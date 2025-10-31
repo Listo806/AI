@@ -1,16 +1,11 @@
- import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 
 /**
  * src/App.jsx
  * Single-file React public-facing landing experience for Listo Qasa Ultimate MVP.
  *
- * Note: This version includes the nav onClick routing to /buy, /sell, /rent.
- * Keep other behavior identical to your current App.jsx.
- *
- * Requirements:
- * - Tailwind CSS configured
- * - npm install framer-motion
+ * Now includes navigation to: /buy, /sell, /rent, /list-property, /owners, /assistant
  */
 
 const NAV_LINKS = [
@@ -38,9 +33,7 @@ function useInViewAnimation(threshold = 0.18) {
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            controls.start("visible");
-          }
+          if (entry.isIntersecting) controls.start("visible");
         });
       },
       { threshold }
@@ -82,10 +75,12 @@ export default function App() {
           key={label}
           className="hover:text-gray-900 cursor-pointer"
           onClick={() => {
-            // route to simple pages for now
             if (label === "Buy") window.location.href = "/buy";
             else if (label === "Sell") window.location.href = "/sell";
             else if (label === "Rent") window.location.href = "/rent";
+            else if (label === "List Property") window.location.href = "/list-property";
+            else if (label === "Owners") window.location.href = "/owners";
+            else if (label === "AI Assistant") window.location.href = "/assistant";
             else onClick && onClick();
           }}
         >
@@ -106,7 +101,9 @@ export default function App() {
               AI
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-xl font-semibold tracking-wide text-gray-900">ListoQasa</span>
+              <span className="text-xl font-semibold tracking-wide text-gray-900">
+                ListoQasa
+              </span>
               <span className="text-xs text-gray-500 -mt-0.5">AI Real Estate</span>
             </div>
           </div>
@@ -137,30 +134,55 @@ export default function App() {
               className="md:hidden p-2 rounded-md hover:bg-gray-100"
               onClick={() => setMobileOpen((s) => !s)}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-gray-700">
-                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="text-gray-700"
+              >
+                <path
+                  d="M4 7h16M4 12h16M4 17h16"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
         </nav>
 
         {/* Mobile nav */}
-        <div className={`md:hidden w-full bg-white border-t border-gray-100 transition-all overflow-hidden ${mobileOpen ? "max-h-96" : "max-h-0"}`}>
+        <div
+          className={`md:hidden w-full bg-white border-t border-gray-100 transition-all overflow-hidden ${
+            mobileOpen ? "max-h-96" : "max-h-0"
+          }`}
+        >
           <div className="px-4 pb-4">
             <ul className="flex flex-col space-y-2 py-3 text-gray-700 text-sm">
               {NAV_LINKS.map((label) => (
-                <li key={label} className="py-2 px-2 rounded hover:bg-gray-50" onClick={() => {
-                  setMobileOpen(false);
-                  if (label === "Buy") window.location.href = "/buy";
-                  else if (label === "Sell") window.location.href = "/sell";
-                  else if (label === "Rent") window.location.href = "/rent";
-                }}>
+                <li
+                  key={label}
+                  className="py-2 px-2 rounded hover:bg-gray-50"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    if (label === "Buy") window.location.href = "/buy";
+                    else if (label === "Sell") window.location.href = "/sell";
+                    else if (label === "Rent") window.location.href = "/rent";
+                    else if (label === "List Property") window.location.href = "/list-property";
+                    else if (label === "Owners") window.location.href = "/owners";
+                    else if (label === "AI Assistant") window.location.href = "/assistant";
+                  }}
+                >
                   {label}
                 </li>
               ))}
             </ul>
             <div className="px-2">
-              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium">Sign In</button>
+              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium">
+                Sign In
+              </button>
             </div>
           </div>
         </div>
@@ -168,70 +190,130 @@ export default function App() {
 
       {/* HERO SECTION */}
       <section className="pt-32 pb-20 bg-gradient-to-b from-blue-50 to-white text-center relative overflow-hidden">
-        <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="text-4xl md:text-6xl font-light text-gray-900 mb-6 italic">
-          Find Your Perfect Property — Powered by <span className="text-blue-600">AI</span>
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl md:text-6xl font-light text-gray-900 mb-6 italic"
+        >
+          Find Your Perfect Property — Powered by{" "}
+          <span className="text-blue-600">AI</span>
         </motion.h1>
         <p className="text-lg md:text-xl text-gray-600 mb-10">
-          Instantly match with homes, buyers, or investments using real-time AI property data.
+          Instantly match with homes, buyers, or investments using real-time AI
+          property data.
         </p>
         <div className="max-w-3xl mx-auto bg-white rounded-full shadow-md p-4 flex flex-col md:flex-row md:items-center gap-4 md:gap-2">
-          <input type="text" placeholder="Property type (House, Condo, Land)" className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500" />
-          <input type="text" placeholder="Location" className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500" />
-          <input type="text" placeholder="Price range" className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500" />
-          <button className="px-6 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition">Search</button>
+          <input
+            type="text"
+            placeholder="Property type (House, Condo, Land)"
+            className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500"
+          />
+          <input
+            type="text"
+            placeholder="Location"
+            className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500"
+          />
+          <input
+            type="text"
+            placeholder="Price range"
+            className="flex-1 px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:border-blue-500"
+          />
+          <button className="px-6 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition">
+            Search
+          </button>
         </div>
       </section>
 
       {/* PAGE 2 – WHAT WE DO */}
       <section className="py-24 max-w-6xl mx-auto px-6 space-y-16">
         <div>
-          <h2 className="text-3xl italic mb-3 text-gray-900">“AI Property Matchmaker”</h2>
+          <h2 className="text-3xl italic mb-3 text-gray-900">
+            “AI Property Matchmaker”
+          </h2>
           <p className="text-gray-600 border-b border-blue-200 pb-2">
-            Our AI instantly connects listings with matching buyers or renters based on behavior, preferences, and location.
+            Our AI instantly connects listings with matching buyers or renters
+            based on behavior, preferences, and location.
           </p>
         </div>
         <div>
-          <h2 className="text-3xl italic mb-3 text-gray-900">“Smart CRM Automation”</h2>
+          <h2 className="text-3xl italic mb-3 text-gray-900">
+            “Smart CRM Automation”
+          </h2>
           <p className="text-gray-600 border-b border-blue-200 pb-2">
-            Manage leads effortlessly with automated follow-ups, reminders, and AI-powered deal flow tracking.
+            Manage leads effortlessly with automated follow-ups, reminders, and
+            AI-powered deal flow tracking.
           </p>
         </div>
         <div>
-          <h2 className="text-3xl italic mb-3 text-gray-900">“Instant Listing Uploads”</h2>
+          <h2 className="text-3xl italic mb-3 text-gray-900">
+            “Instant Listing Uploads”
+          </h2>
           <p className="text-gray-600 border-b border-blue-200 pb-2">
-            Upload and publish listings across the network in seconds — no duplicates, no manual edits.
+            Upload and publish listings across the network in seconds — no
+            duplicates, no manual edits.
           </p>
         </div>
         <div>
-          <h2 className="text-3xl italic mb-3 text-gray-900">“Seamless Team Collaboration”</h2>
+          <h2 className="text-3xl italic mb-3 text-gray-900">
+            “Seamless Team Collaboration”
+          </h2>
           <p className="text-gray-600 border-b border-blue-200 pb-2">
-            Agents, developers, and owners work together in real-time, sharing updates and analytics effortlessly.
+            Agents, developers, and owners work together in real-time, sharing
+            updates and analytics effortlessly.
           </p>
         </div>
       </section>
 
       {/* PAGE 3 – ALL-IN-ONE & ANALYTICS WOW */}
       <section className="py-24 bg-gradient-to-b from-white to-blue-50 text-center">
-        <h2 className="text-4xl italic mb-6 text-gray-900">“All-in-One & Analytics Wow”</h2>
+        <h2 className="text-4xl italic mb-6 text-gray-900">
+          “All-in-One & Analytics Wow”
+        </h2>
         <p className="max-w-3xl mx-auto text-gray-600 mb-12">
-          Gain full visibility into your leads, listings, and conversions — with real-time analytics that reveal what’s working and where to focus next.
+          Gain full visibility into your leads, listings, and conversions — with
+          real-time analytics that reveal what’s working and where to focus
+          next.
         </p>
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-10 border border-gray-100">
-          <img src="https://res.cloudinary.com/demo/image/upload/v1699999999/analytics_mockup.png" alt="Analytics Mockup" className="w-full rounded-lg shadow-sm" />
+          <img
+            src="https://res.cloudinary.com/demo/image/upload/v1699999999/analytics_mockup.png"
+            alt="Analytics Mockup"
+            className="w-full rounded-lg shadow-sm"
+          />
         </div>
       </section>
 
       {/* PAGE 4 – TRUSTED WORLDWIDE */}
       <section className="py-24 text-center bg-white">
-        <h2 className="text-3xl italic text-gray-900 mb-4">“Trusted by Agents, Developers, and Investors Worldwide”</h2>
+        <h2 className="text-3xl italic text-gray-900 mb-4">
+          “Trusted by Agents, Developers, and Investors Worldwide”
+        </h2>
         <p className="text-gray-600 mb-10">
-          Our platform is powering AI real-estate connections across multiple countries and growing fast.
+          Our platform is powering AI real-estate connections across multiple
+          countries and growing fast.
         </p>
         <div className="flex flex-wrap justify-center gap-10 max-w-5xl mx-auto">
-          <img src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo1.png" alt="Logo1" className="h-12" />
-          <img src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo2.png" alt="Logo2" className="h-12" />
-          <img src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo3.png" alt="Logo3" className="h-12" />
-          <img src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo4.png" alt="Logo4" className="h-12" />
+          <img
+            src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo1.png"
+            alt="Logo1"
+            className="h-12"
+          />
+          <img
+            src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo2.png"
+            alt="Logo2"
+            className="h-12"
+          />
+          <img
+            src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo3.png"
+            alt="Logo3"
+            className="h-12"
+          />
+          <img
+            src="https://res.cloudinary.com/demo/image/upload/v1700000001/logo4.png"
+            alt="Logo4"
+            className="h-12"
+          />
         </div>
       </section>
 
@@ -242,3 +324,4 @@ export default function App() {
     </div>
   );
 }
+
