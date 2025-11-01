@@ -1,11 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
 
+# create directory if missing
+mkdir -p src/components
+
+# overwrite the component file
+cat > src/components/AIAssistantLandingPage.jsx <<'JS'
 import React from "react";
-import aiHero from "../assets/aiassistant-hero.png";
 
 const AIAssistantLandingPage = () => {
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      {/* HERO */}
+      {/* HERO (removed image hero to avoid missing-asset build failures) */}
       <section className="w-full bg-gradient-to-br from-white via-blue-50/30 to-blue-100/40 pt-28 pb-20">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1">
@@ -28,12 +34,15 @@ const AIAssistantLandingPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Right column kept for layout balance — hero image removed */}
           <div className="flex-1">
-            <img
-              src={aiHero}
-              alt="AI Assistant dashboard hero"
-              className="rounded-2xl shadow-xl border border-slate-100"
-            />
+            <div className="rounded-2xl shadow-xl border border-slate-100 p-10">
+              {/* Placeholder content so layout remains pleasant until real image is added */}
+              <div className="h-64 flex items-center justify-center text-slate-400">
+                Illustration / hero removed for build — will be restored later
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -172,3 +181,12 @@ const AIAssistantLandingPage = () => {
 };
 
 export default AIAssistantLandingPage;
+JS
+
+# create a branch, commit, and push
+git checkout -b chore/remove-ai-hero
+git add src/components/AIAssistantLandingPage.jsx
+git commit -m "chore: remove AI hero image to avoid missing-asset build failures"
+git push -u origin chore/remove-ai-hero
+
+echo "File replaced and pushed to branch chore/remove-ai-hero"
