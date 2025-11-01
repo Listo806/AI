@@ -1,0 +1,10 @@
+*** Begin Patch
+*** Update File: package.json
+@@
+   "license": "MIT",
+-  "dependencies": {
+-    "react": "^18.2.0",
++  "dependencies": {
++    "react": "^18.2.0",
++    "react-router-dom": "^6.26.1",
+*** End Patch
