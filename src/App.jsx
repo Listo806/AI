@@ -1,15 +1,17 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import DevelopersLandingPage from "./components/DevelopersLandingPage";
 import WholesalersLandingPage from "./components/WholesalersLandingPage";
 import InvestorsLandingPage from "./components/InvestorsLandingPage";
 import AICRMLandingPage from "./components/AICRMLandingPage";
-import AIAssistantLandingPage from "./components/AIAssistantLandingPage"; // 🆕 added
+import AIAssistantLandingPage from "./components/AIAssistantLandingPage";
+import AICRMInterface from "./components/AICRMInterface"; // 🧠 NEW: Full AI CRM workspace
 
 /**
  * src/App.jsx
  * Unified front-end for Listo Qasa Ultimate MVP
- * Includes integrated landing pages for Developers, Wholesalers, Investors, AI CRM, and AI Assistant
+ * Now includes the full integrated AI CRM Interface
  */
 
 const NAV_LINKS = [
@@ -73,44 +75,48 @@ export default function App() {
 
   const handleNavClick = (label) => {
     // ---- PAGE SWITCH LOGIC ----
+    const scrollTop = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setMobileOpen(false);
+    };
+
     if (label === "Developers") {
       setPage("developers");
-      window.scrollTo(0, 0);
-      setMobileOpen(false);
+      scrollTop();
       return;
     }
     if (label === "Wholesalers") {
       setPage("wholesalers");
-      window.scrollTo(0, 0);
-      setMobileOpen(false);
+      scrollTop();
       return;
     }
     if (label === "Investors") {
       setPage("investors");
-      window.scrollTo(0, 0);
-      setMobileOpen(false);
+      scrollTop();
       return;
     }
     if (label === "AI CRM") {
-      setPage("ai-crm");
-      window.scrollTo(0, 0);
-      setMobileOpen(false);
+      // 🔹 This now opens the actual CRM interface, not just landing
+      setPage("ai-crm-interface");
+      scrollTop();
       return;
     }
     if (label === "AI Assistant") {
       setPage("ai-assistant");
-      window.scrollTo(0, 0);
-      setMobileOpen(false);
+      scrollTop();
       return;
     }
 
     // ---- EXTERNAL NAVIGATION ----
-    if (label === "Buy") window.location.href = "/buy";
-    else if (label === "Sell") window.location.href = "/sell";
-    else if (label === "Rent") window.location.href = "/rent";
-    else if (label === "List Property") window.location.href = "/list-property";
-    else if (label === "Owners") window.location.href = "/owners";
-    else if (label === "Agents") window.location.href = "/agents";
+    const routes = {
+      Buy: "/buy",
+      Sell: "/sell",
+      Rent: "/rent",
+      "List Property": "/list-property",
+      Owners: "/owners",
+      Agents: "/agents",
+    };
+    if (routes[label]) window.location.href = routes[label];
     else setMobileOpen(false);
   };
 
@@ -129,21 +135,12 @@ export default function App() {
   );
 
   // ---- PAGE SWITCH ----
-  if (page === "developers") {
-    return <DevelopersLandingPage />;
-  }
-  if (page === "wholesalers") {
-    return <WholesalersLandingPage />;
-  }
-  if (page === "investors") {
-    return <InvestorsLandingPage />;
-  }
-  if (page === "ai-crm") {
-    return <AICRMLandingPage />;
-  }
-  if (page === "ai-assistant") {
-    return <AIAssistantLandingPage />;
-  }
+  if (page === "developers") return <DevelopersLandingPage />;
+  if (page === "wholesalers") return <WholesalersLandingPage />;
+  if (page === "investors") return <InvestorsLandingPage />;
+  if (page === "ai-crm") return <AICRMLandingPage />;
+  if (page === "ai-assistant") return <AIAssistantLandingPage />;
+  if (page === "ai-crm-interface") return <AICRMInterface />; // 🚀 new full workspace view
 
   // ---- DEFAULT MAIN LANDING ----
   return (
@@ -152,7 +149,7 @@ export default function App() {
       <header className="fixed top-0 left-0 w-full bg-white/85 backdrop-blur-md border-b border-gray-100 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setPage("home")}>
             <div className="w-8 h-8 bg-blue-600 rounded-sm flex items-center justify-center text-white font-semibold text-sm">
               AI
             </div>
@@ -241,10 +238,9 @@ export default function App() {
       {/* ---- MAIN LANDING SECTIONS ---- */}
       <main className="pt-24">
         {/* HERO + WHAT WE DO + ANALYTICS + TRUSTED + FOOTER */}
-        {/* Your main site sections remain here unchanged */}
+        {/* Your main site sections remain unchanged */}
       </main>
     </div>
   );
 }
-
 
