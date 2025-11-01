@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ensure folder exists
 mkdir -p src/components
 
+# write the complete component file
 cat > src/components/AIAssistantLandingPage.jsx <<'JS'
 import React from "react";
 
@@ -131,7 +133,7 @@ const AIAssistantLandingPage = () => {
 
       {/* INTEGRATIONS */}
       <section className="py-20 bg-white border-t border-slate-100">
-        <div className="max-w-6- xl mx-auto px-6 text-center">
+        <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-semibold mb-3 text-slate-900">
             Connected to Everything You Use
           </h2>
@@ -179,10 +181,10 @@ const AIAssistantLandingPage = () => {
 export default AIAssistantLandingPage;
 JS
 
+# commit & push
 git checkout -b chore/remove-ai-hero
 git add src/components/AIAssistantLandingPage.jsx
 git commit -m "chore: remove AI hero image to avoid missing-asset build failures"
 git push -u origin chore/remove-ai-hero
 
-echo "File replaced and pushed to branch chore/remove-ai-hero"
-            
+echo "Done — file updated and pushed to branch chore/remove-ai-hero"
