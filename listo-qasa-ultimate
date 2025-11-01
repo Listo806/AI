@@ -1,0 +1,107 @@
+# 🏗️ Create and enter the main project folder
+mkdir listo-qasa-ultimate
+cd listo-qasa-ultimate
+
+# ✅ Initialize Node project (creates package.json)
+npm init -y
+
+# 🧩 Install required dependencies
+npm install react react-dom react-router-dom
+npm install -D vite
+
+# 🗂️ Create source and public directories
+mkdir -p src/pages public
+
+# 🖋️ Create main React entry point (src/index.js)
+cat > src/index.js <<'JS'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import App from "./App";
+import Checkout from "./pages/Checkout";
+import ThankYou from "./pages/ThankYou";
+import "./index.css";
+
+const rootEl = document.getElementById("root");
+if (!rootEl) {
+  const created = document.createElement("div");
+  created.id = "root";
+  document.body.appendChild(created);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <Router>
+      <Routes>
+        <Route path="/*" element={<App />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/thank-you" element={<ThankYou />} />
+      </Routes>
+    </Router>
+  </React.StrictMode>
+);
+JS
+
+# 🏡 Create minimal pages
+cat > src/App.jsx <<'JS'
+import React from "react";
+export default function App() {
+  return <h1>🏡 Welcome to Listo Qasa Ultimate MVP</h1>;
+}
+JS
+
+cat > src/pages/Checkout.jsx <<'JS'
+import React from "react";
+export default function Checkout() {
+  return <h2>💳 Checkout Page</h2>;
+}
+JS
+
+cat > src/pages/ThankYou.jsx <<'JS'
+import React from "react";
+export default function ThankYou() {
+  return <h2>🎉 Thank You Page</h2>;
+}
+JS
+
+# 🧾 Basic stylesheet
+echo "body { font-family: sans-serif; margin: 2rem; }" > src/index.css
+
+# 🌐 Public HTML entry
+cat > public/index.html <<'HTML'
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Listo Qasa — AI</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.js"></script>
+  </body>
+</html>
+HTML
+
+# ⚙️ Create vite.config.js for Netlify build
+cat > vite.config.js <<'JS'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+export default defineConfig({
+  plugins: [react()],
+  build: { outDir: "dist" },
+  server: { port: 5173 },
+});
+JS
+
+# 🚀 Add start and build scripts
+npx npm-add-script -k "dev" -v "vite"
+npx npm-add-script -k "build" -v "vite build"
+npx npm-add-script -k "preview" -v "vite preview"
+
+# 🧪 Initialize Git repo (optional but recommended)
+git init
+git add .
+git commit -m "Initial React Vite setup for Listo Qasa Ultimate"
+
+echo "✅ Setup complete! Run: npm run dev  (to preview locally)"
