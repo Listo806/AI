@@ -3,12 +3,13 @@ import { motion, useAnimation } from "framer-motion";
 import DevelopersLandingPage from "./components/DevelopersLandingPage";
 import WholesalersLandingPage from "./components/WholesalersLandingPage";
 import InvestorsLandingPage from "./components/InvestorsLandingPage";
-import AICRMLandingPage from "./components/AICRMLandingPage"; // 🆕 added
+import AICRMLandingPage from "./components/AICRMLandingPage";
+import AIAssistantLandingPage from "./components/AIAssistantLandingPage"; // 🆕 added
 
 /**
  * src/App.jsx
  * Unified front-end for Listo Qasa Ultimate MVP
- * Includes integrated landing pages for Developers, Wholesalers, Investors, and AI CRM
+ * Includes integrated landing pages for Developers, Wholesalers, Investors, AI CRM, and AI Assistant
  */
 
 const NAV_LINKS = [
@@ -96,6 +97,12 @@ export default function App() {
       setMobileOpen(false);
       return;
     }
+    if (label === "AI Assistant") {
+      setPage("ai-assistant");
+      window.scrollTo(0, 0);
+      setMobileOpen(false);
+      return;
+    }
 
     // ---- EXTERNAL NAVIGATION ----
     if (label === "Buy") window.location.href = "/buy";
@@ -104,7 +111,6 @@ export default function App() {
     else if (label === "List Property") window.location.href = "/list-property";
     else if (label === "Owners") window.location.href = "/owners";
     else if (label === "Agents") window.location.href = "/agents";
-    else if (label === "AI Assistant") window.location.href = "/assistant";
     else setMobileOpen(false);
   };
 
@@ -134,6 +140,9 @@ export default function App() {
   }
   if (page === "ai-crm") {
     return <AICRMLandingPage />;
+  }
+  if (page === "ai-assistant") {
+    return <AIAssistantLandingPage />;
   }
 
   // ---- DEFAULT MAIN LANDING ----
