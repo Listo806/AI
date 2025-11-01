@@ -10,6 +10,7 @@ import Rent from "./Rent";
 import Assistant from "./Assistant";
 import ListProperty from "./ListProperty";
 import Owners from "./Owners";
+import Agents from "./Agents"; // 👈 added
 
 // Payment + post-checkout flow
 import Checkout from "./Checkout";
@@ -29,9 +30,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
         {/* Owner plan funnel */}
         <Route path="/owners" element={<Owners />} />
+
+        {/* Agent funnel */}
+        <Route path="/agents" element={<Agents />} /> {/* 👈 added */}
+
+        {/* Checkout + post-payment */}
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/thank-you" element={<ThankYou />} />
       </Routes>
     </Router>
   </React.StrictMode>
 );
+
