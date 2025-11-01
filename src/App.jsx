@@ -2,12 +2,13 @@ import React, { useRef, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import DevelopersLandingPage from "./components/DevelopersLandingPage";
 import WholesalersLandingPage from "./components/WholesalersLandingPage";
-import InvestorsLandingPage from "./components/InvestorsLandingPage"; // 🆕 added
+import InvestorsLandingPage from "./components/InvestorsLandingPage";
+import AICRMLandingPage from "./components/AICRMLandingPage"; // 🆕 added
 
 /**
  * src/App.jsx
  * Unified front-end for Listo Qasa Ultimate MVP
- * Includes integrated landing pages for Developers, Wholesalers, and Investors
+ * Includes integrated landing pages for Developers, Wholesalers, Investors, and AI CRM
  */
 
 const NAV_LINKS = [
@@ -22,7 +23,6 @@ const NAV_LINKS = [
   "Investors",
   "AI CRM",
   "AI Assistant",
-  "Pricing",
 ];
 
 function useInViewAnimation(threshold = 0.18) {
@@ -90,6 +90,12 @@ export default function App() {
       setMobileOpen(false);
       return;
     }
+    if (label === "AI CRM") {
+      setPage("ai-crm");
+      window.scrollTo(0, 0);
+      setMobileOpen(false);
+      return;
+    }
 
     // ---- EXTERNAL NAVIGATION ----
     if (label === "Buy") window.location.href = "/buy";
@@ -125,6 +131,9 @@ export default function App() {
   }
   if (page === "investors") {
     return <InvestorsLandingPage />;
+  }
+  if (page === "ai-crm") {
+    return <AICRMLandingPage />;
   }
 
   // ---- DEFAULT MAIN LANDING ----
@@ -228,6 +237,5 @@ export default function App() {
     </div>
   );
 }
-
 
 
