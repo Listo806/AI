@@ -15,6 +15,8 @@ root.render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/ai-assistant" element={<AIAssistantLandingPage />} />
+        {/* ✅ Wildcard route: shows App for any unknown path */}
+        <Route path="*" element={<App />} />
       </Routes>
     </Router>
   </React.StrictMode>
