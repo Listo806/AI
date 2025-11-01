@@ -1,10 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
+import DevelopersLandingPage from "./components/DevelopersLandingPage";
 
 /**
  * src/App.jsx
- * Public-facing landing experience for Listo Qasa Ultimate MVP.
- * Now routes to: /buy, /sell, /rent, /list-property, /owners, /agents, /assistant
+ * Unified front-end for Listo Qasa Ultimate MVP
+ * Includes full navigation and integrated Developers landing page
  */
 
 const NAV_LINKS = [
@@ -55,6 +56,7 @@ const createSlideVariants = (direction = "left", distance = 60) => {
 export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(false);
+  const [page, setPage] = useState("home"); // 🆕 handle developers view toggle
 
   const [heroRef, heroControls] = useInViewAnimation(0.45);
   const [whatRef, whatControls] = useInViewAnimation(0.2);
@@ -62,27 +64,35 @@ export default function App() {
   const [trustedRef, trustedControls] = useInViewAnimation(0.2);
 
   const firstInputRef = useRef(null);
-
   useEffect(() => {
     if (!firstInputRef.current) return;
   }, []);
 
-  const NavLinks = ({ onClick }) => (
+  const handleNavClick = (label) => {
+    if (label === "Developers") {
+      // Instead of redirect, show the DevelopersLandingPage inline
+      setPage("developers");
+      window.scrollTo(0, 0);
+      setMobileOpen(false);
+      return;
+    }
+    if (label === "Buy") window.location.href = "/buy";
+    else if (label === "Sell") window.location.href = "/sell";
+    else if (label === "Rent") window.location.href = "/rent";
+    else if (label === "List Property") window.location.href = "/list-property";
+    else if (label === "Owners") window.location.href = "/owners";
+    else if (label === "Agents") window.location.href = "/agents";
+    else if (label === "AI Assistant") window.location.href = "/assistant";
+    else setMobileOpen(false);
+  };
+
+  const NavLinks = () => (
     <ul className="hidden md:flex space-x-6 text-sm font-medium text-gray-700">
       {NAV_LINKS.map((label) => (
         <li
           key={label}
           className="hover:text-gray-900 cursor-pointer"
-          onClick={() => {
-            if (label === "Buy") window.location.href = "/buy";
-            else if (label === "Sell") window.location.href = "/sell";
-            else if (label === "Rent") window.location.href = "/rent";
-            else if (label === "List Property") window.location.href = "/list-property";
-            else if (label === "Owners") window.location.href = "/owners";
-            else if (label === "Agents") window.location.href = "/agents"; // 👈 Added
-            else if (label === "AI Assistant") window.location.href = "/assistant";
-            else onClick && onClick();
-          }}
+          onClick={() => handleNavClick(label)}
         >
           {label}
         </li>
@@ -90,6 +100,12 @@ export default function App() {
     </ul>
   );
 
+  // When “Developers” is clicked, just show that page
+  if (page === "developers") {
+    return <DevelopersLandingPage />;
+  }
+
+  // Otherwise show your normal public landing
   return (
     <div className="min-h-screen font-sans text-gray-800 bg-white">
       {/* HEADER */}
@@ -104,12 +120,14 @@ export default function App() {
               <span className="text-xl font-semibold tracking-wide text-gray-900">
                 ListoQasa
               </span>
-              <span className="text-xs text-gray-500 -mt-0.5">AI Real Estate</span>
+              <span className="text-xs text-gray-500 -mt-0.5">
+                AI Real Estate
+              </span>
             </div>
           </div>
 
           {/* Desktop nav */}
-          <NavLinks onClick={() => setMobileOpen(false)} />
+          <NavLinks />
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
@@ -165,16 +183,7 @@ export default function App() {
                 <li
                   key={label}
                   className="py-2 px-2 rounded hover:bg-gray-50"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    if (label === "Buy") window.location.href = "/buy";
-                    else if (label === "Sell") window.location.href = "/sell";
-                    else if (label === "Rent") window.location.href = "/rent";
-                    else if (label === "List Property") window.location.href = "/list-property";
-                    else if (label === "Owners") window.location.href = "/owners";
-                    else if (label === "Agents") window.location.href = "/agents"; // 👈 Added
-                    else if (label === "AI Assistant") window.location.href = "/assistant";
-                  }}
+                  onClick={() => handleNavClick(label)}
                 >
                   {label}
                 </li>
@@ -189,8 +198,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* Existing sections remain unchanged below */}
-      {/* HERO + WHAT WE DO + ANALYTICS + TRUSTED + FOOTER ... */}
+      {/* ---- MAIN LANDING SECTIONS ---- */}
+      <main className="pt-24">
+        {/* HERO + WHAT WE DO + ANALYTICS + TRUSTED + FOOTER */}
+        {/* Your existing landing sections stay below unchanged */}
+      </main>
     </div>
   );
 }
