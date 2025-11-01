@@ -1,0 +1,6 @@
+/* Minimal index.css — Tailwind base + project globals.
+   If you are not using Tailwind, replace contents with your normal global CSS. */
+
+/* Tailwind directives (keep if your project uses Tailwind) */
+@tailwind base;
+@tailwind components;
