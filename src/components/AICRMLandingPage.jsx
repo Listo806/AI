@@ -1,0 +1,1 @@
+import React from 'react'; export default function AICRMLandingPage(){return (<div className='min-h-screen flex items-center justify-center'><h1 className='text-4xl'>AI CRM Landing</h1></div>);}

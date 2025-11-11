@@ -1,0 +1,1 @@
+import React from 'react'; export default function ThankYou(){return (<div className='min-h-screen flex items-center justify-center'><h1 className='text-3xl'>Thank You</h1></div>);}

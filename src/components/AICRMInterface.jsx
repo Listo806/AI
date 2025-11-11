@@ -1,0 +1,1 @@
+import React from 'react'; export default function AICRMInterface(){return (<div className='min-h-screen flex items-center justify-center'><h1 className='text-4xl'>AI CRM Interface</h1></div>);}
