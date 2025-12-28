@@ -12,13 +12,15 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  getProfile(@CurrentUser() user: any) {
+  async getProfile(@CurrentUser() user: any) {
+    // Fetch fresh user data to ensure teamId is up to date
+    const freshUser = await this.usersService.findById(user.id);
     return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      teamId: user.teamId,
-      isActive: user.isActive,
+      id: freshUser?.id,
+      email: freshUser?.email,
+      role: freshUser?.role,
+      teamId: freshUser?.teamId,
+      isActive: freshUser?.isActive,
     };
   }
 

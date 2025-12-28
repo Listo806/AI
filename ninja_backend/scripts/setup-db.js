@@ -104,10 +104,19 @@ async function setupDatabase() {
     console.log('Connected successfully!');
 
     console.log('Running migrations...');
-    const migrationPath = path.join(__dirname, '../src/database/migrations/001_initial_schema.sql');
-    const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+    
+    // Run initial schema migration
+    const migration1Path = path.join(__dirname, '../src/database/migrations/001_initial_schema.sql');
+    const migration1SQL = fs.readFileSync(migration1Path, 'utf8');
+    await pool.query(migration1SQL);
+    console.log('✓ Initial schema migration completed');
 
-    await pool.query(migrationSQL);
+    // Run Milestone 2 schema migration
+    const migration2Path = path.join(__dirname, '../src/database/migrations/002_milestone2_schema.sql');
+    const migration2SQL = fs.readFileSync(migration2Path, 'utf8');
+    await pool.query(migration2SQL);
+    console.log('✓ Milestone 2 schema migration completed');
+
     console.log('Database schema created successfully!');
 
     await pool.end();

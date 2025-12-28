@@ -39,7 +39,7 @@ export class UsersService {
     return rows[0] || null;
   }
 
-  async update(id: string, data: Partial<User>): Promise<User> {
+  async update(id: string, data: Partial<User & { teamId: string | null; isActive: boolean }>): Promise<User> {
     const updates: string[] = [];
     const values: any[] = [];
     let paramCount = 1;
@@ -56,9 +56,17 @@ export class UsersService {
       updates.push(`role = $${paramCount++}`);
       values.push(data.role);
     }
+    if (data.teamId !== undefined) {
+      updates.push(`team_id = $${paramCount++}`);
+      values.push(data.teamId);
+    }
     if (data.isActive !== undefined) {
       updates.push(`is_active = $${paramCount++}`);
       values.push(data.isActive);
+    }
+
+    if (updates.length === 0) {
+      return this.findById(id) as Promise<User>;
     }
 
     updates.push(`updated_at = NOW()`);
