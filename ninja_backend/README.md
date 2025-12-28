@@ -61,8 +61,9 @@ npm run build
 npm run start:prod
 ```
 
-## Milestone 1 - ✅ Complete
+## Milestones Status
 
+### Milestone 1 - ✅ Complete
 Foundation, Environment & Auth is fully implemented. See [MILESTONE_1.md](./MILESTONE_1.md) for details.
 
 **Features:**
@@ -72,6 +73,26 @@ Foundation, Environment & Auth is fully implemented. See [MILESTONE_1.md](./MILE
 - ✅ Role-based access control (Owner, Agent, Developer, Admin)
 - ✅ Password hashing with bcrypt
 - ✅ Protected routes with guards
+
+### Milestone 2 - ✅ Complete
+Core Domain APIs are fully implemented. See [MILESTONE_2.md](./MILESTONE_2.md) for details.
+
+**Features:**
+- ✅ Teams & seat management
+- ✅ Leads module (CRUD, assignment, status tracking)
+- ✅ Properties module (CRUD, publishing, media management)
+- ✅ Server-side validation & permissions
+
+### Milestone 3 - ✅ Complete
+Payments & Subscriptions (Stripe) are fully implemented. See [MILESTONE_3.md](./MILESTONE_3.md) for details.
+
+**Features:**
+- ✅ Stripe subscription integration
+- ✅ Plan mapping and seat-based billing
+- ✅ Webhook handling (subscription events)
+- ✅ Automatic seat enforcement via webhooks
+- ✅ Payment state enforcement
+- ✅ Access restrictions based on subscription status
 
 ## Project Structure
 

@@ -124,55 +124,131 @@ export class TeamsService {
   }
 
   async enforceSeatLimits(teamId: string): Promise<void> {
-    const team = await this.findById(teamId);
-    if (!team) {
-      return;
-    }
+    const client = await this.db.getClient();
+    
+    try {
+      await client.query('BEGIN');
 
-    const { rows } = await this.db.query(
-      `SELECT id FROM users
-       WHERE team_id = $1 AND is_active = true AND role != 'owner'
-       ORDER BY created_at ASC`,
-      [teamId],
-    );
+      // Lock team row
+      const { rows: teamRows } = await client.query(
+        `SELECT seat_limit, token_version FROM teams WHERE id = $1 FOR UPDATE`,
+        [teamId],
+      );
 
-    const activeMembers = rows;
-    const limit = team.seatLimit - 1; // -1 for owner
-
-    if (activeMembers.length > limit) {
-      const toDeactivate = activeMembers.slice(limit);
-      const ids = toDeactivate.map((m: any) => m.id);
-
-      if (ids.length > 0) {
-        await this.db.query(
-          `UPDATE users SET is_active = false WHERE id = ANY($1::uuid[])`,
-          [ids],
-        );
+      if (teamRows.length === 0) {
+        await client.query('ROLLBACK');
+        return;
       }
+
+      const seatLimit = teamRows[0].seat_limit;
+      const limit = seatLimit - 1; // -1 for owner
+
+      // Get active members (excluding owner) ordered by creation date
+      const { rows } = await client.query(
+        `SELECT id FROM users
+         WHERE team_id = $1 AND is_active = true AND role != 'owner'
+         ORDER BY created_at ASC`,
+        [teamId],
+      );
+
+      const activeMembers = rows;
+
+      if (activeMembers.length > limit) {
+        const toDeactivate = activeMembers.slice(limit);
+        const ids = toDeactivate.map((m: any) => m.id);
+
+        if (ids.length > 0) {
+          // Deactivate excess members
+          await client.query(
+            `UPDATE users SET is_active = false, updated_at = NOW() 
+             WHERE id = ANY($1::uuid[])`,
+            [ids],
+          );
+
+          // Increment team token version to invalidate tokens for deactivated users
+          await client.query(
+            `UPDATE teams 
+             SET token_version = token_version + 1, updated_at = NOW()
+             WHERE id = $1`,
+            [teamId],
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
   }
 
   async addMember(teamId: string, userId: string, requestingUserId: string): Promise<void> {
-    const team = await this.findById(teamId);
-    if (!team) {
-      throw new NotFoundException('Team not found');
+    const client = await this.db.getClient();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Lock team row to prevent concurrent modifications (row-level locking)
+      const { rows: teamRows } = await client.query(
+        `SELECT id, owner_id, seat_limit, token_version
+         FROM teams WHERE id = $1 FOR UPDATE`,
+        [teamId],
+      );
+
+      if (teamRows.length === 0) {
+        await client.query('ROLLBACK');
+        throw new NotFoundException('Team not found');
+      }
+
+      const team = teamRows[0];
+
+      // Only owner can add members
+      if (team.owner_id !== requestingUserId) {
+        await client.query('ROLLBACK');
+        throw new ForbiddenException('Only team owner can add members');
+      }
+
+      // Get current active seat count (excluding owner)
+      const { rows: seatCountRows } = await client.query(
+        `SELECT COUNT(*) as count
+         FROM users
+         WHERE team_id = $1 AND is_active = true AND role != 'owner'`,
+        [teamId],
+      );
+
+      const currentSeats = parseInt(seatCountRows[0].count, 10);
+      const availableSeats = team.seat_limit - 1 - currentSeats; // -1 for owner
+
+      if (availableSeats <= 0) {
+        await client.query('ROLLBACK');
+        throw new BadRequestException('No available seats in this team');
+      }
+
+      // Atomically add user to team and activate
+      await client.query(
+        `UPDATE users 
+         SET team_id = $1, is_active = true, updated_at = NOW()
+         WHERE id = $2`,
+        [teamId, userId],
+      );
+
+      // Increment team token version to invalidate existing tokens
+      await client.query(
+        `UPDATE teams 
+         SET token_version = token_version + 1, updated_at = NOW()
+         WHERE id = $1`,
+        [teamId],
+      );
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    // Only owner can add members
-    if (team.ownerId !== requestingUserId) {
-      throw new ForbiddenException('Only team owner can add members');
-    }
-
-    // Check if seats are available
-    if (!(await this.canAddMember(teamId))) {
-      throw new BadRequestException('No available seats in this team');
-    }
-
-    // Add user to team
-    await this.usersService.update(userId, { teamId, isActive: true } as any);
-
-    // Enforce seat limits
-    await this.enforceSeatLimits(teamId);
   }
 
   async removeMember(teamId: string, userId: string, requestingUserId: string): Promise<void> {

@@ -117,6 +117,20 @@ async function setupDatabase() {
     await pool.query(migration2SQL);
     console.log('✓ Milestone 2 schema migration completed');
 
+    // Run Milestone 3 schema migration
+    const migration3Path = path.join(__dirname, '../src/database/migrations/003_milestone3_subscriptions.sql');
+    const migration3SQL = fs.readFileSync(migration3Path, 'utf8');
+    await pool.query(migration3SQL);
+    console.log('✓ Milestone 3 schema migration completed');
+
+    // Run Production Readiness migration
+    const migration4Path = path.join(__dirname, '../src/database/migrations/004_production_readiness.sql');
+    if (fs.existsSync(migration4Path)) {
+      const migration4SQL = fs.readFileSync(migration4Path, 'utf8');
+      await pool.query(migration4SQL);
+      console.log('✓ Production readiness migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

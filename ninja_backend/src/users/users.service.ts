@@ -43,6 +43,7 @@ export class UsersService {
     const updates: string[] = [];
     const values: any[] = [];
     let paramCount = 1;
+    let shouldInvalidateTokens = false;
 
     if (data.email !== undefined) {
       updates.push(`email = $${paramCount++}`);
@@ -55,18 +56,26 @@ export class UsersService {
     if (data.role !== undefined) {
       updates.push(`role = $${paramCount++}`);
       values.push(data.role);
+      shouldInvalidateTokens = true; // Role change invalidates tokens
     }
     if (data.teamId !== undefined) {
       updates.push(`team_id = $${paramCount++}`);
       values.push(data.teamId);
+      shouldInvalidateTokens = true; // Team change invalidates tokens
     }
     if (data.isActive !== undefined) {
       updates.push(`is_active = $${paramCount++}`);
       values.push(data.isActive);
+      shouldInvalidateTokens = true; // Active status change invalidates tokens
     }
 
     if (updates.length === 0) {
       return this.findById(id) as Promise<User>;
+    }
+
+    // Increment token_version to invalidate existing tokens when critical changes occur
+    if (shouldInvalidateTokens) {
+      updates.push(`token_version = token_version + 1`);
     }
 
     updates.push(`updated_at = NOW()`);

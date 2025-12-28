@@ -7,7 +7,9 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true, // Enable raw body for webhook signature verification
+  });
   
   // Global prefix for all routes
   app.setGlobalPrefix(process.env.API_PREFIX || 'api');
@@ -18,12 +20,13 @@ async function bootstrap() {
     credentials: true,
   });
   
-  // Global validation pipe
+  // Global validation pipe (skip for webhooks)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      skipMissingProperties: false,
     }),
   );
   

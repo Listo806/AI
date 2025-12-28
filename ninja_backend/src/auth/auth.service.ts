@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import type { StringValue } from 'ms';
 import { UsersService } from '../users/users.service';
+import { DatabaseService } from '../database/database.service';
 import { UserRole } from '../users/entities/user.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,6 +15,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly db: DatabaseService,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -106,7 +108,42 @@ export class AuthService {
   }
 
   private async generateTokens(user: any) {
-    const payload = { id: user.id, email: user.email, role: user.role };
+    // Get user's token version and team token version
+    // Fallback to default values if columns don't exist (for backward compatibility)
+    let tokenVersion = 1;
+    let teamTokenVersion = 0;
+
+    try {
+      const { rows: userRows } = await this.db.query(
+        `SELECT u.token_version, COALESCE(t.token_version, 0) as team_token_version
+         FROM users u
+         LEFT JOIN teams t ON t.id = u.team_id
+         WHERE u.id = $1`,
+        [user.id],
+      );
+
+      if (userRows.length > 0) {
+        tokenVersion = userRows[0]?.token_version ?? 1;
+        teamTokenVersion = userRows[0]?.team_token_version ?? 0;
+      }
+    } catch (error: any) {
+      // If columns don't exist yet (migration not run), use defaults
+      if (error.code === '42703') { // undefined_column
+        console.warn('token_version columns not found - using defaults. Run migration 004_production_readiness.sql');
+        tokenVersion = 1;
+        teamTokenVersion = 0;
+      } else {
+        throw error;
+      }
+    }
+
+    const payload = { 
+      id: user.id, 
+      email: user.email, 
+      role: user.role,
+      tokenVersion,
+      teamTokenVersion,
+    };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getRequired('JWT_SECRET'),
@@ -114,7 +151,7 @@ export class AuthService {
     });
 
     const refreshToken = this.jwtService.sign(
-      { id: user.id },
+      { id: user.id, tokenVersion, teamTokenVersion },
       {
         secret: this.configService.getRequired('JWT_REFRESH_SECRET'),
         expiresIn: (this.configService.get('JWT_REFRESH_EXPIRES_IN') || '7d') as StringValue,

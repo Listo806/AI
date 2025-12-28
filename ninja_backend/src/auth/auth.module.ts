@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import type { StringValue } from 'ms';
 import { ConfigModule } from '../config/config.module';
 import { ConfigService } from '../config/config.service';
+import { DatabaseModule } from '../database/database.module';
 import { UsersModule } from '../users/users.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -15,6 +16,7 @@ import { RolesGuard } from './guards/roles.guard';
   imports: [
     UsersModule,
     ConfigModule,
+    DatabaseModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
