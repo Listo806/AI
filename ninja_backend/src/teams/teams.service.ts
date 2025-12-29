@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { DatabaseService } from '../database/database.service';
 import { Team, CreateTeamDto, UpdateTeamDto } from './entities/team.entity';
 import { UsersService } from '../users/users.service';
+import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class TeamsService {
   constructor(
     private readonly db: DatabaseService,
     private readonly usersService: UsersService,
+    private readonly eventLogger: EventLoggerService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto, ownerId: string): Promise<Team> {
@@ -243,6 +245,9 @@ export class TeamsService {
       );
 
       await client.query('COMMIT');
+
+      // Log event after successful commit
+      await this.eventLogger.logTeamMemberAdded(teamId, requestingUserId, userId);
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -268,6 +273,9 @@ export class TeamsService {
 
     // Remove user from team
     await this.usersService.update(userId, { teamId: null } as any);
+
+    // Log event
+    await this.eventLogger.logTeamMemberRemoved(teamId, requestingUserId, userId);
   }
 }
 

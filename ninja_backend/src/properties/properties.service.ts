@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Property, PropertyStatus, CreatePropertyDto, UpdatePropertyDto, PropertyMedia } from './entities/property.entity';
+import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class PropertiesService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly eventLogger: EventLoggerService,
+  ) {}
 
   async create(createPropertyDto: CreatePropertyDto, userId: string, teamId: string | null): Promise<Property> {
     const status = createPropertyDto.status || PropertyStatus.DRAFT;
@@ -43,7 +47,17 @@ export class PropertiesService {
       ],
     );
 
-    return rows[0];
+    const property = rows[0];
+
+    // Log event
+    await this.eventLogger.logPropertyCreated(property.id, userId, teamId, {
+      title: property.title,
+      type: property.type,
+      status: property.status,
+      price: property.price,
+    });
+
+    return property;
   }
 
   async findAll(userId: string, teamId: string | null, filters?: { type?: string; status?: string }): Promise<Property[]> {
@@ -109,6 +123,9 @@ export class PropertiesService {
     if (!isCreator && !isTeamMember) {
       throw new ForbiddenException('You do not have permission to update this property');
     }
+
+    const oldStatus = property.status;
+    const wasPublished = property.status === PropertyStatus.PUBLISHED;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -200,11 +217,35 @@ export class PropertiesService {
       values,
     );
 
-    return rows[0];
+    const updatedProperty = rows[0];
+
+    // Log status change if status was updated
+    if (updatePropertyDto.status !== undefined && updatePropertyDto.status !== oldStatus) {
+      await this.eventLogger.logPropertyStatusChanged(updatedProperty.id, userId, teamId, oldStatus, updatePropertyDto.status);
+      
+      // Log publish event if status changed to published
+      if (updatePropertyDto.status === PropertyStatus.PUBLISHED && !wasPublished) {
+        await this.eventLogger.logPropertyPublished(updatedProperty.id, userId, teamId);
+      }
+    }
+
+    return updatedProperty;
   }
 
   async publish(id: string, userId: string, teamId: string | null): Promise<Property> {
-    return this.update(id, { status: PropertyStatus.PUBLISHED }, userId, teamId);
+    const property = await this.findById(id);
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+
+    const result = await this.update(id, { status: PropertyStatus.PUBLISHED }, userId, teamId);
+    
+    // Log publish event (update method already logs status change, but we also want explicit publish event)
+    if (property.status !== PropertyStatus.PUBLISHED) {
+      await this.eventLogger.logPropertyPublished(result.id, userId, teamId);
+    }
+
+    return result;
   }
 
   async delete(id: string, userId: string, teamId: string | null): Promise<void> {

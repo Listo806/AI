@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { Lead, LeadStatus, CreateLeadDto, UpdateLeadDto } from './entities/lead.entity';
+import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class LeadsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly eventLogger: EventLoggerService,
+  ) {}
 
   async create(createLeadDto: CreateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
     const status = createLeadDto.status || LeadStatus.NEW;
@@ -27,7 +31,16 @@ export class LeadsService {
       ],
     );
 
-    return rows[0];
+    const lead = rows[0];
+
+    // Log event
+    await this.eventLogger.logLeadCreated(lead.id, userId, teamId, {
+      name: lead.name,
+      status: lead.status,
+      source: lead.source,
+    });
+
+    return lead;
   }
 
   async findAll(userId: string, teamId: string | null): Promise<Lead[]> {
@@ -76,6 +89,9 @@ export class LeadsService {
       throw new ForbiddenException('You do not have permission to update this lead');
     }
 
+    const oldStatus = lead.status;
+    const oldAssignedTo = lead.assignedTo;
+
     const updates: string[] = [];
     const values: any[] = [];
     let paramCount = 1;
@@ -123,7 +139,22 @@ export class LeadsService {
       values,
     );
 
-    return rows[0];
+    const updatedLead = rows[0];
+
+    // Log events
+    await this.eventLogger.logLeadUpdated(updatedLead.id, userId, teamId);
+
+    // Log status change if status was updated
+    if (updateLeadDto.status !== undefined && updateLeadDto.status !== oldStatus) {
+      await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updateLeadDto.status);
+    }
+
+    // Log assignment if assignedTo was updated
+    if (updateLeadDto.assignedTo !== undefined && updateLeadDto.assignedTo !== oldAssignedTo) {
+      await this.eventLogger.logLeadAssigned(updatedLead.id, userId, teamId, updateLeadDto.assignedTo || '');
+    }
+
+    return updatedLead;
   }
 
   async delete(id: string, userId: string, teamId: string | null): Promise<void> {

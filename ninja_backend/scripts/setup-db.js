@@ -147,6 +147,14 @@ async function setupDatabase() {
       console.log('✓ Milestone 4 push notifications migration completed');
     }
 
+    // Run Milestone 5 Analytics migration
+    const migration7Path = path.join(__dirname, '../src/database/migrations/007_milestone5_analytics.sql');
+    if (fs.existsSync(migration7Path)) {
+      const migration7SQL = fs.readFileSync(migration7Path, 'utf8');
+      await pool.query(migration7SQL);
+      console.log('✓ Milestone 5 analytics migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

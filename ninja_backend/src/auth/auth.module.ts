@@ -6,6 +6,7 @@ import { ConfigModule } from '../config/config.module';
 import { ConfigService } from '../config/config.service';
 import { DatabaseModule } from '../database/database.module';
 import { UsersModule } from '../users/users.module';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -17,6 +18,7 @@ import { RolesGuard } from './guards/roles.guard';
     UsersModule,
     ConfigModule,
     DatabaseModule,
+    AnalyticsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

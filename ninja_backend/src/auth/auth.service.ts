@@ -8,6 +8,7 @@ import { UserRole } from '../users/entities/user.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '../config/config.service';
+import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly db: DatabaseService,
+    private readonly eventLogger: EventLoggerService,
   ) {}
 
   async signup(signupDto: SignupDto) {
@@ -79,6 +81,9 @@ export class AuthService {
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
+
+    // Log login event
+    await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
 
     return {
       user: {

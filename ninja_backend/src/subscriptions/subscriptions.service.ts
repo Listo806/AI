@@ -5,6 +5,7 @@ import { TeamsService } from '../teams/teams.service';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionPlansService } from './subscription-plans.service';
+import { EventLoggerService } from '../analytics/events/event-logger.service';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class SubscriptionsService {
     private readonly stripeService: StripeService,
     private readonly teamsService: TeamsService,
     private readonly plansService: SubscriptionPlansService,
+    private readonly eventLogger: EventLoggerService,
   ) {}
 
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string }> {
@@ -116,6 +118,12 @@ export class SubscriptionsService {
       `UPDATE teams SET subscription_id = $1 WHERE id = $2`,
       [subscription.id, teamId],
     );
+
+    // Log subscription created event
+    await this.eventLogger.logSubscriptionCreated(subscription.id, teamId, planId, {
+      provider: 'stripe',
+      status: SubscriptionStatus.INACTIVE,
+    });
 
     return {
       subscription,
@@ -249,6 +257,26 @@ export class SubscriptionsService {
 
     const updatedSubscription = rows[0];
 
+    // Log subscription status change
+    if (subscription.status !== status) {
+      await this.eventLogger.logSubscriptionStatusChanged(
+        updatedSubscription.id,
+        updatedSubscription.teamId,
+        subscription.status,
+        status,
+      );
+
+      // Log activation if status changed to active
+      if (status === SubscriptionStatus.ACTIVE && subscription.status !== SubscriptionStatus.ACTIVE) {
+        await this.eventLogger.logEvent({
+          eventType: 'subscription.activated' as any,
+          entityType: 'subscription' as any,
+          entityId: updatedSubscription.id,
+          teamId: updatedSubscription.teamId,
+        });
+      }
+    }
+
     // Increment team token_version to invalidate tokens when subscription changes
     // This ensures users with canceled subscriptions can't continue using the system
     await this.db.query(
@@ -289,6 +317,8 @@ export class SubscriptionsService {
     const status = immediately ? SubscriptionStatus.CANCELED : subscription.status;
     const canceledAt = immediately ? new Date() : subscription.canceledAt;
 
+    const oldStatus = subscription.status;
+
     const { rows } = await this.db.query(
       `UPDATE subscriptions SET
         status = $1,
@@ -303,7 +333,16 @@ export class SubscriptionsService {
       [status, !immediately, canceledAt, subscriptionId],
     );
 
-    return rows[0];
+    const cancelledSubscription = rows[0];
+
+    // Log cancellation event
+    await this.eventLogger.logSubscriptionCancelled(cancelledSubscription.id, cancelledSubscription.teamId, {
+      immediately,
+      oldStatus,
+      newStatus: status,
+    });
+
+    return cancelledSubscription;
   }
 
   async createBillingPortalSession(teamId: string, userId: string): Promise<string> {
