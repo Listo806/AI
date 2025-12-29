@@ -131,6 +131,22 @@ async function setupDatabase() {
       console.log('✓ Production readiness migration completed');
     }
 
+    // Run Milestone 4 Storage migration
+    const migration5Path = path.join(__dirname, '../src/database/migrations/005_milestone4_storage.sql');
+    if (fs.existsSync(migration5Path)) {
+      const migration5SQL = fs.readFileSync(migration5Path, 'utf8');
+      await pool.query(migration5SQL);
+      console.log('✓ Milestone 4 storage migration completed');
+    }
+
+    // Run Milestone 4 Push Notifications migration
+    const migration6Path = path.join(__dirname, '../src/database/migrations/006_milestone4_push_notifications.sql');
+    if (fs.existsSync(migration6Path)) {
+      const migration6SQL = fs.readFileSync(migration6Path, 'utf8');
+      await pool.query(migration6SQL);
+      console.log('✓ Milestone 4 push notifications migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
