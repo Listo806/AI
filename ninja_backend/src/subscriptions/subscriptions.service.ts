@@ -148,6 +148,7 @@ export class SubscriptionsService {
     return {
       subscription,
       checkoutUrl: checkoutSession.checkoutUrl || '',
+      transactionId: checkoutSession.transactionId || null, // Include transaction ID for overlay checkout
     };
   }
 

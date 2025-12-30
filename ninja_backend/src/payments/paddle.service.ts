@@ -11,6 +11,11 @@ export interface CreateCheckoutOptions {
   metadata?: Record<string, any>;
 }
 
+export interface CreateCheckoutResponse {
+  checkoutUrl: string;
+  transactionId: string | null;
+}
+
 @Injectable()
 export class PaddleService {
   private readonly logger = new Logger(PaddleService.name);
@@ -46,7 +51,7 @@ export class PaddleService {
    * Create a checkout session
    * Paddle SDK v3.5+ uses transactions API for checkout creation
    */
-  async createCheckout(options: CreateCheckoutOptions): Promise<{ checkoutUrl: string }> {
+  async createCheckout(options: CreateCheckoutOptions): Promise<CreateCheckoutResponse> {
     if (!this.isConfigured || !this.paddle) {
       throw new BadRequestException('Paddle service is not configured. Please check PADDLE_API_KEY environment variable.');
     }
@@ -169,8 +174,15 @@ export class PaddleService {
         this.logger.warn(`Checkout URL doesn't look like a Paddle URL: ${checkoutUrl}`);
       }
 
+      // Log transaction details for debugging overlay checkout
       this.logger.log(`Checkout created successfully. Transaction: ${transactionId}, Status: ${transactionStatus}, URL: ${checkoutUrl.substring(0, 50)}...`);
-      return { checkoutUrl };
+      this.logger.debug(`Transaction ID for overlay checkout: ${transactionId}`);
+      this.logger.debug(`Transaction status: ${transactionStatus}`);
+      
+      return { 
+        checkoutUrl,
+        transactionId: transactionId || null, // Return the actual transaction ID from API (for overlay checkout)
+      };
     } catch (error: any) {
       this.logger.error(`Failed to create Paddle checkout: ${error.message}`, error.stack);
       
@@ -471,11 +483,14 @@ export class PaddleService {
    */
   getConfigStatus() {
     const apiKey = this.configService.get('PADDLE_API_KEY');
+    const vendorId = this.configService.get('PADDLE_VENDOR_ID');
     const apiKeyPrefix = apiKey ? apiKey.substring(0, 5) : 'none';
     
     return {
       isConfigured: this.isConfigured,
       hasApiKey: !!apiKey,
+      hasVendorId: !!vendorId,
+      vendorId: vendorId || null, // Return vendor ID for frontend use
       environment: this.environment,
       apiKeyPrefix: apiKeyPrefix + '...',
       apiKeyFormatValid: apiKey ? (apiKey.startsWith('test_') || apiKey.startsWith('live_')) : false,
