@@ -1,18 +1,17 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { StripeService } from '../payments/stripe.service';
+import { PaddleService } from '../payments/paddle.service';
 import { TeamsService } from '../teams/teams.service';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionPlansService } from './subscription-plans.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
-import Stripe from 'stripe';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(
     private readonly db: DatabaseService,
-    private readonly stripeService: StripeService,
+    private readonly paddleService: PaddleService,
     private readonly teamsService: TeamsService,
     private readonly plansService: SubscriptionPlansService,
     private readonly eventLogger: EventLoggerService,
@@ -43,29 +42,29 @@ export class SubscriptionsService {
       throw new NotFoundException('Subscription plan not found or inactive');
     }
 
-    if (!plan.stripePriceId) {
-      throw new BadRequestException('Plan does not have a Stripe price ID configured');
+    if (!plan.paddlePriceId) {
+      throw new BadRequestException('Plan does not have a Paddle price ID configured');
     }
 
-    // Get or create Stripe customer
-    let stripeCustomerId: string;
+    // Get user email for customer creation
+    const { rows: userRows } = await this.db.query(
+      `SELECT email FROM users WHERE id = $1`,
+      [userId],
+    );
+    const userEmail = userRows[0]?.email;
+
+    // Get or create Paddle customer
+    let paddleCustomerId: string;
     const existingSubscriptionRecord = await this.findByTeamId(teamId);
     
-    if (existingSubscriptionRecord?.stripeCustomerId) {
-      stripeCustomerId = existingSubscriptionRecord.stripeCustomerId;
+    if (existingSubscriptionRecord?.paddleCustomerId) {
+      paddleCustomerId = existingSubscriptionRecord.paddleCustomerId;
     } else {
-      // Get user email for customer creation
-      const { rows: userRows } = await this.db.query(
-        `SELECT email FROM users WHERE id = $1`,
-        [userId],
-      );
-      const userEmail = userRows[0]?.email;
-
-      const customer = await this.stripeService.createCustomer(userEmail, undefined, {
+      const customer = await this.paddleService.createCustomer(userEmail, undefined, {
         teamId,
         userId,
       });
-      stripeCustomerId = customer.id;
+      paddleCustomerId = customer.id;
     }
 
     // Create checkout session
@@ -74,41 +73,39 @@ export class SubscriptionsService {
     
     let checkoutSession;
     try {
-      checkoutSession = await this.stripeService.createCheckoutSession(
-        stripeCustomerId,
-        plan.stripePriceId,
+      checkoutSession = await this.paddleService.createCheckout({
+        priceId: plan.paddlePriceId,
+        customerEmail: userEmail,
+        customerId: paddleCustomerId,
         successUrl,
         cancelUrl,
-        {
+        metadata: {
           teamId,
           planId,
         },
-      );
+      });
     } catch (error: any) {
-      // Handle Stripe API errors
-      if (error.type === 'StripeInvalidRequestError') {
-        if (error.code === 'resource_missing' || error.message?.includes('No such price')) {
-          throw new BadRequestException(
-            `Stripe price ID '${plan.stripePriceId}' does not exist in your Stripe account. ` +
-            `Please create the price in Stripe Dashboard first, or use a valid price ID.`
-          );
-        }
-        throw new BadRequestException(`Stripe error: ${error.message || error.code}`);
+      // Handle Paddle API errors
+      if (error.message?.includes('price') || error.message?.includes('not found')) {
+        throw new BadRequestException(
+          `Paddle price ID '${plan.paddlePriceId}' does not exist in your Paddle account. ` +
+          `Please create the price in Paddle Dashboard first, or use a valid price ID.`
+        );
       }
-      throw error;
+      throw new BadRequestException(`Paddle error: ${error.message || 'Unknown error'}`);
     }
 
     // Create subscription record (inactive until payment succeeds)
     const { rows } = await this.db.query(
       `INSERT INTO subscriptions (
-        team_id, plan_id, stripe_customer_id, status, seat_limit, provider, created_at, updated_at
+        team_id, plan_id, paddle_customer_id, status, seat_limit, provider, created_at, updated_at
       )
       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-      RETURNING id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-                stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+      RETURNING id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+                paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
                 current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
                 canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"`,
-      [teamId, planId, stripeCustomerId, SubscriptionStatus.INACTIVE, plan.seatLimit, 'stripe'],
+      [teamId, planId, paddleCustomerId, SubscriptionStatus.INACTIVE, plan.seatLimit, 'paddle'],
     );
 
     const subscription = rows[0];
@@ -121,20 +118,20 @@ export class SubscriptionsService {
 
     // Log subscription created event
     await this.eventLogger.logSubscriptionCreated(subscription.id, teamId, planId, {
-      provider: 'stripe',
+      provider: 'paddle',
       status: SubscriptionStatus.INACTIVE,
     });
 
     return {
       subscription,
-      checkoutUrl: checkoutSession.url || '',
+      checkoutUrl: checkoutSession.checkoutUrl || '',
     };
   }
 
   async findByTeamId(teamId: string): Promise<Subscription | null> {
     const { rows } = await this.db.query(
-      `SELECT id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-              stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+      `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+              paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
               current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
               canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"
        FROM subscriptions WHERE team_id = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -145,8 +142,8 @@ export class SubscriptionsService {
 
   async findActiveByTeamId(teamId: string): Promise<Subscription | null> {
     const { rows } = await this.db.query(
-      `SELECT id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-              stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+      `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+              paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
               current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
               canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"
        FROM subscriptions 
@@ -159,8 +156,8 @@ export class SubscriptionsService {
 
   async findById(id: string): Promise<Subscription | null> {
     const { rows } = await this.db.query(
-      `SELECT id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-              stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+      `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+              paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
               current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
               canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"
        FROM subscriptions WHERE id = $1`,
@@ -169,62 +166,69 @@ export class SubscriptionsService {
     return rows[0] || null;
   }
 
-  async findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<Subscription | null> {
+  async findByPaddleSubscriptionId(paddleSubscriptionId: string): Promise<Subscription | null> {
     const { rows } = await this.db.query(
-      `SELECT id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-              stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+      `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+              paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
               current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
               canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"
-       FROM subscriptions WHERE stripe_subscription_id = $1`,
-      [stripeSubscriptionId],
+       FROM subscriptions WHERE paddle_subscription_id = $1`,
+      [paddleSubscriptionId],
     );
     return rows[0] || null;
   }
 
-  async updateFromStripe(stripeSubscription: Stripe.Subscription): Promise<Subscription> {
-    // Try to find by stripe_subscription_id first
-    let subscription = await this.findByStripeSubscriptionId(stripeSubscription.id);
+  async updateFromPaddle(paddleSubscription: any): Promise<Subscription> {
+    // Try to find by paddle_subscription_id first
+    let subscription = await this.findByPaddleSubscriptionId(paddleSubscription.id);
     
-    // If not found, try to find by customer_id (subscription might not have stripe_subscription_id set yet)
-    if (!subscription && stripeSubscription.customer) {
-      const customerId = typeof stripeSubscription.customer === 'string' 
-        ? stripeSubscription.customer 
-        : stripeSubscription.customer.id;
+    // If not found, try to find by customer_id (subscription might not have paddle_subscription_id set yet)
+    if (!subscription && paddleSubscription.customerId) {
+      const customerId = paddleSubscription.customerId;
       
       const { rows } = await this.db.query(
-        `SELECT id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-                stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+        `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+                paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
                 current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
                 canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"
          FROM subscriptions 
-         WHERE stripe_customer_id = $1 AND stripe_subscription_id IS NULL
+         WHERE paddle_customer_id = $1 AND paddle_subscription_id IS NULL
          ORDER BY created_at DESC LIMIT 1`,
         [customerId],
       );
       
       if (rows.length > 0) {
         subscription = rows[0];
-        // Update the subscription record with the stripe_subscription_id
+        // Update the subscription record with the paddle_subscription_id
         await this.db.query(
-          `UPDATE subscriptions SET stripe_subscription_id = $1 WHERE id = $2`,
-          [stripeSubscription.id, subscription.id],
+          `UPDATE subscriptions SET paddle_subscription_id = $1 WHERE id = $2`,
+          [paddleSubscription.id, subscription.id],
         );
       }
     }
     
     if (!subscription) {
       throw new NotFoundException(
-        `Subscription not found for Stripe subscription ${stripeSubscription.id}. ` +
+        `Subscription not found for Paddle subscription ${paddleSubscription.id}. ` +
         `This may happen if the subscription was created outside of this system.`
       );
     }
 
-    // Map Stripe status to our status
-    const status = this.mapStripeStatusToSubscriptionStatus(stripeSubscription.status);
+    // Map Paddle status to our status
+    const status = this.mapPaddleStatusToSubscriptionStatus(paddleSubscription.status);
 
-    // Get plan from Stripe price
-    const priceId = stripeSubscription.items.data[0]?.price.id;
-    const plan = priceId ? await this.plansService.findByStripePriceId(priceId) : null;
+    // Get plan from Paddle price
+    const priceId = paddleSubscription.items?.[0]?.priceId || paddleSubscription.priceId;
+    const plan = priceId ? await this.plansService.findByPaddlePriceId(priceId) : null;
+
+    // Parse Paddle dates (Paddle uses ISO strings)
+    const currentPeriodStart = paddleSubscription.currentBillingPeriod?.startsAt 
+      ? new Date(paddleSubscription.currentBillingPeriod.startsAt) 
+      : null;
+    const currentPeriodEnd = paddleSubscription.currentBillingPeriod?.endsAt 
+      ? new Date(paddleSubscription.currentBillingPeriod.endsAt) 
+      : null;
+    const canceledAt = paddleSubscription.canceledAt ? new Date(paddleSubscription.canceledAt) : null;
 
     const { rows } = await this.db.query(
       `UPDATE subscriptions SET
@@ -235,22 +239,22 @@ export class SubscriptionsService {
         cancel_at_period_end = $5,
         canceled_at = $6,
         seat_limit = $7,
-        stripe_subscription_id = $8,
+        paddle_subscription_id = $8,
         updated_at = NOW()
        WHERE id = $9
-       RETURNING id, team_id as "teamId", plan_id as "planId", stripe_subscription_id as "stripeSubscriptionId",
-                 stripe_customer_id as "stripeCustomerId", status, current_period_start as "currentPeriodStart",
+       RETURNING id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+                 paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
                  current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
                  canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"`,
       [
         plan?.id || subscription.planId,
         status,
-        (stripeSubscription as any).current_period_start ? new Date((stripeSubscription as any).current_period_start * 1000) : null,
-        (stripeSubscription as any).current_period_end ? new Date((stripeSubscription as any).current_period_end * 1000) : null,
-        (stripeSubscription as any).cancel_at_period_end || false,
-        (stripeSubscription as any).canceled_at ? new Date((stripeSubscription as any).canceled_at * 1000) : null,
+        currentPeriodStart,
+        currentPeriodEnd,
+        paddleSubscription.scheduledChange?.action === 'cancel' || false,
+        canceledAt,
         plan?.seatLimit || subscription.seatLimit,
-        stripeSubscription.id, // Set stripe_subscription_id
+        paddleSubscription.id, // Set paddle_subscription_id
         subscription.id,
       ],
     );
@@ -306,12 +310,12 @@ export class SubscriptionsService {
       throw new ForbiddenException('Only team owner can cancel subscription');
     }
 
-    if (!subscription.stripeSubscriptionId) {
-      throw new BadRequestException('Subscription does not have a Stripe subscription ID');
+    if (!subscription.paddleSubscriptionId) {
+      throw new BadRequestException('Subscription does not have a Paddle subscription ID');
     }
 
-    // Cancel in Stripe
-    await this.stripeService.cancelSubscription(subscription.stripeSubscriptionId, immediately);
+    // Cancel in Paddle
+    await this.paddleService.cancelSubscription(subscription.paddleSubscriptionId, immediately);
 
     // Update local record
     const status = immediately ? SubscriptionStatus.CANCELED : subscription.status;
@@ -347,7 +351,7 @@ export class SubscriptionsService {
 
   async createBillingPortalSession(teamId: string, userId: string): Promise<string> {
     const subscription = await this.findByTeamId(teamId);
-    if (!subscription || !subscription.stripeCustomerId) {
+    if (!subscription || !subscription.paddleCustomerId) {
       throw new NotFoundException('Subscription or customer not found');
     }
 
@@ -357,27 +361,26 @@ export class SubscriptionsService {
       throw new ForbiddenException('Only team owner can access billing portal');
     }
 
+    // Paddle doesn't have a billing portal like Stripe
+    // Return the Paddle customer portal URL or subscription management URL
+    // This would need to be implemented based on Paddle's customer portal API
     const returnUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/subscription`;
-    const session = await this.stripeService.createBillingPortalSession(
-      subscription.stripeCustomerId,
-      returnUrl,
-    );
-
-    return session.url;
+    
+    // For now, return a placeholder - Paddle customer portal URL would need to be generated
+    // Check Paddle documentation for customer portal implementation
+    throw new BadRequestException('Billing portal not yet implemented for Paddle. Please manage your subscription through Paddle directly.');
   }
 
-  private mapStripeStatusToSubscriptionStatus(stripeStatus: Stripe.Subscription.Status): SubscriptionStatus {
+  private mapPaddleStatusToSubscriptionStatus(paddleStatus: string): SubscriptionStatus {
     const statusMap: Record<string, SubscriptionStatus> = {
       active: SubscriptionStatus.ACTIVE,
       past_due: SubscriptionStatus.PAST_DUE,
       canceled: SubscriptionStatus.CANCELED,
-      unpaid: SubscriptionStatus.UNPAID,
-      incomplete: SubscriptionStatus.INCOMPLETE,
-      incomplete_expired: SubscriptionStatus.INCOMPLETE_EXPIRED,
+      paused: SubscriptionStatus.SUSPENDED,
       trialing: SubscriptionStatus.TRIALING,
     };
 
-    return statusMap[stripeStatus] || SubscriptionStatus.INACTIVE;
+    return statusMap[paddleStatus?.toLowerCase()] || SubscriptionStatus.INACTIVE;
   }
 
   private async enforceSeatLimits(teamId: string, seatLimit: number): Promise<void> {

@@ -24,11 +24,7 @@ export class UpdatePlanDto {
 
   @IsOptional()
   @IsString()
-  stripePriceId?: string;
-
-  @IsOptional()
-  @IsString()
-  stripeProductId?: string;
+  paddlePriceId?: string;
 
   @IsOptional()
   @Type(() => Boolean)

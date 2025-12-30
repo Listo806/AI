@@ -10,17 +10,16 @@ export class SubscriptionPlansService {
 
   async create(createPlanDto: CreatePlanDto): Promise<SubscriptionPlan> {
     const { rows } = await this.db.query(
-      `INSERT INTO subscription_plans (name, description, price, seat_limit, stripe_price_id, stripe_product_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
-       RETURNING id, name, description, price, seat_limit as "seatLimit", stripe_price_id as "stripePriceId", 
-                 stripe_product_id as "stripeProductId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
+      `INSERT INTO subscription_plans (name, description, price, seat_limit, paddle_price_id, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       RETURNING id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
+                 is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createPlanDto.name,
         createPlanDto.description || null,
         createPlanDto.price,
         createPlanDto.seatLimit,
-        createPlanDto.stripePriceId || null,
-        createPlanDto.stripeProductId || null,
+        createPlanDto.paddlePriceId || null,
       ],
     );
 
@@ -28,8 +27,8 @@ export class SubscriptionPlansService {
   }
 
   async findAll(activeOnly: boolean = false): Promise<SubscriptionPlan[]> {
-    let query = `SELECT id, name, description, price, seat_limit as "seatLimit", stripe_price_id as "stripePriceId", 
-                        stripe_product_id as "stripeProductId", is_active as "isActive", 
+    let query = `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
+                        is_active as "isActive", 
                         created_at as "createdAt", updated_at as "updatedAt"
                  FROM subscription_plans`;
     
@@ -46,8 +45,8 @@ export class SubscriptionPlansService {
 
   async findById(id: string): Promise<SubscriptionPlan | null> {
     const { rows } = await this.db.query(
-      `SELECT id, name, description, price, seat_limit as "seatLimit", stripe_price_id as "stripePriceId", 
-              stripe_product_id as "stripeProductId", is_active as "isActive", 
+      `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
+              is_active as "isActive", 
               created_at as "createdAt", updated_at as "updatedAt"
        FROM subscription_plans WHERE id = $1`,
       [id],
@@ -55,13 +54,13 @@ export class SubscriptionPlansService {
     return rows[0] || null;
   }
 
-  async findByStripePriceId(stripePriceId: string): Promise<SubscriptionPlan | null> {
+  async findByPaddlePriceId(paddlePriceId: string): Promise<SubscriptionPlan | null> {
     const { rows } = await this.db.query(
-      `SELECT id, name, description, price, seat_limit as "seatLimit", stripe_price_id as "stripePriceId", 
-              stripe_product_id as "stripeProductId", is_active as "isActive", 
+      `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
+              is_active as "isActive", 
               created_at as "createdAt", updated_at as "updatedAt"
-       FROM subscription_plans WHERE stripe_price_id = $1`,
-      [stripePriceId],
+       FROM subscription_plans WHERE paddle_price_id = $1`,
+      [paddlePriceId],
     );
     return rows[0] || null;
   }
@@ -95,13 +94,9 @@ export class SubscriptionPlansService {
       updates.push(`seat_limit = $${paramCount++}`);
       values.push(updatePlanDto.seatLimit);
     }
-    if (updatePlanDto.stripePriceId !== undefined) {
-      updates.push(`stripe_price_id = $${paramCount++}`);
-      values.push(updatePlanDto.stripePriceId);
-    }
-    if (updatePlanDto.stripeProductId !== undefined) {
-      updates.push(`stripe_product_id = $${paramCount++}`);
-      values.push(updatePlanDto.stripeProductId);
+    if (updatePlanDto.paddlePriceId !== undefined) {
+      updates.push(`paddle_price_id = $${paramCount++}`);
+      values.push(updatePlanDto.paddlePriceId);
     }
     if (updatePlanDto.isActive !== undefined) {
       updates.push(`is_active = $${paramCount++}`);
@@ -117,8 +112,8 @@ export class SubscriptionPlansService {
 
     const { rows } = await this.db.query(
       `UPDATE subscription_plans SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, name, description, price, seat_limit as "seatLimit", stripe_price_id as "stripePriceId", 
-                 stripe_product_id as "stripeProductId", is_active as "isActive", 
+       RETURNING id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
+                 is_active as "isActive", 
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values,
     );

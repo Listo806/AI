@@ -24,8 +24,7 @@ export interface SubscriptionPlan {
   description: string | null;
   price: number;
   seatLimit: number;
-  stripePriceId: string | null;
-  stripeProductId: string | null;
+  paddlePriceId: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -35,8 +34,8 @@ export interface Subscription {
   id: string;
   teamId: string;
   planId: string | null;
-  stripeSubscriptionId: string | null;
-  stripeCustomerId: string | null;
+  paddleSubscriptionId: string | null;
+  paddleCustomerId: string | null;
   status: SubscriptionStatus;
   currentPeriodStart: Date | null;
   currentPeriodEnd: Date | null;
@@ -50,8 +49,7 @@ export interface Subscription {
 export interface Payment {
   id: string;
   subscriptionId: string;
-  stripePaymentIntentId: string | null;
-  stripeInvoiceId: string | null;
+  paddleTransactionId: string | null;
   amount: number;
   currency: string;
   status: PaymentStatus;

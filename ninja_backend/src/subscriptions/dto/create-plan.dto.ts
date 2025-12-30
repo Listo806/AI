@@ -22,10 +22,6 @@ export class CreatePlanDto {
 
   @IsOptional()
   @IsString()
-  stripePriceId?: string;
-
-  @IsOptional()
-  @IsString()
-  stripeProductId?: string;
+  paddlePriceId?: string;
 }
 

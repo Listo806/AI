@@ -155,6 +155,14 @@ async function setupDatabase() {
       console.log('✓ Milestone 5 analytics migration completed');
     }
 
+    // Run Paddle Integration migration
+    const migration8Path = path.join(__dirname, '../src/database/migrations/008_paddle_integration.sql');
+    if (fs.existsSync(migration8Path)) {
+      const migration8SQL = fs.readFileSync(migration8Path, 'utf8');
+      await pool.query(migration8SQL);
+      console.log('✓ Paddle integration migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
