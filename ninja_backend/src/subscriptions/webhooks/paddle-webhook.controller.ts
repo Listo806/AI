@@ -1,4 +1,4 @@
-import { Controller, Post, Headers, Body, RawBodyRequest, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Headers, RawBodyRequest, Req, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { Request } from 'express';
 import { PaddleService } from '../../payments/paddle.service';
 import { SubscriptionsService } from '../subscriptions.service';
@@ -6,6 +6,8 @@ import { DatabaseService } from '../../database/database.service';
 
 @Controller('webhooks/paddle')
 export class PaddleWebhookController {
+  private readonly logger = new Logger(PaddleWebhookController.name);
+
   constructor(
     private readonly paddleService: PaddleService,
     private readonly subscriptionsService: SubscriptionsService,
@@ -23,13 +25,18 @@ export class PaddleWebhookController {
     
     // Verify webhook signature
     if (!this.paddleService.verifyWebhookSignature(signature, payloadString)) {
-      console.error('Paddle webhook signature verification failed');
-      return { received: false };
+      this.logger.error('Paddle webhook signature verification failed');
+      return { received: false, error: 'Invalid signature' };
     }
 
+    // Parse event
     const event = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const eventId = event.eventId || event.alert_name || `${Date.now()}-${Math.random()}`;
-    const eventType = event.eventType || event.alert_name || 'unknown';
+    
+    // Extract event ID and type (Paddle may use different field names)
+    const eventId = event.eventId || event.alert_name || event.id || `${Date.now()}-${Math.random()}`;
+    const eventType = event.eventType || event.alert_name || event.type || 'unknown';
+
+    this.logger.log(`Received Paddle webhook: ${eventType} (${eventId})`);
 
     // Idempotency check: prevent duplicate event processing
     const existingEvent = await this.db.query(
@@ -39,14 +46,17 @@ export class PaddleWebhookController {
     );
 
     if (existingEvent.rows.length > 0) {
-      // Event already processed - return success (idempotent)
-      console.log(`Paddle webhook event ${eventId} already processed, skipping`);
+      this.logger.log(`Paddle webhook event ${eventId} already processed, skipping (idempotent)`);
       return { received: true, idempotent: true };
     }
 
     // Extract subscription ID from event if available
     let subscriptionId: string | null = null;
-    const paddleSubscriptionId = event.data?.subscriptionId || event.subscription_id;
+    const paddleSubscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.subscription_id || 
+      event.subscriptionId;
     
     if (paddleSubscriptionId) {
       const sub = await this.subscriptionsService.findByPaddleSubscriptionId(paddleSubscriptionId);
@@ -64,14 +74,13 @@ export class PaddleWebhookController {
     } catch (err: any) {
       // If insert fails due to race condition, another process already handled it
       if (err.code === '23505') { // Unique violation
-        console.log(`Paddle webhook event ${eventId} processed by another process`);
+        this.logger.log(`Paddle webhook event ${eventId} processed by another process`);
         return { received: true, idempotent: true };
       }
       throw err;
     }
 
     // Handle the event
-    console.log(`Processing Paddle webhook event: ${eventType} (${eventId})`);
     try {
       switch (eventType) {
         case 'subscription.created':
@@ -86,11 +95,13 @@ export class PaddleWebhookController {
 
         case 'subscription.canceled':
         case 'subscription_cancelled':
+        case 'subscription.cancelled':
           await this.handleSubscriptionCanceled(event);
           break;
 
         case 'transaction.completed':
         case 'payment_succeeded':
+        case 'transaction.completed':
           await this.handleTransactionCompleted(event);
           break;
 
@@ -100,11 +111,12 @@ export class PaddleWebhookController {
           break;
 
         default:
-          console.log(`Unhandled Paddle event type: ${eventType}`);
+          this.logger.debug(`Unhandled Paddle event type: ${eventType}`);
       }
-      console.log(`Successfully processed Paddle webhook event: ${eventType} (${eventId})`);
+      
+      this.logger.log(`Successfully processed Paddle webhook event: ${eventType} (${eventId})`);
     } catch (error) {
-      console.error(`Error processing Paddle webhook event ${eventId}:`, error);
+      this.logger.error(`Error processing Paddle webhook event ${eventId}:`, error);
       // Don't remove event record - allows for retry/debugging
       throw error;
     }
@@ -113,70 +125,153 @@ export class PaddleWebhookController {
   }
 
   private async handleSubscriptionCreated(event: any) {
-    const subscriptionId = event.data?.subscriptionId || event.subscription_id;
+    const subscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.subscription_id || 
+      event.subscriptionId;
+      
     if (subscriptionId) {
-      const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
-      await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+      this.logger.log(`Handling subscription.created for: ${subscriptionId}`);
+      try {
+        const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
+        await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+      } catch (error: any) {
+        this.logger.error(`Failed to process subscription.created: ${error.message}`, error);
+        throw error;
+      }
     }
   }
 
   private async handleSubscriptionUpdated(event: any) {
-    const subscriptionId = event.data?.subscriptionId || event.subscription_id;
+    const subscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.subscription_id || 
+      event.subscriptionId;
+      
     if (subscriptionId) {
-      const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
-      await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+      this.logger.log(`Handling subscription.updated for: ${subscriptionId}`);
+      try {
+        const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
+        await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+      } catch (error: any) {
+        this.logger.error(`Failed to process subscription.updated: ${error.message}`, error);
+        throw error;
+      }
     }
   }
 
   private async handleSubscriptionCanceled(event: any) {
-    const subscriptionId = event.data?.subscriptionId || event.subscription_id;
+    const subscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.subscription_id || 
+      event.subscriptionId;
+      
     if (subscriptionId) {
-      const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
-      if (subscription) {
-        const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
-        await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+      this.logger.log(`Handling subscription.canceled for: ${subscriptionId}`);
+      try {
+        const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
+        if (subscription) {
+          const paddleSubscription = await this.paddleService.getSubscription(subscriptionId);
+          await this.subscriptionsService.updateFromPaddle(paddleSubscription);
+        }
+      } catch (error: any) {
+        this.logger.error(`Failed to process subscription.canceled: ${error.message}`, error);
+        throw error;
       }
     }
   }
 
   private async handleTransactionCompleted(event: any) {
-    const subscriptionId = event.data?.subscriptionId || event.subscription_id;
-    if (subscriptionId) {
-      const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
+    const subscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.data?.transaction?.subscriptionId ||
+      event.subscription_id || 
+      event.subscriptionId;
       
-      if (subscription) {
-        const transactionId = event.data?.transactionId || event.transaction_id;
-        const amount = event.data?.amount || event.amount;
-        const currency = event.data?.currency || event.currency || 'USD';
+    if (subscriptionId) {
+      this.logger.log(`Handling transaction.completed for subscription: ${subscriptionId}`);
+      try {
+        const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
         
-        await this.recordPayment(
-          subscription.id,
-          transactionId,
-          amount,
-          currency,
-          'succeeded',
-        );
+        if (subscription) {
+          const transactionId = 
+            event.data?.transactionId || 
+            event.data?.transaction?.id ||
+            event.transaction_id || 
+            event.transactionId;
+          const amount = 
+            event.data?.amount || 
+            event.data?.transaction?.totals?.total ||
+            event.amount;
+          const currency = 
+            event.data?.currency || 
+            event.data?.transaction?.currencyCode ||
+            event.currency || 
+            'USD';
+          
+          if (transactionId) {
+            await this.recordPayment(
+              subscription.id,
+              transactionId,
+              amount,
+              currency,
+              'succeeded',
+            );
+          }
+        }
+      } catch (error: any) {
+        this.logger.error(`Failed to process transaction.completed: ${error.message}`, error);
+        throw error;
       }
     }
   }
 
   private async handlePaymentFailed(event: any) {
-    const subscriptionId = event.data?.subscriptionId || event.subscription_id;
-    if (subscriptionId) {
-      const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
+    const subscriptionId = 
+      event.data?.subscriptionId || 
+      event.data?.subscription?.id ||
+      event.data?.transaction?.subscriptionId ||
+      event.subscription_id || 
+      event.subscriptionId;
       
-      if (subscription) {
-        const transactionId = event.data?.transactionId || event.transaction_id;
-        const amount = event.data?.amount || event.amount;
-        const currency = event.data?.currency || event.currency || 'USD';
+    if (subscriptionId) {
+      this.logger.log(`Handling payment.failed for subscription: ${subscriptionId}`);
+      try {
+        const subscription = await this.subscriptionsService.findByPaddleSubscriptionId(subscriptionId);
         
-        await this.recordPayment(
-          subscription.id,
-          transactionId,
-          amount,
-          currency,
-          'failed',
-        );
+        if (subscription) {
+          const transactionId = 
+            event.data?.transactionId || 
+            event.data?.transaction?.id ||
+            event.transaction_id || 
+            event.transactionId;
+          const amount = 
+            event.data?.amount || 
+            event.data?.transaction?.totals?.total ||
+            event.amount;
+          const currency = 
+            event.data?.currency || 
+            event.data?.transaction?.currencyCode ||
+            event.currency || 
+            'USD';
+          
+          if (transactionId) {
+            await this.recordPayment(
+              subscription.id,
+              transactionId,
+              amount,
+              currency,
+              'failed',
+            );
+          }
+        }
+      } catch (error: any) {
+        this.logger.error(`Failed to process payment.failed: ${error.message}`, error);
+        throw error;
       }
     }
   }
@@ -184,22 +279,42 @@ export class PaddleWebhookController {
   private async recordPayment(
     subscriptionId: string,
     transactionId: string | null,
-    amount: number,
+    amount: number | string,
     currency: string,
     status: string,
   ) {
-    if (!transactionId) return;
+    if (!transactionId) {
+      this.logger.warn('Cannot record payment: transaction ID is missing');
+      return;
+    }
 
-    // Convert amount from cents if needed (Paddle may use different format)
-    const amountDecimal = typeof amount === 'number' ? amount / 100 : parseFloat(amount) / 100;
+    // Convert amount to decimal (Paddle may return in cents or as decimal)
+    let amountDecimal: number;
+    if (typeof amount === 'string') {
+      amountDecimal = parseFloat(amount);
+    } else {
+      amountDecimal = amount;
+    }
+    
+    // If amount seems to be in cents (very large number), convert to dollars
+    if (amountDecimal > 1000) {
+      amountDecimal = amountDecimal / 100;
+    }
 
-    await this.db.query(
-      `INSERT INTO payments (subscription_id, paddle_transaction_id, amount, currency, status, payment_date, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-       ON CONFLICT (paddle_transaction_id) DO UPDATE SET
-         status = EXCLUDED.status`,
-      [subscriptionId, transactionId, amountDecimal, currency, status],
-    );
+    try {
+      await this.db.query(
+        `INSERT INTO payments (subscription_id, paddle_transaction_id, amount, currency, status, payment_date, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+         ON CONFLICT (paddle_transaction_id) DO UPDATE SET
+           status = EXCLUDED.status,
+           amount = EXCLUDED.amount`,
+        [subscriptionId, transactionId, amountDecimal, currency, status],
+      );
+      
+      this.logger.log(`Payment recorded: ${transactionId} - ${status} - ${amountDecimal} ${currency}`);
+    } catch (error: any) {
+      this.logger.error(`Failed to record payment: ${error.message}`, error);
+      throw error;
+    }
   }
 }
-

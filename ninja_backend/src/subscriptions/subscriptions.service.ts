@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PaddleService } from '../payments/paddle.service';
 import { TeamsService } from '../teams/teams.service';
@@ -9,6 +9,8 @@ import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class SubscriptionsService {
+  private readonly logger = new Logger(SubscriptionsService.name);
+
   constructor(
     private readonly db: DatabaseService,
     private readonly paddleService: PaddleService,
@@ -53,26 +55,29 @@ export class SubscriptionsService {
     );
     const userEmail = userRows[0]?.email;
 
-    // Get existing Paddle customer ID if available (optional - Paddle creates customers automatically)
+    // Get existing Paddle customer ID if available
+    // Note: Paddle creates customers automatically during checkout if not provided
     let paddleCustomerId: string | undefined;
     const existingSubscriptionRecord = await this.findByTeamId(teamId);
     
     if (existingSubscriptionRecord?.paddleCustomerId) {
+      // Use existing customer ID
       paddleCustomerId = existingSubscriptionRecord.paddleCustomerId;
     } else {
-      // Try to create customer, but don't fail if it's not permitted
-      // Paddle will create the customer automatically during checkout
-      try {
-        const customer = await this.paddleService.createCustomer(userEmail, undefined, {
-          teamId,
-          userId,
-        });
+      // Try to create customer (optional - Paddle will create it during checkout if this fails)
+      // If customer already exists (email conflict), we'll get the existing customer ID
+      const customer = await this.paddleService.createCustomer(userEmail, undefined, {
+        teamId,
+        userId,
+      });
+      
+      // Customer creation may return null if not permitted - that's okay
+      // Or it may return existing customer if email conflicts
+      if (customer?.id) {
         paddleCustomerId = customer.id;
-      } catch (error: any) {
-        // If customer creation fails due to permissions, continue without customerId
-        // Paddle will create the customer automatically during checkout
-        console.log('Customer creation skipped (will be created during checkout):', error.message);
-        paddleCustomerId = undefined;
+        this.logger.log(`Using Paddle customer: ${paddleCustomerId}`);
+      } else {
+        this.logger.debug('No customer ID available, Paddle will create customer during checkout');
       }
     }
 
@@ -94,13 +99,20 @@ export class SubscriptionsService {
         },
       });
     } catch (error: any) {
-      // Handle Paddle API errors
+      // Re-throw BadRequestException as-is (already has helpful message)
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      // Handle specific Paddle API errors
       if (error.message?.includes('price') || error.message?.includes('not found')) {
         throw new BadRequestException(
           `Paddle price ID '${plan.paddlePriceId}' does not exist in your Paddle account. ` +
-          `Please create the price in Paddle Dashboard first, or use a valid price ID.`
+          `Please verify the price exists in Paddle Dashboard and matches your environment (sandbox/production).`
         );
       }
+      
+      // Generic error
       throw new BadRequestException(`Paddle error: ${error.message || 'Unknown error'}`);
     }
 
@@ -232,14 +244,33 @@ export class SubscriptionsService {
     const priceId = paddleSubscription.items?.[0]?.priceId || paddleSubscription.priceId;
     const plan = priceId ? await this.plansService.findByPaddlePriceId(priceId) : null;
 
-    // Parse Paddle dates (Paddle uses ISO strings)
-    const currentPeriodStart = paddleSubscription.currentBillingPeriod?.startsAt 
-      ? new Date(paddleSubscription.currentBillingPeriod.startsAt) 
-      : null;
-    const currentPeriodEnd = paddleSubscription.currentBillingPeriod?.endsAt 
-      ? new Date(paddleSubscription.currentBillingPeriod.endsAt) 
-      : null;
-    const canceledAt = paddleSubscription.canceledAt ? new Date(paddleSubscription.canceledAt) : null;
+    // Extract customer ID from Paddle subscription
+    const paddleCustomerId = paddleSubscription.customerId || paddleSubscription.customer?.id || null;
+
+    // Parse Paddle dates (Paddle uses ISO strings or timestamps)
+    let currentPeriodStart: Date | null = null;
+    let currentPeriodEnd: Date | null = null;
+    let canceledAt: Date | null = null;
+
+    if (paddleSubscription.currentBillingPeriod?.startsAt) {
+      currentPeriodStart = new Date(paddleSubscription.currentBillingPeriod.startsAt);
+    } else if (paddleSubscription.currentBillingPeriod?.start) {
+      currentPeriodStart = new Date(paddleSubscription.currentBillingPeriod.start);
+    }
+
+    if (paddleSubscription.currentBillingPeriod?.endsAt) {
+      currentPeriodEnd = new Date(paddleSubscription.currentBillingPeriod.endsAt);
+    } else if (paddleSubscription.currentBillingPeriod?.end) {
+      currentPeriodEnd = new Date(paddleSubscription.currentBillingPeriod.end);
+    }
+
+    if (paddleSubscription.canceledAt) {
+      canceledAt = new Date(paddleSubscription.canceledAt);
+    }
+
+    const cancelAtPeriodEnd = paddleSubscription.scheduledChange?.action === 'cancel' || 
+                             paddleSubscription.cancelAtPeriodEnd || 
+                             false;
 
     const { rows } = await this.db.query(
       `UPDATE subscriptions SET
@@ -251,8 +282,9 @@ export class SubscriptionsService {
         canceled_at = $6,
         seat_limit = $7,
         paddle_subscription_id = $8,
+        paddle_customer_id = COALESCE($9, paddle_customer_id),
         updated_at = NOW()
-       WHERE id = $9
+       WHERE id = $10
        RETURNING id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
                  paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
                  current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
@@ -262,10 +294,11 @@ export class SubscriptionsService {
         status,
         currentPeriodStart,
         currentPeriodEnd,
-        paddleSubscription.scheduledChange?.action === 'cancel' || false,
+        cancelAtPeriodEnd,
         canceledAt,
         plan?.seatLimit || subscription.seatLimit,
         paddleSubscription.id, // Set paddle_subscription_id
+        paddleCustomerId, // Update customer ID if available
         subscription.id,
       ],
     );
