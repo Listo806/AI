@@ -48,8 +48,10 @@ export class PaddleService {
       const paddleAny = this.paddle as any;
       
       // Try different possible API structures
-      // Build checkout payload - customerId is optional (Paddle creates customer automatically)
-      const checkoutPayload: any = {
+      let checkout: any;
+      
+      // Build checkout options - customerId is optional
+      const checkoutOptions: any = {
         items: [
           {
             priceId: options.priceId,
@@ -60,18 +62,17 @@ export class PaddleService {
         customData: options.metadata || {},
         returnUrl: options.successUrl,
       };
-
-      // Only include customerId if provided (optional)
+      
+      // Only include customerId if it's provided
       if (options.customerId) {
-        checkoutPayload.customerId = options.customerId;
+        checkoutOptions.customerId = options.customerId;
       }
-
-      let checkout: any;
+      
       if (paddleAny.transactions) {
         // Paddle Billing API structure
-        checkout = await paddleAny.transactions.create(checkoutPayload);
+        checkout = await paddleAny.transactions.create(checkoutOptions);
       } else if (paddleAny.checkout) {
-        checkout = await paddleAny.checkout.create(checkoutPayload);
+        checkout = await paddleAny.checkout.create(checkoutOptions);
       } else {
         throw new Error('Paddle SDK structure not recognized. Please check Paddle SDK documentation.');
       }
@@ -87,6 +88,8 @@ export class PaddleService {
 
   /**
    * Create or get customer
+   * Note: Paddle may create customers automatically during checkout
+   * This method is optional and may not be needed
    */
   async createCustomer(email: string, name?: string, metadata?: Record<string, string>): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
@@ -94,15 +97,35 @@ export class PaddleService {
     }
 
     try {
-      const customer = await this.paddle.customers.create({
-        email,
-        name,
-        customData: metadata || {},
-      });
-      return customer;
+      const paddleAny = this.paddle as any;
+      
+      // Try to create customer - if not permitted, return null (customer will be created during checkout)
+      if (paddleAny.customers?.create) {
+        try {
+          const customer = await paddleAny.customers.create({
+            email,
+            name,
+            customData: metadata || {},
+          });
+          return customer;
+        } catch (error: any) {
+          // If customer creation is not permitted, log and return null
+          // Paddle will create the customer automatically during checkout
+          if (error.message?.includes('permitted') || error.message?.includes('permission')) {
+            this.logger.warn(`Customer creation not permitted. Customer will be created during checkout: ${error.message}`);
+            return null;
+          }
+          throw error;
+        }
+      } else {
+        // Customer API not available - will be created during checkout
+        this.logger.warn('Customer API not available. Customer will be created during checkout.');
+        return null;
+      }
     } catch (error: any) {
-      this.logger.error(`Failed to create Paddle customer: ${error.message}`, error);
-      throw new BadRequestException(`Failed to create customer: ${error.message}`);
+      // If we can't create customer, it's okay - Paddle will create it during checkout
+      this.logger.warn(`Customer creation failed, will be created during checkout: ${error.message}`);
+      return null;
     }
   }
 

@@ -46,32 +46,35 @@ export class SubscriptionsService {
       throw new BadRequestException('Plan does not have a Paddle price ID configured');
     }
 
-    // Get user email for checkout
+    // Get user email for customer creation
     const { rows: userRows } = await this.db.query(
       `SELECT email FROM users WHERE id = $1`,
       [userId],
     );
     const userEmail = userRows[0]?.email;
 
-    // Get existing Paddle customer ID if available (optional - Paddle creates customers automatically)
+    // Get or create Paddle customer
+    // Note: Paddle may create customers automatically during checkout
+    // We try to create/get customer, but if it fails, we proceed without customerId
     let paddleCustomerId: string | undefined;
     const existingSubscriptionRecord = await this.findByTeamId(teamId);
     
     if (existingSubscriptionRecord?.paddleCustomerId) {
       paddleCustomerId = existingSubscriptionRecord.paddleCustomerId;
     } else {
-      // Try to create customer, but don't fail if it's not permitted
+      // Try to create customer - if it fails, we'll proceed without customerId
       // Paddle will create the customer automatically during checkout
       try {
         const customer = await this.paddleService.createCustomer(userEmail, undefined, {
           teamId,
           userId,
         });
-        paddleCustomerId = customer.id;
+        if (customer && customer.id) {
+          paddleCustomerId = customer.id;
+        }
       } catch (error: any) {
-        // If customer creation fails due to permissions, continue without customerId
-        // Paddle will create the customer automatically during checkout
-        console.log('Customer creation skipped (will be created during checkout):', error.message);
+        // Customer creation failed - that's okay, Paddle will create it during checkout
+        console.log('Customer creation skipped, will be created during checkout:', error.message);
         paddleCustomerId = undefined;
       }
     }
@@ -85,7 +88,7 @@ export class SubscriptionsService {
       checkoutSession = await this.paddleService.createCheckout({
         priceId: plan.paddlePriceId,
         customerEmail: userEmail,
-        customerId: paddleCustomerId, // Optional - Paddle creates customer if not provided
+        customerId: paddleCustomerId,
         successUrl,
         cancelUrl,
         metadata: {
@@ -105,8 +108,7 @@ export class SubscriptionsService {
     }
 
     // Create subscription record (inactive until payment succeeds)
-    // Note: paddle_customer_id may be null if customer creation was skipped
-    // It will be set when the webhook processes the checkout completion
+    // paddle_customer_id may be null if customer creation was skipped
     const { rows } = await this.db.query(
       `INSERT INTO subscriptions (
         team_id, plan_id, paddle_customer_id, status, seat_limit, provider, created_at, updated_at
