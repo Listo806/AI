@@ -481,4 +481,33 @@ export class PaddleService {
       apiKeyFormatValid: apiKey ? (apiKey.startsWith('test_') || apiKey.startsWith('live_')) : false,
     };
   }
+
+  /**
+   * Get client token for Paddle.js initialization
+   * This is used by the frontend to initialize Paddle.js
+   */
+  async getClientToken(): Promise<string> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    try {
+      const paddleAny = this.paddle as any;
+      
+      // Paddle SDK v3.5+ uses clientTokens API
+      if (paddleAny.clientTokens?.create) {
+        const clientToken = await paddleAny.clientTokens.create();
+        return clientToken.clientToken || clientToken.token || '';
+      } else if (paddleAny.clientTokens) {
+        // Fallback
+        const clientToken = await paddleAny.clientTokens.create();
+        return clientToken.clientToken || clientToken.token || '';
+      } else {
+        throw new Error('Client tokens API not available');
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to get client token: ${error.message}`, error.stack);
+      throw new BadRequestException(`Failed to get Paddle client token: ${error.message}`);
+    }
+  }
 }
