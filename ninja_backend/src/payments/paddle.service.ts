@@ -48,34 +48,30 @@ export class PaddleService {
       const paddleAny = this.paddle as any;
       
       // Try different possible API structures
+      // Build checkout payload - customerId is optional (Paddle creates customer automatically)
+      const checkoutPayload: any = {
+        items: [
+          {
+            priceId: options.priceId,
+            quantity: 1,
+          },
+        ],
+        customerEmail: options.customerEmail,
+        customData: options.metadata || {},
+        returnUrl: options.successUrl,
+      };
+
+      // Only include customerId if provided (optional)
+      if (options.customerId) {
+        checkoutPayload.customerId = options.customerId;
+      }
+
       let checkout: any;
       if (paddleAny.transactions) {
         // Paddle Billing API structure
-        checkout = await paddleAny.transactions.create({
-          items: [
-            {
-              priceId: options.priceId,
-              quantity: 1,
-            },
-          ],
-          customerId: options.customerId,
-          customerEmail: options.customerEmail,
-          customData: options.metadata || {},
-          returnUrl: options.successUrl,
-        });
+        checkout = await paddleAny.transactions.create(checkoutPayload);
       } else if (paddleAny.checkout) {
-        checkout = await paddleAny.checkout.create({
-          items: [
-            {
-              priceId: options.priceId,
-              quantity: 1,
-            },
-          ],
-          customerId: options.customerId,
-          customerEmail: options.customerEmail,
-          customData: options.metadata || {},
-          returnUrl: options.successUrl,
-        });
+        checkout = await paddleAny.checkout.create(checkoutPayload);
       } else {
         throw new Error('Paddle SDK structure not recognized. Please check Paddle SDK documentation.');
       }
