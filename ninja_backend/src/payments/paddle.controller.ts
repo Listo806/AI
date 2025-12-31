@@ -16,6 +16,7 @@ export class PaddleController {
   @UseGuards(JwtAuthGuard)
   async getClientToken() {
     const token = await this.paddleService.getClientToken();
+    // If token is null, frontend will automatically fall back to vendor ID
     return { clientToken: token };
   }
 }

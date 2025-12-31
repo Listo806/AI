@@ -497,15 +497,24 @@ export class PaddleService {
       vendorId: vendorId || null, // Return vendor ID for frontend use
       environment: this.environment,
       apiKeyPrefix: apiKeyPrefix + '...',
-      apiKeyFormatValid: apiKey ? (apiKey.startsWith('test_') || apiKey.startsWith('live_')) : false,
+      // Support both old format (test_/live_) and new format (pdl_sdbx_/pdl_live_)
+      apiKeyFormatValid: apiKey ? (
+        apiKey.startsWith('test_') || 
+        apiKey.startsWith('live_') || 
+        apiKey.startsWith('pdl_sdbx_') || 
+        apiKey.startsWith('pdl_live_')
+      ) : false,
     };
   }
 
   /**
    * Get client token for Paddle.js initialization
    * This is used by the frontend to initialize Paddle.js
+   * Note: Client tokens may not be available in all Paddle SDK versions.
+   * If this returns null, the frontend will fall back to using vendor ID for initialization.
+   * @returns Client token string, or null if not available
    */
-  async getClientToken(): Promise<string> {
+  async getClientToken(): Promise<string | null> {
     if (!this.isConfigured || !this.paddle) {
       throw new BadRequestException('Paddle service is not configured');
     }
@@ -513,20 +522,91 @@ export class PaddleService {
     try {
       const paddleAny = this.paddle as any;
       
-      // Paddle SDK v3.5+ uses clientTokens API
+      // Log available methods for debugging
+      this.logger.debug('Paddle SDK methods:', Object.keys(paddleAny));
+      
+      // Try different possible API structures
       if (paddleAny.clientTokens?.create) {
-        const clientToken = await paddleAny.clientTokens.create();
-        return clientToken.clientToken || clientToken.token || '';
-      } else if (paddleAny.clientTokens) {
-        // Fallback
-        const clientToken = await paddleAny.clientTokens.create();
-        return clientToken.clientToken || clientToken.token || '';
-      } else {
-        throw new Error('Client tokens API not available');
+        this.logger.debug('Using clientTokens.create()');
+        const response = await paddleAny.clientTokens.create();
+        this.logger.debug('Client token response:', JSON.stringify(response, null, 2));
+        
+        // Handle different response structures
+        if (typeof response === 'string') {
+          return response;
+        }
+        if (response?.data?.clientToken) {
+          return response.data.clientToken;
+        }
+        if (response?.data?.token) {
+          return response.data.token;
+        }
+        if (response?.clientToken) {
+          return response.clientToken;
+        }
+        if (response?.token) {
+          return response.token;
+        }
+        
+        this.logger.warn('Client token response structure unexpected:', response);
+        // Return null instead of throwing - frontend will use vendor ID
+        return null;
+      } 
+      
+      // Try alternative API structure
+      if (paddleAny.clientTokens) {
+        this.logger.debug('Trying alternative clientTokens API');
+        const response = await paddleAny.clientTokens.create();
+        
+        if (typeof response === 'string') {
+          return response;
+        }
+        if (response?.clientToken) {
+          return response.clientToken;
+        }
+        if (response?.token) {
+          return response.token;
+        }
+        if (response?.data?.clientToken) {
+          return response.data.clientToken;
+        }
+        
+        // Return null instead of throwing
+        return null;
       }
+      
+      // Client tokens API not available - this is okay, frontend can use vendor ID
+      this.logger.info('Client tokens API not available in Paddle SDK. Frontend will use vendor ID instead.');
+      return null;
     } catch (error: any) {
-      this.logger.error(`Failed to get client token: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to get Paddle client token: ${error.message}`);
+      // Log full error details for debugging
+      this.logger.warn(`Client token API error: ${error.message}`);
+      
+      // Check if it's a JSON parsing error or API not available
+      if (
+        error.message?.includes('JSON') || 
+        error.message?.includes('json') || 
+        error.message?.includes('parse') ||
+        error.message?.includes('not available') ||
+        error.message?.includes('not found') ||
+        error.statusCode === 404 ||
+        error.code === 'resource_not_found'
+      ) {
+        this.logger.info('Client tokens API is not available in this Paddle SDK version. Frontend will use vendor ID instead.');
+        // Return null instead of throwing - this is expected behavior
+        return null;
+      }
+      
+      // For unexpected errors, log but still return null to allow fallback
+      this.logger.error(`Unexpected error getting client token: ${error.message}`, error.stack);
+      this.logger.error('Full error details:', JSON.stringify({
+        message: error.message,
+        code: error.code,
+        statusCode: error.statusCode,
+      }, null, 2));
+      
+      // Return null to allow frontend to fall back to vendor ID
+      return null;
     }
   }
 }
