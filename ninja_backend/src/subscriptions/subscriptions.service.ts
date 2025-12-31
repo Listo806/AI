@@ -19,7 +19,7 @@ export class SubscriptionsService {
     private readonly eventLogger: EventLoggerService,
   ) {}
 
-  async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string }> {
+  async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {
     const { planId, teamId } = createSubscriptionDto;
 
     // Verify team exists and user is owner

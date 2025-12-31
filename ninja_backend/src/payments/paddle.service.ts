@@ -274,8 +274,12 @@ export class PaddleService {
               '';
 
             if (checkoutUrl) {
+              const retryTransactionId = checkout.id || checkout.data?.id || null;
               this.logger.log(`Checkout created successfully (without customerId): ${checkoutUrl.substring(0, 50)}...`);
-              return { checkoutUrl };
+              return { 
+                checkoutUrl,
+                transactionId: retryTransactionId,
+              };
             }
           } catch (retryError: any) {
             const retryErrorDetails = retryError.response?.body || retryError.body || retryError.data || {};
