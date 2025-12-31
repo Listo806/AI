@@ -576,7 +576,7 @@ export class PaddleService {
       }
       
       // Client tokens API not available - this is okay, frontend can use vendor ID
-      this.logger.info('Client tokens API not available in Paddle SDK. Frontend will use vendor ID instead.');
+      this.logger.log('Client tokens API not available in Paddle SDK. Frontend will use vendor ID instead.');
       return null;
     } catch (error: any) {
       // Log full error details for debugging
@@ -592,7 +592,7 @@ export class PaddleService {
         error.statusCode === 404 ||
         error.code === 'resource_not_found'
       ) {
-        this.logger.info('Client tokens API is not available in this Paddle SDK version. Frontend will use vendor ID instead.');
+        this.logger.log('Client tokens API is not available in this Paddle SDK version. Frontend will use vendor ID instead.');
         // Return null instead of throwing - this is expected behavior
         return null;
       }
