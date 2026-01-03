@@ -32,7 +32,21 @@ export class PropertiesController {
     @CurrentUser() user: any,
     @Query('type') type?: string,
     @Query('status') status?: string,
+    @Query('west') west?: string,
+    @Query('south') south?: string,
+    @Query('east') east?: string,
+    @Query('north') north?: string,
   ) {
+    // If bbox parameters are provided, use bbox query
+    if (west && south && east && north) {
+      const bbox = {
+        west: parseFloat(west),
+        south: parseFloat(south),
+        east: parseFloat(east),
+        north: parseFloat(north),
+      };
+      return this.propertiesService.findByBbox(user.id, user.teamId, bbox, { type, status });
+    }
     return this.propertiesService.findAll(user.id, user.teamId, { type, status });
   }
 

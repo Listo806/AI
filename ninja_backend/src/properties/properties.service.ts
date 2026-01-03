@@ -98,6 +98,61 @@ export class PropertiesService {
     return rows;
   }
 
+  async findByBbox(
+    userId: string,
+    teamId: string | null,
+    bbox: { west: number; south: number; east: number; north: number },
+    filters?: { type?: string; status?: string },
+  ): Promise<Property[]> {
+    let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+                        bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                        created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                        created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
+                 FROM properties`;
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    if (teamId) {
+      conditions.push(`team_id = $${paramCount++}`);
+      params.push(teamId);
+    } else {
+      conditions.push(`created_by = $${paramCount++}`);
+      params.push(userId);
+    }
+
+    // Bounding box filter - only properties with coordinates within the bbox
+    conditions.push(`latitude IS NOT NULL`);
+    conditions.push(`longitude IS NOT NULL`);
+    conditions.push(`latitude >= $${paramCount++}`);
+    params.push(bbox.south);
+    conditions.push(`latitude <= $${paramCount++}`);
+    params.push(bbox.north);
+    conditions.push(`longitude >= $${paramCount++}`);
+    params.push(bbox.west);
+    conditions.push(`longitude <= $${paramCount++}`);
+    params.push(bbox.east);
+
+    if (filters?.type) {
+      conditions.push(`type = $${paramCount++}`);
+      params.push(filters.type);
+    }
+
+    if (filters?.status) {
+      conditions.push(`status = $${paramCount++}`);
+      params.push(filters.status);
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    query += ` ORDER BY created_at DESC`;
+
+    const { rows } = await this.db.query(query, params);
+    return rows;
+  }
+
   async findById(id: string): Promise<Property | null> {
     const { rows } = await this.db.query(
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
