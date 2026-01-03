@@ -1,13 +1,22 @@
 import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 import { MapboxService } from './mapbox.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 
 export class GeocodeDto {
+  @IsString()
+  @IsNotEmpty()
   address: string;
 }
 
 export class ReverseGeocodeDto {
+  @Type(() => Number)
+  @IsNumber()
   latitude: number;
+
+  @Type(() => Number)
+  @IsNumber()
   longitude: number;
 }
 
