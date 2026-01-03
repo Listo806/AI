@@ -10,6 +10,8 @@ import Checkout from './pages/Checkout';
 import Teams from './pages/Teams';
 import Leads from './pages/Leads';
 import Properties from './pages/Properties';
+import Map from './pages/Map';
+import FileUpload from './pages/FileUpload';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -65,6 +67,8 @@ function App() {
         <Route path="teams" element={<Teams />} />
         <Route path="leads" element={<Leads />} />
         <Route path="properties" element={<Properties />} />
+        <Route path="map" element={<Map />} />
+        <Route path="file-upload" element={<FileUpload />} />
       </Route>
     </Routes>
   );

@@ -24,6 +24,8 @@ function Layout({ user, setUser }) {
             <Link to="/teams">Teams</Link>
             <Link to="/leads">Leads</Link>
             <Link to="/properties">Properties</Link>
+            <Link to="/map">Map Test</Link>
+            <Link to="/file-upload">File Upload</Link>
             {user && (
               <span className="nav-user">
                 {user.email}

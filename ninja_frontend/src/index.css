@@ -61,6 +61,25 @@ code {
   background-color: #c82333;
 }
 
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
 .form-group {
   margin-bottom: 15px;
 }
