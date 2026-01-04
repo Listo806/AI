@@ -11,6 +11,7 @@ import Teams from './pages/Teams';
 import Leads from './pages/Leads';
 import Properties from './pages/Properties';
 import Map from './pages/Map';
+import MapTest from './pages/MapTest';
 import FileUpload from './pages/FileUpload';
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login setUser={setUser} />} />
       <Route path="/signup" element={<Signup setUser={setUser} />} />
+      <Route path="/map-test" element={<MapTest />} />
       <Route
         path="/"
         element={
