@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/apiClient';
 
 function Properties() {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -277,15 +279,33 @@ function Properties() {
     return <div className="container">Loading...</div>;
   }
 
+  const handleBuyClick = () => {
+    navigate('/map?type=sale');
+  };
+
+  const handleRentClick = () => {
+    navigate('/map?type=rent');
+  };
+
   return (
     <div className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Properties</h1>
-        {!showForm && !editingProperty && (
-          <button onClick={() => setShowForm(true)} className="btn btn-primary">
-            Create Property
-          </button>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+        <h1 style={{ margin: 0 }}>Properties</h1>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {!showForm && !editingProperty && (
+            <>
+              <button onClick={handleBuyClick} className="btn btn-primary" style={{ backgroundColor: '#007bff', borderColor: '#007bff' }}>
+                Buy
+              </button>
+              <button onClick={handleRentClick} className="btn btn-primary" style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}>
+                Rent
+              </button>
+              <button onClick={() => setShowForm(true)} className="btn btn-primary">
+                Create Property
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -767,7 +787,43 @@ function Properties() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            {selectedProperty.type === 'sale' && (
+              <button
+                onClick={() => navigate(`/map?type=sale&propertyId=${selectedProperty.id}`)}
+                className="btn"
+                style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}
+              >
+                View on Map (Buy)
+              </button>
+            )}
+            {selectedProperty.type === 'rent' && (
+              <button
+                onClick={() => navigate(`/map?type=rent&propertyId=${selectedProperty.id}`)}
+                className="btn"
+                style={{ backgroundColor: '#28a745', borderColor: '#28a745', color: 'white' }}
+              >
+                View on Map (Rent)
+              </button>
+            )}
+            {!selectedProperty.type && (
+              <>
+                <button
+                  onClick={() => navigate(`/map?type=sale&propertyId=${selectedProperty.id}`)}
+                  className="btn"
+                  style={{ backgroundColor: '#007bff', borderColor: '#007bff', color: 'white' }}
+                >
+                  View on Map (Buy)
+                </button>
+                <button
+                  onClick={() => navigate(`/map?type=rent&propertyId=${selectedProperty.id}`)}
+                  className="btn"
+                  style={{ backgroundColor: '#28a745', borderColor: '#28a745', color: 'white' }}
+                >
+                  View on Map (Rent)
+                </button>
+              </>
+            )}
             <button
               onClick={() => handleEdit(selectedProperty)}
               className="btn btn-primary"
@@ -925,6 +981,66 @@ function Properties() {
                       <td>{new Date(property.createdAt).toLocaleDateString()}</td>
                       <td>
                         <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                          {property.type === 'sale' && (
+                            <button
+                              onClick={() => navigate(`/map?type=sale&propertyId=${property.id}`)}
+                              className="btn btn-sm"
+                              style={{ 
+                                fontSize: '12px', 
+                                padding: '4px 8px',
+                                backgroundColor: '#007bff',
+                                borderColor: '#007bff',
+                                color: 'white'
+                              }}
+                            >
+                              Buy
+                            </button>
+                          )}
+                          {property.type === 'rent' && (
+                            <button
+                              onClick={() => navigate(`/map?type=rent&propertyId=${property.id}`)}
+                              className="btn btn-sm"
+                              style={{ 
+                                fontSize: '12px', 
+                                padding: '4px 8px',
+                                backgroundColor: '#28a745',
+                                borderColor: '#28a745',
+                                color: 'white'
+                              }}
+                            >
+                              Rent
+                            </button>
+                          )}
+                          {!property.type && (
+                            <>
+                              <button
+                                onClick={() => navigate(`/map?type=sale&propertyId=${property.id}`)}
+                                className="btn btn-sm"
+                                style={{ 
+                                  fontSize: '12px', 
+                                  padding: '4px 8px',
+                                  backgroundColor: '#007bff',
+                                  borderColor: '#007bff',
+                                  color: 'white'
+                                }}
+                              >
+                                Buy
+                              </button>
+                              <button
+                                onClick={() => navigate(`/map?type=rent&propertyId=${property.id}`)}
+                                className="btn btn-sm"
+                                style={{ 
+                                  fontSize: '12px', 
+                                  padding: '4px 8px',
+                                  backgroundColor: '#28a745',
+                                  borderColor: '#28a745',
+                                  color: 'white'
+                                }}
+                              >
+                                Rent
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => handleViewDetails(property)}
                             className="btn btn-sm btn-secondary"

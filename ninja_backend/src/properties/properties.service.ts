@@ -60,7 +60,7 @@ export class PropertiesService {
     return property;
   }
 
-  async findAll(userId: string, teamId: string | null, filters?: { type?: string; status?: string }): Promise<Property[]> {
+  async findAll(userId: string, teamId: string | null, filters?: { type?: string; status?: string; search?: string }): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", team_id as "teamId", latitude, longitude,
@@ -88,6 +88,21 @@ export class PropertiesService {
       params.push(filters.status);
     }
 
+    // Add text search on address, city, state, title, and description
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(`(
+        address ILIKE $${paramCount} OR
+        city ILIKE $${paramCount} OR
+        state ILIKE $${paramCount} OR
+        title ILIKE $${paramCount} OR
+        description ILIKE $${paramCount} OR
+        zip_code ILIKE $${paramCount}
+      )`);
+      params.push(searchTerm);
+      paramCount++;
+    }
+
     if (conditions.length > 0) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
@@ -102,7 +117,7 @@ export class PropertiesService {
     userId: string,
     teamId: string | null,
     bbox: { west: number; south: number; east: number; north: number },
-    filters?: { type?: string; status?: string },
+    filters?: { type?: string; status?: string; search?: string },
   ): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
@@ -141,6 +156,21 @@ export class PropertiesService {
     if (filters?.status) {
       conditions.push(`status = $${paramCount++}`);
       params.push(filters.status);
+    }
+
+    // Add text search on address, city, state, title, and description
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(`(
+        address ILIKE $${paramCount} OR
+        city ILIKE $${paramCount} OR
+        state ILIKE $${paramCount} OR
+        title ILIKE $${paramCount} OR
+        description ILIKE $${paramCount} OR
+        zip_code ILIKE $${paramCount}
+      )`);
+      params.push(searchTerm);
+      paramCount++;
     }
 
     if (conditions.length > 0) {

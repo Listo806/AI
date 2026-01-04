@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getProperties, getProperty } from '../api/propertiesApi';
+import { geocodeAddress } from '../api/mapboxApi';
 
 function Map() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -11,8 +14,18 @@ function Map() {
   const [loading, setLoading] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [previewProperty, setPreviewProperty] = useState(null);
-  const [filters, setFilters] = useState({ type: '', status: 'published' });
+  
+  // Initialize filters from URL params or defaults
+  const initialType = searchParams.get('type') || '';
+  const initialStatus = searchParams.get('status') || 'published';
+  const initialSearch = searchParams.get('search') || '';
+  const [filters, setFilters] = useState({ type: initialType, status: initialStatus });
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [searching, setSearching] = useState(false);
+  const [highlightedPropertyId, setHighlightedPropertyId] = useState(null);
   const markersRef = useRef({});
+  const highlightedMarkerRef = useRef(null);
   const debounceTimerRef = useRef(null);
   const handlersSetupRef = useRef(false);
 
@@ -252,8 +265,15 @@ function Map() {
       // Create custom HTML element for price label
       const el = document.createElement('div');
       el.className = 'property-price-marker';
-      el.innerHTML = `<div class="price-label">${price}</div>`;
+      const isHighlighted = highlightedPropertyId === property.id;
+      el.innerHTML = `<div class="price-label ${isHighlighted ? 'highlighted' : ''}">${price}</div>`;
       el.style.cursor = 'pointer';
+      
+      // Add special styling for highlighted property
+      if (isHighlighted) {
+        el.style.zIndex = '1000';
+        el.style.animation = 'pulse 2s infinite';
+      }
       
       try {
         // Ensure map container exists and is fully initialized
@@ -276,6 +296,11 @@ function Map() {
 
         // Store marker reference
         markersRef.current[markerId] = marker;
+        
+        // Store highlighted marker reference
+        if (isHighlighted) {
+          highlightedMarkerRef.current = marker;
+        }
 
         // Add click handler
         el.addEventListener('click', async () => {
@@ -302,7 +327,7 @@ function Map() {
         console.error('Error adding marker:', err, property.id);
       }
     });
-  }, [mapLoaded]);
+  }, [mapLoaded, highlightedPropertyId]);
 
   // Load properties based on current viewport
   const loadPropertiesForViewport = useCallback(async () => {
@@ -584,9 +609,134 @@ function Map() {
     }
   }, [filters, mapLoaded, loadPropertiesForViewport]); // Include dependencies to ensure it works
 
+  // Handle property highlighting when propertyId is in URL
+  useEffect(() => {
+    const propertyId = searchParams.get('propertyId');
+    setHighlightedPropertyId(propertyId || null);
+  }, [searchParams]);
+
+  // Sync search input with URL parameter
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    setSearchQuery(urlSearch);
+    setSearchInput(urlSearch);
+  }, [searchParams]);
+
+  // Zoom to and highlight specific property
+  useEffect(() => {
+    if (!highlightedPropertyId || !mapLoaded || !map.current) return;
+
+    const zoomToProperty = async () => {
+      try {
+        // Fetch the property details
+        const property = await getProperty(highlightedPropertyId);
+        
+        if (!property || !property.latitude || !property.longitude) {
+          console.warn('Property not found or missing coordinates');
+          return;
+        }
+
+        const lat = typeof property.latitude === 'string' ? parseFloat(property.latitude) : property.latitude;
+        const lng = typeof property.longitude === 'string' ? parseFloat(property.longitude) : property.longitude;
+
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn('Invalid coordinates for property');
+          return;
+        }
+
+        // Wait a bit for markers to be rendered
+        setTimeout(() => {
+          if (!map.current) return;
+
+          // Zoom to property location
+          map.current.easeTo({
+            center: [lng, lat],
+            zoom: 15,
+            duration: 1500,
+          });
+
+          // Show property preview
+          setPreviewProperty(property);
+          setSelectedProperty(property);
+
+          // Highlight the marker after a short delay to ensure it's rendered
+          setTimeout(() => {
+            const marker = markersRef.current[highlightedPropertyId];
+            if (marker) {
+              // Add a pulsing effect by toggling a class
+              const markerEl = marker.getElement();
+              if (markerEl) {
+                markerEl.style.transform = 'scale(1.3)';
+                markerEl.style.transition = 'transform 0.3s ease';
+                markerEl.style.zIndex = '1000';
+                
+                // Reset after animation
+                setTimeout(() => {
+                  markerEl.style.transform = 'scale(1.1)';
+                }, 500);
+              }
+            }
+          }, 1600);
+        }, 500);
+      } catch (err) {
+        console.error('Failed to load property for highlighting:', err);
+      }
+    };
+
+    zoomToProperty();
+  }, [highlightedPropertyId, mapLoaded]);
+
   const handleViewDetails = () => {
     if (selectedProperty) {
       window.location.href = `/properties?view=${selectedProperty.id}`;
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    const query = searchInput.trim();
+    
+    if (!query) {
+      // Clear search
+      setSearchQuery('');
+      setSearchInput('');
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('search');
+      setSearchParams(newParams);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      // Geocode the address
+      const result = await geocodeAddress(query);
+      
+      if (result && result.latitude && result.longitude) {
+        const lat = parseFloat(result.latitude);
+        const lng = parseFloat(result.longitude);
+        
+        // Update search query
+        setSearchQuery(query);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('search', query);
+        setSearchParams(newParams);
+        
+        // Zoom to the location
+        if (map.current) {
+          map.current.easeTo({
+            center: [lng, lat],
+            zoom: 12,
+            duration: 1000,
+          });
+        }
+      } else {
+        alert('Location not found. Please try a different search term.');
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      alert('Failed to search location. Please try again.');
+    } finally {
+      setSearching(false);
     }
   };
 
@@ -599,17 +749,68 @@ function Map() {
         padding: '15px 20px', 
         backgroundColor: 'white', 
         borderBottom: '1px solid #e0e0e0',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
         flexShrink: 0
       }}>
-        <h1 style={{ margin: 0, fontSize: '24px' }}>Property Map</h1>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search by location, address, city..."
+            style={{ 
+              flex: 1, 
+              padding: '10px 15px', 
+              borderRadius: '4px', 
+              border: '1px solid #ddd',
+              fontSize: '14px',
+              maxWidth: '400px'
+            }}
+          />
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={searching}
+            style={{ whiteSpace: 'nowrap', minWidth: '100px' }}
+          >
+            {searching ? 'Searching...' : 'Search'}
+          </button>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearchQuery('');
+                const newParams = new URLSearchParams(searchParams);
+                newParams.delete('search');
+                setSearchParams(newParams);
+              }}
+              className="btn btn-secondary"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              Clear
+            </button>
+          )}
+        </form>
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ margin: 0, fontSize: '24px' }}>Property Map</h1>
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           <div className="form-group" style={{ margin: 0 }}>
             <select
               value={filters.type}
-              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setFilters({ ...filters, type: newType });
+                // Update URL params
+                const newParams = new URLSearchParams(searchParams);
+                if (newType) {
+                  newParams.set('type', newType);
+                } else {
+                  newParams.delete('type');
+                }
+                setSearchParams(newParams);
+              }}
               style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ddd' }}
             >
               <option value="">All Types</option>
@@ -620,7 +821,18 @@ function Map() {
           <div className="form-group" style={{ margin: 0 }}>
             <select
               value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              onChange={(e) => {
+                const newStatus = e.target.value;
+                setFilters({ ...filters, status: newStatus });
+                // Update URL params
+                const newParams = new URLSearchParams(searchParams);
+                if (newStatus) {
+                  newParams.set('status', newStatus);
+                } else {
+                  newParams.delete('status');
+                }
+                setSearchParams(newParams);
+              }}
               style={{ padding: '8px 12px', borderRadius: '4px', border: '1px solid #ddd' }}
             >
               <option value="published">Published</option>
@@ -631,6 +843,7 @@ function Map() {
           {loading && (
             <div style={{ fontSize: '14px', color: '#666' }}>Loading properties...</div>
           )}
+          </div>
         </div>
       </div>
 

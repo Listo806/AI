@@ -32,6 +32,7 @@ export class PropertiesController {
     @CurrentUser() user: any,
     @Query('type') type?: string,
     @Query('status') status?: string,
+    @Query('search') search?: string,
     @Query('west') west?: string,
     @Query('south') south?: string,
     @Query('east') east?: string,
@@ -45,9 +46,9 @@ export class PropertiesController {
         east: parseFloat(east),
         north: parseFloat(north),
       };
-      return this.propertiesService.findByBbox(user.id, user.teamId, bbox, { type, status });
+      return this.propertiesService.findByBbox(user.id, user.teamId, bbox, { type, status, search });
     }
-    return this.propertiesService.findAll(user.id, user.teamId, { type, status });
+    return this.propertiesService.findAll(user.id, user.teamId, { type, status, search });
   }
 
   @Get(':id')
