@@ -276,19 +276,146 @@ document.addEventListener('propertiesFiltered', (event) => {
 - `canManageTeams()` - Can manage teams (Owner/Admin only)
 - `canViewAnalytics()` - Can view analytics
 
+## 🎯 Milestone 3: Agent Dashboard (CRM Core)
+
+### Features Implemented
+
+✅ **Agent Dashboard:**
+- View assigned listings (properties)
+- View incoming leads assigned to agent
+- Dashboard statistics (total leads, new leads, qualified, converted, etc.)
+- Filter leads by status
+- Filter properties by status
+- Search functionality for leads and properties
+- Real-time data updates
+
+✅ **Data Management:**
+- Leads filtering by assignment (agents see only assigned leads)
+- Properties filtering by team/user
+- Status-based filtering
+- Search across leads and properties
+
+✅ **Statistics:**
+- Total leads count
+- Leads by status (new, contacted, qualified, converted, lost)
+- Total properties count
+- Properties by status (published, draft, sold, rented)
+
+### Files Created
+
+- `js/agent-dashboard.js` - Agent dashboard service
+- `agent-dashboard-test.html` - Local test page
+- `webflow/milestone3-agent-dashboard.js` - Webflow-ready code
+
+### Testing Agent Dashboard
+
+1. Open `agent-dashboard-test.html` in your browser
+2. Make sure you're logged in (use `auth-test.html` first if needed)
+3. View dashboard statistics
+4. Test filtering leads and properties
+5. Test search functionality
+
+### Webflow Integration
+
+1. Add `webflow/milestone3-agent-dashboard.js` to Webflow Custom Code (after milestone2-authentication.js)
+2. Mark dashboard containers with data attributes:
+   ```html
+   <!-- Statistics container -->
+   <div data-dashboard="stats">
+     <div data-stat="totalLeads">0</div>
+     <div data-stat="newLeads">0</div>
+     <div data-stat="qualifiedLeads">0</div>
+   </div>
+
+   <!-- Leads container -->
+   <div data-dashboard="leads">
+     <!-- Template for each lead (hidden) -->
+     <div data-lead-template style="display: none;">
+       <h3>{{name}}</h3>
+       <p>{{email}}</p>
+       <span>{{status}}</span>
+     </div>
+   </div>
+
+   <!-- Properties container -->
+   <div data-dashboard="properties">
+     <!-- Template for each property (hidden) -->
+     <div data-property-template style="display: none;">
+       <h3>{{title}}</h3>
+       <p>{{price}}</p>
+       <p>{{location}}</p>
+     </div>
+   </div>
+   ```
+
+3. Listen to dashboard events:
+   ```javascript
+   // Dashboard ready
+   document.addEventListener('ninja:dashboard:ready', (event) => {
+     const dashboard = event.detail.dashboard;
+     console.log('Dashboard loaded:', dashboard);
+   });
+
+   // Stats updated
+   document.addEventListener('ninja:dashboard:stats', (event) => {
+     const stats = event.detail.stats;
+     // Update your UI with stats
+   });
+
+   // Leads loaded
+   document.addEventListener('ninja:dashboard:leads', (event) => {
+     const leads = event.detail.leads;
+     // Update your UI with leads
+   });
+
+   // Properties loaded
+   document.addEventListener('ninja:dashboard:properties', (event) => {
+     const properties = event.detail.properties;
+     // Update your UI with properties
+   });
+   ```
+
+4. Use JavaScript API:
+   ```javascript
+   // Access dashboard
+   const dashboard = window.NinjaAgentDashboard;
+
+   // Get stats
+   const stats = dashboard.getStats();
+
+   // Filter leads
+   const newLeads = dashboard.getLeadsByStatus('new');
+
+   // Search leads
+   const results = dashboard.searchLeads('john');
+
+   // Update lead status
+   await dashboard.updateLeadStatus('lead-id', 'contacted');
+   ```
+
+### Dashboard Methods
+
+- `loadDashboard()` - Load all dashboard data
+- `loadLeads(status)` - Load leads (optionally filtered by status)
+- `loadProperties(type, status)` - Load properties (optionally filtered)
+- `getLeadsByStatus(status)` - Get leads by status
+- `getPropertiesByStatus(status)` - Get properties by status
+- `getRecentLeads(days)` - Get recent leads
+- `getRecentProperties(days)` - Get recent properties
+- `searchLeads(term)` - Search leads
+- `searchProperties(term)` - Search properties
+- `updateLeadStatus(leadId, status)` - Update lead status
+- `getStats()` - Get dashboard statistics
+
 ## 📝 Next Steps
 
-After Milestone 2 is complete:
+After Milestone 3 is complete:
 
-1. **Milestone 3**: Agent Dashboard (CRM Core)
-   - View assigned listings
-   - View incoming leads
-
-2. **Milestone 4**: Lead Assignment Logic
+1. **Milestone 4**: Lead Assignment Logic
    - Automatic lead routing
    - Agent assignment
 
-3. **Milestone 5**: Subscription Enforcement
+2. **Milestone 5**: Subscription Enforcement
    - Feature gating
    - Plan limits
 

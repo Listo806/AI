@@ -192,6 +192,56 @@ class ApiClient {
   async getProperty(id) {
     return this.request(`/properties/${id}`);
   }
+
+  /**
+   * Get all leads
+   * @param {string} status - Optional status filter
+   */
+  async getLeads(status = null) {
+    const queryParams = new URLSearchParams();
+    if (status) queryParams.append('status', status);
+    
+    const queryString = queryParams.toString();
+    const endpoint = `/leads${queryString ? `?${queryString}` : ''}`;
+    
+    return this.request(endpoint);
+  }
+
+  /**
+   * Get lead by ID
+   */
+  async getLead(id) {
+    return this.request(`/leads/${id}`);
+  }
+
+  /**
+   * Create a new lead
+   */
+  async createLead(leadData) {
+    return this.request('/leads', {
+      method: 'POST',
+      body: JSON.stringify(leadData),
+    });
+  }
+
+  /**
+   * Update a lead
+   */
+  async updateLead(id, updateData) {
+    return this.request(`/leads/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  /**
+   * Delete a lead
+   */
+  async deleteLead(id) {
+    return this.request(`/leads/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Export for use in modules
