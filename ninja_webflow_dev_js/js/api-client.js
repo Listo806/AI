@@ -80,13 +80,44 @@ class ApiClient {
    * Handle API response
    */
   async handleResponse(response) {
-    const data = await response.json();
-
+    // Handle different status codes
     if (!response.ok) {
-      throw new Error(data.message || `API Error: ${response.status}`);
+      let errorMessage = `API Error: ${response.status}`;
+      
+      try {
+        const data = await response.json();
+        errorMessage = data.message || errorMessage;
+      } catch (e) {
+        // Response is not JSON, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+
+      // Provide user-friendly messages for common errors
+      if (response.status === 409) {
+        errorMessage = 'This email is already registered. Please use a different email or try logging in.';
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid credentials. Please check your email and password.';
+      } else if (response.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (response.status === 404) {
+        errorMessage = 'The requested resource was not found.';
+      } else if (response.status === 422) {
+        errorMessage = 'Invalid input. Please check your information and try again.';
+      } else if (response.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+
+      throw new Error(errorMessage);
     }
 
-    return data;
+    // Parse JSON response
+    try {
+      const data = await response.json();
+      return data;
+    } catch (e) {
+      // Response is not JSON, return empty object
+      return {};
+    }
   }
 
   /**

@@ -198,24 +198,97 @@ document.addEventListener('propertiesFiltered', (event) => {
 - Set user location first
 - Check geocoding if using address input
 
+## 🎯 Milestone 2: Authentication & Roles
+
+### Features Implemented
+
+✅ **Authentication:**
+- User signup with role selection
+- User login with email/password
+- Session management (JWT tokens)
+- Token refresh handling
+- Logout functionality
+
+✅ **Role-Based Access:**
+- Role types: Owner, Agent, Admin, Developer
+- Permission checking utilities
+- Role-based element visibility
+- Route protection helpers
+
+✅ **Session Management:**
+- Automatic token refresh
+- Session verification
+- Persistent login (localStorage)
+- Auth state events
+
+### Files Created
+
+- `js/auth-service.js` - Authentication service
+- `js/permissions.js` - Permission checking utilities
+- `auth-test.html` - Local test page for authentication
+- `webflow/milestone2-authentication.js` - Webflow-ready code
+
+### Testing Authentication
+
+1. Open `auth-test.html` in your browser
+2. Test signup with different roles
+3. Test login/logout
+4. Verify session persistence
+5. Test permission checks
+
+### Webflow Integration
+
+1. Add `webflow/milestone2-authentication.js` to Webflow Custom Code
+2. Use data attributes for role-based visibility:
+   ```html
+   <!-- Show only when authenticated -->
+   <div data-require-auth>Protected Content</div>
+   
+   <!-- Show only for specific roles -->
+   <div data-require-role="owner,admin">Admin Content</div>
+   
+   <!-- Hide for specific roles -->
+   <div data-hide-role="agent">Not for Agents</div>
+   ```
+
+3. Use JavaScript API:
+   ```javascript
+   // Login
+   await window.NinjaAuth.login('email@example.com', 'password');
+   
+   // Check permissions
+   window.NinjaPermissions.canViewProperties();
+   window.NinjaPermissions.canAccessAdminPanel();
+   
+   // Protect route
+   window.NinjaPermissions.protectRoute(['owner', 'admin'], '/login');
+   ```
+
+### Permission Methods
+
+- `canViewProperties()` - Can view property listings
+- `canCreateProperties()` - Can create new properties
+- `canEditProperties()` - Can edit properties
+- `canDeleteProperties()` - Can delete properties (Owner/Admin only)
+- `canViewLeads()` - Can view leads
+- `canAccessAgentDashboard()` - Can access agent dashboard
+- `canAccessAdminPanel()` - Can access admin panel (Admin/Developer only)
+- `canManageTeams()` - Can manage teams (Owner/Admin only)
+- `canViewAnalytics()` - Can view analytics
+
 ## 📝 Next Steps
 
-After Milestone 1 is complete:
+After Milestone 2 is complete:
 
-1. **Milestone 2**: Authentication & Roles
-   - User login/signup
-   - Role-based access
-   - Session management
-
-2. **Milestone 3**: Agent Dashboard
+1. **Milestone 3**: Agent Dashboard (CRM Core)
    - View assigned listings
    - View incoming leads
 
-3. **Milestone 4**: Lead Assignment Logic
+2. **Milestone 4**: Lead Assignment Logic
    - Automatic lead routing
    - Agent assignment
 
-4. **Milestone 5**: Subscription Enforcement
+3. **Milestone 5**: Subscription Enforcement
    - Feature gating
    - Plan limits
 
