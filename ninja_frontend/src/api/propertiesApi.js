@@ -10,6 +10,7 @@ import apiClient from './apiClient';
  * @param {Object} options - Query options
  * @param {string} options.type - Filter by type (sale, rent)
  * @param {string} options.status - Filter by status
+ * @param {string} options.search - Search text for address, city, state, title, description
  * @param {Object} options.bbox - Bounding box {west, south, east, north}
  * @returns {Promise} Response with properties array
  */
@@ -17,6 +18,7 @@ export const getProperties = async (options = {}) => {
   const params = {};
   if (options.type) params.type = options.type;
   if (options.status) params.status = options.status;
+  if (options.search) params.search = options.search;
   if (options.bbox) {
     params.west = options.bbox.west;
     params.south = options.bbox.south;

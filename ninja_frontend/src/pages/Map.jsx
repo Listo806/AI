@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { getProperties, getProperty } from '../api/propertiesApi';
-import { geocodeAddress } from '../api/mapboxApi';
 
 function Map() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -272,7 +271,6 @@ function Map() {
       // Add special styling for highlighted property
       if (isHighlighted) {
         el.style.zIndex = '1000';
-        el.style.animation = 'pulse 2s infinite';
       }
       
       try {
@@ -376,6 +374,11 @@ function Map() {
         options.status = filters.status;
       }
       
+      // Add search query if present
+      if (searchQuery) {
+        options.search = searchQuery;
+      }
+      
       console.log('Loading properties with options:', options);
 
       const data = await getProperties(options);
@@ -408,7 +411,7 @@ function Map() {
     } finally {
       setLoading(false);
     }
-  }, [mapLoaded, filters]); // Remove updateMapMarkers from dependencies to avoid re-creation
+  }, [mapLoaded, filters, searchQuery]); // Add searchQuery to dependencies
 
   // Initialize map
   useEffect(() => {
@@ -585,10 +588,10 @@ function Map() {
     };
   }, []); // Empty dependency array - only run once on mount
 
-  // Load properties when filters change (map load is handled in map.on('load'))
+  // Load properties when filters or search change (map load is handled in map.on('load'))
   useEffect(() => {
     if (mapLoaded && map.current) {
-      console.log('Filters changed, reloading properties:', filters);
+      console.log('Filters or search changed, reloading properties:', filters, searchQuery);
       // Clear existing markers immediately when filters change
       Object.values(markersRef.current).forEach(marker => {
         try {
@@ -599,15 +602,27 @@ function Map() {
       });
       markersRef.current = {};
       
-      // Small delay to ensure map is fully ready
-      const timer = setTimeout(() => {
-        if (map.current && mapLoaded) {
-          loadPropertiesForViewport();
-        }
-      }, 200);
-      return () => clearTimeout(timer);
+      // If there's a search query, don't use viewport bbox - use search results
+      if (searchQuery) {
+        // Search will be handled by handleSearch or we can trigger it here
+        // For now, just reload viewport which will include search
+        const timer = setTimeout(() => {
+          if (map.current && mapLoaded) {
+            loadPropertiesForViewport();
+          }
+        }, 200);
+        return () => clearTimeout(timer);
+      } else {
+        // No search - use viewport bbox
+        const timer = setTimeout(() => {
+          if (map.current && mapLoaded) {
+            loadPropertiesForViewport();
+          }
+        }, 200);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [filters, mapLoaded, loadPropertiesForViewport]); // Include dependencies to ensure it works
+  }, [filters, searchQuery, mapLoaded, loadPropertiesForViewport]); // Add searchQuery to dependencies
 
   // Handle property highlighting when propertyId is in URL
   useEffect(() => {
@@ -644,11 +659,25 @@ function Map() {
           return;
         }
 
-        // Wait a bit for markers to be rendered
+        // First, ensure the property is in the current properties list
+        // If not, we need to load it or add it temporarily
+        const propertyExists = properties.some(p => p.id === highlightedPropertyId);
+        
+        if (!propertyExists) {
+          // Add the property to the list temporarily so marker can be created
+          setProperties(prev => {
+            if (!prev.some(p => p.id === property.id)) {
+              return [...prev, property];
+            }
+            return prev;
+          });
+        }
+
+        // Wait for markers to be updated with the new property
         setTimeout(() => {
           if (!map.current) return;
 
-          // Zoom to property location
+          // Zoom to property location first
           map.current.easeTo({
             center: [lng, lat],
             zoom: 15,
@@ -659,32 +688,45 @@ function Map() {
           setPreviewProperty(property);
           setSelectedProperty(property);
 
-          // Highlight the marker after a short delay to ensure it's rendered
+          // Wait for marker to be created and positioned
           setTimeout(() => {
             const marker = markersRef.current[highlightedPropertyId];
             if (marker) {
-              // Add a pulsing effect by toggling a class
+              // Verify marker position matches property coordinates
+              const markerLngLat = marker.getLngLat();
+              const markerLat = markerLngLat.lat;
+              const markerLng = markerLngLat.lng;
+              
+              // If marker is not at correct position, reposition it
+              if (Math.abs(markerLat - lat) > 0.0001 || Math.abs(markerLng - lng) > 0.0001) {
+                console.log('Repositioning marker to correct location');
+                marker.setLngLat([lng, lat]);
+              }
+              
               const markerEl = marker.getElement();
               if (markerEl) {
-                markerEl.style.transform = 'scale(1.3)';
-                markerEl.style.transition = 'transform 0.3s ease';
+                // Ensure marker is visible and on top
                 markerEl.style.zIndex = '1000';
-                
-                // Reset after animation
-                setTimeout(() => {
-                  markerEl.style.transform = 'scale(1.1)';
-                }, 500);
+                // Verify the highlighted class is applied
+                const priceLabel = markerEl.querySelector('.price-label');
+                if (priceLabel && !priceLabel.classList.contains('highlighted')) {
+                  priceLabel.classList.add('highlighted');
+                }
               }
+            } else {
+              console.warn('Highlighted marker not found, triggering marker update');
+              // Force marker update by updating properties
+              updateMapMarkers(properties.some(p => p.id === property.id) ? properties : [...properties, property]);
             }
-          }, 1600);
-        }, 500);
+          }, 2000);
+        }, 1000);
       } catch (err) {
         console.error('Failed to load property for highlighting:', err);
       }
     };
 
     zoomToProperty();
-  }, [highlightedPropertyId, mapLoaded]);
+  }, [highlightedPropertyId, mapLoaded, properties, updateMapMarkers]);
 
   const handleViewDetails = () => {
     if (selectedProperty) {
@@ -703,38 +745,80 @@ function Map() {
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('search');
       setSearchParams(newParams);
+      // Reload properties without search
+      if (mapLoaded && map.current) {
+        loadPropertiesForViewport();
+      }
       return;
     }
 
     setSearching(true);
     try {
-      // Geocode the address
-      const result = await geocodeAddress(query);
+      // Update search query
+      setSearchQuery(query);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('search', query);
+      setSearchParams(newParams);
       
-      if (result && result.latitude && result.longitude) {
-        const lat = parseFloat(result.latitude);
-        const lng = parseFloat(result.longitude);
-        
-        // Update search query
-        setSearchQuery(query);
-        const newParams = new URLSearchParams(searchParams);
-        newParams.set('search', query);
-        setSearchParams(newParams);
-        
-        // Zoom to the location
-        if (map.current) {
+      // Search properties using the API
+      const searchOptions = {
+        search: query,
+      };
+      
+      // Add current filters
+      if (filters.type) {
+        searchOptions.type = filters.type;
+      }
+      if (filters.status) {
+        searchOptions.status = filters.status;
+      }
+      
+      const searchResults = await getProperties(searchOptions);
+      
+      // Filter properties with valid coordinates
+      const propertiesWithCoords = searchResults.filter(p => {
+        if (!p.latitude || !p.longitude) return false;
+        const lat = typeof p.latitude === 'string' ? parseFloat(p.latitude) : p.latitude;
+        const lng = typeof p.longitude === 'string' ? parseFloat(p.longitude) : p.longitude;
+        return !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+      });
+      
+      setProperties(propertiesWithCoords);
+      
+      // Update markers
+      setTimeout(() => {
+        if (map.current && map.current.getContainer()) {
+          updateMapMarkers(propertiesWithCoords);
+        }
+      }, 100);
+      
+      // Zoom to first property with coordinates, or fit bounds if multiple
+      if (map.current && propertiesWithCoords.length > 0) {
+        if (propertiesWithCoords.length === 1) {
+          const prop = propertiesWithCoords[0];
+          const lat = typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude;
+          const lng = typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude;
           map.current.easeTo({
             center: [lng, lat],
-            zoom: 12,
+            zoom: 13,
             duration: 1000,
           });
+        } else {
+          // Fit bounds to show all properties
+          const bounds = new mapboxgl.LngLatBounds();
+          propertiesWithCoords.forEach(prop => {
+            const lat = typeof prop.latitude === 'string' ? parseFloat(prop.latitude) : prop.latitude;
+            const lng = typeof prop.longitude === 'string' ? parseFloat(prop.longitude) : prop.longitude;
+            bounds.extend([lng, lat]);
+          });
+          map.current.fitBounds(bounds, { padding: 50, duration: 1000 });
         }
-      } else {
-        alert('Location not found. Please try a different search term.');
+      } else if (propertiesWithCoords.length === 0) {
+        alert('No properties found matching your search.');
       }
     } catch (err) {
       console.error('Search error:', err);
-      alert('Failed to search location. Please try again.');
+      alert('Failed to search properties. Please try again.');
     } finally {
       setSearching(false);
     }
