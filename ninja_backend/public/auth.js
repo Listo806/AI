@@ -2,13 +2,14 @@
  * Standalone Authentication Module for Webflow
  * 
  * This file can be hosted externally and loaded via script tag:
- * <script src="https://your-backend.onrender.com/api/webflow/auth.js"></script>
+ * <script src="https://your-backend.onrender.com/static/auth.js"></script>
  * 
  * Features:
- * - Page-based authentication (/sign-in, /sign-up)
- * - Automatic form handling
- * - Redirect on success
- * - Error handling
+ * - Auth/session checks
+ * - Protected route logic (redirects to /sign-in if not authenticated)
+ * - Token handling with automatic refresh
+ * - Form handling for /sign-in and /sign-up pages only
+ * - No UI overrides on public pages
  */
 
 (function() {
@@ -18,7 +19,10 @@
   const CONFIG = {
     API_BASE_URL: 'https://ai-2-7ikc.onrender.com/api', // Update with your backend URL
     DASHBOARD_URL: '/dashboard',
+    SIGN_IN_URL: '/sign-in',
     STORAGE_PREFIX: 'listo_',
+    // Pages that require authentication (add your protected routes here)
+    PROTECTED_PAGES: ['/dashboard', '/agent-dashboard', '/admin'],
   };
 
   /**
@@ -66,8 +70,28 @@
             const retryResponse = await fetch(url, { ...options, headers });
             return this.handleResponse(retryResponse);
           } catch (refreshError) {
+            // Token refresh failed - clear tokens and redirect to sign-in
             this.clearTokens();
+            localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
+            
+            // Only redirect if not already on sign-in/sign-up page
+            const currentPath = window.location.pathname;
+            if (currentPath !== CONFIG.SIGN_IN_URL && !currentPath.endsWith('/sign-up')) {
+              window.location.href = CONFIG.SIGN_IN_URL;
+            }
+            
             throw new Error('Session expired');
+          }
+        }
+        
+        // If 401 and no refresh token, redirect to sign-in
+        if (response.status === 401 && !this.refreshToken) {
+          this.clearTokens();
+          localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
+          
+          const currentPath = window.location.pathname;
+          if (currentPath !== CONFIG.SIGN_IN_URL && !currentPath.endsWith('/sign-up')) {
+            window.location.href = CONFIG.SIGN_IN_URL;
           }
         }
 
@@ -193,11 +217,23 @@
     }
 
     isSignInPage() {
-      return this.currentPath === '/sign-in' || this.currentPath.endsWith('/sign-in');
+      return this.currentPath === CONFIG.SIGN_IN_URL || this.currentPath.endsWith('/sign-in');
     }
 
     isSignUpPage() {
       return this.currentPath === '/sign-up' || this.currentPath.endsWith('/sign-up');
+    }
+
+    isProtectedPage() {
+      // Check if current page is in protected pages list
+      return CONFIG.PROTECTED_PAGES.some(protectedPath => 
+        this.currentPath === protectedPath || 
+        this.currentPath.startsWith(protectedPath + '/')
+      );
+    }
+
+    isPublicPage() {
+      return this.isSignInPage() || this.isSignUpPage();
     }
 
     redirect(url) {
@@ -206,6 +242,10 @@
 
     redirectToDashboard() {
       this.redirect(CONFIG.DASHBOARD_URL);
+    }
+
+    redirectToSignIn() {
+      this.redirect(CONFIG.SIGN_IN_URL);
     }
   }
 
@@ -353,6 +393,52 @@
   }
 
   /**
+   * Protected Route Handler
+   */
+  class ProtectedRouteHandler {
+    constructor(authService, router, apiClient) {
+      this.authService = authService;
+      this.router = router;
+      this.apiClient = apiClient;
+    }
+
+    /**
+     * Check if current page requires authentication and handle accordingly
+     */
+    async checkProtectedRoute() {
+      // Skip check for public pages (sign-in, sign-up)
+      if (this.router.isPublicPage()) {
+        // If already authenticated on sign-in/sign-up, redirect to dashboard
+        if (this.authService.isAuthenticated()) {
+          this.router.redirectToDashboard();
+        }
+        return;
+      }
+
+      // Check if current page is protected
+      if (this.router.isProtectedPage()) {
+        // Verify session is still valid
+        if (!this.authService.isAuthenticated()) {
+          // Not authenticated - redirect to sign-in
+          this.router.redirectToSignIn();
+          return;
+        }
+
+        // Verify token is still valid by checking current user
+        try {
+          await this.apiClient.request('/users/me');
+        } catch (error) {
+          // Token invalid or expired - redirect to sign-in
+          this.apiClient.clearTokens();
+          localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
+          this.router.redirectToSignIn();
+        }
+      }
+      // For public pages (not sign-in/sign-up), do nothing - no redirects or UI overrides
+    }
+  }
+
+  /**
    * Initialize Authentication
    */
   function initAuth() {
@@ -360,15 +446,12 @@
     const apiClient = new ApiClient(CONFIG.API_BASE_URL);
     const authService = new AuthService(apiClient);
     const formHandler = new FormHandler(authService, router);
+    const protectedRouteHandler = new ProtectedRouteHandler(authService, router, apiClient);
 
-    // Check if user is already authenticated
-    if (authService.isAuthenticated() && (router.isSignInPage() || router.isSignUpPage())) {
-      // Already logged in, redirect to dashboard
-      router.redirectToDashboard();
-      return;
-    }
+    // Handle protected routes (check auth and redirect if needed)
+    protectedRouteHandler.checkProtectedRoute();
 
-    // Initialize form handlers
+    // Initialize form handlers ONLY for sign-in/sign-up pages
     if (router.isSignInPage() || router.isSignUpPage()) {
       formHandler.init();
     }
@@ -379,11 +462,27 @@
       authService,
       router,
       formHandler,
+      protectedRouteHandler,
       isAuthenticated: () => authService.isAuthenticated(),
       logout: () => {
         apiClient.clearTokens();
         localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
-        window.location.href = '/sign-in';
+        router.redirectToSignIn();
+      },
+      checkAuth: async () => {
+        // Verify current session
+        try {
+          await apiClient.request('/users/me');
+          return true;
+        } catch (error) {
+          // Session invalid
+          apiClient.clearTokens();
+          localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
+          if (router.isProtectedPage()) {
+            router.redirectToSignIn();
+          }
+          return false;
+        }
       },
     };
   }
