@@ -12,6 +12,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { HelpCenterModule } from './help-center/help-center.module';
+import { CrmModule } from './crm/crm.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { HelpCenterModule } from './help-center/help-center.module';
     IntegrationsModule,
     AnalyticsModule,
     HelpCenterModule,
+    CrmModule,
   ],
   controllers: [AppController],
 })

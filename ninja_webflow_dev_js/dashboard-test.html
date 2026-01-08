@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard Test - Milestone 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* Sidebar */
+        .dashboard-sidebar {
+            width: 260px;
+            background: #1f2937;
+            color: white;
+            padding: 24px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-logo {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            color: white;
+        }
+        .sidebar-nav {
+            list-style: none;
+        }
+        .sidebar-nav-item {
+            margin-bottom: 8px;
+        }
+        .sidebar-nav-link {
+            display: block;
+            padding: 12px 16px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .sidebar-nav-link:hover {
+            background: #374151;
+            color: white;
+        }
+        .sidebar-nav-link.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .sidebar-user {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #374151;
+        }
+        .sidebar-user-email {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        .sidebar-user-role {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+        .sidebar-logout {
+            margin-top: 16px;
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid #374151;
+            color: #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+        .sidebar-logout:hover {
+            background: #374151;
+        }
+        /* Main Content */
+        .dashboard-main {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+        }
+        .dashboard-header {
+            margin-bottom: 32px;
+        }
+        .dashboard-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .dashboard-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111827;
+        }
+        /* Content Sections */
+        .dashboard-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .section-content {
+            padding: 24px;
+        }
+        /* List Items */
+        .item-list {
+            list-style: none;
+        }
+        .item-list-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .item-list-item:last-child {
+            border-bottom: none;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        .item-title {
+            font-weight: 600;
+            color: #111827;
+            font-size: 16px;
+        }
+        .item-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-new {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-contacted {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-qualified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-converted {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-published {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .badge-draft {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        .item-details {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        .item-meta {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+        /* Loading & Empty States */
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .error-state {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .dashboard-main {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar" id="dashboard-sidebar">
+            <div class="sidebar-logo">Dashboard</div>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li class="sidebar-nav-item">
+                        <a href="/dashboard" class="sidebar-nav-link active" data-nav="dashboard">Dashboard</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/properties" class="sidebar-nav-link" data-nav="properties">Properties</a>
+                    </li>
+                    <li class="sidebar-nav-item">
+                        <a href="/leads" class="sidebar-nav-link" data-nav="leads">Leads</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-user" id="sidebar-user">
+                <div class="sidebar-user-email" id="sidebar-user-email">Loading...</div>
+                <div class="sidebar-user-role" id="sidebar-user-role">-</div>
+                <button class="sidebar-logout" id="sidebar-logout">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Dashboard</h1>
+                <p class="dashboard-subtitle">Overview of your listings and leads</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="dashboard-error" class="error-state" style="display: none;"></div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Leads</div>
+                    <div class="stat-value" data-stat="totalLeads">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">New Leads</div>
+                    <div class="stat-value" data-stat="newLeads">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Qualified</div>
+                    <div class="stat-value" data-stat="qualifiedLeads">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Properties</div>
+                    <div class="stat-value" data-stat="totalProperties">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Published</div>
+                    <div class="stat-value" data-stat="publishedProperties">-</div>
+                </div>
+            </div>
+
+            <!-- Recent Leads -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Leads</h2>
+                </div>
+                <div class="section-content">
+                    <div id="dashboard-leads-loading" class="loading-state">Loading leads...</div>
+                    <ul class="item-list" id="dashboard-leads-list" style="display: none;"></ul>
+                    <div id="dashboard-leads-empty" class="empty-state" style="display: none;">No leads found</div>
+                </div>
+            </div>
+
+            <!-- Recent Properties -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Properties</h2>
+                </div>
+                <div class="section-content">
+                    <div id="dashboard-properties-loading" class="loading-state">Loading properties...</div>
+                    <ul class="item-list" id="dashboard-properties-list" style="display: none;"></ul>
+                    <div id="dashboard-properties-empty" class="empty-state" style="display: none;">No properties found</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load auth.js first (simulating Webflow) -->
+    <!-- In Webflow, this would be: <script src="https://your-backend.onrender.com/static/auth.js"></script> -->
+    <script src="webflow/auth-standalone.js"></script>
+    <!-- Load dashboard.js -->
+    <!-- In Webflow, this would be: <script src="https://your-backend.onrender.com/static/dashboard.js"></script> -->
+    <script src="webflow/dashboard-standalone.js"></script>
+</body>
+</html>

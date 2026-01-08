@@ -198,103 +198,134 @@
             <button onclick="handleLogout()" class="secondary">Logout</button>
         </div>
 
-        <!-- Permissions Test -->
+        <!-- Auth Status Test -->
         <div class="section">
-            <h2>Permission Checks</h2>
-            <div id="permissionsTest" class="permissions-test">
-                <!-- Will be populated by JavaScript -->
-            </div>
-        </div>
-
-        <!-- Role-based Visibility Test -->
-        <div class="section">
-            <h2>Role-based Visibility</h2>
-            <div data-require-auth class="status info">
-                This element is visible only when authenticated
-            </div>
-            <div data-require-role="owner,admin" class="status success">
-                This element is visible only to Owners and Admins
-            </div>
-            <div data-require-role="agent" class="status success">
-                This element is visible only to Agents
-            </div>
-            <div data-hide-role="agent" class="status info">
-                This element is hidden for Agents
+            <h2>Auth Status</h2>
+            <div id="authStatus" style="padding: 15px; background: #f3f4f6; border-radius: 4px;">
+                <p><strong>Is Authenticated:</strong> <span id="authStatusValue">Checking...</span></p>
+                <p><strong>Has Token:</strong> <span id="hasToken">Checking...</span></p>
             </div>
         </div>
     </div>
 
-    <script type="module" src="js/api-client.js"></script>
-    <script type="module" src="js/auth-service.js"></script>
-    <script type="module" src="js/permissions.js"></script>
-    <script type="module">
-        // Initialize services
-        const apiClient = new ApiClient('http://localhost:3000/api');
-        const authService = new AuthService(apiClient);
-        const permissions = new Permissions(authService);
+    <!-- Load auth.js standalone (simulating Webflow) -->
+    <script src="webflow/auth-standalone.js"></script>
+    <script>
+        // Wait for auth.js to initialize
+        function initTest() {
+            if (!window.NinjaAuth) {
+                setTimeout(initTest, 100);
+                return;
+            }
 
-        // Make available globally
-        window.authService = authService;
-        window.permissions = permissions;
-        window.apiClient = apiClient;
+            // Use services from auth.js
+            const apiClient = window.NinjaAuth.apiClient;
+            const authService = window.NinjaAuth.authService;
 
-        // Update UI on auth events
-        document.addEventListener('ninja:auth:login', () => {
+            // Make available globally for test functions
+            window.authService = authService;
+            window.apiClient = apiClient;
+
+            // Update UI on auth events
+            document.addEventListener('ninja:auth:login', () => {
+                updateUserInfo();
+                updateAuthStatus();
+            });
+
+            document.addEventListener('ninja:auth:logout', () => {
+                updateUserInfo();
+                updateAuthStatus();
+            });
+
+            // Handle redirect events (for local testing)
+            document.addEventListener('ninja:auth:redirect', (e) => {
+                const { url, type } = e.detail;
+                if (type === 'dashboard') {
+                    showStatus(`Login successful! Would redirect to ${url} (local testing mode - redirect disabled)`, 'success');
+                } else if (type === 'sign-in') {
+                    showStatus(`Would redirect to ${url} (local testing mode - redirect disabled)`, 'info');
+                }
+            });
+
+            // Initial update
             updateUserInfo();
-            updatePermissions();
-            permissions.applyPermissionsToElements();
+            updateAuthStatus();
+        }
+
+        function updateAuthStatus() {
+            const authStatusEl = document.getElementById('authStatusValue');
+            const hasTokenEl = document.getElementById('hasToken');
+            
+            if (window.NinjaAuth) {
+                const isAuth = window.NinjaAuth.isAuthenticated();
+                if (authStatusEl) authStatusEl.textContent = isAuth ? 'Yes' : 'No';
+                
+                // Check for token in localStorage
+                const prefixes = ['ninja_', 'listo_'];
+                let hasToken = false;
+                for (const prefix of prefixes) {
+                    if (localStorage.getItem(prefix + 'access_token')) {
+                        hasToken = true;
+                        break;
+                    }
+                }
+                if (hasTokenEl) hasTokenEl.textContent = hasToken ? 'Yes' : 'No';
+            } else {
+                if (authStatusEl) authStatusEl.textContent = 'Auth not loaded';
+                if (hasTokenEl) hasTokenEl.textContent = 'Auth not loaded';
+            }
+        }
+
+        // Update auth status on events
+        document.addEventListener('ninja:auth:login', () => {
+            updateAuthStatus();
         });
 
         document.addEventListener('ninja:auth:logout', () => {
-            updateUserInfo();
-            updatePermissions();
-            permissions.applyPermissionsToElements();
+            updateAuthStatus();
         });
 
-        // Initial update
-        updateUserInfo();
-        updatePermissions();
-        permissions.applyPermissionsToElements();
+        // Start initialization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTest);
+        } else {
+            initTest();
+        }
+
+        // Helper functions
+        function getCurrentUser() {
+            // Get user from localStorage (works with both prefixes)
+            const prefixes = ['ninja_', 'listo_'];
+            for (const prefix of prefixes) {
+                const userStr = localStorage.getItem(prefix + 'user');
+                if (userStr) {
+                    try {
+                        return JSON.parse(userStr);
+                    } catch (e) {
+                        console.warn('Failed to parse user:', e);
+                    }
+                }
+            }
+            return null;
+        }
 
         function updateUserInfo() {
-            const user = authService.getCurrentUser();
+            const user = getCurrentUser();
             const userInfoEl = document.getElementById('userInfo');
             
-            if (user) {
+            if (user && window.authService && window.authService.isAuthenticated()) {
                 userInfoEl.classList.remove('hidden');
                 document.getElementById('userEmail').textContent = user.email || '-';
                 document.getElementById('userRole').textContent = user.role || '-';
                 document.getElementById('userId').textContent = user.id || '-';
                 document.getElementById('teamId').textContent = user.teamId || 'None';
-                document.getElementById('isAuthenticated').textContent = authService.isAuthenticated() ? 'Yes' : 'No';
+                document.getElementById('isAuthenticated').textContent = 'Yes';
             } else {
                 userInfoEl.classList.add('hidden');
+                if (document.getElementById('isAuthenticated')) {
+                    document.getElementById('isAuthenticated').textContent = 'No';
+                }
             }
-        }
-
-        function updatePermissions() {
-            const container = document.getElementById('permissionsTest');
-            const checks = [
-                { name: 'View Properties', check: () => permissions.canViewProperties() },
-                { name: 'Create Properties', check: () => permissions.canCreateProperties() },
-                { name: 'Edit Properties', check: () => permissions.canEditProperties() },
-                { name: 'Delete Properties', check: () => permissions.canDeleteProperties() },
-                { name: 'View Leads', check: () => permissions.canViewLeads() },
-                { name: 'Create Leads', check: () => permissions.canCreateLeads() },
-                { name: 'Agent Dashboard', check: () => permissions.canAccessAgentDashboard() },
-                { name: 'Admin Panel', check: () => permissions.canAccessAdminPanel() },
-                { name: 'Manage Teams', check: () => permissions.canManageTeams() },
-                { name: 'View Analytics', check: () => permissions.canViewAnalytics() },
-            ];
-
-            container.innerHTML = checks.map(check => {
-                const allowed = check.check();
-                return `
-                    <div class="permission-item ${allowed ? 'allowed' : 'denied'}">
-                        ${check.name}: ${allowed ? '✓ Allowed' : '✗ Denied'}
-                    </div>
-                `;
-            }).join('');
         }
 
         function showStatus(message, type = 'info') {
@@ -308,6 +339,11 @@
         }
 
         window.handleLogin = async function() {
+            if (!window.NinjaAuth || !window.NinjaAuth.authService) {
+                showStatus('Auth service not ready. Please wait...', 'error');
+                return;
+            }
+
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
@@ -317,7 +353,7 @@
             }
 
             try {
-                await authService.login(email, password);
+                await window.NinjaAuth.authService.login(email, password);
                 showStatus('Login successful!', 'success');
                 document.getElementById('loginEmail').value = '';
                 document.getElementById('loginPassword').value = '';
@@ -327,6 +363,11 @@
         };
 
         window.handleSignup = async function() {
+            if (!window.NinjaAuth || !window.NinjaAuth.authService) {
+                showStatus('Auth service not ready. Please wait...', 'error');
+                return;
+            }
+
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const role = document.getElementById('signupRole').value;
@@ -337,7 +378,7 @@
             }
 
             try {
-                await authService.signup(email, password, role);
+                await window.NinjaAuth.authService.signup(email, password, role);
                 showStatus('Signup successful!', 'success');
                 document.getElementById('signupEmail').value = '';
                 document.getElementById('signupPassword').value = '';
@@ -347,13 +388,20 @@
         };
 
         window.handleLogout = function() {
-            authService.logout();
-            showStatus('Logged out successfully', 'info');
+            if (window.NinjaAuth && window.NinjaAuth.logout) {
+                window.NinjaAuth.logout();
+                showStatus('Logged out successfully', 'info');
+            }
         };
 
         window.verifySession = async function() {
+            if (!window.NinjaAuth || !window.NinjaAuth.checkAuth) {
+                showStatus('Auth service not ready. Please wait...', 'error');
+                return;
+            }
+
             try {
-                const isValid = await authService.verifySession();
+                const isValid = await window.NinjaAuth.checkAuth();
                 if (isValid) {
                     showStatus('Session is valid', 'success');
                 } else {
