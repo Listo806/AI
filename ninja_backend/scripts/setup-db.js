@@ -163,6 +163,14 @@ async function setupDatabase() {
       console.log('✓ Paddle integration migration completed');
     }
 
+    // Run Add property_id to leads migration
+    const migration9Path = path.join(__dirname, '../src/database/migrations/009_add_property_id_to_leads.sql');
+    if (fs.existsSync(migration9Path)) {
+      const migration9SQL = fs.readFileSync(migration9Path, 'utf8');
+      await pool.query(migration9SQL);
+      console.log('✓ Add property_id to leads migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
