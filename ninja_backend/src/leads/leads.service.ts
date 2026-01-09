@@ -14,9 +14,9 @@ export class LeadsService {
     const status = createLeadDto.status || LeadStatus.NEW;
 
     const { rows } = await this.db.query(
-      `INSERT INTO leads (name, email, phone, status, assigned_to, created_by, team_id, notes, source, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, created_by, team_id, notes, source, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createLeadDto.name,
@@ -24,6 +24,7 @@ export class LeadsService {
         createLeadDto.phone || null,
         status,
         createLeadDto.assignedTo || null,
+        createLeadDto.propertyId || null,
         userId,
         teamId,
         createLeadDto.notes || null,
@@ -49,14 +50,14 @@ export class LeadsService {
 
     // If user has a team, show all team leads, otherwise only their own
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1
                ORDER BY created_at DESC`;
       params = [teamId];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1
@@ -70,7 +71,7 @@ export class LeadsService {
 
   async findById(id: string): Promise<Lead | null> {
     const { rows } = await this.db.query(
-      `SELECT id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
               team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
        FROM leads WHERE id = $1`,
       [id],
@@ -116,6 +117,10 @@ export class LeadsService {
       updates.push(`assigned_to = $${paramCount++}`);
       values.push(updateLeadDto.assignedTo || null);
     }
+    if (updateLeadDto.propertyId !== undefined) {
+      updates.push(`property_id = $${paramCount++}`);
+      values.push(updateLeadDto.propertyId || null);
+    }
     if (updateLeadDto.notes !== undefined) {
       updates.push(`notes = $${paramCount++}`);
       values.push(updateLeadDto.notes);
@@ -134,7 +139,7 @@ export class LeadsService {
 
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
       values,
     );
@@ -176,14 +181,14 @@ export class LeadsService {
     let params: any[];
 
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1 AND status = $2
                ORDER BY created_at DESC`;
       params = [teamId, status];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1 AND status = $2

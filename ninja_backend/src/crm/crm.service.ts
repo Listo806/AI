@@ -77,9 +77,8 @@ export class CrmService {
     const teamFilter = teamId ? 'AND l.team_id = $2' : 'AND l.created_by = $2';
     const params = [limit, teamId || userId];
 
-    // Note: ai_score and property_id columns don't exist yet in the schema
-    // These are placeholders for future AI integration
-    // For now, we'll derive intent from source/notes and use status for qualification
+    // Note: ai_score column doesn't exist yet in the schema (placeholder for future AI integration)
+    // property_id now exists in the schema (added in migration 009)
     const query = `
       SELECT 
         l.id,
@@ -88,6 +87,7 @@ export class CrmService {
         l.phone,
         l.status,
         l.assigned_to as "assignedTo",
+        l.property_id as "propertyId",
         l.created_at as "createdAt",
         l.notes,
         l.source,
@@ -98,18 +98,22 @@ export class CrmService {
           WHEN l.status = 'converted' THEN 0.95
           ELSE 0.5
         END as ai_score,
-        -- Determine intent from source or notes (placeholder logic)
+        -- Determine intent from property type if property_id exists, otherwise from source/notes
         CASE 
+          WHEN l.property_id IS NOT NULL AND p.type = 'sale' THEN 'buy'
+          WHEN l.property_id IS NOT NULL AND p.type = 'rent' THEN 'rent'
           WHEN l.source ILIKE '%buy%' OR l.notes ILIKE '%buy%' THEN 'buy'
           WHEN l.source ILIKE '%rent%' OR l.notes ILIKE '%rent%' THEN 'rent'
           ELSE NULL
         END as intent,
-        -- Location from source or notes (placeholder)
-        CASE 
-          WHEN l.source IS NOT NULL THEN l.source
-          ELSE NULL
-        END as location
+        -- Location from property if property_id exists, otherwise from source/notes
+        COALESCE(
+          CONCAT(p.city, ', ', p.state),
+          l.source,
+          NULL
+        ) as location
       FROM leads l
+      LEFT JOIN properties p ON l.property_id = p.id
       WHERE 1=1 ${teamFilter}
       ORDER BY l.created_at DESC
       LIMIT $1
@@ -128,7 +132,7 @@ export class CrmService {
         name: lead.name || 'Unnamed Lead',
         intent: lead.intent || null,
         location: lead.location || null,
-        property_id: null, // Will be added when property_id column is added
+        property_id: lead.propertyId || null,
         ai_score: aiScore,
         status: lead.status,
         created_at: lead.createdAt,
@@ -175,7 +179,7 @@ export class CrmService {
         -- Views count (placeholder: will use analytics_events when available)
         -- For now, return 0 as views are not tracked yet
         0 as views,
-        -- Leads generated count
+        -- Leads generated count (using property_id column from leads table)
         COALESCE((
           SELECT COUNT(*)::int 
           FROM leads l 

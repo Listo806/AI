@@ -15,6 +15,7 @@ export interface Lead {
   assignedTo: string | null;
   createdBy: string;
   teamId: string | null;
+  propertyId: string | null;
   notes: string | null;
   source: string | null;
   createdAt: Date;
@@ -27,6 +28,7 @@ export interface CreateLeadDto {
   phone?: string;
   status?: LeadStatus;
   assignedTo?: string;
+  propertyId?: string;
   notes?: string;
   source?: string;
 }
@@ -37,6 +39,7 @@ export interface UpdateLeadDto {
   phone?: string;
   status?: LeadStatus;
   assignedTo?: string;
+  propertyId?: string;
   notes?: string;
   source?: string;
 }
