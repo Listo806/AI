@@ -25,6 +25,12 @@
     PROTECTED_PAGES: ['/dashboard', '/agent-dashboard', '/admin'],
   };
 
+  // Detect local testing environment (simple HTTP server, no routing)
+  // For local testing, we'll disable automatic redirects to avoid 404 errors
+  const IS_LOCAL_TESTING = window.location.protocol === 'file:' || 
+                            (window.location.hostname === 'localhost' && 
+                             window.location.pathname.split('/').length <= 2);
+
   /**
    * API Client
    */
@@ -210,6 +216,7 @@
 
   /**
    * Page Router
+   * Handles routing for both production (path-based) and local testing
    */
   class PageRouter {
     constructor() {
@@ -217,18 +224,24 @@
     }
 
     isSignInPage() {
-      return this.currentPath === CONFIG.SIGN_IN_URL || this.currentPath.endsWith('/sign-in');
+      return this.currentPath === CONFIG.SIGN_IN_URL || 
+             this.currentPath.endsWith('/sign-in') ||
+             this.currentPath.includes('sign-in') ||
+             this.currentPath.includes('auth-test');
     }
 
     isSignUpPage() {
-      return this.currentPath === '/sign-up' || this.currentPath.endsWith('/sign-up');
+      return this.currentPath === '/sign-up' || 
+             this.currentPath.endsWith('/sign-up') ||
+             this.currentPath.includes('sign-up');
     }
 
     isProtectedPage() {
       // Check if current page is in protected pages list
       return CONFIG.PROTECTED_PAGES.some(protectedPath => 
         this.currentPath === protectedPath || 
-        this.currentPath.startsWith(protectedPath + '/')
+        this.currentPath.startsWith(protectedPath + '/') ||
+        this.currentPath.includes('dashboard')
       );
     }
 
@@ -237,6 +250,16 @@
     }
 
     redirect(url) {
+      if (IS_LOCAL_TESTING) {
+        // For local testing, don't redirect to avoid 404 errors
+        // Instead, dispatch an event that test pages can listen to
+        console.log('[Local Testing] Would redirect to:', url);
+        document.dispatchEvent(new CustomEvent('ninja:auth:redirect', {
+          detail: { url: url, type: url.includes('dashboard') ? 'dashboard' : 'sign-in' }
+        }));
+        return;
+      }
+      // For production, use full page navigation
       window.location.href = url;
     }
 
@@ -259,14 +282,14 @@
     }
 
     init() {
-      // Sign In Form
-      const signInForm = document.getElementById('signin-form');
+      // Sign In Form - using Webflow form ID
+      const signInForm = document.getElementById('lqSigninForm');
       if (signInForm) {
         signInForm.addEventListener('submit', (e) => this.handleSignIn(e));
       }
 
-      // Sign Up Form
-      const signUpForm = document.getElementById('signup-form');
+      // Sign Up Form - using Webflow form ID
+      const signUpForm = document.getElementById('lqSignupForm');
       if (signUpForm) {
         signUpForm.addEventListener('submit', (e) => this.handleSignUp(e));
       }
@@ -275,9 +298,11 @@
     async handleSignIn(e) {
       e.preventDefault();
       
-      const emailInput = document.getElementById('signin-email');
-      const passwordInput = document.getElementById('signin-password');
-      const errorElement = document.getElementById('signin-error');
+      const form = e.target;
+      // Find inputs within the form context (using class selectors)
+      const emailInput = form.querySelector('.auth-email') || form.querySelector('#lqEmail');
+      const passwordInput = form.querySelector('.auth-password') || form.querySelector('#lqPass');
+      const errorElement = form.querySelector('.auth-error') || form.querySelector('.lq-error');
 
       const email = emailInput ? emailInput.value.trim() : '';
       const password = passwordInput ? passwordInput.value : '';
@@ -293,7 +318,7 @@
 
       try {
         // Disable form during submission
-        this.setFormLoading('signin-form', true);
+        this.setFormLoading('lqSigninForm', true);
 
         await this.authService.login(email, password);
         
@@ -301,27 +326,29 @@
         this.router.redirectToDashboard();
       } catch (error) {
         this.showError(errorElement, error.message);
-        this.setFormLoading('signin-form', false);
+        this.setFormLoading('lqSigninForm', false);
       }
     }
 
     async handleSignUp(e) {
       e.preventDefault();
       
-      const nameInput = document.getElementById('signup-name');
-      const emailInput = document.getElementById('signup-email');
-      const passwordInput = document.getElementById('signup-password');
-      const errorElement = document.getElementById('signup-error');
+      const form = e.target;
+      // Find inputs within the form context (using class selectors)
+      const emailInput = form.querySelector('.auth-email') || form.querySelector('#lqEmail');
+      const passwordInput = form.querySelector('.auth-password') || form.querySelector('#lqPass');
+      const roleSelect = form.querySelector('#signupRole');
+      const errorElement = form.querySelector('.auth-error') || form.querySelector('.lq-error');
 
-      const name = nameInput ? nameInput.value.trim() : '';
       const email = emailInput ? emailInput.value.trim() : '';
       const password = passwordInput ? passwordInput.value : '';
+      const role = roleSelect ? roleSelect.value : 'owner';
 
       // Clear previous errors
       this.clearError(errorElement);
 
       // Validation
-      if (!name || !email || !password) {
+      if (!email || !password) {
         this.showError(errorElement, 'Please fill in all fields.');
         return;
       }
@@ -333,16 +360,16 @@
 
       try {
         // Disable form during submission
-        this.setFormLoading('signup-form', true);
+        this.setFormLoading('lqSignupForm', true);
 
-        // Sign up with default role 'owner' (can be changed)
-        await this.authService.signup(email, password, 'owner');
+        // Sign up with selected role (defaults to 'owner')
+        await this.authService.signup(email, password, role);
         
         // Success - redirect to dashboard
         this.router.redirectToDashboard();
       } catch (error) {
         this.showError(errorElement, error.message);
-        this.setFormLoading('signup-form', false);
+        this.setFormLoading('lqSignupForm', false);
       }
     }
 
@@ -360,21 +387,24 @@
     clearError(element) {
       if (!element) return;
       element.textContent = '';
-      element.style.display = 'none';
+      // Don't hide the element completely - just clear the text
+      // Webflow may have styling that depends on the element existing
     }
 
     setFormLoading(formId, loading) {
       const form = document.getElementById(formId);
       if (!form) return;
 
-      const submitButton = form.querySelector('button[type="submit"]');
-      const inputs = form.querySelectorAll('input, button');
+      const submitButton = form.querySelector('button[type="submit"]') || form.querySelector('.form-auth-submit');
+      const inputs = form.querySelectorAll('input, select, button');
 
       if (loading) {
         inputs.forEach(input => {
           input.disabled = true;
         });
         if (submitButton) {
+          const originalText = submitButton.textContent || submitButton.innerText;
+          submitButton.setAttribute('data-original-text', originalText);
           submitButton.textContent = 'Loading...';
         }
       } else {
@@ -382,10 +412,17 @@
           input.disabled = false;
         });
         if (submitButton) {
-          if (formId === 'signin-form') {
-            submitButton.textContent = 'Sign In';
-          } else if (formId === 'signup-form') {
-            submitButton.textContent = 'Create Account';
+          const originalText = submitButton.getAttribute('data-original-text');
+          if (originalText) {
+            submitButton.textContent = originalText;
+            submitButton.removeAttribute('data-original-text');
+          } else {
+            // Fallback to default text
+            if (formId === 'lqSigninForm') {
+              submitButton.textContent = 'Sign In';
+            } else if (formId === 'lqSignupForm') {
+              submitButton.textContent = 'Sign Up';
+            }
           }
         }
       }
