@@ -3,6 +3,8 @@ export enum UserRole {
   AGENT = 'agent',
   DEVELOPER = 'developer',
   ADMIN = 'admin',
+  WHOLESALER = 'wholesaler',
+  INVESTOR = 'investor',
 }
 
 export interface User {

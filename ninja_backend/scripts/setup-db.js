@@ -171,6 +171,14 @@ async function setupDatabase() {
       console.log('✓ Add property_id to leads migration completed');
     }
 
+    // Run Add wholesaler and investor roles migration
+    const migration10Path = path.join(__dirname, '../src/database/migrations/010_add_wholesaler_investor_roles.sql');
+    if (fs.existsSync(migration10Path)) {
+      const migration10SQL = fs.readFileSync(migration10Path, 'utf8');
+      await pool.query(migration10SQL);
+      console.log('✓ Add wholesaler and investor roles migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
