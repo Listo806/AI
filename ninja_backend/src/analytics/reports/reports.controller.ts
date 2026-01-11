@@ -6,10 +6,13 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReportGeneratorService } from './report-generator.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
+@ApiTags('analytics')
+@ApiBearerAuth('JWT-auth')
 @Controller('analytics/reports')
 @UseGuards(JwtAuthGuard)
 export class ReportsController {
@@ -19,6 +22,10 @@ export class ReportsController {
    * Generate weekly report
    */
   @Post('weekly')
+  @ApiOperation({ summary: 'Generate weekly analytics report' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format YYYY-MM-DD)' })
+  @ApiResponse({ status: 200, description: 'Weekly report generated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid date format' })
   async generateWeeklyReport(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,
@@ -41,6 +48,10 @@ export class ReportsController {
    * Generate monthly report
    */
   @Post('monthly')
+  @ApiOperation({ summary: 'Generate monthly analytics report' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format YYYY-MM-DD)' })
+  @ApiResponse({ status: 200, description: 'Monthly report generated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid date format' })
   async generateMonthlyReport(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,

@@ -38,6 +38,7 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.10",
+    "@nestjs/swagger": "^11.2.4",
     "@paddle/paddle-node-sdk": "^3.5.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
@@ -54,6 +55,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "stripe": "^20.1.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
     "web-push": "^3.6.7"
   },

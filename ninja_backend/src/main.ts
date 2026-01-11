@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 // Load environment variables
 dotenv.config();
@@ -54,9 +55,45 @@ async function bootstrap() {
     }),
   );
   
+  // Swagger API Documentation
+  const config = new DocumentBuilder()
+    .setTitle('Ninja Backend API')
+    .setDescription('SaaS-native backend API for real estate platform')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // This name here is important for matching up with @ApiBearerAuth() in your controller!
+    )
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('users', 'User management endpoints')
+    .addTag('teams', 'Team management endpoints')
+    .addTag('properties', 'Property management endpoints')
+    .addTag('leads', 'Lead management endpoints')
+    .addTag('crm', 'CRM dashboard endpoints')
+    .addTag('analytics', 'Analytics and reporting endpoints')
+    .addTag('subscriptions', 'Subscription management endpoints')
+    .addTag('payments', 'Payment processing endpoints')
+    .addTag('integrations', 'Third-party integration endpoints')
+    .build();
+  
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true, // Keep auth token in session
+    },
+  });
+  
   const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`Application is running on: http://localhost:${port}/${process.env.API_PREFIX || 'api'}`);
+  console.log(`Swagger API Documentation: http://localhost:${port}/api-docs`);
 }
 
 bootstrap();

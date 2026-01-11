@@ -6,10 +6,13 @@ import {
   ParseIntPipe,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('analytics')
+@ApiBearerAuth('JWT-auth')
 @Controller('analytics')
 @UseGuards(JwtAuthGuard)
 export class AnalyticsController {
@@ -19,6 +22,10 @@ export class AnalyticsController {
    * Get dashboard metrics (comprehensive overview)
    */
   @Get('dashboard')
+  @ApiOperation({ summary: 'Get dashboard metrics (comprehensive overview)' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601 format)' })
+  @ApiResponse({ status: 200, description: 'Dashboard metrics retrieved successfully' })
   async getDashboard(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,
@@ -38,6 +45,10 @@ export class AnalyticsController {
    * Get lead metrics
    */
   @Get('leads')
+  @ApiOperation({ summary: 'Get lead metrics' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601 format)' })
+  @ApiResponse({ status: 200, description: 'Lead metrics retrieved successfully' })
   async getLeadMetrics(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,
@@ -54,6 +65,10 @@ export class AnalyticsController {
    * Get property metrics
    */
   @Get('properties')
+  @ApiOperation({ summary: 'Get property metrics' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601 format)' })
+  @ApiResponse({ status: 200, description: 'Property metrics retrieved successfully' })
   async getPropertyMetrics(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,
@@ -70,6 +85,8 @@ export class AnalyticsController {
    * Get subscription metrics
    */
   @Get('subscriptions')
+  @ApiOperation({ summary: 'Get subscription metrics' })
+  @ApiResponse({ status: 200, description: 'Subscription metrics retrieved successfully' })
   async getSubscriptionMetrics(@CurrentUser() user: any) {
     return this.analyticsService.getSubscriptionMetrics(
       user.role === 'admin' ? null : user.teamId,
@@ -80,6 +97,8 @@ export class AnalyticsController {
    * Get team metrics
    */
   @Get('teams')
+  @ApiOperation({ summary: 'Get team metrics' })
+  @ApiResponse({ status: 200, description: 'Team metrics retrieved successfully' })
   async getTeamMetrics(@CurrentUser() user: any) {
     return this.analyticsService.getTeamMetrics(
       user.role === 'admin' ? null : user.teamId,
@@ -90,6 +109,11 @@ export class AnalyticsController {
    * Get user metrics
    */
   @Get('users')
+  @ApiOperation({ summary: 'Get user metrics' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601 format)' })
+  @ApiQuery({ name: 'days', required: false, description: 'Number of days (alternative to date range)' })
+  @ApiResponse({ status: 200, description: 'User metrics retrieved successfully' })
   async getUserMetrics(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,
@@ -107,6 +131,11 @@ export class AnalyticsController {
    * Get activity metrics
    */
   @Get('activity')
+  @ApiOperation({ summary: 'Get activity metrics' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601 format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601 format)' })
+  @ApiQuery({ name: 'days', required: false, description: 'Number of days (alternative to date range)' })
+  @ApiResponse({ status: 200, description: 'Activity metrics retrieved successfully' })
   async getActivityMetrics(
     @CurrentUser() user: any,
     @Query('startDate') startDateStr?: string,

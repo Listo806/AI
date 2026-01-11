@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -17,17 +18,33 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { AddMediaDto } from './dto/add-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 
+@ApiTags('properties')
+@ApiBearerAuth('JWT-auth')
 @Controller('properties')
 @UseGuards(JwtAuthGuard)
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new property' })
+  @ApiBody({ type: CreatePropertyDto })
+  @ApiResponse({ status: 201, description: 'Property created successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async create(@Body() createPropertyDto: CreatePropertyDto, @CurrentUser() user: any) {
     return this.propertiesService.create(createPropertyDto, user.id, user.teamId);
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all properties (with optional filters and bbox search)' })
+  @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
+  @ApiQuery({ name: 'status', required: false, description: 'Filter by property status' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search query' })
+  @ApiQuery({ name: 'west', required: false, description: 'Bounding box west longitude' })
+  @ApiQuery({ name: 'south', required: false, description: 'Bounding box south latitude' })
+  @ApiQuery({ name: 'east', required: false, description: 'Bounding box east longitude' })
+  @ApiQuery({ name: 'north', required: false, description: 'Bounding box north latitude' })
+  @ApiResponse({ status: 200, description: 'Properties retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(
     @CurrentUser() user: any,
     @Query('type') type?: string,
@@ -52,11 +69,20 @@ export class PropertiesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get property by ID' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   async findOne(@Param('id') id: string) {
     return this.propertiesService.findById(id);
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update a property' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiBody({ type: UpdatePropertyDto })
+  @ApiResponse({ status: 200, description: 'Property updated successfully' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   async update(
     @Param('id') id: string,
     @Body() updatePropertyDto: UpdatePropertyDto,
@@ -66,17 +92,29 @@ export class PropertiesController {
   }
 
   @Post(':id/publish')
+  @ApiOperation({ summary: 'Publish a property' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property published successfully' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   async publish(@Param('id') id: string, @CurrentUser() user: any) {
     return this.propertiesService.publish(id, user.id, user.teamId);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a property' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Property deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Property not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
     await this.propertiesService.delete(id, user.id, user.teamId);
     return { message: 'Property deleted successfully' };
   }
 
   @Post(':id/media')
+  @ApiOperation({ summary: 'Add media to a property' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiBody({ type: AddMediaDto })
+  @ApiResponse({ status: 201, description: 'Media added successfully' })
   async addMedia(
     @Param('id') propertyId: string,
     @Body() addMediaDto: AddMediaDto,
@@ -93,11 +131,19 @@ export class PropertiesController {
   }
 
   @Get(':id/media')
+  @ApiOperation({ summary: 'Get all media for a property' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiResponse({ status: 200, description: 'Media retrieved successfully' })
   async getMedia(@Param('id') propertyId: string) {
     return this.propertiesService.getMedia(propertyId);
   }
 
   @Put(':id/media/:mediaId')
+  @ApiOperation({ summary: 'Update property media' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiParam({ name: 'mediaId', description: 'Media ID' })
+  @ApiBody({ type: UpdateMediaDto })
+  @ApiResponse({ status: 200, description: 'Media updated successfully' })
   async updateMedia(
     @Param('mediaId') mediaId: string,
     @Body() updateMediaDto: UpdateMediaDto,
@@ -107,6 +153,10 @@ export class PropertiesController {
   }
 
   @Delete(':id/media/:mediaId')
+  @ApiOperation({ summary: 'Delete property media' })
+  @ApiParam({ name: 'id', description: 'Property ID' })
+  @ApiParam({ name: 'mediaId', description: 'Media ID' })
+  @ApiResponse({ status: 200, description: 'Media deleted successfully' })
   async deleteMedia(
     @Param('mediaId') mediaId: string,
     @CurrentUser() user: any,
