@@ -1,0 +1,33 @@
+
+<!-- Signin Form-->
+<form class="lq-row" id="lqSigninForm">
+    <label class="lq-label" for="lqEmail">Email</label>
+    <input id="lqEmail" class="lq-input auth-email" type="email" placeholder="you@email.com" autocomplete="email" required="">
+    <label class="lq-label" for="lqPass">Password</label>
+    <input id="lqPass" class="lq-input auth-password" type="password" placeholder="••••••••" autocomplete="current-password" required="">
+    <button class="lq-btn form-auth-submit" type="submit">Sign In</button>
+    <p class="lq-sub">Don't have an account? <a href="sign-up">Sign Up</a></p>
+    <div class="lq-error auth-error" role="alert">Invalid email or password.</div>
+</form>
+<!-- End Signin Form -->
+
+<!-- Signup Form-->
+<form class="lq-row" id="lqSignupForm">
+    <label class="lq-label" for="lqEmail">Email</label>
+    <input id="lqEmail" class="lq-input auth-email" type="email" placeholder="you@email.com" autocomplete="email" required="">
+    <label class="lq-label" for="lqPass">Password</label>
+    <input id="lqPass" class="lq-input auth-password" type="password" placeholder="••••••••" autocomplete="current-password" required="">
+          <div class="form-group">
+              <label>Role</label>
+              <select id="signupRole">
+                  <option value="owner">Owner</option>
+                  <option value="agent">Agent</option>
+                  <option value="admin">Admin</option>
+                  <option value="developer">Developer</option>
+              </select>
+          </div>
+    <button class="lq-btn form-auth-submit" type="submit">Sign Up</button>
+    <p class="lq-sub">Already have an account? <a href="sign-in">Sign In</a></p>
+</form>
+<!-- End Signup Form -->
+
