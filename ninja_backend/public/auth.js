@@ -21,8 +21,25 @@
     DASHBOARD_URL: '/dashboard',
     SIGN_IN_URL: '/sign-in',
     STORAGE_PREFIX: 'listo_',
+    // Role-based dashboard paths
+    DASHBOARD_PATHS: {
+      owner: '/dashboard/owners',
+      agent: '/dashboard/agent',
+      developer: '/dashboard/developer',
+      admin: '/dashboard/admin',
+      wholesaler: '/dashboard/wholesalers',
+      investor: '/dashboard/investors',
+    },
     // Pages that require authentication (add your protected routes here)
-    PROTECTED_PAGES: ['/dashboard', '/agent-dashboard', '/admin'],
+    PROTECTED_PAGES: [
+      '/dashboard',
+      '/dashboard/owners',
+      '/dashboard/agent',
+      '/dashboard/developer',
+      '/dashboard/admin',
+      '/dashboard/wholesalers',
+      '/dashboard/investors',
+    ],
   };
 
   // Detect local testing environment (simple HTTP server, no routing)
@@ -215,6 +232,31 @@
   }
 
   /**
+   * Get current user from localStorage
+   */
+  function getCurrentUser() {
+    try {
+      const userStr = localStorage.getItem(CONFIG.STORAGE_PREFIX + 'user');
+      return userStr ? JSON.parse(userStr) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get role-based dashboard URL
+   */
+  function getDashboardUrlForRole(role) {
+    if (!role) return CONFIG.DASHBOARD_URL;
+    
+    // Normalize role to lowercase
+    const normalizedRole = role.toLowerCase();
+    
+    // Return role-specific dashboard or default
+    return CONFIG.DASHBOARD_PATHS[normalizedRole] || CONFIG.DASHBOARD_URL;
+  }
+
+  /**
    * Page Router
    * Handles routing for both production (path-based) and local testing
    */
@@ -263,8 +305,10 @@
       window.location.href = url;
     }
 
-    redirectToDashboard() {
-      this.redirect(CONFIG.DASHBOARD_URL);
+    redirectToDashboard(role) {
+      // Get role-based dashboard URL
+      const dashboardUrl = role ? getDashboardUrlForRole(role) : CONFIG.DASHBOARD_URL;
+      this.redirect(dashboardUrl);
     }
 
     redirectToSignIn() {
@@ -320,10 +364,11 @@
         // Disable form during submission
         this.setFormLoading('lqSigninForm', true);
 
-        await this.authService.login(email, password);
+        const response = await this.authService.login(email, password);
         
-        // Success - redirect to dashboard
-        this.router.redirectToDashboard();
+        // Success - redirect to role-based dashboard
+        const userRole = response.user?.role || getCurrentUser()?.role;
+        this.router.redirectToDashboard(userRole);
       } catch (error) {
         this.showError(errorElement, error.message);
         this.setFormLoading('lqSigninForm', false);
@@ -363,10 +408,11 @@
         this.setFormLoading('lqSignupForm', true);
 
         // Sign up with selected role (defaults to 'owner')
-        await this.authService.signup(email, password, role);
+        const response = await this.authService.signup(email, password, role);
         
-        // Success - redirect to dashboard
-        this.router.redirectToDashboard();
+        // Success - redirect to role-based dashboard
+        const userRole = response.user?.role || role;
+        this.router.redirectToDashboard(userRole);
       } catch (error) {
         this.showError(errorElement, error.message);
         this.setFormLoading('lqSignupForm', false);
@@ -445,9 +491,10 @@
     async checkProtectedRoute() {
       // Skip check for public pages (sign-in, sign-up)
       if (this.router.isPublicPage()) {
-        // If already authenticated on sign-in/sign-up, redirect to dashboard
+        // If already authenticated on sign-in/sign-up, redirect to role-based dashboard
         if (this.authService.isAuthenticated()) {
-          this.router.redirectToDashboard();
+          const user = getCurrentUser();
+          this.router.redirectToDashboard(user?.role);
         }
         return;
       }
@@ -463,7 +510,11 @@
 
         // Verify token is still valid by checking current user
         try {
-          await this.apiClient.request('/users/me');
+          const userData = await this.apiClient.request('/users/me');
+          // Update stored user data in case it changed
+          if (userData) {
+            localStorage.setItem(CONFIG.STORAGE_PREFIX + 'user', JSON.stringify(userData));
+          }
         } catch (error) {
           // Token invalid or expired - redirect to sign-in
           this.apiClient.clearTokens();
@@ -501,6 +552,8 @@
       formHandler,
       protectedRouteHandler,
       isAuthenticated: () => authService.isAuthenticated(),
+      getCurrentUser: () => getCurrentUser(),
+      getDashboardUrl: (role) => getDashboardUrlForRole(role),
       logout: () => {
         apiClient.clearTokens();
         localStorage.removeItem(CONFIG.STORAGE_PREFIX + 'user');
@@ -509,7 +562,11 @@
       checkAuth: async () => {
         // Verify current session
         try {
-          await apiClient.request('/users/me');
+          const userData = await apiClient.request('/users/me');
+          // Update stored user data
+          if (userData) {
+            localStorage.setItem(CONFIG.STORAGE_PREFIX + 'user', JSON.stringify(userData));
+          }
           return true;
         } catch (error) {
           // Session invalid
