@@ -37,5 +37,10 @@ export class CreateLeadDto {
   @IsOptional()
   @IsString()
   source?: string;
+
+  @ApiPropertyOptional({ example: 'property-uuid', description: 'Property ID to associate lead with' })
+  @IsOptional()
+  @IsString()
+  propertyId?: string;
 }
 
