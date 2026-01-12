@@ -478,7 +478,7 @@
 
     createLeadItem(lead) {
       const li = document.createElement('li');
-      li.className = 'item-list-item';
+      li.className = 'crm-list-item';
 
       const statusClass = `badge-${lead.status || 'new'}`;
       const date = new Date(lead.created_at).toLocaleDateString('en-US', { 
@@ -499,16 +499,16 @@
         '<div><em>No associated property</em></div>';
 
       li.innerHTML = `
-        <div class="item-header">
-          <div class="item-title">${lead.name || 'Unnamed Lead'}</div>
-          <span class="item-badge ${statusClass}">${lead.status || 'new'}</span>
+        <div class="crm-item-header">
+          <div class="crm-item-title">${lead.name || 'Unnamed Lead'}</div>
+          <span class="crm-item-badge ${statusClass}">${lead.status || 'new'}</span>
         </div>
-        <div class="item-details">
+        <div class="crm-item-details">
           <div><strong>Contact:</strong> ${contact}</div>
           ${propertyInfo}
           <div><strong>AI Score:</strong> ${aiScoreDisplay}</div>
         </div>
-        <div class="item-meta">Created: ${date}</div>
+        <div class="crm-item-meta">Created: ${date}</div>
       `;
 
       return li;
@@ -516,7 +516,7 @@
 
     createPropertyItem(property) {
       const li = document.createElement('li');
-      li.className = 'item-list-item';
+      li.className = 'crm-list-item';
 
       const statusClass = `badge-${property.status || 'draft'}`;
       const date = new Date(property.created_at).toLocaleDateString('en-US', { 
@@ -530,14 +530,14 @@
                             (property.status || 'draft').slice(1);
 
       li.innerHTML = `
-        <div class="item-header">
-          <div class="item-title">${property.title || 'Untitled Property'}</div>
-          <span class="item-badge ${statusClass}">${statusDisplay}</span>
+        <div class="crm-item-header">
+          <div class="crm-item-title">${property.title || 'Untitled Property'}</div>
+          <span class="crm-item-badge ${statusClass}">${statusDisplay}</span>
         </div>
-        <div class="item-details">
+        <div class="crm-item-details">
           ${property.location ? `<div><strong>Location:</strong> ${property.location}</div>` : '<div><em>No location specified</em></div>'}
         </div>
-        <div class="item-meta">Created: ${date}</div>
+        <div class="crm-item-meta">Created: ${date}</div>
       `;
 
       return li;
