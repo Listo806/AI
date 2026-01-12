@@ -313,10 +313,11 @@
       
       try {
         // Load all dashboard data in parallel using CRM endpoints
+        // Use owner-specific endpoints for full lists (role-scoped)
         const [summary, leadsResponse, propertiesResponse] = await Promise.all([
           this.apiClient.request('/crm/dashboard/summary'),
-          this.apiClient.request('/crm/leads/recent?limit=' + CONFIG.MAX_RECENT_ITEMS),
-          this.apiClient.request('/crm/properties/recent?limit=' + CONFIG.MAX_RECENT_ITEMS),
+          this.apiClient.request('/crm/owner/leads'),
+          this.apiClient.request('/crm/owner/properties'),
         ]);
 
         // Update stats from summary endpoint
@@ -328,10 +329,10 @@
           publishedProperties: summary.properties?.published || 0,
         };
 
-        // Update leads from recent endpoint (response may be direct array or { data: [...] })
+        // Update leads from owner endpoint (response may be direct array or { data: [...] })
         this.leads = Array.isArray(leadsResponse) ? leadsResponse : (leadsResponse.data || []);
         
-        // Update properties from recent endpoint (response may be direct array or { data: [...] })
+        // Update properties from owner endpoint (response may be direct array or { data: [...] })
         this.properties = Array.isArray(propertiesResponse) ? propertiesResponse : (propertiesResponse.data || []);
 
         this.loading = false;
@@ -354,12 +355,12 @@
       return this.stats;
     }
 
-    getRecentLeads(limit = CONFIG.MAX_RECENT_ITEMS) {
-      return this.leads.slice(0, limit);
+    getAllLeads() {
+      return this.leads;
     }
 
-    getRecentProperties(limit = CONFIG.MAX_RECENT_ITEMS) {
-      return this.properties.slice(0, limit);
+    getAllProperties() {
+      return this.properties;
     }
 
     getLeadsEmptyMessage() {
@@ -396,7 +397,7 @@
     }
 
     renderLeads() {
-      const leads = this.dashboard.getRecentLeads();
+      const leads = this.dashboard.getAllLeads();
       const container = document.getElementById('dashboard-leads-list');
       const loadingEl = document.getElementById('dashboard-leads-loading');
       const emptyEl = document.getElementById('dashboard-leads-empty');
@@ -416,7 +417,8 @@
 
       if (leads.length === 0) {
         if (emptyEl) {
-          emptyEl.textContent = this.dashboard.getLeadsEmptyMessage();
+          const emptyTextEl = emptyEl.querySelector('.lq-empty-text');
+          if (emptyTextEl) emptyTextEl.textContent = this.dashboard.getLeadsEmptyMessage();
           emptyEl.style.display = 'block';
         }
         container.style.display = 'none';
@@ -435,7 +437,7 @@
     }
 
     renderProperties() {
-      const properties = this.dashboard.getRecentProperties();
+      const properties = this.dashboard.getAllProperties();
       const container = document.getElementById('dashboard-properties-list');
       const loadingEl = document.getElementById('dashboard-properties-loading');
       const emptyEl = document.getElementById('dashboard-properties-empty');
@@ -455,7 +457,8 @@
 
       if (properties.length === 0) {
         if (emptyEl) {
-          emptyEl.textContent = this.dashboard.getPropertiesEmptyMessage();
+          const emptyTextEl = emptyEl.querySelector('.lq-empty-text');
+          if (emptyTextEl) emptyTextEl.textContent = this.dashboard.getPropertiesEmptyMessage();
           emptyEl.style.display = 'block';
         }
         container.style.display = 'none';
@@ -477,21 +480,35 @@
       const li = document.createElement('li');
       li.className = 'item-list-item';
 
-      const statusClass = `badge-${lead.status}`;
-      const date = new Date(lead.created_at).toLocaleDateString();
+      const statusClass = `badge-${lead.status || 'new'}`;
+      const date = new Date(lead.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
       const aiScore = lead.ai_score || 0;
-      const aiScoreDisplay = aiScore > 0 ? ` (AI: ${(aiScore * 100).toFixed(0)}%)` : '';
+      // Show AI score as percentage, or "Pending" if score is 0 or not finalized
+      const aiScoreDisplay = aiScore > 0 ? `${(aiScore * 100).toFixed(0)}%` : 'Pending';
+      
+      // Contact info: email or phone or "No contact"
+      const contact = lead.contact || lead.email || lead.phone || 'No contact';
+      
+      // Associated property
+      const propertyInfo = lead.property_title ? 
+        `<div><strong>Property:</strong> ${lead.property_title}</div>` : 
+        '<div><em>No associated property</em></div>';
 
       li.innerHTML = `
         <div class="item-header">
           <div class="item-title">${lead.name || 'Unnamed Lead'}</div>
-          <span class="item-badge ${statusClass}">${lead.status}${aiScoreDisplay}</span>
+          <span class="item-badge ${statusClass}">${lead.status || 'new'}</span>
         </div>
         <div class="item-details">
-          ${lead.intent ? `<div><strong>Intent:</strong> ${lead.intent}</div>` : ''}
-          ${lead.location ? `<div>📍 ${lead.location}</div>` : ''}
+          <div><strong>Contact:</strong> ${contact}</div>
+          ${propertyInfo}
+          <div><strong>AI Score:</strong> ${aiScoreDisplay}</div>
         </div>
-        <div class="item-meta">${date}</div>
+        <div class="item-meta">Created: ${date}</div>
       `;
 
       return li;
@@ -501,23 +518,26 @@
       const li = document.createElement('li');
       li.className = 'item-list-item';
 
-      const statusClass = `badge-${property.status}`;
-      const date = new Date(property.created_at).toLocaleDateString();
-      const views = property.views || 0;
-      const leadsGenerated = property.leads_generated || 0;
+      const statusClass = `badge-${property.status || 'draft'}`;
+      const date = new Date(property.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      // Status display: capitalize first letter
+      const statusDisplay = (property.status || 'draft').charAt(0).toUpperCase() + 
+                            (property.status || 'draft').slice(1);
 
       li.innerHTML = `
         <div class="item-header">
           <div class="item-title">${property.title || 'Untitled Property'}</div>
-          <span class="item-badge ${statusClass}">${property.status}</span>
+          <span class="item-badge ${statusClass}">${statusDisplay}</span>
         </div>
         <div class="item-details">
-          ${property.location ? `<div>📍 ${property.location}</div>` : ''}
-          <div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
-            👁️ ${views} views • 📋 ${leadsGenerated} leads
-          </div>
+          ${property.location ? `<div><strong>Location:</strong> ${property.location}</div>` : '<div><em>No location specified</em></div>'}
         </div>
-        <div class="item-meta">${date}</div>
+        <div class="item-meta">Created: ${date}</div>
       `;
 
       return li;

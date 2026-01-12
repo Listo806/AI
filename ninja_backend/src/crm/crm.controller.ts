@@ -5,6 +5,7 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CrmService } from './crm.service';
@@ -68,5 +69,39 @@ export class CrmController {
     // Cap limit at 50 for performance
     const safeLimit = Math.min(Math.max(limit, 1), 50);
     return this.crmService.getRecentProperties(user.id, user.teamId, safeLimit);
+  }
+
+  /**
+   * GET /api/crm/owner/properties
+   * Get all owner properties (role-scoped: owner only sees their own)
+   */
+  @Get('owner/properties')
+  @ApiOperation({ summary: 'Get all owner properties (read-only list)' })
+  @ApiResponse({ status: 200, description: 'Owner properties retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not an owner' })
+  async getOwnerProperties(@CurrentUser() user: any) {
+    // Ensure user is an owner
+    if (user.role !== 'owner') {
+      throw new ForbiddenException('This endpoint is only available for owners');
+    }
+    return this.crmService.getOwnerProperties(user.id, user.teamId);
+  }
+
+  /**
+   * GET /api/crm/owner/leads
+   * Get all owner leads (role-scoped: owner only sees their own)
+   */
+  @Get('owner/leads')
+  @ApiOperation({ summary: 'Get all owner leads (read-only list)' })
+  @ApiResponse({ status: 200, description: 'Owner leads retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - not an owner' })
+  async getOwnerLeads(@CurrentUser() user: any) {
+    // Ensure user is an owner
+    if (user.role !== 'owner') {
+      throw new ForbiddenException('This endpoint is only available for owners');
+    }
+    return this.crmService.getOwnerLeads(user.id, user.teamId);
   }
 }

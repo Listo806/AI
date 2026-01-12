@@ -21,10 +21,11 @@ export class CrmService {
     const params = teamId ? [teamId] : [userId];
 
     // Single query for all lead aggregations
+    // New leads: last 7 days (configurable - can be changed to 24 hours if needed)
     const leadsQuery = `
       SELECT 
         COUNT(*)::int as total,
-        COUNT(*) FILTER (WHERE l.status = 'new' AND l.created_at >= NOW() - INTERVAL '24 hours')::int as new,
+        COUNT(*) FILTER (WHERE l.created_at >= NOW() - INTERVAL '7 days')::int as new,
         COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified
       FROM leads l
       WHERE 1=1 ${teamFilter}
@@ -215,6 +216,95 @@ export class CrmService {
     return {
       data: processedProperties,
       meta: { total: processedProperties.length },
+    };
+  }
+
+  /**
+   * Get all owner properties (for owner dashboard)
+   * Role scoped: owners only see their own properties
+   */
+  async getOwnerProperties(userId: string, teamId: string | null) {
+    // For owners, always filter by created_by (no team sharing)
+    const query = `
+      SELECT 
+        p.id,
+        p.title,
+        p.status,
+        p.created_at as "createdAt",
+        p.published_at as "publishedAt",
+        CONCAT(
+          COALESCE(p.city, ''),
+          CASE WHEN p.city IS NOT NULL AND p.state IS NOT NULL THEN ', ' ELSE '' END,
+          COALESCE(p.state, '')
+        ) as location
+      FROM properties p
+      WHERE p.created_by = $1
+      ORDER BY p.created_at DESC
+    `;
+
+    const result = await this.db.query(query, [userId]);
+    const properties = result.rows || [];
+
+    return {
+      data: properties.map((prop) => ({
+        id: prop.id,
+        title: prop.title || 'Untitled Property',
+        status: prop.status,
+        location: prop.location || null,
+        created_at: prop.createdAt,
+        published_at: prop.publishedAt || null,
+      })),
+      meta: { total: properties.length },
+    };
+  }
+
+  /**
+   * Get all owner leads (for owner dashboard)
+   * Role scoped: owners only see their own leads
+   * Includes associated property information
+   */
+  async getOwnerLeads(userId: string, teamId: string | null) {
+    const query = `
+      SELECT 
+        l.id,
+        l.name,
+        l.email,
+        l.phone,
+        l.status,
+        l.property_id as "propertyId",
+        l.created_at as "createdAt",
+        -- Associated property title
+        p.title as "propertyTitle",
+        -- AI score (placeholder: calculated from status)
+        CASE 
+          WHEN l.status = 'qualified' THEN 0.85
+          WHEN l.status = 'contacted' THEN 0.65
+          WHEN l.status = 'converted' THEN 0.95
+          ELSE 0.5
+        END as ai_score
+      FROM leads l
+      LEFT JOIN properties p ON l.property_id = p.id
+      WHERE l.created_by = $1
+      ORDER BY l.created_at DESC
+    `;
+
+    const result = await this.db.query(query, [userId]);
+    const leads = result.rows || [];
+
+    return {
+      data: leads.map((lead) => ({
+        id: lead.id,
+        name: lead.name || 'Unnamed Lead',
+        email: lead.email || null,
+        phone: lead.phone || null,
+        contact: lead.email || lead.phone || 'No contact',
+        property_id: lead.propertyId || null,
+        property_title: lead.propertyTitle || null,
+        ai_score: parseFloat(lead.ai_score) || 0,
+        status: lead.status,
+        created_at: lead.createdAt,
+      })),
+      meta: { total: leads.length },
     };
   }
 }
