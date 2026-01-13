@@ -19,13 +19,25 @@ import { AddMediaDto } from './dto/add-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
 
 @ApiTags('properties')
-@ApiBearerAuth('JWT-auth')
 @Controller('properties')
-@UseGuards(JwtAuthGuard)
 export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
+  @Get('public')
+  @ApiOperation({ summary: 'Get all published properties (public, no auth required)' })
+  @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search query' })
+  @ApiResponse({ status: 200, description: 'Published properties retrieved successfully' })
+  async findPublic(
+    @Query('type') type?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.propertiesService.findPublic({ type, search });
+  }
+
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new property' })
   @ApiBody({ type: CreatePropertyDto })
   @ApiResponse({ status: 201, description: 'Property created successfully' })
@@ -35,6 +47,8 @@ export class PropertiesController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all properties (with optional filters and bbox search)' })
   @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by property status' })
@@ -69,7 +83,7 @@ export class PropertiesController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get property by ID' })
+  @ApiOperation({ summary: 'Get property by ID (public, no auth required for published properties)' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiResponse({ status: 200, description: 'Property retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Property not found' })

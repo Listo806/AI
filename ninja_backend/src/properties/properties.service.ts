@@ -113,6 +113,50 @@ export class PropertiesService {
     return rows;
   }
 
+  async findPublic(filters?: { type?: string; search?: string }): Promise<Property[]> {
+    let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+                        bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                        created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                        created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
+                 FROM properties`;
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let paramCount = 1;
+
+    // Only published properties
+    conditions.push(`status = $${paramCount++}`);
+    params.push(PropertyStatus.PUBLISHED);
+
+    if (filters?.type) {
+      conditions.push(`type = $${paramCount++}`);
+      params.push(filters.type);
+    }
+
+    // Add text search on address, city, state, title, and description
+    if (filters?.search) {
+      const searchTerm = `%${filters.search}%`;
+      conditions.push(`(
+        address ILIKE $${paramCount} OR
+        city ILIKE $${paramCount} OR
+        state ILIKE $${paramCount} OR
+        title ILIKE $${paramCount} OR
+        description ILIKE $${paramCount} OR
+        zip_code ILIKE $${paramCount}
+      )`);
+      params.push(searchTerm);
+      paramCount++;
+    }
+
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    query += ` ORDER BY published_at DESC, created_at DESC`;
+
+    const { rows } = await this.db.query(query, params);
+    return rows;
+  }
+
   async findByBbox(
     userId: string,
     teamId: string | null,
