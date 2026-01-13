@@ -29,5 +29,9 @@ export class UpdateLeadDto {
   @IsOptional()
   @IsString()
   source?: string;
+
+  @IsOptional()
+  @IsString()
+  propertyId?: string;
 }
 

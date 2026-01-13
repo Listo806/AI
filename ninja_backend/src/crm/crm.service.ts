@@ -272,7 +272,10 @@ export class CrmService {
         l.phone,
         l.status,
         l.property_id as "propertyId",
+        l.source,
+        l.notes,
         l.created_at as "createdAt",
+        l.updated_at as "updatedAt",
         -- Associated property title
         p.title as "propertyTitle",
         -- AI score (placeholder: calculated from status)
@@ -300,9 +303,12 @@ export class CrmService {
         contact: lead.email || lead.phone || 'No contact',
         property_id: lead.propertyId || null,
         property_title: lead.propertyTitle || null,
+        source: lead.source || null,
+        notes: lead.notes || null,
         ai_score: parseFloat(lead.ai_score) || 0,
         status: lead.status,
         created_at: lead.createdAt,
+        updated_at: lead.updatedAt,
       })),
       meta: { total: leads.length },
     };

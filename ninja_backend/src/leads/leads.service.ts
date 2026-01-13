@@ -124,9 +124,29 @@ export class LeadsService {
 
   async findById(id: string): Promise<Lead | null> {
     const { rows } = await this.db.query(
-      `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
-              team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
-       FROM leads WHERE id = $1`,
+      `SELECT 
+        l.id, 
+        l.name, 
+        l.email, 
+        l.phone, 
+        l.status, 
+        l.assigned_to as "assignedTo", 
+        l.property_id as "propertyId", 
+        l.created_by as "createdBy", 
+        l.team_id as "teamId", 
+        l.notes, 
+        l.source, 
+        l.created_at as "createdAt", 
+        l.updated_at as "updatedAt",
+        -- AI score (placeholder: calculated from status)
+        CASE 
+          WHEN l.status = 'qualified' THEN 0.85
+          WHEN l.status = 'contacted' THEN 0.65
+          WHEN l.status = 'converted' THEN 0.95
+          ELSE 0.5
+        END as "aiScore"
+       FROM leads l
+       WHERE l.id = $1`,
       [id],
     );
     return rows[0] || null;
