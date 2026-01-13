@@ -10,6 +10,59 @@ export class LeadsService {
     private readonly eventLogger: EventLoggerService,
   ) {}
 
+  async createPublic(createLeadDto: CreateLeadDto): Promise<Lead> {
+    const status = createLeadDto.status || LeadStatus.NEW;
+
+    // For public leads, we need to find the property owner to assign the lead
+    let assignedTo: string | null = null;
+    let teamId: string | null = null;
+
+    if (createLeadDto.propertyId) {
+      // Get property owner
+      const propertyResult = await this.db.query(
+        `SELECT created_by as "createdBy", team_id as "teamId" FROM properties WHERE id = $1`,
+        [createLeadDto.propertyId],
+      );
+      
+      if (propertyResult.rows.length > 0) {
+        assignedTo = propertyResult.rows[0].createdBy;
+        teamId = propertyResult.rows[0].teamId;
+      }
+    }
+
+    const { rows } = await this.db.query(
+      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, created_by, team_id, notes, source, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
+      [
+        createLeadDto.name,
+        createLeadDto.email || null,
+        createLeadDto.phone || null,
+        status,
+        assignedTo || createLeadDto.assignedTo || null,
+        createLeadDto.propertyId || null,
+        assignedTo || null, // Use property owner as created_by, or null for public leads
+        teamId,
+        createLeadDto.notes || null,
+        createLeadDto.source || 'public_contact_form',
+      ],
+    );
+
+    const lead = rows[0];
+
+    // Log event (without user context for public leads)
+    if (assignedTo) {
+      await this.eventLogger.logLeadCreated(lead.id, assignedTo, teamId, {
+        name: lead.name,
+        status: lead.status,
+        source: lead.source,
+      });
+    }
+
+    return lead;
+  }
+
   async create(createLeadDto: CreateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
     const status = createLeadDto.status || LeadStatus.NEW;
 

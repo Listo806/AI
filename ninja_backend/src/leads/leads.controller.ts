@@ -18,13 +18,23 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadStatus } from './entities/lead.entity';
 
 @ApiTags('leads')
-@ApiBearerAuth('JWT-auth')
 @Controller('leads')
-@UseGuards(JwtAuthGuard)
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
+  @Post('public')
+  @ApiOperation({ summary: 'Create a new lead from public contact form (no auth required)' })
+  @ApiBody({ type: CreateLeadDto })
+  @ApiResponse({ status: 201, description: 'Lead created successfully' })
+  async createPublic(@Body() createLeadDto: CreateLeadDto) {
+    // For public leads, we don't have a user ID, so we'll use null
+    // The service will handle this appropriately
+    return this.leadsService.createPublic(createLeadDto);
+  }
+
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new lead' })
   @ApiBody({ type: CreateLeadDto })
   @ApiResponse({ status: 201, description: 'Lead created successfully' })
@@ -34,6 +44,8 @@ export class LeadsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get all leads (optionally filtered by status)' })
   @ApiQuery({ name: 'status', required: false, enum: LeadStatus, description: 'Filter leads by status' })
   @ApiResponse({ status: 200, description: 'Leads retrieved successfully' })
@@ -46,6 +58,8 @@ export class LeadsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get a lead by ID' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiResponse({ status: 200, description: 'Lead retrieved successfully' })
@@ -55,6 +69,8 @@ export class LeadsController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiBody({ type: UpdateLeadDto })
@@ -69,6 +85,8 @@ export class LeadsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete a lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiResponse({ status: 200, description: 'Lead deleted successfully' })

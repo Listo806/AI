@@ -45,7 +45,8 @@ export default function ContactModal({ property, onClose, onSubmit }) {
         propertyId: property.id, // Associate lead with property
       };
 
-      const response = await apiClient.request('/leads', {
+      // Use public endpoint for contact form (no auth required)
+      const response = await apiClient.request('/leads/public', {
         method: 'POST',
         body: JSON.stringify(leadData),
       });
