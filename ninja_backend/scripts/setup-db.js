@@ -179,6 +179,14 @@ async function setupDatabase() {
       console.log('✓ Add wholesaler and investor roles migration completed');
     }
 
+    // Run Update lead status enum migration
+    const migration11Path = path.join(__dirname, '../src/database/migrations/011_update_lead_status_enum.sql');
+    if (fs.existsSync(migration11Path)) {
+      const migration11SQL = fs.readFileSync(migration11Path, 'utf8');
+      await pool.query(migration11SQL);
+      console.log('✓ Update lead status enum migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

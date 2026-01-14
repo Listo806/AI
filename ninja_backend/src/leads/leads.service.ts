@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { DatabaseService } from '../database/database.service';
 import { Lead, LeadStatus, CreateLeadDto, UpdateLeadDto } from './entities/lead.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
+import { LeadAIService } from './lead-ai.service';
 
 @Injectable()
 export class LeadsService {
   constructor(
     private readonly db: DatabaseService,
     private readonly eventLogger: EventLoggerService,
+    private readonly leadAI: LeadAIService,
   ) {}
 
   async createPublic(createLeadDto: CreateLeadDto): Promise<Lead> {
@@ -122,7 +124,7 @@ export class LeadsService {
     return rows;
   }
 
-  async findById(id: string): Promise<Lead | null> {
+  async findById(id: string): Promise<any> {
     const { rows } = await this.db.query(
       `SELECT 
         l.id, 
@@ -138,18 +140,71 @@ export class LeadsService {
         l.source, 
         l.created_at as "createdAt", 
         l.updated_at as "updatedAt",
-        -- AI score (placeholder: calculated from status)
-        CASE 
-          WHEN l.status = 'qualified' THEN 0.85
-          WHEN l.status = 'contacted' THEN 0.65
-          WHEN l.status = 'converted' THEN 0.95
-          ELSE 0.5
-        END as "aiScore"
+        l.updated_at as "lastContactedAt",
+        -- Property details for AI calculation and display
+        p.id as "propertyIdFull",
+        p.title as "propertyTitle",
+        p.price as "propertyPrice",
+        p.type as "propertyType",
+        p.address as "propertyAddress",
+        p.city as "propertyCity",
+        p.state as "propertyState"
        FROM leads l
+       LEFT JOIN properties p ON l.property_id = p.id
        WHERE l.id = $1`,
       [id],
     );
-    return rows[0] || null;
+    
+    if (rows.length === 0) {
+      return null;
+    }
+
+    const lead = rows[0];
+    
+    // Calculate AI metrics
+    const context = {
+      status: lead.status as LeadStatus,
+      createdAt: lead.createdAt,
+      updatedAt: lead.updatedAt,
+      lastContactedAt: lead.lastContactedAt || lead.updatedAt,
+      propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
+      propertyType: lead.propertyType || null,
+      phone: lead.phone || null,
+      email: lead.email || null,
+    };
+
+    const aiMetrics = this.leadAI.calculateLeadAI(context);
+
+    return {
+      id: lead.id,
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      status: lead.status,
+      assignedTo: lead.assignedTo,
+      propertyId: lead.propertyId,
+      createdBy: lead.createdBy,
+      teamId: lead.teamId,
+      notes: lead.notes,
+      source: lead.source,
+      createdAt: lead.createdAt,
+      updatedAt: lead.updatedAt,
+      lastContactedAt: lead.lastContactedAt || lead.updatedAt,
+      property: lead.propertyIdFull ? {
+        id: lead.propertyIdFull,
+        title: lead.propertyTitle || 'Untitled Property',
+        address: lead.propertyAddress || null,
+        city: lead.propertyCity || null,
+        state: lead.propertyState || null,
+        price: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
+        type: lead.propertyType || null,
+      } : null,
+      aiScore: aiMetrics.aiScore,
+      priority: aiMetrics.priority,
+      aiExplanation: aiMetrics.aiExplanation,
+      suggestedNextAction: aiMetrics.suggestedNextAction,
+      actionDetails: aiMetrics.actionDetails,
+    };
   }
 
   async update(id: string, updateLeadDto: UpdateLeadDto, userId: string, teamId: string | null): Promise<Lead> {

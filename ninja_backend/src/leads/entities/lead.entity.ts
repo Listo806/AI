@@ -2,8 +2,9 @@ export enum LeadStatus {
   NEW = 'new',
   CONTACTED = 'contacted',
   QUALIFIED = 'qualified',
-  CONVERTED = 'converted',
-  LOST = 'lost',
+  FOLLOW_UP = 'follow-up',
+  CLOSED_WON = 'closed-won',
+  CLOSED_LOST = 'closed-lost',
 }
 
 export interface Lead {

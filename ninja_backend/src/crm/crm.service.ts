@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { LeadStatus } from '../leads/entities/lead.entity';
+import { LeadAIService } from '../leads/lead-ai.service';
 import { PropertyStatus } from '../properties/entities/property.entity';
 
 @Injectable()
 export class CrmService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly leadAI: LeadAIService,
+  ) {}
 
   /**
    * Get dashboard summary (single lightweight endpoint)
@@ -276,15 +280,14 @@ export class CrmService {
         l.notes,
         l.created_at as "createdAt",
         l.updated_at as "updatedAt",
-        -- Associated property title
+        l.updated_at as "lastContactedAt",
+        -- Associated property details
         p.title as "propertyTitle",
-        -- AI score (placeholder: calculated from status)
-        CASE 
-          WHEN l.status = 'qualified' THEN 0.85
-          WHEN l.status = 'contacted' THEN 0.65
-          WHEN l.status = 'converted' THEN 0.95
-          ELSE 0.5
-        END as ai_score
+        p.price as "propertyPrice",
+        p.type as "propertyType",
+        p.address as "propertyAddress",
+        p.city as "propertyCity",
+        p.state as "propertyState"
       FROM leads l
       LEFT JOIN properties p ON l.property_id = p.id
       WHERE l.created_by = $1
@@ -294,23 +297,82 @@ export class CrmService {
     const result = await this.db.query(query, [userId]);
     const leads = result.rows || [];
 
-    return {
-      data: leads.map((lead) => ({
+    // Calculate AI metrics for each lead
+    const leadsWithAI = leads.map((lead) => {
+      const context = {
+        status: lead.status as LeadStatus,
+        createdAt: lead.createdAt,
+        updatedAt: lead.updatedAt,
+        lastContactedAt: lead.lastContactedAt || lead.updatedAt, // Use updated_at as proxy for last contact
+        propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
+        propertyType: lead.propertyType || null,
+        phone: lead.phone || null,
+        email: lead.email || null,
+      };
+
+      const aiMetrics = this.leadAI.calculateLeadAI(context);
+      const hoursSinceLastContact = lead.lastContactedAt 
+        ? (Date.now() - new Date(lead.lastContactedAt).getTime()) / (1000 * 60 * 60)
+        : null;
+
+      return {
         id: lead.id,
         name: lead.name || 'Unnamed Lead',
         email: lead.email || null,
         phone: lead.phone || null,
-        contact: lead.email || lead.phone || 'No contact',
-        property_id: lead.propertyId || null,
-        property_title: lead.propertyTitle || null,
+        contactInfo: lead.email || lead.phone || 'No contact',
+        property: lead.propertyId ? {
+          id: lead.propertyId,
+          title: lead.propertyTitle || 'Untitled Property',
+          address: lead.propertyAddress || null,
+          city: lead.propertyCity || null,
+          state: lead.propertyState || null,
+          price: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
+          type: lead.propertyType || null,
+        } : null,
         source: lead.source || null,
         notes: lead.notes || null,
-        ai_score: parseFloat(lead.ai_score) || 0,
         status: lead.status,
-        created_at: lead.createdAt,
-        updated_at: lead.updatedAt,
-      })),
-      meta: { total: leads.length },
+        aiScore: aiMetrics.aiScore,
+        priority: aiMetrics.priority,
+        aiExplanation: aiMetrics.aiExplanation,
+        suggestedNextAction: aiMetrics.suggestedNextAction,
+        actionDetails: aiMetrics.actionDetails || null,
+        lastContactedAt: lead.lastContactedAt || lead.updatedAt,
+        timeSinceLastContact: hoursSinceLastContact ? `${Math.round(hoursSinceLastContact)}h` : null,
+        createdAt: lead.createdAt,
+        updatedAt: lead.updatedAt,
+      };
+    });
+
+    // Separate hot leads
+    const hotLeads = leadsWithAI.filter(l => l.priority === 'hot');
+    const otherLeads = leadsWithAI.filter(l => l.priority !== 'hot');
+
+    // Sort other leads: priority > AI score > recency
+    otherLeads.sort((a, b) => {
+      // Priority first (warm > cold)
+      const priorityOrder = { warm: 1, cold: 2 };
+      const priorityDiff = (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3);
+      if (priorityDiff !== 0) return priorityDiff;
+
+      // Then AI score
+      const scoreDiff = b.aiScore - a.aiScore;
+      if (scoreDiff !== 0) return scoreDiff;
+
+      // Then recency
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    return {
+      data: [...hotLeads, ...otherLeads],
+      hotLeads: hotLeads,
+      meta: { 
+        total: leadsWithAI.length,
+        hot: hotLeads.length,
+        warm: leadsWithAI.filter(l => l.priority === 'warm').length,
+        cold: leadsWithAI.filter(l => l.priority === 'cold').length,
+      },
     };
   }
 }
