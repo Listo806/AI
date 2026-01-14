@@ -303,17 +303,16 @@ export class CrmService {
         status: lead.status as LeadStatus,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
-        lastContactedAt: lead.lastContactedAt || lead.updatedAt, // Use updated_at as proxy for last contact
+        lastContactedAt: lead.lastContactedAt || null, // Use actual lastContactedAt, not updatedAt
         propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
         propertyType: lead.propertyType || null,
         phone: lead.phone || null,
         email: lead.email || null,
+        source: lead.source || null,
+        engagementCount: null, // TODO: Add engagement tracking in future
       };
 
       const aiMetrics = this.leadAI.calculateLeadAI(context);
-      const hoursSinceLastContact = lead.lastContactedAt 
-        ? (Date.now() - new Date(lead.lastContactedAt).getTime()) / (1000 * 60 * 60)
-        : null;
 
       return {
         id: lead.id,
@@ -333,45 +332,46 @@ export class CrmService {
         source: lead.source || null,
         notes: lead.notes || null,
         status: lead.status,
-        aiScore: aiMetrics.aiScore,
-        priority: aiMetrics.priority,
-        aiExplanation: aiMetrics.aiExplanation,
-        suggestedNextAction: aiMetrics.suggestedNextAction,
-        actionDetails: aiMetrics.actionDetails || null,
-        lastContactedAt: lead.lastContactedAt || lead.updatedAt,
-        timeSinceLastContact: hoursSinceLastContact ? `${Math.round(hoursSinceLastContact)}h` : null,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
+        lastContactedAt: lead.lastContactedAt || null,
+        // AI fields
+        aiScore: aiMetrics.aiScore,
+        aiTier: aiMetrics.aiTier,
+        aiScoreLabel: aiMetrics.aiScoreLabel,
+        aiReasonBullets: aiMetrics.aiReasonBullets,
+        recommendedAction: aiMetrics.recommendedAction,
+        recommendedActionReason: aiMetrics.recommendedActionReason,
       };
     });
 
-    // Separate hot leads
-    const hotLeads = leadsWithAI.filter(l => l.priority === 'hot');
-    const otherLeads = leadsWithAI.filter(l => l.priority !== 'hot');
+    // Sort leads by: aiTier desc (HOT first) > aiScore desc > createdAt desc
+    leadsWithAI.sort((a, b) => {
+      // Tier first (HOT > WARM > COLD)
+      const tierOrder = { HOT: 1, WARM: 2, COLD: 3 };
+      const tierDiff = (tierOrder[a.aiTier] || 4) - (tierOrder[b.aiTier] || 4);
+      if (tierDiff !== 0) return tierDiff;
 
-    // Sort other leads: priority > AI score > recency
-    otherLeads.sort((a, b) => {
-      // Priority first (warm > cold)
-      const priorityOrder = { warm: 1, cold: 2 };
-      const priorityDiff = (priorityOrder[a.priority] || 3) - (priorityOrder[b.priority] || 3);
-      if (priorityDiff !== 0) return priorityDiff;
-
-      // Then AI score
+      // Then AI score (descending)
       const scoreDiff = b.aiScore - a.aiScore;
       if (scoreDiff !== 0) return scoreDiff;
 
-      // Then recency
+      // Then recency (newest first)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
+    // Separate hot leads for frontend
+    const hotLeads = leadsWithAI.filter(l => l.aiTier === 'HOT');
+    const otherLeads = leadsWithAI.filter(l => l.aiTier !== 'HOT');
+
     return {
-      data: [...hotLeads, ...otherLeads],
+      data: leadsWithAI, // Full sorted list
       hotLeads: hotLeads,
       meta: { 
         total: leadsWithAI.length,
         hot: hotLeads.length,
-        warm: leadsWithAI.filter(l => l.priority === 'warm').length,
-        cold: leadsWithAI.filter(l => l.priority === 'cold').length,
+        warm: leadsWithAI.filter(l => l.aiTier === 'WARM').length,
+        cold: leadsWithAI.filter(l => l.aiTier === 'COLD').length,
       },
     };
   }

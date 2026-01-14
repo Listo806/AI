@@ -166,11 +166,13 @@ export class LeadsService {
       status: lead.status as LeadStatus,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
-      lastContactedAt: lead.lastContactedAt || lead.updatedAt,
+      lastContactedAt: lead.lastContactedAt || null,
       propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
       propertyType: lead.propertyType || null,
       phone: lead.phone || null,
       email: lead.email || null,
+      source: lead.source || null,
+      engagementCount: null, // TODO: Add engagement tracking
     };
 
     const aiMetrics = this.leadAI.calculateLeadAI(context);
@@ -189,7 +191,7 @@ export class LeadsService {
       source: lead.source,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
-      lastContactedAt: lead.lastContactedAt || lead.updatedAt,
+      lastContactedAt: lead.lastContactedAt || null,
       property: lead.propertyIdFull ? {
         id: lead.propertyIdFull,
         title: lead.propertyTitle || 'Untitled Property',
@@ -199,11 +201,13 @@ export class LeadsService {
         price: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
         type: lead.propertyType || null,
       } : null,
+      // AI fields
       aiScore: aiMetrics.aiScore,
-      priority: aiMetrics.priority,
-      aiExplanation: aiMetrics.aiExplanation,
-      suggestedNextAction: aiMetrics.suggestedNextAction,
-      actionDetails: aiMetrics.actionDetails,
+      aiTier: aiMetrics.aiTier,
+      aiScoreLabel: aiMetrics.aiScoreLabel,
+      aiReasonBullets: aiMetrics.aiReasonBullets,
+      recommendedAction: aiMetrics.recommendedAction,
+      recommendedActionReason: aiMetrics.recommendedActionReason,
     };
   }
 

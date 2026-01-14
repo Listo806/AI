@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { LeadStatus } from './entities/lead.entity';
 
-export type LeadPriority = 'hot' | 'warm' | 'cold';
-export type SuggestedAction = 'call-now' | 'send-email' | 'schedule-viewing' | 'follow-up-days';
+export type LeadPriority = 'HOT' | 'WARM' | 'COLD';
+export type RecommendedAction = 'CALL' | 'WHATSAPP' | 'EMAIL' | 'FOLLOW_UP';
 
 export interface LeadAICalculation {
   aiScore: number; // 0-100
-  priority: LeadPriority;
-  aiExplanation: string[];
-  suggestedNextAction: SuggestedAction;
-  actionDetails?: string; // e.g., "Follow up in 3 days"
+  aiTier: LeadPriority;
+  aiScoreLabel: string;
+  aiReasonBullets: string[];
+  recommendedAction: RecommendedAction;
+  recommendedActionReason: string;
 }
 
 export interface LeadContext {
@@ -19,77 +20,73 @@ export interface LeadContext {
   lastContactedAt?: Date | null;
   propertyPrice?: number | null;
   propertyType?: string | null;
-  aiScore?: number | null; // Previous score if exists
-  phone?: string | null; // For action suggestions
-  email?: string | null; // For action suggestions
+  phone?: string | null;
+  email?: string | null;
+  source?: string | null;
+  engagementCount?: number | null;
 }
 
 @Injectable()
 export class LeadAIService {
   /**
    * Calculate AI score (0-100) based on multiple factors
+   * Base = 50, then adjust based on recency, contact freshness, reachability, engagement
    */
   calculateAIScore(context: LeadContext): number {
     let score = 50; // Base score
 
-    // Status-based scoring
-    switch (context.status) {
-      case LeadStatus.CLOSED_WON:
-        return 100;
-      case LeadStatus.CLOSED_LOST:
-        return 0;
-      case LeadStatus.QUALIFIED:
-        score += 25;
-        break;
-      case LeadStatus.FOLLOW_UP:
-        score += 15;
-        break;
-      case LeadStatus.CONTACTED:
-        score += 10;
-        break;
-      case LeadStatus.NEW:
-        score += 5;
-        break;
-    }
+    const now = Date.now();
+    const createdAt = new Date(context.createdAt).getTime();
+    const daysSinceCreation = (now - createdAt) / (1000 * 60 * 60 * 24);
+    const lastContactedAt = context.lastContactedAt ? new Date(context.lastContactedAt).getTime() : null;
+    const daysSinceLastContact = lastContactedAt ? (now - lastContactedAt) / (1000 * 60 * 60 * 24) : null;
+    const hoursSinceLastContact = lastContactedAt ? (now - lastContactedAt) / (1000 * 60 * 60) : null;
 
-    // Time since last contact (recent = higher score)
-    if (context.lastContactedAt) {
-      const hoursSinceContact = (Date.now() - new Date(context.lastContactedAt).getTime()) / (1000 * 60 * 60);
-      if (hoursSinceContact < 12) {
-        score += 20;
-      } else if (hoursSinceContact < 24) {
-        score += 15;
-      } else if (hoursSinceContact < 48) {
-        score += 10;
-      } else if (hoursSinceContact < 168) { // 7 days
-        score += 5;
-      } else {
-        score -= 10; // Stale contact
-      }
+    // Recency scoring
+    if (daysSinceCreation <= 1) {
+      score += 20; // Created within 24h
+    } else if (daysSinceCreation <= 7) {
+      score += 10; // Within 7 days
+    } else if (daysSinceCreation <= 30) {
+      score += 5; // Within 30 days
     } else {
-      // No contact yet - check lead age
-      const hoursSinceCreation = (Date.now() - new Date(context.createdAt).getTime()) / (1000 * 60 * 60);
-      if (hoursSinceCreation < 24) {
-        score += 15; // Fresh lead
-      } else if (hoursSinceCreation < 72) {
-        score += 5;
-      } else {
-        score -= 5; // Old uncontacted lead
+      score -= 10; // Older than 30 days
+    }
+
+    // Contact freshness scoring
+    if (lastContactedAt === null) {
+      score += 10; // Uncontacted
+    } else if (hoursSinceLastContact < 48) {
+      score -= 10; // Contacted recently (within 48h)
+    } else if (daysSinceLastContact > 7) {
+      score += 5; // Last contact older than 7 days
+      if (daysSinceLastContact > 14) {
+        score += 5; // Last contact older than 14 days (additional +5)
       }
     }
 
-    // Property value impact
-    if (context.propertyPrice) {
-      if (context.propertyPrice >= 500000) {
-        score += 10; // High-value property
-      } else if (context.propertyPrice >= 300000) {
-        score += 5;
-      }
-    }
+    // Reachability scoring
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
 
-    // Property type impact (sale typically higher value than rent)
-    if (context.propertyType === 'sale') {
+    if (hasPhone) {
+      score += 10;
+    }
+    if (hasEmail) {
       score += 5;
+    }
+    if (hasWhatsapp) {
+      score += 10; // LATAM preference
+    }
+
+    // Engagement scoring (if available)
+    if (context.engagementCount !== undefined && context.engagementCount !== null) {
+      if (context.engagementCount > 3) {
+        score += 10;
+      } else if (context.engagementCount === 0) {
+        score -= 10;
+      }
     }
 
     // Clamp score between 0 and 100
@@ -97,173 +94,156 @@ export class LeadAIService {
   }
 
   /**
-   * Determine priority (hot/warm/cold) based on rules
+   * Determine tier (HOT/WARM/COLD) based on AI score
    */
-  calculatePriority(context: LeadContext, aiScore: number): LeadPriority {
+  calculateTier(aiScore: number): LeadPriority {
+    if (aiScore >= 80) {
+      return 'HOT';
+    } else if (aiScore >= 60) {
+      return 'WARM';
+    } else {
+      return 'COLD';
+    }
+  }
+
+  /**
+   * Generate AI score label (interpretation)
+   */
+  generateScoreLabel(aiScore: number, aiTier: LeadPriority): string {
+    if (aiTier === 'HOT') {
+      return 'High intent — contact within 24h';
+    } else if (aiTier === 'WARM') {
+      return 'Medium intent — re-engagement suggested';
+    } else {
+      return 'Low intent — manual follow-up recommended';
+    }
+  }
+
+  /**
+   * Generate AI reason bullets (2-4 reasons)
+   */
+  generateReasonBullets(context: LeadContext, aiScore: number): string[] {
+    const reasons: string[] = [];
     const now = Date.now();
     const createdAt = new Date(context.createdAt).getTime();
-    const updatedAt = new Date(context.updatedAt).getTime();
+    const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
     const lastContactedAt = context.lastContactedAt ? new Date(context.lastContactedAt).getTime() : null;
+    const daysSinceLastContact = lastContactedAt ? Math.floor((now - lastContactedAt) / (1000 * 60 * 60 * 24)) : null;
 
-    // Hot Lead if ANY is true:
-    // - AI score >= 80%
-    if (aiScore >= 80) {
-      return 'hot';
-    }
-
-    // - OR last activity within 48h
-    const hoursSinceUpdate = (now - updatedAt) / (1000 * 60 * 60);
-    if (hoursSinceUpdate < 48) {
-      return 'hot';
-    }
-
-    // - OR status = Qualified AND high-value property
-    if (context.status === LeadStatus.QUALIFIED && context.propertyPrice && context.propertyPrice >= 300000) {
-      return 'hot';
-    }
-
-    // - OR lead created within last 24h
-    const hoursSinceCreation = (now - createdAt) / (1000 * 60 * 60);
-    if (hoursSinceCreation < 24) {
-      return 'hot';
-    }
-
-    // Warm if AI score >= 50
-    if (aiScore >= 50) {
-      return 'warm';
-    }
-
-    // Otherwise cold
-    return 'cold';
-  }
-
-  /**
-   * Generate AI explanation for the score
-   */
-  generateAIExplanation(context: LeadContext, aiScore: number): string[] {
-    const explanations: string[] = [];
-
-    // Status-based explanations
-    switch (context.status) {
-      case LeadStatus.QUALIFIED:
-        explanations.push('Qualified status');
-        break;
-      case LeadStatus.FOLLOW_UP:
-        explanations.push('Follow-up required');
-        break;
-      case LeadStatus.CONTACTED:
-        explanations.push('Recently contacted');
-        break;
-      case LeadStatus.NEW:
-        explanations.push('New lead');
-        break;
-    }
-
-    // Time-based explanations
-    if (context.lastContactedAt) {
-      const hoursSinceContact = (Date.now() - new Date(context.lastContactedAt).getTime()) / (1000 * 60 * 60);
-      if (hoursSinceContact < 12) {
-        explanations.push(`Recent activity (${Math.round(hoursSinceContact)}h ago)`);
-      } else if (hoursSinceContact < 48) {
-        explanations.push(`Activity within 48h`);
-      } else if (hoursSinceContact > 168) {
-        explanations.push('Needs re-engagement');
-      }
+    // Always include 1 recency reason
+    if (daysSinceCreation === 0) {
+      reasons.push('Created today');
+    } else if (daysSinceCreation === 1) {
+      reasons.push('Created 1 day ago');
     } else {
-      const hoursSinceCreation = (Date.now() - new Date(context.createdAt).getTime()) / (1000 * 60 * 60);
-      if (hoursSinceCreation < 24) {
-        explanations.push('Fresh lead (created today)');
+      reasons.push(`Created ${daysSinceCreation} days ago`);
+    }
+
+    // Always include 1 contact reason
+    if (lastContactedAt === null) {
+      reasons.push('No contact yet');
+    } else if (daysSinceLastContact === 0) {
+      reasons.push('Contacted today');
+    } else if (daysSinceLastContact === 1) {
+      reasons.push('Last contact 1 day ago');
+    } else if (daysSinceLastContact >= 14) {
+      reasons.push(`No contact in ${daysSinceLastContact}+ days`);
+    } else {
+      reasons.push(`Last contact ${daysSinceLastContact} days ago`);
+    }
+
+    // Include 1 channel reason
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
+
+    if (hasWhatsapp) {
+      reasons.push('WhatsApp available');
+    } else if (hasPhone) {
+      reasons.push('Phone number available');
+    } else if (hasEmail) {
+      reasons.push('Email only');
+    }
+
+    // Include 1 engagement reason if data exists
+    if (context.engagementCount !== undefined && context.engagementCount !== null) {
+      if (context.engagementCount > 3) {
+        reasons.push('High engagement activity');
+      } else if (context.engagementCount === 0) {
+        reasons.push('No engagement recorded');
+      } else {
+        reasons.push(`${context.engagementCount} engagement(s)`);
       }
     }
 
-    // Property value explanations
-    if (context.propertyPrice) {
-      if (context.propertyPrice >= 500000) {
-        explanations.push('High-value property');
-      } else if (context.propertyPrice >= 300000) {
-        explanations.push('Premium property');
-      }
-    }
-
-    // Score-based explanations
-    if (aiScore >= 80) {
-      explanations.push('High conversion potential');
-    } else if (aiScore < 40) {
-      explanations.push('Low engagement');
-    }
-
-    return explanations.length > 0 ? explanations : ['Standard lead'];
+    // Return 2-4 reasons (prioritize the most important)
+    return reasons.slice(0, 4);
   }
 
   /**
-   * Suggest next action based on lead context
+   * Recommend next action based on lead context
    */
-  suggestNextAction(context: LeadContext, aiScore: number): { action: SuggestedAction; details?: string } {
+  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string } {
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
+
     const now = Date.now();
-    const lastContactedAt = context.lastContactedAt ? new Date(context.lastContactedAt).getTime() : null;
+    const lastContact = lastContactedAt ? new Date(lastContactedAt).getTime() : null;
+    const hoursSinceLastContact = lastContact ? (now - lastContact) / (1000 * 60 * 60) : null;
 
-    // High priority actions
-    if (aiScore >= 80 || context.status === LeadStatus.QUALIFIED) {
-      if (context.phone) {
-        return { action: 'call-now' };
-      } else if (context.email) {
-        return { action: 'send-email' };
-      }
-    }
-
-    // Schedule viewing for qualified leads with property
-    if (context.status === LeadStatus.QUALIFIED && context.propertyPrice) {
-      return { action: 'schedule-viewing' };
-    }
-
-    // Follow-up logic based on last contact
-    if (lastContactedAt) {
-      const hoursSinceContact = (now - lastContactedAt) / (1000 * 60 * 60);
-      
-      if (hoursSinceContact < 12) {
-        // Too soon, wait
-        const hoursToWait = 24 - hoursSinceContact;
-        return { 
-          action: 'follow-up-days', 
-          details: `Follow up in ${Math.ceil(hoursToWait / 24)} day(s)` 
-        };
-      } else if (hoursSinceContact < 48) {
-        // Good time for follow-up
-        if (context.phone) {
-          return { action: 'call-now' };
-        } else {
-          return { action: 'send-email' };
-        }
-      } else if (hoursSinceContact < 168) {
-        // Within a week
-        return { 
-          action: 'follow-up-days', 
-          details: 'Follow up soon' 
+    // Primary logic: Phone/WhatsApp if available and not recently contacted
+    if (hasPhone && (lastContact === null || hoursSinceLastContact > 24)) {
+      if (hasWhatsapp) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'WhatsApp contact has the highest response rate for this lead.',
         };
       } else {
-        // Stale, needs re-engagement
-        if (context.phone) {
-          return { action: 'call-now' };
-        } else {
-          return { action: 'send-email' };
-        }
+        return {
+          action: 'CALL',
+          reason: 'Phone contact has the highest response rate for this lead.',
+        };
       }
     }
 
-    // New leads - contact immediately
-    if (context.status === LeadStatus.NEW) {
-      if (context.phone) {
-        return { action: 'call-now' };
-      } else if (context.email) {
-        return { action: 'send-email' };
-      }
+    // Fallback to email
+    if (hasEmail) {
+      return {
+        action: 'EMAIL',
+        reason: 'Email is the best available contact method for this lead.',
+      };
     }
 
-    // Default: follow-up
-    return { 
-      action: 'follow-up-days', 
-      details: 'Follow up in 3 days' 
+    // Default: Follow-up
+    return {
+      action: 'FOLLOW_UP',
+      reason: 'Schedule a follow-up when contact information becomes available.',
     };
+  }
+
+  /**
+   * Check if phone number supports WhatsApp (simple check for common LATAM countries)
+   * This is a simplified check - in production, use a proper phone number library
+   */
+  private isWhatsAppSupported(phone: string | null): boolean {
+    if (!phone) return false;
+    
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Check for common LATAM country codes (simplified)
+    // In production, use a proper phone number parsing library like libphonenumber
+    const latamCodes = ['52', '54', '55', '56', '57', '58', '51', '593', '595', '598', '506', '507', '505', '504', '503', '502', '501'];
+    
+    // Check if starts with + or country code
+    if (phone.startsWith('+')) {
+      const countryCode = digits.substring(0, 3);
+      return latamCodes.some(code => countryCode.startsWith(code));
+    }
+    
+    // Default: assume WhatsApp is available if phone exists (can be refined)
+    return digits.length >= 10;
   }
 
   /**
@@ -271,16 +251,18 @@ export class LeadAIService {
    */
   calculateLeadAI(context: LeadContext): LeadAICalculation {
     const aiScore = this.calculateAIScore(context);
-    const priority = this.calculatePriority(context, aiScore);
-    const aiExplanation = this.generateAIExplanation(context, aiScore);
-    const { action, details } = this.suggestNextAction(context, aiScore);
+    const aiTier = this.calculateTier(aiScore);
+    const aiScoreLabel = this.generateScoreLabel(aiScore, aiTier);
+    const aiReasonBullets = this.generateReasonBullets(context, aiScore);
+    const { action, reason } = this.recommendAction(context, context.lastContactedAt);
 
     return {
       aiScore,
-      priority,
-      aiExplanation,
-      suggestedNextAction: action,
-      actionDetails: details,
+      aiTier,
+      aiScoreLabel,
+      aiReasonBullets,
+      recommendedAction: action,
+      recommendedActionReason: reason,
     };
   }
 }
