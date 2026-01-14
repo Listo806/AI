@@ -89,6 +89,15 @@ export class LeadAIService {
       }
     }
 
+    // Property value scoring (high-value listings get boost)
+    if (context.propertyPrice !== undefined && context.propertyPrice !== null) {
+      if (context.propertyPrice >= 450000) {
+        score += 8; // High-value property boost (+5-10 range, using 8)
+      } else if (context.propertyPrice >= 300000) {
+        score += 4; // Medium-high value boost
+      }
+    }
+
     // Clamp score between 0 and 100
     return Math.max(0, Math.min(100, score));
   }
@@ -176,12 +185,43 @@ export class LeadAIService {
       }
     }
 
+    // Add ONE stronger intent/value signal (prioritize high-value property)
+    let addedIntentSignal = false;
+    
+    // High-value property signal (most important)
+    if (context.propertyPrice !== undefined && context.propertyPrice !== null && context.propertyPrice >= 450000) {
+      const priceFormatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(context.propertyPrice);
+      reasons.push(`High-value property (${priceFormatted})`);
+      addedIntentSignal = true;
+    }
+    
+    // Buyer intent from source (if available and not already added)
+    if (!addedIntentSignal && context.source) {
+      const sourceLower = context.source.toLowerCase();
+      if (sourceLower.includes('purchase') || sourceLower.includes('buy') || sourceLower.includes('buyer')) {
+        reasons.push('Buyer intent: Purchase');
+        addedIntentSignal = true;
+      }
+    }
+    
+    // Multiple property views (if engagement count indicates this)
+    if (!addedIntentSignal && context.engagementCount !== undefined && context.engagementCount !== null && context.engagementCount > 5) {
+      reasons.push('Multiple property views');
+      addedIntentSignal = true;
+    }
+
     // Return 2-4 reasons (prioritize the most important)
     return reasons.slice(0, 4);
   }
 
   /**
    * Recommend next action based on lead context
+   * IMPORTANT: Phone is always preferred over email. Email is only used as fallback when phone is not available.
    */
   recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string } {
     const hasPhone = !!(context.phone && context.phone.trim());
@@ -192,14 +232,28 @@ export class LeadAIService {
     const lastContact = lastContactedAt ? new Date(lastContactedAt).getTime() : null;
     const hoursSinceLastContact = lastContact ? (now - lastContact) / (1000 * 60 * 60) : null;
 
-    // Primary logic: Phone/WhatsApp if available and not recently contacted
-    if (hasPhone && (lastContact === null || hoursSinceLastContact > 24)) {
+    // PRIMARY RULE: If phone exists, ALWAYS recommend CALL or WHATSAPP (never EMAIL)
+    if (hasPhone) {
       if (hasWhatsapp) {
+        // If recently contacted, adjust reason but still recommend WhatsApp
+        if (lastContact !== null && hoursSinceLastContact <= 24) {
+          return {
+            action: 'WHATSAPP',
+            reason: 'WhatsApp is preferred for follow-up. Lead was contacted recently but phone contact has highest response rate.',
+          };
+        }
         return {
           action: 'WHATSAPP',
           reason: 'WhatsApp contact has the highest response rate for this lead.',
         };
       } else {
+        // If recently contacted, adjust reason but still recommend Call
+        if (lastContact !== null && hoursSinceLastContact <= 24) {
+          return {
+            action: 'CALL',
+            reason: 'Phone contact is preferred. Lead was contacted recently but immediate call has highest conversion rate.',
+          };
+        }
         return {
           action: 'CALL',
           reason: 'Phone contact has the highest response rate for this lead.',
@@ -207,7 +261,7 @@ export class LeadAIService {
       }
     }
 
-    // Fallback to email
+    // FALLBACK: Only recommend EMAIL if phone is NOT available
     if (hasEmail) {
       return {
         action: 'EMAIL',
@@ -215,7 +269,7 @@ export class LeadAIService {
       };
     }
 
-    // Default: Follow-up
+    // Default: Follow-up (no contact info available)
     return {
       action: 'FOLLOW_UP',
       reason: 'Schedule a follow-up when contact information becomes available.',
