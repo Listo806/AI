@@ -120,6 +120,7 @@ export class CrmService {
       FROM leads l
       LEFT JOIN properties p ON l.property_id = p.id
       WHERE 1=1 ${teamFilter}
+        AND l.property_id IS NOT NULL
       ORDER BY l.created_at DESC
       LIMIT $1
     `;
@@ -291,6 +292,7 @@ export class CrmService {
       FROM leads l
       LEFT JOIN properties p ON l.property_id = p.id
       WHERE l.created_by = $1
+        AND l.property_id IS NOT NULL
       ORDER BY l.created_at DESC
     `;
 
