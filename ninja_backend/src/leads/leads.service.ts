@@ -140,7 +140,7 @@ export class LeadsService {
         l.source, 
         l.created_at as "createdAt", 
         l.updated_at as "updatedAt",
-        l.updated_at as "lastContactedAt",
+        l.last_contacted_at as "lastContactedAt",
         -- Property details for AI calculation and display
         p.id as "propertyIdFull",
         p.title as "propertyTitle",

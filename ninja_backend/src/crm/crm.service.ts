@@ -281,7 +281,7 @@ export class CrmService {
         l.notes,
         l.created_at as "createdAt",
         l.updated_at as "updatedAt",
-        l.updated_at as "lastContactedAt",
+        l.last_contacted_at as "lastContactedAt",
         -- Associated property details
         p.title as "propertyTitle",
         p.price as "propertyPrice",

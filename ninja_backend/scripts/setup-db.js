@@ -187,6 +187,14 @@ async function setupDatabase() {
       console.log('✓ Update lead status enum migration completed');
     }
 
+    // Run Add Last Contacted At column to leads table migration
+    const migration12Path = path.join(__dirname, '../src/database/migrations/012_add_last_contacted_at_to_leads.sql');
+    if (fs.existsSync(migration12Path)) {
+      const migration12SQL = fs.readFileSync(migration12Path, 'utf8');
+      await pool.query(migration12SQL);
+      console.log('✓ Add Last Contacted At column to leads table migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
