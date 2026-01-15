@@ -84,6 +84,30 @@ export class LeadsController {
     return this.leadsService.update(id, updateLeadDto, user.id, user.teamId);
   }
 
+  @Post(':id/contact')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Log a contact action (call, WhatsApp, or email)' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiBody({ 
+    schema: { 
+      type: 'object', 
+      properties: { 
+        actionType: { type: 'string', enum: ['call', 'whatsapp', 'email'] } 
+      },
+      required: ['actionType']
+    } 
+  })
+  @ApiResponse({ status: 200, description: 'Contact action logged successfully' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async logContact(
+    @Param('id') id: string,
+    @Body() body: { actionType: 'call' | 'whatsapp' | 'email' },
+    @CurrentUser() user: any,
+  ) {
+    return this.leadsService.logContactAction(id, body.actionType, user.id, user.teamId);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

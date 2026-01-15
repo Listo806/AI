@@ -272,7 +272,7 @@ export class LeadsService {
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
-                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
+                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
     );
 
@@ -292,6 +292,56 @@ export class LeadsService {
     }
 
     return updatedLead;
+  }
+
+  /**
+   * Log a contact action (call, WhatsApp, email)
+   * Updates last_contacted_at and status to 'contacted' if not already contacted/qualified
+   */
+  async logContactAction(
+    id: string,
+    actionType: 'call' | 'whatsapp' | 'email',
+    userId: string,
+    teamId: string | null,
+  ): Promise<Lead> {
+    const lead = await this.findById(id);
+    if (!lead) {
+      throw new NotFoundException('Lead not found');
+    }
+
+    // Check permissions
+    if (lead.createdBy !== userId && lead.teamId !== teamId) {
+      throw new ForbiddenException('You do not have permission to update this lead');
+    }
+
+    const oldStatus = lead.status;
+    
+    // Update last_contacted_at and status
+    // Only update status to 'contacted' if it's currently 'new'
+    const statusUpdate = oldStatus === 'new' ? `status = 'contacted',` : '';
+    
+    const { rows } = await this.db.query(
+      `UPDATE leads 
+       SET last_contacted_at = NOW(), 
+           ${statusUpdate}
+           updated_at = NOW()
+       WHERE id = $1
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
+      [id],
+    );
+
+    const updatedLead = rows[0];
+
+    // Log events
+    await this.eventLogger.logLeadUpdated(updatedLead.id, userId, teamId);
+    
+    if (oldStatus === 'new' && updatedLead.status === 'contacted') {
+      await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updatedLead.status);
+    }
+
+    // Return full lead with AI fields by calling findById
+    return this.findById(id);
   }
 
   async delete(id: string, userId: string, teamId: string | null): Promise<void> {
