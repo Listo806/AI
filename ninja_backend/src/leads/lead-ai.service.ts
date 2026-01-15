@@ -185,18 +185,25 @@ export class LeadAIService {
       }
     }
 
-    // Add ONE stronger intent/value signal (prioritize high-value property)
+    // Add ONE stronger intent/value signal (prioritize high-value property with commission framing)
     let addedIntentSignal = false;
     
-    // High-value property signal (most important)
+    // High-value property signal with commission framing (most important)
     if (context.propertyPrice !== undefined && context.propertyPrice !== null && context.propertyPrice >= 450000) {
-      const priceFormatted = new Intl.NumberFormat('en-US', {
+      const commission = this.calculateCommission(context.propertyPrice);
+      const commissionFormatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(context.propertyPrice);
-      reasons.push(`High-value property (${priceFormatted})`);
+      }).format(commission);
+      
+      // Show commission amount for high-value properties
+      if (commission >= 20000) {
+        reasons.push(`High commission potential (${commissionFormatted})`);
+      } else {
+        reasons.push(`High commission potential`);
+      }
       addedIntentSignal = true;
     }
     
@@ -222,6 +229,13 @@ export class LeadAIService {
   /**
    * Recommend next action based on lead context
    * IMPORTANT: Phone is always preferred over email. Email is only used as fallback when phone is not available.
+   * 
+   * Decision logic:
+   * 1. If WhatsApp is available AND lead has NOT been contacted recently → WhatsApp
+   * 2. If WhatsApp is NOT available → Call
+   * 3. If WhatsApp is available BUT lead was contacted recently (within 24h) → Call
+   * 
+   * Only ONE primary action is recommended (never both).
    */
   recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string } {
     const hasPhone = !!(context.phone && context.phone.trim());
@@ -231,34 +245,31 @@ export class LeadAIService {
     const now = Date.now();
     const lastContact = lastContactedAt ? new Date(lastContactedAt).getTime() : null;
     const hoursSinceLastContact = lastContact ? (now - lastContact) / (1000 * 60 * 60) : null;
+    const recentlyContacted = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact <= 24;
 
     // PRIMARY RULE: If phone exists, ALWAYS recommend CALL or WHATSAPP (never EMAIL)
     if (hasPhone) {
-      if (hasWhatsapp) {
-        // If recently contacted, adjust reason but still recommend WhatsApp
-        if (lastContact !== null && hoursSinceLastContact <= 24) {
-          return {
-            action: 'WHATSAPP',
-            reason: 'WhatsApp is preferred for follow-up. Lead was contacted recently but phone contact has highest response rate.',
-          };
-        }
+      // Rule 1: WhatsApp available AND NOT recently contacted → WhatsApp
+      if (hasWhatsapp && !recentlyContacted) {
         return {
           action: 'WHATSAPP',
-          reason: 'WhatsApp contact has the highest response rate for this lead.',
-        };
-      } else {
-        // If recently contacted, adjust reason but still recommend Call
-        if (lastContact !== null && hoursSinceLastContact <= 24) {
-          return {
-            action: 'CALL',
-            reason: 'Phone contact is preferred. Lead was contacted recently but immediate call has highest conversion rate.',
-          };
-        }
-        return {
-          action: 'CALL',
-          reason: 'Phone contact has the highest response rate for this lead.',
+          reason: 'WhatsApp recommended — fastest response for this lead.',
         };
       }
+      
+      // Rule 3: WhatsApp available BUT recently contacted → Call (to avoid spam)
+      if (hasWhatsapp && recentlyContacted) {
+        return {
+          action: 'CALL',
+          reason: 'Call recommended — recent WhatsApp contact detected.',
+        };
+      }
+      
+      // Rule 2: WhatsApp NOT available → Call
+      return {
+        action: 'CALL',
+        reason: 'Call recommended — phone contact has the highest response rate for this lead.',
+      };
     }
 
     // FALLBACK: Only recommend EMAIL if phone is NOT available
@@ -274,6 +285,18 @@ export class LeadAIService {
       action: 'FOLLOW_UP',
       reason: 'Schedule a follow-up when contact information becomes available.',
     };
+  }
+
+  /**
+   * Calculate estimated commission based on property price
+   * Uses standard real estate commission rate (5% of sale price)
+   * This can be adjusted based on market or company policy
+   */
+  private calculateCommission(propertyPrice: number): number {
+    // Standard commission rate: 5% of sale price
+    // In production, this could be configurable or vary by property type/market
+    const commissionRate = 0.05;
+    return propertyPrice * commissionRate;
   }
 
   /**
