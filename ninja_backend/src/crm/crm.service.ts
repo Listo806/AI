@@ -311,6 +311,8 @@ export class CrmService {
         updatedAt: lead.updatedAt,
         lastContactedAt: lead.lastContactedAt || null,
         lastActivityAt: lead.lastActivityAt || lead.lastContactedAt || lead.updatedAt || lead.createdAt,
+        lastActionType: lead.lastActionType || null,
+        lastActionAt: lead.lastActionAt || null,
         propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
         propertyType: lead.propertyType || null,
         phone: lead.phone || null,
@@ -355,6 +357,7 @@ export class CrmService {
         recommendedAction: aiMetrics.recommendedAction,
         recommendedActionReason: aiMetrics.recommendedActionReason,
         followUpRecommended: aiMetrics.followUpRecommended || false,
+        cooldownActive: aiMetrics.cooldownActive || false,
       };
     });
 

@@ -3,7 +3,7 @@ import { LeadStatus } from './entities/lead.entity';
 
 export type LeadPriority = 'HOT' | 'WARM' | 'COLD';
 export type RecommendedAction = 'CALL' | 'WHATSAPP' | 'EMAIL' | 'FOLLOW_UP';
-export type UrgencyState = 'HOT' | 'WARM' | 'COOLING';
+export type UrgencyState = 'ACTIVE' | 'NEEDS_ATTENTION' | 'COOLING';
 
 export interface LeadAICalculation {
   aiScore: number; // 0-100
@@ -14,6 +14,7 @@ export interface LeadAICalculation {
   recommendedAction: RecommendedAction;
   recommendedActionReason: string;
   followUpRecommended?: boolean; // True if follow-up is recommended (24h+ no response)
+  cooldownActive?: boolean; // True if action was taken recently (< 2h) and cooldown is active
 }
 
 export interface LeadContext {
@@ -22,6 +23,8 @@ export interface LeadContext {
   updatedAt: Date;
   lastContactedAt?: Date | null;
   lastActivityAt?: Date | null; // For AI score decay calculation
+  lastActionType?: string | null; // 'call', 'whatsapp', 'email', 'sms'
+  lastActionAt?: Date | null; // When last action was taken
   propertyPrice?: number | null;
   propertyType?: string | null;
   phone?: string | null;
@@ -244,15 +247,16 @@ export class LeadAIService {
    * IMPORTANT: Phone is always preferred over email. Email is only used as fallback when phone is not available.
    * 
    * Decision logic:
-   * 1. If WhatsApp is available AND lead has NOT been contacted recently → WhatsApp
-   * 2. If WhatsApp is NOT available → Call
-   * 3. If WhatsApp is available BUT lead was contacted recently (within 24h) → Call
-   * 4. If no response after 24h → Recommend follow-up SMS/WhatsApp
-   * 5. If no response after 48h → Recommend Email or WhatsApp
+   * 1. Check cooldown period (if action was taken < 2 hours ago, suggest wait or alternative)
+   * 2. If no response after 24h → Recommend follow-up SMS/WhatsApp
+   * 3. If no response after 48h → Recommend Email or WhatsApp
+   * 4. If WhatsApp is available AND lead has NOT been contacted recently → WhatsApp
+   * 5. If WhatsApp is NOT available → Call
+   * 6. If WhatsApp is available BUT lead was contacted recently (within 24h) → Call
    * 
    * Only ONE primary action is recommended (never both).
    */
-  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string; followUpRecommended?: boolean } {
+  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string; followUpRecommended?: boolean; cooldownActive?: boolean } {
     const hasPhone = !!(context.phone && context.phone.trim());
     const hasEmail = !!(context.email && context.email.trim());
     const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
@@ -263,6 +267,54 @@ export class LeadAIService {
     const recentlyContacted = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact <= 24;
     const noResponseAfter24h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 24;
     const noResponseAfter48h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 48;
+    
+    // Check for cooldown period (action taken < 2 hours ago)
+    const lastActionAt = context.lastActionAt ? new Date(context.lastActionAt).getTime() : null;
+    const lastActionType = context.lastActionType || null;
+    const hoursSinceLastAction = lastActionAt ? (now - lastActionAt) / (1000 * 60 * 60) : null;
+    const inCooldown = lastActionAt !== null && hoursSinceLastAction !== null && hoursSinceLastAction < 2;
+
+    // Rule 1: Cooldown period - if action was taken < 2 hours ago, suggest wait or alternative
+    if (inCooldown && lastActionType) {
+      // If last action was call, suggest WhatsApp as alternative
+      if (lastActionType === 'call' && hasWhatsapp) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'Call attempted recently. Try WhatsApp as alternative contact method.',
+          cooldownActive: true,
+        };
+      }
+      // If last action was WhatsApp, suggest call as alternative
+      if (lastActionType === 'whatsapp' && hasPhone) {
+        return {
+          action: 'CALL',
+          reason: 'WhatsApp sent recently. Try calling for immediate response.',
+          cooldownActive: true,
+        };
+      }
+      // If last action was email, suggest phone contact
+      if (lastActionType === 'email' && hasPhone) {
+        if (hasWhatsapp) {
+          return {
+            action: 'WHATSAPP',
+            reason: 'Email sent recently. Try WhatsApp for faster response.',
+            cooldownActive: true,
+          };
+        } else {
+          return {
+            action: 'CALL',
+            reason: 'Email sent recently. Try calling for immediate response.',
+            cooldownActive: true,
+          };
+        }
+      }
+      // If no alternative available, suggest follow-up
+      return {
+        action: 'FOLLOW_UP',
+        reason: `Action taken ${Math.round(hoursSinceLastAction * 60)} minutes ago. Wait before next contact.`,
+        cooldownActive: true,
+      };
+    }
 
     // Rule 4 & 5: Follow-up automation after 24h/48h
     if (noResponseAfter48h && hasPhone) {
@@ -370,6 +422,7 @@ export class LeadAIService {
   /**
    * Calculate urgency state based on time since last activity
    * Separate from AI tier - this is time-based urgency
+   * Labels are distinct from AI tier to avoid duplication
    */
   calculateUrgencyState(lastActivityAt: Date | null, createdAt: Date): UrgencyState {
     if (!lastActivityAt) {
@@ -382,9 +435,9 @@ export class LeadAIService {
     const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
     
     if (hoursSinceActivity <= 24) {
-      return 'HOT';
+      return 'ACTIVE';
     } else if (hoursSinceActivity <= 48) {
-      return 'WARM';
+      return 'NEEDS_ATTENTION';
     } else {
       return 'COOLING';
     }
@@ -399,7 +452,7 @@ export class LeadAIService {
     const urgencyState = this.calculateUrgencyState(context.lastActivityAt || null, context.createdAt);
     const aiScoreLabel = this.generateScoreLabel(aiScore, aiTier);
     const aiReasonBullets = this.generateReasonBullets(context, aiScore);
-    const { action, reason, followUpRecommended } = this.recommendAction(context, context.lastContactedAt);
+    const { action, reason, followUpRecommended, cooldownActive } = this.recommendAction(context, context.lastContactedAt);
 
     return {
       aiScore,
@@ -410,6 +463,7 @@ export class LeadAIService {
       recommendedAction: action,
       recommendedActionReason: reason,
       followUpRecommended: followUpRecommended || false,
+      cooldownActive: cooldownActive || false,
     };
   }
 }
