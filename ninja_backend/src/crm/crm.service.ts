@@ -282,6 +282,10 @@ export class CrmService {
         l.created_at as "createdAt",
         l.updated_at as "updatedAt",
         l.last_contacted_at as "lastContactedAt",
+        l.has_responded as "hasResponded",
+        l.last_activity_at as "lastActivityAt",
+        l.last_action_type as "lastActionType",
+        l.last_action_at as "lastActionAt",
         -- Associated property details
         p.title as "propertyTitle",
         p.price as "propertyPrice",
@@ -305,7 +309,8 @@ export class CrmService {
         status: lead.status as LeadStatus,
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
-        lastContactedAt: lead.lastContactedAt || null, // Use actual lastContactedAt, not updatedAt
+        lastContactedAt: lead.lastContactedAt || null,
+        lastActivityAt: lead.lastActivityAt || lead.lastContactedAt || lead.updatedAt || lead.createdAt,
         propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
         propertyType: lead.propertyType || null,
         phone: lead.phone || null,
@@ -337,13 +342,19 @@ export class CrmService {
         createdAt: lead.createdAt,
         updatedAt: lead.updatedAt,
         lastContactedAt: lead.lastContactedAt || null,
+        hasResponded: lead.hasResponded || false,
+        lastActivityAt: lead.lastActivityAt || null,
+        lastActionType: lead.lastActionType || null,
+        lastActionAt: lead.lastActionAt || null,
         // AI fields
         aiScore: aiMetrics.aiScore,
         aiTier: aiMetrics.aiTier,
+        urgencyState: aiMetrics.urgencyState,
         aiScoreLabel: aiMetrics.aiScoreLabel,
         aiReasonBullets: aiMetrics.aiReasonBullets,
         recommendedAction: aiMetrics.recommendedAction,
         recommendedActionReason: aiMetrics.recommendedActionReason,
+        followUpRecommended: aiMetrics.followUpRecommended || false,
       };
     });
 

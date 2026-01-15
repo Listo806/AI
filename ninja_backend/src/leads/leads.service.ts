@@ -141,6 +141,10 @@ export class LeadsService {
         l.created_at as "createdAt", 
         l.updated_at as "updatedAt",
         l.last_contacted_at as "lastContactedAt",
+        l.has_responded as "hasResponded",
+        l.last_activity_at as "lastActivityAt",
+        l.last_action_type as "lastActionType",
+        l.last_action_at as "lastActionAt",
         -- Property details for AI calculation and display
         p.id as "propertyIdFull",
         p.title as "propertyTitle",
@@ -167,6 +171,7 @@ export class LeadsService {
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
       lastContactedAt: lead.lastContactedAt || null,
+      lastActivityAt: lead.lastActivityAt || lead.lastContactedAt || lead.updatedAt || lead.createdAt,
       propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
       propertyType: lead.propertyType || null,
       phone: lead.phone || null,
@@ -192,6 +197,10 @@ export class LeadsService {
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
       lastContactedAt: lead.lastContactedAt || null,
+      hasResponded: lead.hasResponded || false,
+      lastActivityAt: lead.lastActivityAt || null,
+      lastActionType: lead.lastActionType || null,
+      lastActionAt: lead.lastActionAt || null,
       property: lead.propertyIdFull ? {
         id: lead.propertyIdFull,
         title: lead.propertyTitle || 'Untitled Property',
@@ -204,10 +213,12 @@ export class LeadsService {
       // AI fields
       aiScore: aiMetrics.aiScore,
       aiTier: aiMetrics.aiTier,
+      urgencyState: aiMetrics.urgencyState,
       aiScoreLabel: aiMetrics.aiScoreLabel,
       aiReasonBullets: aiMetrics.aiReasonBullets,
       recommendedAction: aiMetrics.recommendedAction,
       recommendedActionReason: aiMetrics.recommendedActionReason,
+      followUpRecommended: aiMetrics.followUpRecommended || false,
     };
   }
 
@@ -316,19 +327,32 @@ export class LeadsService {
 
     const oldStatus = lead.status;
     
-    // Update last_contacted_at and status
+    // Map actionType to database value
+    const actionTypeMap = {
+      'call': 'call',
+      'whatsapp': 'whatsapp',
+      'email': 'email',
+    };
+    const dbActionType = actionTypeMap[actionType] || actionType;
+    
+    // Update last_contacted_at, last_action_type, last_action_at, last_activity_at and status
     // Only update status to 'contacted' if it's currently 'new'
     const statusUpdate = oldStatus === 'new' ? `status = 'contacted',` : '';
     
     const { rows } = await this.db.query(
       `UPDATE leads 
        SET last_contacted_at = NOW(), 
+           last_action_type = $2,
+           last_action_at = NOW(),
+           last_activity_at = NOW(),
            ${statusUpdate}
            updated_at = NOW()
        WHERE id = $1
        RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
-                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
-      [id],
+                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", 
+                 last_contacted_at as "lastContactedAt", has_responded as "hasResponded",
+                 last_activity_at as "lastActivityAt", last_action_type as "lastActionType", last_action_at as "lastActionAt"`,
+      [id, dbActionType],
     );
 
     const updatedLead = rows[0];

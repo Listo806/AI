@@ -3,14 +3,17 @@ import { LeadStatus } from './entities/lead.entity';
 
 export type LeadPriority = 'HOT' | 'WARM' | 'COLD';
 export type RecommendedAction = 'CALL' | 'WHATSAPP' | 'EMAIL' | 'FOLLOW_UP';
+export type UrgencyState = 'HOT' | 'WARM' | 'COOLING';
 
 export interface LeadAICalculation {
   aiScore: number; // 0-100
   aiTier: LeadPriority;
+  urgencyState: UrgencyState; // Time-based urgency (separate from AI tier)
   aiScoreLabel: string;
   aiReasonBullets: string[];
   recommendedAction: RecommendedAction;
   recommendedActionReason: string;
+  followUpRecommended?: boolean; // True if follow-up is recommended (24h+ no response)
 }
 
 export interface LeadContext {
@@ -18,6 +21,7 @@ export interface LeadContext {
   createdAt: Date;
   updatedAt: Date;
   lastContactedAt?: Date | null;
+  lastActivityAt?: Date | null; // For AI score decay calculation
   propertyPrice?: number | null;
   propertyType?: string | null;
   phone?: string | null;
@@ -96,6 +100,15 @@ export class LeadAIService {
       } else if (context.propertyPrice >= 300000) {
         score += 4; // Medium-high value boost
       }
+    }
+
+    // AI Score Decay: -1 point per 24 hours of inactivity
+    if (context.lastActivityAt) {
+      const lastActivity = new Date(context.lastActivityAt).getTime();
+      const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+      const daysSinceActivity = hoursSinceActivity / 24;
+      const decayPoints = Math.floor(daysSinceActivity); // -1 per full 24h
+      score -= decayPoints;
     }
 
     // Clamp score between 0 and 100
@@ -234,10 +247,12 @@ export class LeadAIService {
    * 1. If WhatsApp is available AND lead has NOT been contacted recently → WhatsApp
    * 2. If WhatsApp is NOT available → Call
    * 3. If WhatsApp is available BUT lead was contacted recently (within 24h) → Call
+   * 4. If no response after 24h → Recommend follow-up SMS/WhatsApp
+   * 5. If no response after 48h → Recommend Email or WhatsApp
    * 
    * Only ONE primary action is recommended (never both).
    */
-  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string } {
+  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string; followUpRecommended?: boolean } {
     const hasPhone = !!(context.phone && context.phone.trim());
     const hasEmail = !!(context.email && context.email.trim());
     const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
@@ -246,6 +261,35 @@ export class LeadAIService {
     const lastContact = lastContactedAt ? new Date(lastContactedAt).getTime() : null;
     const hoursSinceLastContact = lastContact ? (now - lastContact) / (1000 * 60 * 60) : null;
     const recentlyContacted = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact <= 24;
+    const noResponseAfter24h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 24;
+    const noResponseAfter48h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 48;
+
+    // Rule 4 & 5: Follow-up automation after 24h/48h
+    if (noResponseAfter48h && hasPhone) {
+      // After 48h, recommend WhatsApp or Email
+      if (hasWhatsapp) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'Send follow-up text now — no response after 48 hours.',
+          followUpRecommended: true,
+        };
+      } else if (hasEmail) {
+        return {
+          action: 'EMAIL',
+          reason: 'Send follow-up email — no response after 48 hours.',
+          followUpRecommended: true,
+        };
+      }
+    }
+    
+    if (noResponseAfter24h && hasPhone && hasWhatsapp) {
+      // After 24h, recommend follow-up SMS/WhatsApp
+      return {
+        action: 'WHATSAPP',
+        reason: 'Send follow-up text now — no response after 24 hours.',
+        followUpRecommended: true,
+      };
+    }
 
     // PRIMARY RULE: If phone exists, ALWAYS recommend CALL or WHATSAPP (never EMAIL)
     if (hasPhone) {
@@ -324,22 +368,48 @@ export class LeadAIService {
   }
 
   /**
+   * Calculate urgency state based on time since last activity
+   * Separate from AI tier - this is time-based urgency
+   */
+  calculateUrgencyState(lastActivityAt: Date | null, createdAt: Date): UrgencyState {
+    if (!lastActivityAt) {
+      // Use createdAt if no activity yet
+      lastActivityAt = createdAt;
+    }
+    
+    const now = Date.now();
+    const lastActivity = new Date(lastActivityAt).getTime();
+    const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+    
+    if (hoursSinceActivity <= 24) {
+      return 'HOT';
+    } else if (hoursSinceActivity <= 48) {
+      return 'WARM';
+    } else {
+      return 'COOLING';
+    }
+  }
+
+  /**
    * Calculate all AI metrics for a lead
    */
   calculateLeadAI(context: LeadContext): LeadAICalculation {
     const aiScore = this.calculateAIScore(context);
     const aiTier = this.calculateTier(aiScore);
+    const urgencyState = this.calculateUrgencyState(context.lastActivityAt || null, context.createdAt);
     const aiScoreLabel = this.generateScoreLabel(aiScore, aiTier);
     const aiReasonBullets = this.generateReasonBullets(context, aiScore);
-    const { action, reason } = this.recommendAction(context, context.lastContactedAt);
+    const { action, reason, followUpRecommended } = this.recommendAction(context, context.lastContactedAt);
 
     return {
       aiScore,
       aiTier,
+      urgencyState,
       aiScoreLabel,
       aiReasonBullets,
       recommendedAction: action,
       recommendedActionReason: reason,
+      followUpRecommended: followUpRecommended || false,
     };
   }
 }

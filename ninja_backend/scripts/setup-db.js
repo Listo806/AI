@@ -195,6 +195,14 @@ async function setupDatabase() {
       console.log('✓ Add Last Contacted At column to leads table migration completed');
     }
 
+    // Run Add last_activity_at and last_action_type columns to leads table migration
+    const migration13Path = path.join(__dirname, '../src/database/migrations/013_add_lead_action_tracking.sql');
+    if (fs.existsSync(migration13Path)) {
+      const migration13SQL = fs.readFileSync(migration13Path, 'utf8');
+      await pool.query(migration13SQL);
+      console.log('✓ Add last_activity_at and last_action_type columns to leads table migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
