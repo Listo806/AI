@@ -16,19 +16,19 @@ import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm')
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard)
 export class CrmController {
   constructor(private readonly crmService: CrmService) {}
 
   /**
    * GET /api/crm/dashboard/summary
    * Single lightweight endpoint to hydrate the entire dashboard above-the-fold
+   * Available to all authenticated users (FREE/PRO get limited data, PRO PLUS+ get full data)
    */
   @Get('dashboard/summary')
   @ApiOperation({ summary: 'Get dashboard summary statistics' })
   @ApiResponse({ status: 200, description: 'Dashboard summary retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'CRM access required' })
   async getDashboardSummary(@CurrentUser() user: any) {
     return this.crmService.getDashboardSummary(
       user.id,
@@ -40,8 +40,10 @@ export class CrmController {
   /**
    * GET /api/crm/leads/recent?limit=10
    * Get recent leads with AI score logic
+   * Requires CRM access (PRO PLUS+)
    */
   @Get('leads/recent')
+  @UseGuards(CrmAccessGuard)
   @ApiOperation({ summary: 'Get recent leads with AI scores' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of leads to return (1-50)', example: 10 })
   @ApiResponse({ status: 200, description: 'Recent leads retrieved successfully' })
@@ -59,8 +61,10 @@ export class CrmController {
   /**
    * GET /api/crm/properties/recent?limit=10
    * Get recent properties with engagement metrics
+   * Requires CRM access (PRO PLUS+)
    */
   @Get('properties/recent')
+  @UseGuards(CrmAccessGuard)
   @ApiOperation({ summary: 'Get recent properties with engagement metrics' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of properties to return (1-50)', example: 10 })
   @ApiResponse({ status: 200, description: 'Recent properties retrieved successfully' })
@@ -78,8 +82,10 @@ export class CrmController {
   /**
    * GET /api/crm/owner/properties
    * Get all owner properties (role-scoped: owner only sees their own)
+   * Requires CRM access (PRO PLUS+)
    */
   @Get('owner/properties')
+  @UseGuards(CrmAccessGuard)
   @ApiOperation({ summary: 'Get all owner properties (read-only list)' })
   @ApiResponse({ status: 200, description: 'Owner properties retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -95,8 +101,10 @@ export class CrmController {
   /**
    * GET /api/crm/owner/leads
    * Get all owner leads (role-scoped: owner only sees their own)
+   * Requires CRM access (PRO PLUS+)
    */
   @Get('owner/leads')
+  @UseGuards(CrmAccessGuard)
   @ApiOperation({ summary: 'Get all owner leads (read-only list)' })
   @ApiResponse({ status: 200, description: 'Owner leads retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
