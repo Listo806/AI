@@ -120,6 +120,29 @@ export default function PropertyForm() {
     }
   };
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to permanently delete this listing? This action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await apiClient.request(`/properties/${id}`, {
+        method: 'DELETE',
+      });
+      navigate('/properties');
+    } catch (err) {
+      setError(err.message || 'Failed to delete property');
+      setLoading(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <DashboardLayout title={isEdit ? 'Edit Property' : 'New Property'}>
@@ -396,6 +419,28 @@ export default function PropertyForm() {
             </button>
           </div>
         </form>
+
+        {/* Danger Zone - Only show in edit mode */}
+        {isEdit && (
+          <div className="crm-danger-zone">
+            <div className="crm-danger-zone-header">
+              <h3 className="crm-danger-zone-title">Danger Zone</h3>
+              <p className="crm-danger-zone-description">
+                Irreversible and destructive actions
+              </p>
+            </div>
+            <div className="crm-danger-zone-actions">
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="crm-btn crm-btn-danger"
+                disabled={loading}
+              >
+                Delete Property
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

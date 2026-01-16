@@ -32,14 +32,22 @@ class ApiClient {
       ...options.headers,
     };
 
-    if (this.accessToken) {
+    // Check if this is a public endpoint (doesn't require auth)
+    const isPublicEndpoint = endpoint.includes('/public') || 
+                            endpoint.includes('/auth/signin') || 
+                            endpoint.includes('/auth/signup') ||
+                            endpoint.includes('/properties/public');
+
+    // Only add auth header if we have a token and it's not a public endpoint
+    if (this.accessToken && !isPublicEndpoint) {
       headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
 
     try {
       const response = await fetch(url, { ...options, headers });
 
-      if (response.status === 401 && this.refreshToken) {
+      // Only try to refresh token if it's not a public endpoint
+      if (response.status === 401 && this.refreshToken && !isPublicEndpoint) {
         try {
           await this.refreshAccessToken();
           headers['Authorization'] = `Bearer ${this.accessToken}`;
@@ -52,18 +60,19 @@ class ApiClient {
         }
       }
 
-      if (response.status === 401 && !this.refreshToken) {
+      // For public endpoints, don't clear tokens on 401
+      if (response.status === 401 && !this.refreshToken && !isPublicEndpoint) {
         this.clearTokens();
         localStorage.removeItem(STORAGE_PREFIX + 'user');
       }
 
-      return this.handleResponse(response);
+      return this.handleResponse(response, isPublicEndpoint);
     } catch (error) {
       throw error;
     }
   }
 
-  async handleResponse(response) {
+  async handleResponse(response, isPublicEndpoint = false) {
     if (!response.ok) {
       let errorMessage = `API Error: ${response.status}`;
       
@@ -78,7 +87,12 @@ class ApiClient {
       if (response.status === 409) {
         errorMessage = 'This email is already registered. Please use a different email or try logging in.';
       } else if (response.status === 401) {
-        errorMessage = 'Invalid credentials. Please check your email and password.';
+        // Don't show "Invalid credentials" for public endpoints
+        if (isPublicEndpoint) {
+          errorMessage = 'Unable to load data. Please try again later.';
+        } else {
+          errorMessage = 'Invalid credentials. Please check your email and password.';
+        }
       } else if (response.status === 403) {
         errorMessage = 'You do not have permission to perform this action.';
       } else if (response.status === 404) {

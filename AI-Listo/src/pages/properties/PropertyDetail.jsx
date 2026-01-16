@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+import PropertyMap from '../../components/PropertyMap';
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -150,6 +151,19 @@ export default function PropertyDetail() {
             )}
           </div>
         </div>
+
+        {/* Map Section */}
+        {property.latitude && property.longitude && (
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h3 className="crm-section-title">Map</h3>
+            <div style={{ height: '400px', borderRadius: '8px', overflow: 'hidden' }}>
+              <PropertyMap 
+                properties={[property]} 
+                selectedProperty={property}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="crm-section" style={{ marginBottom: '24px' }}>
           <h3 className="crm-section-title">Metadata</h3>

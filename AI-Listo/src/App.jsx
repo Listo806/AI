@@ -6,6 +6,10 @@ import Dashboard from "./pages/dashboard/Dashboard";
 import PropertiesList from "./pages/properties/PropertiesList";
 import PropertyForm from "./pages/properties/PropertyForm";
 import PropertyDetail from "./pages/properties/PropertyDetail";
+import Listings from "./pages/listings/Listings";
+import ListingDetail from "./pages/listings/ListingDetail";
+import LeadsList from "./pages/leads/LeadsList";
+import LeadDetail from "./pages/leads/LeadDetail";
 
 // Root route handler - shows sign-in or redirects to role-based dashboard
 function RootRoute() {
@@ -45,6 +49,12 @@ function AppRoutes() {
       <Route path="/properties/new" element={<PropertyForm />} />
       <Route path="/properties/:id/edit" element={<PropertyForm />} />
       <Route path="/properties/:id" element={<PropertyDetail />} />
+      {/* Leads */}
+      <Route path="/leads" element={<LeadsList />} />
+      <Route path="/leads/:id" element={<LeadDetail />} />
+      {/* Public Listings */}
+      <Route path="/listings" element={<Listings />} />
+      <Route path="/listings/:id" element={<ListingDetail />} />
     </Routes>
   );
 }

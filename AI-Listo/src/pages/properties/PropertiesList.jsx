@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
-import ContactModal from '../../components/ContactModal';
+import PropertyMap from '../../components/PropertyMap';
 
 export default function PropertiesList() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]); // Store all properties for client-side filtering
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Get type from URL parameter
+  const urlType = searchParams.get('type') || '';
+  
   // Filters
   const [filters, setFilters] = useState({
-    type: '',
+    type: urlType, // Initialize from URL
     status: '',
     search: '',
     minPrice: '',
@@ -28,16 +31,6 @@ export default function PropertiesList() {
   const [sortBy, setSortBy] = useState('newest');
   const [userLocation, setUserLocation] = useState(null); // For distance sorting
 
-  // Contact Modal
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState(null);
-
-  // WhatsApp phone number
-  // Priority: 1. User phone, 2. Environment variable, 3. Default placeholder
-  // You can set VITE_WHATSAPP_PHONE in .env file
-  const whatsappPhone = user?.phone || 
-                        import.meta.env.VITE_WHATSAPP_PHONE || 
-                        '+1234567890'; // Default placeholder - update this with your actual number
 
   // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -53,6 +46,14 @@ export default function PropertiesList() {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
+
+  // Update filters when URL type changes
+  useEffect(() => {
+    const urlType = searchParams.get('type') || '';
+    if (filters.type !== urlType) {
+      setFilters(prev => ({ ...prev, type: urlType }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
@@ -192,27 +193,6 @@ export default function PropertiesList() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this property?')) {
-      return;
-    }
-
-    try {
-      await apiClient.request(`/properties/${id}`, { method: 'DELETE' });
-      loadProperties(); // Reload list
-    } catch (err) {
-      alert('Failed to delete property: ' + err.message);
-    }
-  };
-
-  const handlePublish = async (id) => {
-    try {
-      await apiClient.request(`/properties/${id}/publish`, { method: 'POST' });
-      loadProperties(); // Reload list
-    } catch (err) {
-      alert('Failed to publish property: ' + err.message);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -236,17 +216,6 @@ export default function PropertiesList() {
     return `crm-item-badge badge-${status || 'draft'}`;
   };
 
-  const handleContactAgent = (property) => {
-    setSelectedProperty(property);
-    setShowContactModal(true);
-  };
-
-  const handleContactSubmit = (lead) => {
-    // Lead created successfully
-    console.log('Lead created:', lead);
-    // Optionally show a success message or refresh data
-  };
-
   if (authLoading) {
     return (
       <DashboardLayout title="Properties">
@@ -261,6 +230,9 @@ export default function PropertiesList() {
     return null;
   }
 
+  // Properties with valid coordinates for map
+  const mapProperties = properties.filter(p => p.latitude && p.longitude);
+
   return (
     <DashboardLayout title="Properties">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -273,6 +245,18 @@ export default function PropertiesList() {
       {error && (
         <div className="crm-error">
           {error}
+        </div>
+      )}
+
+      {/* Map Section */}
+      {mapProperties.length > 0 && (
+        <div className="crm-map-section" style={{ marginBottom: '32px', height: '500px' }}>
+          <PropertyMap 
+            properties={mapProperties} 
+            onPropertyClick={(property) => {
+              window.location.href = `/properties/${property.id}`;
+            }}
+          />
         </div>
       )}
 
@@ -290,7 +274,16 @@ export default function PropertiesList() {
           />
           <select
             value={filters.type}
-            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            onChange={(e) => {
+              const newType = e.target.value;
+              setFilters({ ...filters, type: newType });
+              // Update URL
+              if (newType) {
+                setSearchParams({ type: newType });
+              } else {
+                setSearchParams({});
+              }
+            }}
             className="crm-select"
           >
             <option value="">All Types</option>
@@ -442,57 +435,11 @@ export default function PropertiesList() {
                 </div>
               </div>
 
-              {/* Buyer Actions */}
-              <div style={{ 
-                marginTop: '16px', 
-                paddingTop: '16px', 
-                borderTop: '1px solid #e5e7eb',
-                display: 'flex', 
-                gap: '8px', 
-                flexWrap: 'wrap'
-              }}>
-                <a
-                  href={buildWhatsAppLink(whatsappPhone, property)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="crm-btn crm-btn-whatsapp"
-                >
-                  💬 WhatsApp
-                </a>
-                <button
-                  onClick={() => handleContactAgent(property)}
-                  className="crm-btn crm-btn-contact"
-                >
-                  Contact Agent
-                </button>
-              </div>
-
-              {/* Admin Actions */}
-              <div style={{ 
-                marginTop: '12px', 
-                display: 'flex', 
-                gap: '8px', 
-                justifyContent: 'flex-end',
-                paddingTop: '12px',
-                borderTop: '1px solid #f1f5f9'
-              }}>
-                <Link to={`/properties/${property.id}`} className="crm-btn crm-btn-secondary">
+              {/* Action Buttons */}
+              <div className="crm-property-actions" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+                <Link to={`/properties/${property.id}`} className="crm-btn crm-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
                   View / Edit
                 </Link>
-                {property.status !== 'published' && (
-                  <button
-                    onClick={() => handlePublish(property.id)}
-                    className="crm-btn crm-btn-primary"
-                  >
-                    Publish
-                  </button>
-                )}
-                <button
-                  onClick={() => handleDelete(property.id)}
-                  className="crm-btn crm-btn-danger"
-                >
-                  Delete
-                </button>
               </div>
 
               <div className="crm-item-meta">
@@ -502,18 +449,6 @@ export default function PropertiesList() {
             </div>
           ))}
         </div>
-      )}
-
-      {/* Contact Modal */}
-      {showContactModal && selectedProperty && (
-        <ContactModal
-          property={selectedProperty}
-          onClose={() => {
-            setShowContactModal(false);
-            setSelectedProperty(null);
-          }}
-          onSubmit={handleContactSubmit}
-        />
       )}
     </DashboardLayout>
   );

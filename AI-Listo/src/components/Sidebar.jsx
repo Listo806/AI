@@ -1,26 +1,66 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="crm-sidebar">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && <div className="crm-sidebar-overlay" onClick={onClose} />}
+      <aside className={`crm-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="crm-logo">AI CRM</div>
       <nav className="crm-nav">
-        <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}>
+        <NavLink 
+          to="/dashboard" 
+          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+          onClick={onClose}
+        >
           Dashboard
         </NavLink>
-        <NavLink to="/properties" className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}>
+        <NavLink 
+          to="/properties" 
+          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+          onClick={onClose}
+        >
           Properties
         </NavLink>
-        <NavLink to="/leads" className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}>
+        {/* Mobile Buy/Rent Links */}
+        <div className="crm-nav-buy-rent">
+          <NavLink 
+            to="/properties?type=sale" 
+            className="crm-nav-link crm-nav-link-buy"
+            onClick={onClose}
+          >
+            Buy
+          </NavLink>
+          <NavLink 
+            to="/properties?type=rent" 
+            className="crm-nav-link crm-nav-link-rent"
+            onClick={onClose}
+          >
+            Rent
+          </NavLink>
+        </div>
+        <NavLink 
+          to="/leads" 
+          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+          onClick={onClose}
+        >
           Leads
         </NavLink>
-        <NavLink to="/pipeline" className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}>
+        <NavLink 
+          to="/pipeline" 
+          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+          onClick={onClose}
+        >
           Pipeline
         </NavLink>
-        <NavLink to="/settings" className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}>
+        <NavLink 
+          to="/settings" 
+          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+          onClick={onClose}
+        >
           Settings
         </NavLink>
       </nav>
@@ -39,5 +79,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
