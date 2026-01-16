@@ -12,6 +12,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionPlansService } from './subscription-plans.service';
+import { SubscriptionEnforcementService } from './services/subscription-enforcement.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
@@ -26,6 +27,7 @@ export class SubscriptionsController {
   constructor(
     private readonly subscriptionsService: SubscriptionsService,
     private readonly plansService: SubscriptionPlansService,
+    private readonly enforcementService: SubscriptionEnforcementService,
   ) {}
 
   @Get('plans')
@@ -89,6 +91,14 @@ export class SubscriptionsController {
   @ApiResponse({ status: 200, description: 'Subscription retrieved successfully' })
   async getTeamSubscription(@Param('teamId') teamId: string) {
     return this.subscriptionsService.findByTeamId(teamId);
+  }
+
+  @Get('team/:teamId/features')
+  @ApiOperation({ summary: 'Get team subscription features and limits' })
+  @ApiParam({ name: 'teamId', description: 'Team ID' })
+  @ApiResponse({ status: 200, description: 'Subscription features retrieved successfully' })
+  async getTeamFeatures(@Param('teamId') teamId: string) {
+    return this.enforcementService.getTeamFeatures(teamId);
   }
 
   @Post(':id/cancel')

@@ -13,7 +13,11 @@ export class SubscriptionPlansService {
       `INSERT INTO subscription_plans (name, description, price, seat_limit, paddle_price_id, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
        RETURNING id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
-                 is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
+                 is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
+                 ai_features as "aiFeatures", analytics_level as "analyticsLevel",
+                 priority_exposure as "priorityExposure", ai_automation as "aiAutomation",
+                 plan_category as "planCategory",
+                 created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createPlanDto.name,
         createPlanDto.description || null,
@@ -28,7 +32,10 @@ export class SubscriptionPlansService {
 
   async findAll(activeOnly: boolean = false): Promise<SubscriptionPlan[]> {
     let query = `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
-                        is_active as "isActive", 
+                        is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
+                        ai_features as "aiFeatures", analytics_level as "analyticsLevel",
+                        priority_exposure as "priorityExposure", ai_automation as "aiAutomation",
+                        plan_category as "planCategory",
                         created_at as "createdAt", updated_at as "updatedAt"
                  FROM subscription_plans`;
     
@@ -46,7 +53,10 @@ export class SubscriptionPlansService {
   async findById(id: string): Promise<SubscriptionPlan | null> {
     const { rows } = await this.db.query(
       `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
-              is_active as "isActive", 
+              is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
+              ai_features as "aiFeatures", analytics_level as "analyticsLevel",
+              priority_exposure as "priorityExposure", ai_automation as "aiAutomation",
+              plan_category as "planCategory",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM subscription_plans WHERE id = $1`,
       [id],
@@ -57,7 +67,10 @@ export class SubscriptionPlansService {
   async findByPaddlePriceId(paddlePriceId: string): Promise<SubscriptionPlan | null> {
     const { rows } = await this.db.query(
       `SELECT id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
-              is_active as "isActive", 
+              is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
+              ai_features as "aiFeatures", analytics_level as "analyticsLevel",
+              priority_exposure as "priorityExposure", ai_automation as "aiAutomation",
+              plan_category as "planCategory",
               created_at as "createdAt", updated_at as "updatedAt"
        FROM subscription_plans WHERE paddle_price_id = $1`,
       [paddlePriceId],
@@ -113,7 +126,10 @@ export class SubscriptionPlansService {
     const { rows } = await this.db.query(
       `UPDATE subscription_plans SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
-                 is_active as "isActive", 
+                 is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
+                 ai_features as "aiFeatures", analytics_level as "analyticsLevel",
+                 priority_exposure as "priorityExposure", ai_automation as "aiAutomation",
+                 plan_category as "planCategory",
                  created_at as "createdAt", updated_at as "updatedAt"`,
       values,
     );

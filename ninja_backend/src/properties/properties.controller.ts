@@ -17,6 +17,8 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { AddMediaDto } from './dto/add-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
+import { ListingLimitGuard } from '../subscriptions/guards/listing-limit.guard';
+import { SubscriptionRequiredGuard } from '../subscriptions/guards/subscription-required.guard';
 
 @ApiTags('properties')
 @Controller('properties')
@@ -36,12 +38,13 @@ export class PropertiesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, ListingLimitGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new property' })
   @ApiBody({ type: CreatePropertyDto })
   @ApiResponse({ status: 201, description: 'Property created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Listing limit reached' })
   async create(@Body() createPropertyDto: CreatePropertyDto, @CurrentUser() user: any) {
     return this.propertiesService.create(createPropertyDto, user.id, user.teamId);
   }
@@ -92,10 +95,13 @@ export class PropertiesController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a property' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiBody({ type: UpdatePropertyDto })
   @ApiResponse({ status: 200, description: 'Property updated successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async update(
     @Param('id') id: string,
@@ -106,18 +112,24 @@ export class PropertiesController {
   }
 
   @Post(':id/publish')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Publish a property' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiResponse({ status: 200, description: 'Property published successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async publish(@Param('id') id: string, @CurrentUser() user: any) {
     return this.propertiesService.publish(id, user.id, user.teamId);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete a property' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiResponse({ status: 200, description: 'Property deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
     await this.propertiesService.delete(id, user.id, user.teamId);
@@ -125,10 +137,13 @@ export class PropertiesController {
   }
 
   @Post(':id/media')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Add media to a property' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiBody({ type: AddMediaDto })
   @ApiResponse({ status: 201, description: 'Media added successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   async addMedia(
     @Param('id') propertyId: string,
     @Body() addMediaDto: AddMediaDto,
@@ -153,11 +168,14 @@ export class PropertiesController {
   }
 
   @Put(':id/media/:mediaId')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update property media' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiParam({ name: 'mediaId', description: 'Media ID' })
   @ApiBody({ type: UpdateMediaDto })
   @ApiResponse({ status: 200, description: 'Media updated successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   async updateMedia(
     @Param('mediaId') mediaId: string,
     @Body() updateMediaDto: UpdateMediaDto,
@@ -167,10 +185,13 @@ export class PropertiesController {
   }
 
   @Delete(':id/media/:mediaId')
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete property media' })
   @ApiParam({ name: 'id', description: 'Property ID' })
   @ApiParam({ name: 'mediaId', description: 'Media ID' })
   @ApiResponse({ status: 200, description: 'Media deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   async deleteMedia(
     @Param('mediaId') mediaId: string,
     @CurrentUser() user: any,

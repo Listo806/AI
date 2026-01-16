@@ -11,11 +11,12 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { CrmService } from './crm.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard)
 export class CrmController {
   constructor(private readonly crmService: CrmService) {}
 
@@ -27,6 +28,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get dashboard summary statistics' })
   @ApiResponse({ status: 200, description: 'Dashboard summary retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   async getDashboardSummary(@CurrentUser() user: any) {
     return this.crmService.getDashboardSummary(
       user.id,
@@ -44,6 +46,7 @@ export class CrmController {
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of leads to return (1-50)', example: 10 })
   @ApiResponse({ status: 200, description: 'Recent leads retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   async getRecentLeads(
     @CurrentUser() user: any,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
@@ -62,6 +65,7 @@ export class CrmController {
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of properties to return (1-50)', example: 10 })
   @ApiResponse({ status: 200, description: 'Recent properties retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   async getRecentProperties(
     @CurrentUser() user: any,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
@@ -79,7 +83,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all owner properties (read-only list)' })
   @ApiResponse({ status: 200, description: 'Owner properties retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - not an owner' })
+  @ApiResponse({ status: 403, description: 'CRM access required or not an owner' })
   async getOwnerProperties(@CurrentUser() user: any) {
     // Ensure user is an owner
     if (user.role !== 'owner') {
@@ -96,7 +100,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all owner leads (read-only list)' })
   @ApiResponse({ status: 200, description: 'Owner leads retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - not an owner' })
+  @ApiResponse({ status: 403, description: 'CRM access required or not an owner' })
   async getOwnerLeads(@CurrentUser() user: any) {
     // Ensure user is an owner
     if (user.role !== 'owner') {

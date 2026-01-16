@@ -4,6 +4,11 @@ import { SubscriptionPlansService } from './subscription-plans.service';
 import { SubscriptionsController } from './subscriptions.controller';
 import { PaddleWebhookController } from './webhooks/paddle-webhook.controller';
 import { SubscriptionActiveGuard } from './guards/subscription-active.guard';
+import { SubscriptionEnforcementService } from './services/subscription-enforcement.service';
+import { ListingLimitGuard } from './guards/listing-limit.guard';
+import { CrmAccessGuard } from './guards/crm-access.guard';
+import { AiFeaturesGuard } from './guards/ai-features.guard';
+import { SubscriptionRequiredGuard } from './guards/subscription-required.guard';
 import { PaymentsModule } from '../payments/payments.module';
 import { TeamsModule } from '../teams/teams.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
@@ -11,8 +16,26 @@ import { AnalyticsModule } from '../analytics/analytics.module';
 @Module({
   imports: [PaymentsModule, TeamsModule, AnalyticsModule],
   controllers: [SubscriptionsController, PaddleWebhookController],
-  providers: [SubscriptionsService, SubscriptionPlansService, SubscriptionActiveGuard],
-  exports: [SubscriptionsService, SubscriptionPlansService, SubscriptionActiveGuard],
+  providers: [
+    SubscriptionsService,
+    SubscriptionPlansService,
+    SubscriptionActiveGuard,
+    SubscriptionEnforcementService,
+    ListingLimitGuard,
+    CrmAccessGuard,
+    AiFeaturesGuard,
+    SubscriptionRequiredGuard,
+  ],
+  exports: [
+    SubscriptionsService,
+    SubscriptionPlansService,
+    SubscriptionActiveGuard,
+    SubscriptionEnforcementService,
+    ListingLimitGuard,
+    CrmAccessGuard,
+    AiFeaturesGuard,
+    SubscriptionRequiredGuard,
+  ],
 })
 export class SubscriptionsModule {}
 

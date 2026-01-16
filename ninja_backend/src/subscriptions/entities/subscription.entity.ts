@@ -18,6 +18,18 @@ export enum PaymentStatus {
   CANCELED = 'canceled',
 }
 
+export enum AnalyticsLevel {
+  NONE = 'none',
+  BASIC = 'basic',
+  ADVANCED = 'advanced',
+  AI_INSIGHTS = 'ai_insights',
+}
+
+export enum PlanCategory {
+  MARKETPLACE = 'marketplace',
+  AI_CRM = 'ai_crm',
+}
+
 export interface SubscriptionPlan {
   id: string;
   name: string;
@@ -26,6 +38,14 @@ export interface SubscriptionPlan {
   seatLimit: number;
   paddlePriceId: string | null;
   isActive: boolean;
+  // Feature limits
+  listingLimit: number | null; // NULL = unlimited, 0 = no listings
+  crmAccess: boolean;
+  aiFeatures: boolean;
+  analyticsLevel: AnalyticsLevel;
+  priorityExposure: boolean;
+  aiAutomation: boolean;
+  planCategory: PlanCategory;
   createdAt: Date;
   updatedAt: Date;
 }

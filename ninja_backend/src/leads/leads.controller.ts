@@ -16,6 +16,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadStatus } from './entities/lead.entity';
+import { SubscriptionRequiredGuard } from '../subscriptions/guards/subscription-required.guard';
+import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 
 @ApiTags('leads')
 @Controller('leads')
@@ -33,12 +35,13 @@ export class LeadsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create a new lead' })
   @ApiBody({ type: CreateLeadDto })
   @ApiResponse({ status: 201, description: 'Lead created successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Active subscription required' })
   async create(@Body() createLeadDto: CreateLeadDto, @CurrentUser() user: any) {
     return this.leadsService.create(createLeadDto, user.id, user.teamId);
   }
@@ -69,12 +72,13 @@ export class LeadsController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update a lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiBody({ type: UpdateLeadDto })
   @ApiResponse({ status: 200, description: 'Lead updated successfully' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   async update(
     @Param('id') id: string,
@@ -85,7 +89,7 @@ export class LeadsController {
   }
 
   @Post(':id/contact')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Log a contact action (call, WhatsApp, or email)' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
@@ -99,6 +103,7 @@ export class LeadsController {
     } 
   })
   @ApiResponse({ status: 200, description: 'Contact action logged successfully' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   async logContact(
     @Param('id') id: string,
@@ -109,11 +114,12 @@ export class LeadsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete a lead' })
   @ApiParam({ name: 'id', description: 'Lead ID' })
   @ApiResponse({ status: 200, description: 'Lead deleted successfully' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
     await this.leadsService.delete(id, user.id, user.teamId);

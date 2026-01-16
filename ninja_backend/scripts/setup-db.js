@@ -203,6 +203,22 @@ async function setupDatabase() {
       console.log('✓ Add last_activity_at and last_action_type columns to leads table migration completed');
     }
 
+    // Run Milestone 5 Subscription Enforcement migration
+    const migration14Path = path.join(__dirname, '../src/database/migrations/014_milestone5_subscription_enforcement.sql');
+    if (fs.existsSync(migration14Path)) {
+      const migration14SQL = fs.readFileSync(migration14Path, 'utf8');
+      await pool.query(migration14SQL);
+      console.log('✓ Milestone 5 subscription enforcement migration completed');
+    }
+
+    // Seed subscription plans
+    const migration15Path = path.join(__dirname, '../src/database/migrations/015_seed_subscription_plans.sql');
+    if (fs.existsSync(migration15Path)) {
+      const migration15SQL = fs.readFileSync(migration15Path, 'utf8');
+      await pool.query(migration15SQL);
+      console.log('✓ Subscription plans seeded');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
