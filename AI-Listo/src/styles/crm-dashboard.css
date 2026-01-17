@@ -29,6 +29,30 @@ body {
   position: fixed;
   height: 100vh;
   overflow-y: auto;
+  z-index: 999;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Desktop: Sidebar always visible */
+@media (min-width: 769px) {
+  .crm-sidebar {
+    transform: translateX(0);
+  }
+}
+
+/* Mobile: Sidebar hidden by default, shown when open */
+@media (max-width: 768px) {
+  .crm-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .crm-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .crm-sidebar-overlay {
+    display: block;
+  }
 }
 
 .crm-logo {
@@ -261,8 +285,16 @@ body {
 .crm-main {
   flex: 1;
   background: #f8fafc;
-  margin-left: 240px;
+  margin-left: 240px; /* Desktop: account for sidebar */
   min-height: 100vh;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+/* Mobile: No margin for sidebar */
+@media (max-width: 768px) {
+  .crm-main {
+    margin-left: 0;
+  }
 }
 
 .crm-header {
@@ -285,7 +317,7 @@ body {
 
 /* Mobile Menu Toggle (Hamburger) */
 .crm-mobile-menu-toggle {
-  display: none;
+  display: none; /* Hidden on desktop */
   flex-direction: column;
   justify-content: space-around;
   width: 28px;
@@ -295,6 +327,13 @@ body {
   cursor: pointer;
   padding: 0;
   z-index: 1001;
+}
+
+/* Show hamburger on mobile */
+@media (max-width: 768px) {
+  .crm-mobile-menu-toggle {
+    display: flex;
+  }
 }
 
 .crm-mobile-menu-toggle span {
@@ -319,6 +358,13 @@ body {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 998;
+}
+
+/* Show overlay on mobile when sidebar is open */
+@media (max-width: 768px) {
+  .crm-sidebar-overlay {
+    display: block;
+  }
 }
 
 .crm-header h1 {
@@ -794,11 +840,7 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .crm-sidebar {
-    width: 200px;
-  }
-
-  .crm-main {
-    margin-left: 200px;
+    width: 240px;
   }
 
   .crm-stats-grid {
@@ -815,29 +857,5 @@ body {
 
   .crm-form-actions .crm-btn {
     width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .crm-mobile-menu-toggle {
-    display: flex;
-  }
-
-  .crm-sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 999;
-  }
-
-  .crm-sidebar.open {
-    transform: translateX(0);
-  }
-
-  .crm-sidebar-overlay {
-    display: block;
-  }
-
-  .crm-main {
-    margin-left: 0;
   }
 }

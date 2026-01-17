@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
@@ -8,13 +7,10 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated, loading: authLoading, user, getDashboardPath } = useAuth();
+  const { login } = useAuth();
 
-  // Redirect if already authenticated
-  if (!authLoading && isAuthenticated() && user) {
-    const dashboardPath = getDashboardPath(user.role);
-    return <Navigate to={dashboardPath} replace />;
-  }
+  // NOTE: Sign-in page ALWAYS shows the form, even if user is already authenticated
+  // This is correct SaaS behavior - clicking "Sign In" should always show the form
 
   const handleSubmit = async (e) => {
     e.preventDefault();

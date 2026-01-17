@@ -75,10 +75,25 @@ class ApiClient {
   async handleResponse(response, isPublicEndpoint = false) {
     if (!response.ok) {
       let errorMessage = `API Error: ${response.status}`;
+      let isSubscriptionError = false;
       
       try {
         const data = await response.json();
         errorMessage = data.message || errorMessage;
+        
+        // Check if this is a subscription-related error
+        // Backend returns messages like:
+        // - "You've reached your plan's listing limit..."
+        // - "🔒 This feature requires an active subscription..."
+        if (response.status === 403 && (
+          errorMessage.includes('listing limit') ||
+          errorMessage.includes('subscription') ||
+          errorMessage.includes('CRM access') ||
+          errorMessage.includes('AI features') ||
+          errorMessage.includes('🔒')
+        )) {
+          isSubscriptionError = true;
+        }
       } catch (e) {
         errorMessage = response.statusText || errorMessage;
       }
@@ -94,7 +109,10 @@ class ApiClient {
           errorMessage = 'Invalid credentials. Please check your email and password.';
         }
       } else if (response.status === 403) {
-        errorMessage = 'You do not have permission to perform this action.';
+        // Keep the original message if it's a subscription error, otherwise use generic
+        if (!isSubscriptionError) {
+          errorMessage = 'You do not have permission to perform this action.';
+        }
       } else if (response.status === 404) {
         errorMessage = 'The requested resource was not found.';
       } else if (response.status === 422) {
@@ -103,7 +121,10 @@ class ApiClient {
         errorMessage = 'Server error. Please try again later.';
       }
 
-      throw new Error(errorMessage);
+      const error = new Error(errorMessage);
+      error.isSubscriptionError = isSubscriptionError;
+      error.status = response.status;
+      throw error;
     }
 
     try {

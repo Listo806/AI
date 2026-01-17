@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import PropertyMap from '../../components/PropertyMap';
 
 export default function PropertiesList() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { handleError } = useApiErrorHandler();
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]); // Store all properties for client-side filtering
@@ -187,6 +188,7 @@ export default function PropertiesList() {
       // applyFiltersAndSort will be called by useEffect
     } catch (err) {
       console.error('Failed to load properties:', err);
+      handleError(err, 'Failed to load properties');
       setError(err.message || 'Failed to load properties');
     } finally {
       setDashboardLoading(false);
@@ -218,11 +220,9 @@ export default function PropertiesList() {
 
   if (authLoading) {
     return (
-      <DashboardLayout title="Properties">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <div>Loading...</div>
-        </div>
-      </DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div>Loading...</div>
+      </div>
     );
   }
 
@@ -234,10 +234,10 @@ export default function PropertiesList() {
   const mapProperties = properties.filter(p => p.latitude && p.longitude);
 
   return (
-    <DashboardLayout title="Properties">
+    <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0 }}>My Properties</h2>
-        <Link to="/properties/new" className="crm-btn crm-btn-primary">
+        <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 600 }}>Properties</h1>
+        <Link to="/dashboard/properties/new" className="crm-btn crm-btn-primary">
           + Add Property
         </Link>
       </div>
@@ -254,7 +254,7 @@ export default function PropertiesList() {
           <PropertyMap 
             properties={mapProperties} 
             onPropertyClick={(property) => {
-              window.location.href = `/properties/${property.id}`;
+              window.location.href = `/dashboard/properties/${property.id}`;
             }}
           />
         </div>
@@ -391,7 +391,7 @@ export default function PropertiesList() {
               : 'Create your first property to get started'}
           </p>
           {!(filters.search || filters.type || filters.status || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms) && (
-            <Link to="/properties/new" className="crm-btn crm-btn-primary" style={{ marginTop: '16px' }}>
+                <Link to="/dashboard/properties/new" className="crm-btn crm-btn-primary" style={{ marginTop: '16px' }}>
               + Add Property
             </Link>
           )}
@@ -437,7 +437,7 @@ export default function PropertiesList() {
 
               {/* Action Buttons */}
               <div className="crm-property-actions" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-                <Link to={`/properties/${property.id}`} className="crm-btn crm-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
+                <Link to={`/dashboard/properties/${property.id}`} className="crm-btn crm-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
                   View / Edit
                 </Link>
               </div>
@@ -450,6 +450,6 @@ export default function PropertiesList() {
           ))}
         </div>
       )}
-    </DashboardLayout>
+    </div>
   );
 }

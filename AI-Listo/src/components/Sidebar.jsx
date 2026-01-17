@@ -9,76 +9,60 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Mobile Overlay */}
       {isOpen && <div className="crm-sidebar-overlay" onClick={onClose} />}
       <aside className={`crm-sidebar ${isOpen ? 'open' : ''}`}>
-      <div className="crm-logo">AI CRM</div>
-      <nav className="crm-nav">
-        <NavLink 
-          to="/dashboard" 
-          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
-          onClick={onClose}
-        >
-          Dashboard
-        </NavLink>
-        <NavLink 
-          to="/properties" 
-          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
-          onClick={onClose}
-        >
-          Properties
-        </NavLink>
-        {/* Mobile Buy/Rent Links */}
-        <div className="crm-nav-buy-rent">
+        <div className="crm-logo">AI CRM</div>
+        <nav className="crm-nav">
           <NavLink 
-            to="/properties?type=sale" 
-            className="crm-nav-link crm-nav-link-buy"
+            to="/dashboard" 
+            className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
             onClick={onClose}
+            end
           >
-            Buy
+            Dashboard
           </NavLink>
           <NavLink 
-            to="/properties?type=rent" 
-            className="crm-nav-link crm-nav-link-rent"
+            to="/dashboard/properties" 
+            className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
             onClick={onClose}
           >
-            Rent
+            Properties
           </NavLink>
-        </div>
-        <NavLink 
-          to="/leads" 
-          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
-          onClick={onClose}
-        >
-          Leads
-        </NavLink>
-        <NavLink 
-          to="/pipeline" 
-          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
-          onClick={onClose}
-        >
-          Pipeline
-        </NavLink>
-        <NavLink 
-          to="/settings" 
-          className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
-          onClick={onClose}
-        >
-          Settings
-        </NavLink>
-      </nav>
-      <div className="crm-sidebar-footer">
-        <div className="crm-user-info">
-          <div className="crm-user-avatar">
-            {user?.email ? user.email[0].toUpperCase() : 'U'}
+          <NavLink 
+            to="/dashboard/leads" 
+            className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+            onClick={onClose}
+          >
+            Leads
+          </NavLink>
+          <NavLink 
+            to="/dashboard/analytics" 
+            className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+            onClick={onClose}
+          >
+            Analytics
+          </NavLink>
+          <NavLink 
+            to="/dashboard/settings" 
+            className={({ isActive }) => isActive ? 'crm-nav-link active' : 'crm-nav-link'}
+            onClick={onClose}
+          >
+            Settings
+          </NavLink>
+        </nav>
+        <div className="crm-sidebar-footer">
+          <div className="crm-user-info">
+            <div className="crm-user-avatar">
+              {user?.email ? user.email[0].toUpperCase() : 'U'}
+            </div>
+            <div className="crm-user-details">
+              <div className="crm-user-name">{user?.email || 'User'}</div>
+              <div className="crm-user-role">{user?.role || 'user'}</div>
+            </div>
           </div>
-          <div className="crm-user-details">
-            <div className="crm-user-name">{user?.email || 'User'}</div>
-            <div className="crm-user-role">{user?.role || 'user'}</div>
-          </div>
+          <button className="crm-logout-btn" onClick={logout}>
+            Logout
+          </button>
         </div>
-        <button className="crm-logout-btn" onClick={logout}>
-          Logout
-        </button>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }

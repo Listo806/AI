@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
+import { useNotification } from '../../context/NotificationContext';
 
 export default function PropertyForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { handleError } = useApiErrorHandler();
+  const { showSuccess } = useNotification();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -105,15 +108,21 @@ export default function PropertyForm() {
           method: 'PUT',
           body: JSON.stringify(submitData),
         });
+        showSuccess('Property updated successfully!');
       } else {
         await apiClient.request('/properties', {
           method: 'POST',
           body: JSON.stringify(submitData),
         });
+        showSuccess('Property created successfully!');
       }
 
-      navigate('/properties');
+      // Small delay to show success message before navigation
+      setTimeout(() => {
+        navigate('/dashboard/properties');
+      }, 500);
     } catch (err) {
+      const isSubscriptionError = handleError(err, 'Failed to save property');
       setError(err.message || 'Failed to save property');
     } finally {
       setLoading(false);
@@ -136,7 +145,7 @@ export default function PropertyForm() {
       await apiClient.request(`/properties/${id}`, {
         method: 'DELETE',
       });
-      navigate('/properties');
+      navigate('/dashboard/properties');
     } catch (err) {
       setError(err.message || 'Failed to delete property');
       setLoading(false);
@@ -145,11 +154,9 @@ export default function PropertyForm() {
 
   if (authLoading) {
     return (
-      <DashboardLayout title={isEdit ? 'Edit Property' : 'New Property'}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <div>Loading...</div>
-        </div>
-      </DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div>Loading...</div>
+      </div>
     );
   }
 
@@ -158,15 +165,17 @@ export default function PropertyForm() {
   }
 
   return (
-    <DashboardLayout title={isEdit ? 'Edit Property' : 'New Property'}>
-      <div style={{ maxWidth: '800px' }}>
-        {error && (
-          <div className="crm-error" style={{ marginBottom: '24px' }}>
-            {error}
-          </div>
-        )}
+    <div style={{ maxWidth: '800px' }}>
+      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>
+        {isEdit ? 'Edit Property' : 'New Property'}
+      </h1>
+      {error && (
+        <div className="crm-error" style={{ marginBottom: '24px' }}>
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="crm-form">
+      <form onSubmit={handleSubmit} className="crm-form">
           <div className="crm-form-section">
             <h3 className="crm-form-section-title">Basic Information</h3>
             
@@ -404,7 +413,7 @@ export default function PropertyForm() {
           <div className="crm-form-actions">
             <button
               type="button"
-              onClick={() => navigate('/properties')}
+              onClick={() => navigate('/dashboard/properties')}
               className="crm-btn crm-btn-secondary"
               disabled={loading}
             >
@@ -441,7 +450,6 @@ export default function PropertyForm() {
             </div>
           </div>
         )}
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
@@ -145,7 +144,7 @@ export default function LeadDetail() {
       await apiClient.request(`/leads/${id}`, {
         method: 'DELETE',
       });
-      navigate('/leads');
+      navigate('/dashboard/leads');
     } catch (err) {
       setError(err.message || 'Failed to delete lead');
       setSaving(false);
@@ -420,11 +419,9 @@ export default function LeadDetail() {
 
   if (authLoading || loading) {
     return (
-      <DashboardLayout title="Lead Details">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <div>Loading...</div>
-        </div>
-      </DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div>Loading...</div>
+      </div>
     );
   }
 
@@ -434,39 +431,40 @@ export default function LeadDetail() {
 
   if (error && !lead) {
     return (
-      <DashboardLayout title="Lead Details">
+      <div>
+        <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Lead Details</h1>
         <div className="crm-error">
           {error}
         </div>
-        <Link to="/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '16px' }}>
+        <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '16px' }}>
           Back to Leads
         </Link>
-      </DashboardLayout>
+      </div>
     );
   }
 
   if (!lead) {
     return (
-      <DashboardLayout title="Lead Details">
+      <div>
+        <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Lead Details</h1>
         <div className="crm-error">
           Lead not found
         </div>
-        <Link to="/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '16px' }}>
+        <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '16px' }}>
           Back to Leads
         </Link>
-      </DashboardLayout>
+      </div>
     );
   }
 
   const associatedProperty = properties.find(p => p.id === lead.propertyId);
 
   return (
-    <DashboardLayout title="Lead Details">
-      <div style={{ maxWidth: '1000px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{ margin: 0 }}>{lead.name || 'Unnamed Lead'}</h2>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            {(() => {
+    <div style={{ maxWidth: '1000px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 600 }}>{lead.name || 'Unnamed Lead'}</h1>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {(() => {
               const urgencyInfo = getUrgencyInfo(lead);
               return urgencyInfo.badge && (
                 <span 
@@ -484,10 +482,10 @@ export default function LeadDetail() {
                   {urgencyInfo.badge.text}
                 </span>
               );
-            })()}
-            {/* Urgency State Badge (separate from AI tier - distinct labels) */}
-            {lead.urgencyState && (
-              <span 
+          })()}
+          {/* Urgency State Badge (separate from AI tier - distinct labels) */}
+          {lead.urgencyState && (
+            <span 
                 style={{ 
                   padding: '6px 12px', 
                   borderRadius: '12px', 
@@ -500,10 +498,10 @@ export default function LeadDetail() {
               >
                 {getUrgencyStateStyle(lead.urgencyState).label}
               </span>
-            )}
-            {/* AI Tier Badge */}
-            {lead.aiTier && (
-              <span 
+          )}
+          {/* AI Tier Badge */}
+          {lead.aiTier && (
+            <span 
                 style={{ 
                   padding: '6px 12px', 
                   borderRadius: '12px', 
@@ -517,13 +515,13 @@ export default function LeadDetail() {
               >
                 {lead.aiTier}
               </span>
-            )}
-            {/* Status Badge (mapped) */}
-            <span className={getStatusBadgeClass(lead.status)}>
-              {getStatusDisplayLabel(lead.status, lead.hasResponded)}
-            </span>
-            {lead.aiScore !== undefined && lead.aiScore !== null && (
-              <div 
+          )}
+          {/* Status Badge (mapped) */}
+          <span className={getStatusBadgeClass(lead.status)}>
+            {getStatusDisplayLabel(lead.status, lead.hasResponded)}
+          </span>
+          {lead.aiScore !== undefined && lead.aiScore !== null && (
+            <div 
                 style={{ 
                   padding: '6px 16px', 
                   borderRadius: '12px', 
@@ -543,16 +541,16 @@ export default function LeadDetail() {
                     {lead.aiScoreLabel}
                   </span>
                 )}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* AI-Recommended Action - Moved higher (right after header) */}
-        {lead.recommendedAction && (
-          <div className="crm-section" style={{ marginBottom: '24px', background: '#eff6ff', padding: '20px', borderRadius: '8px' }}>
-            <h3 className="crm-section-title" style={{ marginBottom: '12px' }}>AI-Recommended Action</h3>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+      {/* AI-Recommended Action - Moved higher (right after header) */}
+      {lead.recommendedAction && (
+        <div className="crm-section" style={{ marginBottom: '24px', background: '#eff6ff', padding: '20px', borderRadius: '8px' }}>
+          <h3 className="crm-section-title" style={{ marginBottom: '12px' }}>AI-Recommended Action</h3>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
               {(lead.recommendedAction === 'CALL' || lead.recommendedAction === 'WHATSAPP' || lead.recommendedAction === 'EMAIL') ? (
                 <>
                   {(() => {
@@ -728,10 +726,10 @@ export default function LeadDetail() {
           </div>
         )}
 
-        {/* AI Reason Bullets */}
-        {lead.aiReasonBullets && lead.aiReasonBullets.length > 0 && (
-          <div className="crm-section" style={{ marginBottom: '24px', background: '#f8fafc', padding: '20px', borderRadius: '8px', borderLeft: '3px solid #3b82f6' }}>
-            <h3 className="crm-section-title" style={{ color: '#3b82f6', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+      {/* AI Reason Bullets */}
+      {lead.aiReasonBullets && lead.aiReasonBullets.length > 0 && (
+        <div className="crm-section" style={{ marginBottom: '24px', background: '#f8fafc', padding: '20px', borderRadius: '8px', borderLeft: '3px solid #3b82f6' }}>
+          <h3 className="crm-section-title" style={{ color: '#3b82f6', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
               Why This Lead Matters
             </h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -754,26 +752,26 @@ export default function LeadDetail() {
           </div>
         )}
 
-        {/* Urgency Decay Warning for COOLING state */}
-        {lead.urgencyState === 'COOLING' && (
-          <div style={{ 
-            marginBottom: '24px',
-            padding: '12px 16px', 
-            background: '#f1f5f9', 
-            borderRadius: '8px',
-            borderLeft: '3px dashed #64748b',
-            border: '1px dashed #64748b',
-            fontSize: '14px',
-            color: '#475569'
-          }}>
-            Cooling — follow up recommended
-          </div>
-        )}
+      {/* Urgency Decay Warning for COOLING state */}
+      {lead.urgencyState === 'COOLING' && (
+        <div style={{ 
+          marginBottom: '24px',
+          padding: '12px 16px', 
+          background: '#f1f5f9', 
+          borderRadius: '8px',
+          borderLeft: '3px dashed #64748b',
+          border: '1px dashed #64748b',
+          fontSize: '14px',
+          color: '#475569'
+        }}>
+          Cooling — follow up recommended
+        </div>
+      )}
 
-        {!isEditing ? (
-          <>
-            {/* View Mode */}
-            <div className="crm-section" style={{ marginBottom: '24px' }}>
+      {!isEditing ? (
+        <>
+          {/* View Mode */}
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
               <h3 className="crm-section-title">Contact Information</h3>
               <div className="crm-item-details" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                 <div><strong>Name:</strong> {lead.name || 'N/A'}</div>
@@ -783,200 +781,199 @@ export default function LeadDetail() {
               </div>
             </div>
 
-            {associatedProperty && (
-              <div className="crm-section" style={{ marginBottom: '24px' }}>
-                <h3 className="crm-section-title">Associated Property</h3>
-                <div className="crm-item-details">
-                  <Link 
-                    to={`/properties/${lead.propertyId}`} 
-                    style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}
-                  >
-                    {associatedProperty.title || 'Untitled Property'}
-                  </Link>
-                  {associatedProperty.address && (
-                    <div style={{ marginTop: '8px', color: '#64748b' }}>
-                      {associatedProperty.address}
-                      {associatedProperty.city && `, ${associatedProperty.city}`}
-                      {associatedProperty.state && `, ${associatedProperty.state}`}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {lead.notes && (
-              <div className="crm-section" style={{ marginBottom: '24px' }}>
-                <h3 className="crm-section-title">Notes</h3>
-                <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{lead.notes}</p>
-              </div>
-            )}
-
+          {associatedProperty && (
             <div className="crm-section" style={{ marginBottom: '24px' }}>
-              <h3 className="crm-section-title">Metadata</h3>
+              <h3 className="crm-section-title">Associated Property</h3>
               <div className="crm-item-details">
-                <div><strong>Created:</strong> {formatDate(lead.createdAt)}</div>
-                <div><strong>Updated:</strong> {formatDate(lead.updatedAt)}</div>
-                {lead.assignedTo && <div><strong>Assigned To:</strong> {lead.assignedTo}</div>}
+                <Link 
+                  to={`/dashboard/properties/${lead.propertyId}`} 
+                  style={{ color: '#3b82f6', textDecoration: 'none', fontSize: '16px', fontWeight: '500' }}
+                >
+                  {associatedProperty.title || 'Untitled Property'}
+                </Link>
+                {associatedProperty.address && (
+                  <div style={{ marginTop: '8px', color: '#64748b' }}>
+                    {associatedProperty.address}
+                    {associatedProperty.city && `, ${associatedProperty.city}`}
+                    {associatedProperty.state && `, ${associatedProperty.state}`}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {lead.notes && (
+            <div className="crm-section" style={{ marginBottom: '24px' }}>
+              <h3 className="crm-section-title">Notes</h3>
+              <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{lead.notes}</p>
+            </div>
+          )}
+
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h3 className="crm-section-title">Metadata</h3>
+            <div className="crm-item-details">
+              <div><strong>Created:</strong> {formatDate(lead.createdAt)}</div>
+              <div><strong>Updated:</strong> {formatDate(lead.updatedAt)}</div>
+              {lead.assignedTo && <div><strong>Assigned To:</strong> {lead.assignedTo}</div>}
+            </div>
+          </div>
+
+          {/* Secondary Actions */}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="crm-btn crm-btn-secondary"
+            >
+              Edit Lead
+            </button>
+            <button
+              onClick={handleDelete}
+              className="crm-btn crm-btn-danger"
+              disabled={saving}
+            >
+              Delete
+            </button>
+            <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary">
+              Back to List
+            </Link>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Edit Mode */}
+          {error && (
+            <div className="crm-error" style={{ marginBottom: '24px' }}>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="crm-form">
+            <div className="crm-form-section">
+              <h3 className="crm-form-section-title">Contact Information</h3>
+              
+              <div className="crm-form-field">
+                <label htmlFor="name">Name *</label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={saving}
+                />
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="phone">Phone</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  disabled={saving}
+                />
               </div>
             </div>
 
-            {/* Secondary Actions */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div className="crm-form-section">
+              <h3 className="crm-form-section-title">Lead Details</h3>
+              
+              <div className="crm-form-field">
+                <label htmlFor="status">Status *</label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                  disabled={saving}
+                >
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="follow-up">Follow-Up</option>
+                  <option value="closed-won">Closed-Won</option>
+                  <option value="closed-lost">Closed-Lost</option>
+                </select>
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="propertyId">Associated Property</label>
+                <select
+                  id="propertyId"
+                  name="propertyId"
+                  value={formData.propertyId}
+                  onChange={handleChange}
+                  disabled={saving}
+                >
+                  <option value="">No Property</option>
+                  {properties.map(prop => (
+                    <option key={prop.id} value={prop.id}>
+                      {prop.title || 'Untitled Property'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={6}
+                  disabled={saving}
+                  placeholder="Add any notes about this lead..."
+                />
+              </div>
+            </div>
+
+            <div className="crm-form-actions">
               <button
-                onClick={() => setIsEditing(true)}
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setFormData({
+                    name: lead.name || '',
+                    email: lead.email || '',
+                    phone: lead.phone || '',
+                    status: lead.status || 'new',
+                    propertyId: lead.propertyId || '',
+                    notes: lead.notes || '',
+                  });
+                  setError(null);
+                }}
                 className="crm-btn crm-btn-secondary"
-              >
-                Edit Lead
-              </button>
-              <button
-                onClick={handleDelete}
-                className="crm-btn crm-btn-danger"
                 disabled={saving}
               >
-                Delete
+                Cancel
               </button>
-              <Link to="/leads" className="crm-btn crm-btn-secondary">
-                Back to List
-              </Link>
+              <button
+                type="submit"
+                className="crm-btn crm-btn-primary"
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
-          </>
-        ) : (
-          <>
-            {/* Edit Mode */}
-            {error && (
-              <div className="crm-error" style={{ marginBottom: '24px' }}>
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="crm-form">
-              <div className="crm-form-section">
-                <h3 className="crm-form-section-title">Contact Information</h3>
-                
-                <div className="crm-form-field">
-                  <label htmlFor="name">Name *</label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    disabled={saving}
-                  />
-                </div>
-
-                <div className="crm-form-field">
-                  <label htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    disabled={saving}
-                  />
-                </div>
-
-                <div className="crm-form-field">
-                  <label htmlFor="phone">Phone</label>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    disabled={saving}
-                  />
-                </div>
-              </div>
-
-              <div className="crm-form-section">
-                <h3 className="crm-form-section-title">Lead Details</h3>
-                
-                <div className="crm-form-field">
-                  <label htmlFor="status">Status *</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    required
-                    disabled={saving}
-                  >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="follow-up">Follow-Up</option>
-                    <option value="closed-won">Closed-Won</option>
-                    <option value="closed-lost">Closed-Lost</option>
-                  </select>
-                </div>
-
-                <div className="crm-form-field">
-                  <label htmlFor="propertyId">Associated Property</label>
-                  <select
-                    id="propertyId"
-                    name="propertyId"
-                    value={formData.propertyId}
-                    onChange={handleChange}
-                    disabled={saving}
-                  >
-                    <option value="">No Property</option>
-                    {properties.map(prop => (
-                      <option key={prop.id} value={prop.id}>
-                        {prop.title || 'Untitled Property'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="crm-form-field">
-                  <label htmlFor="notes">Notes</label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows={6}
-                    disabled={saving}
-                    placeholder="Add any notes about this lead..."
-                  />
-                </div>
-              </div>
-
-              <div className="crm-form-actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setFormData({
-                      name: lead.name || '',
-                      email: lead.email || '',
-                      phone: lead.phone || '',
-                      status: lead.status || 'new',
-                      propertyId: lead.propertyId || '',
-                      notes: lead.notes || '',
-                    });
-                    setError(null);
-                  }}
-                  className="crm-btn crm-btn-secondary"
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="crm-btn crm-btn-primary"
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </>
-        )}
-      </div>
-    </DashboardLayout>
+          </form>
+        </>
+      )}
+    </div>
   );
 }

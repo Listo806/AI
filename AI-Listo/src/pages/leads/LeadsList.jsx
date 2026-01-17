@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 import './Leads.css';
 
 export default function LeadsList() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { handleError } = useApiErrorHandler();
   const [allHotLeads, setAllHotLeads] = useState([]);
   const [allOtherLeads, setAllOtherLeads] = useState([]);
   const [filteredHotLeads, setFilteredHotLeads] = useState([]);
@@ -103,6 +104,7 @@ export default function LeadsList() {
       setAllOtherLeads(other);
     } catch (err) {
       console.error('Failed to load leads:', err);
+      handleError(err, 'Failed to load leads');
       setError(err.message || 'Failed to load leads');
     } finally {
       setLoading(false);
@@ -360,7 +362,10 @@ export default function LeadsList() {
       loadLeads();
     } catch (err) {
       console.error('Failed to log contact action:', err);
-      // Don't show error to user - action still happened, just logging failed
+      // Show notification for subscription errors, but don't block the action
+      if (err.isSubscriptionError || err.status === 403) {
+        handleError(err);
+      }
     }
   };
 
@@ -653,7 +658,7 @@ export default function LeadsList() {
           <span>Last contact: {formatDate(lead.lastContactedAt)}</span>
         )}
         <span>Created: {formatDate(lead.createdAt)}</span>
-        <Link to={`/leads/${lead.id}`} className="crm-lead-view-details">
+        <Link to={`/dashboard/leads/${lead.id}`} className="crm-lead-view-details">
           View Details →
         </Link>
       </div>
@@ -663,11 +668,9 @@ export default function LeadsList() {
 
   if (authLoading) {
     return (
-      <DashboardLayout title="Leads">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <div>Loading...</div>
-        </div>
-      </DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div>Loading...</div>
+      </div>
     );
   }
 
@@ -676,7 +679,8 @@ export default function LeadsList() {
   }
 
   return (
-    <DashboardLayout title="Leads">
+    <div>
+      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Leads</h1>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h2 style={{ margin: 0 }}>My Leads</h2>
         <button
@@ -787,6 +791,6 @@ export default function LeadsList() {
           )}
         </>
       )}
-    </DashboardLayout>
+    </div>
   );
 }

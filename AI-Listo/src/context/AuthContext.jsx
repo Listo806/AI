@@ -68,9 +68,8 @@ export function AuthProvider({ children }) {
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
         
-        // Redirect to role-based dashboard
-        const dashboardPath = getDashboardPath(response.user.role);
-        navigate(dashboardPath);
+        // Redirect to dashboard (all users go to /dashboard now)
+        navigate('/dashboard');
       }
 
       return response;

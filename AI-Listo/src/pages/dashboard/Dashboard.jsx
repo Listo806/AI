@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import DashboardLayout from '../../layouts/DashboardLayout';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 
 export default function Dashboard() {
   const { user, isAuthenticated, loading } = useAuth();
+  const { handleError } = useApiErrorHandler();
   const navigate = useNavigate();
 
   // Redirect to sign-in if not authenticated
@@ -36,14 +37,10 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      // Load all dashboard data in parallel
-      const [summary, leadsResponse, propertiesResponse] = await Promise.all([
-        apiClient.request('/crm/dashboard/summary'),
-        apiClient.request('/crm/owner/leads'),
-        apiClient.request('/crm/owner/properties'),
-      ]);
+      // Dashboard summary is available to all authenticated users (FREE/PRO/PRO PLUS+)
+      const summary = await apiClient.request('/crm/dashboard/summary');
 
-      // Update stats
+      // Update stats (available to all plans)
       setStats({
         totalProperties: summary.properties?.total || 0,
         publishedProperties: summary.properties?.published || 0,
@@ -51,16 +48,42 @@ export default function Dashboard() {
         newLeads: summary.leads?.new || 0,
       });
 
-      // Update leads
-      const leadsData = Array.isArray(leadsResponse) ? leadsResponse : (leadsResponse.data || []);
-      setLeads(leadsData);
+      // Load detailed lists (requires CRM access - PRO PLUS+)
+      // These will fail for FREE/PRO users, so we handle gracefully
+      try {
+        const leadsResponse = await apiClient.request('/crm/owner/leads');
+        const leadsData = Array.isArray(leadsResponse) ? leadsResponse : (leadsResponse.data || []);
+        setLeads(leadsData);
+      } catch (leadsErr) {
+        // If CRM access is required, just show empty list (don't show error)
+        if (leadsErr.status === 403 && leadsErr.isSubscriptionError) {
+          setLeads([]);
+          // Don't show error notification - this is expected for FREE/PRO users
+        } else {
+          console.error('Failed to load leads:', leadsErr);
+        }
+      }
 
-      // Update properties
-      const propertiesData = Array.isArray(propertiesResponse) ? propertiesResponse : (propertiesResponse.data || []);
-      setProperties(propertiesData);
+      try {
+        const propertiesResponse = await apiClient.request('/crm/owner/properties');
+        const propertiesData = Array.isArray(propertiesResponse) ? propertiesResponse : (propertiesResponse.data || []);
+        setProperties(propertiesData);
+      } catch (propertiesErr) {
+        // If CRM access is required, just show empty list (don't show error)
+        if (propertiesErr.status === 403 && propertiesErr.isSubscriptionError) {
+          setProperties([]);
+          // Don't show error notification - this is expected for FREE/PRO users
+        } else {
+          console.error('Failed to load properties:', propertiesErr);
+        }
+      }
     } catch (err) {
       console.error('Failed to load dashboard:', err);
-      setError(err.message || 'Failed to load dashboard');
+      // Only show error if it's not a subscription error (subscription errors are handled above)
+      if (!err.isSubscriptionError) {
+        handleError(err, 'Failed to load dashboard');
+        setError(err.message || 'Failed to load dashboard');
+      }
     } finally {
       setDashboardLoading(false);
     }
@@ -81,11 +104,9 @@ export default function Dashboard() {
   // Show loading while checking auth
   if (loading) {
     return (
-      <DashboardLayout title="AI CRM Dashboard">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <div>Loading...</div>
-        </div>
-      </DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <div>Loading...</div>
+      </div>
     );
   }
 
@@ -95,7 +116,8 @@ export default function Dashboard() {
   }
 
   return (
-    <DashboardLayout title="AI CRM Dashboard">
+    <div>
+      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Dashboard</h1>
       {error && (
         <div className="crm-error">
           {error}
@@ -211,6 +233,6 @@ export default function Dashboard() {
           </ul>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
