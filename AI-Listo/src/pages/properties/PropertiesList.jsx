@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
@@ -8,18 +8,14 @@ import PropertyMap from '../../components/PropertyMap';
 export default function PropertiesList() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]); // Store all properties for client-side filtering
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Get type from URL parameter
-  const urlType = searchParams.get('type') || '';
-  
-  // Filters
+  // Filters - local state only, no URL dependency
   const [filters, setFilters] = useState({
-    type: urlType, // Initialize from URL
+    type: '', // Internal filter only
     status: '',
     search: '',
     minPrice: '',
@@ -47,14 +43,6 @@ export default function PropertiesList() {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
-
-  // Update filters when URL type changes
-  useEffect(() => {
-    const urlType = searchParams.get('type') || '';
-    if (filters.type !== urlType) {
-      setFilters(prev => ({ ...prev, type: urlType }));
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
@@ -262,6 +250,61 @@ export default function PropertiesList() {
 
       {/* Filters and Sort */}
       <div className="crm-filters-section" style={{ marginBottom: '24px' }}>
+        {/* Type Filter Tabs - Internal CRM filters only */}
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', borderBottom: '2px solid #e5e7eb' }}>
+          <button
+            onClick={() => setFilters({ ...filters, type: '' })}
+            className="crm-btn"
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderBottom: filters.type === '' ? '3px solid #3b82f6' : '3px solid transparent',
+              background: 'transparent',
+              color: filters.type === '' ? '#3b82f6' : '#64748b',
+              fontWeight: filters.type === '' ? '600' : '400',
+              cursor: 'pointer',
+              borderRadius: '0',
+              marginBottom: '-2px'
+            }}
+          >
+            All Properties
+          </button>
+          <button
+            onClick={() => setFilters({ ...filters, type: 'sale' })}
+            className="crm-btn"
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderBottom: filters.type === 'sale' ? '3px solid #3b82f6' : '3px solid transparent',
+              background: 'transparent',
+              color: filters.type === 'sale' ? '#3b82f6' : '#64748b',
+              fontWeight: filters.type === 'sale' ? '600' : '400',
+              cursor: 'pointer',
+              borderRadius: '0',
+              marginBottom: '-2px'
+            }}
+          >
+            For Sale
+          </button>
+          <button
+            onClick={() => setFilters({ ...filters, type: 'rent' })}
+            className="crm-btn"
+            style={{
+              padding: '10px 20px',
+              border: 'none',
+              borderBottom: filters.type === 'rent' ? '3px solid #3b82f6' : '3px solid transparent',
+              background: 'transparent',
+              color: filters.type === 'rent' ? '#3b82f6' : '#64748b',
+              fontWeight: filters.type === 'rent' ? '600' : '400',
+              cursor: 'pointer',
+              borderRadius: '0',
+              marginBottom: '-2px'
+            }}
+          >
+            For Rent
+          </button>
+        </div>
+
         {/* Search and Basic Filters Row */}
         <div className="crm-filters" style={{ marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <input
@@ -272,24 +315,6 @@ export default function PropertiesList() {
             className="crm-input"
             style={{ flex: '1', minWidth: '200px' }}
           />
-          <select
-            value={filters.type}
-            onChange={(e) => {
-              const newType = e.target.value;
-              setFilters({ ...filters, type: newType });
-              // Update URL
-              if (newType) {
-                setSearchParams({ type: newType });
-              } else {
-                setSearchParams({});
-              }
-            }}
-            className="crm-select"
-          >
-            <option value="">All Types</option>
-            <option value="sale">For Sale</option>
-            <option value="rent">For Rent</option>
-          </select>
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
