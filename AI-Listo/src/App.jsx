@@ -13,7 +13,14 @@ import PropertyForm from "./pages/properties/PropertyForm";
 import PropertyDetail from "./pages/properties/PropertyDetail";
 import LeadsList from "./pages/leads/LeadsList";
 import LeadDetail from "./pages/leads/LeadDetail";
+import Pipeline from "./pages/pipeline/Pipeline";
+import Contacts from "./pages/contacts/Contacts";
+import AIAssistant from "./pages/ai-assistant/AIAssistant";
+import AIAutomations from "./pages/ai-automations/AIAutomations";
 import Analytics from "./pages/dashboard/Analytics";
+import Team from "./pages/team/Team";
+import Integrations from "./pages/integrations/Integrations";
+import Billing from "./pages/billing/Billing";
 import Settings from "./pages/dashboard/Settings";
 import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
@@ -62,18 +69,39 @@ function AppRoutes() {
         {/* Dashboard Index */}
         <Route index element={<Dashboard />} />
         
+        {/* Leads Routes */}
+        <Route path="leads" element={<LeadsList />} />
+        <Route path="leads/:id" element={<LeadDetail />} />
+        
+        {/* Pipeline Route */}
+        <Route path="pipeline" element={<Pipeline />} />
+        
         {/* Properties Routes */}
         <Route path="properties" element={<PropertiesList />} />
         <Route path="properties/new" element={<PropertyForm />} />
         <Route path="properties/:id/edit" element={<PropertyForm />} />
         <Route path="properties/:id" element={<PropertyDetail />} />
         
-        {/* Leads Routes */}
-        <Route path="leads" element={<LeadsList />} />
-        <Route path="leads/:id" element={<LeadDetail />} />
+        {/* Contacts Route */}
+        <Route path="contacts" element={<Contacts />} />
         
-        {/* Placeholder Pages */}
+        {/* AI Routes */}
+        <Route path="ai-assistant" element={<AIAssistant />} />
+        <Route path="ai-automations" element={<AIAutomations />} />
+        
+        {/* Analytics Route */}
         <Route path="analytics" element={<Analytics />} />
+        
+        {/* Team Route */}
+        <Route path="team" element={<Team />} />
+        
+        {/* Integrations Route */}
+        <Route path="integrations" element={<Integrations />} />
+        
+        {/* Billing Route */}
+        <Route path="billing" element={<Billing />} />
+        
+        {/* Settings Route */}
         <Route path="settings" element={<Settings />} />
       </Route>
 

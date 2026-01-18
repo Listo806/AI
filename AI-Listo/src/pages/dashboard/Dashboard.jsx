@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
@@ -15,16 +16,59 @@ export default function Dashboard() {
       navigate('/sign-in');
     }
   }, [loading, isAuthenticated, navigate]);
+
   const [stats, setStats] = useState({
-    totalProperties: 0,
-    publishedProperties: 0,
     totalLeads: 0,
-    newLeads: 0,
+    newLeadsToday: 0,
+    newLeads7d: 0,
+    dealsInPipeline: 0,
+    closedDeals: 0,
+    revenueClosed: 0,
+    pipelineValue: 0,
   });
-  const [properties, setProperties] = useState([]);
-  const [leads, setLeads] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Demo data for charts
+  const leadsOverTimeData = [
+    { date: 'Jan 1', leads: 12 },
+    { date: 'Jan 8', leads: 19 },
+    { date: 'Jan 15', leads: 15 },
+    { date: 'Jan 22', leads: 23 },
+    { date: 'Jan 29', leads: 18 },
+    { date: 'Feb 5', leads: 27 },
+    { date: 'Feb 12', leads: 31 },
+    { date: 'Feb 19', leads: 24 },
+    { date: 'Feb 26', leads: 29 },
+    { date: 'Mar 5', leads: 35 },
+    { date: 'Mar 12', leads: 28 },
+    { date: 'Mar 19', leads: 42 },
+  ];
+
+  const leadSourceData = [
+    { name: 'Website', value: 45, color: '#3b82f6' },
+    { name: 'WhatsApp', value: 32, color: '#25D366' },
+    { name: 'Email', value: 18, color: '#8b5cf6' },
+    { name: 'Referral', value: 12, color: '#f59e0b' },
+    { name: 'Social Media', value: 8, color: '#ec4899' },
+  ];
+
+  const conversionFunnelData = [
+    { stage: 'New Leads', count: 150 },
+    { stage: 'Contacted', count: 120 },
+    { stage: 'Qualified', count: 85 },
+    { stage: 'Proposal', count: 45 },
+    { stage: 'Negotiation', count: 28 },
+    { stage: 'Closed Won', count: 18 },
+  ];
+
+  const activityDistributionData = [
+    { activity: 'Calls', count: 145 },
+    { activity: 'WhatsApp', count: 98 },
+    { activity: 'Emails', count: 67 },
+    { activity: 'Meetings', count: 34 },
+    { activity: 'Follow-ups', count: 52 },
+  ];
 
   useEffect(() => {
     if (isAuthenticated() && user) {
@@ -41,23 +85,26 @@ export default function Dashboard() {
       const summary = await apiClient.request('/crm/dashboard/summary');
 
       // Update stats (available to all plans)
+      // Note: summary API returns: leads.total, leads.new (7 days), leads.qualified
+      // Pipeline and revenue data would come from separate endpoints in future phases
       setStats({
-        totalProperties: summary.properties?.total || 0,
-        publishedProperties: summary.properties?.published || 0,
         totalLeads: summary.leads?.total || 0,
-        newLeads: summary.leads?.new || 0,
+        newLeadsToday: summary.leads?.new || 0, // Using 7d as today for now (API doesn't have separate today field)
+        newLeads7d: summary.leads?.new || 0,
+        dealsInPipeline: 0, // Placeholder - would come from pipeline endpoint
+        closedDeals: 0, // Placeholder - would come from pipeline endpoint
+        revenueClosed: 0, // Placeholder - would come from revenue endpoint
+        pipelineValue: 0, // Placeholder - would come from pipeline endpoint
       });
 
       // Load detailed lists (requires CRM access - PRO PLUS+)
       // These will fail for FREE/PRO users, so we handle gracefully
       try {
         const leadsResponse = await apiClient.request('/crm/owner/leads');
-        const leadsData = Array.isArray(leadsResponse) ? leadsResponse : (leadsResponse.data || []);
-        setLeads(leadsData);
+        // Store leads if needed for future use
       } catch (leadsErr) {
-        // If CRM access is required, just show empty list (don't show error)
+        // If CRM access is required, just ignore (don't show error)
         if (leadsErr.status === 403 && leadsErr.isSubscriptionError) {
-          setLeads([]);
           // Don't show error notification - this is expected for FREE/PRO users
         } else {
           console.error('Failed to load leads:', leadsErr);
@@ -66,12 +113,10 @@ export default function Dashboard() {
 
       try {
         const propertiesResponse = await apiClient.request('/crm/owner/properties');
-        const propertiesData = Array.isArray(propertiesResponse) ? propertiesResponse : (propertiesResponse.data || []);
-        setProperties(propertiesData);
+        // Store properties if needed for future use
       } catch (propertiesErr) {
-        // If CRM access is required, just show empty list (don't show error)
+        // If CRM access is required, just ignore (don't show error)
         if (propertiesErr.status === 403 && propertiesErr.isSubscriptionError) {
-          setProperties([]);
           // Don't show error notification - this is expected for FREE/PRO users
         } else {
           console.error('Failed to load properties:', propertiesErr);
@@ -87,18 +132,6 @@ export default function Dashboard() {
     } finally {
       setDashboardLoading(false);
     }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const getStatusBadgeClass = (status) => {
-    return `crm-item-badge badge-${status || 'new'}`;
   };
 
   // Show loading while checking auth
@@ -124,114 +157,249 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="crm-stats-grid">
-        <div className="crm-stat-card">
-          <p className="crm-stat-label">Total Properties</p>
-          <h3 className="crm-stat-value">{stats.totalProperties}</h3>
-        </div>
-        <div className="crm-stat-card">
-          <p className="crm-stat-label">Published Properties</p>
-          <h3 className="crm-stat-value">{stats.publishedProperties}</h3>
-        </div>
+      {/* TOP SECTION — METRIC CARDS (6 required) */}
+      <div className="crm-stats-grid" style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+        gap: '16px',
+        marginBottom: '24px'
+      }}>
         <div className="crm-stat-card">
           <p className="crm-stat-label">Total Leads</p>
           <h3 className="crm-stat-value">{stats.totalLeads}</h3>
         </div>
         <div className="crm-stat-card">
+          <p className="crm-stat-label">New Leads (Today)</p>
+          <h3 className="crm-stat-value">{stats.newLeadsToday}</h3>
+        </div>
+        <div className="crm-stat-card">
           <p className="crm-stat-label">New Leads (7d)</p>
-          <h3 className="crm-stat-value">{stats.newLeads}</h3>
+          <h3 className="crm-stat-value">{stats.newLeads7d}</h3>
+        </div>
+        <div className="crm-stat-card">
+          <p className="crm-stat-label">Deals in Pipeline</p>
+          <h3 className="crm-stat-value">{stats.dealsInPipeline}</h3>
+        </div>
+        <div className="crm-stat-card">
+          <p className="crm-stat-label">Closed Deals</p>
+          <h3 className="crm-stat-value">{stats.closedDeals}</h3>
+        </div>
+        <div className="crm-stat-card">
+          <p className="crm-stat-label">Revenue (Closed)</p>
+          <h3 className="crm-stat-value">
+            ${stats.revenueClosed.toLocaleString()}
+          </h3>
         </div>
       </div>
 
-      {/* Properties Section */}
-      <div className="crm-section">
-        <div className="crm-section-header">
-          <h2 className="crm-section-title">My Properties</h2>
-        </div>
-        {dashboardLoading ? (
-          <div className="crm-loading">
-            <div className="crm-skeleton"></div>
-            <div className="crm-skeleton"></div>
-            <div className="crm-skeleton"></div>
+      {/* MAIN LAYOUT: Center (Graphs) + Right Panel */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px' }}>
+        {/* CENTER SECTION — MAIN GRAPHS */}
+        <div>
+          {/* PRIMARY GRAPH — Time-series line chart */}
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              Leads Over Time
+            </h2>
+            <div style={{
+              height: '400px',
+              background: '#fff',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              padding: '16px'
+            }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={leadsOverTimeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#64748b"
+                    style={{ fontSize: '12px' }}
+                  />
+                  <YAxis 
+                    stroke="#64748b"
+                    style={{ fontSize: '12px' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="leads" 
+                    stroke="#3b82f6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3b82f6', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Leads"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        ) : properties.length === 0 ? (
-          <div className="crm-empty-state">
-            <div className="crm-empty-icon">🏠</div>
-            <h3 className="crm-empty-title">No properties yet</h3>
-            <p className="crm-empty-text">Upload your first property to start receiving AI-matched leads.</p>
-          </div>
-        ) : (
-          <ul className="crm-list">
-            {properties.map((property) => (
-              <li key={property.id} className="crm-list-item">
-                <div className="crm-item-header">
-                  <div className="crm-item-title">{property.title || 'Untitled Property'}</div>
-                  <span className={getStatusBadgeClass(property.status)}>
-                    {(property.status || 'draft').charAt(0).toUpperCase() + (property.status || 'draft').slice(1)}
-                  </span>
-                </div>
-                <div className="crm-item-details">
-                  {property.location ? (
-                    <div><strong>Location:</strong> {property.location}</div>
-                  ) : (
-                    <div><em>No location specified</em></div>
-                  )}
-                </div>
-                <div className="crm-item-meta">Created: {formatDate(property.created_at)}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
-      {/* Leads Section */}
-      <div className="crm-section">
-        <div className="crm-section-header">
-          <h2 className="crm-section-title">My Leads</h2>
-        </div>
-        {dashboardLoading ? (
-          <div className="crm-loading">
-            <div className="crm-skeleton"></div>
-            <div className="crm-skeleton"></div>
-            <div className="crm-skeleton"></div>
-          </div>
-        ) : leads.length === 0 ? (
-          <div className="crm-empty-state">
-            <div className="crm-empty-icon">📋</div>
-            <h3 className="crm-empty-title">No leads yet</h3>
-            <p className="crm-empty-text">No leads yet. AI matching is active.</p>
-          </div>
-        ) : (
-          <ul className="crm-list">
-            {leads.map((lead) => {
-              const aiScore = lead.ai_score || 0;
-              const aiScoreDisplay = aiScore > 0 ? `${(aiScore * 100).toFixed(0)}%` : 'Pending';
-              const contact = lead.contact || lead.email || lead.phone || 'No contact';
+          {/* SECONDARY GRAPHS (2-3) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            <div className="crm-section">
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                Lead Source Breakdown
+              </h2>
+              <div style={{
+                height: '300px',
+                background: '#fff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                padding: '16px'
+              }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={leadSourceData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {leadSourceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-              return (
-                <li key={lead.id} className="crm-list-item">
-                  <div className="crm-item-header">
-                    <div className="crm-item-title">{lead.name || 'Unnamed Lead'}</div>
-                    <span className={getStatusBadgeClass(lead.status)}>
-                      {lead.status || 'new'}
-                    </span>
-                  </div>
-                  <div className="crm-item-details">
-                    <div><strong>Contact:</strong> {contact}</div>
-                    {lead.property_title ? (
-                      <div><strong>Property:</strong> {lead.property_title}</div>
-                    ) : (
-                      <div><em>No associated property</em></div>
-                    )}
-                    <div><strong>AI Score:</strong> {aiScoreDisplay}</div>
-                  </div>
-                  <div className="crm-item-meta">Created: {formatDate(lead.created_at)}</div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+            <div className="crm-section">
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                Conversion Funnel
+              </h2>
+              <div style={{
+                height: '300px',
+                background: '#fff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                padding: '16px'
+              }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={conversionFunnelData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis type="number" stroke="#64748b" style={{ fontSize: '12px' }} />
+                    <YAxis 
+                      dataKey="stage" 
+                      type="category" 
+                      stroke="#64748b"
+                      style={{ fontSize: '12px' }}
+                      width={100}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="crm-section">
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+                Activity Distribution
+              </h2>
+              <div style={{
+                height: '300px',
+                background: '#fff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb',
+                padding: '16px'
+              }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={activityDistributionData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="activity" 
+                      stroke="#64748b"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <YAxis 
+                      stroke="#64748b"
+                      style={{ fontSize: '12px' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE PANEL (DASHBOARD ONLY) */}
+        <div>
+          <div className="crm-section" style={{ marginBottom: '16px' }}>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              Revenue Summary
+            </h2>
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Closed Revenue</div>
+              <div style={{ fontSize: '24px', fontWeight: '600', color: '#10b981' }}>
+                ${stats.revenueClosed.toLocaleString()}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Pipeline Value</div>
+              <div style={{ fontSize: '24px', fontWeight: '600', color: '#3b82f6' }}>
+                ${stats.pipelineValue.toLocaleString()}
+              </div>
+            </div>
+          </div>
+
+          <div className="crm-section" style={{ marginBottom: '16px' }}>
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              Deals Closing Soon
+            </h2>
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              fontSize: '14px',
+              color: '#64748b'
+            }}>
+              No deals closing soon (placeholder)
+            </div>
+          </div>
+
+          <div className="crm-section">
+            <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              Priority / Alerts
+            </h2>
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              fontSize: '14px',
+              color: '#64748b'
+            }}>
+              No priority alerts (placeholder)
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

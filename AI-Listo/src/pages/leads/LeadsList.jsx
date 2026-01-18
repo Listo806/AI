@@ -16,6 +16,7 @@ export default function LeadsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
 
   // Filters (secondary)
   const [filters, setFilters] = useState({
@@ -678,119 +679,264 @@ export default function LeadsList() {
     return null;
   }
 
+  // Get all leads for list
+  const allLeads = [...filteredHotLeads, ...filteredOtherLeads];
+
   return (
     <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Leads</h1>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0 }}>My Leads</h2>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="crm-btn crm-btn-secondary"
-          style={{ fontSize: '14px', padding: '8px 16px' }}
-        >
-          {showFilters ? 'Hide' : 'Show'} Filters
-        </button>
-      </div>
-
+      
       {error && (
-        <div className="crm-error">
+        <div className="crm-error" style={{ marginBottom: '24px' }}>
           {error}
         </div>
       )}
 
-      {/* Secondary Filters (Collapsible) */}
-      {showFilters && (
-        <div className="crm-filters-section" style={{ marginBottom: '24px', padding: '16px', background: '#fff', borderRadius: '8px' }}>
-          <div className="crm-filters" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <input
-              type="text"
-              placeholder="Search by name, email, phone, or property..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="crm-input"
-              style={{ flex: '1', minWidth: '200px' }}
-            />
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="crm-select"
+      {/* 3-COLUMN LAYOUT */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '450px 1fr 320px', 
+        gap: '24px', 
+        height: 'calc(100vh - 200px)',
+        overflow: 'hidden' // Prevent page-level scrolling
+      }}>
+        {/* LEFT COLUMN: Lead List + Filters */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          borderRight: '1px solid #e5e7eb',
+          paddingRight: '24px',
+          height: '100%',
+          overflow: 'hidden' // Prevent column from expanding
+        }}>
+          <div style={{ marginBottom: '16px', flexShrink: 0 }}>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="crm-btn crm-btn-secondary"
+              style={{ width: '100%', fontSize: '14px', padding: '8px 16px', marginBottom: '16px' }}
             >
-              <option value="">All Statuses</option>
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="qualified">Qualified</option>
-              <option value="follow-up">Follow-Up</option>
-              <option value="closed-won">Closed-Won</option>
-              <option value="closed-lost">Closed-Lost</option>
-            </select>
-            {(filters.status || filters.search) && (
-              <button
-                onClick={() => setFilters({ status: '', search: '' })}
-                className="crm-btn crm-btn-secondary"
-                style={{ fontSize: '12px', padding: '8px 12px' }}
-              >
-                Clear
-              </button>
+              {showFilters ? 'Hide' : 'Show'} Filters
+            </button>
+
+            {/* Filters */}
+            {showFilters && (
+              <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
+                <input
+                  type="text"
+                  placeholder="Search leads..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="crm-input"
+                  style={{ width: '100%', marginBottom: '8px' }}
+                />
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="crm-select"
+                  style={{ width: '100%' }}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="new">New</option>
+                  <option value="contacted">Contacted</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="follow-up">Follow-Up</option>
+                  <option value="closed-won">Closed-Won</option>
+                  <option value="closed-lost">Closed-Lost</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Lead List - Using EXACT same renderLeadCard style - Scrollable */}
+          <div style={{ 
+            flex: 1, 
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            minHeight: 0 // Important for flex scrolling
+          }}>
+            {loading ? (
+              <div className="crm-loading">
+                <div className="crm-skeleton"></div>
+                <div className="crm-skeleton"></div>
+              </div>
+            ) : allLeads.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+                No leads found
+              </div>
+            ) : (
+              <div>
+                {filteredHotLeads.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#ef4444' }}>
+                      🔥 Hot ({filteredHotLeads.length})
+                    </h3>
+                    {filteredHotLeads.map(lead => (
+                      <div 
+                        key={lead.id}
+                        onClick={() => setSelectedLead(lead)}
+                        style={{
+                          marginBottom: '12px',
+                          opacity: selectedLead?.id === lead.id ? 1 : 0.95,
+                          transform: selectedLead?.id === lead.id ? 'scale(1.02)' : 'scale(1)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {renderLeadCard(lead)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {filteredOtherLeads.length > 0 && (
+                  <div>
+                    <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
+                      All Leads ({filteredOtherLeads.length})
+                    </h3>
+                    {filteredOtherLeads.map(lead => (
+                      <div 
+                        key={lead.id}
+                        onClick={() => setSelectedLead(lead)}
+                        style={{
+                          marginBottom: '12px',
+                          opacity: selectedLead?.id === lead.id ? 1 : 0.95,
+                          transform: selectedLead?.id === lead.id ? 'scale(1.02)' : 'scale(1)',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {renderLeadCard(lead)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
-      )}
 
-      {/* Hot Leads Section */}
-      {loading ? (
-        <div className="crm-loading">
-          <div className="crm-skeleton"></div>
-          <div className="crm-skeleton"></div>
-          <div className="crm-skeleton"></div>
+        {/* CENTER COLUMN: Lead Details + Timeline + Notes */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          height: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          minHeight: 0 // Important for flex scrolling
+        }}>
+          {selectedLead ? (
+            <>
+              <div className="crm-section" style={{ marginBottom: '16px' }}>
+                <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
+                  {selectedLead.name || 'Unnamed Lead'}
+                </h2>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <div><strong>Email:</strong> {selectedLead.email || 'N/A'}</div>
+                  <div><strong>Phone:</strong> {selectedLead.phone || 'N/A'}</div>
+                  <div><strong>Status:</strong> {selectedLead.status || 'new'}</div>
+                  <div><strong>AI Score:</strong> {formatAiScore(selectedLead.aiScore)}</div>
+                  {selectedLead.property && (
+                    <div><strong>Property:</strong> {selectedLead.property.title || 'N/A'}</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="crm-section" style={{ marginBottom: '16px' }}>
+                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>Timeline</h3>
+                <div style={{
+                  padding: '16px',
+                  background: '#f8fafc',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  color: '#64748b'
+                }}>
+                  Timeline placeholder - activity history will appear here
+                </div>
+              </div>
+
+              <div className="crm-section">
+                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>Notes</h3>
+                <textarea
+                  placeholder="Add notes about this lead..."
+                  style={{
+                    width: '100%',
+                    minHeight: '150px',
+                    padding: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #e5e7eb',
+                    fontSize: '14px',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                <button className="crm-btn crm-btn-primary" style={{ marginTop: '12px' }}>
+                  Save Notes
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: '#64748b'
+            }}>
+              Select a lead to view details
+            </div>
+          )}
         </div>
-      ) : (
-        <>
-          {filteredHotLeads.length > 0 && (
-            <div className="crm-leads-section">
-              <div className="crm-leads-section-header">
-                <h3 className="crm-leads-section-title">
-                  🔥 Hot Leads ({filteredHotLeads.length})
-                </h3>
-                <p className="crm-leads-section-subtitle">
-                  High-priority leads requiring immediate attention
-                </p>
-              </div>
-              <div className="crm-leads-grid">
-                {filteredHotLeads.map(lead => renderLeadCard(lead))}
-              </div>
-            </div>
-          )}
 
-          {/* Other Leads Section */}
-          {filteredOtherLeads.length > 0 && (
-            <div className="crm-leads-section" style={{ marginTop: filteredHotLeads.length > 0 ? '48px' : '0' }}>
-              <div className="crm-leads-section-header">
-                <h3 className="crm-leads-section-title">
-                  All Leads ({filteredOtherLeads.length})
-                </h3>
-                <p className="crm-leads-section-subtitle">
-                  {filteredOtherLeads.filter(l => l.aiTier === 'WARM').length} Warm, {filteredOtherLeads.filter(l => l.aiTier === 'COLD').length} Cold
-                </p>
-              </div>
-              <div className="crm-leads-grid">
-                {filteredOtherLeads.map(lead => renderLeadCard(lead))}
-              </div>
+        {/* RIGHT COLUMN: AI Panel + WhatsApp Placeholder */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          borderLeft: '1px solid #e5e7eb',
+          paddingLeft: '24px',
+          height: '100%',
+          overflow: 'hidden' // Prevent column from expanding
+        }}>
+          {/* AI Panel Placeholder */}
+          <div className="crm-section" style={{ marginBottom: '16px' }}>
+            <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>AI Panel</h3>
+            <div style={{
+              padding: '16px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              fontSize: '14px',
+              color: '#64748b',
+              minHeight: '200px'
+            }}>
+              AI recommendations and insights will appear here
             </div>
-          )}
+          </div>
 
-          {filteredHotLeads.length === 0 && filteredOtherLeads.length === 0 && !loading && (
-            <div className="crm-empty-state">
-              <div className="crm-empty-icon">📋</div>
-              <h3 className="crm-empty-title">No leads found</h3>
-              <p className="crm-empty-text">
-                {(filters.search || filters.status)
-                  ? 'Try adjusting your filters'
-                  : 'No leads yet. Leads will appear here when users contact you about your properties.'}
-              </p>
+          {/* WhatsApp Chat Placeholder */}
+          <div className="crm-section" style={{ 
+            flex: 1,
+            minHeight: 0, // Important for flex scrolling
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}>
+            <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600', flexShrink: 0 }}>WhatsApp</h3>
+            <div style={{
+              flex: 1,
+              padding: '16px',
+              background: '#f0fdf4',
+              borderRadius: '6px',
+              border: '1px solid #86efac',
+              fontSize: '14px',
+              color: '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflowY: 'auto',
+              minHeight: 0
+            }}>
+              WhatsApp chat placeholder
+              <br />
+              Messages will appear here
             </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
