@@ -1,0 +1,134 @@
+/* Pipeline Stage Color Tokens */
+:root {
+  --stage-new: rgba(37, 99, 235, 0.15);        /* Blue */
+  --stage-qualified: rgba(16, 185, 129, 0.15); /* Teal */
+  --stage-proposal: rgba(168, 85, 247, 0.15);  /* Purple */
+  --stage-negotiation: rgba(245, 158, 11, 0.15);/* Orange */
+  --stage-won: rgba(34, 197, 94, 0.18);        /* Green */
+  --stage-lost: rgba(239, 68, 68, 0.15);       /* Red */
+}
+
+/* Pipeline Board - Desktop */
+.pipeline-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+/* Pipeline Column Styling */
+.pipeline-column {
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  background: rgba(255, 255, 255, 0.5);
+  min-width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Stage Accents */
+.pipeline-column.new {
+  background: var(--stage-new);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.pipeline-column.qualified {
+  background: var(--stage-qualified);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.pipeline-column.proposal {
+  background: var(--stage-proposal);
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.pipeline-column.negotiation {
+  background: var(--stage-negotiation);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.pipeline-column.won {
+  background: var(--stage-won);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.pipeline-column.lost {
+  background: var(--stage-lost);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Stage Header */
+.pipeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.pipeline-count {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Deals Container */
+.pipeline-deals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 200px;
+}
+
+/* Deal Card */
+.pipeline-deal {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  transition: all 0.2s;
+}
+
+.pipeline-deal:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(229, 231, 235, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Empty State */
+.pipeline-empty {
+  font-size: 13px;
+  opacity: 0.65;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(203, 213, 225, 0.6);
+  text-align: center;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+/* Mobile Pipeline Stacking */
+@media (max-width: 768px) {
+  .pipeline-board {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pipeline-column {
+    width: 100%;
+    min-width: 100%;
+    min-height: auto;
+  }
+
+  .pipeline-deals {
+    min-height: 100px;
+  }
+}

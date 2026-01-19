@@ -20,6 +20,8 @@ import AIAutomations from "./pages/ai-automations/AIAutomations";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import Integrations from "./pages/integrations/Integrations";
+import WhatsApp from "./pages/whatsapp/WhatsApp";
+import Instagram from "./pages/instagram/Instagram";
 import Billing from "./pages/billing/Billing";
 import Settings from "./pages/dashboard/Settings";
 import Listings from "./pages/listings/Listings";
@@ -97,6 +99,12 @@ function AppRoutes() {
         
         {/* Integrations Route */}
         <Route path="integrations" element={<Integrations />} />
+        
+        {/* WhatsApp Route */}
+        <Route path="whatsapp" element={<WhatsApp />} />
+        
+        {/* Instagram Route */}
+        <Route path="instagram" element={<Instagram />} />
         
         {/* Billing Route */}
         <Route path="billing" element={<Billing />} />

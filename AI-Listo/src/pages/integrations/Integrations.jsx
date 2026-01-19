@@ -1,91 +1,128 @@
 export default function Integrations() {
+  const integrations = [
+    {
+      name: 'Email Provider',
+      status: 'not_connected',
+      description: 'Connect your email provider for automated email sequences and campaigns',
+      icon: '📧'
+    },
+    {
+      name: 'Zapier',
+      status: 'not_connected',
+      description: 'Connect Zapier for custom automation workflows and integrations',
+      icon: '⚡'
+    },
+    {
+      name: 'CRM Integration',
+      status: 'not_connected',
+      description: 'Sync data with external CRM systems (coming soon)',
+      icon: '🔗'
+    },
+    {
+      name: 'Webhooks',
+      status: 'not_connected',
+      description: 'Configure webhooks for real-time data synchronization (coming soon)',
+      icon: '🔌'
+    }
+  ];
+
+  const getStatusBadge = (status) => {
+    if (status === 'connected') {
+      return (
+        <span style={{
+          padding: '6px 12px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          background: '#f0fdf4',
+          color: '#16a34a',
+          border: '1px solid #86efac'
+        }}>
+          Connected
+        </span>
+      );
+    }
+    return (
+      <span style={{
+        padding: '6px 12px',
+        borderRadius: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        background: '#f1f5f9',
+        color: '#64748b',
+        border: '1px solid #cbd5e1'
+      }}>
+        Not Connected
+      </span>
+    );
+  };
+
   return (
     <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Integrations</h1>
       
+      <p style={{ 
+        marginBottom: '24px', 
+        fontSize: '16px', 
+        color: '#64748b',
+        lineHeight: '1.6'
+      }}>
+        Connect third-party services to extend your CRM functionality. 
+        For messaging integrations, visit <strong>WhatsApp</strong> or <strong>Instagram</strong> pages.
+      </p>
+
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
         gap: '24px',
         marginBottom: '24px'
       }}>
-        {/* WhatsApp API */}
-        <div className="crm-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>WhatsApp API</h2>
-            <span style={{
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '600',
-              background: '#f0fdf4',
-              color: '#16a34a',
-              border: '1px solid #86efac'
+        {integrations.map((integration, index) => (
+          <div key={index} className="crm-section">
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-start',
+              marginBottom: '16px' 
             }}>
-              Connected
-            </span>
-          </div>
-          <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
-            WhatsApp Business API integration status (UI only)
-          </p>
-          <div style={{
-            padding: '12px',
-            background: '#f8fafc',
-            borderRadius: '6px',
-            fontSize: '13px',
-            color: '#64748b'
-          }}>
-            Status: Active
-          </div>
-        </div>
-
-        {/* Email Provider */}
-        <div className="crm-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Email Provider</h2>
-            <span style={{
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '600',
-              background: '#f1f5f9',
-              color: '#64748b',
-              border: '1px solid #cbd5e1'
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  fontSize: '24px',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#f1f5f9',
+                  borderRadius: '8px'
+                }}>
+                  {integration.icon}
+                </div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                  {integration.name}
+                </h2>
+              </div>
+              {getStatusBadge(integration.status)}
+            </div>
+            
+            <p style={{ 
+              color: '#64748b', 
+              marginBottom: '20px', 
+              fontSize: '14px',
+              lineHeight: '1.5'
             }}>
-              Not Connected
-            </span>
+              {integration.description}
+            </p>
+            
+            <button 
+              className={`crm-btn ${integration.status === 'connected' ? 'crm-btn-secondary' : 'crm-btn-primary'}`}
+              style={{ width: '100%' }}
+              disabled={integration.status === 'connected'}
+            >
+              {integration.status === 'connected' ? 'Connected' : `Connect ${integration.name}`}
+            </button>
           </div>
-          <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
-            Connect your email provider for automated email sequences
-          </p>
-          <button className="crm-btn crm-btn-primary" style={{ width: '100%' }}>
-            Connect Email Provider
-          </button>
-        </div>
-
-        {/* Zapier */}
-        <div className="crm-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Zapier</h2>
-            <span style={{
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '600',
-              background: '#f1f5f9',
-              color: '#64748b',
-              border: '1px solid #cbd5e1'
-            }}>
-              Not Connected
-            </span>
-          </div>
-          <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
-            Connect Zapier for custom automation workflows
-          </p>
-          <button className="crm-btn crm-btn-secondary" style={{ width: '100%' }}>
-            Connect Zapier
-          </button>
-        </div>
+        ))}
       </div>
 
       <div style={{ 
@@ -93,7 +130,8 @@ export default function Integrations() {
         background: '#f8fafc', 
         borderRadius: '8px',
         fontSize: '14px',
-        color: '#64748b'
+        color: '#64748b',
+        border: '1px solid #e5e7eb'
       }}>
         <p style={{ margin: 0 }}>
           💡 <strong>Note:</strong> Integration connections will be implemented in a future phase.

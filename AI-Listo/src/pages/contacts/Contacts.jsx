@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../shared/ai-pages.css';
 
 export default function Contacts() {
   // Placeholder data
@@ -9,10 +10,10 @@ export default function Contacts() {
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Contacts</h1>
       
       {contacts.length === 0 ? (
-        <div className="crm-empty-state">
-          <div className="crm-empty-icon">👥</div>
-          <h3 className="crm-empty-title">No contacts yet</h3>
-          <p className="crm-empty-text">
+        <div className="contacts-empty">
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
+          <h3>No contacts yet</h3>
+          <p>
             Contacts will appear here as you interact with leads and properties.
           </p>
         </div>

@@ -1277,4 +1277,14 @@ body {
     grid-template-columns: 280px 1fr;
     gap: 20px;
   }
+
+  /* WhatsApp Page - Mobile */
+  .whatsapp-main-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Instagram Page - Mobile */
+  .instagram-main-layout {
+    grid-template-columns: 1fr !important;
+  }
 }

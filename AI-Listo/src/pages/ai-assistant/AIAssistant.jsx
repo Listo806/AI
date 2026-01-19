@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../shared/ai-pages.css';
 
 export default function AIAssistant() {
   const [context, setContext] = useState('general');
@@ -28,110 +29,106 @@ export default function AIAssistant() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 200px)', maxHeight: '800px' }}>
+    <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>AI Assistant</h1>
       
       {/* Context Selector */}
-      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
           onClick={() => setContext('general')}
+          className={`ai-tab ${context === 'general' ? 'active' : ''}`}
           style={{
             padding: '8px 16px',
-            borderRadius: '6px',
-            border: context === 'general' ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-            background: context === 'general' ? '#eff6ff' : '#fff',
-            color: context === 'general' ? '#3b82f6' : '#64748b',
+            borderRadius: '8px',
+            border: context === 'general' ? '1px solid rgba(59, 130, 246, 0.85)' : '1px solid #e5e7eb',
+            background: context === 'general' ? 'rgba(59, 130, 246, 0.15)' : '#fff',
+            color: context === 'general' ? 'rgba(59, 130, 246, 0.85)' : '#64748b',
             fontWeight: context === 'general' ? '600' : '400',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.2s'
           }}
         >
           General
         </button>
         <button
           onClick={() => setContext('lead')}
+          className={`ai-tab ${context === 'lead' ? 'active' : ''}`}
           style={{
             padding: '8px 16px',
-            borderRadius: '6px',
-            border: context === 'lead' ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-            background: context === 'lead' ? '#eff6ff' : '#fff',
-            color: context === 'lead' ? '#3b82f6' : '#64748b',
+            borderRadius: '8px',
+            border: context === 'lead' ? '1px solid rgba(59, 130, 246, 0.85)' : '1px solid #e5e7eb',
+            background: context === 'lead' ? 'rgba(59, 130, 246, 0.15)' : '#fff',
+            color: context === 'lead' ? 'rgba(59, 130, 246, 0.85)' : '#64748b',
             fontWeight: context === 'lead' ? '600' : '400',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.2s'
           }}
         >
           Lead
         </button>
         <button
           onClick={() => setContext('pipeline')}
+          className={`ai-tab ${context === 'pipeline' ? 'active' : ''}`}
           style={{
             padding: '8px 16px',
-            borderRadius: '6px',
-            border: context === 'pipeline' ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-            background: context === 'pipeline' ? '#eff6ff' : '#fff',
-            color: context === 'pipeline' ? '#3b82f6' : '#64748b',
+            borderRadius: '8px',
+            border: context === 'pipeline' ? '1px solid rgba(59, 130, 246, 0.85)' : '1px solid #e5e7eb',
+            background: context === 'pipeline' ? 'rgba(59, 130, 246, 0.15)' : '#fff',
+            color: context === 'pipeline' ? 'rgba(59, 130, 246, 0.85)' : '#64748b',
             fontWeight: context === 'pipeline' ? '600' : '400',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            transition: 'all 0.2s'
           }}
         >
           Pipeline
         </button>
       </div>
 
-      {/* Chat Messages */}
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        padding: '16px',
-        background: '#f8fafc',
-        borderRadius: '8px',
-        marginBottom: '16px'
-      }}>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            style={{
-              marginBottom: '16px',
-              display: 'flex',
-              justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
-            }}
-          >
-            <div style={{
-              maxWidth: '70%',
-              padding: '12px 16px',
-              borderRadius: '8px',
-              background: message.role === 'user' ? '#3b82f6' : '#fff',
-              color: message.role === 'user' ? '#fff' : '#0f172a',
-              border: message.role === 'assistant' ? '1px solid #e5e7eb' : 'none'
-            }}>
-              {message.content}
+      {/* Chat Container */}
+      <div className="ai-chat-container">
+        {/* Chat Messages */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '16px',
+          marginBottom: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              style={{
+                display: 'flex',
+                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
+              }}
+            >
+              <div className={`ai-message ${message.role === 'user' ? 'user' : ''}`}>
+                {message.content}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Input Form */}
-      <form onSubmit={handleSend} style={{ display: 'flex', gap: '8px' }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything..."
-          style={{
-            flex: 1,
-            padding: '12px 16px',
-            borderRadius: '8px',
-            border: '1px solid #e5e7eb',
-            fontSize: '14px'
-          }}
-        />
-        <button
-          type="submit"
-          className="crm-btn crm-btn-primary"
-          style={{ padding: '12px 24px' }}
-        >
-          Send
-        </button>
-      </form>
+        {/* Input Form */}
+        <form onSubmit={handleSend} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask me anything..."
+            className="ai-input"
+          />
+          <button
+            type="submit"
+            className="crm-btn crm-btn-primary"
+            style={{ padding: '12px 24px', borderRadius: '14px' }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
