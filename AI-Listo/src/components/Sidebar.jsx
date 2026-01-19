@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 // Navigation items with emoji icons and labels
 const navItems = [
@@ -18,6 +19,8 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const { user, logout } = useAuth();
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -49,6 +52,22 @@ export default function Sidebar({ isOpen, onClose }) {
             </NavLink>
           ))}
         </nav>
+
+        {/* Sidebar Footer - Account Info & Logout */}
+        <div className="crm-sidebar-footer">
+          <div className="crm-user-info">
+            <div className="crm-user-avatar">
+              {user?.email ? user.email[0].toUpperCase() : 'U'}
+            </div>
+            <div className="crm-user-details">
+              <div className="crm-user-name">{user?.email || 'User'}</div>
+              <div className="crm-user-role">{user?.role || 'user'}</div>
+            </div>
+          </div>
+          <button className="crm-logout-btn" onClick={logout}>
+            Logout
+          </button>
+        </div>
       </aside>
     </>
   );

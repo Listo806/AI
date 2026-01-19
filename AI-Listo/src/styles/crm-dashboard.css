@@ -278,7 +278,73 @@ body {
   }
 }
 
-/* Sidebar Footer - REMOVED: No branding blocks in sidebar */
+/* Sidebar Footer - Account Info & Logout */
+.crm-sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.crm-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.crm-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.crm-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-user-role {
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+.crm-logout-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.crm-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fff;
+}
 
 /* Main Content */
 .crm-main {
