@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  width="420"
+  height="90"
+  viewBox="0 0 420 90"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- ICON -->
+  <g transform="translate(0,10)">
+    <path d="M40 0L70 15V45L40 60L10 45V15L40 0Z"
+      stroke="#2563EB"
+      stroke-width="4"
+      fill="none"/>
+    <path d="M40 10L58 19V41L40 50L22 41V19L40 10Z"
+      fill="#2563EB"/>
+  </g>
+
+  <!-- TEXT -->
+  <text
+    x="95"
+    y="38"
+    font-size="34"
+    font-weight="700"
+    fill="#FFFFFF"
+    font-family="Inter, Arial, sans-serif"
+    letter-spacing="1"
+  >
+    CORTEXA
+  </text>
+
+  <text
+    x="95"
+    y="68"
+    font-size="26"
+    font-weight="500"
+    fill="#2563EB"
+    font-family="Inter, Arial, sans-serif"
+    letter-spacing="0.5"
+  >
+    DealFlow
+  </text>
+
+  <!-- POWERED BY -->
+  <text
+    x="95"
+    y="12"
+    font-size="12"
+    font-weight="500"
+    fill="#9CA3AF"
+    font-family="Inter, Arial, sans-serif"
+    letter-spacing="2"
+  >
+    POWERED BY
+  </text>
+</svg>

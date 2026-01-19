@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import "../styles/crm-dashboard.css";
@@ -83,11 +83,11 @@ export default function DashboardLayout() {
               <span></span>
               <span></span>
             </button>
-            <img 
-              src="/Header Background.png"
-              alt="Header"
-              className="crm-header-image"
-            />
+            <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
+              <span className="powered">powered by</span>
+              <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
+              <span className="text"><strong>CORTEXA</strong> DealFlow</span>
+            </Link>
           </div>
           <div className="crm-header-right">
             <div className="crm-account-dropdown">
