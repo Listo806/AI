@@ -18,25 +18,28 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar */
+/* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 240px;
+  width: 200px; /* Increased to show icons + labels */
   background: #020617;
   color: #fff;
-  padding: 24px;
+  padding: 0;
   display: flex;
   flex-direction: column;
   position: fixed;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 999;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Desktop: Sidebar always visible */
+/* Desktop: Sidebar always visible with labels */
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
+    width: 200px;
   }
 }
 
@@ -44,6 +47,7 @@ body {
 @media (max-width: 768px) {
   .crm-sidebar {
     transform: translateX(-100%);
+    width: 240px; /* Wider on mobile for better UX */
   }
   
   .crm-sidebar.open {
@@ -55,27 +59,67 @@ body {
   }
 }
 
-.crm-logo {
-  font-size: 20px;
+/* Sidebar Header - Logo and Brand */
+.crm-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.crm-sidebar-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.crm-sidebar-brand {
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 32px;
   color: #fff;
+  white-space: nowrap;
 }
 
 .crm-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   flex: 1;
+  padding-top: 8px;
 }
 
+/* Desktop: Icons + Labels always visible */
 .crm-nav-link {
   color: #94a3b8;
   text-decoration: none;
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+}
+
+.crm-nav-icon {
+  display: block;
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.crm-nav-label {
+  display: block; /* Always visible on desktop */
   font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .crm-nav-link:hover {
@@ -86,6 +130,37 @@ body {
 .crm-nav-link.active {
   background: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
+}
+
+/* Show labels on mobile */
+@media (max-width: 768px) {
+  .crm-nav-link {
+    width: auto;
+    height: auto;
+    padding: 10px 12px;
+    justify-content: flex-start;
+    margin: 0;
+  }
+  
+  .crm-nav-icon {
+    margin-right: 12px;
+  }
+  
+  .crm-nav-label {
+    display: block;
+    font-size: 14px;
+  }
+  
+  .crm-nav-link:hover .crm-nav-label {
+    position: static;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+  
+  .crm-nav-link:hover .crm-nav-label::before {
+    display: none;
+  }
 }
 
 /* Buy/Rent Navigation Links - REMOVED: Not used in CRM sidebar
@@ -203,80 +278,52 @@ body {
   }
 }
 
-/* Sidebar Footer */
-.crm-sidebar-footer {
-  margin-top: auto;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.crm-user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.crm-user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #3b82f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 16px;
-  color: #fff;
-  flex-shrink: 0;
-}
-
-.crm-user-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.crm-user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.crm-user-role {
-  font-size: 12px;
-  color: #94a3b8;
-  text-transform: capitalize;
-}
-
-.crm-logout-btn {
-  width: 100%;
-  padding: 10px;
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.crm-logout-btn:hover {
-  background: rgba(239, 68, 68, 0.3);
-  color: #fff;
-}
+/* Sidebar Footer - REMOVED: No branding blocks in sidebar */
 
 /* Main Content */
 .crm-main {
   flex: 1;
-  background: #f8fafc;
-  margin-left: 240px; /* Desktop: account for sidebar */
+  margin-left: 200px; /* Desktop: account for sidebar with labels */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
+  position: relative;
+  background: #f8fafc; /* Fallback color */
 }
+
+/* Background image with overlay for better readability */
+.crm-main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/New%20AI%20CRM%20Hero.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Alternative: Gradient overlay for better contrast */
+.crm-main::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(248, 250, 252, 0.85) 0%,
+    rgba(248, 250, 252, 0.92) 50%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
 
 /* Mobile: No margin for sidebar */
 @media (max-width: 768px) {
@@ -286,21 +333,34 @@ body {
 }
 
 .crm-header {
-  background: #fff;
-  padding: 18px 24px;
+  background: #020617;
+  padding: 12px 24px;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100; /* Above background overlay */
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 56px; /* Reduced height */
+  box-shadow: none; /* No heavy shadows */
+  margin-left: 0; /* Header starts after sidebar - sidebar is fixed */
 }
 
 .crm-header-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.crm-header-image {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
 }
 
 /* Mobile Menu Toggle (Hamburger) */
@@ -355,16 +415,122 @@ body {
   }
 }
 
-.crm-header h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 600;
-  color: #0f172a;
+.crm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
-.crm-header-title {
-  font-size: 24px;
+.crm-account-dropdown {
+  position: relative;
+}
+
+.crm-account-trigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crm-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  transition: all 0.2s;
+}
+
+.crm-account-trigger:hover .crm-header-avatar {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.crm-account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.crm-account-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+}
+
+.crm-account-menu-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.crm-account-menu-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.crm-account-menu-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.crm-account-menu-role {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.crm-account-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+.crm-account-menu-item {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.crm-account-menu-item:hover {
+  background: #f1f5f9;
   color: #0f172a;
 }
 
@@ -397,6 +563,8 @@ body {
 .crm-content {
   padding: 24px;
   max-width: 1400px;
+  position: relative;
+  z-index: 2; /* Ensure content is above background layers */
 }
 
 /* Error Message */
@@ -422,7 +590,9 @@ body {
   padding: 24px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1; /* Ensure cards are above background */
 }
 
 .crm-stat-label {
@@ -444,6 +614,9 @@ body {
   border: 1px solid #e5e7eb;
   padding: 24px;
   margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  position: relative;
+  z-index: 1; /* Ensure sections are above background */
 }
 
 .crm-section-header {
