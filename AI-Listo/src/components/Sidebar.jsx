@@ -15,7 +15,6 @@ const navItems = [
   { path: "/dashboard/analytics", icon: "📊", label: "Analytics" },
   { path: "/dashboard/team", icon: "👥", label: "Team" },
   { path: "/dashboard/integrations", icon: "🔌", label: "Integrations" },
-  { path: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
@@ -54,7 +53,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
           ))}
         </nav>
 
-        {/* Sidebar Footer - Account Info & Logout */}
+        {/* Sidebar Footer - Account Info */}
         <div className="crm-sidebar-footer">
           <div className="crm-user-info">
             <div className="crm-user-avatar">
@@ -67,11 +66,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
               </div>
             )}
           </div>
-          {!isCollapsed && (
-            <button className="crm-logout-btn" onClick={logout}>
-              Logout
-            </button>
-          )}
         </div>
       </aside>
     </>

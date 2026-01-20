@@ -24,6 +24,9 @@ import WhatsApp from "./pages/whatsapp/WhatsApp";
 import Instagram from "./pages/instagram/Instagram";
 import Billing from "./pages/billing/Billing";
 import Settings from "./pages/dashboard/Settings";
+import Profile from "./pages/account/Profile";
+import AccountBilling from "./pages/account/Billing";
+import AccountSettings from "./pages/account/Settings";
 import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
 
@@ -106,11 +109,25 @@ function AppRoutes() {
         {/* Instagram Route */}
         <Route path="instagram" element={<Instagram />} />
         
-        {/* Billing Route */}
-        <Route path="billing" element={<Billing />} />
+        {/* Billing Route (legacy - redirects to account/billing) */}
+        <Route path="billing" element={<Navigate to="/account/billing" replace />} />
         
-        {/* Settings Route */}
-        <Route path="settings" element={<Settings />} />
+        {/* Settings Route (legacy - redirects to account/settings) */}
+        <Route path="settings" element={<Navigate to="/account/settings" replace />} />
+      </Route>
+
+      {/* Account Routes - Outside dashboard but still protected */}
+      <Route
+        path="/account"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="profile" element={<Profile />} />
+        <Route path="billing" element={<AccountBilling />} />
+        <Route path="settings" element={<AccountSettings />} />
       </Route>
 
       {/* Legacy Routes - Redirect to dashboard */}

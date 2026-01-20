@@ -738,6 +738,9 @@ body {
   color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
+  text-decoration: none;
+  display: block;
+  font-family: inherit;
 }
 
 .crm-account-menu-item:hover {

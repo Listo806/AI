@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import "../styles/crm-dashboard.css";
@@ -19,6 +19,9 @@ const getPageTitle = (pathname) => {
     "/dashboard/integrations": "Integrations",
     "/dashboard/billing": "Billing",
     "/dashboard/settings": "Settings",
+    "/account/profile": "Profile",
+    "/account/billing": "Billing",
+    "/account/settings": "Settings",
   };
 
   // Check exact match first
@@ -140,6 +143,28 @@ export default function DashboardLayout() {
                       <div className="crm-account-menu-role">{user?.role || 'user'}</div>
                     </div>
                   </div>
+                  <div className="crm-account-menu-divider"></div>
+                  <Link 
+                    to="/account/profile" 
+                    className="crm-account-menu-item"
+                    onClick={() => setAccountDropdownOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link 
+                    to="/account/billing" 
+                    className="crm-account-menu-item"
+                    onClick={() => setAccountDropdownOpen(false)}
+                  >
+                    Billing
+                  </Link>
+                  <Link 
+                    to="/account/settings" 
+                    className="crm-account-menu-item"
+                    onClick={() => setAccountDropdownOpen(false)}
+                  >
+                    Settings
+                  </Link>
                   <div className="crm-account-menu-divider"></div>
                   <button className="crm-account-menu-item" onClick={logout}>
                     Logout
