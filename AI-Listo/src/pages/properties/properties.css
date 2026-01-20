@@ -1,57 +1,63 @@
-/* Properties Color Tokens */
+/* Properties Color Tokens - Subtle Management Style */
 :root {
-  --card-bg: rgba(255, 255, 255, 0.04);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --text-muted: rgba(255, 255, 255, 0.65);
+  --property-card-bg: #0F172A;
+  --property-card-border: rgba(255, 255, 255, 0.12);
+  --property-text-muted: rgba(255, 255, 255, 0.7);
+  --property-text-primary: #E5E7EB;
 
-  --status-published: rgba(34, 197, 94, 0.85);
-  --status-draft: rgba(245, 158, 11, 0.85);
-  --status-archived: rgba(239, 68, 68, 0.85);
+  /* Subtle status colors - left border only (calm, low contrast) */
+  --status-published: rgba(34, 197, 94, 0.35);
+  --status-draft: rgba(245, 158, 11, 0.35);
+  --status-archived: rgba(239, 68, 68, 0.35);
 
-  --accent-published-bg: rgba(34, 197, 94, 0.15);
-  --accent-draft-bg: rgba(245, 158, 11, 0.15);
-  --accent-archived-bg: rgba(239, 68, 68, 0.15);
+  /* Very subtle background accents - calm contrast */
+  --accent-published-bg: #0d1f12;
+  --accent-draft-bg: #1f1b0d;
+  --accent-archived-bg: #1f0d0d;
 }
 
-/* Property Card Base Style */
+/* Property Card Base Style - Compact Management List */
 .property-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
+  background: var(--property-card-bg);
+  border: 1px solid var(--property-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
   transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .property-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: #1F2933;
 }
 
-/* Status-Based Visual Accent */
+/* Status-Based Visual Accent - Subtle Left Border Only */
 .property-card.published {
-  border-left: 4px solid var(--status-published);
+  border-left: 3px solid var(--status-published);
   background: linear-gradient(
     90deg,
-    var(--accent-published-bg),
-    #fff
+    var(--accent-published-bg) 0%,
+    var(--property-card-bg) 10%
   );
 }
 
 .property-card.draft {
-  border-left: 4px solid var(--status-draft);
+  border-left: 3px solid var(--status-draft);
   background: linear-gradient(
     90deg,
-    var(--accent-draft-bg),
-    #fff
+    var(--accent-draft-bg) 0%,
+    var(--property-card-bg) 10%
   );
 }
 
 .property-card.archived {
-  border-left: 4px solid var(--status-archived);
+  border-left: 3px solid var(--status-archived);
   background: linear-gradient(
     90deg,
-    var(--accent-archived-bg),
-    #fff
+    var(--accent-archived-bg) 0%,
+    var(--property-card-bg) 10%
   );
 }
 
@@ -65,48 +71,76 @@
 }
 
 .property-status.published {
-  background: var(--accent-published-bg);
-  color: #16a34a;
+  background: rgba(34, 197, 94, 0.12);
+  color: rgba(34, 197, 94, 0.8);
 }
 
 .property-status.draft {
-  background: var(--accent-draft-bg);
-  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  color: rgba(245, 158, 11, 0.8);
 }
 
 .property-status.archived {
-  background: var(--accent-archived-bg);
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+  color: rgba(239, 68, 68, 0.8);
 }
 
-/* Property Meta Text */
+/* Property Meta Text - Compact */
 .property-meta {
-  font-size: 13px;
-  color: #64748b;
-  margin-top: 4px;
+  font-size: 12px;
+  color: var(--property-text-muted);
+  line-height: 1.4;
 }
 
-/* Action Button */
+/* Action Button - Prominent */
 .property-action {
-  margin-top: 12px;
-  font-weight: 500;
-  opacity: 0.85;
+  margin-top: 10px;
 }
 
 /* Empty State */
 .properties-empty {
-  padding: 40px 16px;
+  padding: 32px 16px;
   text-align: center;
   opacity: 0.7;
-  border: 1px dashed #cbd5e1;
-  border-radius: 16px;
-  color: #64748b;
-  font-size: 14px;
+  border: 1px dashed var(--property-card-border);
+  border-radius: 12px;
+  color: var(--property-text-muted);
+  font-size: 13px;
+  background: var(--property-card-bg);
 }
 
-/* Remove Map on Mobile */
+/* Properties Grid Container */
+.properties-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Desktop Grid Layout */
+@media (min-width: 1024px) {
+  .properties-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Mobile Optimizations */
 @media (max-width: 768px) {
-  .properties-map {
-    display: none;
+  .property-card {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .property-card h3 {
+    font-size: 14px !important;
+  }
+
+  .property-meta {
+    font-size: 11px;
+  }
+
+  .property-action {
+    margin-top: 8px;
   }
 }

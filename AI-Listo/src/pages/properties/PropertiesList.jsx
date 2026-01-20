@@ -112,81 +112,87 @@ export default function PropertiesList() {
           No properties yet. Add your first listing.
         </div>
       ) : (
-        <div>
+        <div className="properties-grid">
           {properties.map((property) => {
             const statusClass = getStatusClassName(property.status);
             return (
               <div key={property.id} className={`property-card ${statusClass}`}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                  <div style={{ flex: 1 }}>
-                    <h3 style={{ 
-                      margin: 0, 
-                      fontSize: '18px', 
-                      fontWeight: '600',
-                      color: '#0f172a',
-                      marginBottom: '4px'
-                    }}>
-                      {property.title || 'Untitled Property'}
-                    </h3>
-                    <div className="property-meta">
-                      {property.address && `${property.address}, `}
-                      {property.city && `${property.city}, `}
-                      {property.state && property.state}
-                      {property.zipCode && ` ${property.zipCode}`}
-                    </div>
-                  </div>
+                {/* Header Row: Title + Status */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start', 
+                  marginBottom: '8px',
+                  gap: '12px'
+                }}>
+                  <h3 style={{ 
+                    margin: 0, 
+                    fontSize: '15px', 
+                    fontWeight: '600',
+                    color: 'var(--property-text-primary, #E5E7EB)',
+                    lineHeight: '1.3',
+                    flex: 1
+                  }}>
+                    {property.title || 'Untitled Property'}
+                  </h3>
                   <span className={`property-status ${statusClass}`}>
                     {(property.status || 'draft').charAt(0).toUpperCase() + (property.status || 'draft').slice(1)}
                   </span>
                 </div>
                 
+                {/* Address - Compact */}
+                <div className="property-meta" style={{ marginBottom: '8px' }}>
+                  {property.address && `${property.address}, `}
+                  {property.city && `${property.city}, `}
+                  {property.state && property.state}
+                  {property.zipCode && ` ${property.zipCode}`}
+                </div>
+                
+                {/* Metadata - Inline, Compact */}
                 <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-                  gap: '12px',
-                  marginTop: '12px'
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '12px 16px',
+                  marginBottom: '10px',
+                  fontSize: '12px',
+                  color: 'var(--property-text-muted, rgba(255, 255, 255, 0.7))'
                 }}>
                   {property.price && (
-                    <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                      <strong>Price:</strong> {formatPrice(property.price)}
-                    </div>
+                    <span><strong>Price:</strong> {formatPrice(property.price)}</span>
                   )}
                   {property.type && (
-                    <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                      <strong>Type:</strong> {property.type === 'sale' ? 'For Sale' : 'For Rent'}
-                    </div>
+                    <span><strong>Type:</strong> {property.type === 'sale' ? 'Sale' : 'Rent'}</span>
                   )}
                   {property.bedrooms && (
-                    <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                      <strong>Bedrooms:</strong> {property.bedrooms}
-                    </div>
+                    <span><strong>Beds:</strong> {property.bedrooms}</span>
                   )}
                   {property.bathrooms && (
-                    <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                      <strong>Bathrooms:</strong> {property.bathrooms}
-                    </div>
+                    <span><strong>Baths:</strong> {property.bathrooms}</span>
                   )}
                   {property.squareFeet && (
-                    <div style={{ fontSize: '14px', color: '#0f172a' }}>
-                      <strong>Square Feet:</strong> {property.squareFeet.toLocaleString()}
-                    </div>
+                    <span><strong>Sqft:</strong> {property.squareFeet.toLocaleString()}</span>
                   )}
                 </div>
 
-                {/* Action Button */}
-                <div className="property-action" style={{ marginTop: '12px' }}>
+                {/* Action Button - Prominent */}
+                <div className="property-action">
                   <Link 
                     to={`/dashboard/properties/${property.id}`} 
                     className="crm-btn crm-btn-secondary" 
-                    style={{ width: '100%', justifyContent: 'center' }}
+                    style={{ 
+                      width: '100%', 
+                      justifyContent: 'center',
+                      padding: '8px 16px',
+                      fontSize: '13px'
+                    }}
                   >
                     View / Edit
                   </Link>
                 </div>
 
-                <div className="property-meta" style={{ marginTop: '12px', fontSize: '12px' }}>
-                  Created: {formatDate(property.createdAt)}
-                  {property.publishedAt && ` • Published: ${formatDate(property.publishedAt)}`}
+                {/* Footer - Minimal */}
+                <div className="property-meta" style={{ marginTop: '8px', fontSize: '11px' }}>
+                  Created {formatDate(property.createdAt)}
                 </div>
               </div>
             );
