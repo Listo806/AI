@@ -41,6 +41,17 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  
+  // Sidebar collapse state (persisted in localStorage)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   // Close sidebar on mobile when route changes
   useEffect(() => {
@@ -66,14 +77,23 @@ export default function DashboardLayout() {
     setSidebarOpen(false);
   };
 
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   const pageTitle = getPageTitle(location.pathname);
 
   return (
-    <div className="crm-root">
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+    <div className={`crm-root ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={closeSidebar}
+        isCollapsed={sidebarCollapsed}
+      />
       <div className="crm-main">
         <header className="crm-header">
           <div className="crm-header-left">
+            {/* Mobile menu toggle */}
             <button 
               className="crm-mobile-menu-toggle"
               onClick={toggleSidebar}
@@ -82,6 +102,15 @@ export default function DashboardLayout() {
               <span></span>
               <span></span>
               <span></span>
+            </button>
+            {/* Desktop sidebar collapse toggle */}
+            <button
+              className="crm-sidebar-toggle"
+              onClick={toggleSidebarCollapse}
+              aria-label="Toggle sidebar"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              ☰
             </button>
             <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>

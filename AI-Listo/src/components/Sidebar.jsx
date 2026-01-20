@@ -18,14 +18,14 @@ const navItems = [
   { path: "/dashboard/settings", icon: "⚙️", label: "Settings" },
 ];
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
   const { user, logout } = useAuth();
 
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen && <div className="crm-sidebar-overlay" onClick={onClose} />}
-      <aside className={`crm-sidebar ${isOpen ? 'open' : ''}`}>
+      <aside className={`crm-sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* Logo and Site Name */}
         <div className="crm-sidebar-header">
           <img 
@@ -33,7 +33,7 @@ export default function Sidebar({ isOpen, onClose }) {
             alt="Listo Qasa Logo"
             className="crm-sidebar-logo"
           />
-          <span className="crm-sidebar-brand">Listo Qasa</span>
+          {!isCollapsed && <span className="crm-sidebar-brand">Listo Qasa</span>}
         </div>
 
         <nav className="crm-nav">
@@ -46,9 +46,10 @@ export default function Sidebar({ isOpen, onClose }) {
               }
               onClick={onClose}
               end={item.path === "/dashboard"}
+              title={isCollapsed ? item.label : undefined}
             >
               <span className="crm-nav-icon">{item.icon}</span>
-              <span className="crm-nav-label">{item.label}</span>
+              {!isCollapsed && <span className="crm-nav-label">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -59,14 +60,18 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="crm-user-avatar">
               {user?.email ? user.email[0].toUpperCase() : 'U'}
             </div>
-            <div className="crm-user-details">
-              <div className="crm-user-name">{user?.email || 'User'}</div>
-              <div className="crm-user-role">{user?.role || 'user'}</div>
-            </div>
+            {!isCollapsed && (
+              <div className="crm-user-details">
+                <div className="crm-user-name">{user?.email || 'User'}</div>
+                <div className="crm-user-role">{user?.role || 'user'}</div>
+              </div>
+            )}
           </div>
-          <button className="crm-logout-btn" onClick={logout}>
-            Logout
-          </button>
+          {!isCollapsed && (
+            <button className="crm-logout-btn" onClick={logout}>
+              Logout
+            </button>
+          )}
         </div>
       </aside>
     </>

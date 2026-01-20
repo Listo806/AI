@@ -20,7 +20,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 200px; /* Increased to show icons + labels */
+  width: 240px; /* Default expanded width */
   background: #020617;
   color: #fff;
   padding: 0;
@@ -39,7 +39,12 @@ body {
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 200px;
+    width: 240px;
+  }
+
+  /* Collapsed state - icon-only */
+  .crm-sidebar.collapsed {
+    width: 72px;
   }
 }
 
@@ -68,6 +73,7 @@ body {
   margin-bottom: 8px;
   /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
   flex-shrink: 0;
+  transition: padding 0.3s ease-in-out;
 }
 
 .crm-sidebar-logo {
@@ -116,10 +122,72 @@ body {
 }
 
 .crm-nav-label {
-  display: block; /* Always visible on desktop */
-  font-size: 14px;
-  font-weight: 500;
+  display: block; /* Visible when expanded */
   white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Hide labels when collapsed */
+@media (min-width: 769px) {
+  .crm-sidebar.collapsed .crm-nav-label {
+    display: none;
+  }
+
+  /* Center icons when collapsed */
+  .crm-sidebar.collapsed .crm-nav-link {
+    justify-content: center;
+    padding: 10px;
+  }
+
+  /* Hide sidebar brand when collapsed */
+  .crm-sidebar.collapsed .crm-sidebar-brand {
+    display: none;
+  }
+
+  /* Center logo when collapsed */
+  .crm-sidebar.collapsed .crm-sidebar-header {
+    justify-content: center;
+    padding: 16px 8px;
+  }
+
+  /* Hide user details when collapsed */
+  .crm-sidebar.collapsed .crm-user-details {
+    display: none;
+  }
+
+  .crm-sidebar.collapsed .crm-logout-btn {
+    display: none;
+  }
+
+  /* Center user avatar when collapsed */
+  .crm-sidebar.collapsed .crm-user-info {
+    justify-content: center;
+  }
+
+  /* Tooltip on hover when collapsed */
+  .crm-sidebar.collapsed .crm-nav-link {
+    position: relative;
+  }
+
+  .crm-sidebar.collapsed .crm-nav-link:hover::after {
+    content: attr(title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 12px;
+    padding: 6px 12px;
+    background: #0F172A;
+    border: 1px solid #1E293B;
+    border-radius: 6px;
+    white-space: nowrap;
+    font-size: 14px;
+    color: #E5E7EB;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .crm-nav-link:hover {
@@ -349,11 +417,18 @@ body {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 200px; /* Desktop: account for sidebar with labels */
+  margin-left: 240px; /* Desktop: account for sidebar with labels (expanded) */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
   background: #f8fafc; /* Fallback color */
+}
+
+/* Adjust main content when sidebar is collapsed */
+@media (min-width: 769px) {
+  .crm-root.sidebar-collapsed .crm-main {
+    margin-left: 72px; /* Collapsed sidebar width */
+  }
 }
 
 /* Background image with overlay for better readability */
@@ -467,6 +542,36 @@ body {
 
 .brand .text strong {
   font-weight: 600;
+}
+
+/* Desktop Sidebar Toggle (Hamburger) */
+.crm-sidebar-toggle {
+  display: none; /* Hidden on mobile */
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #E5E7EB;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.crm-sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Show sidebar toggle on desktop */
+@media (min-width: 769px) {
+  .crm-sidebar-toggle {
+    display: flex;
+  }
 }
 
 /* Mobile Menu Toggle (Hamburger) */
