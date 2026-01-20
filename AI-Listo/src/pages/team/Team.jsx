@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './team.css';
 
 export default function Team() {
+  const { t } = useTranslation();
   // Placeholder data - empty for Phase 1
   const [teamMembers] = useState([]);
   const [usedSeats] = useState(0);
@@ -9,7 +11,7 @@ export default function Team() {
 
   const handleAddMember = () => {
     // Phase 1: Placeholder action
-    alert('Add member functionality will be available in a future phase.');
+    alert(t('team.addMember') + ' - ' + t('common.loading'));
   };
 
   return (
@@ -17,16 +19,16 @@ export default function Team() {
       {/* Header */}
       <div className="team-header">
         <div>
-          <h1 className="team-title">Team</h1>
+          <h1 className="team-title">{t('team.title')}</h1>
           <p className="team-description">
-            Manage your team members, roles, and seats.
+            {t('team.description')}
           </p>
         </div>
         <button 
           className="team-add-btn"
           onClick={handleAddMember}
         >
-          + Add Member
+          + {t('team.addMember')}
         </button>
       </div>
 
@@ -34,9 +36,9 @@ export default function Team() {
       {teamMembers.length === 0 ? (
         <div className="team-empty-state">
           <div className="team-empty-icon">👥</div>
-          <h3 className="team-empty-title">No team members yet</h3>
+          <h3 className="team-empty-title">{t('team.noMembers')}</h3>
           <p className="team-empty-text">
-            Add team members to collaborate on leads and properties.
+            {t('team.addMembersDescription')}
           </p>
         </div>
       ) : (
@@ -47,14 +49,14 @@ export default function Team() {
 
       {/* Seats Summary */}
       <div className="team-seats-summary">
-        <h3 className="team-seats-title">Seats Summary</h3>
+        <h3 className="team-seats-title">{t('team.seatsSummary')}</h3>
         <div className="team-seats-display">
-          <span className="team-seats-used">Used: {usedSeats}</span>
+          <span className="team-seats-used">{t('team.used')}: {usedSeats}</span>
           <span className="team-seats-separator">/</span>
-          <span className="team-seats-available">Available: {availableSeats}</span>
+          <span className="team-seats-available">{t('team.available')}: {availableSeats}</span>
         </div>
         <p className="team-seats-helper">
-          Seat management will be connected to billing and subscriptions in a future phase.
+          {t('team.seatsHelper')}
         </p>
       </div>
     </div>

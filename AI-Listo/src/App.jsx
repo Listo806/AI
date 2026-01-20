@@ -5,6 +5,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
+import "./i18n/config";
 import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
 import SignIn from "./pages/auth/SignIn";
 import Dashboard from "./pages/dashboard/Dashboard";

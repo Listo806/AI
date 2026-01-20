@@ -1,24 +1,26 @@
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 
-// Navigation items with emoji icons and labels
-const navItems = [
-  { path: "/dashboard", icon: "🏠", label: "Dashboard" },
-  { path: "/dashboard/leads", icon: "👥", label: "Leads" },
-  { path: "/dashboard/whatsapp", icon: "💬", label: "WhatsApp" },
-  { path: "/dashboard/instagram", icon: "📸", label: "Instagram" },
-  { path: "/dashboard/pipeline", icon: "📋", label: "Pipeline" },
-  { path: "/dashboard/properties", icon: "🏡", label: "Properties" },
-  { path: "/dashboard/contacts", icon: "👤", label: "Contacts" },
-  { path: "/dashboard/ai-assistant", icon: "🤖", label: "AI Assistant" },
-  { path: "/dashboard/ai-automations", icon: "⚙️", label: "AI Automations" },
-  { path: "/dashboard/analytics", icon: "📊", label: "Analytics" },
-  { path: "/dashboard/team", icon: "👥", label: "Team" },
-  { path: "/dashboard/integrations", icon: "🔌", label: "Integrations" },
-];
-
 export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
+
+  // Navigation items with emoji icons and translation keys
+  const navItems = [
+    { path: "/dashboard", icon: "🏠", labelKey: "nav.dashboard" },
+    { path: "/dashboard/leads", icon: "👥", labelKey: "nav.leads" },
+    { path: "/dashboard/whatsapp", icon: "💬", labelKey: "nav.whatsapp" },
+    { path: "/dashboard/instagram", icon: "📸", labelKey: "nav.instagram" },
+    { path: "/dashboard/pipeline", icon: "📋", labelKey: "nav.pipeline" },
+    { path: "/dashboard/properties", icon: "🏡", labelKey: "nav.properties" },
+    { path: "/dashboard/contacts", icon: "👤", labelKey: "nav.contacts" },
+    { path: "/dashboard/ai-assistant", icon: "🤖", labelKey: "nav.aiAssistant" },
+    { path: "/dashboard/ai-automations", icon: "⚙️", labelKey: "nav.aiAutomations" },
+    { path: "/dashboard/analytics", icon: "📊", labelKey: "nav.analytics" },
+    { path: "/dashboard/team", icon: "👥", labelKey: "nav.team" },
+    { path: "/dashboard/integrations", icon: "🔌", labelKey: "nav.integrations" },
+  ];
 
   return (
     <>
@@ -45,10 +47,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
               }
               onClick={onClose}
               end={item.path === "/dashboard"}
-              title={isCollapsed ? item.label : undefined}
+              title={isCollapsed ? t(item.labelKey) : undefined}
             >
               <span className="crm-nav-icon">{item.icon}</span>
-              {!isCollapsed && <span className="crm-nav-label">{item.label}</span>}
+              {!isCollapsed && <span className="crm-nav-label">{t(item.labelKey)}</span>}
             </NavLink>
           ))}
         </nav>

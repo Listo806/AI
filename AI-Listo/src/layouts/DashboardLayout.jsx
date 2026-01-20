@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
+import LanguageSelector from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
 import "../styles/crm-dashboard.css";
 
@@ -41,6 +43,7 @@ const getPageTitle = (pathname) => {
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
@@ -122,6 +125,7 @@ export default function DashboardLayout() {
             </Link>
           </div>
           <div className="crm-header-right">
+            <LanguageSelector />
             <div className="crm-account-dropdown">
               <button
                 className="crm-account-trigger"
@@ -149,25 +153,25 @@ export default function DashboardLayout() {
                     className="crm-account-menu-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
-                    Profile
+                    {t('header.profile')}
                   </Link>
                   <Link 
                     to="/account/billing" 
                     className="crm-account-menu-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
-                    Billing
+                    {t('header.billing')}
                   </Link>
                   <Link 
                     to="/account/settings" 
                     className="crm-account-menu-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
-                    Settings
+                    {t('header.settings')}
                   </Link>
                   <div className="crm-account-menu-divider"></div>
                   <button className="crm-account-menu-item" onClick={logout}>
-                    Logout
+                    {t('header.logout')}
                   </button>
                 </div>
               )}

@@ -1,26 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import '../shared/ai-pages.css';
 import './ai-assistant.css';
 
 export default function AIAssistant() {
+  const { t, i18n } = useTranslation();
   const [context, setContext] = useState('general');
   const [messages, setMessages] = useState([
-    { id: 1, role: 'assistant', content: 'Hello! I\'m your AI Assistant. Ask me to analyze leads, summarize pipeline activity, or highlight items that need attention.' }
+    { id: 1, role: 'assistant', content: t('aiAssistant.greeting') }
   ]);
   const [input, setInput] = useState('');
   const [showQuickActions, setShowQuickActions] = useState(false);
   const dropdownRef = useRef(null);
 
   const quickActions = [
-    { icon: '✏️', label: 'Write a property description' },
-    { icon: '✨', label: 'Improve a property description' },
-    { icon: '📥', label: 'Analyze new leads' },
-    { icon: '📊', label: 'Review pipeline activity' },
-    { icon: '💡', label: 'Get insights or recommendations' }
+    { icon: '✏️', labelKey: 'aiAssistant.writePropertyDescription' },
+    { icon: '✨', labelKey: 'aiAssistant.improvePropertyDescription' },
+    { icon: '📥', labelKey: 'aiAssistant.analyzeNewLeads' },
+    { icon: '📊', labelKey: 'aiAssistant.reviewPipelineActivity' },
+    { icon: '💡', labelKey: 'aiAssistant.getInsights' }
   ];
 
+  // Update greeting message when language changes
+  useEffect(() => {
+    setMessages([{ id: 1, role: 'assistant', content: t('aiAssistant.greeting') }]);
+  }, [i18n.language, t]);
+
   const handleQuickAction = (action) => {
-    setInput(action.label);
+    setInput(t(action.labelKey));
     setShowQuickActions(false);
   };
 
@@ -50,12 +57,13 @@ export default function AIAssistant() {
     setMessages([...messages, userMessage]);
     setInput('');
 
-    // Simulate AI response (placeholder)
+    // Simulate AI response (placeholder) - Response language matches UI language
     setTimeout(() => {
+      const contextKey = context === 'leads' ? 'aiAssistant.leads' : context === 'pipeline' ? 'aiAssistant.pipeline' : 'aiAssistant.general';
       const aiMessage = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: `This is a placeholder response. In a future phase, I'll provide intelligent assistance based on the ${context === 'leads' ? 'leads' : context} context.`
+        content: t('aiAssistant.placeholderResponse', { context: t(contextKey) })
       };
       setMessages(prev => [...prev, aiMessage]);
     }, 500);
@@ -65,7 +73,7 @@ export default function AIAssistant() {
     <div>
       {/* Header */}
       <div className="ai-assistant-header">
-        <h1>🤖 AI Assistant</h1>
+        <h1>🤖 {t('aiAssistant.title')}</h1>
       </div>
 
       {/* Chat Container */}
@@ -76,26 +84,26 @@ export default function AIAssistant() {
             onClick={() => setContext('general')}
             className={`ai-assistant-tab ${context === 'general' ? 'active' : ''}`}
           >
-            General
+            {t('aiAssistant.general')}
           </button>
           <button
             onClick={() => setContext('leads')}
             className={`ai-assistant-tab ${context === 'leads' ? 'active' : ''}`}
           >
-            Leads
+            {t('aiAssistant.leads')}
           </button>
           <button
             onClick={() => setContext('pipeline')}
             className={`ai-assistant-tab ${context === 'pipeline' ? 'active' : ''}`}
           >
-            Pipeline
+            {t('aiAssistant.pipeline')}
           </button>
         </div>
 
         {/* Quick Actions Section */}
         <div className="ai-assistant-quick-actions">
           <div className="ai-assistant-quick-actions-label">
-            What would you like to do today?
+            {t('aiAssistant.whatWouldYouLike')}
           </div>
           <div className="ai-assistant-dropdown-wrapper" ref={dropdownRef}>
             <button
@@ -103,7 +111,7 @@ export default function AIAssistant() {
               className="ai-assistant-dropdown-trigger"
               onClick={() => setShowQuickActions(!showQuickActions)}
             >
-              <span>Select an action…</span>
+              <span>{t('aiAssistant.selectAction')}</span>
               <span className="ai-assistant-dropdown-arrow">▾</span>
             </button>
             {showQuickActions && (
@@ -116,7 +124,7 @@ export default function AIAssistant() {
                     onClick={() => handleQuickAction(action)}
                   >
                     <span className="ai-assistant-dropdown-icon">{action.icon}</span>
-                    <span>{action.label}</span>
+                    <span>{t(action.labelKey)}</span>
                   </button>
                 ))}
               </div>
@@ -141,11 +149,11 @@ export default function AIAssistant() {
         {/* Empty State Helper (only when no user messages) */}
         {messages.filter(m => m.role === 'user').length === 0 && (
           <div className="ai-assistant-empty-helper">
-            <div className="ai-assistant-empty-helper-title">Try one of these:</div>
+            <div className="ai-assistant-empty-helper-title">{t('aiAssistant.tryThese')}</div>
             <ul className="ai-assistant-empty-helper-list">
-              <li>Write a property description</li>
-              <li>Review pipeline activity</li>
-              <li>Analyze new leads</li>
+              <li>{t('aiAssistant.writePropertyDescription')}</li>
+              <li>{t('aiAssistant.reviewPipelineActivity')}</li>
+              <li>{t('aiAssistant.analyzeNewLeads')}</li>
             </ul>
           </div>
         )}
@@ -156,7 +164,7 @@ export default function AIAssistant() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a question or command…"
+            placeholder={t('aiAssistant.typeQuestion')}
             className="ai-assistant-input"
           />
           <button
@@ -164,7 +172,7 @@ export default function AIAssistant() {
             className="ai-assistant-send-btn"
             disabled={!input.trim()}
           >
-            <span>Send</span>
+            <span>{t('aiAssistant.send')}</span>
             <span>▶</span>
           </button>
         </form>

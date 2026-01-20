@@ -1,0 +1,119 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "view": "Ver",
+    "add": "Adicionar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "close": "Fechar"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "leads": "Leads",
+    "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
+    "pipeline": "Funil",
+    "properties": "Propriedades",
+    "contacts": "Contatos",
+    "aiAssistant": "Assistente IA",
+    "aiAutomations": "Automações IA",
+    "analytics": "Analíticas",
+    "team": "Equipe",
+    "integrations": "Integrações"
+  },
+  "header": {
+    "profile": "Perfil",
+    "billing": "Cobrança",
+    "settings": "Configurações",
+    "logout": "Sair"
+  },
+  "dashboard": {
+    "title": "Painel",
+    "newLeads": "Novos Leads",
+    "uncontactedLeads": "Leads Não Contatados",
+    "dealsInPipeline": "Negócios no Funil",
+    "revenue": "Receita",
+    "leadsOverTime": "Leads ao Longo do Tempo",
+    "conversionFunnel": "Funil de Conversão",
+    "leadSourceBreakdown": "Divisão de Fontes de Leads",
+    "activityDistribution": "Distribuição de Atividade"
+  },
+  "leads": {
+    "title": "Leads",
+    "noLeads": "Ainda não há leads",
+    "selectLead": "Selecione um lead para ver detalhes",
+    "aiScore": "Pontuação IA",
+    "status": "Status",
+    "source": "Fonte",
+    "contacted": "Contatado",
+    "notContacted": "Não Contatado"
+  },
+  "aiAssistant": {
+    "title": "Assistente IA",
+    "whatWouldYouLike": "O que você gostaria de fazer hoje?",
+    "selectAction": "Selecione uma ação…",
+    "typeQuestion": "Digite uma pergunta ou comando…",
+    "send": "Enviar",
+    "tryThese": "Tente uma destas:",
+    "writePropertyDescription": "Escrever uma descrição de propriedade",
+    "improvePropertyDescription": "Melhorar uma descrição de propriedade",
+    "analyzeNewLeads": "Analisar novos leads",
+    "reviewPipelineActivity": "Revisar atividade do funil",
+    "getInsights": "Obter insights ou recomendações",
+    "greeting": "Olá! Sou seu Assistente IA. Peça-me para analisar leads, resumir a atividade do funil ou destacar itens que precisam de atenção.",
+    "placeholderResponse": "Esta é uma resposta de exemplo. Em uma fase futura, fornecerei assistência inteligente com base no contexto de {{context}}.",
+    "general": "Geral",
+    "leads": "Leads",
+    "pipeline": "Funil"
+  },
+  "team": {
+    "title": "Equipe",
+    "description": "Gerencie os membros da sua equipe, funções e assentos.",
+    "addMember": "Adicionar Membro",
+    "noMembers": "Ainda não há membros da equipe",
+    "addMembersDescription": "Adicione membros da equipe para colaborar em leads e propriedades.",
+    "seatsSummary": "Resumo de Assentos",
+    "used": "Usados",
+    "available": "Disponíveis",
+    "seatsHelper": "O gerenciamento de assentos será conectado à cobrança e assinaturas em uma fase futura."
+  },
+  "account": {
+    "profile": {
+      "title": "Perfil",
+      "description": "Gerencie suas informações pessoais e detalhes da conta.",
+      "name": "Nome",
+      "email": "E-mail",
+      "emailReadOnly": "O e-mail não pode ser alterado no momento.",
+      "saveChanges": "Salvar Alterações",
+      "saving": "Salvando..."
+    },
+    "billing": {
+      "title": "Cobrança",
+      "description": "Gerencie sua assinatura, método de pagamento e informações de cobrança.",
+      "currentPlan": "Plano Atual",
+      "paymentMethod": "Método de Pagamento",
+      "updateCard": "Atualizar Cartão",
+      "changePlan": "Alterar Plano",
+      "month": "mês",
+      "year": "ano",
+      "expires": "Expira",
+      "active": "Ativo"
+    },
+    "settings": {
+      "title": "Configurações",
+      "description": "Gerencie suas preferências, notificações e configurações de segurança.",
+      "notifications": "Notificações",
+      "preferences": "Preferências",
+      "security": "Segurança",
+      "notificationsPlaceholder": "A interface de preferências de notificações será implementada em uma fase futura.",
+      "preferencesPlaceholder": "A interface de preferências do usuário será implementada em uma fase futura.",
+      "securityPlaceholder": "As configurações de segurança (alteração de senha, 2FA, etc.) serão implementadas em uma fase futura."
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "leads": "Leads",
+    "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
+    "pipeline": "Pipeline",
+    "properties": "Properties",
+    "contacts": "Contacts",
+    "aiAssistant": "AI Assistant",
+    "aiAutomations": "AI Automations",
+    "analytics": "Analytics",
+    "team": "Team",
+    "integrations": "Integrations"
+  },
+  "header": {
+    "profile": "Profile",
+    "billing": "Billing",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "newLeads": "New Leads",
+    "uncontactedLeads": "Uncontacted Leads",
+    "dealsInPipeline": "Deals in Pipeline",
+    "revenue": "Revenue",
+    "leadsOverTime": "Leads Over Time",
+    "conversionFunnel": "Conversion Funnel",
+    "leadSourceBreakdown": "Lead Source Breakdown",
+    "activityDistribution": "Activity Distribution"
+  },
+  "leads": {
+    "title": "Leads",
+    "noLeads": "No leads yet",
+    "selectLead": "Select a lead to view details",
+    "aiScore": "AI Score",
+    "status": "Status",
+    "source": "Source",
+    "contacted": "Contacted",
+    "notContacted": "Not Contacted"
+  },
+  "aiAssistant": {
+    "title": "AI Assistant",
+    "whatWouldYouLike": "What would you like to do today?",
+    "selectAction": "Select an action…",
+    "typeQuestion": "Type a question or command…",
+    "send": "Send",
+    "tryThese": "Try one of these:",
+    "writePropertyDescription": "Write a property description",
+    "improvePropertyDescription": "Improve a property description",
+    "analyzeNewLeads": "Analyze new leads",
+    "reviewPipelineActivity": "Review pipeline activity",
+    "getInsights": "Get insights or recommendations",
+    "greeting": "Hello! I'm your AI Assistant. Ask me to analyze leads, summarize pipeline activity, or highlight items that need attention.",
+    "placeholderResponse": "This is a placeholder response. In a future phase, I'll provide intelligent assistance based on the {{context}} context.",
+    "general": "General",
+    "leads": "Leads",
+    "pipeline": "Pipeline"
+  },
+  "team": {
+    "title": "Team",
+    "description": "Manage your team members, roles, and seats.",
+    "addMember": "Add Member",
+    "noMembers": "No team members yet",
+    "addMembersDescription": "Add team members to collaborate on leads and properties.",
+    "seatsSummary": "Seats Summary",
+    "used": "Used",
+    "available": "Available",
+    "seatsHelper": "Seat management will be connected to billing and subscriptions in a future phase."
+  },
+  "account": {
+    "profile": {
+      "title": "Profile",
+      "description": "Manage your personal information and account details.",
+      "name": "Name",
+      "email": "Email",
+      "emailReadOnly": "Email cannot be changed at this time.",
+      "saveChanges": "Save Changes",
+      "saving": "Saving..."
+    },
+    "billing": {
+      "title": "Billing",
+      "description": "Manage your subscription, payment method, and billing information.",
+      "currentPlan": "Current Plan",
+      "paymentMethod": "Payment Method",
+      "updateCard": "Update Card",
+      "changePlan": "Change Plan",
+      "month": "month",
+      "year": "year",
+      "expires": "Expires",
+      "active": "Active"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your preferences, notifications, and security settings.",
+      "notifications": "Notifications",
+      "preferences": "Preferences",
+      "security": "Security",
+      "notificationsPlaceholder": "Notification preferences UI will be implemented in a future phase.",
+      "preferencesPlaceholder": "User preferences UI will be implemented in a future phase.",
+      "securityPlaceholder": "Security settings (password change, 2FA, etc.) UI will be implemented in a future phase."
+    }
+  }
+}
