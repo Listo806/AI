@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 import './Leads.css';
+import './leads-master-detail.css';
 
 export default function LeadsList() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -64,6 +65,17 @@ export default function LeadsList() {
     setFilteredHotLeads(filteredHot);
     setFilteredOtherLeads(filteredOther);
   }, [allHotLeads, allOtherLeads, filters]);
+
+  // Auto-select first lead on desktop when leads are loaded
+  useEffect(() => {
+    const isDesktop = window.innerWidth >= 1024;
+    if (isDesktop && !selectedLead && !loading) {
+      const allLeads = [...filteredHotLeads, ...filteredOtherLeads];
+      if (allLeads.length > 0) {
+        setSelectedLead(allLeads[0]);
+      }
+    }
+  }, [filteredHotLeads, filteredOtherLeads, loading, selectedLead]);
 
   const loadLeads = async () => {
     setLoading(true);
@@ -682,6 +694,47 @@ export default function LeadsList() {
   // Get all leads for list
   const allLeads = [...filteredHotLeads, ...filteredOtherLeads];
 
+  // Get source icon
+  const getSourceIcon = (source) => {
+    if (!source) return '🌐';
+    const sourceLower = source.toLowerCase();
+    if (sourceLower.includes('whatsapp')) return '💬';
+    if (sourceLower.includes('instagram')) return '📷';
+    if (sourceLower.includes('email')) return '📧';
+    return '🌐';
+  };
+
+  // Render compact lead card for list
+  const renderCompactLeadCard = (lead) => {
+    const aiTier = (lead.aiTier || 'COLD').toLowerCase();
+    const isActive = selectedLead?.id === lead.id;
+    const isContacted = lead.lastContactedAt || lead.status === 'contacted';
+    
+    return (
+      <div
+        key={lead.id}
+        className={`lead-list-card ${isActive ? 'active' : ''}`}
+        onClick={() => setSelectedLead(lead)}
+      >
+        <div className="lead-list-card-header">
+          <div className="lead-list-card-name">{lead.name || 'Unnamed Lead'}</div>
+          <div className="lead-list-card-ai-score">{formatAiScore(lead.aiScore)}</div>
+        </div>
+        <div className="lead-list-card-badges">
+          <span className={`lead-status-badge ${aiTier}`}>
+            {lead.aiTier || 'COLD'}
+          </span>
+        </div>
+        <div className="lead-list-card-meta">
+          <span className="lead-source-icon">{getSourceIcon(lead.source)}</span>
+          <span className={`lead-contacted-indicator ${isContacted ? '' : 'not-contacted'}`}>
+            {isContacted ? 'Contacted' : 'Not Contacted'}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Leads</h1>
@@ -692,72 +745,19 @@ export default function LeadsList() {
         </div>
       )}
 
-      {/* 3-COLUMN LAYOUT */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '450px 1fr 320px', 
-        gap: '24px', 
-        height: 'calc(100vh - 200px)',
-        overflow: 'hidden' // Prevent page-level scrolling
-      }}>
-        {/* LEFT COLUMN: Lead List + Filters */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          borderRight: '1px solid #e5e7eb',
-          paddingRight: '24px',
-          height: '100%',
-          overflow: 'hidden' // Prevent column from expanding
-        }}>
-          <div style={{ marginBottom: '16px', flexShrink: 0 }}>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="crm-btn crm-btn-secondary"
-              style={{ width: '100%', fontSize: '14px', padding: '8px 16px', marginBottom: '16px' }}
-            >
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </button>
-
-            {/* Filters */}
-            {showFilters && (
-              <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
-                <input
-                  type="text"
-                  placeholder="Search leads..."
-                  value={filters.search}
-                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="crm-input"
-                  style={{ width: '100%', marginBottom: '8px' }}
-                />
-                <select
-                  value={filters.status}
-                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  className="crm-select"
-                  style={{ width: '100%' }}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="qualified">Qualified</option>
-                  <option value="follow-up">Follow-Up</option>
-                  <option value="closed-won">Closed-Won</option>
-                  <option value="closed-lost">Closed-Lost</option>
-                </select>
-              </div>
-            )}
+      {/* 2-COLUMN MASTER-DETAIL LAYOUT */}
+      <div className="leads-master-detail">
+        {/* LEFT COLUMN: Lead List (Master) */}
+        <div className="leads-list-column">
+          <div className="leads-list-header">
+            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#E5E7EB', margin: '0 0 12px 0' }}>
+              All Leads ({allLeads.length})
+            </h2>
           </div>
-
-          {/* Lead List - Using EXACT same renderLeadCard style - Scrollable */}
-          <div style={{ 
-            flex: 1, 
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            minHeight: 0 // Important for flex scrolling
-          }}>
+          <div className="leads-list-scrollable">
             {loading ? (
-              <div className="crm-loading">
-                <div className="crm-skeleton"></div>
-                <div className="crm-skeleton"></div>
+              <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
+                Loading...
               </div>
             ) : allLeads.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
@@ -766,45 +766,21 @@ export default function LeadsList() {
             ) : (
               <div>
                 {filteredHotLeads.length > 0 && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#ef4444' }}>
-                      🔥 Hot ({filteredHotLeads.length})
-                    </h3>
-                    {filteredHotLeads.map(lead => (
-                      <div 
-                        key={lead.id}
-                        onClick={() => setSelectedLead(lead)}
-                        style={{
-                          marginBottom: '12px',
-                          opacity: selectedLead?.id === lead.id ? 1 : 0.95,
-                          transform: selectedLead?.id === lead.id ? 'scale(1.02)' : 'scale(1)',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {renderLeadCard(lead)}
-                      </div>
-                    ))}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#fca5a5', padding: '0 4px' }}>
+                      🔥 HOT ({filteredHotLeads.length})
+                    </div>
+                    {filteredHotLeads.map(lead => renderCompactLeadCard(lead))}
                   </div>
                 )}
                 {filteredOtherLeads.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px' }}>
-                      All Leads ({filteredOtherLeads.length})
-                    </h3>
-                    {filteredOtherLeads.map(lead => (
-                      <div 
-                        key={lead.id}
-                        onClick={() => setSelectedLead(lead)}
-                        style={{
-                          marginBottom: '12px',
-                          opacity: selectedLead?.id === lead.id ? 1 : 0.95,
-                          transform: selectedLead?.id === lead.id ? 'scale(1.02)' : 'scale(1)',
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        {renderLeadCard(lead)}
+                    {filteredHotLeads.length > 0 && (
+                      <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#94a3b8', padding: '0 4px', marginTop: '16px' }}>
+                        OTHERS ({filteredOtherLeads.length})
                       </div>
-                    ))}
+                    )}
+                    {filteredOtherLeads.map(lead => renderCompactLeadCard(lead))}
                   </div>
                 )}
               </div>
@@ -812,129 +788,241 @@ export default function LeadsList() {
           </div>
         </div>
 
-        {/* CENTER COLUMN: Lead Details + Timeline + Notes */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          height: '100%',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          minHeight: 0 // Important for flex scrolling
-        }}>
+        {/* RIGHT COLUMN: Lead Detail (Detail View) */}
+        <div className="lead-detail-column">
           {selectedLead ? (
-            <>
-              <div className="crm-section" style={{ marginBottom: '16px' }}>
-                <h2 style={{ marginBottom: '16px', fontSize: '20px', fontWeight: '600' }}>
-                  {selectedLead.name || 'Unnamed Lead'}
-                </h2>
-                <div style={{ display: 'grid', gap: '12px' }}>
-                  <div><strong>Email:</strong> {selectedLead.email || 'N/A'}</div>
-                  <div><strong>Phone:</strong> {selectedLead.phone || 'N/A'}</div>
-                  <div><strong>Status:</strong> {selectedLead.status || 'new'}</div>
-                  <div><strong>AI Score:</strong> {formatAiScore(selectedLead.aiScore)}</div>
-                  {selectedLead.property && (
-                    <div><strong>Property:</strong> {selectedLead.property.title || 'N/A'}</div>
+            <div className="lead-detail-scrollable">
+              {/* Section 1: Lead Header Card */}
+              <div className="lead-header-card">
+                <div className="lead-header-top">
+                  <div style={{ flex: 1 }}>
+                    <h2 className="lead-header-name">{selectedLead.name || 'Unnamed Lead'}</h2>
+                    <div className="lead-header-contact">
+                      {selectedLead.email && <div>📧 {selectedLead.email}</div>}
+                      {selectedLead.phone && <div>📞 {selectedLead.phone}</div>}
+                    </div>
+                  </div>
+                  <div className="lead-header-ai-score">
+                    <div className="lead-header-ai-score-value">{formatAiScore(selectedLead.aiScore)}</div>
+                    <div className="lead-header-ai-score-label">AI Score</div>
+                  </div>
+                </div>
+                <div className="lead-header-status-badges">
+                  <span className={`lead-status-badge ${(selectedLead.aiTier || 'COLD').toLowerCase()}`}>
+                    {selectedLead.aiTier || 'COLD'}
+                  </span>
+                  <span className={getStatusBadgeClass(selectedLead.status)}>
+                    {getStatusDisplayLabel(selectedLead.status, selectedLead.hasResponded)}
+                  </span>
+                </div>
+                <div className="lead-header-last-contact">
+                  {selectedLead.lastContactedAt 
+                    ? `Last contacted: ${formatTimeAgo(selectedLead.lastContactedAt)}`
+                    : 'Not contacted yet'}
+                </div>
+                <div className="lead-header-cta">
+                  {selectedLead.phone && (
+                    <button
+                      className="lead-cta-whatsapp"
+                      onClick={() => handleWhatsAppClick(selectedLead)}
+                    >
+                      💬 WhatsApp
+                    </button>
+                  )}
+                  {selectedLead.phone && (
+                    <button
+                      className="lead-cta-secondary"
+                      onClick={() => handleCallClick(selectedLead)}
+                      title="Call"
+                    >
+                      📞
+                    </button>
+                  )}
+                  {selectedLead.email && (
+                    <button
+                      className="lead-cta-secondary"
+                      onClick={() => handleEmailAction(selectedLead)}
+                      title="Email"
+                    >
+                      📧
+                    </button>
                   )}
                 </div>
               </div>
 
-              <div className="crm-section" style={{ marginBottom: '16px' }}>
-                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>Timeline</h3>
-                <div style={{
-                  padding: '16px',
-                  background: '#f8fafc',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  color: '#64748b'
-                }}>
-                  Timeline placeholder - activity history will appear here
+              {/* Section 2: AI Insights Panel */}
+              <div className="lead-ai-insights">
+                <div className="lead-ai-insights-title">AI Panel</div>
+                <div className="lead-ai-insights-content">
+                  {selectedLead.aiReasonBullets && selectedLead.aiReasonBullets.length > 0 ? (
+                    selectedLead.aiReasonBullets.map((reason, idx) => (
+                      <div key={idx} className="lead-ai-insight-item">
+                        • {reason}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="lead-ai-insight-item">
+                      High intent — contact within 24h
+                    </div>
+                  )}
+                  {selectedLead.recommendedActionReason && (
+                    <div className="lead-ai-insight-item">
+                      Recommended follow-up if no response
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <div className="crm-section">
-                <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>Notes</h3>
-                <textarea
-                  placeholder="Add notes about this lead..."
-                  style={{
-                    width: '100%',
-                    minHeight: '150px',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #e5e7eb',
-                    fontSize: '14px',
-                    fontFamily: 'inherit'
-                  }}
-                />
-                <button className="crm-btn crm-btn-primary" style={{ marginTop: '12px' }}>
-                  Save Notes
-                </button>
+              {/* Section 3: Lead Timeline */}
+              <div className="lead-timeline">
+                <div className="lead-timeline-title">Timeline</div>
+                <div className="lead-timeline-item">
+                  <div className="lead-timeline-content">
+                    <div className="lead-timeline-event">Lead created</div>
+                    <div className="lead-timeline-time">{formatDate(selectedLead.createdAt)}</div>
+                  </div>
+                </div>
+                {selectedLead.lastContactedAt && (
+                  <div className="lead-timeline-item">
+                    <div className="lead-timeline-content">
+                      <div className="lead-timeline-event">Contacted</div>
+                      <div className="lead-timeline-time">{formatTimeAgo(selectedLead.lastContactedAt)}</div>
+                    </div>
+                  </div>
+                )}
+                {selectedLead.status && selectedLead.status !== 'new' && (
+                  <div className="lead-timeline-item">
+                    <div className="lead-timeline-content">
+                      <div className="lead-timeline-event">Status changed to {getStatusLabel(selectedLead.status)}</div>
+                      <div className="lead-timeline-time">{formatDate(selectedLead.updatedAt)}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </>
+
+              {/* Section 4: Quick Notes */}
+              <div className="lead-notes">
+                <div className="lead-notes-title">Notes</div>
+                <textarea
+                  className="lead-notes-textarea"
+                  placeholder="Add notes about this lead..."
+                  defaultValue=""
+                />
+              </div>
+
+              {/* Section 5: WhatsApp Panel */}
+              <div className="lead-whatsapp-panel">
+                <div className="lead-whatsapp-title">WhatsApp</div>
+                <div className="lead-whatsapp-messages">
+                  <div className="lead-whatsapp-message incoming">
+                    Chat messages will appear here
+                  </div>
+                </div>
+                <div className="lead-whatsapp-input-container">
+                  <input
+                    type="text"
+                    className="lead-whatsapp-input"
+                    placeholder="Type a message..."
+                    disabled
+                  />
+                  <button className="lead-whatsapp-send" disabled>➤</button>
+                </div>
+              </div>
+            </div>
           ) : (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '100%',
-              color: '#64748b'
-            }}>
-              Select a lead to view details
+              <div className="lead-detail-empty">
+              <div className="lead-detail-empty-icon">👥</div>
+              <div className="lead-detail-empty-text">Select a lead to view details</div>
             </div>
           )}
         </div>
 
-        {/* RIGHT COLUMN: AI Panel + WhatsApp Placeholder */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          borderLeft: '1px solid #e5e7eb',
-          paddingLeft: '24px',
-          height: '100%',
-          overflow: 'hidden' // Prevent column from expanding
-        }}>
-          {/* AI Panel Placeholder */}
-          <div className="crm-section" style={{ marginBottom: '16px' }}>
-            <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600' }}>AI Panel</h3>
-            <div style={{
-              padding: '16px',
-              background: '#f8fafc',
-              borderRadius: '6px',
-              fontSize: '14px',
-              color: '#64748b',
-              minHeight: '200px'
-            }}>
-              AI recommendations and insights will appear here
-            </div>
-          </div>
+        {/* RIGHT COLUMN: Agent & Lead Attribution (Desktop Only) */}
+        <div className="lead-attribution-column">
+          {selectedLead ? (
+            <div className="lead-attribution-scrollable">
+              <h2 className="lead-attribution-title" style={{ marginBottom: '20px', fontSize: '16px' }}>
+                Agent & Lead Attribution
+              </h2>
 
-          {/* WhatsApp Chat Placeholder */}
-          <div className="crm-section" style={{ 
-            flex: 1,
-            minHeight: 0, // Important for flex scrolling
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-          }}>
-            <h3 style={{ marginBottom: '12px', fontSize: '16px', fontWeight: '600', flexShrink: 0 }}>WhatsApp</h3>
-            <div style={{
-              flex: 1,
-              padding: '16px',
-              background: '#f0fdf4',
-              borderRadius: '6px',
-              border: '1px solid #86efac',
-              fontSize: '14px',
-              color: '#16a34a',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflowY: 'auto',
-              minHeight: 0
-            }}>
-              WhatsApp chat placeholder
-              <br />
-              Messages will appear here
+              {/* SECTION A - Lead Origin */}
+              <div className="lead-attribution-section">
+                <h3 className="lead-attribution-title">Lead Origin</h3>
+                <div className="lead-attribution-item">
+                  <div className="lead-attribution-label">Source</div>
+                  <div className="lead-attribution-value">
+                    {selectedLead.source ? (
+                      <>
+                        {getSourceIcon(selectedLead.source)} {selectedLead.source}
+                      </>
+                    ) : (
+                      '🌐 Website'
+                    )}
+                  </div>
+                </div>
+                <div className="lead-attribution-item">
+                  <div className="lead-attribution-label">Captured by</div>
+                  <div className="lead-attribution-value">
+                    {user?.name || 'System'}
+                  </div>
+                </div>
+                {selectedLead.property && (
+                  <div className="lead-attribution-item">
+                    <div className="lead-attribution-label">Campaign</div>
+                    <div className="lead-attribution-value">
+                      {selectedLead.property.title}
+                    </div>
+                  </div>
+                )}
+                <div className="lead-attribution-item">
+                  <div className="lead-attribution-label">Date & Time</div>
+                  <div className="lead-attribution-value">
+                    {formatDate(selectedLead.createdAt)} {selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION B - Assigned Agent */}
+              <div className="lead-attribution-section">
+                <h3 className="lead-attribution-title">Assigned Agent</h3>
+                <div className="lead-agent-card">
+                  <div className="lead-agent-avatar">
+                    {(user?.name || 'A').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="lead-agent-info">
+                    <div className="lead-agent-name">{user?.name || 'Unassigned'}</div>
+                    <div className="lead-agent-role">{user?.role || 'Agent'}</div>
+                    <span className="lead-agent-status">Active</span>
+                  </div>
+                </div>
+                <button className="lead-reassign-btn">
+                  Reassign Lead
+                </button>
+              </div>
+
+              {/* SECTION C - Team Context */}
+              <div className="lead-attribution-section">
+                <h3 className="lead-attribution-title">Team Context</h3>
+                <div className="lead-team-stat">
+                  <span className="lead-team-stat-label">Active leads owned</span>
+                  <span className="lead-team-stat-value">
+                    {allLeads.filter(l => l.status && l.status !== 'closed-won' && l.status !== 'closed-lost').length}
+                  </span>
+                </div>
+                <div className="lead-team-stat">
+                  <span className="lead-team-stat-label">Team average</span>
+                  <span className="lead-team-stat-value">
+                    {Math.round(allLeads.length / 1)}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="lead-attribution-empty">
+              <div className="lead-attribution-empty-icon">👤</div>
+              <div className="lead-attribution-empty-text">Select a lead to view attribution</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
