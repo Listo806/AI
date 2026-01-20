@@ -40,13 +40,15 @@ export default function Instagram() {
     <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Instagram</h1>
 
-      {/* Status Cards Row */}
+      {/* Status Cards Row - Mobile First: Single Column */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
         marginBottom: '24px'
-      }}>
+      }}
+      className="instagram-status-cards"
+      >
         {/* Instagram Connection Status */}
         <div className="crm-section">
           <div style={{
@@ -101,15 +103,15 @@ export default function Instagram() {
         </div>
       </div>
 
-      {/* Main Content: Two Columns */}
+      {/* Main Content: Mobile First - Single Column Stack */}
       <div className="instagram-main-layout" style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 400px',
+        display: 'flex',
+        flexDirection: 'column',
         gap: '24px',
         marginBottom: '24px'
       }}>
-        {/* Left Column: Instagram DM Inbox */}
-        <div className="crm-section">
+        {/* PRIMARY: Instagram DM Inbox (Full Width on Mobile) */}
+        <div className="crm-section instagram-dm-inbox">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
             Direct Messages Inbox
           </h2>
@@ -216,8 +218,8 @@ export default function Instagram() {
           </div>
         </div>
 
-        {/* Right Column: Info & Settings */}
-        <div>
+        {/* Secondary Content: Info & Settings (Below Inbox on Mobile) */}
+        <div className="instagram-secondary-content">
           {/* Instagram Notes */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>

@@ -671,6 +671,9 @@ body {
   /* max-width: 1400px; */
   position: relative;
   z-index: 2; /* Ensure content is above background layers */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Error Message */
@@ -1185,6 +1188,36 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+  /* Prevent horizontal overflow on mobile */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .crm-content {
+    padding: 16px;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .crm-main {
+    margin-left: 0;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Ensure all sections are constrained */
+  .crm-section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+  }
+
   .crm-sidebar {
     width: 240px;
   }
@@ -1278,13 +1311,153 @@ body {
     gap: 20px;
   }
 
-  /* WhatsApp Page - Mobile */
-  .whatsapp-main-layout {
-    grid-template-columns: 1fr !important;
+  /* WhatsApp Page - Mobile First */
+  .whatsapp-status-cards {
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
   }
 
-  /* Instagram Page - Mobile */
+  .whatsapp-main-layout {
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .whatsapp-messaging-panel {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .whatsapp-secondary-content {
+    order: 2;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Fix WhatsApp messaging panel on mobile */
+  .whatsapp-messaging-panel .crm-section {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .whatsapp-messaging-panel > div {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Fix input container overflow */
+  .whatsapp-messaging-panel input {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ensure all WhatsApp sections are constrained */
+  .whatsapp-status-cards .crm-section,
+  .whatsapp-secondary-content .crm-section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+  }
+
+  /* Fix flex containers that might overflow */
+  .whatsapp-status-cards .crm-section > div[style*="display: flex"] {
+    flex-wrap: wrap;
+  }
+
+  /* Ensure status badges don't cause overflow */
+  .whatsapp-status-cards .crm-section h2 {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Instagram Page - Mobile First */
+  .instagram-status-cards {
+    flex-direction: column;
+  }
+
   .instagram-main-layout {
-    grid-template-columns: 1fr !important;
+    flex-direction: column;
+  }
+
+  .instagram-dm-inbox {
+    order: 1;
+  }
+
+  .instagram-secondary-content {
+    order: 2;
+  }
+
+  /* Integrations Page - Mobile First */
+  .integrations-grid {
+    flex-direction: column;
+  }
+
+  .integration-connect-btn {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 20px;
+    font-size: 16px;
+  }
+}
+
+/* Desktop Adaptations (>=1024px) - Adapt FROM mobile */
+@media (min-width: 1024px) {
+  /* WhatsApp Page - Desktop */
+  .whatsapp-status-cards {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    flex-direction: row;
+  }
+
+  .whatsapp-main-layout {
+    display: grid !important;
+    grid-template-columns: 1fr 400px;
+    flex-direction: row;
+  }
+
+  .whatsapp-messaging-panel {
+    order: 0;
+  }
+
+  .whatsapp-secondary-content {
+    order: 0;
+  }
+
+  /* Instagram Page - Desktop */
+  .instagram-status-cards {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    flex-direction: row;
+  }
+
+  .instagram-main-layout {
+    display: grid !important;
+    grid-template-columns: 1fr 400px;
+    flex-direction: row;
+  }
+
+  .instagram-dm-inbox {
+    order: 0;
+  }
+
+  .instagram-secondary-content {
+    order: 0;
+  }
+
+  /* Integrations Page - Desktop */
+  .integrations-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    flex-direction: row;
   }
 }

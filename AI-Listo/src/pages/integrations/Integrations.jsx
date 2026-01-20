@@ -71,12 +71,15 @@ export default function Integrations() {
         For messaging integrations, visit <strong>WhatsApp</strong> or <strong>Instagram</strong> pages.
       </p>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-        gap: '24px',
-        marginBottom: '24px'
-      }}>
+      <div 
+        className="integrations-grid"
+        style={{ 
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          marginBottom: '24px'
+        }}
+      >
         {integrations.map((integration, index) => (
           <div key={index} className="crm-section">
             <div style={{ 
@@ -115,8 +118,13 @@ export default function Integrations() {
             </p>
             
             <button 
-              className={`crm-btn ${integration.status === 'connected' ? 'crm-btn-secondary' : 'crm-btn-primary'}`}
-              style={{ width: '100%' }}
+              className={`crm-btn ${integration.status === 'connected' ? 'crm-btn-secondary' : 'crm-btn-primary'} integration-connect-btn`}
+              style={{ 
+                width: '100%',
+                padding: '14px 20px',
+                fontSize: '16px',
+                minHeight: '48px'
+              }}
               disabled={integration.status === 'connected'}
             >
               {integration.status === 'connected' ? 'Connected' : `Connect ${integration.name}`}

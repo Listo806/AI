@@ -56,16 +56,29 @@ export default function WhatsApp() {
   };
 
   return (
-    <div>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>WhatsApp</h1>
+    <div style={{ 
+      width: '100%', 
+      maxWidth: '100%', 
+      overflowX: 'hidden',
+      boxSizing: 'border-box'
+    }}>
+      <h1 style={{ 
+        marginBottom: '24px', 
+        fontSize: '28px', 
+        fontWeight: 600,
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word'
+      }}>WhatsApp</h1>
 
-      {/* Status Cards Row */}
+      {/* Status Cards Row - Mobile First: Single Column */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
         marginBottom: '24px'
-      }}>
+      }}
+      className="whatsapp-status-cards"
+      >
         {/* WhatsApp Business API Status */}
         <div className="crm-section">
           <div style={{
@@ -149,15 +162,15 @@ export default function WhatsApp() {
         </div>
       </div>
 
-      {/* Main Content: Two Columns */}
+      {/* Main Content: Mobile First - Single Column Stack */}
       <div className="whatsapp-main-layout" style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 400px',
+        display: 'flex',
+        flexDirection: 'column',
         gap: '24px',
         marginBottom: '24px'
       }}>
-        {/* Left Column: Messaging Panel */}
-        <div className="crm-section">
+        {/* PRIMARY: Messaging Panel (Full Width on Mobile) */}
+        <div className="crm-section whatsapp-messaging-panel">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
             Messaging Panel
           </h2>
@@ -264,8 +277,12 @@ export default function WhatsApp() {
           </div>
         </div>
 
-        {/* Right Column: Info & Settings */}
-        <div>
+        {/* Secondary Content: Info & Settings (Below Messaging on Mobile) */}
+        <div className="whatsapp-secondary-content" style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%'
+        }}>
           {/* WhatsApp Notes */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
