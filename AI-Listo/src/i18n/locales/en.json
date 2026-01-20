@@ -74,7 +74,12 @@
     "offersLabel": "Offers",
     "revenueSummary": "Revenue Summary",
     "dealsClosingSoon": "Deals Closing Soon",
-    "priorityAlerts": "Priority Alerts"
+    "priorityAlerts": "Priority Alerts",
+    "whatsappLeads": "WhatsApp Leads",
+    "instagramLeads": "Instagram Leads",
+    "next7Days": "Next 7 days",
+    "requiresAttention": "Requires attention",
+    "newToday": "New today"
   },
   "leads": {
     "title": "Leads",

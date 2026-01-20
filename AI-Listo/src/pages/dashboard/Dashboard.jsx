@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/apiClient';
@@ -17,60 +17,65 @@ const chartData = [
   { name: 'Feb 12', blue: 19, green: 16 },
 ];
 
-function KpiCard({ icon, value, label, sub, isEmphasized = false, isDeemphasized = false }) {
+// New KPI Card with dark theme and accent colors
+function KpiCard({ icon, value, label, accentColor = '#2563EB', sub }) {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
+    <div className="dashboard-kpi-card" style={{
+      background: '#0F172A',
+      border: `1px solid #1E293B`,
+      borderLeft: `4px solid ${accentColor}`,
       borderRadius: '12px',
-      background: isEmphasized ? '#f0f9ff' : '#fff',
-      padding: '12px 16px',
-      boxShadow: isEmphasized 
-        ? '0 2px 8px 0 rgba(59, 130, 246, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05)' 
-        : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-      border: isEmphasized 
-        ? '1px solid #3b82f6' 
-        : isDeemphasized 
-        ? '1px solid #e2e8f0' 
-        : '1px solid #e2e8f0',
-      opacity: isDeemphasized ? 0.6 : 1,
-      transition: 'all 0.2s'
+      padding: '16px',
+      transition: 'all 0.2s',
+      position: 'relative'
     }}>
       <div style={{
-        display: 'grid',
-        placeItems: 'center',
-        height: '36px',
-        width: '36px',
-        borderRadius: '8px',
-        background: isEmphasized ? '#dbeafe' : '#f1f5f9',
-        color: isEmphasized ? '#3b82f6' : '#334155',
-        fontSize: '16px',
-        fontWeight: '600'
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        marginBottom: '8px'
       }}>
-        {icon}
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-          <div style={{ 
-            fontSize: isEmphasized ? '22px' : '20px', 
-            fontWeight: isEmphasized ? '700' : '600', 
-            color: isEmphasized ? '#1e40af' : '#0f172a' 
-          }}>
-            {value}
-          </div>
-          {sub && <div style={{ fontSize: '12px', fontWeight: '500', color: '#10b981' }}>{sub}</div>}
-        </div>
-        <div style={{ 
-          fontSize: '12px', 
-          color: isEmphasized ? '#1e40af' : '#64748b',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          fontWeight: isEmphasized ? '500' : '400'
+        <div style={{
+          display: 'grid',
+          placeItems: 'center',
+          height: '40px',
+          width: '40px',
+          borderRadius: '8px',
+          background: `${accentColor}15`,
+          color: accentColor,
+          fontSize: '20px',
+          flexShrink: 0
         }}>
-          {label}
+          {icon}
         </div>
+        {sub && (
+          <div style={{ 
+            fontSize: '12px', 
+            fontWeight: '500', 
+            color: accentColor,
+            padding: '2px 8px',
+            background: `${accentColor}15`,
+            borderRadius: '4px'
+          }}>
+            {sub}
+          </div>
+        )}
+      </div>
+      <div style={{ 
+        fontSize: '28px', 
+        fontWeight: '700', 
+        color: '#E5E7EB',
+        marginBottom: '4px',
+        lineHeight: '1.2'
+      }}>
+        {value}
+      </div>
+      <div style={{ 
+        fontSize: '13px', 
+        color: '#94A3B8',
+        fontWeight: '500'
+      }}>
+        {label}
       </div>
     </div>
   );
@@ -88,46 +93,46 @@ function FunnelVisualization({ data }) {
   // Blue shades getting progressively darker (matching the image)
   const segments = [
     { 
-      label: 'New Leads', 
+      label: t('dashboard.newLeadsLabel'), 
       value: newLeads, 
       clipPath: 'polygon(0% 0%, 100% 0%, 94% 100%, 6% 100%)', // Top segment - narrows slightly
-      bg: '#bfdbfe', // Lightest blue
-      text: '#1e40af', // Dark blue text
+      bg: 'rgba(37, 99, 235, 0.2)', // Blue with opacity for dark theme
+      text: '#E5E7EB', // Light text
       showPercent: false
     },
     { 
       label: t('dashboard.contactedLabel'), 
       value: contacted, 
       clipPath: 'polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%)', // Second segment - narrower
-      bg: '#93c5fd', // Medium blue
-      text: '#1e40af', // Dark blue text
+      bg: 'rgba(37, 99, 235, 0.25)', // Medium blue
+      text: '#E5E7EB', // Light text
       showPercent: true, 
       percent: contactedPercent,
-      percentBg: '#e5e7eb', // Light grey box
-      percentText: '#374151' // Dark grey text
+      percentBg: '#1E293B', // Dark box
+      percentText: '#E5E7EB' // Light text
     },
     { 
       label: t('dashboard.showingsLabel'), 
       value: showings, 
       clipPath: 'polygon(12% 0%, 88% 0%, 82% 100%, 18% 100%)', // Third segment - even narrower
-      bg: '#60a5fa', // Darker blue
-      text: '#1e40af', // Dark blue text
+      bg: 'rgba(37, 99, 235, 0.3)', // Darker blue
+      text: '#E5E7EB', // Light text
       showPercent: true, 
       percent: showingsPercent,
-      percentBg: '#e5e7eb', // Light grey box
-      percentText: '#374151' // Dark grey text
+      percentBg: '#1E293B', // Dark box
+      percentText: '#E5E7EB' // Light text
     },
     { 
       label: t('dashboard.offersLabel'), 
       value: offers, 
       clipPath: 'polygon(18% 0%, 82% 0%, 76% 100%, 24% 100%)', // Bottom segment - narrowest
-      bg: '#3b82f6', // Darkest blue
-      text: '#1e40af', // Dark blue text
+      bg: 'rgba(37, 99, 235, 0.35)', // Darkest blue
+      text: '#E5E7EB', // Light text
       showPercent: true, 
       percent: offers,
       isNumber: true,
-      percentBg: '#e5e7eb', // Light grey box
-      percentText: '#374151' // Dark grey text
+      percentBg: '#1E293B', // Dark box
+      percentText: '#E5E7EB' // Light text
     },
   ];
 
@@ -321,11 +326,15 @@ export default function Dashboard() {
     newLeadsToday: 0,
     newLeads7d: 0,
     newLeads30d: 0,
-    uncontactedLeads: 0,
+    contactedLeads: 0,
     dealsInPipeline: 0,
     closedDeals: 0,
     revenueClosed: 0,
     pipelineValue: 0,
+    dealsClosingSoon: 0,
+    priorityAlerts: 0,
+    whatsappLeadsToday: 0,
+    instagramLeadsToday: 0,
   });
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -403,11 +412,15 @@ export default function Dashboard() {
         newLeadsToday: summary.leads?.new || 0, // Using 7d as today for now (API doesn't have separate today field)
         newLeads7d: summary.leads?.new || 0,
         newLeads30d: summary.leads?.total || 0, // Placeholder - would come from API
-        uncontactedLeads: (summary.leads?.total || 0) - (summary.leads?.new || 0), // Placeholder calculation
+        contactedLeads: summary.leads?.new || 0, // Placeholder - would come from API
         dealsInPipeline: 1, // Placeholder - would come from pipeline endpoint
         closedDeals: 0, // Placeholder - would come from pipeline endpoint
         revenueClosed: 0, // Placeholder - would come from revenue endpoint
         pipelineValue: 0, // Placeholder - would come from pipeline endpoint
+        dealsClosingSoon: 3, // Placeholder - deals closing in next 7 days
+        priorityAlerts: 2, // Placeholder - critical alerts count
+        whatsappLeadsToday: 5, // Placeholder - WhatsApp leads today
+        instagramLeadsToday: 3, // Placeholder - Instagram leads today
       });
 
       // Load detailed lists (requires CRM access - PRO PLUS+)
@@ -462,17 +475,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
+    <div style={{ background: '#020617', minHeight: '100vh', color: '#E5E7EB' }}>
       {error && (
         <div className="crm-error">
           {error}
         </div>
       )}
 
-      {/* MAIN LAYOUT: Main Section (Left) + Right Section */}
-      <div className="dashboard-layout">
-        {/* MAIN SECTION (LEFT) */}
-        <div className="dashboard-main-section">
+      {/* MAIN LAYOUT: Main Section (Full Width) */}
+      <div className="dashboard-layout" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* MAIN SECTION */}
+        <div className="dashboard-main-section" style={{ width: '100%' }}>
           {/* FIRST ROW: 4 KPIs */}
           <div className="dashboard-kpi-row">
             <LeadsKpiCard 
@@ -481,21 +494,22 @@ export default function Dashboard() {
               onTimeframeChange={setLeadsTimeframe}
             />
             <KpiCard 
-              icon="📋" 
-              value={stats.uncontactedLeads || 0} 
-              label={t('dashboard.uncontactedLeads')}
+              icon="📞" 
+              value={stats.contactedLeads || 0} 
+              label={t('dashboard.contactedLabel')}
+              accentColor="#14B8A6"
             />
             <KpiCard 
               icon="🔄" 
               value={stats.dealsInPipeline || 0} 
               label={t('dashboard.dealsInPipeline')}
-              isEmphasized={stats.dealsInPipeline > 0}
+              accentColor="#6366F1"
             />
             <KpiCard 
               icon="💰" 
               value={`$${stats.revenueClosed.toLocaleString() || 0}`} 
               label={t('dashboard.revenue')}
-              isDeemphasized={stats.revenueClosed === 0}
+              accentColor="#22C55E"
             />
           </div>
 
@@ -513,9 +527,9 @@ export default function Dashboard() {
                   margin: 0,
                   fontSize: '20px',
                   fontWeight: '700',
-                  color: '#0f172a'
+                  color: '#E5E7EB'
                 }}>
-                  Leads Over Time
+                  {t('dashboard.leadsOverTime')}
                 </h2>
                 <select
                   value={leadsOverTimeRange}
@@ -523,15 +537,15 @@ export default function Dashboard() {
                   style={{
                     fontSize: '14px',
                     fontWeight: '500',
-                    color: '#0f172a',
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
+                    color: '#E5E7EB',
+                    background: '#020617',
+                    border: '1px solid #1E293B',
                     borderRadius: '8px',
                     padding: '8px 32px 8px 12px',
                     cursor: 'pointer',
                     outline: 'none',
                     appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%230f172a\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23E5E7EB\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 12px center'
                   }}
@@ -579,29 +593,30 @@ export default function Dashboard() {
                             <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                         <XAxis 
                           dataKey="date" 
-                          tick={{ fill: "#6b7280", fontSize: 12 }} 
+                          tick={{ fill: "#94A3B8", fontSize: 12 }} 
                         />
                         <YAxis
                           yAxisId="left"
-                          tick={{ fill: "#6b7280", fontSize: 12 }}
+                          tick={{ fill: "#94A3B8", fontSize: 12 }}
                         />
                         <YAxis
                           yAxisId="right"
                           orientation="right"
-                          tick={{ fill: "#6b7280", fontSize: 12 }}
+                          tick={{ fill: "#94A3B8", fontSize: 12 }}
                           tickFormatter={(v) => `$${v / 1000}k`}
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#ffffff",
+                            backgroundColor: "#0F172A",
                             borderRadius: "10px",
-                            border: "1px solid #e5e7eb"
+                            border: "1px solid #1E293B",
+                            color: "#E5E7EB"
                           }}
                           formatter={(value, name) => {
-                            if (name === "Revenue") {
+                            if (name === t('dashboard.revenue')) {
                               return [`$${value.toLocaleString()}`, name];
                             }
                             return [value, name];
@@ -618,29 +633,29 @@ export default function Dashboard() {
                           dot={{ r: 3 }}
                           activeDot={{ r: 6 }}
                           fill="url(#leadsGradient)"
-                          name="New Leads"
+                          name={t('dashboard.newLeads')}
                         />
                         {/* DEALS — RED */}
                         <Line
                           yAxisId="left"
                           type="monotone"
                           dataKey="deals"
-                          stroke="#ef4444"
+                          stroke="#EF4444"
                           strokeWidth={3}
                           dot={{ r: 3 }}
                           activeDot={{ r: 6 }}
-                          name="Deals in Pipeline"
+                          name={t('dashboard.dealsInPipeline')}
                         />
                         {/* REVENUE — BLUE */}
                         <Line
                           yAxisId="right"
                           type="monotone"
                           dataKey="revenue"
-                          stroke="#3b82f6"
+                          stroke="#2563EB"
                           strokeWidth={3}
                           dot={{ r: 3 }}
                           activeDot={{ r: 6 }}
-                          name="Revenue"
+                          name={t('dashboard.revenue')}
                         />
                       </LineChart>
                     </ResponsiveContainer>
@@ -654,38 +669,39 @@ export default function Dashboard() {
           {/* THIRD ROW: 4 Charts (3 charts + Revenue Summary) */}
           <div className="dashboard-charts-row">
             <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
+              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
                 {t('dashboard.conversionFunnel')}
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
                 Lead progression through stages
               </p>
               <div style={{
                 height: '250px',
-                background: '#fff',
+                background: '#020617',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #1E293B',
                 padding: '16px'
               }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={conversionFunnelData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis type="number" stroke="#64748b" style={{ fontSize: '11px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                    <XAxis type="number" stroke="#94A3B8" style={{ fontSize: '11px' }} />
                     <YAxis 
                       dataKey="stage" 
                       type="category" 
-                      stroke="#64748b"
+                      stroke="#94A3B8"
                       style={{ fontSize: '11px' }}
                       width={90}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#fff', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px'
+                        backgroundColor: '#0F172A', 
+                        border: '1px solid #1E293B',
+                        borderRadius: '6px',
+                        color: '#E5E7EB'
                       }}
                     />
-                    <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="count" fill="#2563EB" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -695,7 +711,7 @@ export default function Dashboard() {
               <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
                 Lead Source Breakdown
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
                 Where your leads come from
               </p>
               <div style={{
@@ -731,36 +747,37 @@ export default function Dashboard() {
               <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
                 {t('dashboard.activityDistribution')}
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
-                {t('dashboard.activityDistribution')}
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
+                Communication touchpoints with leads
               </p>
               <div style={{
                 height: '250px',
-                background: '#fff',
+                background: '#020617',
                 borderRadius: '8px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid #1E293B',
                 padding: '16px'
               }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activityDistributionData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
                     <XAxis 
                       dataKey="activity" 
-                      stroke="#64748b"
+                      stroke="#94A3B8"
                       style={{ fontSize: '11px' }}
                     />
                     <YAxis 
-                      stroke="#64748b"
+                      stroke="#94A3B8"
                       style={{ fontSize: '11px' }}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#fff', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px'
+                        backgroundColor: '#0F172A', 
+                        border: '1px solid #1E293B',
+                        borderRadius: '6px',
+                        color: '#E5E7EB'
                       }}
                     />
-                    <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="count" fill="#22C55E" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -768,131 +785,194 @@ export default function Dashboard() {
 
             {/* Revenue Summary - 4th column */}
             <div className="crm-section">
-              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: '#E5E7EB' }}>
                 {t('dashboard.revenueSummary')}
               </h2>
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
-                <div style={{ fontSize: '24px', fontWeight: '600', color: '#10b981' }}>
+                <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
+                <div style={{ fontSize: '24px', fontWeight: '600', color: '#22C55E' }}>
                   ${stats.revenueClosed.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Pipeline Value</div>
-                <div style={{ fontSize: '24px', fontWeight: '600', color: '#3b82f6' }}>
-                  ${stats.pipelineValue.toLocaleString()}
+                <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>Pipeline Value</div>
+                <div style={{ fontSize: '24px', fontWeight: '600', color: '#2563EB' }}>
+                  ${(stats.pipelineValue || 0).toLocaleString()}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* FOURTH ROW: 4 Columns (Deals Closing Soon, Priority/Alerts, 2 Placeholders) */}
-          <div className="dashboard-fourth-row">
-            <div className="crm-section" style={{ opacity: 0.7 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
+          {/* SECTION 4: ACTION SIGNAL GRID */}
+          <div className="dashboard-action-grid">
+            {/* Card 1: Deals Closing Soon */}
+            <Link to="/dashboard/pipeline" className="dashboard-action-card" style={{
+              background: '#0F172A',
+              border: '1px solid #1E293B',
+              borderLeft: '4px solid #F59E0B',
+              borderRadius: '12px',
+              padding: '20px',
+              textDecoration: 'none',
+              color: 'inherit',
+              transition: 'all 0.2s',
+              cursor: 'pointer'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  height: '36px',
+                  width: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  color: '#F59E0B',
+                  fontSize: '20px'
+                }}>
+                  ⏰
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
                   {t('dashboard.dealsClosingSoon')}
-                </h2>
-                <span style={{
-                  fontSize: '10px',
-                  fontWeight: '600',
-                  color: '#94a3b8',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  padding: '2px 8px',
-                  background: '#f1f5f9',
-                  borderRadius: '4px'
-                }}>
-                  {t('common.loading')}
-                </span>
+                </h3>
               </div>
-              <div style={{
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#94a3b8',
-                textAlign: 'center',
-                border: '1px dashed #cbd5e1'
-              }}>
-                {t('dashboard.dealsClosingSoon')}
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+                {stats.dealsClosingSoon || 0}
               </div>
-            </div>
+              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+                {t('dashboard.next7Days')}
+              </div>
+            </Link>
 
-            <div className="crm-section" style={{ opacity: 0.7 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
+            {/* Card 2: Priority Alerts */}
+            <div className="dashboard-action-card" style={{
+              background: '#0F172A',
+              border: '1px solid #1E293B',
+              borderLeft: '4px solid #EF4444',
+              borderRadius: '12px',
+              padding: '20px',
+              transition: 'all 0.2s',
+              cursor: 'pointer'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  height: '36px',
+                  width: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  color: '#EF4444',
+                  fontSize: '20px'
+                }}>
+                  🚨
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
                   {t('dashboard.priorityAlerts')}
-                </h2>
-                <span style={{
-                  fontSize: '10px',
-                  fontWeight: '600',
-                  color: '#94a3b8',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  padding: '2px 8px',
-                  background: '#f1f5f9',
-                  borderRadius: '4px'
+                </h3>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+                {stats.priorityAlerts || 0}
+              </div>
+              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+                {t('dashboard.requiresAttention')}
+              </div>
+            </div>
+
+            {/* Card 3: WhatsApp Leads */}
+            <Link to="/dashboard/whatsapp" className="dashboard-action-card" style={{
+              background: '#0F172A',
+              border: '1px solid #1E293B',
+              borderLeft: '4px solid #22C55E',
+              borderRadius: '12px',
+              padding: '20px',
+              textDecoration: 'none',
+              color: 'inherit',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              position: 'relative',
+              boxShadow: '0 0 0 0 rgba(34, 197, 94, 0)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 0 0 rgba(34, 197, 94, 0)';
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  height: '36px',
+                  width: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(34, 197, 94, 0.15)',
+                  color: '#22C55E',
+                  fontSize: '20px'
                 }}>
-                  {t('common.loading')}
-                </span>
+                  💬
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                  {t('dashboard.whatsappLeads')}
+                </h3>
               </div>
-              <div style={{
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#94a3b8',
-                textAlign: 'center',
-                border: '1px dashed #cbd5e1'
-              }}>
-                {t('dashboard.priorityAlerts')}
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+                {stats.whatsappLeadsToday || 0}
               </div>
-            </div>
+              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+                {t('dashboard.newToday')}
+              </div>
+            </Link>
 
-            {/* Placeholder 1 */}
-            <div className="crm-section" style={{ opacity: 0.5 }}>
-              <h2 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
-                Placeholder
-              </h2>
-              <div style={{
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#94a3b8',
-                textAlign: 'center',
-                border: '1px dashed #cbd5e1',
-                minHeight: '100px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                Content placeholder
+            {/* Card 4: Instagram Leads */}
+            <Link to="/dashboard/instagram" className="dashboard-action-card" style={{
+              background: '#0F172A',
+              border: '1px solid #1E293B',
+              borderRadius: '12px',
+              padding: '20px',
+              textDecoration: 'none',
+              color: 'inherit',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(225, 48, 108, 0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+            }}>
+              <div style={{ 
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: '4px',
+                background: 'linear-gradient(180deg, #E1306C 0%, #F77737 100%)',
+                borderRadius: '12px 0 0 12px'
+              }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  height: '36px',
+                  width: '36px',
+                  borderRadius: '8px',
+                  background: 'linear-gradient(135deg, rgba(225, 48, 108, 0.15) 0%, rgba(247, 119, 55, 0.15) 100%)',
+                  color: '#E1306C',
+                  fontSize: '20px'
+                }}>
+                  📷
+                </div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                  {t('dashboard.instagramLeads')}
+                </h3>
               </div>
-            </div>
-
-            {/* Placeholder 2 */}
-            <div className="crm-section" style={{ opacity: 0.5 }}>
-              <h2 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
-                Placeholder
-              </h2>
-              <div style={{
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '6px',
-                fontSize: '13px',
-                color: '#94a3b8',
-                textAlign: 'center',
-                border: '1px dashed #cbd5e1',
-                minHeight: '100px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                Content placeholder
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+                {stats.instagramLeadsToday || 0}
               </div>
-            </div>
+              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+                {t('dashboard.newToday')}
+              </div>
+            </Link>
           </div>
         </div>
       </div>

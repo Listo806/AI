@@ -74,7 +74,12 @@
     "offersLabel": "Ofertas",
     "revenueSummary": "Resumo de Receita",
     "dealsClosingSoon": "Negócios Fechando em Breve",
-    "priorityAlerts": "Alertas Prioritários"
+    "priorityAlerts": "Alertas Prioritários",
+    "whatsappLeads": "Leads do WhatsApp",
+    "instagramLeads": "Leads do Instagram",
+    "next7Days": "Próximos 7 dias",
+    "requiresAttention": "Requer atenção",
+    "newToday": "Novos hoje"
   },
   "leads": {
     "title": "Leads",
