@@ -1,27 +1,35 @@
+import { useTranslation } from 'react-i18next';
+
 export default function Integrations() {
+  const { t } = useTranslation();
+  
   const integrations = [
     {
-      name: 'Email Provider',
+      name: t('integrations.emailProvider'),
+      nameKey: 'integrations.emailProvider',
       status: 'not_connected',
-      description: 'Connect your email provider for automated email sequences and campaigns',
+      description: t('integrations.emailProviderDesc'),
       icon: '📧'
     },
     {
-      name: 'Zapier',
+      name: t('integrations.zapier'),
+      nameKey: 'integrations.zapier',
       status: 'not_connected',
-      description: 'Connect Zapier for custom automation workflows and integrations',
+      description: t('integrations.zapierDesc'),
       icon: '⚡'
     },
     {
-      name: 'CRM Integration',
+      name: t('integrations.crmIntegration'),
+      nameKey: 'integrations.crmIntegration',
       status: 'not_connected',
-      description: 'Sync data with external CRM systems (coming soon)',
+      description: t('integrations.crmIntegrationDesc'),
       icon: '🔗'
     },
     {
-      name: 'Webhooks',
+      name: t('integrations.webhooks'),
+      nameKey: 'integrations.webhooks',
       status: 'not_connected',
-      description: 'Configure webhooks for real-time data synchronization (coming soon)',
+      description: t('integrations.webhooksDesc'),
       icon: '🔌'
     }
   ];
@@ -38,7 +46,7 @@ export default function Integrations() {
           color: '#16a34a',
           border: '1px solid #86efac'
         }}>
-          Connected
+          {t('common.connected')}
         </span>
       );
     }
@@ -52,14 +60,14 @@ export default function Integrations() {
         color: '#64748b',
         border: '1px solid #cbd5e1'
       }}>
-        Not Connected
+        {t('common.notConnected')}
       </span>
     );
   };
 
   return (
     <div>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Integrations</h1>
+      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>{t('integrations.title')}</h1>
       
       <p style={{ 
         marginBottom: '24px', 
@@ -67,8 +75,7 @@ export default function Integrations() {
         color: '#64748b',
         lineHeight: '1.6'
       }}>
-        Connect third-party services to extend your CRM functionality. 
-        For messaging integrations, visit <strong>WhatsApp</strong> or <strong>Instagram</strong> pages.
+        {t('integrations.description')}
       </p>
 
       <div 
@@ -127,7 +134,7 @@ export default function Integrations() {
               }}
               disabled={integration.status === 'connected'}
             >
-              {integration.status === 'connected' ? 'Connected' : `Connect ${integration.name}`}
+              {integration.status === 'connected' ? t('common.connected') : `${t('integrations.connect')} ${integration.name}`}
             </button>
           </div>
         ))}
@@ -142,8 +149,7 @@ export default function Integrations() {
         border: '1px solid #e5e7eb'
       }}>
         <p style={{ margin: 0 }}>
-          💡 <strong>Note:</strong> Integration connections will be implemented in a future phase.
-          This is the UI structure only.
+          💡 <strong>{t('common.name')}:</strong> {t('integrations.note')}
         </p>
       </div>
     </div>

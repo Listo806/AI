@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
@@ -8,12 +9,14 @@ import {
 import './analytics.css';
 
 export default function Analytics() {
+  const { t } = useTranslation();
+  
   // Options for multi-select filters
   const dateRangeOptions = [
-    { value: 'today', label: 'Today' },
+    { value: 'today', label: t('common.today') },
     { value: '7d', label: '7d' },
     { value: '30d', label: '30d' },
-    { value: 'custom', label: 'Custom' }
+    { value: 'custom', label: t('common.all') }
   ];
 
   const agentOptions = [
@@ -248,7 +251,7 @@ export default function Analytics() {
               checked={filters.comparePeriod}
               onChange={handleCompareToggle}
             />
-            <span>Compare vs previous period</span>
+            <span>{t('analytics.comparePeriod')}</span>
           </label>
         </div>
 
@@ -256,7 +259,7 @@ export default function Analytics() {
           <div className="analytics-multi-select-wrapper">
             <Select
               isMulti
-              placeholder="Agent"
+              placeholder={t('analytics.agent')}
               options={agentOptions}
               value={filters.agents}
               onChange={(selected) => setFilters({ ...filters, agents: selected || [] })}
@@ -268,7 +271,7 @@ export default function Analytics() {
           <div className="analytics-multi-select-wrapper">
             <Select
               isMulti
-              placeholder="Team"
+              placeholder={t('analytics.team')}
               options={teamOptions}
               value={filters.teams}
               onChange={(selected) => setFilters({ ...filters, teams: selected || [] })}
@@ -280,7 +283,7 @@ export default function Analytics() {
           <div className="analytics-multi-select-wrapper">
             <Select
               isMulti
-              placeholder="Lead Source"
+              placeholder={t('analytics.leadSource')}
               options={leadSourceOptions}
               value={filters.leadSources}
               onChange={(selected) => setFilters({ ...filters, leadSources: selected || [] })}
@@ -292,7 +295,7 @@ export default function Analytics() {
           <div className="analytics-multi-select-wrapper">
             <Select
               isMulti
-              placeholder="Campaign"
+              placeholder={t('analytics.campaign')}
               options={campaignOptions}
               value={filters.campaigns}
               onChange={(selected) => setFilters({ ...filters, campaigns: selected || [] })}
@@ -304,7 +307,7 @@ export default function Analytics() {
           <div className="analytics-multi-select-wrapper">
             <Select
               isMulti
-              placeholder="Lead Status"
+              placeholder={t('analytics.leadStatus')}
               options={leadStatusOptions}
               value={filters.leadStatuses}
               onChange={(selected) => setFilters({ ...filters, leadStatuses: selected || [] })}
@@ -319,10 +322,10 @@ export default function Analytics() {
       <div className="analytics-content">
         {/* 1. KPI Overview */}
         <section className="analytics-section">
-          <h2 className="analytics-section-title">KPI Overview</h2>
+          <h2 className="analytics-section-title">{t('analytics.kpiOverview')}</h2>
           <div className="analytics-kpi-grid">
             <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">Total Leads</div>
+              <div className="analytics-kpi-label">{t('analytics.totalLeads')}</div>
               <div className="analytics-kpi-value">{kpiData.totalLeads.toLocaleString()}</div>
                 {filters.comparePeriod && (
                   <div className={`analytics-kpi-change ${kpiData.changes.totalLeads >= 0 ? 'positive' : 'negative'}`}>
@@ -340,7 +343,7 @@ export default function Analytics() {
                 )}
             </div>
             <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">Conversion Rate</div>
+              <div className="analytics-kpi-label">{t('analytics.conversionRate')}</div>
               <div className="analytics-kpi-value">{kpiData.conversionRate}%</div>
                 {filters.comparePeriod && (
                   <div className={`analytics-kpi-change ${kpiData.changes.conversionRate >= 0 ? 'positive' : 'negative'}`}>
@@ -371,7 +374,7 @@ export default function Analytics() {
 
         {/* 2. Full Conversion Funnel */}
         <section className="analytics-section">
-          <h2 className="analytics-section-title">Full Conversion Funnel</h2>
+          <h2 className="analytics-section-title">{t('analytics.fullConversionFunnel')}</h2>
           <div className="analytics-funnel-container">
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={funnelData} layout="vertical">
@@ -488,7 +491,7 @@ export default function Analytics() {
 
         {/* 4. Agent Performance Analytics */}
         <section className="analytics-section">
-          <h2 className="analytics-section-title">Agent Performance Analytics</h2>
+          <h2 className="analytics-section-title">{t('analytics.agentPerformance')}</h2>
           <div className="analytics-table-container">
             <table className="analytics-table">
               <thead>
@@ -564,7 +567,7 @@ export default function Analytics() {
 
         {/* 6. Time-to-Conversion Analysis */}
         <section className="analytics-section">
-          <h2 className="analytics-section-title">Time-to-Conversion Analysis</h2>
+          <h2 className="analytics-section-title">{t('analytics.timeToConversion')}</h2>
           <div className="analytics-time-conversion">
             {timeToConversionData.map((item) => (
               <div key={item.metric} className="analytics-time-card">

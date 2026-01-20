@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Instagram() {
+  const { t } = useTranslation();
   const [connectionStatus, setConnectionStatus] = useState('connected'); // 'connected' | 'not_connected'
 
   const getStatusBadge = (status) => {
@@ -9,13 +11,13 @@ export default function Instagram() {
         background: '#f0fdf4',
         color: '#16a34a',
         border: '1px solid #86efac',
-        text: 'Connected'
+        text: t('common.connected')
       },
       not_connected: {
         background: '#fef2f2',
         color: '#dc2626',
         border: '1px solid #fecaca',
-        text: 'Not Connected'
+        text: t('common.notConnected')
       }
     };
 
@@ -58,12 +60,12 @@ export default function Instagram() {
             marginBottom: '16px'
           }}>
             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-              Instagram Connection
+              {t('instagram.connectionStatus')}
             </h2>
             {getStatusBadge(connectionStatus)}
           </div>
           <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
-            Connection status with Instagram Business Account
+            {t('instagram.connectionStatus')}
           </p>
           <div style={{
             padding: '12px',
@@ -73,18 +75,18 @@ export default function Instagram() {
             color: '#64748b'
           }}>
             {connectionStatus === 'connected' 
-              ? 'Successfully connected to Instagram Business Account'
-              : 'Not connected. Please connect your Instagram account.'}
+              ? t('common.connected')
+              : t('common.notConnected')}
           </div>
         </div>
 
         {/* Account Name / Handle */}
         <div className="crm-section">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-            Account Information
+            {t('instagram.accountHandle')}
           </h2>
           <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '14px' }}>
-            Your connected Instagram account details
+            {t('instagram.accountHandle')}
           </p>
           <div style={{
             padding: '12px',
@@ -94,10 +96,10 @@ export default function Instagram() {
             color: '#64748b'
           }}>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Account Name:</strong> Your Business Name
+              <strong>{t('common.name')}:</strong> Your Business Name
             </div>
             <div>
-              <strong>Handle:</strong> @yourbusiness
+              <strong>{t('instagram.accountHandle')}:</strong> @yourbusiness
             </div>
           </div>
         </div>
@@ -113,7 +115,7 @@ export default function Instagram() {
         {/* PRIMARY: Instagram DM Inbox (Full Width on Mobile) */}
         <div className="crm-section instagram-dm-inbox">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-            Direct Messages Inbox
+            {t('instagram.dmInbox')}
           </h2>
           <div style={{
             height: '500px',
@@ -188,7 +190,7 @@ export default function Instagram() {
               }}>
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder={t('instagram.sendMessage')}
                   disabled
                   style={{
                     flex: 1,
@@ -211,7 +213,7 @@ export default function Instagram() {
                     opacity: 0.5
                   }}
                 >
-                  Send
+                  {t('instagram.send')}
                 </button>
               </div>
             </div>
@@ -262,7 +264,7 @@ export default function Instagram() {
           {/* DM Automation */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              DM Automation
+              {t('instagram.automation')}
             </h2>
             <div style={{
               padding: '16px',
@@ -273,14 +275,14 @@ export default function Instagram() {
               textAlign: 'center',
               border: '1px dashed #cbd5e1'
             }}>
-              DM automation configuration placeholder
+              {t('common.loading')}
             </div>
           </div>
 
           {/* Response Templates */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              Response Templates
+              {t('instagram.responseTemplates')}
             </h2>
             <div style={{
               padding: '16px',
@@ -291,14 +293,14 @@ export default function Instagram() {
               textAlign: 'center',
               border: '1px dashed #cbd5e1'
             }}>
-              Response templates placeholder
+              {t('common.loading')}
             </div>
           </div>
 
           {/* Engagement Notes */}
           <div className="crm-section">
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              Engagement Notes
+              {t('instagram.engagementNotes')}
             </h2>
             <div style={{
               padding: '16px',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
@@ -8,6 +9,7 @@ import './Leads.css';
 import './leads-master-detail.css';
 
 export default function LeadsList() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const [allHotLeads, setAllHotLeads] = useState([]);
@@ -303,7 +305,16 @@ export default function LeadsList() {
   };
 
   const getAiTierLabel = (aiTier) => {
-    return aiTier || 'COLD';
+    switch (aiTier) {
+      case 'HOT':
+        return t('leads.hot');
+      case 'WARM':
+        return t('leads.warm');
+      case 'COLD':
+        return t('leads.cold');
+      default:
+        return t('leads.cold');
+    }
   };
 
   const getActionLabel = (action) => {
@@ -722,7 +733,7 @@ export default function LeadsList() {
         </div>
         <div className="lead-list-card-badges">
           <span className={`lead-status-badge ${aiTier}`}>
-            {lead.aiTier || 'COLD'}
+            {getAiTierLabel(lead.aiTier)}
           </span>
         </div>
         <div className="lead-list-card-meta">
@@ -757,11 +768,11 @@ export default function LeadsList() {
           <div className="leads-list-scrollable">
             {loading ? (
               <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
-                Loading...
+                {t('common.loading')}
               </div>
             ) : allLeads.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
-                No leads found
+                {t('leads.noLeads')}
               </div>
             ) : (
               <div>
@@ -804,7 +815,7 @@ export default function LeadsList() {
                   </div>
                   <div className="lead-header-ai-score">
                     <div className="lead-header-ai-score-value">{formatAiScore(selectedLead.aiScore)}</div>
-                    <div className="lead-header-ai-score-label">AI Score</div>
+                    <div className="lead-header-ai-score-label">{t('leads.aiScore')}</div>
                   </div>
                 </div>
                 <div className="lead-header-status-badges">
@@ -826,7 +837,7 @@ export default function LeadsList() {
                       className="lead-cta-whatsapp"
                       onClick={() => handleWhatsAppClick(selectedLead)}
                     >
-                      💬 WhatsApp
+                      💬 {t('leads.whatsapp')}
                     </button>
                   )}
                   {selectedLead.phone && (
@@ -875,7 +886,7 @@ export default function LeadsList() {
 
               {/* Section 3: Lead Timeline */}
               <div className="lead-timeline">
-                <div className="lead-timeline-title">Timeline</div>
+                <div className="lead-timeline-title">{t('leads.timeline')}</div>
                 <div className="lead-timeline-item">
                   <div className="lead-timeline-content">
                     <div className="lead-timeline-event">Lead created</div>
@@ -902,10 +913,10 @@ export default function LeadsList() {
 
               {/* Section 4: Quick Notes */}
               <div className="lead-notes">
-                <div className="lead-notes-title">Notes</div>
+                <div className="lead-notes-title">{t('leads.notes')}</div>
                 <textarea
                   className="lead-notes-textarea"
-                  placeholder="Add notes about this lead..."
+                  placeholder={t('leads.addNote')}
                   defaultValue=""
                 />
               </div>
@@ -932,7 +943,7 @@ export default function LeadsList() {
           ) : (
               <div className="lead-detail-empty">
               <div className="lead-detail-empty-icon">👥</div>
-              <div className="lead-detail-empty-text">Select a lead to view details</div>
+              <div className="lead-detail-empty-text">{t('leads.selectLead')}</div>
             </div>
           )}
         </div>
@@ -949,33 +960,33 @@ export default function LeadsList() {
               <div className="lead-attribution-section">
                 <h3 className="lead-attribution-title">Lead Origin</h3>
                 <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">Source</div>
+                  <div className="lead-attribution-label">{t('leads.source')}</div>
                   <div className="lead-attribution-value">
                     {selectedLead.source ? (
                       <>
                         {getSourceIcon(selectedLead.source)} {selectedLead.source}
                       </>
                     ) : (
-                      '🌐 Website'
+                      `🌐 ${t('leads.website')}`
                     )}
                   </div>
                 </div>
                 <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">Captured by</div>
+                  <div className="lead-attribution-label">{t('leads.capturedBy')}</div>
                   <div className="lead-attribution-value">
                     {user?.name || 'System'}
                   </div>
                 </div>
                 {selectedLead.property && (
                   <div className="lead-attribution-item">
-                    <div className="lead-attribution-label">Campaign</div>
+                    <div className="lead-attribution-label">{t('leads.campaign')}</div>
                     <div className="lead-attribution-value">
                       {selectedLead.property.title}
                     </div>
                   </div>
                 )}
                 <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">Date & Time</div>
+                  <div className="lead-attribution-label">{t('leads.dateTime')}</div>
                   <div className="lead-attribution-value">
                     {formatDate(selectedLead.createdAt)} {selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
                   </div>
@@ -984,7 +995,7 @@ export default function LeadsList() {
 
               {/* SECTION B - Assigned Agent */}
               <div className="lead-attribution-section">
-                <h3 className="lead-attribution-title">Assigned Agent</h3>
+                <h3 className="lead-attribution-title">{t('leads.assignedAgent')}</h3>
                 <div className="lead-agent-card">
                   <div className="lead-agent-avatar">
                     {(user?.name || 'A').charAt(0).toUpperCase()}
@@ -1020,7 +1031,7 @@ export default function LeadsList() {
           ) : (
             <div className="lead-attribution-empty">
               <div className="lead-attribution-empty-icon">👤</div>
-              <div className="lead-attribution-empty-text">Select a lead to view attribution</div>
+              <div className="lead-attribution-empty-text">{t('leads.selectLead')}</div>
             </div>
           )}
         </div>

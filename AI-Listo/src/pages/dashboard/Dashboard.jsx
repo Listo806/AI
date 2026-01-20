@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
@@ -77,6 +78,7 @@ function KpiCard({ icon, value, label, sub, isEmphasized = false, isDeemphasized
 
 // Funnel Visualization Component - Using clip-path for funnel shape
 function FunnelVisualization({ data }) {
+  const { t } = useTranslation();
   const { newLeads, contacted, showings, offers } = data;
   
   // Calculate percentages based on previous stage (not total)
@@ -94,7 +96,7 @@ function FunnelVisualization({ data }) {
       showPercent: false
     },
     { 
-      label: 'Contacted', 
+      label: t('dashboard.contactedLabel'), 
       value: contacted, 
       clipPath: 'polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%)', // Second segment - narrower
       bg: '#93c5fd', // Medium blue
@@ -105,7 +107,7 @@ function FunnelVisualization({ data }) {
       percentText: '#374151' // Dark grey text
     },
     { 
-      label: 'Showings', 
+      label: t('dashboard.showingsLabel'), 
       value: showings, 
       clipPath: 'polygon(12% 0%, 88% 0%, 82% 100%, 18% 100%)', // Third segment - even narrower
       bg: '#60a5fa', // Darker blue
@@ -116,7 +118,7 @@ function FunnelVisualization({ data }) {
       percentText: '#374151' // Dark grey text
     },
     { 
-      label: 'Offers', 
+      label: t('dashboard.offersLabel'), 
       value: offers, 
       clipPath: 'polygon(18% 0%, 82% 0%, 76% 100%, 24% 100%)', // Bottom segment - narrowest
       bg: '#3b82f6', // Darkest blue
@@ -200,6 +202,8 @@ function FunnelVisualization({ data }) {
 }
 
 function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
+  const { t } = useTranslation();
+  
   const getLeadsValue = () => {
     switch (timeframe) {
       case 'Today':
@@ -214,15 +218,16 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
   };
 
   const getLabel = () => {
+    const baseLabel = t('dashboard.newLeads');
     switch (timeframe) {
       case 'Today':
-        return 'New Leads (Today)';
+        return `${baseLabel} (${t('common.today')})`;
       case '7d':
-        return 'New Leads (7d)';
+        return `${baseLabel} (7d)`;
       case '30d':
-        return 'New Leads (30d)';
+        return `${baseLabel} (30d)`;
       default:
-        return 'New Leads';
+        return baseLabel;
     }
   };
 
@@ -277,7 +282,7 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
               minWidth: '60px'
             }}
           >
-            <option value="Today">Today</option>
+            <option value="Today">{t('common.today')}</option>
             <option value="7d">7d</option>
             <option value="30d">30d</option>
           </select>
@@ -299,6 +304,7 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const navigate = useNavigate();
@@ -477,18 +483,18 @@ export default function Dashboard() {
             <KpiCard 
               icon="📋" 
               value={stats.uncontactedLeads || 0} 
-              label="Uncontacted Leads"
+              label={t('dashboard.uncontactedLeads')}
             />
             <KpiCard 
               icon="🔄" 
               value={stats.dealsInPipeline || 0} 
-              label="Deals in Pipeline"
+              label={t('dashboard.dealsInPipeline')}
               isEmphasized={stats.dealsInPipeline > 0}
             />
             <KpiCard 
               icon="💰" 
               value={`$${stats.revenueClosed.toLocaleString() || 0}`} 
-              label="Revenue"
+              label={t('dashboard.revenue')}
               isDeemphasized={stats.revenueClosed === 0}
             />
           </div>
@@ -562,7 +568,7 @@ export default function Dashboard() {
                       marginBottom: '12px',
                       flexShrink: 0
                     }}>
-                      Growth Performance Overview
+                      {t('dashboard.leadsOverTime')}
                     </h3>
                     <div style={{ flex: 1, minHeight: 0, width: '100%' }}>
                       <ResponsiveContainer width="100%" height={300}>
@@ -649,7 +655,7 @@ export default function Dashboard() {
           <div className="dashboard-charts-row">
             <div className="crm-section">
               <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
-                Conversion Funnel
+                {t('dashboard.conversionFunnel')}
               </h2>
               <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
                 Lead progression through stages
@@ -723,10 +729,10 @@ export default function Dashboard() {
 
             <div className="crm-section">
               <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
-                Activity Distribution
+                {t('dashboard.activityDistribution')}
               </h2>
               <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
-                Communication touchpoints with leads
+                {t('dashboard.activityDistribution')}
               </p>
               <div style={{
                 height: '250px',
@@ -763,10 +769,10 @@ export default function Dashboard() {
             {/* Revenue Summary - 4th column */}
             <div className="crm-section">
               <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-                Revenue Summary
+                {t('dashboard.revenueSummary')}
               </h2>
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Closed Revenue</div>
+                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
                 <div style={{ fontSize: '24px', fontWeight: '600', color: '#10b981' }}>
                   ${stats.revenueClosed.toLocaleString()}
                 </div>
@@ -785,7 +791,7 @@ export default function Dashboard() {
             <div className="crm-section" style={{ opacity: 0.7 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
-                  Deals Closing Soon
+                  {t('dashboard.dealsClosingSoon')}
                 </h2>
                 <span style={{
                   fontSize: '10px',
@@ -797,7 +803,7 @@ export default function Dashboard() {
                   background: '#f1f5f9',
                   borderRadius: '4px'
                 }}>
-                  Coming Soon
+                  {t('common.loading')}
                 </span>
               </div>
               <div style={{
@@ -809,14 +815,14 @@ export default function Dashboard() {
                 textAlign: 'center',
                 border: '1px dashed #cbd5e1'
               }}>
-                This feature will show deals closing in the next 7 days
+                {t('dashboard.dealsClosingSoon')}
               </div>
             </div>
 
             <div className="crm-section" style={{ opacity: 0.7 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#94a3b8' }}>
-                  Priority / Alerts
+                  {t('dashboard.priorityAlerts')}
                 </h2>
                 <span style={{
                   fontSize: '10px',
@@ -828,7 +834,7 @@ export default function Dashboard() {
                   background: '#f1f5f9',
                   borderRadius: '4px'
                 }}>
-                  Coming Soon
+                  {t('common.loading')}
                 </span>
               </div>
               <div style={{
@@ -840,7 +846,7 @@ export default function Dashboard() {
                 textAlign: 'center',
                 border: '1px dashed #cbd5e1'
               }}>
-                Priority alerts and notifications will appear here
+                {t('dashboard.priorityAlerts')}
               </div>
             </div>
 

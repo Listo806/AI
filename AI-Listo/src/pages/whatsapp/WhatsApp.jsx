@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function WhatsApp() {
+  const { t } = useTranslation();
   const [apiStatus, setApiStatus] = useState('connected'); // 'connected' | 'not_connected'
   const [accountStatus, setAccountStatus] = useState('active'); // 'active' | 'pending' | 'error'
 
@@ -10,31 +12,31 @@ export default function WhatsApp() {
         background: '#f0fdf4',
         color: '#16a34a',
         border: '1px solid #86efac',
-        text: 'Connected'
+        text: t('common.connected')
       },
       not_connected: {
         background: '#fef2f2',
         color: '#dc2626',
         border: '1px solid #fecaca',
-        text: 'Not Connected'
+        text: t('common.notConnected')
       },
       active: {
         background: '#f0fdf4',
         color: '#16a34a',
         border: '1px solid #86efac',
-        text: 'Active'
+        text: t('common.active')
       },
       pending: {
         background: '#fef3c7',
         color: '#d97706',
         border: '1px solid #fde68a',
-        text: 'Pending'
+        text: t('common.pending')
       },
       error: {
         background: '#fef2f2',
         color: '#dc2626',
         border: '1px solid #fecaca',
-        text: 'Error'
+        text: t('common.error')
       }
     };
 
@@ -68,7 +70,7 @@ export default function WhatsApp() {
         fontWeight: 600,
         wordBreak: 'break-word',
         overflowWrap: 'break-word'
-      }}>WhatsApp</h1>
+      }}>{t('whatsapp.title')}</h1>
 
       {/* Status Cards Row - Mobile First: Single Column */}
       <div style={{
@@ -172,7 +174,7 @@ export default function WhatsApp() {
         {/* PRIMARY: Messaging Panel (Full Width on Mobile) */}
         <div className="crm-section whatsapp-messaging-panel">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-            Messaging Panel
+            {t('whatsapp.messagingPanel')}
           </h2>
           <div style={{
             height: '500px',
@@ -286,7 +288,7 @@ export default function WhatsApp() {
           {/* WhatsApp Notes */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              About WhatsApp
+              {t('whatsapp.aboutWhatsApp')}
             </h2>
             <div style={{
               display: 'flex',
@@ -300,10 +302,10 @@ export default function WhatsApp() {
                 border: '1px solid #bfdbfe'
               }}>
                 <div style={{ fontWeight: '600', marginBottom: '4px', color: '#1e40af' }}>
-                  ⚡ Used for fastest lead response
+                  ⚡ {t('whatsapp.fastestResponse')}
                 </div>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>
-                  Respond to leads instantly via WhatsApp
+                  {t('whatsapp.fastestResponse')}
                 </div>
               </div>
               <div style={{
@@ -313,10 +315,10 @@ export default function WhatsApp() {
                 border: '1px solid #bfdbfe'
               }}>
                 <div style={{ fontWeight: '600', marginBottom: '4px', color: '#1e40af' }}>
-                  📞 Primary contact channel
+                  📞 {t('whatsapp.primaryChannel')}
                 </div>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>
-                  Main communication channel for customer engagement
+                  {t('whatsapp.primaryChannel')}
                 </div>
               </div>
             </div>
@@ -325,7 +327,7 @@ export default function WhatsApp() {
           {/* WhatsApp Templates */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              WhatsApp Templates
+              {t('whatsapp.templates')}
             </h2>
             <div style={{
               padding: '16px',
@@ -336,14 +338,14 @@ export default function WhatsApp() {
               textAlign: 'center',
               border: '1px dashed #cbd5e1'
             }}>
-              Template management placeholder
+              {t('common.loading')}
             </div>
           </div>
 
           {/* Auto-Reply Info */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              Auto-Reply
+              {t('whatsapp.autoReply')}
             </h2>
             <div style={{
               padding: '16px',
@@ -354,14 +356,14 @@ export default function WhatsApp() {
               textAlign: 'center',
               border: '1px dashed #cbd5e1'
             }}>
-              Auto-reply configuration placeholder
+              {t('common.loading')}
             </div>
           </div>
 
           {/* Business Hours */}
           <div className="crm-section">
             <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
-              Business Hours
+              {t('whatsapp.businessHours')}
             </h2>
             <div style={{
               padding: '16px',
@@ -372,7 +374,7 @@ export default function WhatsApp() {
               textAlign: 'center',
               border: '1px dashed #cbd5e1'
             }}>
-              Business hours configuration placeholder
+              {t('common.loading')}
             </div>
           </div>
         </div>

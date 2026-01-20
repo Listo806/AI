@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import './properties.css';
 
 export default function PropertiesList() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const [properties, setProperties] = useState([]);
@@ -84,12 +86,12 @@ export default function PropertiesList() {
   return (
     <div>
       {/* Page Title */}
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Properties</h1>
+      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>{t('properties.title')}</h1>
 
       {/* Add Property Button */}
       <div style={{ marginBottom: '24px' }}>
         <Link to="/dashboard/properties/new" className="crm-btn crm-btn-primary">
-          + Add Property
+          + {t('properties.addProperty')}
         </Link>
       </div>
 
@@ -109,7 +111,7 @@ export default function PropertiesList() {
         </div>
       ) : properties.length === 0 ? (
         <div className="properties-empty">
-          No properties yet. Add your first listing.
+          {t('properties.noProperties')}
         </div>
       ) : (
         <div className="properties-grid">
@@ -136,7 +138,10 @@ export default function PropertiesList() {
                     {property.title || 'Untitled Property'}
                   </h3>
                   <span className={`property-status ${statusClass}`}>
-                    {(property.status || 'draft').charAt(0).toUpperCase() + (property.status || 'draft').slice(1)}
+                    {property.status === 'published' ? t('properties.published') :
+                     property.status === 'draft' ? t('properties.draft') :
+                     property.status === 'archived' || property.status === 'sold' || property.status === 'rented' ? t('properties.archived') :
+                     t('properties.draft')}
                   </span>
                 </div>
                 
@@ -158,19 +163,19 @@ export default function PropertiesList() {
                   color: 'var(--property-text-muted, rgba(255, 255, 255, 0.7))'
                 }}>
                   {property.price && (
-                    <span><strong>Price:</strong> {formatPrice(property.price)}</span>
+                    <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
                   )}
                   {property.type && (
-                    <span><strong>Type:</strong> {property.type === 'sale' ? 'Sale' : 'Rent'}</span>
+                    <span><strong>{t('common.status')}:</strong> {property.type === 'sale' ? t('properties.published') : t('properties.draft')}</span>
                   )}
                   {property.bedrooms && (
-                    <span><strong>Beds:</strong> {property.bedrooms}</span>
+                    <span><strong>{t('properties.bedrooms')}:</strong> {property.bedrooms}</span>
                   )}
                   {property.bathrooms && (
-                    <span><strong>Baths:</strong> {property.bathrooms}</span>
+                    <span><strong>{t('properties.bathrooms')}:</strong> {property.bathrooms}</span>
                   )}
                   {property.squareFeet && (
-                    <span><strong>Sqft:</strong> {property.squareFeet.toLocaleString()}</span>
+                    <span><strong>{t('properties.sqft')}:</strong> {property.squareFeet.toLocaleString()}</span>
                   )}
                 </div>
 
@@ -186,13 +191,13 @@ export default function PropertiesList() {
                       fontSize: '13px'
                     }}
                   >
-                    View / Edit
+                    {t('common.view')} / {t('common.edit')}
                   </Link>
                 </div>
 
                 {/* Footer - Minimal */}
                 <div className="property-meta" style={{ marginTop: '8px', fontSize: '11px' }}>
-                  Created {formatDate(property.createdAt)}
+                  {t('properties.lastUpdated')} {formatDate(property.createdAt)}
                 </div>
               </div>
             );
