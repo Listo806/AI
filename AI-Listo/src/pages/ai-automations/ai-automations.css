@@ -1,0 +1,184 @@
+/* AI Automations Page - Premium White-Tech Style */
+
+/* Header */
+.ai-automations-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ai-automations-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ai-automations-back-btn {
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.ai-automations-back-btn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Section Description */
+.ai-automations-description {
+  margin-bottom: 12px;
+}
+
+.ai-automations-description p {
+  font-size: 16px;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Helper Line */
+.ai-automations-helper-line {
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-left: 3px solid #3b82f6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Automation Modules Grid */
+.ai-automations-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Module Card */
+.ai-automations-module-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-automations-module-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.ai-automations-module-header {
+  margin-bottom: 12px;
+}
+
+.ai-automations-module-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ai-automations-module-description {
+  margin-bottom: 16px;
+}
+
+.ai-automations-module-description p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-automations-module-status {
+  padding-top: 16px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.ai-automations-module-status span {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Detail View */
+.ai-automations-detail {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 32px;
+}
+
+.ai-automations-detail-description {
+  margin-bottom: 20px;
+}
+
+.ai-automations-detail-description p {
+  font-size: 16px;
+  color: #0f172a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-automations-placeholder {
+  margin-top: 32px;
+  padding: 32px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ai-automations-placeholder p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .ai-automations-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ai-automations-header h1 {
+    font-size: 24px;
+  }
+
+  .ai-automations-back-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .ai-automations-module-card {
+    padding: 20px;
+  }
+
+  .ai-automations-module-header h2 {
+    font-size: 18px;
+  }
+
+  .ai-automations-detail {
+    padding: 24px;
+  }
+
+  .ai-automations-placeholder {
+    padding: 24px;
+  }
+}
