@@ -38,8 +38,8 @@ export default function Pipeline() {
               ) : (
                 stage.deals.map((deal) => (
                   <div key={deal.id} className="pipeline-deal">
-                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>{deal.name}</div>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>{deal.value}</div>
+                    <div style={{ fontWeight: '600', marginBottom: '4px', color: '#E5E7EB' }}>{deal.name}</div>
+                    <div style={{ fontSize: '12px', color: '#CBD5E1' }}>{deal.value}</div>
                   </div>
                 ))
               )}
