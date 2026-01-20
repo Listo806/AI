@@ -1,0 +1,169 @@
+/* Team Page - Dark CRM Theme */
+
+.team-page {
+  background: #020617;
+  color: #E5E7EB;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Header */
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.team-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #E5E7EB;
+  margin: 0 0 8px 0;
+}
+
+.team-description {
+  font-size: 16px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Add Member Button */
+.team-add-btn {
+  padding: 10px 20px;
+  background: #2563EB;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.team-add-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.team-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Empty State */
+.team-empty-state {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+  padding: 64px 32px;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.team-empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.team-empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #E5E7EB;
+  margin: 0 0 8px 0;
+}
+
+.team-empty-text {
+  font-size: 14px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Team Members List (for future phases) */
+.team-members-list {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+/* Seats Summary */
+.team-seats-summary {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.team-seats-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #E5E7EB;
+  margin: 0 0 16px 0;
+}
+
+.team-seats-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.team-seats-used {
+  color: #E5E7EB;
+  font-weight: 500;
+}
+
+.team-seats-separator {
+  color: #94A3B8;
+}
+
+.team-seats-available {
+  color: #94A3B8;
+}
+
+.team-seats-helper {
+  font-size: 13px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .team-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .team-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .team-empty-state {
+    padding: 48px 24px;
+  }
+
+  .team-empty-icon {
+    font-size: 48px;
+  }
+
+  .team-seats-summary {
+    padding: 20px;
+  }
+}
