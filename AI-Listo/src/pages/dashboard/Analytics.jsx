@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import { 
@@ -8,8 +8,66 @@ import {
 } from 'recharts';
 import './analytics.css';
 
+// Collapsible Section Component for Mobile
+function CollapsibleSection({ title, children, defaultExpanded = false, isMobile = false }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [renderKey, setRenderKey] = useState(0);
+
+  useEffect(() => {
+    // Force re-render of charts when section expands
+    if (isExpanded) {
+      // Small delay to ensure DOM is ready for chart rendering
+      const timer = setTimeout(() => {
+        setRenderKey(prev => prev + 1);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isExpanded]);
+
+  if (!isMobile) {
+    // Desktop: Always show expanded
+    return (
+      <section className="analytics-section">
+        <h2 className="analytics-section-title">{title}</h2>
+        {children}
+      </section>
+    );
+  }
+
+  // Mobile: Collapsible
+  return (
+    <section className="analytics-section analytics-section-collapsible">
+      <button 
+        className="analytics-section-header-button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+      >
+        <h2 className="analytics-section-title">{title}</h2>
+        <span className="analytics-section-toggle-icon">
+          {isExpanded ? '▼' : '▶'}
+        </span>
+      </button>
+      {isExpanded && (
+        <div className="analytics-section-content" key={renderKey}>
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Analytics() {
   const { t } = useTranslation();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Detect mobile on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Options for multi-select filters
   const dateRangeOptions = [
@@ -321,8 +379,11 @@ export default function Analytics() {
 
       <div className="analytics-content">
         {/* 1. KPI Overview */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">{t('analytics.kpiOverview')}</h2>
+        <CollapsibleSection 
+          title={t('analytics.kpiOverview')} 
+          defaultExpanded={true}
+          isMobile={isMobile}
+        >
           <div className="analytics-kpi-grid">
             <div className="analytics-kpi-card">
               <div className="analytics-kpi-label">{t('analytics.totalLeads')}</div>
@@ -370,17 +431,20 @@ export default function Analytics() {
                 )}
             </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 2. Full Conversion Funnel */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">{t('analytics.fullConversionFunnel')}</h2>
+        <CollapsibleSection 
+          title={t('analytics.fullConversionFunnel')}
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-funnel-container">
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={funnelData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                <XAxis type="number" stroke="#94A3B8" fontSize={12} />
-                <YAxis dataKey="stage" type="category" stroke="#94A3B8" fontSize={12} width={100} />
+            <ResponsiveContainer width="100%" height={isMobile ? 250 : 400}>
+              <BarChart data={funnelData} layout="vertical" margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis type="number" stroke="#64748b" fontSize={isMobile ? 10 : 12} />
+                <YAxis dataKey="stage" type="category" stroke="#64748b" fontSize={isMobile ? 10 : 12} width={isMobile ? 70 : 100} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#0F172A', 
@@ -406,15 +470,18 @@ export default function Analytics() {
               })}
             </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 3. Lead Source Performance */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">Lead Source Performance</h2>
+        <CollapsibleSection 
+          title="Lead Source Performance"
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-chart-grid">
             <div className="analytics-chart-card">
               <h3 className="analytics-chart-title">Leads by Source Over Time</h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                 <AreaChart data={leadSourceData}>
                   <defs>
                     <linearGradient id="websiteGradient" x1="0" y1="0" x2="0" y2="1">
@@ -426,9 +493,9 @@ export default function Analytics() {
                       <stop offset="95%" stopColor="#16A34A" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                  <XAxis dataKey="date" stroke="#94A3B8" fontSize={11} />
-                  <YAxis stroke="#94A3B8" fontSize={11} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
+                  <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#0F172A', 
@@ -447,11 +514,11 @@ export default function Analytics() {
             </div>
             <div className="analytics-chart-card">
               <h3 className="analytics-chart-title">Conversion Rate by Source</h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
                 <BarChart data={sourcePerformanceData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                  <XAxis dataKey="source" stroke="#94A3B8" fontSize={11} />
-                  <YAxis stroke="#94A3B8" fontSize={11} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="source" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
+                  <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#0F172A', 
@@ -487,11 +554,14 @@ export default function Analytics() {
               </tbody>
             </table>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 4. Agent Performance Analytics */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">{t('analytics.agentPerformance')}</h2>
+        <CollapsibleSection 
+          title={t('analytics.agentPerformance')}
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-table-container">
             <table className="analytics-table">
               <thead>
@@ -516,19 +586,22 @@ export default function Analytics() {
               </tbody>
             </table>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 5. Activity → Outcome Analysis */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">Activity → Outcome Analysis</h2>
+        <CollapsibleSection 
+          title="Activity → Outcome Analysis"
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-chart-grid">
             <div className="analytics-chart-card">
               <h3 className="analytics-chart-title">Activity Volume</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={activityOutcomeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                  <XAxis dataKey="activity" stroke="#94A3B8" fontSize={11} />
-                  <YAxis stroke="#94A3B8" fontSize={11} />
+              <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+                <BarChart data={activityOutcomeData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="activity" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
+                  <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#0F172A', 
@@ -543,11 +616,11 @@ export default function Analytics() {
             </div>
             <div className="analytics-chart-card">
               <h3 className="analytics-chart-title">Outcomes by Activity</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={activityOutcomeData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                  <XAxis dataKey="activity" stroke="#94A3B8" fontSize={11} />
-                  <YAxis stroke="#94A3B8" fontSize={11} />
+              <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
+                <BarChart data={activityOutcomeData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="activity" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
+                  <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#0F172A', 
@@ -563,11 +636,14 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 6. Time-to-Conversion Analysis */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">{t('analytics.timeToConversion')}</h2>
+        <CollapsibleSection 
+          title={t('analytics.timeToConversion')}
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-time-conversion">
             {timeToConversionData.map((item) => (
               <div key={item.metric} className="analytics-time-card">
@@ -586,11 +662,14 @@ export default function Analytics() {
               </div>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
         {/* 7. Campaign / Channel Performance */}
-        <section className="analytics-section">
-          <h2 className="analytics-section-title">Campaign / Channel Performance</h2>
+        <CollapsibleSection 
+          title="Campaign / Channel Performance"
+          defaultExpanded={false}
+          isMobile={isMobile}
+        >
           <div className="analytics-table-container">
             <table className="analytics-table">
               <thead>
@@ -613,7 +692,7 @@ export default function Analytics() {
               </tbody>
             </table>
           </div>
-        </section>
+        </CollapsibleSection>
       </div>
     </div>
   );

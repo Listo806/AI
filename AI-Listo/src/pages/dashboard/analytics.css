@@ -177,6 +177,76 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+/* Collapsible Section Styles (Mobile Only) */
+.analytics-section-collapsible {
+  padding: 0;
+  overflow: hidden;
+}
+
+.analytics-section-header-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.analytics-section-header-button:hover {
+  background: #f8fafc;
+}
+
+.analytics-section-header-button .analytics-section-title {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 18px;
+  flex: 1;
+}
+
+.analytics-section-toggle-icon {
+  font-size: 12px;
+  color: #64748b;
+  margin-left: 12px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.analytics-section-header-button[aria-expanded="true"] .analytics-section-toggle-icon {
+  transform: rotate(0deg);
+}
+
+.analytics-section-header-button[aria-expanded="false"] .analytics-section-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.analytics-section-content {
+  padding: 0 20px 20px 20px;
+  animation: slideDown 0.3s ease-out;
+  min-height: 0;
+}
+
+/* Ensure charts render properly when section expands */
+.analytics-section-content .recharts-wrapper {
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 5000px;
+  }
+}
+
 /* KPI Grid */
 .analytics-kpi-grid {
   display: grid;
@@ -226,6 +296,12 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
+}
+
+.analytics-funnel-container .recharts-wrapper {
+  width: 100% !important;
+  overflow: visible;
 }
 
 .analytics-funnel-stats {
@@ -431,7 +507,7 @@
 
   .analytics-content {
     padding: 13px; /* Reduced from 16px by ~19% */
-    gap: 20px; /* Reduced from 32px by ~38% */
+    gap: 16px; /* Reduced from 32px by 50% - less spacing between collapsible sections */
   }
 
   .analytics-kpi-grid {
@@ -444,8 +520,29 @@
   }
 
   .analytics-section {
-    padding: 13px; /* Reduced from 16px by ~19% */
-    margin-bottom: 20px; /* Add margin to prevent endless scrolling */
+    padding: 0; /* No padding for collapsible sections */
+    margin-bottom: 12px; /* Reduced spacing between sections */
+  }
+
+  .analytics-section-content {
+    padding: 0 13px 13px 13px; /* Padding inside collapsible content */
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Ensure charts are visible when section expands */
+  .analytics-section-content > * {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .analytics-section-header-button {
+    padding: 13px; /* Reduced padding */
+  }
+
+  .analytics-section-header-button .analytics-section-title {
+    font-size: 16px; /* Smaller title on mobile */
+    margin-bottom: 0;
   }
 
   .analytics-section-title {
@@ -455,15 +552,64 @@
 
   .analytics-chart-grid {
     gap: 13px; /* Reduced from 24px by ~46% */
-    margin-bottom: 20px; /* Reduced from 24px by ~17% */
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
   }
 
   .analytics-chart-card {
-    padding: 16px; /* Reduced from 20px by 20% */
+    padding: 13px; /* Reduced from 20px by 35% */
   }
 
+  .analytics-chart-title {
+    font-size: 13px; /* Smaller chart titles on mobile */
+    margin-bottom: 12px; /* Reduced from 16px */
+  }
+
+  /* Responsive chart heights for mobile */
+  .analytics-chart-card .recharts-wrapper {
+    max-width: 100% !important;
+  }
+
+  /* Ensure charts are readable on mobile */
   .analytics-funnel-container {
-    gap: 16px; /* Reduced from 24px by ~33% */
+    gap: 13px; /* Reduced from 24px by ~46% */
+    padding: 0;
+  }
+
+  .analytics-funnel-container .recharts-wrapper {
+    width: 100% !important;
+    height: 250px !important; /* Reduced from 400px for mobile */
+    margin: 0;
+    padding: 0;
+  }
+
+  .analytics-funnel-container .recharts-surface {
+    overflow: visible;
+  }
+
+  /* Reduce YAxis width on mobile for funnel chart */
+  .analytics-funnel-container .recharts-cartesian-axis {
+    font-size: 10px !important;
+  }
+
+  /* Fix funnel chart margins on mobile */
+  .analytics-funnel-container .recharts-bar {
+    margin: 0;
+  }
+
+  .analytics-funnel-container .recharts-cartesian-axis-ticks {
+    font-size: 9px !important;
+  }
+
+  .analytics-chart-card .recharts-wrapper {
+    width: 100% !important;
+    height: 220px !important; /* Reduced from 300px for mobile */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure chart containers don't have extra padding */
+  .analytics-chart-card {
+    overflow: visible;
   }
 
   .analytics-funnel-stats {
@@ -482,11 +628,12 @@
 
   .analytics-table {
     min-width: 600px;
+    font-size: 12px; /* Smaller font for better fit */
   }
 
   .analytics-table th,
   .analytics-table td {
-    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
+    padding: 8px 10px; /* Reduced from 12px 16px by ~33-38% */
   }
 
   .analytics-select-wrapper,
@@ -505,7 +652,15 @@
   }
 
   .analytics-time-card {
-    padding: 16px; /* Reduced from 20px by 20% */
+    padding: 13px; /* Reduced from 20px by 35% */
+  }
+
+  .analytics-time-value {
+    font-size: 20px; /* Smaller on mobile */
+  }
+
+  .recharts-responsive-container > div {
+    width: 100% !important;
   }
 }
 
@@ -524,4 +679,39 @@
 .recharts-legend-item-text {
   color: #64748b !important;
   font-size: 12px;
+}
+
+/* Ensure ResponsiveContainer works properly */
+.analytics-chart-card .recharts-responsive-container {
+  width: 100% !important;
+  min-height: 200px;
+}
+
+.analytics-funnel-container .recharts-responsive-container {
+  width: 100% !important;
+  min-height: 250px;
+}
+
+/* Mobile chart text adjustments */
+@media (max-width: 768px) {
+  .recharts-text {
+    font-size: 10px !important;
+  }
+
+  .recharts-legend-item-text {
+    font-size: 11px !important;
+  }
+
+  .recharts-tooltip-wrapper {
+    font-size: 11px !important;
+  }
+
+  /* Ensure chart containers don't overflow */
+  .analytics-chart-card {
+    overflow: hidden;
+  }
+
+  .analytics-funnel-container {
+    overflow: hidden;
+  }
 }
