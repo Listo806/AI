@@ -128,8 +128,8 @@
 /* Mobile Optimizations */
 @media (max-width: 768px) {
   .property-card {
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 8px; /* Reduced from 10px by 20% */
+    margin-bottom: 6px; /* Reduced from 8px by 25% */
   }
 
   .property-card h3 {
@@ -141,6 +141,14 @@
   }
 
   .property-action {
-    margin-top: 8px;
+    margin-top: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .properties-empty {
+    padding: 25px 13px; /* Reduced from 32px 16px by ~22-19% */
+  }
+
+  .properties-grid {
+    gap: 8px; /* Reduced from 10px by 20% */
   }
 }

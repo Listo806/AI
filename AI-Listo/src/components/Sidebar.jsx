@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
         </nav>
 
         {/* Sidebar Footer - Account Info */}
-        <div className="crm-sidebar-footer">
+        {/* <div className="crm-sidebar-footer">
           <div className="crm-user-info">
             <div className="crm-user-avatar">
               {user?.email ? user.email[0].toUpperCase() : 'U'}
@@ -68,7 +68,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false }) {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
       </aside>
     </>
   );

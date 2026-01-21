@@ -283,24 +283,53 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .crm-leads-section {
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+  }
+
+  .crm-leads-section-header {
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+  }
+
   .crm-leads-grid {
     grid-template-columns: 1fr;
+    gap: 13px; /* Reduced from 24px by ~46% */
+  }
+
+  .crm-lead-card {
+    padding: 19px; /* Reduced from 24px by ~21% */
   }
 
   .crm-lead-card-header {
     flex-direction: column;
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   .crm-lead-card-ai {
     align-self: flex-start;
   }
 
+  .crm-lead-ai-explanation {
+    padding: 13px; /* Reduced from 16px by ~19% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+
   .crm-lead-action-section {
     flex-direction: column;
     align-items: stretch;
+    padding: 13px; /* Reduced from 16px by ~19% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+    gap: 10px; /* Reduced from 12px by ~17% */
   }
 
   .crm-lead-action-button {
     width: 100%;
+    padding: 10px 19px; /* Reduced from 12px 24px by ~17-21% */
+  }
+
+  .crm-lead-card-footer {
+    padding-top: 13px; /* Reduced from 16px by ~19% */
+    gap: 6px; /* Reduced from 8px by 25% */
   }
 }

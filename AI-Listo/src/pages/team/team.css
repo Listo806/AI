@@ -145,25 +145,43 @@
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
+  .team-page {
+    padding: 13px; /* Reduced from 24px by ~46% */
+  }
+
   .team-header {
     flex-direction: column;
     align-items: stretch;
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+    gap: 13px; /* Reduced from 24px by ~46% */
   }
 
   .team-add-btn {
     width: 100%;
     justify-content: center;
+    padding: 8px 16px; /* Reduced from 10px 20px by ~20% */
   }
 
   .team-empty-state {
-    padding: 48px 24px;
+    padding: 38px 19px; /* Reduced from 48px 24px by ~21% */
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
   }
 
   .team-empty-icon {
     font-size: 48px;
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .team-members-list {
+    padding: 19px; /* Reduced from 24px by ~21% */
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
   }
 
   .team-seats-summary {
-    padding: 20px;
+    padding: 19px; /* Reduced from 24px by ~21% */
+  }
+
+  .team-seats-title {
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
   }
 }

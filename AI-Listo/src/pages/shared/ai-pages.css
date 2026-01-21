@@ -143,17 +143,40 @@
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .contacts-empty {
+    padding: 38px 13px; /* Reduced from 48px 16px by ~21-19% */
+  }
+
+  .contacts-empty h3 {
+    margin-top: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .contacts-empty p {
+    margin-top: 6px; /* Reduced from 8px by 25% */
+  }
+
   .ai-chat-container {
     height: calc(100vh - 150px);
     max-height: 600px;
+    padding: 13px; /* Reduced from 16px by ~19% */
   }
 
   .ai-message {
     max-width: 85%;
+    padding: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-input {
+    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
   }
 
   .automation-tab {
-    padding: 10px 16px;
+    padding: 8px 13px; /* Reduced from 10px 16px by ~20-19% */
     font-size: 14px;
+  }
+
+  .automation-card {
+    padding: 14px; /* Reduced from 18px by ~22% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
   }
 }

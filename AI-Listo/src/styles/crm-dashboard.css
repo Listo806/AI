@@ -6,6 +6,12 @@
   box-sizing: border-box;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   color: #0f172a;
@@ -1393,8 +1399,12 @@ body {
     max-width: 100vw;
   }
 
+  html {
+    overflow-x: hidden;
+  }
+
   .crm-content {
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
@@ -1413,7 +1423,8 @@ body {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
+    margin-bottom: 16px; /* Reduced from 24px by ~33% to prevent endless scrolling */
   }
 
   .crm-sidebar {
@@ -1422,44 +1433,68 @@ body {
 
   .crm-stats-grid {
     grid-template-columns: 1fr;
+    gap: 13px; /* Reduced from 20px by ~35% */
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+  }
+
+  .crm-stat-card {
+    padding: 19px; /* Reduced from 24px by ~21% */
   }
 
   .crm-form-row {
     grid-template-columns: 1fr;
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   .crm-form-actions {
     flex-direction: column;
+    gap: 10px; /* Reduced from 12px by ~17% */
+    margin-top: 20px; /* Reduced from 32px by ~38% */
+    padding-top: 19px; /* Reduced from 24px by ~21% */
   }
 
   .crm-form-actions .crm-btn {
     width: 100%;
   }
 
+  .crm-form {
+    padding: 19px; /* Reduced from 24px by ~21% */
+  }
+
+  .crm-form-section {
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+  }
+
   /* Dashboard Layout - Mobile */
   .dashboard-layout {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .dashboard-main-section {
+    gap: 13px; /* Reduced from 24px by ~46% */
   }
 
   .dashboard-kpi-row {
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    gap: 10px; /* Reduced from 12px by ~17% */
+    margin-bottom: 0; /* Remove bottom margin to reduce scrolling */
   }
 
   .dashboard-charts-row {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 13px; /* Reduced from 16px by ~19% */
+    margin-bottom: 0; /* Remove bottom margin */
   }
 
   .dashboard-fourth-row {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   .dashboard-action-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   /* Ensure KPI cards stack properly on mobile */
@@ -1470,11 +1505,12 @@ body {
   /* Second row - mobile */
   .dashboard-second-row-body {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 13px; /* Reduced from 20px by ~35% */
   }
 
   .dashboard-ladder-column {
     order: 2; /* Show ladder after graph on mobile */
+    padding-top: 8px; /* Reduced from 10px by 20% */
   }
 
   .dashboard-graph-column {
@@ -1483,6 +1519,35 @@ body {
 
   .dashboard-graph-column > div {
     height: 300px !important;
+  }
+
+  /* Reduce section header spacing */
+  .crm-section-header {
+    margin-bottom: 13px; /* Reduced from 20px by ~35% */
+  }
+
+  .crm-section-title {
+    font-size: 18px; /* Slightly reduced for better mobile fit */
+  }
+
+  /* Reduce list item spacing */
+  .crm-list {
+    gap: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .crm-list-item {
+    padding: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  /* Reduce empty state padding */
+  .crm-empty-state {
+    padding: 38px 19px; /* Reduced from 48px 24px by ~21% */
+  }
+
+  /* Reduce header padding */
+  .crm-header {
+    padding: 10px 19px; /* Reduced from 12px 24px by ~17-21% */
+    min-height: 50px; /* Slightly reduced */
   }
 }
 
@@ -1545,7 +1610,7 @@ body {
   .whatsapp-messaging-panel .crm-section {
     width: 100%;
     max-width: 100%;
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
     box-sizing: border-box;
   }
 
@@ -1569,7 +1634,7 @@ body {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
   }
 
   /* Fix flex containers that might overflow */
@@ -1608,7 +1673,7 @@ body {
   .integration-connect-btn {
     width: 100%;
     min-height: 48px;
-    padding: 14px 20px;
+    padding: 11px 16px; /* Reduced from 14px 20px by ~21-20% */
     font-size: 16px;
   }
 }

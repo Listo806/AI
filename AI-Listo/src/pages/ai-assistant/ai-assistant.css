@@ -278,38 +278,71 @@
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
+  .ai-assistant-header {
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+  }
+
   .ai-assistant-container {
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
     height: auto;
     min-height: 500px;
   }
 
   .ai-assistant-tabs {
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px; /* Reduced from 6px by ~17% */
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+    padding-bottom: 13px; /* Reduced from 16px by ~19% */
   }
 
   .ai-assistant-tab {
-    padding: 6px 12px;
+    padding: 5px 10px; /* Reduced from 6px 12px by ~17-17% */
     font-size: 13px;
+  }
+
+  .ai-assistant-quick-actions {
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+  }
+
+  .ai-assistant-quick-actions-label {
+    margin-bottom: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-assistant-dropdown-trigger {
+    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
+  }
+
+  .ai-assistant-messages {
+    padding: 13px 0; /* Reduced from 16px 0 by ~19% */
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   .ai-assistant-message {
     max-width: 85%;
     font-size: 13px;
-    padding: 12px;
+    padding: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-assistant-empty-helper {
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+    padding: 13px; /* Reduced from 16px by ~19% */
   }
 
   .ai-assistant-input-form {
     flex-direction: column;
+    padding-top: 13px; /* Reduced from 16px by ~19% */
+    gap: 10px; /* Reduced from 12px by ~17% */
   }
 
   .ai-assistant-input {
     width: 100%;
+    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
   }
 
   .ai-assistant-send-btn {
     width: 100%;
     justify-content: center;
+    padding: 10px 16px; /* Reduced from 12px 20px by ~17-20% */
   }
 }

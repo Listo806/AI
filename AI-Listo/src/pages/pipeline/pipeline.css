@@ -109,12 +109,29 @@
   .pipeline-board {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 13px; /* Reduced from 16px by ~19% */
   }
 
   .pipeline-column {
     width: 100%;
     min-height: auto;
+    padding: 11px; /* Reduced from 14px by ~21% */
+  }
+
+  .pipeline-header {
+    margin-bottom: 8px; /* Reduced from 10px by 20% */
+  }
+
+  .pipeline-deals {
+    gap: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .pipeline-deal {
+    padding: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .pipeline-empty {
+    padding: 10px; /* Reduced from 12px by ~17% */
   }
 }
 

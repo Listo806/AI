@@ -738,8 +738,9 @@
   .leads-list-column {
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
-    max-height: 400px;
+    max-height: 350px; /* Reduced from 400px by ~13% to prevent endless scrolling */
     border-radius: 0;
+    padding: 6px; /* Reduced from 8px by 25% */
   }
 
   .lead-detail-column {
@@ -753,12 +754,13 @@
   }
 
   .lead-detail-scrollable {
-    padding: 16px;
+    padding: 13px; /* Reduced from 16px by ~19% */
   }
 
   .lead-header-top {
     flex-direction: column;
-    gap: 12px;
+    gap: 10px; /* Reduced from 12px by ~17% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
   }
 
   .lead-header-ai-score {
@@ -767,9 +769,25 @@
 
   .lead-header-cta {
     flex-direction: column;
+    gap: 10px; /* Reduced from 12px by ~17% */
   }
 
   .lead-cta-whatsapp {
     width: 100%;
+    padding: 10px 16px; /* Reduced from 12px 20px by ~17-20% */
+  }
+
+  .lead-section {
+    margin-bottom: 16px; /* Reduced from 20px by 20% */
+    padding: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .lead-attribution-empty {
+    padding: 32px; /* Reduced from 40px by 20% */
+    min-height: 320px; /* Reduced from 400px by 20% */
+  }
+
+  .lead-attribution-empty-icon {
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
   }
 }
