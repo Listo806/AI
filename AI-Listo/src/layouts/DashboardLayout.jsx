@@ -178,7 +178,7 @@ export default function DashboardLayout() {
             </div>
           </div>
         </header>
-        <main className="crm-content">
+        <main className={`crm-content ${location.pathname === '/dashboard' ? 'dashboard-content-dark' : ''}`}>
           <Outlet />
         </main>
       </div>

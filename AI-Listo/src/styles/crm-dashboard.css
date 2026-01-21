@@ -431,7 +431,39 @@ body {
   }
 }
 
-/* Dark theme - no background image overlay */
+/* Background image with overlay for better readability */
+.crm-main::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(/New%20AI%20CRM%20Hero.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Alternative: Gradient overlay for better contrast */
+.crm-main::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(248, 250, 252, 0.85) 0%,
+    rgba(248, 250, 252, 0.92) 50%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
 
 
 /* Mobile: No margin for sidebar */
@@ -748,8 +780,6 @@ body {
   position: relative;
   z-index: 2; /* Ensure content is above background layers */
   width: 100%;
-  background: #020617;
-  color: #E5E7EB;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -796,11 +826,12 @@ body {
 
 /* Section */
 .crm-section {
-  background: #0F172A;
-  border-radius: 12px;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
   padding: 24px;
   /* margin-bottom: 24px; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 1; /* Ensure sections are above background */
 }
@@ -1283,6 +1314,68 @@ body {
 .dashboard-action-card:hover {
   transform: translateY(-2px);
   border-color: currentColor;
+}
+
+/* Dashboard-specific dark theme - scoped to .dashboard-content-dark */
+.dashboard-content-dark {
+  background: #020617 !important;
+  color: #E5E7EB;
+}
+
+.dashboard-content-dark .crm-section {
+  background: #0F172A !important;
+  border: 1px solid #1E293B !important;
+  border-radius: 12px;
+  box-shadow: none !important;
+}
+
+.dashboard-content-dark .crm-section h2 {
+  color: #E5E7EB !important;
+  border-bottom: 1px solid #1E293B !important;
+}
+
+.dashboard-content-dark .crm-section h3 {
+  color: #E5E7EB !important;
+}
+
+.dashboard-content-dark .crm-section p {
+  color: #94A3B8 !important;
+}
+
+.dashboard-content-dark .dashboard-page-dark {
+  background: transparent !important;
+}
+
+/* Hide background overlay on dashboard page */
+.crm-main:has(.dashboard-content-dark)::before,
+.crm-main:has(.dashboard-content-dark)::after {
+  display: none;
+}
+
+/* Hide background overlay on dashboard page */
+.crm-main:has(.dashboard-page-dark)::before,
+.crm-main:has(.dashboard-page-dark)::after {
+  display: none;
+}
+
+/* Dashboard-specific dark theme - scoped to .dashboard-page-dark */
+.dashboard-page-dark .crm-section {
+  background: #0F172A;
+  border: 1px solid #1E293B;
+  border-radius: 12px;
+}
+
+.dashboard-page-dark .crm-section h2 {
+  color: #E5E7EB;
+  border-bottom: 1px solid #1E293B;
+}
+
+.dashboard-page-dark .crm-section h3 {
+  color: #E5E7EB;
+}
+
+.dashboard-page-dark .crm-section p {
+  color: #94A3B8;
 }
 
 .dashboard-right-section {
