@@ -1,19 +1,19 @@
-/* Properties Color Tokens - Subtle Management Style */
+/* Properties Color Tokens - Light Management Style */
 :root {
-  --property-card-bg: #0F172A;
-  --property-card-border: rgba(255, 255, 255, 0.12);
-  --property-text-muted: rgba(255, 255, 255, 0.7);
-  --property-text-primary: #E5E7EB;
+  --property-card-bg: #fff;
+  --property-card-border: #e5e7eb;
+  --property-text-muted: #64748b;
+  --property-text-primary: #0f172a;
 
   /* Subtle status colors - left border only (calm, low contrast) */
-  --status-published: rgba(34, 197, 94, 0.35);
-  --status-draft: rgba(245, 158, 11, 0.35);
-  --status-archived: rgba(239, 68, 68, 0.35);
+  --status-published: #22c55e;
+  --status-draft: #f59e0b;
+  --status-archived: #ef4444;
 
   /* Very subtle background accents - calm contrast */
-  --accent-published-bg: #0d1f12;
-  --accent-draft-bg: #1f1b0d;
-  --accent-archived-bg: #1f0d0d;
+  --accent-published-bg: #f0fdf4;
+  --accent-draft-bg: #fef3c7;
+  --accent-archived-bg: #fef2f2;
 }
 
 /* Property Card Base Style - Compact Management List */
@@ -29,8 +29,8 @@
 }
 
 .property-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: #1F2933;
+  border-color: #3b82f6;
+  background: #f8fafc;
 }
 
 /* Status-Based Visual Accent - Subtle Left Border Only */
@@ -71,18 +71,18 @@
 }
 
 .property-status.published {
-  background: rgba(34, 197, 94, 0.12);
-  color: rgba(34, 197, 94, 0.8);
+  background: #f0fdf4;
+  color: #16a34a;
 }
 
 .property-status.draft {
-  background: rgba(245, 158, 11, 0.12);
-  color: rgba(245, 158, 11, 0.8);
+  background: #fef3c7;
+  color: #d97706;
 }
 
 .property-status.archived {
-  background: rgba(239, 68, 68, 0.12);
-  color: rgba(239, 68, 68, 0.8);
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 /* Property Meta Text - Compact */

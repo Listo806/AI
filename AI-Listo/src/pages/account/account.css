@@ -1,9 +1,9 @@
-/* Account Pages - Dark CRM Theme */
+/* Account Pages - Light CRM Theme */
 
 .account-page {
   min-height: 100vh;
-  background: #020617;
-  color: #E5E7EB;
+  background: #f8fafc;
+  color: #0f172a;
   padding: 24px;
 }
 
@@ -14,20 +14,20 @@
 .account-title {
   font-size: 28px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 8px 0;
 }
 
 .account-description {
   font-size: 16px;
-  color: #94A3B8;
+  color: #64748b;
   margin: 0;
   line-height: 1.5;
 }
 
 .account-form {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 32px;
   max-width: 600px;
@@ -46,15 +46,15 @@
   gap: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #E5E7EB;
+  color: #0f172a;
 }
 
 .account-input {
   padding: 10px 14px;
-  background: #020617;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
-  color: #E5E7EB;
+  color: #0f172a;
   font-size: 14px;
   font-family: inherit;
   transition: all 0.2s;
@@ -62,19 +62,19 @@
 
 .account-input:focus {
   outline: none;
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .account-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: #0F172A;
+  background: #f8fafc;
 }
 
 .account-help-text {
   font-size: 12px;
-  color: #94A3B8;
+  color: #64748b;
   margin-top: 4px;
 }
 
@@ -82,12 +82,12 @@
   display: flex;
   gap: 12px;
   padding-top: 24px;
-  border-top: 1px solid #1E293B;
+  border-top: 1px solid #e5e7eb;
 }
 
 .account-btn-primary {
   padding: 10px 20px;
-  background: #2563EB;
+  background: #3b82f6;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -99,9 +99,9 @@
 }
 
 .account-btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #2563eb;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
 }
 
 .account-btn-primary:disabled {
@@ -112,8 +112,8 @@
 .account-btn-secondary {
   padding: 10px 20px;
   background: transparent;
-  color: #E5E7EB;
-  border: 1px solid #1E293B;
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
@@ -123,14 +123,14 @@
 }
 
 .account-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: #2563EB;
+  background: #f8fafc;
+  border-color: #3b82f6;
 }
 
 /* Billing Page Specific */
 .billing-section {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
@@ -139,13 +139,13 @@
 .billing-section-title {
   font-size: 20px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 20px 0;
 }
 
 .billing-plan-card {
-  background: #020617;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 24px;
 }
@@ -160,21 +160,21 @@
 .billing-plan-name {
   font-size: 18px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 4px 0;
 }
 
 .billing-plan-price {
   font-size: 14px;
-  color: #94A3B8;
+  color: #64748b;
   margin: 0;
 }
 
 .billing-status {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(34, 197, 94, 0.15);
-  color: #16A34A;
+  background: #f0fdf4;
+  color: #16a34a;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 500;
@@ -182,15 +182,15 @@
 
 .billing-payment-method {
   padding: 16px;
-  background: #020617;
-  border: 1px solid #1E293B;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   margin-top: 16px;
 }
 
 .billing-payment-label {
   font-size: 12px;
-  color: #94A3B8;
+  color: #64748b;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -198,7 +198,7 @@
 
 .billing-payment-info {
   font-size: 14px;
-  color: #E5E7EB;
+  color: #0f172a;
   font-weight: 500;
 }
 
@@ -207,7 +207,7 @@
   gap: 12px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #1E293B;
+  border-top: 1px solid #e5e7eb;
 }
 
 /* Settings Page Specific */
@@ -215,7 +215,7 @@
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  border-bottom: 1px solid #1E293B;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .settings-tab {
@@ -223,7 +223,7 @@
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #94A3B8;
+  color: #64748b;
   font-size: 14px;
   font-weight: 400;
   cursor: pointer;
@@ -233,18 +233,18 @@
 }
 
 .settings-tab:hover {
-  color: #E5E7EB;
+  color: #0f172a;
 }
 
 .settings-tab.active {
-  color: #2563EB;
-  border-bottom-color: #2563EB;
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
   font-weight: 600;
 }
 
 .settings-tab-content {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px;
 }
@@ -252,7 +252,7 @@
 .settings-section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 16px 0;
 }
 

@@ -17,17 +17,18 @@ const chartData = [
   { name: 'Feb 12', blue: 19, green: 16 },
 ];
 
-// New KPI Card with dark theme and accent colors
-function KpiCard({ icon, value, label, accentColor = '#2563EB', sub }) {
+// New KPI Card with light theme and accent colors
+function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
   return (
     <div className="dashboard-kpi-card" style={{
-      background: '#0F172A',
-      border: `1px solid #1E293B`,
+      background: '#fff',
+      border: `1px solid #e5e7eb`,
       borderLeft: `4px solid ${accentColor}`,
       borderRadius: '12px',
       padding: '16px',
       transition: 'all 0.2s',
-      position: 'relative'
+      position: 'relative',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
     }}>
       <div style={{
         display: 'flex',
@@ -64,7 +65,7 @@ function KpiCard({ icon, value, label, accentColor = '#2563EB', sub }) {
       <div style={{ 
         fontSize: '28px', 
         fontWeight: '700', 
-        color: '#E5E7EB',
+        color: '#0f172a',
         marginBottom: '4px',
         lineHeight: '1.2'
       }}>
@@ -72,7 +73,7 @@ function KpiCard({ icon, value, label, accentColor = '#2563EB', sub }) {
       </div>
       <div style={{ 
         fontSize: '13px', 
-        color: '#94A3B8',
+        color: '#64748b',
         fontWeight: '500'
       }}>
         {label}
@@ -96,43 +97,46 @@ function FunnelVisualization({ data }) {
       label: t('dashboard.newLeadsLabel'), 
       value: newLeads, 
       clipPath: 'polygon(0% 0%, 100% 0%, 94% 100%, 6% 100%)', // Top segment - narrows slightly
-      bg: 'rgba(37, 99, 235, 0.2)', // Blue with opacity for dark theme
-      text: '#E5E7EB', // Light text
+      bg: 'rgba(59, 130, 246, 0.1)', // Light blue with opacity for light theme
+      text: '#0f172a', // Dark text
       showPercent: false
     },
     { 
       label: t('dashboard.contactedLabel'), 
       value: contacted, 
       clipPath: 'polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%)', // Second segment - narrower
-      bg: 'rgba(37, 99, 235, 0.25)', // Medium blue
-      text: '#E5E7EB', // Light text
+      bg: 'rgba(59, 130, 246, 0.15)', // Medium blue
+      text: '#0f172a', // Dark text
       showPercent: true, 
       percent: contactedPercent,
-      percentBg: '#1E293B', // Dark box
-      percentText: '#E5E7EB' // Light text
+      percentBg: '#fff', // Light box
+      percentText: '#0f172a', // Dark text
+      percentBorder: '#e5e7eb'
     },
     { 
       label: t('dashboard.showingsLabel'), 
       value: showings, 
       clipPath: 'polygon(12% 0%, 88% 0%, 82% 100%, 18% 100%)', // Third segment - even narrower
-      bg: 'rgba(37, 99, 235, 0.3)', // Darker blue
-      text: '#E5E7EB', // Light text
+      bg: 'rgba(59, 130, 246, 0.2)', // Darker blue
+      text: '#0f172a', // Dark text
       showPercent: true, 
       percent: showingsPercent,
-      percentBg: '#1E293B', // Dark box
-      percentText: '#E5E7EB' // Light text
+      percentBg: '#fff', // Light box
+      percentText: '#0f172a', // Dark text
+      percentBorder: '#e5e7eb'
     },
     { 
       label: t('dashboard.offersLabel'), 
       value: offers, 
       clipPath: 'polygon(18% 0%, 82% 0%, 76% 100%, 24% 100%)', // Bottom segment - narrowest
-      bg: 'rgba(37, 99, 235, 0.35)', // Darkest blue
-      text: '#E5E7EB', // Light text
+      bg: 'rgba(59, 130, 246, 0.25)', // Darkest blue
+      text: '#0f172a', // Dark text
       showPercent: true, 
       percent: offers,
       isNumber: true,
-      percentBg: '#1E293B', // Dark box
-      percentText: '#E5E7EB' // Light text
+      percentBg: '#fff', // Light box
+      percentText: '#0f172a', // Dark text
+      percentBorder: '#e5e7eb'
     },
   ];
 
@@ -527,7 +531,7 @@ export default function Dashboard() {
                   margin: 0,
                   fontSize: '20px',
                   fontWeight: '700',
-                  color: '#E5E7EB'
+                  color: '#0f172a'
                 }}>
                   {t('dashboard.leadsOverTime')}
                 </h2>
@@ -537,15 +541,15 @@ export default function Dashboard() {
                   style={{
                     fontSize: '14px',
                     fontWeight: '500',
-                    color: '#E5E7EB',
-                    background: '#020617',
-                    border: '1px solid #1E293B',
+                    color: '#0f172a',
+                    background: '#fff',
+                    border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                     padding: '8px 32px 8px 12px',
                     cursor: 'pointer',
                     outline: 'none',
                     appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23E5E7EB\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
+                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%2364748b\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 12px center'
                   }}
@@ -593,27 +597,27 @@ export default function Dashboard() {
                             <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis 
                           dataKey="date" 
-                          tick={{ fill: "#94A3B8", fontSize: 12 }} 
+                          tick={{ fill: "#64748b", fontSize: 12 }} 
                         />
                         <YAxis
                           yAxisId="left"
-                          tick={{ fill: "#94A3B8", fontSize: 12 }}
+                          tick={{ fill: "#64748b", fontSize: 12 }}
                         />
                         <YAxis
                           yAxisId="right"
                           orientation="right"
-                          tick={{ fill: "#94A3B8", fontSize: 12 }}
+                          tick={{ fill: "#64748b", fontSize: 12 }}
                           tickFormatter={(v) => `$${v / 1000}k`}
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: "#0F172A",
+                            backgroundColor: "#fff",
                             borderRadius: "10px",
-                            border: "1px solid #1E293B",
-                            color: "#E5E7EB"
+                            border: "1px solid #e5e7eb",
+                            color: "#0f172a"
                           }}
                           formatter={(value, name) => {
                             if (name === t('dashboard.revenue')) {
@@ -669,49 +673,49 @@ export default function Dashboard() {
           {/* THIRD ROW: 4 Charts (3 charts + Revenue Summary) */}
           <div className="dashboard-charts-row">
             <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                 {t('dashboard.conversionFunnel')}
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
                 Lead progression through stages
               </p>
               <div style={{
                 height: '250px',
-                background: '#020617',
+                background: '#fff',
                 borderRadius: '8px',
-                border: '1px solid #1E293B',
+                border: '1px solid #e5e7eb',
                 padding: '16px'
               }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={conversionFunnelData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
-                    <XAxis type="number" stroke="#94A3B8" style={{ fontSize: '11px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis type="number" stroke="#64748b" style={{ fontSize: '11px' }} />
                     <YAxis 
                       dataKey="stage" 
                       type="category" 
-                      stroke="#94A3B8"
+                      stroke="#64748b"
                       style={{ fontSize: '11px' }}
                       width={90}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#0F172A', 
-                        border: '1px solid #1E293B',
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
                         borderRadius: '6px',
-                        color: '#E5E7EB'
+                        color: '#0f172a'
                       }}
                     />
-                    <Bar dataKey="count" fill="#2563EB" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
+              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                 Lead Source Breakdown
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
                 Where your leads come from
               </p>
               <div style={{
@@ -744,37 +748,37 @@ export default function Dashboard() {
             </div>
 
             <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600' }}>
+              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                 {t('dashboard.activityDistribution')}
               </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#94A3B8' }}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: '#64748b' }}>
                 Communication touchpoints with leads
               </p>
               <div style={{
                 height: '250px',
-                background: '#020617',
+                background: '#fff',
                 borderRadius: '8px',
-                border: '1px solid #1E293B',
+                border: '1px solid #e5e7eb',
                 padding: '16px'
               }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={activityDistributionData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis 
                       dataKey="activity" 
-                      stroke="#94A3B8"
+                      stroke="#64748b"
                       style={{ fontSize: '11px' }}
                     />
                     <YAxis 
-                      stroke="#94A3B8"
+                      stroke="#64748b"
                       style={{ fontSize: '11px' }}
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#0F172A', 
-                        border: '1px solid #1E293B',
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
                         borderRadius: '6px',
-                        color: '#E5E7EB'
+                        color: '#0f172a'
                       }}
                     />
                     <Bar dataKey="count" fill="#22C55E" radius={[4, 4, 0, 0]} />
@@ -785,18 +789,18 @@ export default function Dashboard() {
 
             {/* Revenue Summary - 4th column */}
             <div className="crm-section">
-              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: '#E5E7EB' }}>
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: '#0f172a' }}>
                 {t('dashboard.revenueSummary')}
               </h2>
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
+                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
                 <div style={{ fontSize: '24px', fontWeight: '600', color: '#22C55E' }}>
                   ${stats.revenueClosed.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>Pipeline Value</div>
-                <div style={{ fontSize: '24px', fontWeight: '600', color: '#2563EB' }}>
+                <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '4px' }}>Pipeline Value</div>
+                <div style={{ fontSize: '24px', fontWeight: '600', color: '#3b82f6' }}>
                   ${(stats.pipelineValue || 0).toLocaleString()}
                 </div>
               </div>
@@ -807,15 +811,16 @@ export default function Dashboard() {
           <div className="dashboard-action-grid">
             {/* Card 1: Deals Closing Soon */}
             <Link to="/dashboard/pipeline" className="dashboard-action-card" style={{
-              background: '#0F172A',
-              border: '1px solid #1E293B',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
               borderLeft: '4px solid #F59E0B',
               borderRadius: '12px',
               padding: '20px',
               textDecoration: 'none',
               color: 'inherit',
               transition: 'all 0.2s',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
@@ -830,27 +835,28 @@ export default function Dashboard() {
                 }}>
                   ⏰
                 </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                   {t('dashboard.dealsClosingSoon')}
                 </h3>
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                 {stats.dealsClosingSoon || 0}
               </div>
-              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
                 {t('dashboard.next7Days')}
               </div>
             </Link>
 
             {/* Card 2: Priority Alerts */}
             <div className="dashboard-action-card" style={{
-              background: '#0F172A',
-              border: '1px solid #1E293B',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
               borderLeft: '4px solid #EF4444',
               borderRadius: '12px',
               padding: '20px',
               transition: 'all 0.2s',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
@@ -865,22 +871,22 @@ export default function Dashboard() {
                 }}>
                   🚨
                 </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                   {t('dashboard.priorityAlerts')}
                 </h3>
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                 {stats.priorityAlerts || 0}
               </div>
-              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
                 {t('dashboard.requiresAttention')}
               </div>
             </div>
 
             {/* Card 3: WhatsApp Leads */}
             <Link to="/dashboard/whatsapp" className="dashboard-action-card" style={{
-              background: '#0F172A',
-              border: '1px solid #1E293B',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
               borderLeft: '4px solid #22C55E',
               borderRadius: '12px',
               padding: '20px',
@@ -889,13 +895,13 @@ export default function Dashboard() {
               transition: 'all 0.2s',
               cursor: 'pointer',
               position: 'relative',
-              boxShadow: '0 0 0 0 rgba(34, 197, 94, 0)'
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.2)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 0 0 rgba(34, 197, 94, 0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)';
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{
@@ -910,35 +916,36 @@ export default function Dashboard() {
                 }}>
                   💬
                 </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                   {t('dashboard.whatsappLeads')}
                 </h3>
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                 {stats.whatsappLeadsToday || 0}
               </div>
-              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
                 {t('dashboard.newToday')}
               </div>
             </Link>
 
             {/* Card 4: Instagram Leads */}
             <Link to="/dashboard/instagram" className="dashboard-action-card" style={{
-              background: '#0F172A',
-              border: '1px solid #1E293B',
+              background: '#fff',
+              border: '1px solid #e5e7eb',
               borderRadius: '12px',
               padding: '20px',
               textDecoration: 'none',
               color: 'inherit',
               transition: 'all 0.2s',
               cursor: 'pointer',
-              position: 'relative'
+              position: 'relative',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.boxShadow = '0 0 15px rgba(225, 48, 108, 0.15)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)';
             }}>
               <div style={{ 
                 position: 'absolute',
@@ -962,14 +969,14 @@ export default function Dashboard() {
                 }}>
                   📷
                 </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#E5E7EB' }}>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>
                   {t('dashboard.instagramLeads')}
                 </h3>
               </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#E5E7EB', marginBottom: '4px' }}>
+              <div style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                 {stats.instagramLeadsToday || 0}
               </div>
-              <div style={{ fontSize: '13px', color: '#94A3B8' }}>
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
                 {t('dashboard.newToday')}
               </div>
             </Link>

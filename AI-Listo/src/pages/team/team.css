@@ -1,11 +1,11 @@
-/* Team Page - Dark CRM Theme */
+/* Team Page - Light CRM Theme */
 
 .team-page {
-  background: #020617;
-  color: #E5E7EB;
+  background: #fff;
+  color: #0f172a;
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #e5e7eb;
 }
 
 /* Header */
@@ -21,13 +21,13 @@
 .team-title {
   font-size: 28px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 8px 0;
 }
 
 .team-description {
   font-size: 16px;
-  color: #94A3B8;
+  color: #64748b;
   margin: 0;
   line-height: 1.5;
 }
@@ -59,8 +59,8 @@
 
 /* Empty State */
 .team-empty-state {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 64px 32px;
   text-align: center;
@@ -76,13 +76,13 @@
 .team-empty-title {
   font-size: 20px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 8px 0;
 }
 
 .team-empty-text {
   font-size: 14px;
-  color: #94A3B8;
+  color: #64748b;
   margin: 0;
   line-height: 1.6;
   max-width: 400px;
@@ -92,8 +92,8 @@
 
 /* Team Members List (for future phases) */
 .team-members-list {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
@@ -101,8 +101,8 @@
 
 /* Seats Summary */
 .team-seats-summary {
-  background: #0F172A;
-  border: 1px solid #1E293B;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px;
 }
@@ -110,7 +110,7 @@
 .team-seats-title {
   font-size: 18px;
   font-weight: 600;
-  color: #E5E7EB;
+  color: #0f172a;
   margin: 0 0 16px 0;
 }
 
@@ -123,21 +123,21 @@
 }
 
 .team-seats-used {
-  color: #E5E7EB;
+  color: #0f172a;
   font-weight: 500;
 }
 
 .team-seats-separator {
-  color: #94A3B8;
+  color: #64748b;
 }
 
 .team-seats-available {
-  color: #94A3B8;
+  color: #64748b;
 }
 
 .team-seats-helper {
   font-size: 13px;
-  color: #94A3B8;
+  color: #64748b;
   margin: 0;
   line-height: 1.5;
   font-style: italic;
