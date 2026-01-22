@@ -20,17 +20,18 @@
   border-radius: 12px;
   padding: 14px;
   border: 1px solid #e5e7eb; /* Light theme border */
-  background: #fff; /* Light theme background */
+  background: rgba(255, 255, 255, 0.92); /* Solid white background with 92% opacity - not glassy */
   width: 100%;
   display: flex;
   flex-direction: column;
   transition: opacity 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
 }
 
-/* Empty Stage - Reduced Visual Weight */
+/* Empty Stage - Still visible but softer */
 .pipeline-column:has(.pipeline-empty) {
-  opacity: 0.5; /* Reduce opacity when empty */
-  background: #f8fafc; /* Softer background when empty */
+  opacity: 0.85; /* Less reduction - still clearly visible */
+  background: rgba(255, 255, 255, 0.88); /* Still solid, slightly softer */
   border-color: #e2e8f0; /* Softer border */
 }
 
@@ -46,46 +47,129 @@
   color: #94a3b8; /* Softer text */
 }
 
-/* Stage Accents - Light Theme */
+/* Stage Accents - Solid backgrounds with green-tinted overlay for active feel */
 .pipeline-column.new {
-  background: rgba(59, 130, 246, 0.08); /* Light blue */
-  border-left: 3px solid #3b82f6;
+  background: rgba(255, 255, 255, 0.92); /* Solid white base */
+  border-left: 4px solid #3b82f6; /* Stronger border */
+  position: relative;
+}
+
+.pipeline-column.new::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint overlay */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pipeline-column.qualified {
-  background: rgba(16, 185, 129, 0.08); /* Light teal */
-  border-left: 3px solid #10b981;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 4px solid #10b981; /* Teal/green */
+  position: relative;
+}
+
+.pipeline-column.qualified::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%); /* Stronger green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pipeline-column.proposal {
-  background: rgba(168, 85, 247, 0.08); /* Light purple */
-  border-left: 3px solid #a855f7;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 4px solid #a855f7;
+  position: relative;
+}
+
+.pipeline-column.proposal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pipeline-column.negotiation {
-  background: rgba(245, 158, 11, 0.08); /* Light orange */
-  border-left: 3px solid #f59e0b;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 4px solid #f59e0b;
+  position: relative;
+}
+
+.pipeline-column.negotiation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pipeline-column.won {
-  background: rgba(34, 197, 94, 0.08); /* Light green */
-  border-left: 3px solid #22c55e;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 4px solid #22c55e; /* Green - strongest */
+  position: relative;
+}
+
+.pipeline-column.won::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%); /* Strongest green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pipeline-column.lost {
-  background: rgba(239, 68, 68, 0.08); /* Light red */
-  border-left: 3px solid #ef4444;
+  background: rgba(255, 255, 255, 0.92);
+  border-left: 4px solid #ef4444;
+  position: relative;
 }
 
-/* Empty stages lose accent colors */
-.pipeline-column:has(.pipeline-empty).new,
-.pipeline-column:has(.pipeline-empty).qualified,
-.pipeline-column:has(.pipeline-empty).proposal,
-.pipeline-column:has(.pipeline-empty).negotiation,
-.pipeline-column:has(.pipeline-empty).won,
-.pipeline-column:has(.pipeline-empty).lost {
-  background: #f8fafc !important; /* Neutral background when empty */
-  border-left-color: #e2e8f0 !important; /* Neutral border when empty */
+.pipeline-column.lost::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.04) 0%, rgba(16, 185, 129, 0.03) 100%); /* Subtle green tint even for lost */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Empty stages keep green tint but softer */
+.pipeline-column:has(.pipeline-empty).new::before,
+.pipeline-column:has(.pipeline-empty).qualified::before,
+.pipeline-column:has(.pipeline-empty).proposal::before,
+.pipeline-column:has(.pipeline-empty).negotiation::before,
+.pipeline-column:has(.pipeline-empty).won::before,
+.pipeline-column:has(.pipeline-empty).lost::before {
+  opacity: 0.5; /* Reduce green tint intensity when empty */
 }
 
 /* Stage Header */
@@ -98,6 +182,8 @@
   margin-bottom: 10px;
   color: #0f172a; /* Light theme color */
   transition: opacity 0.2s, color 0.2s;
+  position: relative; /* Ensure it's above the green tint overlay */
+  z-index: 1;
 }
 
 .pipeline-count {
@@ -115,16 +201,19 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative; /* Ensure it's above the green tint overlay */
+  z-index: 1;
 }
 
 /* Deal Card - Light Theme */
 .pipeline-deal {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.95); /* More solid white */
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   transition: all 0.2s;
   color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* Subtle shadow */
 }
 
 .pipeline-deal:hover {
@@ -178,7 +267,7 @@
 
   /* Empty stages on mobile */
   .pipeline-column:has(.pipeline-empty) {
-    opacity: 0.45; /* Even more reduced on mobile */
+    opacity: 0.85; /* Even more reduced on mobile */
   }
 }
 
@@ -193,5 +282,25 @@
   .pipeline-column {
     width: 100%;
     min-height: auto;
+    background: rgba(255, 255, 255, 0.95); /* Even more solid on desktop */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); /* Stronger shadow on desktop */
+  }
+
+  /* Stronger green tint on desktop for active feel */
+  .pipeline-column.new::before,
+  .pipeline-column.qualified::before,
+  .pipeline-column.proposal::before,
+  .pipeline-column.negotiation::before,
+  .pipeline-column.won::before,
+  .pipeline-column.lost::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%); /* Stronger green on desktop */
+  }
+
+  .pipeline-column.qualified::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+  }
+
+  .pipeline-column.won::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.10) 100%); /* Strongest green on desktop */
   }
 }
