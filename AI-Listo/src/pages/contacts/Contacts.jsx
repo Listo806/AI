@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../shared/ai-pages.css';
 
@@ -7,13 +7,22 @@ export default function Contacts() {
   // Placeholder data
   const [contacts] = useState([]);
 
+  // Initialize Lucide icons
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
+
   return (
     <div>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>{t('contacts.title')}</h1>
       
       {contacts.length === 0 ? (
         <div className="contacts-empty">
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>👥</div>
+          <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+            <i data-lucide="users" style={{ width: '48px', height: '48px', stroke: '#64748b', strokeWidth: 2 }}></i>
+          </div>
           <h3>{t('contacts.noContacts')}</h3>
           <p>
             {t('contacts.description')}

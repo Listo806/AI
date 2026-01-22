@@ -64,6 +64,27 @@ export default function DashboardLayout() {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  // Lock body scroll when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      // Add class to body to lock scroll and prevent interaction
+      document.body.classList.add('sidebar-open');
+      // Store current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.top = `-${scrollY}px`;
+      
+      return () => {
+        // Remove class and restore scroll position
+        document.body.classList.remove('sidebar-open');
+        const scrollY = document.body.style.top;
+        document.body.style.top = '';
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
+      };
+    }
+  }, [sidebarOpen]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -124,7 +145,7 @@ export default function DashboardLayout() {
             <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>
               <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
-              <span className="text"><strong>CORTEXA</strong> DealFlow</span>
+              <span className="text"><strong>CORTEXA</strong></span>
             </Link>
           </div>
           <div className="crm-header-right">

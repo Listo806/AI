@@ -25,7 +25,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 240px; /* Default expanded width */
+  width: 200px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
   background: #020617;
   color: #fff;
   padding: 0;
@@ -44,12 +44,12 @@ body {
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 240px;
+    width: 200px;
   }
 
   /* Collapsed state - icon-only */
   .crm-sidebar.collapsed {
-    width: 72px;
+    width: 60px; /* Reduced proportionally from 72px */
   }
 }
 
@@ -57,15 +57,11 @@ body {
 @media (max-width: 768px) {
   .crm-sidebar {
     transform: translateX(-100%);
-    width: 240px; /* Wider on mobile for better UX */
+    width: 200px; /* Reduced from 240px for tighter feel */
   }
   
   .crm-sidebar.open {
     transform: translateX(0);
-  }
-  
-  .crm-sidebar-overlay {
-    display: block;
   }
 }
 
@@ -73,8 +69,8 @@ body {
 .crm-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 12px;
+  gap: 8px; /* Reduced from 12px for tighter spacing */
+  padding: 12px 8px; /* Reduced from 16px 12px for tighter feel */
   margin-bottom: 8px;
   /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
   flex-shrink: 0;
@@ -108,23 +104,52 @@ body {
 .crm-nav-link {
   color: #94a3b8;
   text-decoration: none;
-  padding: 10px 12px;
+  padding: 8px 10px; /* Reduced from 10px 12px for tighter spacing */
   border-radius: 8px;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 8px; /* Reduced from 12px - icons closer to text */
   width: 100%;
   margin: 0;
 }
 
 .crm-nav-icon {
   display: block;
-  font-size: 20px;
-  line-height: 1;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   text-align: center;
+  color: inherit;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+/* Lucide icon styling for sidebar */
+.crm-nav-link i[data-lucide] {
+  width: 20px;
+  height: 20px;
+  color: inherit;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+/* Lucide icon styling for KPI cards */
+.dashboard-kpi-card i[data-lucide] {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+}
+
+/* General Lucide icon styling */
+i[data-lucide] {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
 }
 
 .crm-nav-label {
@@ -143,7 +168,7 @@ body {
   /* Center icons when collapsed */
   .crm-sidebar.collapsed .crm-nav-link {
     justify-content: center;
-    padding: 10px;
+    padding: 8px; /* Reduced from 10px */
   }
 
   /* Hide sidebar brand when collapsed */
@@ -154,7 +179,7 @@ body {
   /* Center logo when collapsed */
   .crm-sidebar.collapsed .crm-sidebar-header {
     justify-content: center;
-    padding: 16px 8px;
+    padding: 12px 8px; /* Reduced from 16px 8px */
   }
 
   /* Hide toggle button inside sidebar when collapsed */
@@ -428,7 +453,7 @@ body {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 240px; /* Desktop: account for sidebar with labels (expanded) */
+  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
@@ -438,7 +463,7 @@ body {
 /* Adjust main content when sidebar is collapsed */
 @media (min-width: 769px) {
   .crm-root.sidebar-collapsed .crm-main {
-    margin-left: 72px; /* Collapsed sidebar width */
+    margin-left: 60px; /* Collapsed sidebar width - updated from 72px */
   }
 }
 
@@ -671,8 +696,8 @@ body {
   display: none; /* Hidden on desktop */
   flex-direction: column;
   justify-content: space-around;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -690,7 +715,7 @@ body {
 .crm-mobile-menu-toggle span {
   width: 100%;
   height: 3px;
-  background: #0f172a;
+  background: #ffffff;
   border-radius: 2px;
   transition: all 0.3s;
 }
@@ -707,14 +732,34 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+  background: rgba(0, 0, 0, 0.6); /* Darker, more translucent backdrop */
+  z-index: 998; /* Below sidebar (999) but above content */
+  backdrop-filter: blur(2px); /* Slight blur for modern feel */
+  transition: opacity 0.3s ease-in-out;
+  cursor: pointer; /* Indicate it's clickable to close */
 }
 
 /* Show overlay on mobile when sidebar is open */
 @media (max-width: 768px) {
   .crm-sidebar-overlay {
     display: block;
+  }
+
+  /* Lock body scroll when sidebar is open - handled by JavaScript */
+  body.sidebar-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Prevent interaction with dashboard content when sidebar is open */
+  body.sidebar-open .crm-main {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
   }
 }
 
@@ -1548,7 +1593,7 @@ body {
   }
 
   .crm-sidebar {
-    width: 240px;
+    width: 200px; /* Updated to match new sidebar width */
   }
 
   .crm-stats-grid {
@@ -1596,7 +1641,7 @@ body {
   }
 
   .dashboard-kpi-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 16px; /* Maintain prominence on mobile */
     margin-bottom: 24px; /* Maintain spacing for hierarchy */
   }

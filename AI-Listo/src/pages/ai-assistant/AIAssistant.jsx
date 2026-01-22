@@ -14,12 +14,19 @@ export default function AIAssistant() {
   const dropdownRef = useRef(null);
 
   const quickActions = [
-    { icon: '✏️', labelKey: 'aiAssistant.writePropertyDescription' },
-    { icon: '✨', labelKey: 'aiAssistant.improvePropertyDescription' },
-    { icon: '📥', labelKey: 'aiAssistant.analyzeNewLeads' },
-    { icon: '📊', labelKey: 'aiAssistant.reviewPipelineActivity' },
-    { icon: '💡', labelKey: 'aiAssistant.getInsights' }
+    { icon: 'edit', labelKey: 'aiAssistant.writePropertyDescription' },
+    { icon: 'sparkles', labelKey: 'aiAssistant.improvePropertyDescription' },
+    { icon: 'download', labelKey: 'aiAssistant.analyzeNewLeads' },
+    { icon: 'bar-chart-3', labelKey: 'aiAssistant.reviewPipelineActivity' },
+    { icon: 'lightbulb', labelKey: 'aiAssistant.getInsights' }
   ];
+
+  // Initialize Lucide icons
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
 
   // Update greeting message when language changes
   useEffect(() => {
@@ -73,7 +80,10 @@ export default function AIAssistant() {
     <div>
       {/* Header */}
       <div className="ai-assistant-header">
-        <h1>🤖 {t('aiAssistant.title')}</h1>
+        <h1>
+          <i data-lucide="bot" style={{ width: '28px', height: '28px', display: 'inline-block', verticalAlign: 'middle', marginRight: '8px', stroke: 'currentColor', strokeWidth: 2 }}></i>
+          {t('aiAssistant.title')}
+        </h1>
       </div>
 
       {/* Chat Container */}
@@ -123,7 +133,7 @@ export default function AIAssistant() {
                     className="ai-assistant-dropdown-item"
                     onClick={() => handleQuickAction(action)}
                   >
-                    <span className="ai-assistant-dropdown-icon">{action.icon}</span>
+                    <i data-lucide={action.icon} className="ai-assistant-dropdown-icon" style={{ width: '18px', height: '18px', stroke: 'currentColor', strokeWidth: 2 }}></i>
                     <span>{t(action.labelKey)}</span>
                   </button>
                 ))}

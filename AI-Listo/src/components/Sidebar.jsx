@@ -1,25 +1,33 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
 
-  // Navigation items with emoji icons and translation keys
+  // Initialize Lucide icons when component mounts or updates
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
+
+  // Navigation items with Lucide icon names and translation keys
   const navItems = [
-    { path: "/dashboard", icon: "🏠", labelKey: "nav.dashboard" },
-    { path: "/dashboard/leads", icon: "👥", labelKey: "nav.leads" },
-    { path: "/dashboard/whatsapp", icon: "💬", labelKey: "nav.whatsapp" },
-    { path: "/dashboard/instagram", icon: "📸", labelKey: "nav.instagram" },
-    { path: "/dashboard/pipeline", icon: "📋", labelKey: "nav.pipeline" },
-    { path: "/dashboard/properties", icon: "🏡", labelKey: "nav.properties" },
-    { path: "/dashboard/contacts", icon: "👤", labelKey: "nav.contacts" },
-    { path: "/dashboard/ai-assistant", icon: "🤖", labelKey: "nav.aiAssistant" },
-    { path: "/dashboard/ai-automations", icon: "⚙️", labelKey: "nav.aiAutomations" },
-    { path: "/dashboard/analytics", icon: "📊", labelKey: "nav.analytics" },
-    { path: "/dashboard/team", icon: "👥", labelKey: "nav.team" },
-    { path: "/dashboard/integrations", icon: "🔌", labelKey: "nav.integrations" },
+    { path: "/dashboard", icon: "home", labelKey: "nav.dashboard" },
+    { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
+    { path: "/dashboard/whatsapp", icon: "message-circle", labelKey: "nav.whatsapp" },
+    { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
+    { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
+    { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
+    { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
+    { path: "/dashboard/ai-assistant", icon: "bot", labelKey: "nav.aiAssistant" },
+    { path: "/dashboard/ai-automations", icon: "zap", labelKey: "nav.aiAutomations" },
+    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
+    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
+    { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
 
   return (
@@ -58,7 +66,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
               end={item.path === "/dashboard"}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
-              <span className="crm-nav-icon">{item.icon}</span>
+              <i data-lucide={item.icon} className="crm-nav-icon"></i>
               {!isCollapsed && <span className="crm-nav-label">{t(item.labelKey)}</span>}
             </NavLink>
           ))}

@@ -1,7 +1,15 @@
 import { useTranslation } from 'react-i18next';
+import { useEffect } from 'react';
 
 export default function Integrations() {
   const { t } = useTranslation();
+  
+  // Initialize Lucide icons
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
   
   const integrations = [
     {
@@ -30,7 +38,7 @@ export default function Integrations() {
       nameKey: 'integrations.webhooks',
       status: 'not_connected',
       description: t('integrations.webhooksDesc'),
-      icon: '🔌'
+      icon: 'plug'
     }
   ];
 
@@ -106,7 +114,7 @@ export default function Integrations() {
                   background: '#f1f5f9',
                   borderRadius: '8px'
                 }}>
-                  {integration.icon}
+                  <i data-lucide={integration.icon} style={{ width: '24px', height: '24px', stroke: '#64748b', strokeWidth: 2 }}></i>
                 </div>
                 <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
                   {integration.name}

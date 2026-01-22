@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -19,6 +19,13 @@ const chartData = [
 
 // New KPI Card with light theme and accent colors
 function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
+  // Initialize Lucide icons when component renders
+  React.useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
+
   return (
     <div className="dashboard-kpi-card" style={{
       background: '#fff',
@@ -44,10 +51,9 @@ function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
           borderRadius: '8px',
           background: `${accentColor}15`,
           color: accentColor,
-          fontSize: '20px',
           flexShrink: 0
         }}>
-          {icon}
+          <i data-lucide={icon} style={{ width: '22px', height: '22px', stroke: accentColor }}></i>
         </div>
         {sub && (
           <div style={{ 
@@ -213,6 +219,13 @@ function FunnelVisualization({ data }) {
 function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
   const { t } = useTranslation();
   
+  // Initialize Lucide icons
+  React.useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
+  
   const getLeadsValue = () => {
     switch (timeframe) {
       case 'Today':
@@ -260,11 +273,9 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
         width: '36px',
         borderRadius: '8px',
         background: '#dbeafe',
-        color: '#3b82f6',
-        fontSize: '16px',
-        fontWeight: '600'
+        color: '#3b82f6'
       }}>
-        📊
+        <i data-lucide="bar-chart-3" style={{ width: '20px', height: '20px', stroke: '#3b82f6' }}></i>
       </div>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', justifyContent: 'space-between' }}>
@@ -498,19 +509,19 @@ export default function Dashboard() {
               onTimeframeChange={setLeadsTimeframe}
             />
             <KpiCard 
-              icon="📞" 
+              icon="phone" 
               value={stats.contactedLeads || 0} 
               label={t('dashboard.contactedLabel')}
               accentColor="#14B8A6"
             />
             <KpiCard 
-              icon="🔄" 
+              icon="git-branch" 
               value={stats.dealsInPipeline || 0} 
               label={t('dashboard.dealsInPipeline')}
               accentColor="#6366F1"
             />
             <KpiCard 
-              icon="💰" 
+              icon="dollar-sign" 
               value={`$${stats.revenueClosed.toLocaleString() || 0}`} 
               label={t('dashboard.revenue')}
               accentColor="#22C55E"

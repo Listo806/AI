@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function WhatsApp() {
   const { t } = useTranslation();
+  
+  // Initialize Lucide icons
+  useEffect(() => {
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  });
   const [apiStatus, setApiStatus] = useState('connected'); // 'connected' | 'not_connected'
   const [accountStatus, setAccountStatus] = useState('active'); // 'active' | 'pending' | 'error'
 
@@ -206,7 +213,7 @@ export default function WhatsApp() {
                 fontSize: '20px',
                 fontWeight: '600'
               }}>
-                💬
+                <i data-lucide="message-circle" style={{ width: '20px', height: '20px', stroke: '#fff', strokeWidth: 2 }}></i>
               </div>
               <div>
                 <div style={{ fontWeight: '600', fontSize: '14px' }}>WhatsApp Chat</div>
@@ -227,7 +234,9 @@ export default function WhatsApp() {
               fontSize: '14px'
             }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>💬</div>
+                <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+                  <i data-lucide="message-circle" style={{ width: '48px', height: '48px', stroke: '#64748b', strokeWidth: 2 }}></i>
+                </div>
                 <div style={{ fontWeight: '500', marginBottom: '8px' }}>WhatsApp Messaging</div>
                 <div>Chat interface placeholder</div>
                 <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
