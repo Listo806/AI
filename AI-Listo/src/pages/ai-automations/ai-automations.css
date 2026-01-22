@@ -73,12 +73,57 @@
   padding: 24px;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
 }
 
 .ai-automations-module-card:hover {
   border-color: #3b82f6;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
+}
+
+/* Inactive/Locked Module - NOT Interactive */
+.ai-automations-module-inactive,
+.ai-automations-module-locked {
+  opacity: 0.6; /* Reduced opacity */
+  cursor: not-allowed !important;
+  background: #f8fafc; /* Softer background */
+  border-color: #e2e8f0; /* Softer border */
+  pointer-events: none; /* Prevent interaction */
+}
+
+.ai-automations-module-inactive:hover,
+.ai-automations-module-locked:hover {
+  border-color: #e2e8f0 !important; /* No hover effect */
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Lock Badge */
+.ai-automations-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #fef3c7; /* Soft yellow background */
+  color: #92400e; /* Darker yellow text */
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+.ai-automations-module-locked .ai-automations-module-header h2 {
+  color: #94a3b8; /* Softer title color */
+}
+
+.ai-automations-module-locked .ai-automations-module-description p {
+  color: #cbd5e1; /* Softer description color */
+}
+
+.ai-automations-module-locked .ai-automations-module-status span {
+  color: #94a3b8; /* Softer status color */
+  font-style: italic;
 }
 
 .ai-automations-module-header {
@@ -199,6 +244,18 @@
 
   .ai-automations-module-status {
     padding-top: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  /* Locked modules on mobile */
+  .ai-automations-module-locked,
+  .ai-automations-module-inactive {
+    opacity: 0.55; /* Even more reduced on mobile */
+  }
+
+  .ai-automations-lock-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    margin-left: 8px;
   }
 
   .ai-automations-detail {

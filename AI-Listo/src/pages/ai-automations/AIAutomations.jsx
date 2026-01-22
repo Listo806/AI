@@ -13,26 +13,38 @@ export default function AIAutomations() {
       titleKey: 'aiAutomations.whatsappAutomation',
       descriptionKey: 'aiAutomations.whatsappAutomationDesc',
       statusKey: 'aiAutomations.status',
-      configKey: 'aiAutomations.whatsappConfig'
+      configKey: 'aiAutomations.whatsappConfig',
+      isActive: false, // Active automation
+      isLocked: true,
+      lockReason: 'Coming Soon'
     },
     {
       id: 'email',
       titleKey: 'aiAutomations.emailAutomation',
       descriptionKey: 'aiAutomations.emailAutomationDesc',
       statusKey: 'aiAutomations.status',
-      configKey: 'aiAutomations.emailConfig'
+      configKey: 'aiAutomations.emailConfig',
+      isActive: false, // Inactive
+      isLocked: true,
+      lockReason: 'Coming Soon'
     },
     {
       id: 'instagram',
       titleKey: 'aiAutomations.instagramAutomation',
       descriptionKey: 'aiAutomations.instagramAutomationDesc',
       statusKey: 'aiAutomations.status',
-      configKey: 'aiAutomations.instagramConfig'
+      configKey: 'aiAutomations.instagramConfig',
+      isActive: false, // Inactive
+      isLocked: true,
+      lockReason: 'Locked'
     }
   ];
 
   const handleAutomationClick = (automation) => {
-    setSelectedAutomation(automation);
+    // Only allow clicking active automations
+    if (automation.isActive && !automation.isLocked) {
+      setSelectedAutomation(automation);
+    }
   };
 
   const handleBack = () => {
@@ -89,17 +101,22 @@ export default function AIAutomations() {
         {automations.map((automation) => (
           <div
             key={automation.id}
-            className="ai-automations-module-card"
+            className={`ai-automations-module-card ${automation.isLocked ? 'ai-automations-module-locked' : ''} ${!automation.isActive ? 'ai-automations-module-inactive' : ''}`}
             onClick={() => handleAutomationClick(automation)}
           >
             <div className="ai-automations-module-header">
               <h2>{t(automation.titleKey)}</h2>
+              {automation.isLocked && (
+                <span className="ai-automations-lock-badge">
+                  🔒 {automation.lockReason || 'Locked'}
+                </span>
+              )}
             </div>
             <div className="ai-automations-module-description">
               <p>{t(automation.descriptionKey)}</p>
             </div>
             <div className="ai-automations-module-status">
-              <span>{t(automation.statusKey)}</span>
+              <span>{automation.isActive ? t(automation.statusKey) : (automation.lockReason || 'Inactive')}</span>
             </div>
           </div>
         ))}
