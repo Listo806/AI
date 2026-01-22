@@ -17,21 +17,21 @@ export default function Integrations() {
       nameKey: 'integrations.emailProvider',
       status: 'not_connected',
       description: t('integrations.emailProviderDesc'),
-      icon: '📧'
+      icon: 'mail'
     },
     {
       name: t('integrations.zapier'),
       nameKey: 'integrations.zapier',
       status: 'not_connected',
       description: t('integrations.zapierDesc'),
-      icon: '⚡'
+      icon: 'zap'
     },
     {
       name: t('integrations.crmIntegration'),
       nameKey: 'integrations.crmIntegration',
       status: 'not_connected',
       description: t('integrations.crmIntegrationDesc'),
-      icon: '🔗'
+      icon: 'link'
     },
     {
       name: t('integrations.webhooks'),

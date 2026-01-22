@@ -1,4 +1,4 @@
-/* AI Automations Page - Premium White-Tech Style */
+/* AI Automations Page - Theme-aware (light/dark) */
 
 /* Header */
 .ai-automations-header {
@@ -11,16 +11,16 @@
 .ai-automations-header h1 {
   font-size: 28px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0;
 }
 
 .ai-automations-back-btn {
   padding: 8px 16px;
-  background: #fff;
-  border: 1px solid #E5E7EB;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -29,7 +29,7 @@
 }
 
 .ai-automations-back-btn:hover {
-  background: #f8fafc;
+  background: var(--border);
   border-color: #3b82f6;
   color: #3b82f6;
 }
@@ -41,7 +41,7 @@
 
 .ai-automations-description p {
   font-size: 16px;
-  color: #0f172a;
+  color: var(--text);
   margin: 0;
   line-height: 1.6;
 }
@@ -50,11 +50,11 @@
 .ai-automations-helper-line {
   margin-bottom: 32px;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: var(--card);
   border-left: 3px solid #3b82f6;
   border-radius: 6px;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -67,8 +67,8 @@
 
 /* Module Card */
 .ai-automations-module-card {
-  background: #fff;
-  border: 1px solid #E5E7EB;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   cursor: pointer;
@@ -85,16 +85,16 @@
 /* Inactive/Locked Module - NOT Interactive */
 .ai-automations-module-inactive,
 .ai-automations-module-locked {
-  opacity: 0.6; /* Reduced opacity */
+  opacity: 0.6;
   cursor: not-allowed !important;
-  background: #f8fafc; /* Softer background */
-  border-color: #e2e8f0; /* Softer border */
-  pointer-events: none; /* Prevent interaction */
+  background: var(--card);
+  border-color: var(--border);
+  pointer-events: none;
 }
 
 .ai-automations-module-inactive:hover,
 .ai-automations-module-locked:hover {
-  border-color: #e2e8f0 !important; /* No hover effect */
+  border-color: var(--border) !important;
   box-shadow: none !important;
   transform: none !important;
 }
@@ -105,24 +105,29 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: #fef3c7; /* Soft yellow background */
-  color: #92400e; /* Darker yellow text */
+  background: #fef3c7;
+  color: #92400e;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   margin-left: 12px;
 }
 
+body.crm-dark .ai-automations-lock-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
 .ai-automations-module-locked .ai-automations-module-header h2 {
-  color: #94a3b8; /* Softer title color */
+  color: var(--text-muted);
 }
 
 .ai-automations-module-locked .ai-automations-module-description p {
-  color: #cbd5e1; /* Softer description color */
+  color: var(--text-muted);
 }
 
 .ai-automations-module-locked .ai-automations-module-status span {
-  color: #94a3b8; /* Softer status color */
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -133,7 +138,7 @@
 .ai-automations-module-header h2 {
   font-size: 20px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0;
 }
 
@@ -143,26 +148,26 @@
 
 .ai-automations-module-description p {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   line-height: 1.6;
   margin: 0;
 }
 
 .ai-automations-module-status {
   padding-top: 16px;
-  border-top: 1px solid #E5E7EB;
+  border-top: 1px solid var(--border);
 }
 
 .ai-automations-module-status span {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-style: italic;
 }
 
 /* Detail View */
 .ai-automations-detail {
-  background: #fff;
-  border: 1px solid #E5E7EB;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 32px;
 }
@@ -173,7 +178,7 @@
 
 .ai-automations-detail-description p {
   font-size: 16px;
-  color: #0f172a;
+  color: var(--text);
   line-height: 1.6;
   margin: 0;
 }
@@ -181,15 +186,15 @@
 .ai-automations-placeholder {
   margin-top: 32px;
   padding: 32px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
+  background: var(--card);
+  border: 1px dashed var(--border);
   border-radius: 8px;
   text-align: center;
 }
 
 .ai-automations-placeholder p {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.6;
 }

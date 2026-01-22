@@ -56,6 +56,9 @@
     "profile": "Perfil",
     "billing": "Facturación",
     "settings": "Configuración",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
     "logout": "Cerrar sesión"
   },
   "dashboard": {

@@ -56,6 +56,9 @@
     "profile": "Profile",
     "billing": "Billing",
     "settings": "Settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
     "logout": "Logout"
   },
   "dashboard": {

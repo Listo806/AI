@@ -1,5 +1,21 @@
 /* AI CRM Dashboard Styles */
 
+:root {
+  --bg: #ffffff;
+  --text: #0f172a;
+  --card: #f8fafc;
+  --border: #e5e7eb;
+  --text-muted: #64748b;
+}
+
+body.crm-dark {
+  --bg: #0b0f19;
+  --text: #e5e7eb;
+  --card: #111827;
+  --border: #1f2933;
+  --text-muted: #94a3b8;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -13,8 +29,8 @@ html, body {
 
 body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 /* Root Layout */
@@ -312,7 +328,7 @@ i[data-lucide] {
 
 /* Homepage Search Bar */
 .crm-search-bar {
-  background: #fff;
+  background: var(--card);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -329,10 +345,12 @@ i[data-lucide] {
   flex: 1;
   min-width: 300px;
   padding: 12px 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border);
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 0.2s;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .crm-search-input:focus {
@@ -457,7 +475,7 @@ i[data-lucide] {
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
-  background: #f8fafc; /* Fallback color */
+  background: var(--bg);
 }
 
 /* Adjust main content when sidebar is collapsed */
@@ -501,6 +519,11 @@ i[data-lucide] {
   pointer-events: none;
 }
 
+/* Dark mode: hide decorative overlay, use solid background */
+body.crm-dark .crm-main::before,
+body.crm-dark .crm-main::after {
+  display: none;
+}
 
 /* Mobile: No margin for sidebar */
 @media (max-width: 768px) {
@@ -908,8 +931,8 @@ i[data-lucide] {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 200px;
@@ -922,7 +945,7 @@ i[data-lucide] {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #f8fafc;
+  background: var(--card);
 }
 
 .crm-account-menu-avatar {
@@ -947,7 +970,7 @@ i[data-lucide] {
 .crm-account-menu-name {
   font-size: 14px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -955,13 +978,13 @@ i[data-lucide] {
 
 .crm-account-menu-role {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: capitalize;
 }
 
 .crm-account-menu-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: var(--border);
   margin: 4px 0;
 }
 
@@ -972,7 +995,7 @@ i[data-lucide] {
   border: none;
   text-align: left;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -981,8 +1004,59 @@ i[data-lucide] {
 }
 
 .crm-account-menu-item:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--border);
+  color: var(--text);
+}
+
+/* Theme toggle - pill slider inside profile dropdown */
+.crm-theme-toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: transparent;
+}
+
+.crm-theme-toggle-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.crm-theme-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.crm-theme-toggle:hover {
+  opacity: 0.9;
+}
+
+.crm-theme-option {
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 16px;
+  transition: all 0.2s;
+}
+
+.crm-theme-toggle .crm-theme-option.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+body.crm-dark .crm-theme-toggle .crm-theme-option.active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .crm-header-links {
@@ -1013,13 +1087,19 @@ i[data-lucide] {
 
 .crm-content {
   padding: 24px;
-  /* max-width: 1400px; */
   position: relative;
-  z-index: 2; /* Ensure content is above background layers */
+  z-index: 2;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  color: var(--text);
+}
+
+/* Page titles - theme-aware (pages using inline styles without color inherit this) */
+.crm-content h1,
+.crm-content h2 {
+  color: var(--text);
 }
 
 /* Error Message */
@@ -1032,6 +1112,11 @@ i[data-lucide] {
   border: 1px solid #fecaca;
 }
 
+body.crm-dark .crm-error {
+  background: rgba(185, 28, 28, 0.2);
+  border-color: rgba(185, 28, 28, 0.4);
+}
+
 /* Stats Grid - HIGHEST EMPHASIS (Dashboard KPIs) */
 .crm-stats-grid {
   display: grid;
@@ -1041,10 +1126,10 @@ i[data-lucide] {
 }
 
 .crm-stat-card {
-  background: #fff;
+  background: var(--card);
   padding: 24px;
   border-radius: 12px; /* More rounded */
-  border: 2px solid #e5e7eb; /* Stronger border */
+  border: 2px solid var(--border); /* Stronger border */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06); /* Stronger shadow */
   position: relative;
   z-index: 1;
@@ -1054,12 +1139,12 @@ i[data-lucide] {
 .crm-stat-card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 3px 6px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
-  border-color: #cbd5e1;
+  border-color: var(--border);
 }
 
 .crm-stat-label {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 10px;
   font-weight: 600; /* Bolder */
   text-transform: uppercase;
@@ -1069,15 +1154,15 @@ i[data-lucide] {
 .crm-stat-value {
   font-size: 36px; /* Larger */
   font-weight: 700; /* Bolder */
-  color: #0f172a;
+  color: var(--text);
   line-height: 1.1;
 }
 
 /* Section - SECONDARY EMPHASIS */
 .crm-section {
-  background: #fff;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 24px;
   margin-bottom: 24px; /* Clear spacing between sections */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04); /* Subtle shadow */
@@ -1092,27 +1177,27 @@ i[data-lucide] {
 .crm-section-title {
   font-size: 18px; /* Slightly smaller than KPIs */
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
 }
 
 /* Add bottom border to headers in card sections */
 .crm-section h2 {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .crm-section h3 {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .crm-section p {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 /* Handle header wrapper divs (like in Leads Over Time section) */
 .crm-section-header-wrapper {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 16px !important;
   margin-bottom: 24px !important;
 }
@@ -1133,15 +1218,14 @@ i[data-lucide] {
 
 .crm-list-item {
   padding: 16px;
-  background: #f8fafc;
+  background: var(--card);
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   transition: all 0.2s;
 }
 
 .crm-list-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  border-color: var(--border);
 }
 
 .crm-item-header {
@@ -1154,7 +1238,7 @@ i[data-lucide] {
 .crm-item-title {
   font-size: 16px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .crm-item-badge {
@@ -1200,17 +1284,17 @@ i[data-lucide] {
   flex-direction: column;
   gap: 8px;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .crm-item-details strong {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .crm-item-meta {
   margin-top: 12px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 /* Loading State */
@@ -1222,7 +1306,7 @@ i[data-lucide] {
 
 .crm-skeleton {
   height: 80px;
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, var(--border) 25%, var(--card) 50%, var(--border) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s ease-in-out infinite;
   border-radius: 6px;
@@ -1251,13 +1335,13 @@ i[data-lucide] {
 .crm-empty-title {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin-bottom: 8px;
 }
 
 .crm-empty-text {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 /* Buttons */
@@ -1284,12 +1368,12 @@ i[data-lucide] {
 }
 
 .crm-btn-secondary {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--border);
+  color: var(--text);
 }
 
 .crm-btn-secondary:hover:not(:disabled) {
-  background: #d1d5db;
+  opacity: 0.9;
 }
 
 .crm-btn-danger {
@@ -1334,7 +1418,7 @@ i[data-lucide] {
 .crm-property-actions {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
 }
 
 .crm-action-buttons {
@@ -1386,9 +1470,9 @@ i[data-lucide] {
 
 /* Form Elements */
 .crm-form {
-  background: #fff;
+  background: var(--card);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 24px;
 }
 
@@ -1403,10 +1487,10 @@ i[data-lucide] {
 .crm-form-section-title {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
 }
 
 .crm-form-field {
@@ -1417,7 +1501,7 @@ i[data-lucide] {
   display: block;
   font-size: 14px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--text);
   margin-bottom: 8px;
 }
 
@@ -1426,11 +1510,13 @@ i[data-lucide] {
 .crm-form-field textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   transition: all 0.2s;
   font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .crm-form-field input:focus,
@@ -1444,7 +1530,7 @@ i[data-lucide] {
 .crm-form-field input:disabled,
 .crm-form-field select:disabled,
 .crm-form-field textarea:disabled {
-  background: #f1f5f9;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
@@ -1465,24 +1551,26 @@ i[data-lucide] {
   justify-content: flex-end;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border);
 }
 
 /* Filters */
 .crm-filters {
-  background: #fff;
+  background: var(--card);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   padding: 16px;
 }
 
 .crm-input,
 .crm-select {
   padding: 10px 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   transition: all 0.2s;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .crm-input:focus,
@@ -1516,8 +1604,8 @@ i[data-lucide] {
 
 /* Dashboard KPI Card - Highest Visual Weight */
 .dashboard-kpi-card {
-  background: #fff;
-  border: 2px solid #e5e7eb !important; /* Stronger border */
+  background: var(--card) !important;
+  border: 2px solid var(--border) !important; /* Stronger border */
   border-left: 4px solid #3b82f6 !important; /* Accent border */
   border-radius: 12px !important; /* More rounded */
   padding: 20px !important; /* More padding */
@@ -1529,7 +1617,7 @@ i[data-lucide] {
 .dashboard-kpi-card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 3px 6px rgba(0, 0, 0, 0.08) !important;
   transform: translateY(-2px);
-  border-color: #cbd5e1 !important;
+  border-color: var(--border) !important;
 }
 
 .dashboard-second-row {
@@ -1586,30 +1674,30 @@ i[data-lucide] {
   border-color: currentColor;
 }
 
-/* Dashboard-specific light theme - scoped to .dashboard-content-dark */
+/* Dashboard uses global theme vars */
 .dashboard-content-dark {
-  background: #f8fafc !important;
-  color: #0f172a;
+  background: var(--bg) !important;
+  color: var(--text);
 }
 
 .dashboard-content-dark .crm-section {
-  background: #fff !important;
-  border: 1px solid #e5e7eb !important;
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .dashboard-content-dark .crm-section h2 {
-  color: #0f172a !important;
-  border-bottom: 1px solid #e5e7eb !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .dashboard-content-dark .crm-section h3 {
-  color: #0f172a !important;
+  color: var(--text) !important;
 }
 
 .dashboard-content-dark .crm-section p {
-  color: #64748b !important;
+  color: var(--text-muted) !important;
 }
 
 .dashboard-content-dark .dashboard-page-dark {
@@ -1628,24 +1716,24 @@ i[data-lucide] {
   display: none;
 }
 
-/* Dashboard-specific light theme - scoped to .dashboard-page-dark */
+/* Dashboard page uses theme vars */
 .dashboard-page-dark .crm-section {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
 }
 
 .dashboard-page-dark .crm-section h2 {
-  color: #0f172a;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-page-dark .crm-section h3 {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .dashboard-page-dark .crm-section p {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .dashboard-right-section {

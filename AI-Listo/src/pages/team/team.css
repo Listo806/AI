@@ -1,11 +1,11 @@
-/* Team Page - Light CRM Theme */
+/* Team Page - Theme-aware (light/dark) */
 
 .team-page {
-  background: #fff;
-  color: #0f172a;
+  background: var(--card);
+  color: var(--text);
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
 }
 
 /* Header */
@@ -21,13 +21,13 @@
 .team-title {
   font-size: 28px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0 0 8px 0;
 }
 
 .team-description {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.5;
 }
@@ -59,8 +59,8 @@
 
 /* Empty State */
 .team-empty-state {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 64px 32px;
   text-align: center;
@@ -76,13 +76,13 @@
 .team-empty-title {
   font-size: 20px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0 0 8px 0;
 }
 
 .team-empty-text {
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.6;
   max-width: 400px;
@@ -92,8 +92,8 @@
 
 /* Team Members List (for future phases) */
 .team-members-list {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 32px;
@@ -101,8 +101,8 @@
 
 /* Seats Summary */
 .team-seats-summary {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
 }
@@ -110,7 +110,7 @@
 .team-seats-title {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0 0 16px 0;
 }
 
@@ -123,21 +123,21 @@
 }
 
 .team-seats-used {
-  color: #0f172a;
+  color: var(--text);
   font-weight: 500;
 }
 
 .team-seats-separator {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .team-seats-available {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .team-seats-helper {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.5;
   font-style: italic;

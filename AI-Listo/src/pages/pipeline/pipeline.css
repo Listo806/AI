@@ -19,38 +19,37 @@
 .pipeline-column {
   border-radius: 12px;
   padding: 14px;
-  border: 1px solid #e5e7eb; /* Light theme border */
-  background: rgba(255, 255, 255, 0.92); /* Solid white background with 92% opacity - not glassy */
+  border: 1px solid var(--border);
+  background: var(--card);
   width: 100%;
   display: flex;
   flex-direction: column;
   transition: opacity 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Empty Stage - Still visible but softer */
 .pipeline-column:has(.pipeline-empty) {
-  opacity: 0.85; /* Less reduction - still clearly visible */
-  background: rgba(255, 255, 255, 0.88); /* Still solid, slightly softer */
-  border-color: #e2e8f0; /* Softer border */
+  opacity: 0.85;
+  border-color: var(--border);
 }
 
 .pipeline-column:has(.pipeline-empty) .pipeline-header {
-  opacity: 0.7; /* Keep title visible but softer */
-  color: #94a3b8; /* Softer color */
-  font-weight: 500; /* Less bold */
+  opacity: 0.7;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
 .pipeline-column:has(.pipeline-empty) .pipeline-count {
-  opacity: 0.5; /* Softer count badge */
-  background: #e2e8f0; /* Softer background */
-  color: #94a3b8; /* Softer text */
+  opacity: 0.5;
+  background: var(--border);
+  color: var(--text-muted);
 }
 
 /* Stage Accents - Solid backgrounds with green-tinted overlay for active feel */
 .pipeline-column.new {
-  background: rgba(255, 255, 255, 0.92); /* Solid white base */
-  border-left: 4px solid #3b82f6; /* Stronger border */
+  background: var(--card);
+  border-left: 4px solid #3b82f6;
   position: relative;
 }
 
@@ -68,8 +67,8 @@
 }
 
 .pipeline-column.qualified {
-  background: rgba(255, 255, 255, 0.92);
-  border-left: 4px solid #10b981; /* Teal/green */
+  background: var(--card);
+  border-left: 4px solid #10b981;
   position: relative;
 }
 
@@ -87,7 +86,7 @@
 }
 
 .pipeline-column.proposal {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card);
   border-left: 4px solid #a855f7;
   position: relative;
 }
@@ -106,7 +105,7 @@
 }
 
 .pipeline-column.negotiation {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card);
   border-left: 4px solid #f59e0b;
   position: relative;
 }
@@ -125,8 +124,8 @@
 }
 
 .pipeline-column.won {
-  background: rgba(255, 255, 255, 0.92);
-  border-left: 4px solid #22c55e; /* Green - strongest */
+  background: var(--card);
+  border-left: 4px solid #22c55e;
   position: relative;
 }
 
@@ -144,7 +143,7 @@
 }
 
 .pipeline-column.lost {
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--card);
   border-left: 4px solid #ef4444;
   position: relative;
 }
@@ -169,7 +168,12 @@
 .pipeline-column:has(.pipeline-empty).negotiation::before,
 .pipeline-column:has(.pipeline-empty).won::before,
 .pipeline-column:has(.pipeline-empty).lost::before {
-  opacity: 0.5; /* Reduce green tint intensity when empty */
+  opacity: 0.5;
+}
+
+/* Dark mode: subtle overlays */
+body.crm-dark .pipeline-column::before {
+  opacity: 0.15;
 }
 
 /* Stage Header */
@@ -180,9 +184,9 @@
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 10px;
-  color: #0f172a; /* Light theme color */
+  color: var(--text);
   transition: opacity 0.2s, color 0.2s;
-  position: relative; /* Ensure it's above the green tint overlay */
+  position: relative;
   z-index: 1;
 }
 
@@ -190,8 +194,8 @@
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #e2e8f0; /* Light theme background */
-  color: #475569; /* Light theme text */
+  background: var(--border);
+  color: var(--text-muted);
   font-weight: 500;
   transition: opacity 0.2s, background 0.2s;
 }
@@ -205,33 +209,32 @@
   z-index: 1;
 }
 
-/* Deal Card - Light Theme */
+/* Deal Card */
 .pipeline-deal {
-  background: rgba(255, 255, 255, 0.95); /* More solid white */
+  background: var(--bg);
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   transition: all 0.2s;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* Subtle shadow */
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .pipeline-deal:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  border-color: var(--border);
 }
 
-/* Empty State - Intentional, Reduced Visual Weight */
+/* Empty State */
 .pipeline-empty {
   font-size: 13px;
-  opacity: 0.5; /* Lower opacity */
+  opacity: 0.5;
   padding: 12px;
   border-radius: 8px;
-  border: 1px dashed #cbd5e1; /* Softer, lighter border */
+  border: 1px dashed var(--border);
   text-align: center;
-  color: #94a3b8; /* Softer text color */
-  background: rgba(248, 250, 252, 0.3); /* Very subtle background */
-  font-style: italic; /* Indicate it's an empty state */
+  color: var(--text-muted);
+  background: transparent;
+  font-style: italic;
 }
 
 /* Mobile Pipeline Stacking */

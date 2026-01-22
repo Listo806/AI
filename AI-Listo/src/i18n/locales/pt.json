@@ -56,6 +56,9 @@
     "profile": "Perfil",
     "billing": "Cobrança",
     "settings": "Configurações",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Escuro",
     "logout": "Sair"
   },
   "dashboard": {

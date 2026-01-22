@@ -9,6 +9,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
   </head>
   <body>
+    <script>
+      (function(){ var k='crm-theme'; if(localStorage.getItem(k)==='dark') document.body.classList.add('crm-dark'); })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
