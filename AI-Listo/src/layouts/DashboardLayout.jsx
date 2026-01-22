@@ -95,6 +95,7 @@ export default function DashboardLayout() {
         isOpen={sidebarOpen} 
         onClose={closeSidebar}
         isCollapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
       />
       <div className="crm-main">
         <header className="crm-header">
@@ -109,15 +110,17 @@ export default function DashboardLayout() {
               <span></span>
               <span></span>
             </button>
-            {/* Desktop sidebar collapse toggle */}
-            <button
-              className="crm-sidebar-toggle"
-              onClick={toggleSidebarCollapse}
-              aria-label="Toggle sidebar"
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              ☰
-            </button>
+            {/* Desktop sidebar collapse toggle - Only shown when sidebar is collapsed */}
+            {sidebarCollapsed && (
+              <button
+                className="crm-sidebar-toggle-outside"
+                onClick={toggleSidebarCollapse}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+              >
+                ☰
+              </button>
+            )}
             <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>
               <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
