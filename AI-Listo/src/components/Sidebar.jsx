@@ -38,14 +38,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
         {/* Logo and Site Name */}
         <div className="crm-sidebar-header">
           {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded) */}
-          <button
+          {/* <button
             className="crm-sidebar-toggle-inside"
             onClick={onToggleCollapse}
             aria-label="Toggle sidebar"
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             ☰
-          </button>
+          </button> */}
           <img 
             src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
             alt="Listo Qasa Logo"

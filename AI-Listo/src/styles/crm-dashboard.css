@@ -532,7 +532,6 @@ i[data-lucide] {
   z-index: 1;
   flex: 1;
   min-width: 0; /* Allow flex item to shrink */
-  overflow: hidden; /* Prevent overflow */
 }
 
 .crm-header-image {
@@ -621,6 +620,106 @@ i[data-lucide] {
   .crm-header {
     padding: 10px 12px; /* Reduced padding on mobile */
     min-height: 48px; /* Slightly reduced height */
+  }
+}
+
+/* Unified Sidebar Toggle Button - Header (works for both mobile and desktop) */
+.crm-sidebar-toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #E5E7EB;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-right: 12px;
+  position: relative;
+  /* Better touch target for mobile */
+  min-width: 32px;
+  min-height: 32px;
+  margin-left: -24px;
+}
+
+.crm-sidebar-toggle-header:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.crm-sidebar-toggle-header:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.crm-sidebar-toggle-header:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+.crm-sidebar-toggle-header:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.crm-sidebar-toggle-header i[data-lucide] {
+  width: 22px;
+  height: 22px;
+  stroke: #fff;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
+}
+
+.crm-sidebar-toggle-header:hover i[data-lucide] {
+  transform: rotate(90deg);
+}
+
+/* Add tooltip on hover for better UX */
+.crm-sidebar-toggle-header::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.crm-sidebar-toggle-header:hover::after {
+  opacity: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .crm-sidebar-toggle-header {
+    width: 32px;
+    height: 32px;
+    margin-left: 0px;
+    margin-right: 8px;
+    /* Larger touch target on mobile */
+  }
+  
+  .crm-sidebar-toggle-header i[data-lucide] {
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* Hide tooltip on mobile (touch devices) */
+  .crm-sidebar-toggle-header::after {
+    display: none;
   }
 }
 

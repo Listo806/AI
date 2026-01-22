@@ -6,6 +6,13 @@ import LanguageSelector from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
 import "../styles/crm-dashboard.css";
 
+// Initialize Lucide icons helper
+const initLucideIcons = () => {
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+};
+
 // Map routes to page titles
 const getPageTitle = (pathname) => {
   const routeMap = {
@@ -96,12 +103,39 @@ export default function DashboardLayout() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [accountDropdownOpen]);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   const closeSidebar = () => {
     setSidebarOpen(false);
+  };
+
+  // Unified toggle function - handles both mobile (open/close) and desktop (collapse/expand)
+  const handleSidebarToggle = () => {
+    // Check if we're on mobile (window width < 769px)
+    const isMobile = window.innerWidth < 769;
+    
+    if (isMobile) {
+      // Mobile: toggle open/close
+      setSidebarOpen(!sidebarOpen);
+    } else {
+      // Desktop: toggle collapse/expand
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+    
+    // Initialize Lucide icons after toggle
+    setTimeout(() => {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }, 100);
+  };
+
+  // Get appropriate aria-label and title for the toggle button
+  const getToggleButtonLabel = () => {
+    const isMobile = window.innerWidth < 769;
+    if (isMobile) {
+      return sidebarOpen ? "Close menu" : "Open menu";
+    } else {
+      return sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar";
+    }
   };
 
   const toggleSidebarCollapse = () => {
@@ -109,6 +143,14 @@ export default function DashboardLayout() {
   };
 
   const pageTitle = getPageTitle(location.pathname);
+
+  // Initialize Lucide icons when component mounts
+  useEffect(() => {
+    initLucideIcons();
+    // Re-initialize after a short delay to ensure DOM is ready
+    const timer = setTimeout(initLucideIcons, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className={`crm-root ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -121,27 +163,15 @@ export default function DashboardLayout() {
       <div className="crm-main">
         <header className="crm-header">
           <div className="crm-header-left">
-            {/* Mobile menu toggle */}
+            {/* Unified sidebar toggle button - works for both mobile and desktop */}
             <button 
-              className="crm-mobile-menu-toggle"
-              onClick={toggleSidebar}
-              aria-label="Toggle menu"
+              className="crm-sidebar-toggle-header"
+              onClick={handleSidebarToggle}
+              aria-label={getToggleButtonLabel()}
+              title={getToggleButtonLabel()}
             >
-              <span></span>
-              <span></span>
-              <span></span>
+              <i data-lucide="menu"></i>
             </button>
-            {/* Desktop sidebar collapse toggle - Only shown when sidebar is collapsed */}
-            {sidebarCollapsed && (
-              <button
-                className="crm-sidebar-toggle-outside"
-                onClick={toggleSidebarCollapse}
-                aria-label="Expand sidebar"
-                title="Expand sidebar"
-              >
-                ☰
-              </button>
-            )}
             <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>
               <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />

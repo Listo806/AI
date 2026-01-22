@@ -357,6 +357,34 @@ export default function Dashboard() {
   const [leadsOverTimeRange, setLeadsOverTimeRange] = useState('7d'); // '7d', '1 month', '6 month'
 
   // Demo data for leads over time chart (with deals and revenue)
+  // Chart color palette
+  const COLORS = {
+    revenue: "#4F8DFF",   // primary metric
+    pipeline: "#7AA2F7",
+    newLeads: "#94A3B8",
+    deals: "#CBD5E1",
+    grid: "#1E293B",
+    axis: "#64748B",
+    panel: "#020617"
+  };
+
+  // Performance chart data - mapped from existing data structure
+  const performanceChartData = [
+    { time: "Jan 1", revenue: 0, pipeline: 0, newLeads: 2, deals: 0 },
+    { time: "Jan 8", revenue: 0, pipeline: 1, newLeads: 5, deals: 1 },
+    { time: "Jan 15", revenue: 2500, pipeline: 2, newLeads: 8, deals: 2 },
+    { time: "Jan 22", revenue: 5000, pipeline: 2, newLeads: 6, deals: 2 },
+    { time: "Jan 29", revenue: 7500, pipeline: 3, newLeads: 10, deals: 3 },
+    { time: "Feb 5", revenue: 12500, pipeline: 4, newLeads: 14, deals: 4 },
+    { time: "Feb 12", revenue: 18000, pipeline: 5, newLeads: 18, deals: 5 },
+    { time: "Feb 19", revenue: 24000, pipeline: 6, newLeads: 22, deals: 6 },
+    { time: "Feb 26", revenue: 31000, pipeline: 7, newLeads: 26, deals: 7 },
+    { time: "Mar 5", revenue: 42000, pipeline: 9, newLeads: 32, deals: 9 },
+    { time: "Mar 12", revenue: 56000, pipeline: 11, newLeads: 38, deals: 11 },
+    { time: "Mar 19", revenue: 72000, pipeline: 14, newLeads: 45, deals: 14 }
+  ];
+
+  // Keep old data for other charts
   const leadsOverTimeData = [
     { date: "Jan 1", leads: 2, deals: 0, revenue: 0 },
     { date: "Jan 8", leads: 5, deals: 1, revenue: 0 },
@@ -582,7 +610,7 @@ export default function Dashboard() {
                 <div className="dashboard-graph-column">
                   <div style={{
                     width: '100%',
-                    height: '360px',
+                    height: '400px',
                     background: '#fff',
                     borderRadius: '12px',
                     padding: '16px',
@@ -600,80 +628,137 @@ export default function Dashboard() {
                       {t('dashboard.leadsOverTime')}
                     </h3>
                     <div style={{ flex: 1, minHeight: 0, width: '100%' }}>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={leadsOverTimeData}>
-                        <defs>
-                          <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis 
-                          dataKey="date" 
-                          tick={{ fill: "#64748b", fontSize: 12 }} 
-                        />
-                        <YAxis
-                          yAxisId="left"
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                        />
-                        <YAxis
-                          yAxisId="right"
-                          orientation="right"
-                          tick={{ fill: "#64748b", fontSize: 12 }}
-                          tickFormatter={(v) => `$${v / 1000}k`}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#fff",
-                            borderRadius: "10px",
-                            border: "1px solid #e5e7eb",
-                            color: "#0f172a"
-                          }}
-                          formatter={(value, name) => {
-                            if (name === t('dashboard.revenue')) {
-                              return [`$${value.toLocaleString()}`, name];
-                            }
-                            return [value, name];
-                          }}
-                        />
-                        <Legend />
-                        {/* LEADS — GREEN */}
-                        <Line
-                          yAxisId="left"
-                          type="monotone"
-                          dataKey="leads"
-                          stroke="#22c55e"
-                          strokeWidth={3}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 6 }}
-                          fill="url(#leadsGradient)"
-                          name={t('dashboard.newLeads')}
-                        />
-                        {/* DEALS — RED */}
-                        <Line
-                          yAxisId="left"
-                          type="monotone"
-                          dataKey="deals"
-                          stroke="#EF4444"
-                          strokeWidth={3}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 6 }}
-                          name={t('dashboard.dealsInPipeline')}
-                        />
-                        {/* REVENUE — BLUE */}
-                        <Line
-                          yAxisId="right"
-                          type="monotone"
-                          dataKey="revenue"
-                          stroke="#2563EB"
-                          strokeWidth={3}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 6 }}
-                          name={t('dashboard.revenue')}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                      <ResponsiveContainer width="100%" height={360}>
+                        <LineChart
+                          data={performanceChartData}
+                          margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
+                        >
+                          {/* GRID — VERY SUBTLE */}
+                          <CartesianGrid
+                            stroke={COLORS.grid}
+                            strokeOpacity={0.04}
+                            vertical={false}
+                          />
+
+                          {/* X AXIS */}
+                          <XAxis
+                            dataKey="time"
+                            tick={{ fill: COLORS.axis, fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+
+                          {/* Y AXIS */}
+                          <YAxis
+                            tick={{ fill: COLORS.axis, fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+
+                          {/* TOOLTIP — FLAT CONSOLE STYLE */}
+                          <Tooltip
+                            cursor={{
+                              stroke: COLORS.axis,
+                              strokeOpacity: 0.25,
+                              strokeDasharray: "4 4"
+                            }}
+                            contentStyle={{
+                              background: COLORS.panel,
+                              border: `1px solid ${COLORS.grid}`,
+                              borderRadius: 0,
+                              fontSize: 12,
+                              color: "#E5E7EB"
+                            }}
+                            labelStyle={{
+                              color: COLORS.axis,
+                              marginBottom: 6
+                            }}
+                            formatter={(value, name) => {
+                              if (name === 'revenue') {
+                                return [`$${value.toLocaleString()}`, 'Revenue'];
+                              }
+                              return [value, name === 'newLeads' ? 'New Leads' : name === 'pipeline' ? 'Pipeline' : 'Deals'];
+                            }}
+                          />
+
+                          {/* REVENUE */}
+                          <Line
+                            type="monotone"
+                            dataKey="revenue"
+                            stroke={COLORS.revenue}
+                            strokeWidth={1.25}
+                            strokeOpacity={0.95}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              fill: COLORS.revenue,
+                              stroke: COLORS.panel,
+                              strokeWidth: 1
+                            }}
+                            isAnimationActive={false}
+                            strokeLinecap="butt"
+                            strokeLinejoin="miter"
+                          />
+
+                          {/* PIPELINE */}
+                          <Line
+                            type="monotone"
+                            dataKey="pipeline"
+                            stroke={COLORS.pipeline}
+                            strokeWidth={1.1}
+                            strokeOpacity={0.55}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              fill: COLORS.pipeline,
+                              stroke: COLORS.panel,
+                              strokeWidth: 1
+                            }}
+                            isAnimationActive={false}
+                            strokeLinecap="butt"
+                            strokeLinejoin="miter"
+                          />
+
+                          {/* NEW LEADS */}
+                          <Line
+                            type="monotone"
+                            dataKey="newLeads"
+                            stroke={COLORS.newLeads}
+                            strokeWidth={1}
+                            strokeOpacity={0.45}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              fill: COLORS.newLeads,
+                              stroke: COLORS.panel,
+                              strokeWidth: 1
+                            }}
+                            isAnimationActive={false}
+                            strokeLinecap="butt"
+                            strokeLinejoin="miter"
+                          />
+
+                          {/* DEALS */}
+                          <Line
+                            type="monotone"
+                            dataKey="deals"
+                            stroke={COLORS.deals}
+                            strokeWidth={1}
+                            strokeOpacity={0.35}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              fill: COLORS.deals,
+                              stroke: COLORS.panel,
+                              strokeWidth: 1
+                            }}
+                            isAnimationActive={false}
+                            strokeLinecap="butt"
+                            strokeLinejoin="miter"
+                          />
+
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
                   </div>
                 </div>
