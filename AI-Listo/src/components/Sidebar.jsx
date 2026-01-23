@@ -15,7 +15,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   }, [isCollapsed]); // Re-initialize when collapsed state changes
 
   // Navigation items with Lucide icon names and translation keys
-  const navItems = [
+  const allNavItems = [
     { path: "/dashboard", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     { path: "/dashboard/whatsapp", icon: "message-circle", labelKey: "nav.whatsapp" },
@@ -29,6 +29,12 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
     { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
+
+  // Filter navigation items based on user role
+  // VA users can only see properties
+  const navItems = user?.role === 'va' 
+    ? allNavItems.filter(item => item.path === '/dashboard/properties')
+    : allNavItems;
 
   return (
     <>

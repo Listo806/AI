@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
       admin: '/dashboard/admin',
       wholesaler: '/dashboard/wholesalers',
       investor: '/dashboard/investors',
+      va: '/dashboard/properties', // VA users go directly to properties
     };
     return paths[role] || '/dashboard';
   };
@@ -68,8 +69,13 @@ export function AuthProvider({ children }) {
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
         
-        // Redirect to dashboard (all users go to /dashboard now)
-        navigate('/dashboard');
+        // Redirect based on user role
+        // VA users go directly to properties page
+        if (response.user?.role === 'va') {
+          navigate('/dashboard/properties');
+        } else {
+          navigate('/dashboard');
+        }
       }
 
       return response;

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VaRouteGuard from "./components/VaRouteGuard";
 import DashboardLayout from "./layouts/DashboardLayout";
 import "./i18n/config";
 import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
@@ -33,7 +34,7 @@ import ListingDetail from "./pages/listings/ListingDetail";
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -44,7 +45,10 @@ function RootRoute() {
   }
 
   if (isAuthenticated()) {
-    // User is authenticated - redirect to dashboard
+    // VA users go directly to properties, others go to dashboard
+    if (user?.role === 'va') {
+      return <Navigate to="/dashboard/properties" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -68,7 +72,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <VaRouteGuard>
+              <DashboardLayout />
+            </VaRouteGuard>
           </ProtectedRoute>
         }
       >
@@ -122,7 +128,9 @@ function AppRoutes() {
         path="/account"
         element={
           <ProtectedRoute>
-            <DashboardLayout />
+            <VaRouteGuard>
+              <DashboardLayout />
+            </VaRouteGuard>
           </ProtectedRoute>
         }
       >

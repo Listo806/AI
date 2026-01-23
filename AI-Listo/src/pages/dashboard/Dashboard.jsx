@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/apiClient';
@@ -336,6 +336,11 @@ export default function Dashboard() {
       navigate('/sign-in');
     }
   }, [loading, isAuthenticated, navigate]);
+
+  // Redirect VA users to properties page
+  if (user?.role === 'va') {
+    return <Navigate to="/dashboard/properties" replace />;
+  }
 
   const [stats, setStats] = useState({
     totalLeads: 0,
