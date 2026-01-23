@@ -221,7 +221,7 @@ async function setupDatabase() {
 
 
     // Intelligence foundation migration
-    const migration16Path = path.join(__dirname, '../src/database/migrations/016_intelligence_foundation.sql');
+    const migration16Path = path.join(__dirname, '../src/database/migrations/016_milestone1_intelligence_foundation.sql');
     if (fs.existsSync(migration16Path)) {
       const migration16SQL = fs.readFileSync(migration16Path, 'utf8');
       await pool.query(migration16SQL);
@@ -229,7 +229,7 @@ async function setupDatabase() {
     }
 
     // VA role migration
-    const migration17Path = path.join(__dirname, '../src/database/migrations/017_va_role.sql');
+    const migration17Path = path.join(__dirname, '../src/database/migrations/017_add_va_role_and_edited_by.sql');
     if (fs.existsSync(migration17Path)) {
       const migration17SQL = fs.readFileSync(migration17Path, 'utf8');
       await pool.query(migration17SQL);
