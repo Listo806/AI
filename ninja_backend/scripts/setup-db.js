@@ -219,6 +219,23 @@ async function setupDatabase() {
       console.log('✓ Subscription plans seeded');
     }
 
+
+    // Intelligence foundation migration
+    const migration16Path = path.join(__dirname, '../src/database/migrations/016_intelligence_foundation.sql');
+    if (fs.existsSync(migration16Path)) {
+      const migration16SQL = fs.readFileSync(migration16Path, 'utf8');
+      await pool.query(migration16SQL);
+      console.log('✓ Intelligence foundation migration completed');
+    }
+
+    // VA role migration
+    const migration17Path = path.join(__dirname, '../src/database/migrations/017_va_role.sql');
+    if (fs.existsSync(migration17Path)) {
+      const migration17SQL = fs.readFileSync(migration17Path, 'utf8');
+      await pool.query(migration17SQL);
+      console.log('✓ VA role migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
