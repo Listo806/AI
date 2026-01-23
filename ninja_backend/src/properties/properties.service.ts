@@ -22,7 +22,7 @@ export class PropertiesService {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW(), $19)
       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                 bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
                 created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       [
         createPropertyDto.title,
@@ -63,7 +63,7 @@ export class PropertiesService {
   async findAll(userId: string, teamId: string | null, filters?: { type?: string; status?: string; search?: string }): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                        created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                        created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -116,7 +116,7 @@ export class PropertiesService {
   async findPublic(filters?: { type?: string; search?: string }): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                        created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                        created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -165,7 +165,7 @@ export class PropertiesService {
   ): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                        created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                        created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -231,7 +231,7 @@ export class PropertiesService {
     const { rows } = await this.db.query(
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-              created_by as "createdBy", team_id as "teamId", latitude, longitude,
+              created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
               created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties WHERE id = $1`,
       [id],
@@ -334,6 +334,9 @@ export class PropertiesService {
       return property;
     }
 
+    // Track who edited the property
+    updates.push(`edited_by = $${paramCount++}`);
+    values.push(userId);
     updates.push(`updated_at = NOW()`);
     values.push(id);
 
@@ -341,7 +344,7 @@ export class PropertiesService {
       `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                  bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                 created_by as "createdBy", team_id as "teamId", latitude, longitude,
+                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
                  created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       values,
     );

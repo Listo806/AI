@@ -14,6 +14,7 @@ import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionPlansService } from './subscription-plans.service';
 import { SubscriptionEnforcementService } from './services/subscription-enforcement.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
@@ -22,7 +23,7 @@ import { UpdatePlanDto } from './dto/update-plan.dto';
 @ApiTags('subscriptions')
 @ApiBearerAuth('JWT-auth')
 @Controller('subscriptions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class SubscriptionsController {
   constructor(
     private readonly subscriptionsService: SubscriptionsService,

@@ -117,6 +117,7 @@ async function bootstrap() {
     .addTag('subscriptions', 'Subscription management endpoints')
     .addTag('payments', 'Payment processing endpoints')
     .addTag('integrations', 'Third-party integration endpoints')
+    .addTag('intelligence', 'Buyer intelligence and market signals endpoints')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

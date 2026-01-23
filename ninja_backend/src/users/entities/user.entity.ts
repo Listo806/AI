@@ -5,6 +5,7 @@ export enum UserRole {
   ADMIN = 'admin',
   WHOLESALER = 'wholesaler',
   INVESTOR = 'investor',
+  VA = 'va', // Virtual Assistant / Listings Assistant
 }
 
 export interface User {

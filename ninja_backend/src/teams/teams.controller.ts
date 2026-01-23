@@ -11,6 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { TeamsService } from './teams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
@@ -18,7 +19,7 @@ import { UpdateTeamDto } from './dto/update-team.dto';
 @ApiTags('teams')
 @ApiBearerAuth('JWT-auth')
 @Controller('teams')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 

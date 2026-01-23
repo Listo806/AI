@@ -13,6 +13,7 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { HelpCenterModule } from './help-center/help-center.module';
 import { CrmModule } from './crm/crm.module';
+import { IntelligenceModule } from './intelligence/intelligence.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CrmModule } from './crm/crm.module';
     AnalyticsModule,
     HelpCenterModule,
     CrmModule,
+    IntelligenceModule,
   ],
   controllers: [AppController],
 })

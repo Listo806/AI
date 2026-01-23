@@ -28,6 +28,7 @@ export interface Property {
   lotSize: number | null;
   yearBuilt: number | null;
   createdBy: string;
+  editedBy: string | null;
   teamId: string | null;
   latitude: number | null;
   longitude: number | null;

@@ -10,13 +10,14 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CrmService } from './crm.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class CrmController {
   constructor(private readonly crmService: CrmService) {}
 
