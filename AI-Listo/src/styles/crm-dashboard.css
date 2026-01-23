@@ -41,7 +41,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 200px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
+  width: 165px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
   background: #020617;
   color: #fff;
   padding: 0;
@@ -56,11 +56,15 @@ body {
   /* border-right: 1px solid rgba(255, 255, 255, 0.1); */
 }
 
+.desktop-text{
+  display: initial;
+}
+
 /* Desktop: Sidebar always visible with labels */
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 200px;
+    width: 165px;
   }
 
   /* Collapsed state - icon-only */
@@ -71,9 +75,13 @@ body {
 
 /* Mobile: Sidebar hidden by default, shown when open */
 @media (max-width: 768px) {
+  .desktop-text{
+    display: none;
+  }
+
   .crm-sidebar {
     transform: translateX(-100%);
-    width: 200px; /* Reduced from 240px for tighter feel */
+    width: 165px; /* Reduced from 240px for tighter feel */
   }
   
   .crm-sidebar.open {
@@ -192,15 +200,10 @@ i[data-lucide] {
     display: none;
   }
 
-  /* Center logo when collapsed */
+  /* Center header when collapsed (toggle button will be centered) */
   .crm-sidebar.collapsed .crm-sidebar-header {
     justify-content: center;
     padding: 12px 8px; /* Reduced from 16px 8px */
-  }
-
-  /* Hide toggle button inside sidebar when collapsed */
-  .crm-sidebar.collapsed .crm-sidebar-toggle-inside {
-    display: none !important;
   }
 
   /* Hide user details when collapsed */
@@ -471,7 +474,7 @@ i[data-lucide] {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
+  margin-left: 165px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
@@ -725,6 +728,13 @@ body.crm-dark .crm-main::after {
   opacity: 1;
 }
 
+/* Hide header toggle on desktop - use sidebar toggle instead */
+@media (min-width: 769px) {
+  .crm-sidebar-toggle-header {
+    display: none;
+  }
+}
+
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .crm-sidebar-toggle-header {
@@ -746,38 +756,66 @@ body.crm-dark .crm-main::after {
   }
 }
 
-/* Desktop Sidebar Toggle - Inside Sidebar (left of logo when expanded) */
+/* Desktop Sidebar Toggle - Inside Sidebar (left of logo when expanded, centered when collapsed) */
 .crm-sidebar-toggle-inside {
   display: none; /* Hidden on mobile */
   width: 32px;
   height: 32px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
   color: #E5E7EB;
-  font-size: 16px;
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-right: 0;
+  /* margin-right: 8px; */
+  position: relative;
 }
 
 .crm-sidebar-toggle-inside:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* When collapsed, hide the inside toggle */
+.crm-sidebar-toggle-inside:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.crm-sidebar-toggle-inside i[data-lucide] {
+  width: 22px;
+  height: 22px;
+  stroke: #fff;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
+}
+
+.crm-sidebar-toggle-inside:hover i[data-lucide] {
+  transform: rotate(90deg);
+}
+
+/* Desktop: Show sidebar toggle inside sidebar */
 @media (min-width: 769px) {
   .crm-sidebar-toggle-inside {
     display: flex;
   }
 
+  /* When collapsed, center the toggle button and hide logo */
   .crm-sidebar.collapsed .crm-sidebar-toggle-inside {
-    display: none; /* Hide when sidebar is collapsed */
+    margin-right: 0;
+  }
+
+  .crm-sidebar.collapsed .crm-sidebar-logo {
+    display: none;
+  }
+
+  .crm-sidebar.collapsed .crm-sidebar-header {
+    justify-content: center;
   }
 }
 
@@ -1780,7 +1818,7 @@ body.crm-dark .crm-error {
   }
 
   .crm-sidebar {
-    width: 200px; /* Updated to match new sidebar width */
+    width: 165px; /* Updated to match new sidebar width */
   }
 
   .crm-stats-grid {

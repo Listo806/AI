@@ -12,7 +12,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  });
+  }, [isCollapsed]); // Re-initialize when collapsed state changes
 
   // Navigation items with Lucide icon names and translation keys
   const navItems = [
@@ -37,21 +37,25 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
       <aside className={`crm-sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* Logo and Site Name */}
         <div className="crm-sidebar-header">
-          {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded) */}
-          {/* <button
+          {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded, centered when collapsed) */}
+          <button
             className="crm-sidebar-toggle-inside"
             onClick={onToggleCollapse}
-            aria-label="Toggle sidebar"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            ☰
-          </button> */}
-          <img 
-            src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
-            alt="Listo Qasa Logo"
-            className="crm-sidebar-logo"
-          />
-          {!isCollapsed && <span className="crm-sidebar-brand">Listo Qasa</span>}
+            <i data-lucide="menu"></i>
+          </button>
+          {!isCollapsed && (
+            <>
+              <img 
+                src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
+                alt="Listo Qasa Logo"
+                className="crm-sidebar-logo"
+              />
+              <span className="crm-sidebar-brand">Listo Qasa</span>
+            </>
+          )}
         </div>
 
         <nav className="crm-nav">

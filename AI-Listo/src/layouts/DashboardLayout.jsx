@@ -177,7 +177,7 @@ export default function DashboardLayout() {
             <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>
               <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
-              <span className="text"><strong>CORTEXA</strong></span>
+              <span className="text"><strong>CORTEXA</strong> <span className="desktop-text">Dealflow</span></span>
             </Link>
           </div>
           <div className="crm-header-right">

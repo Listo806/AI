@@ -30,7 +30,7 @@
 
 /* Empty Stage - Still visible but softer */
 .pipeline-column:has(.pipeline-empty) {
-  opacity: 0.85;
+  opacity: 0.95;
   border-color: var(--border);
 }
 
@@ -270,7 +270,7 @@ body.crm-dark .pipeline-column::before {
 
   /* Empty stages on mobile */
   .pipeline-column:has(.pipeline-empty) {
-    opacity: 0.85; /* Even more reduced on mobile */
+    opacity: 0.95; /* Even more reduced on mobile */
   }
 }
 
