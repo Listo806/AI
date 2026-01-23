@@ -5,6 +5,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
+import { useTheme } from '../../theme/ThemeProvider';
 
 // Chart data - will be replaced with real API data
 const chartData = [
@@ -355,34 +356,75 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [leadsTimeframe, setLeadsTimeframe] = useState('Today'); // 'Today', '7d', '30d'
   const [leadsOverTimeRange, setLeadsOverTimeRange] = useState('7d'); // '7d', '1 month', '6 month'
+  const { isDark } = useTheme();
 
-  // Demo data for leads over time chart (with deals and revenue)
-  // Chart color palette
-  const COLORS = {
-    revenue: "#4F8DFF",   // primary metric
-    pipeline: "#7AA2F7",
-    newLeads: "#94A3B8",
-    deals: "#CBD5E1",
-    grid: "#1E293B",
-    axis: "#64748B",
-    panel: "#020617"
+  // Main operational chart - Day-by-day inspection data
+  // Data format: { date: "YYYY-MM-DD", leads: number, pipeline: number, deals: number }
+  const dashboardPerformanceData = [
+    { date: "2026-01-01", leads: 2, pipeline: 0, deals: 0 },
+    { date: "2026-01-02", leads: 5, pipeline: 50000, deals: 1 },
+    { date: "2026-01-03", leads: 8, pipeline: 120000, deals: 2 },
+    { date: "2026-01-04", leads: 6, pipeline: 150000, deals: 2 },
+    { date: "2026-01-05", leads: 10, pipeline: 180000, deals: 3 },
+    { date: "2026-01-06", leads: 14, pipeline: 220000, deals: 4 },
+    { date: "2026-01-07", leads: 18, pipeline: 245000, deals: 6 },
+    { date: "2026-01-08", leads: 22, pipeline: 280000, deals: 7 },
+    { date: "2026-01-09", leads: 26, pipeline: 320000, deals: 8 },
+    { date: "2026-01-10", leads: 32, pipeline: 380000, deals: 10 },
+    { date: "2026-01-11", leads: 38, pipeline: 420000, deals: 12 },
+    { date: "2026-01-12", leads: 45, pipeline: 480000, deals: 14 }
+  ];
+
+  // Chart colors - theme-aware
+  const chartColors = {
+    leads: "#4F8DFF",
+    pipeline: "#22C55E",
+    deals: "#A855F7",
+    grid: isDark ? "#1f2933" : "#e5e7eb",
+    axis: isDark ? "#94a3b8" : "#64748b",
+    panel: isDark ? "#111827" : "#ffffff"
   };
 
-  // Performance chart data - mapped from existing data structure
-  const performanceChartData = [
-    { time: "Jan 1", revenue: 0, pipeline: 0, newLeads: 2, deals: 0 },
-    { time: "Jan 8", revenue: 0, pipeline: 1, newLeads: 5, deals: 1 },
-    { time: "Jan 15", revenue: 2500, pipeline: 2, newLeads: 8, deals: 2 },
-    { time: "Jan 22", revenue: 5000, pipeline: 2, newLeads: 6, deals: 2 },
-    { time: "Jan 29", revenue: 7500, pipeline: 3, newLeads: 10, deals: 3 },
-    { time: "Feb 5", revenue: 12500, pipeline: 4, newLeads: 14, deals: 4 },
-    { time: "Feb 12", revenue: 18000, pipeline: 5, newLeads: 18, deals: 5 },
-    { time: "Feb 19", revenue: 24000, pipeline: 6, newLeads: 22, deals: 6 },
-    { time: "Feb 26", revenue: 31000, pipeline: 7, newLeads: 26, deals: 7 },
-    { time: "Mar 5", revenue: 42000, pipeline: 9, newLeads: 32, deals: 9 },
-    { time: "Mar 12", revenue: 56000, pipeline: 11, newLeads: 38, deals: 11 },
-    { time: "Mar 19", revenue: 72000, pipeline: 14, newLeads: 45, deals: 14 }
-  ];
+  // Google Ads-style tooltip component
+  const InspectionTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const data = payload[0].payload;
+
+    return (
+      <div
+        style={{
+          background: chartColors.panel,
+          border: `1px solid ${chartColors.grid}`,
+          padding: "10px 12px",
+          fontSize: 12,
+          color: isDark ? "#E5E7EB" : "#0f172a",
+          minWidth: 180,
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
+        }}
+      >
+        <div style={{ color: chartColors.axis, marginBottom: 6 }}>
+          {new Date(label).toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+          })}
+        </div>
+
+        <div style={{ marginBottom: 4 }}>
+          Leads: <strong style={{ color: chartColors.leads }}>{data.leads}</strong>
+        </div>
+        <div style={{ marginBottom: 4 }}>
+          Pipeline: <strong style={{ color: chartColors.pipeline }}>${data.pipeline.toLocaleString()}</strong>
+        </div>
+        <div>
+          Deals: <strong style={{ color: chartColors.deals }}>{data.deals}</strong>
+        </div>
+      </div>
+    );
+  };
 
   // Keep old data for other charts
   const leadsOverTimeData = [
@@ -608,7 +650,7 @@ export default function Dashboard() {
 
                 {/* Right Column: Big Graph */}
                 <div className="dashboard-graph-column">
-                  <div style={{
+                  <div className="dashboard-performance-chart-container" style={{
                     width: '100%',
                     height: '400px',
                     background: 'var(--card)',
@@ -616,145 +658,107 @@ export default function Dashboard() {
                     padding: '16px',
                     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                     display: 'flex',
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                    position: 'relative'
                   }}>
                     <h3 style={{
                       fontSize: '14px',
                       fontWeight: '600',
-                      color: '#1f2937',
+                      color: 'var(--text)',
                       marginBottom: '12px',
                       flexShrink: 0
                     }}>
                       {t('dashboard.leadsOverTime')}
                     </h3>
-                    <div style={{ flex: 1, minHeight: 0, width: '100%' }}>
-                      <ResponsiveContainer width="100%" height={360}>
+                    <div style={{ flex: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}>
+                      <ResponsiveContainer width="100%" height="100%">
                         <LineChart
-                          data={performanceChartData}
+                          data={dashboardPerformanceData}
                           margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
                         >
-                          {/* GRID — VERY SUBTLE */}
                           <CartesianGrid
-                            stroke={COLORS.grid}
+                            stroke={chartColors.grid}
                             strokeOpacity={0.04}
                             vertical={false}
                           />
 
-                          {/* X AXIS */}
                           <XAxis
-                            dataKey="time"
-                            tick={{ fill: COLORS.axis, fontSize: 11 }}
+                            dataKey="date"
+                            tickFormatter={(d) =>
+                              new Date(d).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric"
+                              })
+                            }
+                            tick={{ fill: chartColors.axis, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
                           />
 
-                          {/* Y AXIS */}
+                          {/* Left Y-Axis for Leads and Deals (counts) */}
                           <YAxis
-                            tick={{ fill: COLORS.axis, fontSize: 11 }}
+                            yAxisId="left"
+                            tick={{ fill: chartColors.axis, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
+                            tickFormatter={(value) => value.toString()}
                           />
 
-                          {/* TOOLTIP — FLAT CONSOLE STYLE */}
+                          {/* Right Y-Axis for Pipeline (dollars) */}
+                          <YAxis
+                            yAxisId="right"
+                            orientation="right"
+                            tick={{ fill: chartColors.axis, fontSize: 11 }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                          />
+
                           <Tooltip
+                            content={<InspectionTooltip />}
                             cursor={{
-                              stroke: COLORS.axis,
+                              stroke: chartColors.axis,
                               strokeOpacity: 0.25,
                               strokeDasharray: "4 4"
                             }}
-                            contentStyle={{
-                              background: COLORS.panel,
-                              border: `1px solid ${COLORS.grid}`,
-                              borderRadius: 0,
-                              fontSize: 12,
-                              color: "#E5E7EB"
-                            }}
-                            labelStyle={{
-                              color: COLORS.axis,
-                              marginBottom: 6
-                            }}
-                            formatter={(value, name) => {
-                              if (name === 'revenue') {
-                                return [`$${value.toLocaleString()}`, 'Revenue'];
-                              }
-                              return [value, name === 'newLeads' ? 'New Leads' : name === 'pipeline' ? 'Pipeline' : 'Deals'];
-                            }}
                           />
 
-                          {/* REVENUE */}
+                          {/* LEADS - Left Y-axis */}
                           <Line
+                            yAxisId="left"
                             type="monotone"
-                            dataKey="revenue"
-                            stroke={COLORS.revenue}
-                            strokeWidth={1.25}
-                            strokeOpacity={0.95}
+                            dataKey="leads"
+                            stroke={chartColors.leads}
+                            strokeWidth={1.2}
                             dot={false}
-                            activeDot={{
-                              r: 4,
-                              fill: COLORS.revenue,
-                              stroke: COLORS.panel,
-                              strokeWidth: 1
-                            }}
+                            activeDot={{ r: 4 }}
                             isAnimationActive={false}
-                            strokeLinecap="butt"
-                            strokeLinejoin="miter"
                           />
 
-                          {/* PIPELINE */}
+                          {/* PIPELINE - Right Y-axis */}
                           <Line
+                            yAxisId="right"
                             type="monotone"
                             dataKey="pipeline"
-                            stroke={COLORS.pipeline}
+                            stroke={chartColors.pipeline}
                             strokeWidth={1.1}
-                            strokeOpacity={0.55}
                             dot={false}
-                            activeDot={{
-                              r: 4,
-                              fill: COLORS.pipeline,
-                              stroke: COLORS.panel,
-                              strokeWidth: 1
-                            }}
+                            activeDot={{ r: 4 }}
                             isAnimationActive={false}
-                            strokeLinecap="butt"
-                            strokeLinejoin="miter"
                           />
 
-                          {/* NEW LEADS */}
+                          {/* DEALS - Left Y-axis */}
                           <Line
-                            type="monotone"
-                            dataKey="newLeads"
-                            stroke={COLORS.newLeads}
-                            strokeWidth={1}
-                            strokeOpacity={0.45}
-                            dot={false}
-                            activeDot={{
-                              r: 4,
-                              fill: COLORS.newLeads,
-                              stroke: COLORS.panel,
-                              strokeWidth: 1
-                            }}
-                            isAnimationActive={false}
-                            strokeLinecap="butt"
-                            strokeLinejoin="miter"
-                          />
-
-                          {/* DEALS */}
-                          <Line
+                            yAxisId="left"
                             type="monotone"
                             dataKey="deals"
-                            stroke={COLORS.deals}
+                            stroke={chartColors.deals}
                             strokeWidth={1}
-                            strokeOpacity={0.35}
                             dot={false}
-                            activeDot={{
-                              r: 4,
-                              fill: COLORS.deals,
-                              stroke: COLORS.panel,
-                              strokeWidth: 1
-                            }}
+                            activeDot={{ r: 4 }}
                             isAnimationActive={false}
-                            strokeLinecap="butt"
-                            strokeLinejoin="miter"
                           />
 
                         </LineChart>

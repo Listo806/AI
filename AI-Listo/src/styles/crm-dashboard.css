@@ -1904,21 +1904,69 @@ body.crm-dark .crm-error {
 
   /* Second row - mobile */
   .dashboard-second-row-body {
-    grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 20px by ~35% */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important; /* Clear separation between chart and funnel on mobile */
+    align-items: stretch !important;
   }
 
   .dashboard-ladder-column {
-    order: 2; /* Show ladder after graph on mobile */
-    padding-top: 8px; /* Reduced from 10px by 20% */
+    order: 2 !important; /* Show ladder after graph on mobile */
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
   }
 
   .dashboard-graph-column {
-    order: 1; /* Show graph first on mobile */
+    order: 1 !important; /* Show graph first on mobile */
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    flex-shrink: 0 !important;
   }
 
-  .dashboard-graph-column > div {
-    height: 300px !important;
+  /* Chart container - fixed height and proper containment on mobile */
+  .dashboard-performance-chart-container {
+    height: 380px !important;
+    min-height: 380px !important;
+    max-height: 380px !important;
+    overflow: hidden !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ResponsiveContainer inside chart - ensure it respects container height */
+  .dashboard-performance-chart-container .recharts-responsive-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  /* Chart inner wrapper - ensure proper height calculation */
+  .dashboard-performance-chart-container > div:last-child {
+    height: calc(100% - 40px) !important;
+    max-height: calc(100% - 40px) !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  /* Ensure section containing chart and funnel has proper spacing */
+  .dashboard-second-row .crm-section {
+    margin-bottom: 24px !important;
+    overflow: visible !important;
+  }
+
+  /* Additional mobile containment - ensure chart doesn't overflow */
+  .dashboard-graph-column .dashboard-performance-chart-container {
+    contain: layout style paint !important;
+  }
+
+  /* Ensure funnel column has proper top margin to start after chart */
+  .dashboard-ladder-column {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
   }
 
   /* Reduce section header spacing */
