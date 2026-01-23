@@ -1,0 +1,278 @@
+/* AI Automations Page - Theme-aware (light/dark) */
+
+/* Header */
+.ai-automations-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ai-automations-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.ai-automations-back-btn {
+  padding: 8px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.ai-automations-back-btn:hover {
+  background: var(--border);
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Section Description */
+.ai-automations-description {
+  margin-bottom: 12px;
+}
+
+.ai-automations-description p {
+  font-size: 16px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Helper Line */
+.ai-automations-helper-line {
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  background: var(--card);
+  border-left: 3px solid #3b82f6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Automation Modules Grid */
+.ai-automations-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Module Card */
+.ai-automations-module-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.ai-automations-module-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+/* Inactive/Locked Module - NOT Interactive */
+.ai-automations-module-inactive,
+.ai-automations-module-locked {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+  background: var(--card);
+  border-color: var(--border);
+  pointer-events: none;
+}
+
+.ai-automations-module-inactive:hover,
+.ai-automations-module-locked:hover {
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Lock Badge */
+.ai-automations-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+body.crm-dark .ai-automations-lock-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.ai-automations-module-locked .ai-automations-module-header h2 {
+  color: var(--text-muted);
+}
+
+.ai-automations-module-locked .ai-automations-module-description p {
+  color: var(--text-muted);
+}
+
+.ai-automations-module-locked .ai-automations-module-status span {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.ai-automations-module-header {
+  margin-bottom: 12px;
+}
+
+.ai-automations-module-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.ai-automations-module-description {
+  margin-bottom: 16px;
+}
+
+.ai-automations-module-description p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-automations-module-status {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.ai-automations-module-status span {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Detail View */
+.ai-automations-detail {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+}
+
+.ai-automations-detail-description {
+  margin-bottom: 20px;
+}
+
+.ai-automations-detail-description p {
+  font-size: 16px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.ai-automations-placeholder {
+  margin-top: 32px;
+  padding: 32px;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.ai-automations-placeholder p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .ai-automations-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px; /* Reduced from 12px by ~17% */
+    margin-bottom: 16px; /* Reduced from 24px by ~33% */
+  }
+
+  .ai-automations-header h1 {
+    font-size: 24px;
+  }
+
+  .ai-automations-back-btn {
+    width: 100%;
+    text-align: center;
+    padding: 6px 13px; /* Reduced from 8px 16px by ~25-19% */
+  }
+
+  .ai-automations-description {
+    margin-bottom: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-automations-helper-line {
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
+  }
+
+  .ai-automations-modules {
+    gap: 13px; /* Reduced from 20px by ~35% */
+  }
+
+  .ai-automations-module-card {
+    padding: 16px; /* Reduced from 20px by 20% */
+  }
+
+  .ai-automations-module-header {
+    margin-bottom: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-automations-module-header h2 {
+    font-size: 18px;
+  }
+
+  .ai-automations-module-description {
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .ai-automations-module-status {
+    padding-top: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  /* Locked modules on mobile */
+  .ai-automations-module-locked,
+  .ai-automations-module-inactive {
+    opacity: 0.55; /* Even more reduced on mobile */
+  }
+
+  .ai-automations-lock-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    margin-left: 8px;
+  }
+
+  .ai-automations-detail {
+    padding: 19px; /* Reduced from 24px by ~21% */
+  }
+
+  .ai-automations-detail-description {
+    margin-bottom: 16px; /* Reduced from 20px by 20% */
+  }
+
+  .ai-automations-placeholder {
+    padding: 19px; /* Reduced from 24px by ~21% */
+    margin-top: 20px; /* Reduced from 32px by ~38% */
+  }
+}

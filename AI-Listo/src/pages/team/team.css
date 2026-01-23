@@ -1,0 +1,187 @@
+/* Team Page - Theme-aware (light/dark) */
+
+.team-page {
+  background: var(--card);
+  color: var(--text);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+/* Header */
+.team-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.team-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.team-description {
+  font-size: 16px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Add Member Button */
+.team-add-btn {
+  padding: 10px 20px;
+  background: #2563EB;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.team-add-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+}
+
+.team-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Empty State */
+.team-empty-state {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 64px 32px;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.team-empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.team-empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.team-empty-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Team Members List (for future phases) */
+.team-members-list {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+/* Seats Summary */
+.team-seats-summary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.team-seats-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 16px 0;
+}
+
+.team-seats-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.team-seats-used {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.team-seats-separator {
+  color: var(--text-muted);
+}
+
+.team-seats-available {
+  color: var(--text-muted);
+}
+
+.team-seats-helper {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .team-page {
+    padding: 13px; /* Reduced from 24px by ~46% */
+  }
+
+  .team-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+    gap: 13px; /* Reduced from 24px by ~46% */
+  }
+
+  .team-add-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 16px; /* Reduced from 10px 20px by ~20% */
+  }
+
+  .team-empty-state {
+    padding: 38px 19px; /* Reduced from 48px 24px by ~21% */
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+  }
+
+  .team-empty-icon {
+    font-size: 48px;
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .team-members-list {
+    padding: 19px; /* Reduced from 24px by ~21% */
+    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+  }
+
+  .team-seats-summary {
+    padding: 19px; /* Reduced from 24px by ~21% */
+  }
+
+  .team-seats-title {
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+}

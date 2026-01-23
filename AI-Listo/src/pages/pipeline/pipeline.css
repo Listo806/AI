@@ -1,0 +1,309 @@
+/* Pipeline Stage Color Tokens */
+:root {
+  --stage-new: rgba(37, 99, 235, 0.15);        /* Blue */
+  --stage-qualified: rgba(16, 185, 129, 0.15); /* Teal */
+  --stage-proposal: rgba(168, 85, 247, 0.15);  /* Purple */
+  --stage-negotiation: rgba(245, 158, 11, 0.15);/* Orange */
+  --stage-won: rgba(34, 197, 94, 0.18);        /* Green */
+  --stage-lost: rgba(239, 68, 68, 0.15);       /* Red */
+}
+
+/* Pipeline Board - Mobile First (Single Column) */
+.pipeline-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Pipeline Column Styling */
+.pipeline-column {
+  border-radius: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Empty Stage - Still visible but softer */
+.pipeline-column:has(.pipeline-empty) {
+  opacity: 0.95;
+  border-color: var(--border);
+}
+
+.pipeline-column:has(.pipeline-empty) .pipeline-header {
+  opacity: 0.7;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pipeline-column:has(.pipeline-empty) .pipeline-count {
+  opacity: 0.5;
+  background: var(--border);
+  color: var(--text-muted);
+}
+
+/* Stage Accents - Solid backgrounds with green-tinted overlay for active feel */
+.pipeline-column.new {
+  background: var(--card);
+  border-left: 4px solid #3b82f6;
+  position: relative;
+}
+
+.pipeline-column.new::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint overlay */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pipeline-column.qualified {
+  background: var(--card);
+  border-left: 4px solid #10b981;
+  position: relative;
+}
+
+.pipeline-column.qualified::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%); /* Stronger green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pipeline-column.proposal {
+  background: var(--card);
+  border-left: 4px solid #a855f7;
+  position: relative;
+}
+
+.pipeline-column.proposal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pipeline-column.negotiation {
+  background: var(--card);
+  border-left: 4px solid #f59e0b;
+  position: relative;
+}
+
+.pipeline-column.negotiation::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%); /* Green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pipeline-column.won {
+  background: var(--card);
+  border-left: 4px solid #22c55e;
+  position: relative;
+}
+
+.pipeline-column.won::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%); /* Strongest green tint */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pipeline-column.lost {
+  background: var(--card);
+  border-left: 4px solid #ef4444;
+  position: relative;
+}
+
+.pipeline-column.lost::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.04) 0%, rgba(16, 185, 129, 0.03) 100%); /* Subtle green tint even for lost */
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Empty stages keep green tint but softer */
+.pipeline-column:has(.pipeline-empty).new::before,
+.pipeline-column:has(.pipeline-empty).qualified::before,
+.pipeline-column:has(.pipeline-empty).proposal::before,
+.pipeline-column:has(.pipeline-empty).negotiation::before,
+.pipeline-column:has(.pipeline-empty).won::before,
+.pipeline-column:has(.pipeline-empty).lost::before {
+  opacity: 0.5;
+}
+
+/* Dark mode: subtle overlays */
+body.crm-dark .pipeline-column::before {
+  opacity: 0.15;
+}
+
+/* Stage Header */
+.pipeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--text);
+  transition: opacity 0.2s, color 0.2s;
+  position: relative;
+  z-index: 1;
+}
+
+.pipeline-count {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--text-muted);
+  font-weight: 500;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+/* Deals Container */
+.pipeline-deals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative; /* Ensure it's above the green tint overlay */
+  z-index: 1;
+}
+
+/* Deal Card */
+.pipeline-deal {
+  background: var(--bg);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.pipeline-deal:hover {
+  border-color: var(--border);
+}
+
+/* Empty State */
+.pipeline-empty {
+  font-size: 13px;
+  opacity: 0.5;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  background: transparent;
+  font-style: italic;
+}
+
+/* Mobile Pipeline Stacking */
+@media (max-width: 1023px) {
+  .pipeline-board {
+    display: flex;
+    flex-direction: column;
+    gap: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .pipeline-column {
+    width: 100%;
+    min-height: auto;
+    padding: 11px; /* Reduced from 14px by ~21% */
+  }
+
+  .pipeline-header {
+    margin-bottom: 8px; /* Reduced from 10px by 20% */
+  }
+
+  .pipeline-deals {
+    gap: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .pipeline-deal {
+    padding: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .pipeline-empty {
+    padding: 10px;
+    font-size: 12px; /* Slightly smaller on mobile */
+  }
+
+  /* Empty stages on mobile */
+  .pipeline-column:has(.pipeline-empty) {
+    opacity: 0.95; /* Even more reduced on mobile */
+  }
+}
+
+/* Desktop Behavior - 3 Column Grid (2 Rows) */
+@media (min-width: 1024px) {
+  .pipeline-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .pipeline-column {
+    width: 100%;
+    min-height: auto;
+    background: rgba(255, 255, 255, 0.95); /* Even more solid on desktop */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); /* Stronger shadow on desktop */
+  }
+
+  /* Stronger green tint on desktop for active feel */
+  .pipeline-column.new::before,
+  .pipeline-column.qualified::before,
+  .pipeline-column.proposal::before,
+  .pipeline-column.negotiation::before,
+  .pipeline-column.won::before,
+  .pipeline-column.lost::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.06) 100%); /* Stronger green on desktop */
+  }
+
+  .pipeline-column.qualified::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+  }
+
+  .pipeline-column.won::before {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.10) 100%); /* Strongest green on desktop */
+  }
+}

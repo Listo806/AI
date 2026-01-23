@@ -1,0 +1,201 @@
+/* Global Color Tokens for AI Pages */
+:root {
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --muted-text: rgba(255, 255, 255, 0.65);
+
+  --ai-accent: rgba(59, 130, 246, 0.85);
+  --ai-accent-bg: rgba(59, 130, 246, 0.15);
+
+  --success-bg: rgba(34, 197, 94, 0.15);
+  --warning-bg: rgba(245, 158, 11, 0.15);
+}
+
+/* Light theme adjustments */
+:root {
+  --card-bg-light: #fff;
+  --card-border-light: #e5e7eb;
+  --muted-text-light: #64748b;
+}
+
+/* Contacts Empty State - Intentional, Reduced Visual Weight */
+.contacts-empty {
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: 12px;
+  background: #f8fafc; /* Softer background */
+  border: 1px dashed #cbd5e1; /* Softer border */
+  opacity: 0.75; /* Reduced opacity */
+  margin: 24px 0;
+}
+
+.contacts-empty > div {
+  opacity: 0.6; /* Icon with lower opacity */
+  margin-bottom: 16px;
+}
+
+.contacts-empty h3 {
+  margin-top: 12px;
+  color: #64748b; /* Softer color */
+  font-size: 18px;
+  font-weight: 500; /* Less bold */
+  margin-bottom: 8px;
+}
+
+.contacts-empty p {
+  color: #94a3b8; /* Softer text color */
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 1.6;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* AI Chat Container */
+.ai-chat-container {
+  background: var(--card-bg-light);
+  border: 1px solid var(--card-border-light);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  max-height: 800px;
+}
+
+/* Assistant Message Bubble */
+.ai-message {
+  background: var(--ai-accent-bg);
+  border-left: 4px solid var(--ai-accent);
+  border-radius: 12px;
+  padding: 12px;
+  color: #0f172a;
+  max-width: 70%;
+}
+
+/* User Message Bubble */
+.ai-message.user {
+  background: #3b82f6;
+  border-left: none;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* Input Bar */
+.ai-input {
+  border-radius: 14px;
+  border: 1px solid var(--card-border-light);
+  padding: 12px 16px;
+  font-size: 14px;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.ai-input:focus {
+  outline: none;
+  border-color: var(--ai-accent);
+  box-shadow: 0 0 0 3px var(--ai-accent-bg);
+}
+
+/* Active Tab */
+.ai-tab.active {
+  background: var(--ai-accent-bg);
+  border: 1px solid var(--ai-accent);
+  color: var(--ai-accent);
+  font-weight: 600;
+}
+
+/* AI Automations Tabs */
+.automation-tab {
+  padding: 12px 24px;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-weight: 400;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.automation-tab.active {
+  color: var(--ai-accent);
+  border-bottom: 2px solid var(--ai-accent);
+  font-weight: 600;
+}
+
+/* Automation Cards */
+.automation-card {
+  background: var(--card-bg-light);
+  border: 1px solid var(--card-border-light);
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.automation-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Locked / Future State */
+.automation-locked {
+  opacity: 0.6;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.02),
+    rgba(0, 0, 0, 0.02) 10px,
+    rgba(0, 0, 0, 0.04) 10px,
+    rgba(0, 0, 0, 0.04) 20px
+  );
+  cursor: not-allowed;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .contacts-empty {
+    padding: 32px 16px; /* Reduced but maintain emphasis */
+    opacity: 0.7; /* Slightly more visible on mobile */
+  }
+
+  .contacts-empty > div {
+    opacity: 0.5; /* Icon with lower opacity */
+  }
+
+  .contacts-empty h3 {
+    margin-top: 10px;
+    font-size: 16px; /* Slightly smaller on mobile */
+  }
+
+  .contacts-empty p {
+    margin-top: 6px;
+    font-size: 13px; /* Slightly smaller on mobile */
+  }
+
+  .ai-chat-container {
+    height: calc(100vh - 150px);
+    max-height: 600px;
+    padding: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .ai-message {
+    max-width: 85%;
+    padding: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .ai-input {
+    padding: 10px 13px; /* Reduced from 12px 16px by ~17-19% */
+  }
+
+  .automation-tab {
+    padding: 8px 13px; /* Reduced from 10px 16px by ~20-19% */
+    font-size: 14px;
+  }
+
+  .automation-card {
+    padding: 14px; /* Reduced from 18px by ~22% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+}

@@ -1,0 +1,469 @@
+import { Injectable } from '@nestjs/common';
+import { LeadStatus } from './entities/lead.entity';
+
+export type LeadPriority = 'HOT' | 'WARM' | 'COLD';
+export type RecommendedAction = 'CALL' | 'WHATSAPP' | 'EMAIL' | 'FOLLOW_UP';
+export type UrgencyState = 'ACTIVE' | 'NEEDS_ATTENTION' | 'COOLING';
+
+export interface LeadAICalculation {
+  aiScore: number; // 0-100
+  aiTier: LeadPriority;
+  urgencyState: UrgencyState; // Time-based urgency (separate from AI tier)
+  aiScoreLabel: string;
+  aiReasonBullets: string[];
+  recommendedAction: RecommendedAction;
+  recommendedActionReason: string;
+  followUpRecommended?: boolean; // True if follow-up is recommended (24h+ no response)
+  cooldownActive?: boolean; // True if action was taken recently (< 2h) and cooldown is active
+}
+
+export interface LeadContext {
+  status: LeadStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  lastContactedAt?: Date | null;
+  lastActivityAt?: Date | null; // For AI score decay calculation
+  lastActionType?: string | null; // 'call', 'whatsapp', 'email', 'sms'
+  lastActionAt?: Date | null; // When last action was taken
+  propertyPrice?: number | null;
+  propertyType?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  source?: string | null;
+  engagementCount?: number | null;
+}
+
+@Injectable()
+export class LeadAIService {
+  /**
+   * Calculate AI score (0-100) based on multiple factors
+   * Base = 50, then adjust based on recency, contact freshness, reachability, engagement
+   */
+  calculateAIScore(context: LeadContext): number {
+    let score = 50; // Base score
+
+    const now = Date.now();
+    const createdAt = new Date(context.createdAt).getTime();
+    const daysSinceCreation = (now - createdAt) / (1000 * 60 * 60 * 24);
+    const lastContactedAt = context.lastContactedAt ? new Date(context.lastContactedAt).getTime() : null;
+    const daysSinceLastContact = lastContactedAt ? (now - lastContactedAt) / (1000 * 60 * 60 * 24) : null;
+    const hoursSinceLastContact = lastContactedAt ? (now - lastContactedAt) / (1000 * 60 * 60) : null;
+
+    // Recency scoring
+    if (daysSinceCreation <= 1) {
+      score += 20; // Created within 24h
+    } else if (daysSinceCreation <= 7) {
+      score += 10; // Within 7 days
+    } else if (daysSinceCreation <= 30) {
+      score += 5; // Within 30 days
+    } else {
+      score -= 10; // Older than 30 days
+    }
+
+    // Contact freshness scoring
+    if (lastContactedAt === null) {
+      score += 10; // Uncontacted
+    } else if (hoursSinceLastContact < 48) {
+      score -= 10; // Contacted recently (within 48h)
+    } else if (daysSinceLastContact > 7) {
+      score += 5; // Last contact older than 7 days
+      if (daysSinceLastContact > 14) {
+        score += 5; // Last contact older than 14 days (additional +5)
+      }
+    }
+
+    // Reachability scoring
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
+
+    if (hasPhone) {
+      score += 10;
+    }
+    if (hasEmail) {
+      score += 5;
+    }
+    if (hasWhatsapp) {
+      score += 10; // LATAM preference
+    }
+
+    // Engagement scoring (if available)
+    if (context.engagementCount !== undefined && context.engagementCount !== null) {
+      if (context.engagementCount > 3) {
+        score += 10;
+      } else if (context.engagementCount === 0) {
+        score -= 10;
+      }
+    }
+
+    // Property value scoring (high-value listings get boost)
+    if (context.propertyPrice !== undefined && context.propertyPrice !== null) {
+      if (context.propertyPrice >= 450000) {
+        score += 8; // High-value property boost (+5-10 range, using 8)
+      } else if (context.propertyPrice >= 300000) {
+        score += 4; // Medium-high value boost
+      }
+    }
+
+    // AI Score Decay: -1 point per 24 hours of inactivity
+    if (context.lastActivityAt) {
+      const lastActivity = new Date(context.lastActivityAt).getTime();
+      const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+      const daysSinceActivity = hoursSinceActivity / 24;
+      const decayPoints = Math.floor(daysSinceActivity); // -1 per full 24h
+      score -= decayPoints;
+    }
+
+    // Clamp score between 0 and 100
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Determine tier (HOT/WARM/COLD) based on AI score
+   */
+  calculateTier(aiScore: number): LeadPriority {
+    if (aiScore >= 80) {
+      return 'HOT';
+    } else if (aiScore >= 60) {
+      return 'WARM';
+    } else {
+      return 'COLD';
+    }
+  }
+
+  /**
+   * Generate AI score label (interpretation)
+   */
+  generateScoreLabel(aiScore: number, aiTier: LeadPriority): string {
+    if (aiTier === 'HOT') {
+      return 'High intent — contact within 24h';
+    } else if (aiTier === 'WARM') {
+      return 'Medium intent — re-engagement suggested';
+    } else {
+      return 'Low intent — manual follow-up recommended';
+    }
+  }
+
+  /**
+   * Generate AI reason bullets (2-4 reasons)
+   */
+  generateReasonBullets(context: LeadContext, aiScore: number): string[] {
+    const reasons: string[] = [];
+    const now = Date.now();
+    const createdAt = new Date(context.createdAt).getTime();
+    const daysSinceCreation = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+    const lastContactedAt = context.lastContactedAt ? new Date(context.lastContactedAt).getTime() : null;
+    const daysSinceLastContact = lastContactedAt ? Math.floor((now - lastContactedAt) / (1000 * 60 * 60 * 24)) : null;
+
+    // Always include 1 recency reason
+    if (daysSinceCreation === 0) {
+      reasons.push('Created today');
+    } else if (daysSinceCreation === 1) {
+      reasons.push('Created 1 day ago');
+    } else {
+      reasons.push(`Created ${daysSinceCreation} days ago`);
+    }
+
+    // Always include 1 contact reason
+    if (lastContactedAt === null) {
+      reasons.push('No contact yet');
+    } else if (daysSinceLastContact === 0) {
+      reasons.push('Contacted today');
+    } else if (daysSinceLastContact === 1) {
+      reasons.push('Last contact 1 day ago');
+    } else if (daysSinceLastContact >= 14) {
+      reasons.push(`No contact in ${daysSinceLastContact}+ days`);
+    } else {
+      reasons.push(`Last contact ${daysSinceLastContact} days ago`);
+    }
+
+    // Include 1 channel reason
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
+
+    if (hasWhatsapp) {
+      reasons.push('WhatsApp available');
+    } else if (hasPhone) {
+      reasons.push('Phone number available');
+    } else if (hasEmail) {
+      reasons.push('Email only');
+    }
+
+    // Include 1 engagement reason if data exists
+    if (context.engagementCount !== undefined && context.engagementCount !== null) {
+      if (context.engagementCount > 3) {
+        reasons.push('High engagement activity');
+      } else if (context.engagementCount === 0) {
+        reasons.push('No engagement recorded');
+      } else {
+        reasons.push(`${context.engagementCount} engagement(s)`);
+      }
+    }
+
+    // Add ONE stronger intent/value signal (prioritize high-value property with commission framing)
+    let addedIntentSignal = false;
+    
+    // High-value property signal with commission framing (most important)
+    if (context.propertyPrice !== undefined && context.propertyPrice !== null && context.propertyPrice >= 450000) {
+      const commission = this.calculateCommission(context.propertyPrice);
+      const commissionFormatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(commission);
+      
+      // Show commission amount for high-value properties
+      if (commission >= 20000) {
+        reasons.push(`High commission potential (${commissionFormatted})`);
+      } else {
+        reasons.push(`High commission potential`);
+      }
+      addedIntentSignal = true;
+    }
+    
+    // Buyer intent from source (if available and not already added)
+    if (!addedIntentSignal && context.source) {
+      const sourceLower = context.source.toLowerCase();
+      if (sourceLower.includes('purchase') || sourceLower.includes('buy') || sourceLower.includes('buyer')) {
+        reasons.push('Buyer intent: Purchase');
+        addedIntentSignal = true;
+      }
+    }
+    
+    // Multiple property views (if engagement count indicates this)
+    if (!addedIntentSignal && context.engagementCount !== undefined && context.engagementCount !== null && context.engagementCount > 5) {
+      reasons.push('Multiple property views');
+      addedIntentSignal = true;
+    }
+
+    // Return 2-4 reasons (prioritize the most important)
+    return reasons.slice(0, 4);
+  }
+
+  /**
+   * Recommend next action based on lead context
+   * IMPORTANT: Phone is always preferred over email. Email is only used as fallback when phone is not available.
+   * 
+   * Decision logic:
+   * 1. Check cooldown period (if action was taken < 2 hours ago, suggest wait or alternative)
+   * 2. If no response after 24h → Recommend follow-up SMS/WhatsApp
+   * 3. If no response after 48h → Recommend Email or WhatsApp
+   * 4. If WhatsApp is available AND lead has NOT been contacted recently → WhatsApp
+   * 5. If WhatsApp is NOT available → Call
+   * 6. If WhatsApp is available BUT lead was contacted recently (within 24h) → Call
+   * 
+   * Only ONE primary action is recommended (never both).
+   */
+  recommendAction(context: LeadContext, lastContactedAt?: Date | null): { action: RecommendedAction; reason: string; followUpRecommended?: boolean; cooldownActive?: boolean } {
+    const hasPhone = !!(context.phone && context.phone.trim());
+    const hasEmail = !!(context.email && context.email.trim());
+    const hasWhatsapp = hasPhone && this.isWhatsAppSupported(context.phone);
+
+    const now = Date.now();
+    const lastContact = lastContactedAt ? new Date(lastContactedAt).getTime() : null;
+    const hoursSinceLastContact = lastContact ? (now - lastContact) / (1000 * 60 * 60) : null;
+    const recentlyContacted = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact <= 24;
+    const noResponseAfter24h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 24;
+    const noResponseAfter48h = lastContact !== null && hoursSinceLastContact !== null && hoursSinceLastContact >= 48;
+    
+    // Check for cooldown period (action taken < 2 hours ago)
+    const lastActionAt = context.lastActionAt ? new Date(context.lastActionAt).getTime() : null;
+    const lastActionType = context.lastActionType || null;
+    const hoursSinceLastAction = lastActionAt ? (now - lastActionAt) / (1000 * 60 * 60) : null;
+    const inCooldown = lastActionAt !== null && hoursSinceLastAction !== null && hoursSinceLastAction < 2;
+
+    // Rule 1: Cooldown period - if action was taken < 2 hours ago, suggest wait or alternative
+    if (inCooldown && lastActionType) {
+      // If last action was call, suggest WhatsApp as alternative
+      if (lastActionType === 'call' && hasWhatsapp) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'Call attempted recently. Try WhatsApp as alternative contact method.',
+          cooldownActive: true,
+        };
+      }
+      // If last action was WhatsApp, suggest call as alternative
+      if (lastActionType === 'whatsapp' && hasPhone) {
+        return {
+          action: 'CALL',
+          reason: 'WhatsApp sent recently. Try calling for immediate response.',
+          cooldownActive: true,
+        };
+      }
+      // If last action was email, suggest phone contact
+      if (lastActionType === 'email' && hasPhone) {
+        if (hasWhatsapp) {
+          return {
+            action: 'WHATSAPP',
+            reason: 'Email sent recently. Try WhatsApp for faster response.',
+            cooldownActive: true,
+          };
+        } else {
+          return {
+            action: 'CALL',
+            reason: 'Email sent recently. Try calling for immediate response.',
+            cooldownActive: true,
+          };
+        }
+      }
+      // If no alternative available, suggest follow-up
+      return {
+        action: 'FOLLOW_UP',
+        reason: `Action taken ${Math.round(hoursSinceLastAction * 60)} minutes ago. Wait before next contact.`,
+        cooldownActive: true,
+      };
+    }
+
+    // Rule 4 & 5: Follow-up automation after 24h/48h
+    if (noResponseAfter48h && hasPhone) {
+      // After 48h, recommend WhatsApp or Email
+      if (hasWhatsapp) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'Send follow-up text now — no response after 48 hours.',
+          followUpRecommended: true,
+        };
+      } else if (hasEmail) {
+        return {
+          action: 'EMAIL',
+          reason: 'Send follow-up email — no response after 48 hours.',
+          followUpRecommended: true,
+        };
+      }
+    }
+    
+    if (noResponseAfter24h && hasPhone && hasWhatsapp) {
+      // After 24h, recommend follow-up SMS/WhatsApp
+      return {
+        action: 'WHATSAPP',
+        reason: 'Send follow-up text now — no response after 24 hours.',
+        followUpRecommended: true,
+      };
+    }
+
+    // PRIMARY RULE: If phone exists, ALWAYS recommend CALL or WHATSAPP (never EMAIL)
+    if (hasPhone) {
+      // Rule 1: WhatsApp available AND NOT recently contacted → WhatsApp
+      if (hasWhatsapp && !recentlyContacted) {
+        return {
+          action: 'WHATSAPP',
+          reason: 'WhatsApp recommended — fastest response for this lead.',
+        };
+      }
+      
+      // Rule 3: WhatsApp available BUT recently contacted → Call (to avoid spam)
+      if (hasWhatsapp && recentlyContacted) {
+        return {
+          action: 'CALL',
+          reason: 'Call recommended — recent WhatsApp contact detected.',
+        };
+      }
+      
+      // Rule 2: WhatsApp NOT available → Call
+      return {
+        action: 'CALL',
+        reason: 'Call recommended — phone contact has the highest response rate for this lead.',
+      };
+    }
+
+    // FALLBACK: Only recommend EMAIL if phone is NOT available
+    if (hasEmail) {
+      return {
+        action: 'EMAIL',
+        reason: 'Email is the best available contact method for this lead.',
+      };
+    }
+
+    // Default: Follow-up (no contact info available)
+    return {
+      action: 'FOLLOW_UP',
+      reason: 'Schedule a follow-up when contact information becomes available.',
+    };
+  }
+
+  /**
+   * Calculate estimated commission based on property price
+   * Uses standard real estate commission rate (5% of sale price)
+   * This can be adjusted based on market or company policy
+   */
+  private calculateCommission(propertyPrice: number): number {
+    // Standard commission rate: 5% of sale price
+    // In production, this could be configurable or vary by property type/market
+    const commissionRate = 0.05;
+    return propertyPrice * commissionRate;
+  }
+
+  /**
+   * Check if phone number supports WhatsApp (simple check for common LATAM countries)
+   * This is a simplified check - in production, use a proper phone number library
+   */
+  private isWhatsAppSupported(phone: string | null): boolean {
+    if (!phone) return false;
+    
+    // Remove all non-digit characters
+    const digits = phone.replace(/\D/g, '');
+    
+    // Check for common LATAM country codes (simplified)
+    // In production, use a proper phone number parsing library like libphonenumber
+    const latamCodes = ['52', '54', '55', '56', '57', '58', '51', '593', '595', '598', '506', '507', '505', '504', '503', '502', '501'];
+    
+    // Check if starts with + or country code
+    if (phone.startsWith('+')) {
+      const countryCode = digits.substring(0, 3);
+      return latamCodes.some(code => countryCode.startsWith(code));
+    }
+    
+    // Default: assume WhatsApp is available if phone exists (can be refined)
+    return digits.length >= 10;
+  }
+
+  /**
+   * Calculate urgency state based on time since last activity
+   * Separate from AI tier - this is time-based urgency
+   * Labels are distinct from AI tier to avoid duplication
+   */
+  calculateUrgencyState(lastActivityAt: Date | null, createdAt: Date): UrgencyState {
+    if (!lastActivityAt) {
+      // Use createdAt if no activity yet
+      lastActivityAt = createdAt;
+    }
+    
+    const now = Date.now();
+    const lastActivity = new Date(lastActivityAt).getTime();
+    const hoursSinceActivity = (now - lastActivity) / (1000 * 60 * 60);
+    
+    if (hoursSinceActivity <= 24) {
+      return 'ACTIVE';
+    } else if (hoursSinceActivity <= 48) {
+      return 'NEEDS_ATTENTION';
+    } else {
+      return 'COOLING';
+    }
+  }
+
+  /**
+   * Calculate all AI metrics for a lead
+   */
+  calculateLeadAI(context: LeadContext): LeadAICalculation {
+    const aiScore = this.calculateAIScore(context);
+    const aiTier = this.calculateTier(aiScore);
+    const urgencyState = this.calculateUrgencyState(context.lastActivityAt || null, context.createdAt);
+    const aiScoreLabel = this.generateScoreLabel(aiScore, aiTier);
+    const aiReasonBullets = this.generateReasonBullets(context, aiScore);
+    const { action, reason, followUpRecommended, cooldownActive } = this.recommendAction(context, context.lastContactedAt);
+
+    return {
+      aiScore,
+      aiTier,
+      urgencyState,
+      aiScoreLabel,
+      aiReasonBullets,
+      recommendedAction: action,
+      recommendedActionReason: reason,
+      followUpRecommended: followUpRecommended || false,
+      cooldownActive: cooldownActive || false,
+    };
+  }
+}

@@ -1,0 +1,147 @@
+/* Language Selector - Theme-aware (light/dark) */
+
+.language-selector {
+  position: relative;
+  margin-right: 12px;
+  z-index: 10;
+}
+
+.language-selector-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.language-selector-trigger:hover {
+  background: var(--border);
+  border-color: var(--border);
+}
+
+.language-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.language-code {
+  font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+}
+
+.language-arrow {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.language-selector-trigger:hover .language-arrow {
+  color: var(--text);
+}
+
+.language-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.language-option {
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.language-option:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.language-option.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+body.crm-dark .language-option.active {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+
+.language-label {
+  flex: 1;
+}
+
+.language-code-small {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.language-option.active .language-code-small {
+  color: #3b82f6;
+}
+
+body.crm-dark .language-option.active .language-code-small {
+  color: #60a5fa;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .language-selector {
+    margin-right: 6px; /* Reduced margin */
+  }
+
+  .language-selector-trigger {
+    padding: 6px 8px; /* Reduced padding */
+    font-size: 12px;
+    min-width: auto; /* Allow to shrink */
+  }
+
+  .language-code {
+    /* display: none;  */
+    font-size: 10px;
+  }
+
+  .language-arrow {
+    display: none; /* Hide arrow on mobile for more space */
+  }
+
+  .language-icon {
+    font-size: 18px; /* Slightly smaller icon */
+  }
+
+  .language-icon {
+    font-size: 14px;
+  }
+
+  .language-code {
+    min-width: 20px;
+  }
+}

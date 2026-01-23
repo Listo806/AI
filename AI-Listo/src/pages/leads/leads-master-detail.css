@@ -1,0 +1,793 @@
+/* Leads Master-Detail Layout - Light CRM Theme */
+
+/* Master-Detail Container */
+.leads-master-detail {
+  display: grid;
+  grid-template-columns: 35% 65%;
+  gap: 0;
+  height: calc(100vh - 200px);
+  max-height: 800px;
+  background: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+/* Desktop 3-Column Layout (>=1024px) */
+@media (min-width: 1024px) {
+  .leads-master-detail {
+    grid-template-columns: 32% 48% 20%;
+    gap: 16px;
+    padding: 8px;
+    padding-top: 0;
+    margin-right: 16px;
+    overflow: visible;
+    background: initial;
+  }
+}
+
+/* LEFT COLUMN - Lead List (Master) */
+.leads-list-column {
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  border-radius: 12px;
+}
+
+@media (min-width: 1024px) {
+  .leads-list-column {
+    border-right: none;
+  }
+}
+
+.leads-list-header {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.leads-list-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+}
+
+/* Compact Lead Card (for list) */
+.lead-list-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lead-list-card:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+}
+
+.lead-list-card.active {
+  background: #eff6ff;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.lead-list-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.lead-list-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  flex: 1;
+}
+
+.lead-list-card-ai-score {
+  font-size: 16px;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-left: 8px;
+}
+
+.lead-list-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.lead-status-badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-status-badge.hot {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.lead-status-badge.warm {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.lead-status-badge.cold {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.lead-list-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.lead-source-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.lead-contacted-indicator {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.lead-contacted-indicator.not-contacted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* CENTER COLUMN - Lead Detail (Detail View) */
+.lead-detail-column {
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  padding: 0;
+}
+
+@media (min-width: 1024px) {
+  .lead-detail-column {
+    border-right: 1px solid #e5e7eb;
+    border-radius: 12px;
+  }
+}
+
+/* RIGHT COLUMN - Agent & Attribution */
+.lead-attribution-column {
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+  padding: 0;
+  border-radius: 12px;
+}
+
+@media (min-width: 1024px) {
+  .lead-attribution-column {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+  }
+}
+
+.lead-detail-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+/* Section 1: Lead Header Card */
+.lead-header-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.lead-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.lead-header-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.lead-header-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.lead-header-ai-score {
+  text-align: center;
+  min-width: 80px;
+}
+
+.lead-header-ai-score-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.lead-header-ai-score-label {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-header-status-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.lead-header-last-contact {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.lead-header-cta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.lead-cta-whatsapp {
+  flex: 1;
+  padding: 12px 20px;
+  background: #16A34A;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lead-cta-whatsapp:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.lead-cta-secondary {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.lead-cta-secondary:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+}
+
+/* Section 2: AI Insights Panel */
+.lead-ai-insights {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.lead-ai-insights-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-ai-insights-content {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.lead-ai-insight-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lead-ai-insight-item:last-child {
+  border-bottom: none;
+}
+
+/* Section 3: Lead Timeline */
+.lead-timeline {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.lead-timeline-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 16px;
+  margin-left: 8px;
+  position: relative;
+}
+
+.lead-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #fff;
+}
+
+.lead-timeline-item:last-child {
+  border-left: none;
+}
+
+.lead-timeline-content {
+  flex: 1;
+}
+
+.lead-timeline-event {
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.lead-timeline-time {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Section 4: Quick Notes */
+.lead-notes {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.lead-notes-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-notes-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.lead-notes-textarea::placeholder {
+  color: #64748b;
+}
+
+.lead-notes-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Section 5: WhatsApp Panel */
+.lead-whatsapp-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+}
+
+.lead-whatsapp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-whatsapp-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lead-whatsapp-message {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  max-width: 70%;
+}
+
+.lead-whatsapp-message.incoming {
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
+  align-self: flex-start;
+}
+
+.lead-whatsapp-message.outgoing {
+  background: #dcfce7;
+  color: #166534;
+  align-self: flex-end;
+  border: 1px solid #86efac;
+}
+
+.lead-whatsapp-input-container {
+  display: flex;
+  gap: 8px;
+}
+
+.lead-whatsapp-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.lead-whatsapp-input::placeholder {
+  color: #64748b;
+}
+
+.lead-whatsapp-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #16A34A;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+/* Empty State */
+.lead-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b;
+  text-align: center;
+  padding: 40px;
+  min-height: 400px;
+}
+
+.lead-detail-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.lead-detail-empty-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Status Badge Override for Light Theme */
+.lead-header-status-badges .crm-item-badge {
+  background: #f8fafc !important;
+  color: #334155 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Attribution Column Styles */
+.lead-attribution-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+}
+
+.lead-attribution-section {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.lead-attribution-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-attribution-item {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.lead-attribution-label {
+  color: #64748b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.lead-attribution-value {
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.lead-agent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.lead-agent-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.lead-agent-info {
+  flex: 1;
+}
+
+.lead-agent-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.lead-agent-role {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.lead-agent-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  background: #f0fdf4;
+  color: #16a34a;
+  margin-top: 4px;
+}
+
+.lead-reassign-btn {
+  width: 100%;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lead-reassign-btn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+}
+
+.lead-team-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lead-team-stat:last-child {
+  border-bottom: none;
+}
+
+.lead-team-stat-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.lead-team-stat-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.lead-attribution-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  padding: 40px;
+  min-height: 400px;
+}
+
+.lead-attribution-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.lead-attribution-empty-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* Mobile Layout (<1024px) */
+@media (max-width: 1023px) {
+  .leads-master-detail {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .leads-list-column {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    max-height: 350px; /* Reduced from 400px by ~13% to prevent endless scrolling */
+    border-radius: 0;
+    padding: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .lead-detail-column {
+    min-height: 500px;
+    border-right: none;
+    border-radius: 0;
+  }
+
+  .lead-attribution-column {
+    display: none; /* Hide right column on mobile */
+  }
+
+  .lead-detail-scrollable {
+    padding: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .lead-header-top {
+    flex-direction: column;
+    gap: 10px; /* Reduced from 12px by ~17% */
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .lead-header-ai-score {
+    align-self: flex-start;
+  }
+
+  .lead-header-cta {
+    flex-direction: column;
+    gap: 10px; /* Reduced from 12px by ~17% */
+  }
+
+  .lead-cta-whatsapp {
+    width: 100%;
+    padding: 10px 16px; /* Reduced from 12px 20px by ~17-20% */
+  }
+
+  .lead-section {
+    margin-bottom: 16px; /* Reduced from 20px by 20% */
+    padding: 13px; /* Reduced from 16px by ~19% */
+  }
+
+  .lead-attribution-empty {
+    padding: 32px; /* Reduced from 40px by 20% */
+    min-height: 320px; /* Reduced from 400px by 20% */
+  }
+
+  .lead-attribution-empty-icon {
+    margin-bottom: 13px; /* Reduced from 16px by ~19% */
+  }
+}

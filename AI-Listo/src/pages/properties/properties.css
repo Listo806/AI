@@ -1,0 +1,154 @@
+/* Properties Color Tokens - Light Management Style */
+:root {
+  --property-card-bg: #fff;
+  --property-card-border: #e5e7eb;
+  --property-text-muted: #64748b;
+  --property-text-primary: #0f172a;
+
+  /* Subtle status colors - left border only (calm, low contrast) */
+  --status-published: #22c55e;
+  --status-draft: #f59e0b;
+  --status-archived: #ef4444;
+
+  /* Very subtle background accents - calm contrast */
+  --accent-published-bg: #f0fdf4;
+  --accent-draft-bg: #fef3c7;
+  --accent-archived-bg: #fef2f2;
+}
+
+/* Property Card Base Style - Compact Management List */
+.property-card {
+  background: var(--property-card-bg);
+  border: 1px solid var(--property-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.property-card:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+/* Status-Based Visual Accent - Subtle Left Border Only */
+.property-card.published {
+  border-left: 3px solid var(--status-published);
+  background: linear-gradient(
+    90deg,
+    var(--accent-published-bg) 0%,
+    var(--property-card-bg) 10%
+  );
+}
+
+.property-card.draft {
+  border-left: 3px solid var(--status-draft);
+  background: linear-gradient(
+    90deg,
+    var(--accent-draft-bg) 0%,
+    var(--property-card-bg) 10%
+  );
+}
+
+.property-card.archived {
+  border-left: 3px solid var(--status-archived);
+  background: linear-gradient(
+    90deg,
+    var(--accent-archived-bg) 0%,
+    var(--property-card-bg) 10%
+  );
+}
+
+/* Status Badge Style */
+.property-status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.property-status.published {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.property-status.draft {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.property-status.archived {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* Property Meta Text - Compact */
+.property-meta {
+  font-size: 12px;
+  color: var(--property-text-muted);
+  line-height: 1.4;
+}
+
+/* Action Button - Prominent */
+.property-action {
+  margin-top: 10px;
+}
+
+/* Empty State */
+.properties-empty {
+  padding: 32px 16px;
+  text-align: center;
+  opacity: 0.7;
+  border: 1px dashed var(--property-card-border);
+  border-radius: 12px;
+  color: var(--property-text-muted);
+  font-size: 13px;
+  background: var(--property-card-bg);
+}
+
+/* Properties Grid Container */
+.properties-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Desktop Grid Layout */
+@media (min-width: 1024px) {
+  .properties-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .property-card {
+    padding: 8px; /* Reduced from 10px by 20% */
+    margin-bottom: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .property-card h3 {
+    font-size: 14px !important;
+  }
+
+  .property-meta {
+    font-size: 11px;
+  }
+
+  .property-action {
+    margin-top: 6px; /* Reduced from 8px by 25% */
+  }
+
+  .properties-empty {
+    padding: 25px 13px; /* Reduced from 32px 16px by ~22-19% */
+  }
+
+  .properties-grid {
+    gap: 8px; /* Reduced from 10px by 20% */
+  }
+}
