@@ -42,8 +42,8 @@ body {
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
   width: 165px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
-  background: #020617;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -53,7 +53,7 @@ body {
   overflow-x: hidden;
   z-index: 999;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
-  /* border-right: 1px solid rgba(255, 255, 255, 0.1); */
+  /* border-right: 1px solid var(--border); */
 }
 
 .desktop-text{
@@ -112,7 +112,7 @@ body {
 .crm-sidebar-brand {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -126,7 +126,7 @@ body {
 
 /* Desktop: Icons + Labels always visible */
 .crm-nav-link {
-  color: #94a3b8;
+  color: var(--text-muted);
   text-decoration: none;
   padding: 8px 10px; /* Reduced from 10px 12px for tighter spacing */
   border-radius: 8px;
@@ -233,25 +233,30 @@ i[data-lucide] {
     transform: translateY(-50%);
     margin-left: 12px;
     padding: 6px 12px;
-    background: #0F172A;
-    border: 1px solid #1E293B;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 6px;
     white-space: nowrap;
     font-size: 14px;
-    color: #E5E7EB;
+    color: var(--text);
     z-index: 1000;
     pointer-events: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 }
 
 .crm-nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--border);
+  color: var(--text);
 }
 
 .crm-nav-link.active {
-  background: rgba(59, 130, 246, 0.2);
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+body.crm-dark .crm-nav-link.active {
+  background: rgba(59, 130, 246, 0.25);
   color: #60a5fa;
 }
 
@@ -406,7 +411,7 @@ i[data-lucide] {
 /* Sidebar Footer - Account Info & Logout */
 .crm-sidebar-footer {
   margin-top: auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
   margin-bottom: 10px;
   padding: 10px;
@@ -536,9 +541,9 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-header {
-  background: #020617;
+  background: var(--bg);
   padding: 12px 24px;
-  /* border-bottom: 1px solid #e5e7eb; */
+  /* border-bottom: 1px solid var(--border); */
   position: sticky;
   top: 0;
   z-index: 100; /* Above background overlay */
@@ -590,7 +595,7 @@ body.crm-dark .crm-main::after {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   opacity: 0.7;
-  color: #fff;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -604,7 +609,7 @@ body.crm-dark .crm-main::after {
   font-size: 18px;
   font-weight: 500;
   line-height: 1;
-  color: #fff;
+  color: var(--text);
   flex-shrink: 0;
 }
 
@@ -656,10 +661,10 @@ body.crm-dark .crm-main::after {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #E5E7EB;
+  color: var(--text);
   cursor: pointer;
   padding: 0;
   transition: all 0.2s ease;
@@ -673,15 +678,15 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-sidebar-toggle-header:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--card);
+  border-color: var(--border);
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .crm-sidebar-toggle-header:active {
   transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--border);
 }
 
 .crm-sidebar-toggle-header:focus {
@@ -696,7 +701,7 @@ body.crm-dark .crm-main::after {
 .crm-sidebar-toggle-header i[data-lucide] {
   width: 22px;
   height: 22px;
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 2.5;
   transition: transform 0.2s ease;
 }
@@ -761,10 +766,10 @@ body.crm-dark .crm-main::after {
   display: none; /* Hidden on mobile */
   width: 32px;
   height: 32px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #E5E7EB;
+  color: var(--text);
   cursor: pointer;
   padding: 0;
   transition: all 0.2s ease;
@@ -776,21 +781,21 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-sidebar-toggle-inside:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--card);
+  border-color: var(--border);
   transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .crm-sidebar-toggle-inside:active {
   transform: scale(0.98);
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--border);
 }
 
 .crm-sidebar-toggle-inside i[data-lucide] {
   width: 22px;
   height: 22px;
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 2.5;
   transition: transform 0.2s ease;
 }
