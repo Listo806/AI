@@ -31,6 +31,12 @@ BEGIN
   END IF;
 END $$;
 
+-- First, fix any existing users with invalid roles (set to 'owner' as default)
+-- This prevents constraint violation when adding the new constraint
+UPDATE users 
+SET role = 'owner' 
+WHERE role NOT IN ('owner', 'agent', 'developer', 'admin', 'wholesaler', 'investor', 'va');
+
 -- Add the new CHECK constraint with all roles including VA
 ALTER TABLE users 
 ADD CONSTRAINT users_role_check 

@@ -1,5 +1,8 @@
 -- Milestone 2: Agent Priority Engine
 -- This migration adds tables for trigger history, intent snapshots, agent engagements, and buyer-lead linking
+-- 
+-- PREREQUISITE: Migration 017 (add_va_role_and_edited_by) must be run first
+-- If you get a role constraint error, ensure migration 017 has been executed successfully
 
 -- ============================================================================
 -- ADD BUYER_ID TO LEADS TABLE
