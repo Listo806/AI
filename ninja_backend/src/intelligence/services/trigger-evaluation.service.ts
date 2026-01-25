@@ -50,7 +50,13 @@ export class TriggerEvaluationService {
   async evaluateIntentSpike(buyerId: string): Promise<Trigger | null> {
     // Get current intent score
     const currentScore = await this.intentScoringService.getIntentScore(buyerId);
-    if (!currentScore || currentScore.score < 15) {
+    if (!currentScore) {
+      return null;
+    }
+
+    // Parse score to number (PostgreSQL returns Decimal as string)
+    const currentScoreValue = parseFloat(currentScore.score.toString());
+    if (currentScoreValue < 15) {
       return null; // No spike if score is too low
     }
 
@@ -65,20 +71,20 @@ export class TriggerEvaluationService {
       [buyerId],
     );
 
-    const score24hAgo = rows.length > 0 ? parseFloat(rows[0].score) : 0;
-    const scoreIncrease = currentScore.score - score24hAgo;
+    const score24hAgo = rows.length > 0 ? parseFloat(rows[0].score.toString()) : 0;
+    const scoreIncrease = currentScoreValue - score24hAgo;
 
     // Check trigger conditions
     const condition1 = scoreIncrease >= 15;
-    const condition2 = currentScore.score >= 60 && scoreIncrease >= 10;
+    const condition2 = currentScoreValue >= 60 && scoreIncrease >= 10;
 
     if (condition1 || condition2) {
       return {
         buyerId,
         triggerType: TriggerType.INTENT_SPIKE,
-        intentScore: currentScore.score,
+        intentScore: currentScoreValue,
         triggeredAt: new Date(),
-        reason: `Intent score increased by ${scoreIncrease.toFixed(1)} points in the last 24 hours (${score24hAgo.toFixed(1)} → ${currentScore.score.toFixed(1)})`,
+        reason: `Intent score increased by ${scoreIncrease.toFixed(1)} points in the last 24 hours (${score24hAgo.toFixed(1)} → ${currentScoreValue.toFixed(1)})`,
         metadata: {
           scoreIncrease: parseFloat(scoreIncrease.toFixed(2)),
           score24hAgo: parseFloat(score24hAgo.toFixed(2)),
@@ -106,7 +112,7 @@ export class TriggerEvaluationService {
 
     // Get current intent score
     const currentScore = await this.intentScoringService.getIntentScore(buyerId);
-    const intentScore = currentScore ? currentScore.score : 0;
+    const intentScore = currentScore ? parseFloat(currentScore.score.toString()) : 0;
 
     // Build query to find matching new listings
     let query = `
@@ -194,7 +200,7 @@ export class TriggerEvaluationService {
 
     // Get current intent score
     const currentScore = await this.intentScoringService.getIntentScore(buyerId);
-    const intentScore = currentScore ? currentScore.score : 0;
+    const intentScore = currentScore ? parseFloat(currentScore.score.toString()) : 0;
 
     // Check each zone for scarcity transitions
     for (const zoneId of preferences.zones) {
