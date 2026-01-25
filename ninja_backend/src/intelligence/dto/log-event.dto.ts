@@ -5,8 +5,13 @@ export enum BuyerEventType {
   PROPERTY_SEARCH = 'property_search',
   FILTERS_APPLIED = 'filters_applied',
   LISTING_VIEW = 'listing_view',
+  FAVORITE_ADDED = 'favorite_added',
+  FAVORITE_REMOVED = 'favorite_removed',
+  SAVED_SEARCH = 'saved_search',
   REVISIT = 'revisit',
   CONTACTED = 'contacted',
+  SESSION_START = 'session_start',
+  SESSION_END = 'session_end',
 }
 
 export class LogEventDto {

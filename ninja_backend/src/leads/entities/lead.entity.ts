@@ -17,6 +17,7 @@ export interface Lead {
   createdBy: string;
   teamId: string | null;
   propertyId: string | null;
+  buyerId: string | null; // Linked buyer (when buyer contacts via property)
   notes: string | null;
   source: string | null;
   createdAt: Date;

@@ -69,8 +69,8 @@ export class IntentScoringService {
       }
     }
 
-    // Add new event weight
-    let scoreAfter = Math.min(100, scoreBefore + eventWeight); // Cap at 100
+    // Add new event weight (can be negative for events like favorite_removed)
+    let scoreAfter = Math.max(0, Math.min(100, scoreBefore + eventWeight)); // Cap between 0 and 100
 
     // Log score change
     await this.logScoreChange(buyerId, scoreBefore, scoreAfter, changeReason, eventId || null);
@@ -181,5 +181,41 @@ export class IntentScoringService {
     }
 
     return updatedCount;
+  }
+
+  /**
+   * Create a snapshot of current intent score
+   * Should be called periodically (e.g., every hour) for spike detection
+   */
+  async createSnapshot(buyerId: string): Promise<void> {
+    const score = await this.getIntentScore(buyerId);
+    if (score) {
+      await this.db.query(
+        `INSERT INTO intent_score_snapshots (buyer_id, score, snapshot_at, created_at)
+         VALUES ($1, $2, NOW(), NOW())`,
+        [buyerId, score.score],
+      );
+    }
+  }
+
+  /**
+   * Create snapshots for all buyers with intent scores
+   * Should be called periodically (e.g., hourly cron job)
+   */
+  async createSnapshotsForAllBuyers(): Promise<number> {
+    const { rows } = await this.db.query(
+      `SELECT buyer_id as "buyerId", score
+       FROM buyer_intent_scores`,
+    );
+
+    for (const row of rows) {
+      await this.db.query(
+        `INSERT INTO intent_score_snapshots (buyer_id, score, snapshot_at, created_at)
+         VALUES ($1, $2, NOW(), NOW())`,
+        [row.buyerId, row.score],
+      );
+    }
+
+    return rows.length;
   }
 }

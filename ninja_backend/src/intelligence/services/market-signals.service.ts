@@ -98,6 +98,9 @@ export class MarketSignalsService {
     const isScarcity = activeListingsCount < this.SCARCITY_THRESHOLD;
     const isIncrease = percentageChange > (this.INCREASE_THRESHOLD * 100);
 
+    // Track scarcity history if it changed
+    await this.trackScarcityChange(zoneId, isScarcity, activeListingsCount);
+
     return {
       zoneId,
       zoneName,
@@ -115,6 +118,36 @@ export class MarketSignalsService {
       },
       calculatedAt: new Date(),
     };
+  }
+
+  /**
+   * Track scarcity state changes in history
+   */
+  private async trackScarcityChange(
+    zoneId: string,
+    isScarcity: boolean,
+    activeListingsCount: number,
+  ): Promise<void> {
+    // Get last recorded scarcity state
+    const { rows } = await this.db.query(
+      `SELECT is_scarcity as "isScarcity"
+       FROM zone_scarcity_history
+       WHERE zone_id = $1
+       ORDER BY changed_at DESC
+       LIMIT 1`,
+      [zoneId],
+    );
+
+    const previousScarcity = rows.length > 0 ? rows[0].isScarcity : null;
+
+    // Only record if state changed or this is the first record
+    if (previousScarcity === null || previousScarcity !== isScarcity) {
+      await this.db.query(
+        `INSERT INTO zone_scarcity_history (zone_id, is_scarcity, active_listings_count, changed_at, created_at)
+         VALUES ($1, $2, $3, NOW(), NOW())`,
+        [zoneId, isScarcity, activeListingsCount],
+      );
+    }
   }
 
   /**

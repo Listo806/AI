@@ -48,13 +48,27 @@ export class IntelligenceController {
         data: {
           type: 'object',
           properties: {
-            id: { type: 'string', format: 'uuid' },
-            buyerId: { type: 'string', format: 'uuid' },
-            eventType: { type: 'string', enum: ['property_search', 'filters_applied', 'listing_view', 'revisit', 'contacted'] },
-            propertyId: { type: 'string', format: 'uuid', nullable: true },
-            zoneId: { type: 'string', format: 'uuid', nullable: true },
-            metadata: { type: 'object', nullable: true },
-            createdAt: { type: 'string', format: 'date-time' }
+            event: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                buyerId: { type: 'string', format: 'uuid' },
+                eventType: { type: 'string', enum: ['property_search', 'filters_applied', 'listing_view', 'favorite_added', 'favorite_removed', 'saved_search', 'revisit', 'contacted', 'session_start', 'session_end'] },
+                propertyId: { type: 'string', format: 'uuid', nullable: true },
+                zoneId: { type: 'string', format: 'uuid', nullable: true },
+                metadata: { type: 'object', nullable: true },
+                createdAt: { type: 'string', format: 'date-time' }
+              }
+            },
+            intentScore: {
+              type: 'object',
+              properties: {
+                buyerId: { type: 'string', format: 'uuid' },
+                score: { type: 'number', example: 45.5, minimum: 0, maximum: 100 },
+                lastCalculatedAt: { type: 'string', format: 'date-time', nullable: true },
+                lastActivityAt: { type: 'string', format: 'date-time', nullable: true }
+              }
+            }
           }
         }
       }
@@ -63,9 +77,26 @@ export class IntelligenceController {
   @ApiResponse({ status: 400, description: 'Invalid input' })
   async logEvent(@Body() dto: LogEventDto) {
     const event = await this.buyerEventsService.logEvent(dto);
+    
+    // Get updated intent score
+    const intentScore = await this.intentScoringService.getIntentScore(dto.buyerId);
+    
     return {
       success: true,
-      data: event,
+      data: {
+        event,
+        intentScore: intentScore ? {
+          buyerId: intentScore.buyerId,
+          score: parseFloat(intentScore.score.toString()),
+          lastCalculatedAt: intentScore.lastCalculatedAt,
+          lastActivityAt: intentScore.lastActivityAt,
+        } : {
+          buyerId: dto.buyerId,
+          score: 0,
+          lastCalculatedAt: null,
+          lastActivityAt: null,
+        },
+      },
     };
   }
 
@@ -96,6 +127,8 @@ export class IntelligenceController {
             score: { type: 'number', example: 45.5, minimum: 0, maximum: 100 },
             lastCalculatedAt: { type: 'string', format: 'date-time', nullable: true },
             lastActivityAt: { type: 'string', format: 'date-time', nullable: true },
+            lastEventAt: { type: 'string', format: 'date-time', nullable: true },
+            updatedAt: { type: 'string', format: 'date-time', nullable: true },
             history: {
               type: 'array',
               items: {
@@ -121,6 +154,9 @@ export class IntelligenceController {
   ) {
     const score = await this.intentScoringService.getIntentScore(buyerId);
 
+    // Get last event timestamp
+    const lastEventAt = await this.buyerEventsService.getLastEventAt(buyerId);
+
     if (!score) {
       // Return default score if buyer doesn't exist yet
       return {
@@ -130,6 +166,8 @@ export class IntelligenceController {
           score: 0,
           lastCalculatedAt: null,
           lastActivityAt: null,
+          lastEventAt: lastEventAt,
+          updatedAt: null,
           history: includeHistory === 'true' ? [] : undefined,
         },
       };
@@ -142,6 +180,8 @@ export class IntelligenceController {
         score: parseFloat(score.score.toString()),
         lastCalculatedAt: score.lastCalculatedAt,
         lastActivityAt: score.lastActivityAt,
+        lastEventAt: lastEventAt,
+        updatedAt: score.updatedAt,
       },
     };
 

@@ -32,10 +32,20 @@ export class LeadsService {
       }
     }
 
+    // Try to find buyer by email/phone (for buyer-lead linking)
+    let buyerId: string | null = null;
+    if (createLeadDto.email || createLeadDto.phone) {
+      // Note: Buyer matching by email/phone will be implemented in Milestone 4
+      // For now, buyer_id can be passed in metadata if available from cookie
+      if ((createLeadDto as any).buyerId) {
+        buyerId = (createLeadDto as any).buyerId;
+      }
+    }
+
     const { rows } = await this.db.query(
-      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, created_by, team_id, notes, source, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, buyer_id, created_by, team_id, notes, source, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createLeadDto.name,
@@ -44,6 +54,7 @@ export class LeadsService {
         status,
         assignedTo || createLeadDto.assignedTo || null,
         createLeadDto.propertyId || null,
+        buyerId,
         assignedTo || null, // Use property owner as created_by, or null for public leads
         teamId,
         createLeadDto.notes || null,
@@ -68,10 +79,20 @@ export class LeadsService {
   async create(createLeadDto: CreateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
     const status = createLeadDto.status || LeadStatus.NEW;
 
+    // Try to find buyer by email/phone (for buyer-lead linking)
+    let buyerId: string | null = null;
+    if (createLeadDto.email || createLeadDto.phone) {
+      // Note: Buyer matching by email/phone will be implemented in Milestone 4
+      // For now, buyer_id can be passed in metadata if available
+      if ((createLeadDto as any).buyerId) {
+        buyerId = (createLeadDto as any).buyerId;
+      }
+    }
+
     const { rows } = await this.db.query(
-      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, created_by, team_id, notes, source, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, buyer_id, created_by, team_id, notes, source, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createLeadDto.name,
@@ -80,6 +101,7 @@ export class LeadsService {
         status,
         createLeadDto.assignedTo || null,
         createLeadDto.propertyId || null,
+        buyerId,
         userId,
         teamId,
         createLeadDto.notes || null,
@@ -105,14 +127,14 @@ export class LeadsService {
 
     // If user has a team, show all team leads, otherwise only their own
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1
                ORDER BY created_at DESC`;
       params = [teamId];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1
@@ -134,6 +156,7 @@ export class LeadsService {
         l.status, 
         l.assigned_to as "assignedTo", 
         l.property_id as "propertyId", 
+        l.buyer_id as "buyerId",
         l.created_by as "createdBy", 
         l.team_id as "teamId", 
         l.notes, 
@@ -285,7 +308,7 @@ export class LeadsService {
 
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
     );
@@ -351,7 +374,7 @@ export class LeadsService {
            ${statusUpdate}
            updated_at = NOW()
        WHERE id = $1
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", 
                  last_contacted_at as "lastContactedAt", has_responded as "hasResponded",
                  last_activity_at as "lastActivityAt", last_action_type as "lastActionType", last_action_at as "lastActionAt"`,
@@ -390,14 +413,14 @@ export class LeadsService {
     let params: any[];
 
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1 AND status = $2
                ORDER BY created_at DESC`;
       params = [teamId, status];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1 AND status = $2

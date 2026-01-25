@@ -236,6 +236,14 @@ async function setupDatabase() {
       console.log('✓ VA role migration completed');
     }
 
+    // Agent priority engine
+    const migration18Path = path.join(__dirname, '../src/database/migrations/018_milestone2_agent_priority_engine.sql');
+    if (fs.existsSync(migration18Path)) {
+      const migration18SQL = fs.readFileSync(migration18Path, 'utf8');
+      await pool.query(migration18SQL);
+      console.log('✓ Agent priority engine migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

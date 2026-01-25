@@ -13,8 +13,13 @@ export class BuyerEventsService {
     [BuyerEventType.PROPERTY_SEARCH]: 2,
     [BuyerEventType.FILTERS_APPLIED]: 3,
     [BuyerEventType.LISTING_VIEW]: 4,
+    [BuyerEventType.FAVORITE_ADDED]: 5, // Higher weight than view
+    [BuyerEventType.FAVORITE_REMOVED]: -2, // Negative weight (reduces intent)
+    [BuyerEventType.SAVED_SEARCH]: 8, // Higher weight than filters
     [BuyerEventType.REVISIT]: 6,
     [BuyerEventType.CONTACTED]: 25,
+    [BuyerEventType.SESSION_START]: 0, // No weight (optional tracking)
+    [BuyerEventType.SESSION_END]: 0, // No weight (optional tracking)
   };
 
   constructor(
@@ -98,14 +103,16 @@ export class BuyerEventsService {
 
     const event = rows[0];
 
-    // Update intent score
+    // Update intent score (skip if weight is 0, e.g., session_start/end)
     const eventWeight = this.EVENT_WEIGHTS[actualEventType];
-    await this.intentScoringService.updateIntentScore(
-      dto.buyerId,
-      eventWeight,
-      `event:${actualEventType}`,
-      event.id,
-    );
+    if (eventWeight !== 0) {
+      await this.intentScoringService.updateIntentScore(
+        dto.buyerId,
+        eventWeight,
+        `event:${actualEventType}`,
+        event.id,
+      );
+    }
 
     // Update buyer last activity
     await this.db.query(
@@ -173,5 +180,21 @@ export class BuyerEventsService {
       ...row,
       metadata: row.metadata ? JSON.parse(row.metadata) : null,
     }));
+  }
+
+  /**
+   * Get last event timestamp for a buyer
+   */
+  async getLastEventAt(buyerId: string): Promise<Date | null> {
+    const { rows } = await this.db.query(
+      `SELECT created_at as "createdAt"
+       FROM buyer_events
+       WHERE buyer_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [buyerId],
+    );
+
+    return rows.length > 0 ? rows[0].createdAt : null;
   }
 }
