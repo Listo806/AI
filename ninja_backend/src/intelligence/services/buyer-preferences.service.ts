@@ -27,7 +27,9 @@ export class BuyerPreferencesService {
 
     const events: BuyerEventWithMetadata[] = rows.map((row) => ({
       ...row,
-      metadata: row.metadata ? JSON.parse(row.metadata) : null,
+      metadata: row.metadata 
+        ? (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata)
+        : null,
     }));
 
     // Extract preferences with weighting
