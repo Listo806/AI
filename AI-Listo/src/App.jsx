@@ -61,7 +61,9 @@ function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<RootRoute />} />
-      <Route path="/sign-in" element={<SignIn />} />
+      <Route path="/sign-in" element={<SignIn variant="crm" />} />
+      <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
+      <Route path="/team/sign-in" element={<SignIn variant="internal" />} />
       
       {/* Public Listings (no auth required) */}
       <Route path="/listings" element={<Listings />} />
