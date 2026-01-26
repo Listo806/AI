@@ -11,7 +11,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 
 @ApiTags('agents')
-@Controller('api/agents')
+@Controller('agents')
 @UseGuards(JwtAuthGuard, VaRestrictionGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentsController {

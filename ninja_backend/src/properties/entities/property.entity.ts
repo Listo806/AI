@@ -30,6 +30,7 @@ export interface Property {
   createdBy: string;
   editedBy: string | null;
   teamId: string | null;
+  zoneId: string | null;
   latitude: number | null;
   longitude: number | null;
   createdAt: Date;

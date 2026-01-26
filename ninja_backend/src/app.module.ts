@@ -14,6 +14,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { HelpCenterModule } from './help-center/help-center.module';
 import { CrmModule } from './crm/crm.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
+import { ListingsModule } from './listings/listings.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { IntelligenceModule } from './intelligence/intelligence.module';
     HelpCenterModule,
     CrmModule,
     IntelligenceModule,
+    ListingsModule,
   ],
   controllers: [AppController],
 })

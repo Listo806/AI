@@ -27,13 +27,16 @@ function parseDatabaseUrl(databaseUrl) {
  * Create a connection to the default 'postgres' database
  */
 function createAdminPool(dbConfig) {
+  console.log('Creating admin pool with config:', dbConfig);
+
   return new Pool({
     host: dbConfig.host,
     port: dbConfig.port,
     user: dbConfig.user,
     password: dbConfig.password,
     database: 'postgres', // Connect to default database
-    ssl: dbConfig.ssl,
+    // ssl: { rejectUnauthorized: false }, //dbConfig.ssl,
+    ssl: false,
   });
 }
 
@@ -97,7 +100,8 @@ async function setupDatabase() {
     console.log(`Connecting to database '${databaseName}'...`);
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: dbConfig.ssl,
+      // ssl: { rejectUnauthorized: false },
+      ssl: false,
     });
 
     await pool.query('SELECT 1');
@@ -242,6 +246,14 @@ async function setupDatabase() {
       const migration18SQL = fs.readFileSync(migration18Path, 'utf8');
       await pool.query(migration18SQL);
       console.log('✓ Agent priority engine migration completed');
+    }
+
+    // Buyer confidence + match intelligence
+    const migration19Path = path.join(__dirname, '../src/database/migrations/019_milestone3_buyer_confidence.sql');
+    if (fs.existsSync(migration19Path)) {
+      const migration19SQL = fs.readFileSync(migration19Path, 'utf8');
+      await pool.query(migration19SQL);
+      console.log('✓ Buyer confidence + match intelligence migration completed');
     }
 
     console.log('Database schema created successfully!');

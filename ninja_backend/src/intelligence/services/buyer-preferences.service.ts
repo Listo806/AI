@@ -50,29 +50,34 @@ export class BuyerPreferencesService {
     for (const event of events) {
       const weight = weights[event.eventType] || 1;
 
-      // Extract price range from metadata
-      if (event.metadata?.filters?.price_min) {
-        priceFilters.push(event.metadata.filters.price_min);
+      // Extract price range from metadata (support both structures: metadata.filters.price_min and metadata.price_min)
+      const priceMin = event.metadata?.filters?.price_min || event.metadata?.price_min;
+      const priceMax = event.metadata?.filters?.price_max || event.metadata?.price_max;
+      
+      if (priceMin !== null && priceMin !== undefined) {
+        priceFilters.push(priceMin);
       }
-      if (event.metadata?.filters?.price_max) {
-        priceFilters.push(event.metadata.filters.price_max);
+      if (priceMax !== null && priceMax !== undefined) {
+        priceFilters.push(priceMax);
       }
 
-      // Extract bedrooms from metadata
-      if (event.metadata?.filters?.bedrooms) {
-        const bedrooms = event.metadata.filters.bedrooms;
-        if (typeof bedrooms === 'number') {
-          bedroomFilters.push(bedrooms);
-        } else if (bedrooms?.min) {
-          bedroomFilters.push(bedrooms.min);
-        } else if (bedrooms?.max) {
-          bedroomFilters.push(bedrooms.max);
+      // Extract bedrooms from metadata (support both structures)
+      const bedroomsValue = event.metadata?.filters?.bedrooms || event.metadata?.bedrooms;
+      if (bedroomsValue !== null && bedroomsValue !== undefined) {
+        if (typeof bedroomsValue === 'number') {
+          bedroomFilters.push(bedroomsValue);
+        } else if (bedroomsValue?.min) {
+          bedroomFilters.push(bedroomsValue.min);
+        } else if (bedroomsValue?.max) {
+          bedroomFilters.push(bedroomsValue.max);
         }
       }
 
       // Extract property type (from metadata or property lookup)
-      if (event.metadata?.property_type) {
-        propertyTypes.push({ type: event.metadata.property_type, weight });
+      // Support both: metadata.property_type, metadata.type, or metadata.filters.type
+      const propertyType = event.metadata?.property_type || event.metadata?.type || event.metadata?.filters?.type;
+      if (propertyType) {
+        propertyTypes.push({ type: propertyType, weight });
       } else if (event.propertyId) {
         // Look up property type if we have property_id
         const propResult = await this.db.query(
