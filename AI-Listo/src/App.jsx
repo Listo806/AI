@@ -45,11 +45,11 @@ function RootRoute() {
   }
 
   if (isAuthenticated()) {
-    // VA users go directly to properties, others go to dashboard
+    // VA users go directly to properties, others go to WhatsApp (default route)
     if (user?.role === 'va') {
       return <Navigate to="/dashboard/properties" replace />;
     }
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard/whatsapp" replace />;
   }
 
   // Not authenticated - show sign-in
@@ -80,8 +80,11 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* Dashboard Index */}
-        <Route index element={<Dashboard />} />
+        {/* Dashboard Index - Redirect to WhatsApp (default route) */}
+        <Route index element={<Navigate to="/dashboard/whatsapp" replace />} />
+        
+        {/* Dashboard Home Route - Actual dashboard page */}
+        <Route path="home" element={<Dashboard />} />
         
         {/* Leads Routes */}
         <Route path="leads" element={<LeadsList />} />

@@ -153,6 +153,14 @@ body {
   fill: none;
 }
 
+/* WhatsApp icon image styling */
+.crm-nav-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
 /* Lucide icon styling for sidebar */
 .crm-nav-link i[data-lucide] {
   width: 20px;

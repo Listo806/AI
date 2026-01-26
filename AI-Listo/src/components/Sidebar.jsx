@@ -15,11 +15,11 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   }, [isCollapsed]); // Re-initialize when collapsed state changes
 
   // Navigation items with Lucide icon names and translation keys
+  // WhatsApp is first (priority/revenue channel)
   const allNavItems = [
-    { path: "/dashboard", icon: "home", labelKey: "nav.dashboard" },
+    { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
+    { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
-    { path: "/dashboard/whatsapp", icon: "message-circle", labelKey: "nav.whatsapp" },
-    { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
@@ -73,11 +73,30 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 `crm-nav-link ${isActive ? 'active' : ''}`
               }
               onClick={onClose}
-              end={item.path === "/dashboard"}
+              end={item.path === "/dashboard/home"}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
-              <i data-lucide={item.icon} className="crm-nav-icon"></i>
-              {!isCollapsed && <span className="crm-nav-label">{t(item.labelKey)}</span>}
+              {item.isWhatsApp ? (
+                <img 
+                  src="/assets/WhatsApp-Logo.svg" 
+                  alt="WhatsApp" 
+                  className="crm-nav-icon"
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    objectFit: 'contain',
+                    flexShrink: 0
+                  }}
+                />
+              ) : (
+                <i data-lucide={item.icon} className="crm-nav-icon"></i>
+              )}
+              {!isCollapsed && (
+                <span className="crm-nav-label">
+                  {t(item.labelKey)}
+                  {item.isWhatsApp && <span style={{ marginLeft: '4px', fontSize: '12px' }}>🔥</span>}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
