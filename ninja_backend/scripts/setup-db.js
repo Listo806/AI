@@ -256,6 +256,14 @@ async function setupDatabase() {
       console.log('✓ Buyer confidence + match intelligence migration completed');
     }
 
+    // Milestone 4: Lead creation + channel attribution
+    const migration20Path = path.join(__dirname, '../src/database/migrations/020_milestone4_lead_attribution.sql');
+    if (fs.existsSync(migration20Path)) {
+      const migration20SQL = fs.readFileSync(migration20Path, 'utf8');
+      await pool.query(migration20SQL);
+      console.log('✓ Milestone 4 lead attribution migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
