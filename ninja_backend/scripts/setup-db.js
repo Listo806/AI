@@ -264,6 +264,21 @@ async function setupDatabase() {
       console.log('✓ Milestone 4 lead attribution migration completed');
     }
 
+    // Milestone 6: AI Copilot + Zapier
+    const migration21Path = path.join(__dirname, '../src/database/migrations/021_milestone6_ai_copilot.sql');
+    if (fs.existsSync(migration21Path)) {
+      const migration21SQL = fs.readFileSync(migration21Path, 'utf8');
+      await pool.query(migration21SQL);
+      console.log('✓ Milestone 6 AI Copilot + Zapier migration completed');
+    }
+
+    const migration22Path = path.join(__dirname, '../src/database/migrations/022_leads_priority.sql');
+    if (fs.existsSync(migration22Path)) {
+      const migration22SQL = fs.readFileSync(migration22Path, 'utf8');
+      await pool.query(migration22SQL);
+      console.log('✓ Leads priority migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

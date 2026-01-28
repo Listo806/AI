@@ -7,16 +7,23 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { WhatsAppLeadService } from './services/whatsapp-lead.service';
 import { WhatsAppPhoneResolverService } from './services/whatsapp-phone-resolver.service';
 import { BuyerLinkerService } from './services/buyer-linker.service';
+import { AILeadAnalysisService } from './services/ai-lead-analysis.service';
+import { MessageDraftService } from './services/message-draft.service';
+import { AILeadController } from './controllers/ai-lead.controller';
+import { IntegrationsModule } from '../integrations/integrations.module';
+import { IntelligenceModule } from '../intelligence/intelligence.module';
 
 @Module({
-  imports: [AnalyticsModule, SubscriptionsModule],
-  controllers: [LeadsController],
+  imports: [AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule],
+  controllers: [AILeadController, LeadsController],
   providers: [
     LeadsService,
     LeadAIService,
     WhatsAppLeadService,
     WhatsAppPhoneResolverService,
     BuyerLinkerService,
+    AILeadAnalysisService,
+    MessageDraftService,
   ],
   exports: [LeadsService, LeadAIService],
 })

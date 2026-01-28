@@ -396,7 +396,7 @@ Return as JSON array: [{"propertyIndex": 1, "matchScore": 8, "matchReasons": ["r
         content: msg.content,
       })),
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 2000, // Milestone 6: 2,000 tokens/request cap
     });
 
     return {
@@ -417,7 +417,7 @@ Return as JSON array: [{"propertyIndex": 1, "matchScore": 8, "matchReasons": ["r
 
     const response = await this.axiosInstance.post('/messages', {
       model: this.model,
-      max_tokens: 1000,
+      max_tokens: 2000, // Milestone 6: 2,000 tokens/request cap
       system: systemMessage?.content || 'You are a helpful assistant.',
       messages: userMessages.map((msg) => ({
         role: msg.role === 'assistant' ? 'assistant' : 'user',
