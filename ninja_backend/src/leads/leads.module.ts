@@ -12,9 +12,10 @@ import { MessageDraftService } from './services/message-draft.service';
 import { AILeadController } from './controllers/ai-lead.controller';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { IntelligenceModule } from '../intelligence/intelligence.module';
+import { MessagingModule } from '../messaging/messaging.module';
 
 @Module({
-  imports: [AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule],
+  imports: [AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, MessagingModule],
   controllers: [AILeadController, LeadsController],
   providers: [
     LeadsService,

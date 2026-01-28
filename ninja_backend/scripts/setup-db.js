@@ -279,6 +279,14 @@ async function setupDatabase() {
       console.log('✓ Leads priority migration completed');
     }
 
+    // Milestone 5: Messaging (WhatsApp + Email)
+    const migration23Path = path.join(__dirname, '../src/database/migrations/023_milestone5_messaging.sql');
+    if (fs.existsSync(migration23Path)) {
+      const migration23SQL = fs.readFileSync(migration23Path, 'utf8');
+      await pool.query(migration23SQL);
+      console.log('✓ Milestone 5 messaging migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

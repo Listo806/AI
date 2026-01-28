@@ -120,6 +120,8 @@ async function bootstrap() {
     .addTag('intelligence', 'Buyer intelligence and market signals endpoints')
     .addTag('agents', 'Agent priority feed endpoints')
     .addTag('listings', 'Listing comps and match explanation endpoints')
+    .addTag('whatsapp', 'WhatsApp messaging (Twilio)')
+    .addTag('email', 'Email messaging')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

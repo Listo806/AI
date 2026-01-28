@@ -9,10 +9,13 @@ import {
   Query,
   UseGuards,
   BadRequestException,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { LeadsService } from './leads.service';
 import { WhatsAppLeadService } from './services/whatsapp-lead.service';
+import { LeadMessagesService } from '../messaging/lead-messages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateLeadDto } from './dto/create-lead.dto';
@@ -28,6 +31,7 @@ export class LeadsController {
   constructor(
     private readonly leadsService: LeadsService,
     private readonly whatsappLeadService: WhatsAppLeadService,
+    private readonly leadMessages: LeadMessagesService,
   ) {}
 
   @Post('whatsapp')
@@ -118,6 +122,32 @@ export class LeadsController {
     return this.leadsService.findAll(user.id, user.teamId);
   }
 
+  @Get(':id/email-thread')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get email thread for a lead' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiResponse({ status: 200, description: 'Email thread' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async getEmailThread(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.assertLeadAccess(id, user);
+    return { data: await this.leadMessages.getEmailThread(id) };
+  }
+
+  @Get(':id/messages')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get all messages (WhatsApp + email) for a lead timeline' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiResponse({ status: 200, description: 'Lead messages timeline' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async getMessages(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.assertLeadAccess(id, user);
+    return { data: await this.leadMessages.findByLead(id) };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
@@ -182,6 +212,14 @@ export class LeadsController {
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
     await this.leadsService.delete(id, user.id, user.teamId);
     return { message: 'Lead deleted successfully' };
+  }
+
+  private async assertLeadAccess(leadId: string, user: any): Promise<void> {
+    const lead = await this.leadsService.findById(leadId);
+    if (!lead) throw new NotFoundException('Lead not found');
+    if (lead.teamId !== user.teamId && lead.createdBy !== user.id) {
+      throw new ForbiddenException('You do not have access to this lead');
+    }
   }
 }
 

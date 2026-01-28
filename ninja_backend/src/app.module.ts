@@ -16,6 +16,7 @@ import { CrmModule } from './crm/crm.module';
 import { IntelligenceModule } from './intelligence/intelligence.module';
 import { ListingsModule } from './listings/listings.module';
 import { ZapierModule } from './zapier/zapier.module';
+import { MessagingModule } from './messaging/messaging.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ZapierModule } from './zapier/zapier.module';
     IntelligenceModule,
     ListingsModule,
     ZapierModule,
+    MessagingModule,
   ],
   controllers: [AppController],
 })
