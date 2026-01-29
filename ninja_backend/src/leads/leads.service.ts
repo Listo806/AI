@@ -161,6 +161,7 @@ export class LeadsService {
         l.team_id as "teamId", 
         l.notes, 
         l.source, 
+        l.instagram_id as "instagramId",
         l.created_at as "createdAt", 
         l.updated_at as "updatedAt",
         l.last_contacted_at as "lastContactedAt",
@@ -298,6 +299,10 @@ export class LeadsService {
       updates.push(`source = $${paramCount++}`);
       values.push(updateLeadDto.source);
     }
+    if (updateLeadDto.instagramId !== undefined) {
+      updates.push(`instagram_id = $${paramCount++}`);
+      values.push(updateLeadDto.instagramId || null);
+    }
 
     if (updates.length === 0) {
       return lead;
@@ -309,7 +314,7 @@ export class LeadsService {
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
-                 team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
+                 team_id as "teamId", notes, source, instagram_id as "instagramId", created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
     );
 

@@ -33,5 +33,9 @@ export class UpdateLeadDto {
   @IsOptional()
   @IsString()
   propertyId?: string;
+
+  @IsOptional()
+  @IsString()
+  instagramId?: string;
 }
 

@@ -295,6 +295,14 @@ async function setupDatabase() {
       console.log('✓ Agent-owned WhatsApp migration completed');
     }
 
+    // Instagram DM (Phase 2 Milestone 2)
+    const migration25Path = path.join(__dirname, '../src/database/migrations/025_instagram_dm.sql');
+    if (fs.existsSync(migration25Path)) {
+      const migration25SQL = fs.readFileSync(migration25Path, 'utf8');
+      await pool.query(migration25SQL);
+      console.log('✓ Instagram DM migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

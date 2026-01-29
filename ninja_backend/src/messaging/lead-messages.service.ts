@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 
-export type MessageChannel = 'whatsapp' | 'email';
+export type MessageChannel = 'whatsapp' | 'email' | 'instagram_dm';
 export type MessageDirection = 'inbound' | 'outbound';
 export type MessageStatus = 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
 export type SenderType = 'platform' | 'agent';
