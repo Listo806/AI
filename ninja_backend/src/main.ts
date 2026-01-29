@@ -122,6 +122,7 @@ async function bootstrap() {
     .addTag('listings', 'Listing comps and match explanation endpoints')
     .addTag('whatsapp', 'WhatsApp messaging (Twilio)')
     .addTag('email', 'Email messaging')
+    .addTag('agent-whatsapp', 'Agent-owned WhatsApp connect/disconnect')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

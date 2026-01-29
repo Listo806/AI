@@ -287,6 +287,14 @@ async function setupDatabase() {
       console.log('✓ Milestone 5 messaging migration completed');
     }
 
+    // Agent-Owned WhatsApp (Phase 2 Final Milestone)
+    const migration24Path = path.join(__dirname, '../src/database/migrations/024_agent_owned_whatsapp.sql');
+    if (fs.existsSync(migration24Path)) {
+      const migration24SQL = fs.readFileSync(migration24Path, 'utf8');
+      await pool.query(migration24SQL);
+      console.log('✓ Agent-owned WhatsApp migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

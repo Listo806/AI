@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsUUID, IsOptional, IsIn } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SendWhatsAppDto {
   @ApiProperty({ description: 'Lead ID' })
@@ -11,4 +11,9 @@ export class SendWhatsAppDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @ApiPropertyOptional({ description: 'Sender: platform (default) or agent', enum: ['platform', 'agent'] })
+  @IsOptional()
+  @IsIn(['platform', 'agent'])
+  senderType?: 'platform' | 'agent';
 }

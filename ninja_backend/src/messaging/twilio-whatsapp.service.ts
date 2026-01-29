@@ -2,11 +2,13 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 import { LeadMessagesService } from './lead-messages.service';
+import { AgentWhatsAppConnectionService } from './agent-whatsapp-connection.service';
 import twilio from 'twilio';
 
 export interface SendWhatsAppDto {
   leadId: string;
   message: string;
+  senderType?: 'platform' | 'agent';
 }
 
 export interface InboundWebhookPayload {
@@ -31,6 +33,7 @@ export class TwilioWhatsAppService {
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly leadMessages: LeadMessagesService,
+    private readonly agentConnections: AgentWhatsAppConnectionService,
   ) {
     const accountSid = config.get('TWILIO_ACCOUNT_SID');
     const authToken = config.get('TWILIO_AUTH_TOKEN');
@@ -73,11 +76,10 @@ export class TwilioWhatsAppService {
 
   /**
    * Send WhatsApp message for a lead (outbound from CRM). Per-lead, per-action only.
+   * senderType: platform (default) | agent. Agent uses connected Twilio sub-account.
    */
   async sendForLead(dto: SendWhatsAppDto, userId: string, teamId: string | null): Promise<{ messageId: string; status: string }> {
-    if (!this.isConfigured || !this.client) {
-      throw new BadRequestException('WhatsApp (Twilio) is not configured');
-    }
+    const senderType = dto.senderType ?? 'platform';
 
     const { rows } = await this.db.query(
       `SELECT id, phone, team_id, created_by FROM leads WHERE id = $1`,
@@ -97,9 +99,27 @@ export class TwilioWhatsAppService {
     const baseUrl = this.config.get('BACKEND_URL') || this.config.get('RENDER_EXTERNAL_URL') || 'http://localhost:3000';
     const statusCallback = `${baseUrl.replace(/\/$/, '')}/api/whatsapp/status-callback`;
 
-    const msg = await this.client.messages.create({
+    let client: any;
+    let from: string;
+    let storeAgentId: string | null = null;
+
+    if (senderType === 'agent') {
+      const conn = await this.agentConnections.getForSend(userId);
+      if (!conn) throw new BadRequestException('Agent WhatsApp not connected. Connect via POST /api/agent/whatsapp/connect.');
+      client = (twilio as any)(conn.subAccountSid, conn.authToken);
+      from = conn.whatsappNumber.startsWith('+') ? `whatsapp:${conn.whatsappNumber}` : `whatsapp:+${conn.whatsappNumber}`;
+      storeAgentId = userId;
+    } else {
+      if (!this.isConfigured || !this.client) {
+        throw new BadRequestException('WhatsApp (Twilio) is not configured');
+      }
+      client = this.client;
+      from = this.from;
+    }
+
+    const msg = await client.messages.create({
       body: dto.message,
-      from: this.from,
+      from,
       to,
       statusCallback,
     });
@@ -112,6 +132,8 @@ export class TwilioWhatsAppService {
       external_id: msg.sid,
       body: dto.message,
       status,
+      sender_type: senderType,
+      agent_id: storeAgentId,
     });
 
     await this.db.query(
@@ -123,7 +145,7 @@ export class TwilioWhatsAppService {
   }
 
   /**
-   * Handle inbound webhook from Twilio. Find lead by From, store message, return TwiML.
+   * Handle inbound webhook from Twilio. Find lead by From, resolve To (platform vs agent), store with sender_type.
    */
   async handleInbound(payload: InboundWebhookPayload): Promise<string> {
     const from = TwilioWhatsAppService.phoneFromTwilioAddress(payload.From || '');
@@ -135,11 +157,20 @@ export class TwilioWhatsAppService {
       return '<Response></Response>';
     }
 
+    const resolved = await this.agentConnections.resolveReceivingNumber(payload.To || '');
+    if (!resolved) {
+      this.logger.warn(`Inbound WhatsApp: unknown receiving number To=${payload.To}, skipping store`);
+      return '<Response></Response>';
+    }
+
     const lead = await this.findLeadByPhone(from);
     if (!lead) {
       this.logger.warn(`Inbound WhatsApp: no lead for phone ${from}, skipping store`);
       return '<Response></Response>';
     }
+
+    const senderType = resolved.type === 'platform' ? 'platform' : 'agent';
+    const agentId = resolved.type === 'agent' ? resolved.agentId : null;
 
     await this.leadMessages.create({
       lead_id: lead.id,
@@ -154,6 +185,8 @@ export class TwilioWhatsAppService {
         ProfileName: payload.ProfileName,
         WaId: payload.WaId,
       },
+      sender_type: senderType,
+      agent_id: agentId,
     });
 
     await this.db.query(

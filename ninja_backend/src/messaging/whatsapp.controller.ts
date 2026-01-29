@@ -44,7 +44,7 @@ export class WhatsAppController {
   @ApiResponse({ status: 403, description: 'CRM access required' })
   async send(@Body() dto: SendWhatsAppDto, @CurrentUser() user: any) {
     const result = await this.whatsapp.sendForLead(
-      { leadId: dto.leadId, message: dto.message },
+      { leadId: dto.leadId, message: dto.message, senderType: dto.senderType },
       user.id,
       user.teamId,
     );
