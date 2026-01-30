@@ -123,6 +123,8 @@ async function bootstrap() {
     .addTag('whatsapp', 'WhatsApp messaging (Twilio)')
     .addTag('email', 'Email messaging')
     .addTag('agent-whatsapp', 'Agent-owned WhatsApp connect/disconnect')
+    .addTag('instagram', 'Instagram DM send, OAuth callback, webhook')
+    .addTag('agent-instagram', 'Agent Instagram connect, disconnect, status')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

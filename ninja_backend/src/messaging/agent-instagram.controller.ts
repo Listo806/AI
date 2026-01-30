@@ -13,9 +13,16 @@ export class AgentInstagramController {
   constructor(private readonly connections: AgentInstagramConnectionService) {}
 
   @Get('auth-url')
-  @ApiOperation({ summary: 'Get Instagram OAuth URL for connect' })
-  @ApiResponse({ status: 200, description: 'URL to redirect user to' })
-  @ApiResponse({ status: 400, description: 'Instagram not configured' })
+  @ApiOperation({
+    summary: 'Get Instagram OAuth URL',
+    description: 'Returns Meta OAuth URL. Redirect user to this URL to connect Instagram (Business/Creator linked to a Facebook Page). After auth, Meta redirects to GET /api/instagram/callback.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'OAuth URL',
+    schema: { example: { url: 'https://www.facebook.com/v18.0/dialog/oauth?client_id=...' } },
+  })
+  @ApiResponse({ status: 400, description: 'Instagram (Meta) not configured' })
   @ApiResponse({ status: 403, description: 'CRM access required' })
   async getAuthUrl(@CurrentUser() user: any) {
     const url = this.connections.getAuthUrl(user.id);
@@ -23,8 +30,8 @@ export class AgentInstagramController {
   }
 
   @Delete('disconnect')
-  @ApiOperation({ summary: 'Disconnect Instagram' })
-  @ApiResponse({ status: 200, description: 'Disconnected' })
+  @ApiOperation({ summary: 'Disconnect Instagram', description: 'Sets agent Instagram connection to disconnected.' })
+  @ApiResponse({ status: 200, description: 'Disconnected', schema: { example: { success: true } } })
   @ApiResponse({ status: 403, description: 'CRM access required' })
   async disconnect(@CurrentUser() user: any) {
     await this.connections.disconnect(user.id);
@@ -32,8 +39,22 @@ export class AgentInstagramController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get Instagram connection status' })
-  @ApiResponse({ status: 200, description: 'Status' })
+  @ApiOperation({
+    summary: 'Get Instagram connection status',
+    description: 'Returns whether the current agent has Instagram connected and optional username.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Connection status',
+    schema: {
+      example: {
+        data: {
+          connected: true,
+          instagramUsername: 'my_business_ig',
+        },
+      },
+    },
+  })
   @ApiResponse({ status: 403, description: 'CRM access required' })
   async getStatus(@CurrentUser() user: any) {
     const status = await this.connections.getStatus(user.id);
