@@ -9,11 +9,30 @@ import { AgentWhatsAppConnectionService } from './agent-whatsapp-connection.serv
 import { WhatsAppController } from './whatsapp.controller';
 import { EmailController } from './email.controller';
 import { AgentWhatsAppController } from './agent-whatsapp.controller';
+import { AgentInstagramConnectionService } from './agent-instagram-connection.service';
+import { InstagramDmService } from './instagram-dm.service';
+import { InstagramWebhookService } from './instagram-webhook.service';
+import { InstagramController } from './instagram.controller';
+import { AgentInstagramController } from './agent-instagram.controller';
 
 @Module({
   imports: [ConfigModule, DatabaseModule, SubscriptionsModule],
-  controllers: [WhatsAppController, EmailController, AgentWhatsAppController],
-  providers: [LeadMessagesService, TwilioWhatsAppService, EmailService, AgentWhatsAppConnectionService],
+  controllers: [
+    WhatsAppController,
+    EmailController,
+    AgentWhatsAppController,
+    InstagramController,
+    AgentInstagramController,
+  ],
+  providers: [
+    LeadMessagesService,
+    TwilioWhatsAppService,
+    EmailService,
+    AgentWhatsAppConnectionService,
+    AgentInstagramConnectionService,
+    InstagramDmService,
+    InstagramWebhookService,
+  ],
   exports: [LeadMessagesService],
 })
 export class MessagingModule {}
