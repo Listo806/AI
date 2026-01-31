@@ -20,6 +20,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
+    { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
