@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import apiClient from '../api/apiClient';
+import { normalizePhoneToE164 } from '../utils/whatsapp';
 import '../styles/ContactModal.css';
 
 export default function ContactModal({ property, onClose, onSubmit }) {
@@ -34,11 +35,12 @@ export default function ContactModal({ property, onClose, onSubmit }) {
       if (property.state) addressParts.push(property.state);
       const address = addressParts.length > 0 ? addressParts.join(', ') : property.title;
 
-      // Create lead with property association
+      // Create lead with property association (phone normalized to E.164)
+      const normalizedPhone = formData.phone ? normalizePhoneToE164(formData.phone) : undefined;
       const leadData = {
         name: formData.name,
         email: formData.email || undefined,
-        phone: formData.phone || undefined,
+        phone: normalizedPhone || undefined,
         notes: formData.notes || `Interested in property: ${address}`,
         source: 'contact_form',
         status: 'new',
@@ -141,6 +143,15 @@ export default function ContactModal({ property, onClose, onSubmit }) {
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={(e) => {
+                  const val = e.target.value?.trim();
+                  if (val) {
+                    const normalized = normalizePhoneToE164(val);
+                    if (normalized && normalized !== val) {
+                      setFormData((prev) => ({ ...prev, phone: normalized }));
+                    }
+                  }
+                }}
                 disabled={loading}
                 placeholder="+1 (555) 123-4567"
               />

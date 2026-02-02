@@ -1830,6 +1830,20 @@ body.crm-dark .crm-error {
     margin-bottom: 16px; /* Reduced from 24px by ~33% to prevent endless scrolling */
   }
 
+  /* WhatsApp chat layout - stack on mobile */
+  .whatsapp-chat-layout {
+    flex-direction: column !important;
+    height: 600px !important;
+  }
+
+  .whatsapp-lead-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: 180px;
+    border-right: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
   .crm-sidebar {
     width: 165px; /* Updated to match new sidebar width */
   }
@@ -2051,6 +2065,19 @@ body.crm-dark .crm-error {
     flex-direction: column;
     width: 100%;
     max-width: 100%;
+  }
+
+  .whatsapp-chat-layout {
+    flex-direction: column !important;
+    height: 600px !important;
+  }
+
+  .whatsapp-lead-list {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: 180px;
+    border-right: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
   }
 
   .whatsapp-main-layout {

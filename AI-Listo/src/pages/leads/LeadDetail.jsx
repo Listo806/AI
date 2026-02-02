@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
+import WhatsAppChat from '../../components/WhatsAppChat';
 import './Leads.css';
 
 export default function LeadDetail() {
@@ -780,6 +781,19 @@ export default function LeadDetail() {
                 <div><strong>Source:</strong> {lead.source || 'N/A'}</div>
               </div>
             </div>
+
+          {/* WhatsApp Chat - in-app messaging */}
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h3 className="crm-section-title">WhatsApp Messages</h3>
+            <div style={{ height: '400px', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
+              <WhatsAppChat
+                leadId={id}
+                leadPhone={formData.phone}
+                leadName={lead.name}
+                onSendSuccess={loadLead}
+              />
+            </div>
+          </div>
 
           {associatedProperty && (
             <div className="crm-section" style={{ marginBottom: '24px' }}>
