@@ -4,6 +4,7 @@ import { DatabaseService } from '../database/database.service';
 export type ConversationOwnership = 'ai' | 'human';
 export type ConversationStatus = 'open' | 'closed';
 export type ConversationSource = 'organic' | 'ad';
+export type ConversationStage = 'new' | 'qualified' | 'presented' | 'escalated' | 'converted' | 'closed';
 
 export interface Conversation {
   id: string;
@@ -14,6 +15,7 @@ export interface Conversation {
   status: ConversationStatus;
   source: ConversationSource;
   source_meta: Record<string, unknown> | null;
+  stage: ConversationStage;
   created_at: Date;
   updated_at: Date;
 }
@@ -43,6 +45,7 @@ export class ConversationsService {
       status: row.status ?? 'open',
       source: row.source ?? 'organic',
       source_meta: row.source_meta ?? null,
+      stage: row.stage ?? 'new',
       created_at: row.created_at,
       updated_at: row.updated_at,
     };
@@ -54,7 +57,7 @@ export class ConversationsService {
    */
   async getOrCreateForLead(leadId: string, dto?: Partial<CreateConversationDto>): Promise<{ conversation: Conversation; created: boolean }> {
     const { rows: existing } = await this.db.query(
-      `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, created_at, updated_at
+      `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, stage, created_at, updated_at
        FROM conversations WHERE lead_id = $1 AND status = 'open' LIMIT 1`,
       [leadId],
     );
@@ -64,7 +67,7 @@ export class ConversationsService {
     const { rows: created } = await this.db.query(
       `INSERT INTO conversations (lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, updated_at)
        VALUES ($1, $2, $3, $4, 'open', $5, $6, NOW())
-       RETURNING id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, created_at, updated_at`,
+       RETURNING id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, stage, created_at, updated_at`,
       [
         leadId,
         dto?.agent_id ?? null,
@@ -79,7 +82,7 @@ export class ConversationsService {
 
   async findById(id: string): Promise<Conversation | null> {
     const { rows } = await this.db.query(
-      `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, created_at, updated_at
+      `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, stage, created_at, updated_at
        FROM conversations WHERE id = $1`,
       [id],
     );
@@ -87,7 +90,7 @@ export class ConversationsService {
   }
 
   async findByLeadId(leadId: string, status?: ConversationStatus): Promise<Conversation | null> {
-    let query = `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, created_at, updated_at
+    let query = `SELECT id, lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, stage, created_at, updated_at
                  FROM conversations WHERE lead_id = $1`;
     const params: any[] = [leadId];
     if (status) {
@@ -104,7 +107,7 @@ export class ConversationsService {
    */
   async listForTeam(teamId: string, filters?: { status?: ConversationStatus; ownership?: ConversationOwnership }): Promise<Conversation[]> {
     let query = `
-      SELECT c.id, c.lead_id, c.agent_id, c.ownership, c.ai_enabled, c.status, c.source, c.source_meta, c.created_at, c.updated_at
+      SELECT c.id, c.lead_id, c.agent_id, c.ownership, c.ai_enabled, c.status, c.source, c.source_meta, c.stage, c.created_at, c.updated_at
       FROM conversations c
       JOIN leads l ON l.id = c.lead_id
       WHERE l.team_id = $1`;
@@ -134,6 +137,28 @@ export class ConversationsService {
       `UPDATE conversations SET ai_enabled = $1, updated_at = NOW() WHERE id = $2`,
       [aiEnabled, id],
     );
+  }
+
+  /**
+   * Advance stage forward (never regress), except when closing.
+   */
+  async advanceStage(id: string, next: ConversationStage): Promise<void> {
+    const order: ConversationStage[] = ['new', 'qualified', 'presented', 'escalated', 'converted', 'closed'];
+    const { rows } = await this.db.query(`SELECT stage, status FROM conversations WHERE id = $1`, [id]);
+    if (!rows.length) return;
+    const current: ConversationStage = rows[0].stage ?? 'new';
+    const status: ConversationStatus = rows[0].status ?? 'open';
+
+    if (next === 'closed' || status === 'closed') {
+      await this.db.query(`UPDATE conversations SET stage = 'closed', status = 'closed', updated_at = NOW() WHERE id = $1`, [id]);
+      return;
+    }
+
+    const curIdx = order.indexOf(current);
+    const nextIdx = order.indexOf(next);
+    if (nextIdx > curIdx) {
+      await this.db.query(`UPDATE conversations SET stage = $1, updated_at = NOW() WHERE id = $2`, [next, id]);
+    }
   }
 
   async updateSourceMeta(id: string, source: ConversationSource, sourceMeta: Record<string, unknown> | null): Promise<void> {

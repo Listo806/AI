@@ -22,6 +22,7 @@ import { TwilioMediaService } from './twilio-media.service';
 import { WhatsAppInboundService } from './whatsapp-inbound.service';
 import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
+import { IntentEventsService } from './intent-events.service';
 
 @Module({
   imports: [ConfigModule, DatabaseModule, SubscriptionsModule, IntegrationsModule],
@@ -47,6 +48,7 @@ import { WhatsAppActionsService } from './whatsapp-actions.service';
     WhatsAppInboundService,
     WhatsAppCardsService,
     WhatsAppActionsService,
+    IntentEventsService,
   ],
   exports: [LeadMessagesService, ConversationsService],
 })

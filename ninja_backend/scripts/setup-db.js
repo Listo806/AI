@@ -311,6 +311,14 @@ async function setupDatabase() {
       console.log('✓ CORTEXA WhatsApp Core migration completed');
     }
 
+    // CORTEXA WhatsApp Core Add-ons (stage + intent_events)
+    const migration27Path = path.join(__dirname, '../src/database/migrations/027_whatsapp_intent_stage_nextq.sql');
+    if (fs.existsSync(migration27Path)) {
+      const migration27SQL = fs.readFileSync(migration27Path, 'utf8');
+      await pool.query(migration27SQL);
+      console.log('✓ CORTEXA WhatsApp Add-ons (stage + intent_events) migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

@@ -11,6 +11,7 @@ import { ConversationsService } from './conversations.service';
 import { LeadMessagesService } from './lead-messages.service';
 import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
+import { IntentEventsService } from './intent-events.service';
 
 @ApiTags('whatsapp')
 @Controller('whatsapp')
@@ -22,6 +23,7 @@ export class WhatsAppController {
     private readonly leadMessages: LeadMessagesService,
     private readonly cards: WhatsAppCardsService,
     private readonly actions: WhatsAppActionsService,
+    private readonly intents: IntentEventsService,
   ) {}
 
   @Post('webhook')
@@ -122,6 +124,7 @@ export class WhatsAppController {
       throw new NotFoundException('Conversation not found');
     }
     await this.conversations.updateOwnership(id, 'human');
+    await this.conversations.advanceStage(id, 'escalated');
     const result = await this.whatsapp.sendForLead(
       { leadId: conv.lead_id, message: body.message, senderType: 'agent', conversationId: id },
       user.id,
@@ -146,6 +149,9 @@ export class WhatsAppController {
       throw new NotFoundException('Conversation not found');
     }
     await this.conversations.setAiEnabled(id, body.aiEnabled);
+    if (body.aiEnabled === false) {
+      await this.conversations.advanceStage(id, 'escalated');
+    }
     return { success: true, aiEnabled: body.aiEnabled };
   }
 
@@ -214,5 +220,20 @@ export class WhatsAppController {
       payload: body.payload,
     });
     return { success: true };
+  }
+
+  @Get('conversations/:id/intents')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'List intent events for a conversation' })
+  @ApiParam({ name: 'id', description: 'Conversation ID' })
+  async listIntents(@Param('id') id: string, @CurrentUser() user: any) {
+    try {
+      await this.conversations.assertTeamAccess(id, user.teamId);
+    } catch {
+      throw new NotFoundException('Conversation not found');
+    }
+    const data = await this.intents.listForConversation(id);
+    return { data };
   }
 }

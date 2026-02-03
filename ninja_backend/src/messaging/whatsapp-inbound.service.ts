@@ -7,6 +7,7 @@ import { ConversationsService } from './conversations.service';
 import { WhatsAppRoutingService } from './whatsapp-routing.service';
 import { WhatsAppAiReplyService } from './whatsapp-ai-reply.service';
 import { TwilioMediaService } from './twilio-media.service';
+import { IntentEventsService } from './intent-events.service';
 
 const AD_GREETING_TEXT = `¡Hola! Gracias por contactarnos. ¿En qué podemos ayudarte?
 • COMPRAR - Estoy interesado en comprar
@@ -26,6 +27,7 @@ export class WhatsAppInboundService {
     private readonly routing: WhatsAppRoutingService,
     private readonly aiReply: WhatsAppAiReplyService,
     private readonly twilioMedia: TwilioMediaService,
+    private readonly intents: IntentEventsService,
   ) {}
 
   /**
@@ -98,6 +100,14 @@ export class WhatsAppInboundService {
       agent_id: agentId,
       conversation_id: conversation.id,
       message_type: messageType,
+    });
+
+    // Intent detection (minimal, safe). Run after transcription if audio.
+    await this.intents.createIfAllowed({
+      conversationId: conversation.id,
+      leadId: lead.id,
+      detectedFrom: messageType === 'audio' ? 'audio' : 'text',
+      text: body,
     });
 
     await this.db.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [conversation.id]);

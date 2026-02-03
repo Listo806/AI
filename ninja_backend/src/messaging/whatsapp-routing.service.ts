@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { ConversationsService } from './conversations.service';
+import { IntentEventsService } from './intent-events.service';
 
 export type RouteAction = 'reply_ai' | 'notify_agent';
 
@@ -13,6 +14,7 @@ export class WhatsAppRoutingService {
   constructor(
     private readonly db: DatabaseService,
     private readonly conversations: ConversationsService,
+    private readonly intents: IntentEventsService,
   ) {}
 
   /**
@@ -30,6 +32,12 @@ export class WhatsAppRoutingService {
       return { action: 'notify_agent', reason: 'conversation_not_found' };
     }
 
+    // 0) closed -> notify_agent (or ignore). We notify and log.
+    if (conv.status === 'closed' || conv.stage === 'closed') {
+      await this.logRoutingEvent(conversationId, 'notify_agent', 'conversation_closed');
+      return { action: 'notify_agent', reason: 'conversation_closed' };
+    }
+
     if (conv.ownership === 'human') {
       await this.logRoutingEvent(conversationId, 'notify_agent', 'ownership is human');
       return { action: 'notify_agent', reason: 'ownership_human' };
@@ -40,10 +48,20 @@ export class WhatsAppRoutingService {
       return { action: 'notify_agent', reason: 'ai_disabled' };
     }
 
+    // 3) intent escalation: latest intent agent_request
+    const latestIntent = await this.intents.getLatestForConversation(conversationId);
+    if (latestIntent?.intent_type === 'agent_request') {
+      await this.conversations.updateOwnership(conversationId, 'human');
+      await this.conversations.advanceStage(conversationId, 'escalated');
+      await this.logRoutingEvent(conversationId, 'notify_agent', 'intent_agent_request');
+      return { action: 'notify_agent', reason: 'intent_agent_request' };
+    }
+
     const text = (messageText || '').toLowerCase();
     for (const kw of HUMAN_KEYWORDS) {
       if (text.includes(kw.toLowerCase())) {
         await this.conversations.updateOwnership(conversationId, 'human');
+        await this.conversations.advanceStage(conversationId, 'escalated');
         await this.logRoutingEvent(conversationId, 'notify_agent', `keyword: ${kw}`);
         return { action: 'notify_agent', reason: `keyword_${kw}` };
       }

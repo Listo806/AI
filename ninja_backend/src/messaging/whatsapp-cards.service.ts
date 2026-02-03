@@ -65,6 +65,7 @@ export class WhatsAppCardsService {
       message_type: 'card',
       meta: { propertyId, link },
     });
+    await this.conversations.advanceStage(conversationId, 'presented');
     return { messageId: result.messageId };
   }
 
