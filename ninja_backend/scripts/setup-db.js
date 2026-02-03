@@ -303,6 +303,14 @@ async function setupDatabase() {
       console.log('✓ Instagram DM migration completed');
     }
 
+    // CORTEXA WhatsApp Core (conversations, routing, lead_messages extensions)
+    const migration26Path = path.join(__dirname, '../src/database/migrations/026_whatsapp_cortexa_core.sql');
+    if (fs.existsSync(migration26Path)) {
+      const migration26SQL = fs.readFileSync(migration26Path, 'utf8');
+      await pool.query(migration26SQL);
+      console.log('✓ CORTEXA WhatsApp Core migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

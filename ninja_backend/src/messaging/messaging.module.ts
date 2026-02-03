@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '../config/config.module';
 import { DatabaseModule } from '../database/database.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 import { LeadMessagesService } from './lead-messages.service';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { EmailService } from './email.service';
@@ -14,9 +15,16 @@ import { InstagramDmService } from './instagram-dm.service';
 import { InstagramWebhookService } from './instagram-webhook.service';
 import { InstagramController } from './instagram.controller';
 import { AgentInstagramController } from './agent-instagram.controller';
+import { ConversationsService } from './conversations.service';
+import { WhatsAppRoutingService } from './whatsapp-routing.service';
+import { WhatsAppAiReplyService } from './whatsapp-ai-reply.service';
+import { TwilioMediaService } from './twilio-media.service';
+import { WhatsAppInboundService } from './whatsapp-inbound.service';
+import { WhatsAppCardsService } from './whatsapp-cards.service';
+import { WhatsAppActionsService } from './whatsapp-actions.service';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule],
+  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, IntegrationsModule],
   controllers: [
     WhatsAppController,
     EmailController,
@@ -32,7 +40,14 @@ import { AgentInstagramController } from './agent-instagram.controller';
     AgentInstagramConnectionService,
     InstagramDmService,
     InstagramWebhookService,
+    ConversationsService,
+    WhatsAppRoutingService,
+    TwilioMediaService,
+    WhatsAppAiReplyService,
+    WhatsAppInboundService,
+    WhatsAppCardsService,
+    WhatsAppActionsService,
   ],
-  exports: [LeadMessagesService],
+  exports: [LeadMessagesService, ConversationsService],
 })
 export class MessagingModule {}

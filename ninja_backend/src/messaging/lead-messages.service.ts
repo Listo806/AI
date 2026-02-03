@@ -4,7 +4,8 @@ import { DatabaseService } from '../database/database.service';
 export type MessageChannel = 'whatsapp' | 'email' | 'instagram_dm';
 export type MessageDirection = 'inbound' | 'outbound';
 export type MessageStatus = 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
-export type SenderType = 'platform' | 'agent';
+export type SenderType = 'platform' | 'agent' | 'ai' | 'lead';
+export type MessageType = 'text' | 'audio' | 'card';
 
 export interface CreateMessageDto {
   lead_id: string;
@@ -17,6 +18,10 @@ export interface CreateMessageDto {
   metadata?: Record<string, unknown>;
   sender_type?: SenderType;
   agent_id?: string | null;
+  conversation_id?: string | null;
+  message_type?: MessageType;
+  media_url?: string | null;
+  meta?: Record<string, unknown> | null;
 }
 
 export interface LeadMessage {
@@ -31,6 +36,10 @@ export interface LeadMessage {
   metadata: Record<string, unknown> | null;
   sender_type: SenderType;
   agent_id: string | null;
+  conversation_id: string | null;
+  message_type: MessageType;
+  media_url: string | null;
+  meta: Record<string, unknown> | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -41,9 +50,9 @@ export class LeadMessagesService {
 
   async create(dto: CreateMessageDto): Promise<LeadMessage> {
     const { rows } = await this.db.query(
-      `INSERT INTO lead_messages (lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
-       RETURNING id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, created_at, updated_at`,
+      `INSERT INTO lead_messages (lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW())
+       RETURNING id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, created_at, updated_at`,
       [
         dto.lead_id,
         dto.channel,
@@ -55,6 +64,10 @@ export class LeadMessagesService {
         dto.metadata ? JSON.stringify(dto.metadata) : null,
         dto.sender_type ?? 'platform',
         dto.agent_id ?? null,
+        dto.conversation_id ?? null,
+        dto.message_type ?? 'text',
+        dto.media_url ?? null,
+        dto.meta ? JSON.stringify(dto.meta) : null,
       ],
     );
     return this.mapRow(rows[0]);
@@ -69,7 +82,7 @@ export class LeadMessagesService {
   }
 
   async findByLead(leadId: string, channel?: MessageChannel): Promise<LeadMessage[]> {
-    let query = `SELECT id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, created_at, updated_at
+    let query = `SELECT id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, created_at, updated_at
                  FROM lead_messages WHERE lead_id = $1`;
     const params: any[] = [leadId];
     if (channel) {
@@ -80,6 +93,22 @@ export class LeadMessagesService {
 
     const { rows } = await this.db.query(query, params);
     return rows.map(this.mapRow);
+  }
+
+  /**
+   * Find messages by conversation (for WhatsApp AI reply context and API).
+   * Returns last N messages in chronological order (oldest first).
+   */
+  async findByConversation(conversationId: string, limit = 50): Promise<LeadMessage[]> {
+    const { rows } = await this.db.query(
+      `SELECT id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, created_at, updated_at
+       FROM lead_messages
+       WHERE conversation_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [conversationId, limit],
+    );
+    return rows.reverse().map(this.mapRow);
   }
 
   async getEmailThread(leadId: string): Promise<LeadMessage[]> {
@@ -99,6 +128,10 @@ export class LeadMessagesService {
       metadata: row.metadata,
       sender_type: row.sender_type ?? 'platform',
       agent_id: row.agent_id ?? null,
+      conversation_id: row.conversation_id ?? null,
+      message_type: row.message_type ?? 'text',
+      media_url: row.media_url ?? null,
+      meta: row.meta ?? null,
       created_at: row.created_at,
       updated_at: row.updated_at,
     };

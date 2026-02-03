@@ -9,6 +9,7 @@ export interface SendWhatsAppDto {
   leadId: string;
   message: string;
   senderType?: 'platform' | 'agent';
+  conversationId?: string;
 }
 
 export interface InboundWebhookPayload {
@@ -77,6 +78,8 @@ export class TwilioWhatsAppService {
   /**
    * Send WhatsApp message for a lead (outbound from CRM). Per-lead, per-action only.
    * senderType: platform (default) | agent. Agent uses connected Twilio sub-account.
+   * Routing safety: AI/automation must use senderType 'platform' only — never 'agent'.
+   * AI must not send on Agent WhatsApp or Instagram DM; only allowed platform channels.
    */
   async sendForLead(dto: SendWhatsAppDto, userId: string, teamId: string | null): Promise<{ messageId: string; status: string }> {
     const senderType = dto.senderType ?? 'platform';
@@ -134,11 +137,60 @@ export class TwilioWhatsAppService {
       status,
       sender_type: senderType,
       agent_id: storeAgentId,
+      conversation_id: dto.conversationId ?? null,
     });
 
     await this.db.query(
       `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(), last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
       [dto.leadId],
+    );
+
+    return { messageId: msg.sid, status: msg.status || 'queued' };
+  }
+
+  /**
+   * Send AI reply to lead via platform WhatsApp. Stores message with sender_type='ai' and conversation_id.
+   * Used by WhatsApp AI reply service after AiAssistantService.chat().
+   */
+  async sendAiReply(leadId: string, conversationId: string, message: string): Promise<{ messageId: string; status: string }> {
+    if (!this.isConfigured || !this.client) {
+      throw new BadRequestException('WhatsApp (Twilio) is not configured');
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, phone FROM leads WHERE id = $1`,
+      [leadId],
+    );
+    if (!rows.length) throw new BadRequestException('Lead not found');
+    const phone = rows[0].phone;
+    if (!phone || !/^\+[1-9]\d{1,14}$/.test(phone)) {
+      throw new BadRequestException('Lead has no valid phone number for WhatsApp');
+    }
+    const to = phone.startsWith('+') ? `whatsapp:${phone}` : `whatsapp:+${phone}`;
+    const baseUrl = this.config.get('BACKEND_URL') || this.config.get('RENDER_EXTERNAL_URL') || 'http://localhost:3000';
+    const statusCallback = `${baseUrl.replace(/\/$/, '')}/api/whatsapp/status-callback`;
+
+    const msg = await this.client.messages.create({
+      body: message,
+      from: this.from,
+      to,
+      statusCallback,
+    });
+
+    const status = ['queued', 'sent', 'delivered', 'read', 'failed'].includes(msg.status) ? msg.status : 'sent';
+    await this.leadMessages.create({
+      lead_id: leadId,
+      channel: 'whatsapp',
+      direction: 'outbound',
+      external_id: msg.sid,
+      body: message,
+      status,
+      sender_type: 'ai',
+      conversation_id: conversationId,
+    });
+
+    await this.db.query(
+      `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(), last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      [leadId],
     );
 
     return { messageId: msg.sid, status: msg.status || 'queued' };

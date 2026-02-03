@@ -16,4 +16,9 @@ export class SendWhatsAppDto {
   @IsOptional()
   @IsIn(['platform', 'agent'])
   senderType?: 'platform' | 'agent';
+
+  @ApiPropertyOptional({ description: 'Conversation ID (for conversation-scoped send)' })
+  @IsOptional()
+  @IsUUID()
+  conversationId?: string;
 }
