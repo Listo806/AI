@@ -50,13 +50,14 @@ export default function Instagram() {
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Instagram</h1>
 
       {/* Status Cards Row - Mobile First: Single Column */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        marginBottom: '24px'
-      }}
-      className="instagram-status-cards"
+      <div
+        className="instagram-status-cards"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          marginBottom: '24px'
+        }}
       >
         {/* Instagram Connection Status */}
         <div className="crm-section">
@@ -119,7 +120,7 @@ export default function Instagram() {
         gap: '24px',
         marginBottom: '24px'
       }}>
-        {/* PRIMARY: Instagram DM Inbox (Full Width on Mobile) */}
+        {/* PRIMARY: Instagram DM Inbox — unavailable until Meta approved */}
         <div className="crm-section instagram-dm-inbox">
           <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600' }}>
             {t('instagram.dmInbox')}
@@ -133,6 +134,17 @@ export default function Instagram() {
             flexDirection: 'column',
             overflow: 'hidden'
           }}>
+            {/* Unavailable banner: no false affordances */}
+            <div style={{
+              padding: '12px 16px',
+              background: '#fef3c7',
+              borderBottom: '1px solid #fcd34d',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#92400e'
+            }}>
+              Instagram DM — Requires Meta Approval
+            </div>
             {/* Inbox Header */}
             <div style={{
               padding: '16px',
@@ -157,8 +169,8 @@ export default function Instagram() {
                 <i data-lucide="camera" style={{ width: '20px', height: '20px', stroke: '#fff', strokeWidth: 2 }}></i>
               </div>
               <div>
-                <div style={{ fontWeight: '600', fontSize: '14px' }}>Instagram DMs</div>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>Manage your direct messages</div>
+                <div style={{ fontWeight: '600', fontSize: '14px' }}>Instagram DM</div>
+                <div style={{ fontSize: '12px', color: '#64748b' }}>Unavailable — requires Meta business approval</div>
               </div>
             </div>
 
@@ -179,19 +191,27 @@ export default function Instagram() {
                   <i data-lucide="camera" style={{ width: '48px', height: '48px', stroke: '#64748b', strokeWidth: 2 }}></i>
                 </div>
                 <div style={{ fontWeight: '500', marginBottom: '8px' }}>Instagram Direct Messages</div>
-                <div>DM inbox interface placeholder</div>
+                <div>DM inbox will be available after Meta approval.</div>
                 <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
-                  Your Instagram messages will appear here
+                  Your Instagram messages will appear here once connected.
                 </div>
               </div>
             </div>
 
-            {/* Message Input */}
+            {/* Message Input — disabled with clear label */}
             <div style={{
               padding: '16px',
-              background: '#fff',
+              background: '#f1f5f9',
               borderTop: '1px solid #e5e7eb'
             }}>
+              <div style={{
+                fontSize: '12px',
+                color: '#64748b',
+                marginBottom: '8px',
+                fontWeight: '500'
+              }}>
+                Unavailable — Requires Meta Approval
+              </div>
               <div style={{
                 display: 'flex',
                 gap: '8px',
@@ -201,25 +221,36 @@ export default function Instagram() {
                   type="text"
                   placeholder={t('instagram.sendMessage')}
                   disabled
+                  readOnly
+                  aria-disabled="true"
+                  title="Requires Meta Approval"
                   style={{
                     flex: 1,
+                    minHeight: '44px',
                     padding: '10px 12px',
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '20px',
                     fontSize: '14px',
-                    background: '#f8fafc'
+                    background: '#e2e8f0',
+                    color: '#64748b',
+                    cursor: 'not-allowed'
                   }}
                 />
                 <button
+                  type="button"
                   disabled
+                  aria-disabled="true"
+                  title="Requires Meta Approval"
                   style={{
+                    minHeight: '44px',
+                    minWidth: '44px',
                     padding: '10px 16px',
-                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    background: '#94a3b8',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '20px',
                     cursor: 'not-allowed',
-                    opacity: 0.5
+                    opacity: 0.8
                   }}
                 >
                   {t('instagram.send')}

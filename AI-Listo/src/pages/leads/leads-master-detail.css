@@ -278,6 +278,7 @@
 
 .lead-cta-whatsapp {
   flex: 1;
+  min-height: 44px;
   padding: 12px 20px;
   background: #16A34A;
   color: #fff;
@@ -448,15 +449,16 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Section 5: WhatsApp Panel */
+/* Section 5: WhatsApp Panel — real chat with channel label */
 .lead-whatsapp-panel {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 16px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  height: 300px;
+  min-height: 320px;
+  overflow: hidden;
 }
 
 .lead-whatsapp-title {

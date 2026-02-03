@@ -82,6 +82,8 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
     return st === 'agent' ? 'WhatsApp (Agent)' : 'WhatsApp (Platform)';
   };
 
+  const isAiMessage = (msg) => msg.sender_type === 'ai';
+
   if (!leadId) {
     return (
       <div style={{
@@ -125,7 +127,7 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
       height: '100%',
       minHeight: 0,
     }}>
-      {/* Chat header */}
+      {/* Chat header — channel label (text) mandatory for clarity */}
       <div style={{
         padding: '12px 16px',
         background: '#fff',
@@ -147,9 +149,13 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
         }}>
           <img src="/assets/WhatsApp-Logo.svg" alt="" style={{ width: '20px', height: '20px' }} />
         </div>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: '600', fontSize: '14px' }}>{leadName || 'Lead'}</div>
-          <div style={{ fontSize: '12px', color: '#64748b' }}>{leadPhone}</div>
+          <div style={{ fontSize: '12px', color: '#64748b' }}>
+            <span style={{ fontWeight: '500', color: '#0f172a' }}>WhatsApp</span>
+            {' · '}
+            {leadPhone}
+          </div>
         </div>
       </div>
 
@@ -188,8 +194,24 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
                   borderBottomLeftRadius: isOutbound ? '12px' : '4px',
                 }}
               >
-                <div style={{ marginBottom: '4px', fontSize: '11px', opacity: 0.9 }}>
-                  {getChannelLabel(msg)} · {formatTime(msg.created_at)}
+                <div style={{ marginBottom: '4px', fontSize: '11px', opacity: 0.9, display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <span>{getChannelLabel(msg)}</span>
+                  <span>·</span>
+                  <span>{formatTime(msg.created_at)}</span>
+                  {isAiMessage(msg) && (
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: isOutbound ? 'rgba(255,255,255,0.25)' : '#e0e7ff',
+                        color: isOutbound ? '#fff' : '#4338ca',
+                      }}
+                    >
+                      AI
+                    </span>
+                  )}
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {msg.body || '(no content)'}
@@ -229,8 +251,10 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             disabled={sending}
+            aria-busy={sending}
             style={{
               flex: 1,
+              minHeight: '44px',
               padding: '10px 14px',
               border: '1px solid #e5e7eb',
               borderRadius: '20px',
@@ -239,9 +263,14 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
             }}
           />
           <button
+            type="button"
             onClick={handleSend}
             disabled={!canSend}
+            aria-busy={sending}
+            aria-disabled={!canSend}
             style={{
+              minHeight: '44px',
+              minWidth: '44px',
               padding: '10px 20px',
               background: canSend ? '#25D366' : '#cbd5e1',
               color: '#fff',

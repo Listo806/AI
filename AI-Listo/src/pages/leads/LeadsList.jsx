@@ -5,6 +5,7 @@ import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
+import WhatsAppChat from '../../components/WhatsAppChat';
 import './Leads.css';
 import './leads-master-detail.css';
 
@@ -921,22 +922,15 @@ export default function LeadsList() {
                 />
               </div>
 
-              {/* Section 5: WhatsApp Panel */}
-              <div className="lead-whatsapp-panel">
-                <div className="lead-whatsapp-title">WhatsApp</div>
-                <div className="lead-whatsapp-messages">
-                  <div className="lead-whatsapp-message incoming">
-                    Chat messages will appear here
-                  </div>
-                </div>
-                <div className="lead-whatsapp-input-container">
-                  <input
-                    type="text"
-                    className="lead-whatsapp-input"
-                    placeholder="Type a message..."
-                    disabled
+              {/* Section 5: WhatsApp — real chat with channel label in header */}
+              <div className="lead-whatsapp-panel" style={{ minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <WhatsAppChat
+                    leadId={selectedLead.id}
+                    leadPhone={selectedLead.phone}
+                    leadName={selectedLead.name}
+                    onSendSuccess={loadLeads}
                   />
-                  <button className="lead-whatsapp-send" disabled>➤</button>
                 </div>
               </div>
             </div>

@@ -1465,6 +1465,18 @@ body.crm-dark .crm-error {
   cursor: not-allowed;
 }
 
+/* Touch targets: min 44px for mobile (Contact Agent, Send Message, etc.) */
+@media (max-width: 1024px) {
+  .crm-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 20px;
+  }
+  .crm-form-actions .crm-btn {
+    min-height: 44px;
+  }
+}
+
 /* Property Action Buttons */
 .crm-property-actions {
   margin-top: 16px;
