@@ -11,8 +11,13 @@ export default function WhatsApp() {
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(true);
+  const [conversations, setConversations] = useState([]);
+  const [conversationsLoading, setConversationsLoading] = useState(false);
+  const [toggleAiLoading, setToggleAiLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState('unknown'); // 'connected' | 'not_connected' | 'unknown'
   const [agentStatus, setAgentStatus] = useState(null); // { connected: true, whatsappNumber?: string } | null
+
+  const selectedConversation = conversations.find((c) => c.lead_id === selectedLead?.id) ?? null;
 
   // Initialize Lucide icons
   useEffect(() => {
@@ -21,13 +26,52 @@ export default function WhatsApp() {
     }
   }, []);
 
-  // Load leads
+  // Load leads and conversations
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
       loadLeads();
+      loadConversations();
       loadStatus();
     }
   }, [isAuthenticated, user, authLoading]);
+
+  const loadConversations = async () => {
+    setConversationsLoading(true);
+    try {
+      const res = await apiClient.request('/whatsapp/conversations');
+      const data = Array.isArray(res?.data) ? res.data : res?.data ?? [];
+      setConversations(data);
+    } catch (err) {
+      console.error('Failed to load conversations', err);
+      setConversations([]);
+    } finally {
+      setConversationsLoading(false);
+    }
+  };
+
+  const handleToggleAi = async () => {
+    if (!selectedConversation || toggleAiLoading) return;
+    const willAiReply = selectedConversation.ownership === 'ai' && selectedConversation.ai_enabled;
+    const nextEnabled = !willAiReply;
+    setToggleAiLoading(true);
+    try {
+      await apiClient.request(`/whatsapp/conversations/${selectedConversation.id}/toggle-ai`, {
+        method: 'POST',
+        body: JSON.stringify({ aiEnabled: nextEnabled }),
+      });
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === selectedConversation.id
+            ? { ...c, ai_enabled: nextEnabled, ownership: nextEnabled ? 'ai' : c.ownership }
+            : c
+        )
+      );
+    } catch (err) {
+      console.error('Toggle AI failed', err);
+    } finally {
+      setToggleAiLoading(false);
+    }
+  };
 
   const loadLeads = async () => {
     setLeadsLoading(true);
@@ -180,11 +224,65 @@ export default function WhatsApp() {
 
           {/* Chat area */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            {/* Toggle AI bar – shown when this lead has a conversation */}
+            {selectedLead && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 16px',
+                  background: '#f8fafc',
+                  borderBottom: '1px solid #e5e7eb',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ fontSize: '13px', color: '#64748b' }}>
+                  {selectedConversation
+                    ? selectedConversation.ownership === 'human'
+                      ? 'Agent has taken over (AI won\'t reply until you turn AI on).'
+                      : selectedConversation.ai_enabled
+                        ? 'AI replies are on'
+                        : 'AI replies are off'
+                    : 'No conversation yet — send a message from the lead\'s phone to create one'}
+                </span>
+                {selectedConversation && (
+                  <button
+                    type="button"
+                    onClick={handleToggleAi}
+                    disabled={toggleAiLoading}
+                    aria-pressed={selectedConversation.ownership === 'ai' && selectedConversation.ai_enabled}
+                    style={{
+                      padding: '6px 14px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      background:
+                        selectedConversation.ownership === 'ai' && selectedConversation.ai_enabled ? '#f1f5f9' : '#25D366',
+                      color:
+                        selectedConversation.ownership === 'ai' && selectedConversation.ai_enabled ? '#475569' : '#fff',
+                      cursor: toggleAiLoading ? 'not-allowed' : 'pointer',
+                      opacity: toggleAiLoading ? 0.7 : 1,
+                    }}
+                  >
+                    {toggleAiLoading
+                      ? '…'
+                      : selectedConversation.ownership === 'ai' && selectedConversation.ai_enabled
+                        ? 'Turn AI off'
+                        : 'Turn AI on'}
+                  </button>
+                )}
+              </div>
+            )}
             <WhatsAppChat
               leadId={selectedLead?.id}
               leadPhone={selectedLead?.phone}
               leadName={selectedLead?.name}
-              onSendSuccess={loadLeads}
+              onSendSuccess={() => {
+                loadLeads();
+                loadConversations();
+              }}
             />
           </div>
         </div>

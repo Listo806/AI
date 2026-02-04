@@ -151,6 +151,9 @@ export class WhatsAppController {
     await this.conversations.setAiEnabled(id, body.aiEnabled);
     if (body.aiEnabled === false) {
       await this.conversations.advanceStage(id, 'escalated');
+    } else {
+      // Hand back to AI so the lead gets AI replies again
+      await this.conversations.updateOwnership(id, 'ai');
     }
     return { success: true, aiEnabled: body.aiEnabled };
   }
