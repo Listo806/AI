@@ -38,7 +38,7 @@ export class WhatsAppCardsService {
     const priceStr = prop.price != null ? `$${Number(prop.price).toLocaleString()}` : '';
     const bedsBaths = [prop.bedrooms != null && `${prop.bedrooms} bed`, prop.bathrooms != null && `${prop.bathrooms} bath`].filter(Boolean).join(', ');
     const body = [
-      `🏠 ${prop.title || 'Property'}`,
+      prop.title || 'Property',
       [location, priceStr, bedsBaths].filter(Boolean).join(' · '),
     ]
       .filter(Boolean)
