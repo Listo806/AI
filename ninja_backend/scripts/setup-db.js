@@ -319,6 +319,14 @@ async function setupDatabase() {
       console.log('✓ CORTEXA WhatsApp Add-ons (stage + intent_events) migration completed');
     }
 
+    // CORTEXA WhatsApp Broadcast Add-on (broadcast_events audit log)
+    const migration28Path = path.join(__dirname, '../src/database/migrations/028_broadcast_events.sql');
+    if (fs.existsSync(migration28Path)) {
+      const migration28SQL = fs.readFileSync(migration28Path, 'utf8');
+      await pool.query(migration28SQL);
+      console.log('✓ CORTEXA WhatsApp Broadcast (broadcast_events) migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

@@ -23,6 +23,7 @@ import { WhatsAppInboundService } from './whatsapp-inbound.service';
 import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
 import { IntentEventsService } from './intent-events.service';
+import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
 
 @Module({
   imports: [ConfigModule, DatabaseModule, SubscriptionsModule, IntegrationsModule],
@@ -49,6 +50,7 @@ import { IntentEventsService } from './intent-events.service';
     WhatsAppCardsService,
     WhatsAppActionsService,
     IntentEventsService,
+    WhatsAppBroadcastService,
   ],
   exports: [LeadMessagesService, ConversationsService],
 })

@@ -254,6 +254,51 @@ export class TwilioWhatsAppService {
   }
 
   /**
+   * Send WhatsApp template (ContentSid) to a lead. Used for broadcast only.
+   * Platform number only; no agent send. Does not create lead_message (broadcast service logs to broadcast_events).
+   */
+  async sendTemplate(
+    leadId: string,
+    contentSid: string,
+    options?: { contentVariables?: string | Record<string, string>; conversationId?: string },
+  ): Promise<{ messageId: string; status: string }> {
+    if (!this.isConfigured || !this.client) {
+      throw new BadRequestException('WhatsApp (Twilio) is not configured');
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, phone FROM leads WHERE id = $1`,
+      [leadId],
+    );
+    if (!rows.length) throw new BadRequestException('Lead not found');
+    const phone = rows[0].phone;
+    if (!phone || !/^\+[1-9]\d{1,14}$/.test(phone)) {
+      throw new BadRequestException('Lead has no valid phone number for WhatsApp');
+    }
+    const to = phone.startsWith('+') ? `whatsapp:${phone}` : `whatsapp:+${phone}`;
+    const baseUrl = this.config.get('BACKEND_URL') || this.config.get('RENDER_EXTERNAL_URL') || 'http://localhost:3000';
+    const statusCallback = `${baseUrl.replace(/\/$/, '')}/api/whatsapp/status-callback`;
+
+    const params: Record<string, unknown> = {
+      contentSid,
+      from: this.from,
+      to,
+      statusCallback,
+    };
+    if (options?.contentVariables != null) {
+      params.contentVariables =
+        typeof options.contentVariables === 'string'
+          ? options.contentVariables
+          : JSON.stringify(options.contentVariables);
+    }
+
+    const msg = await this.client.messages.create(params as any);
+    const status = ['queued', 'sent', 'delivered', 'read', 'failed'].includes(msg.status || '')
+      ? (msg.status as string)
+      : 'sent';
+    return { messageId: msg.sid, status };
+  }
+
+  /**
    * Handle status callback. Update lead_messages.status by MessageSid.
    */
   async handleStatusCallback(messageSid: string, messageStatus: string): Promise<void> {

@@ -137,14 +137,23 @@ export class WhatsAppInboundService {
     return '<Response></Response>';
   }
 
+  /**
+   * Ad source: ad_id / campaign_id / source=ad (simulation) or ReferralCtwaClid (Twilio from Meta Click-to-WhatsApp).
+   */
   private detectAdSource(payload: Record<string, string>): boolean {
-    return !!(payload.ad_id || payload.campaign_id || payload.source === 'ad');
+    return !!(
+      payload.ad_id ||
+      payload.campaign_id ||
+      payload.source === 'ad' ||
+      payload.ReferralCtwaClid
+    );
   }
 
   private extractAdMeta(payload: Record<string, string>): Record<string, unknown> {
     const meta: Record<string, unknown> = {};
     if (payload.ad_id) meta.ad_id = payload.ad_id;
     if (payload.campaign_id) meta.campaign_id = payload.campaign_id;
+    if (payload.ReferralCtwaClid) meta.ctwa_clid = payload.ReferralCtwaClid;
     if (payload.platform) meta.platform = payload.platform;
     return meta;
   }

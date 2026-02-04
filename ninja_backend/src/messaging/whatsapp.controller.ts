@@ -13,6 +13,7 @@ import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
 import { IntentEventsService } from './intent-events.service';
 import { TwilioMediaService } from './twilio-media.service';
+import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
 
 @ApiTags('whatsapp')
 @Controller('whatsapp')
@@ -26,6 +27,7 @@ export class WhatsAppController {
     private readonly actions: WhatsAppActionsService,
     private readonly intents: IntentEventsService,
     private readonly twilioMedia: TwilioMediaService,
+    private readonly broadcast: WhatsAppBroadcastService,
   ) {}
 
   @Post('webhook')
@@ -299,5 +301,54 @@ export class WhatsAppController {
     }
     const data = await this.intents.listForConversation(id);
     return { data };
+  }
+
+  @Post('broadcast')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send WhatsApp template broadcast to eligible conversations (AI-owned, not escalated)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        contentSid: { type: 'string', description: 'Twilio Content Template SID (HX...)' },
+        templateName: { type: 'string', description: 'Logical name for audit log' },
+        contentVariables: { type: 'object', additionalProperties: { type: 'string' }, description: 'Template variables' },
+        stages: { type: 'array', items: { type: 'string' }, description: 'Conversation stages (default: new, qualified)' },
+        city: { type: 'string', description: 'Filter by lead city' },
+        intent: { type: 'array', items: { type: 'string' }, description: 'Filter by latest intent (buy, rent, etc.)' },
+        source: { type: 'string', description: 'Campaign/source label for audit' },
+        delayMs: { type: 'number', description: 'Delay between sends (default 500)' },
+      },
+      required: ['contentSid', 'templateName'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Broadcast result (sent, failed, errors)' })
+  async sendBroadcast(
+    @Body() body: {
+      contentSid: string;
+      templateName: string;
+      contentVariables?: string | Record<string, string>;
+      stages?: string[];
+      city?: string;
+      intent?: string[];
+      source?: string;
+      delayMs?: number;
+    },
+    @CurrentUser() user: any,
+  ) {
+    const result = await this.broadcast.sendBroadcast({
+      contentSid: body.contentSid,
+      templateName: body.templateName,
+      contentVariables: body.contentVariables,
+      stages: body.stages,
+      city: body.city,
+      intent: body.intent,
+      teamId: user.teamId,
+      source: body.source,
+      delayMs: body.delayMs,
+    });
+    return { success: true, ...result };
   }
 }
