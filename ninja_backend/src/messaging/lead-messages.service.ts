@@ -81,6 +81,15 @@ export class LeadMessagesService {
     return result.rowCount ?? 0;
   }
 
+  async findById(id: string): Promise<LeadMessage | null> {
+    const { rows } = await this.db.query(
+      `SELECT id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, created_at, updated_at
+       FROM lead_messages WHERE id = $1`,
+      [id],
+    );
+    return rows.length ? this.mapRow(rows[0]) : null;
+  }
+
   async findByLead(leadId: string, channel?: MessageChannel): Promise<LeadMessage[]> {
     let query = `SELECT id, lead_id, channel, direction, external_id, body, subject, status, metadata, sender_type, agent_id, conversation_id, message_type, media_url, meta, created_at, updated_at
                  FROM lead_messages WHERE lead_id = $1`;

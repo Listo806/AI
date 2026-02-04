@@ -12,6 +12,7 @@ import { LeadMessagesService } from './lead-messages.service';
 import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
 import { IntentEventsService } from './intent-events.service';
+import { TwilioMediaService } from './twilio-media.service';
 
 @ApiTags('whatsapp')
 @Controller('whatsapp')
@@ -24,6 +25,7 @@ export class WhatsAppController {
     private readonly cards: WhatsAppCardsService,
     private readonly actions: WhatsAppActionsService,
     private readonly intents: IntentEventsService,
+    private readonly twilioMedia: TwilioMediaService,
   ) {}
 
   @Post('webhook')
@@ -115,6 +117,46 @@ export class WhatsAppController {
     }
     const messages = await this.leadMessages.findByConversation(id);
     return { data: messages };
+  }
+
+  @Get('messages/:messageId/audio')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Stream original voice message audio (for owner playback)' })
+  @ApiParam({ name: 'messageId', description: 'Lead message ID (must be message_type=audio)' })
+  @ApiResponse({ status: 200, description: 'Audio file' })
+  @ApiResponse({ status: 404, description: 'Message not found or not a voice message' })
+  async getMessageAudio(
+    @Param('messageId') messageId: string,
+    @Res({ passthrough: false }) res: Response,
+    @CurrentUser() user: any,
+  ) {
+    const message = await this.leadMessages.findById(messageId);
+    if (!message || message.message_type !== 'audio') {
+      throw new NotFoundException('Message not found or not a voice message');
+    }
+    const mediaUrl = message.media_url ?? (message.metadata && typeof message.metadata === 'object' && 'MediaUrl0' in message.metadata
+      ? (message.metadata as { MediaUrl0?: string }).MediaUrl0
+      : null);
+    if (!mediaUrl) {
+      throw new NotFoundException('Original voice media not available');
+    }
+    if (message.conversation_id) {
+      try {
+        await this.conversations.assertTeamAccess(message.conversation_id, user.teamId);
+      } catch {
+        throw new NotFoundException('Conversation not found');
+      }
+    } else {
+      throw new NotFoundException('Message has no conversation');
+    }
+    const buffer = await this.twilioMedia.downloadMedia(mediaUrl);
+    const contentType = (message.meta && typeof message.meta === 'object' && 'media_content_type' in message.meta)
+      ? (message.meta as { media_content_type?: string }).media_content_type || 'audio/ogg'
+      : 'audio/ogg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    res.send(buffer);
   }
 
   @Post('conversations/:id/send')

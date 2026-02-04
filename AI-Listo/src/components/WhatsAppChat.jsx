@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://ai-2-7ikc.onrender.com/api';
+const AUTH_TOKEN_KEY = 'listo_access_token';
+
 /**
  * Reusable WhatsApp chat component.
  * Fetches messages from GET /api/leads/:id/messages and sends via POST /api/whatsapp/send.
@@ -15,6 +18,8 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [draft, setDraft] = useState('');
+  const [playingAudioId, setPlayingAudioId] = useState(null);
+  const [audioBlobUrl, setAudioBlobUrl] = useState(null);
   const messagesEndRef = useRef(null);
 
   const canSend = Boolean(leadId && leadPhone && draft.trim() && !sending);
@@ -83,6 +88,45 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
   };
 
   const isAiMessage = (msg) => msg.sender_type === 'ai';
+
+  const isVoiceMessage = (msg) =>
+    msg.message_type === 'audio' || (msg.meta && typeof msg.meta === 'object' && msg.meta.from_voice);
+
+  const hasOriginalVoice = (msg) => isVoiceMessage(msg) && (msg.media_url || (msg.metadata && msg.metadata.MediaUrl0));
+
+  const handlePlayOriginal = async (msg) => {
+    if (!hasOriginalVoice(msg)) return;
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    const url = `${API_BASE}/whatsapp/messages/${msg.id}/audio`;
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('Failed to load audio');
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
+      setAudioBlobUrl(blobUrl);
+      setPlayingAudioId(msg.id);
+    } catch (err) {
+      console.error('Play original voice failed', err);
+    }
+  };
+
+  const stopPlayingOriginal = () => {
+    if (audioBlobUrl) {
+      URL.revokeObjectURL(audioBlobUrl);
+      setAudioBlobUrl(null);
+    }
+    setPlayingAudioId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
+    };
+  }, [audioBlobUrl]);
 
   if (!leadId) {
     return (
@@ -212,10 +256,53 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
                       AI
                     </span>
                   )}
+                  {isVoiceMessage(msg) && (
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: '500',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: isOutbound ? 'rgba(255,255,255,0.2)' : '#e0f2fe',
+                        color: isOutbound ? '#fff' : '#0369a1',
+                      }}
+                      title="Transcribed from voice message"
+                    >
+                      Voice
+                    </span>
+                  )}
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {msg.body || '(no content)'}
                 </div>
+                {hasOriginalVoice(msg) && (
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => (playingAudioId === msg.id ? stopPlayingOriginal() : handlePlayOriginal(msg))}
+                      style={{
+                        fontSize: '12px',
+                        padding: '4px 10px',
+                        border: `1px solid ${isOutbound ? 'rgba(255,255,255,0.5)' : '#94a3b8'}`,
+                        borderRadius: '6px',
+                        background: isOutbound ? 'rgba(255,255,255,0.15)' : '#f1f5f9',
+                        color: isOutbound ? '#fff' : '#475569',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {playingAudioId === msg.id ? 'Stop' : 'Play original'}
+                    </button>
+                    {playingAudioId === msg.id && audioBlobUrl && (
+                      <audio
+                        src={audioBlobUrl}
+                        controls
+                        autoPlay
+                        onEnded={stopPlayingOriginal}
+                        style={{ maxWidth: '200px', height: '28px' }}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             );
           })

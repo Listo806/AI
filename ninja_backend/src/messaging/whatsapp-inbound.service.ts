@@ -81,6 +81,10 @@ export class WhatsAppInboundService {
     const senderType = resolved.type === 'platform' ? 'platform' : 'agent';
     const agentId = resolved.type === 'agent' ? resolved.agentId : null;
 
+    const metaVoice = messageType === 'audio'
+      ? { from_voice: true, media_content_type: payload.MediaContentType0 || 'audio/ogg' }
+      : null;
+
     await this.leadMessages.create({
       lead_id: lead.id,
       channel: 'whatsapp',
@@ -100,6 +104,8 @@ export class WhatsAppInboundService {
       agent_id: agentId,
       conversation_id: conversation.id,
       message_type: messageType,
+      media_url: messageType === 'audio' ? mediaUrl0 : undefined,
+      meta: metaVoice,
     });
 
     // Intent detection (minimal, safe). Run after transcription if audio.
