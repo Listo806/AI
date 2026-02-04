@@ -143,8 +143,9 @@ export class WhatsAppController {
   @ApiResponse({ status: 200, description: 'Updated' })
   @ApiResponse({ status: 404, description: 'Conversation not found' })
   async toggleAi(@Param('id') id: string, @Body() body: { aiEnabled: boolean }, @CurrentUser() user: any) {
+    let conv;
     try {
-      await this.conversations.assertTeamAccess(id, user.teamId);
+      conv = await this.conversations.assertTeamAccess(id, user.teamId);
     } catch {
       throw new NotFoundException('Conversation not found');
     }
@@ -154,6 +155,14 @@ export class WhatsAppController {
     } else {
       // Hand back to AI so the lead gets AI replies again
       await this.conversations.updateOwnership(id, 'ai');
+      // Record a "handed back to AI" intent so routing no longer escalates on the previous agent_request
+      await this.intents.createIfAllowed({
+        conversationId: id,
+        leadId: conv.lead_id,
+        detectedFrom: 'button',
+        intentType: 'general',
+        confidence: 1,
+      });
     }
     return { success: true, aiEnabled: body.aiEnabled };
   }
