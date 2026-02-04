@@ -140,6 +140,16 @@ export class ConversationsService {
   }
 
   /**
+   * Close conversation: set both status and stage to 'closed' for consistency (analytics, UI filters).
+   */
+  async closeConversation(id: string): Promise<void> {
+    await this.db.query(
+      `UPDATE conversations SET status = 'closed', stage = 'closed', updated_at = NOW() WHERE id = $1`,
+      [id],
+    );
+  }
+
+  /**
    * Advance stage forward (never regress), except when closing.
    */
   async advanceStage(id: string, next: ConversationStage): Promise<void> {
@@ -150,7 +160,7 @@ export class ConversationsService {
     const status: ConversationStatus = rows[0].status ?? 'open';
 
     if (next === 'closed' || status === 'closed') {
-      await this.db.query(`UPDATE conversations SET stage = 'closed', status = 'closed', updated_at = NOW() WHERE id = $1`, [id]);
+      await this.closeConversation(id);
       return;
     }
 

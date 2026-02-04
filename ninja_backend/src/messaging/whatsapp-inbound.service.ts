@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { AgentWhatsAppConnectionService } from './agent-whatsapp-connection.service';
@@ -9,16 +10,15 @@ import { WhatsAppAiReplyService } from './whatsapp-ai-reply.service';
 import { TwilioMediaService } from './twilio-media.service';
 import { IntentEventsService } from './intent-events.service';
 
-const AD_GREETING_TEXT = `¡Hola! Gracias por contactarnos. ¿En qué podemos ayudarte?
-• COMPRAR - Estoy interesado en comprar
-• ALQUILAR - Estoy interesado en alquilar
-• HABLAR CON AGENTE - Quiero hablar con un asesor`;
+/** WhatsApp-first default: one immediate auto-reply for ad/landing first message (ES). */
+const AD_GREETING_TEXT = 'Hola 👋 Soy el asistente de CORTEXA. ¿Buscas comprar, alquilar o vender?';
 
 @Injectable()
 export class WhatsAppInboundService {
   private readonly logger = new Logger(WhatsAppInboundService.name);
 
   constructor(
+    private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly twilioWhatsApp: TwilioWhatsAppService,
     private readonly agentConnections: AgentWhatsAppConnectionService,
@@ -52,7 +52,15 @@ export class WhatsAppInboundService {
       return '<Response></Response>';
     }
 
-    const lead = await this.twilioWhatsApp.findLeadByPhone(from);
+    const isAd = this.detectAdSource(payload);
+    let lead = await this.twilioWhatsApp.findLeadByPhone(from);
+    if (!lead && isAd) {
+      const createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY');
+      if (createdBy) {
+        lead = await this.upsertLeadFromAd(from, payload, createdBy);
+        if (lead) this.logger.log(`Inbound WhatsApp: created lead from ad for phone ${from}`);
+      }
+    }
     if (!lead) {
       this.logger.warn(`Inbound WhatsApp: no lead for phone ${from}, skipping store`);
       return '<Response></Response>';
@@ -72,8 +80,9 @@ export class WhatsAppInboundService {
       }
     }
 
-    const isAd = this.detectAdSource(payload);
     const { conversation, created } = await this.conversations.getOrCreateForLead(lead.id, {
+      ownership: isAd ? 'ai' : undefined,
+      ai_enabled: isAd ? true : undefined,
       source: isAd ? 'ad' : 'organic',
       source_meta: isAd ? this.extractAdMeta(payload) : null,
     });
@@ -155,6 +164,41 @@ export class WhatsAppInboundService {
     if (payload.campaign_id) meta.campaign_id = payload.campaign_id;
     if (payload.ReferralCtwaClid) meta.ctwa_clid = payload.ReferralCtwaClid;
     if (payload.platform) meta.platform = payload.platform;
+    if (payload.utm_source) meta.utm_source = payload.utm_source;
+    if (payload.utm_medium) meta.utm_medium = payload.utm_medium;
+    if (payload.utm_campaign) meta.utm_campaign = payload.utm_campaign;
+    if (payload.utm_term) meta.utm_term = payload.utm_term;
+    if (payload.utm_content) meta.utm_content = payload.utm_content;
+    if (payload.landing_page) meta.landing_page = payload.landing_page;
     return meta;
+  }
+
+  /**
+   * Upsert lead by phone when first inbound is from ad/landing. Creates lead so ad-first flow can continue.
+   * Requires WHATSAPP_FIRST_LEAD_CREATED_BY (user UUID) in env. Lead remains eligible for broadcast (ai-owned).
+   */
+  private async upsertLeadFromAd(
+    phone: string,
+    payload: Record<string, string>,
+    createdBy: string,
+  ): Promise<{ id: string; team_id: string | null } | null> {
+    const { rows: userRows } = await this.db.query(
+      `SELECT team_id FROM users WHERE id = $1`,
+      [createdBy],
+    );
+    if (!userRows.length) {
+      this.logger.warn(`Inbound WhatsApp: WHATSAPP_FIRST_LEAD_CREATED_BY user ${createdBy} not found`);
+      return null;
+    }
+    const teamId = userRows[0].team_id ?? null;
+    const name = (payload.ProfileName || '').trim() || 'WhatsApp Lead';
+    const { rows } = await this.db.query(
+      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at)
+       VALUES ($1, $2, 'new', $3, $4, 'whatsapp_ad', 'whatsapp_ad', NOW(), NOW())
+       RETURNING id, team_id`,
+      [name, phone, createdBy, teamId],
+    );
+    if (!rows.length) return null;
+    return { id: rows[0].id, team_id: rows[0].team_id ?? null };
   }
 }

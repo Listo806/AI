@@ -48,7 +48,8 @@ export class WhatsAppRoutingService {
       return { action: 'notify_agent', reason: 'ai_disabled' };
     }
 
-    // 3) intent escalation: latest intent agent_request
+    // 3) intent escalation: use latest intent from DB (ORDER BY created_at DESC LIMIT 1)
+    //    so routing reflects most recent intent from button action or prior message, not just current pass.
     const latestIntent = await this.intents.getLatestForConversation(conversationId);
     if (latestIntent?.intent_type === 'agent_request') {
       await this.conversations.updateOwnership(conversationId, 'human');
