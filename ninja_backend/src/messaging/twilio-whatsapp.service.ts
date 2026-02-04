@@ -10,6 +10,8 @@ export interface SendWhatsAppDto {
   message: string;
   senderType?: 'platform' | 'agent';
   conversationId?: string;
+  message_type?: 'text' | 'audio' | 'card';
+  meta?: Record<string, unknown> | null;
 }
 
 export interface InboundWebhookPayload {
@@ -138,6 +140,8 @@ export class TwilioWhatsAppService {
       sender_type: senderType,
       agent_id: storeAgentId,
       conversation_id: dto.conversationId ?? null,
+      message_type: dto.message_type ?? 'text',
+      meta: dto.meta ?? null,
     });
 
     await this.db.query(

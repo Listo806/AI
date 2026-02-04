@@ -48,23 +48,17 @@ export class WhatsAppCardsService {
     const link = await this.generateWebViewLink('property', propertyId);
     const message = link ? `${body}\n\n${link}` : body;
     const result = await this.twilioWhatsApp.sendForLead(
-      { leadId: conv.lead_id, message, senderType, conversationId },
+      {
+        leadId: conv.lead_id,
+        message,
+        senderType,
+        conversationId,
+        message_type: 'card',
+        meta: { propertyId, link },
+      },
       userId,
       teamId,
     );
-    await this.leadMessages.create({
-      lead_id: conv.lead_id,
-      channel: 'whatsapp',
-      direction: 'outbound',
-      external_id: result.messageId,
-      body: message,
-      status: 'sent',
-      sender_type: senderType,
-      agent_id: senderType === 'agent' ? userId : null,
-      conversation_id: conversationId,
-      message_type: 'card',
-      meta: { propertyId, link },
-    });
     await this.conversations.advanceStage(conversationId, 'presented');
     return { messageId: result.messageId };
   }

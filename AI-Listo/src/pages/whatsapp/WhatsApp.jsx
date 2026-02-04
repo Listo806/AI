@@ -14,6 +14,10 @@ export default function WhatsApp() {
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(false);
   const [toggleAiLoading, setToggleAiLoading] = useState(false);
+  const [properties, setProperties] = useState([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+  const [sendCardLoading, setSendCardLoading] = useState(false);
+  const [messageRefreshKey, setMessageRefreshKey] = useState(0);
   const [apiStatus, setApiStatus] = useState('unknown'); // 'connected' | 'not_connected' | 'unknown'
   const [agentStatus, setAgentStatus] = useState(null); // { connected: true, whatsappNumber?: string } | null
 
@@ -26,14 +30,35 @@ export default function WhatsApp() {
     }
   }, []);
 
-  // Load leads and conversations
+  // Load leads, conversations, and properties
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
       loadLeads();
       loadConversations();
+      loadProperties();
       loadStatus();
     }
   }, [isAuthenticated, user, authLoading]);
+
+  const loadProperties = async () => {
+    try {
+      const res = await apiClient.request('/crm/owner/properties');
+      const data = Array.isArray(res) ? res : (res?.data || []);
+      setProperties(data);
+      if (data.length && !selectedPropertyId) setSelectedPropertyId(data[0].id);
+    } catch (err) {
+      console.error('Failed to load properties', err);
+      setProperties([]);
+    }
+  };
+
+  // When switching lead, pre-select that lead's property in the dropdown if available
+  useEffect(() => {
+    const leadPropId = selectedLead?.propertyId ?? selectedLead?.property_id;
+    if (leadPropId && properties.some((p) => p.id === leadPropId)) {
+      setSelectedPropertyId(leadPropId);
+    }
+  }, [selectedLead?.id, properties]);
 
   const loadConversations = async () => {
     setConversationsLoading(true);
@@ -70,6 +95,27 @@ export default function WhatsApp() {
       console.error('Toggle AI failed', err);
     } finally {
       setToggleAiLoading(false);
+    }
+  };
+
+  const handleSendPropertyCard = async () => {
+    if (!selectedConversation || !selectedPropertyId || sendCardLoading) return;
+    setSendCardLoading(true);
+    try {
+      await apiClient.request('/whatsapp/send/property-card', {
+        method: 'POST',
+        body: JSON.stringify({
+          conversationId: selectedConversation.id,
+          propertyId: selectedPropertyId,
+          senderType: 'agent',
+        }),
+      });
+      loadConversations();
+      setMessageRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error('Send property card failed', err);
+    } finally {
+      setSendCardLoading(false);
     }
   };
 
@@ -275,7 +321,65 @@ export default function WhatsApp() {
                 )}
               </div>
             )}
+            {/* Send property card – shown when this lead has a conversation */}
+            {selectedLead && selectedConversation && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '10px 16px',
+                  background: '#fff',
+                  borderBottom: '1px solid #e5e7eb',
+                  flexShrink: 0,
+                }}
+              >
+                <span style={{ fontSize: '13px', color: '#64748b', whiteSpace: 'nowrap' }}>Send property card:</span>
+                <select
+                  value={selectedPropertyId}
+                  onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  disabled={sendCardLoading || properties.length === 0}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    background: '#fff',
+                  }}
+                >
+                  {properties.length === 0 ? (
+                    <option value="">No properties</option>
+                  ) : (
+                    properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title || p.address || p.id?.slice(0, 8)}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleSendPropertyCard}
+                  disabled={sendCardLoading || !selectedPropertyId || properties.length === 0}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    background: sendCardLoading || !selectedPropertyId ? '#f1f5f9' : '#25D366',
+                    color: sendCardLoading || !selectedPropertyId ? '#94a3b8' : '#fff',
+                    cursor: sendCardLoading || !selectedPropertyId ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {sendCardLoading ? 'Sending…' : 'Send card'}
+                </button>
+              </div>
+            )}
             <WhatsAppChat
+              key={`chat-${selectedLead?.id}-${messageRefreshKey}`}
               leadId={selectedLead?.id}
               leadPhone={selectedLead?.phone}
               leadName={selectedLead?.name}
