@@ -48,11 +48,13 @@ export class WhatsAppCardsService {
       ? `${baseUrl}/listings/${propertyId}${prop.type ? `?type=${encodeURIComponent(prop.type)}` : ''}`
       : '';
     const message = link ? `${body}\n${link}` : body;
+    // Always send from platform (sandbox/main number) so the lead receives it. The lead
+    // only has a session with the platform number; sending from agent's number would fail.
     const result = await this.twilioWhatsApp.sendForLead(
       {
         leadId: conv.lead_id,
         message,
-        senderType,
+        senderType: 'platform',
         conversationId,
         message_type: 'card',
         meta: { propertyId, link },
