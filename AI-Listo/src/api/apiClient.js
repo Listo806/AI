@@ -36,7 +36,8 @@ class ApiClient {
     const isPublicEndpoint = endpoint.includes('/public') || 
                             endpoint.includes('/auth/signin') || 
                             endpoint.includes('/auth/signup') ||
-                            endpoint.includes('/properties/public');
+                            endpoint.includes('/properties/public') ||
+                            endpoint.includes('/whatsapp/webview-resolve');
 
     // Only add auth header if we have a token and it's not a public endpoint
     if (this.accessToken && !isPublicEndpoint) {

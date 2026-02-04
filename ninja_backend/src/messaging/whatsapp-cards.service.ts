@@ -35,18 +35,19 @@ export class WhatsAppCardsService {
     if (!rows.length) throw new BadRequestException('Property not found');
     const prop = rows[0];
     const location = [prop.address, prop.city, prop.state].filter(Boolean).join(', ');
+    const priceStr = prop.price != null ? `$${Number(prop.price).toLocaleString()}` : '';
+    const bedsBaths = [prop.bedrooms != null && `${prop.bedrooms} bed`, prop.bathrooms != null && `${prop.bathrooms} bath`].filter(Boolean).join(', ');
     const body = [
       `🏠 ${prop.title || 'Property'}`,
-      location && `📍 ${location}`,
-      prop.price != null && `💰 $${Number(prop.price).toLocaleString()}`,
-      prop.bedrooms != null && `🛏 ${prop.bedrooms} beds`,
-      prop.bathrooms != null && `🛁 ${prop.bathrooms} baths`,
-      prop.type && `Type: ${prop.type}`,
+      [location, priceStr, bedsBaths].filter(Boolean).join(' · '),
     ]
       .filter(Boolean)
       .join('\n');
-    const link = await this.generateWebViewLink('property', propertyId);
-    const message = link ? `${body}\n\n${link}` : body;
+    const baseUrl = (this.config.get('WEBVIEW_BASE_URL') || this.config.get('FRONTEND_URL') || '').replace(/\/$/, '');
+    const link = baseUrl
+      ? `${baseUrl}/listings/${propertyId}${prop.type ? `?type=${encodeURIComponent(prop.type)}` : ''}`
+      : '';
+    const message = link ? `${body}\n${link}` : body;
     const result = await this.twilioWhatsApp.sendForLead(
       {
         leadId: conv.lead_id,
@@ -76,5 +77,26 @@ export class WhatsAppCardsService {
     const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
     const token = Buffer.from(JSON.stringify({ type, entityId, exp, sig })).toString('base64url');
     return `${baseUrl.replace(/\/$/, '')}/view?t=${token}`;
+  }
+
+  /**
+   * Verify webview token and return type + entityId. Returns null if invalid or expired.
+   */
+  async verifyWebViewToken(tokenBase64: string): Promise<{ type: string; entityId: string } | null> {
+    if (!tokenBase64 || typeof tokenBase64 !== 'string') return null;
+    try {
+      const json = Buffer.from(tokenBase64, 'base64url').toString('utf8');
+      const data = JSON.parse(json) as { type?: string; entityId?: string; exp?: number; sig?: string };
+      if (!data.type || !data.entityId || !data.exp || !data.sig) return null;
+      if (data.exp < Math.floor(Date.now() / 1000)) return null;
+      const secret = this.config.get('WEBVIEW_LINK_SECRET') || this.config.get('JWT_SECRET') || 'change-me';
+      const payload = `${data.type}:${data.entityId}:${data.exp}`;
+      const crypto = await import('crypto');
+      const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+      if (expectedSig !== data.sig) return null;
+      return { type: data.type, entityId: data.entityId };
+    } catch {
+      return null;
+    }
   }
 }

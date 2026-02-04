@@ -31,6 +31,7 @@ import AccountBilling from "./pages/account/Billing";
 import AccountSettings from "./pages/account/Settings";
 import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
+import View from "./pages/view/View";
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
@@ -68,6 +69,8 @@ function AppRoutes() {
       {/* Public Listings (no auth required) */}
       <Route path="/listings" element={<Listings />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
+      {/* Tokenized webview link from WhatsApp property card */}
+      <Route path="/view" element={<View />} />
 
       {/* Protected Dashboard Routes - All under /dashboard */}
       <Route

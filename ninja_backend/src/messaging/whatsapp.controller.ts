@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, Res, HttpCode, HttpStatus, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Req, Res, HttpCode, HttpStatus, UseGuards, NotFoundException } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -55,6 +55,16 @@ export class WhatsAppController {
     const messageStatus = payload.MessageStatus;
     if (messageSid) await this.whatsapp.handleStatusCallback(messageSid, messageStatus || '');
     return res.status(200).end();
+  }
+
+  @Get('webview-resolve')
+  @ApiOperation({ summary: 'Resolve webview token (public); returns type and entityId for redirect' })
+  @ApiResponse({ status: 200, description: 'Token valid' })
+  @ApiResponse({ status: 404, description: 'Token invalid or expired' })
+  async webviewResolve(@Query('t') t: string) {
+    const payload = await this.cards.verifyWebViewToken(t || '');
+    if (!payload) throw new NotFoundException('Invalid or expired link');
+    return payload;
   }
 
   @Post('send')
