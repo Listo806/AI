@@ -167,6 +167,8 @@ export class WhatsAppInboundService {
     if (payload.utm_source) meta.utm_source = payload.utm_source;
     if (payload.utm_medium) meta.utm_medium = payload.utm_medium;
     if (payload.utm_campaign) meta.utm_campaign = payload.utm_campaign;
+    if (payload.utm_adgroup) meta.utm_adgroup = payload.utm_adgroup;
+    if (payload.utm_ad) meta.utm_ad = payload.utm_ad;
     if (payload.utm_term) meta.utm_term = payload.utm_term;
     if (payload.utm_content) meta.utm_content = payload.utm_content;
     if (payload.landing_page) meta.landing_page = payload.landing_page;
