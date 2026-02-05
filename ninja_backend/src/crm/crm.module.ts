@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
 import { CrmController } from './crm.controller';
 import { CrmService } from './crm.service';
+import { CrmPropertiesController } from './crm-properties.controller';
+import { CrmProjectsController } from './crm-projects.controller';
+import { CrmPropertiesService } from './crm-properties.service';
+import { CrmProjectsService } from './crm-projects.service';
 import { DatabaseModule } from '../database/database.module';
 import { LeadsModule } from '../leads/leads.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [DatabaseModule, LeadsModule, SubscriptionsModule],
-  controllers: [CrmController],
-  providers: [CrmService],
-  exports: [CrmService],
+  controllers: [CrmController, CrmPropertiesController, CrmProjectsController],
+  providers: [CrmService, CrmPropertiesService, CrmProjectsService],
+  exports: [CrmService, CrmPropertiesService, CrmProjectsService],
 })
 export class CrmModule {}

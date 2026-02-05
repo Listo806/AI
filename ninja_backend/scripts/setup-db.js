@@ -327,6 +327,14 @@ async function setupDatabase() {
       console.log('✓ CORTEXA WhatsApp Broadcast (broadcast_events) migration completed');
     }
 
+    // CRM EXTENSION MIGRATION
+    const migration29Path = path.join(__dirname, '../src/database/migrations/029_crm_extension.sql');
+    if (fs.existsSync(migration29Path)) {
+      const migration29SQL = fs.readFileSync(migration29Path, 'utf8');
+      await pool.query(migration29SQL);
+      console.log('✓ CRM EXTENSION migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

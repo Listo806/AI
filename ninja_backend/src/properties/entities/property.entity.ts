@@ -6,6 +6,7 @@ export enum PropertyType {
 export enum PropertyStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
+  RESERVED = 'reserved',
   SOLD = 'sold',
   RENTED = 'rented',
   ARCHIVED = 'archived',
