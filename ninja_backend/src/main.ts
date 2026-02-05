@@ -125,6 +125,7 @@ async function bootstrap() {
     .addTag('agent-whatsapp', 'Agent-owned WhatsApp connect/disconnect')
     .addTag('instagram', 'Instagram DM send, OAuth callback, webhook')
     .addTag('agent-instagram', 'Agent Instagram connect, disconnect, status')
+    .addTag('ai-center', 'AI Center overview, auto-reply, appointment setter, activity')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

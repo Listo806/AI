@@ -334,7 +334,16 @@ async function setupDatabase() {
       await pool.query(migration29SQL);
       console.log('✓ CRM EXTENSION migration completed');
     }
-
+    
+    // AI CENTER MIGRATION
+    const migration30Path = path.join(__dirname, '../src/database/migrations/030_ai_center.sql');
+    if (fs.existsSync(migration30Path)) {
+      const migration30SQL = fs.readFileSync(migration30Path, 'utf8');
+      await pool.query(migration30SQL);
+      console.log('✓ AI CENTER migration completed');
+    }
+    
+    
     console.log('Database schema created successfully!');
 
     await pool.end();

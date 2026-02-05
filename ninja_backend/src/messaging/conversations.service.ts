@@ -64,6 +64,16 @@ export class ConversationsService {
     if (existing.length > 0) {
       return { conversation: this.mapRow(existing[0]), created: false };
     }
+    let aiEnabled = dto?.ai_enabled;
+    if (aiEnabled === undefined) {
+      const { rows: leadTeam } = await this.db.query(
+        `SELECT t.ai_auto_reply_enabled FROM leads l
+         INNER JOIN teams t ON t.id = l.team_id
+         WHERE l.id = $1`,
+        [leadId],
+      );
+      aiEnabled = leadTeam[0]?.ai_auto_reply_enabled ?? true;
+    }
     const { rows: created } = await this.db.query(
       `INSERT INTO conversations (lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, updated_at)
        VALUES ($1, $2, $3, $4, 'open', $5, $6, NOW())
@@ -72,7 +82,7 @@ export class ConversationsService {
         leadId,
         dto?.agent_id ?? null,
         dto?.ownership ?? 'ai',
-        dto?.ai_enabled ?? true,
+        aiEnabled,
         dto?.source ?? 'organic',
         dto?.source_meta ? JSON.stringify(dto.source_meta) : null,
       ],
