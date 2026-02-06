@@ -1,22 +1,61 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+const AI_CENTER_PATHS = [
+  "/dashboard/ai-center",
+  "/dashboard/ai-auto-reply",
+  "/dashboard/ai-appointment-setter",
+  "/dashboard/ai-qualification-rules",
+  "/dashboard/ai-messaging",
+  "/dashboard/ai-logs",
+];
+
+const AI_CENTER_ITEMS = [
+  { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
+  { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
+  { path: "/dashboard/ai-appointment-setter", labelKey: "nav.aiCenter.appointmentSetter" },
+  { path: "/dashboard/ai-qualification-rules", labelKey: "nav.aiCenter.qualificationRules" },
+  { path: "/dashboard/ai-messaging", labelKey: "nav.aiCenter.messaging" },
+  { path: "/dashboard/ai-logs", labelKey: "nav.aiCenter.activityLogs" },
+];
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const [aiCenterOpen, setAiCenterOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("aiCenterSidebarOpen");
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    const open = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+    if (open && !aiCenterOpen) setAiCenterOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("aiCenterSidebarOpen", JSON.stringify(aiCenterOpen));
+    } catch (_) {}
+  }, [aiCenterOpen]);
 
   // Initialize Lucide icons when component mounts or updates
   useEffect(() => {
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [isCollapsed]); // Re-initialize when collapsed state changes
+  }, [isCollapsed, aiCenterOpen]);
 
-  // Navigation items with Lucide icon names and translation keys
-  // WhatsApp is first (priority/revenue channel)
-  const allNavItems = [
+  const isAiCenterActive = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+
+  const topNavItems = [
     { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
@@ -24,18 +63,18 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/ai-assistant", icon: "bot", labelKey: "nav.aiAssistant" },
-    { path: "/dashboard/ai-automations", icon: "zap", labelKey: "nav.aiAutomations" },
+  ];
+
+  const bottomNavItems = [
     { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
     { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
     { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
 
-  // Filter navigation items based on user role
-  // VA users can only see properties
-  const navItems = user?.role === 'va' 
-    ? allNavItems.filter(item => item.path === '/dashboard/properties')
-    : allNavItems;
+  const canSeeAiCenter = user?.role && ["admin", "owner", "agent"].includes(user.role.toLowerCase());
+  const navItems = user?.role === "va"
+    ? topNavItems.filter((item) => item.path === "/dashboard/properties")
+    : [...topNavItems];
 
   return (
     <>
@@ -70,23 +109,23 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             <NavLink
               key={`${item.path}-${index}`}
               to={item.path}
-              className={({ isActive }) => 
-                `crm-nav-link ${isActive ? 'active' : ''}`
+              className={({ isActive }) =>
+                `crm-nav-link ${isActive ? "active" : ""}`
               }
               onClick={onClose}
               end={item.path === "/dashboard/home"}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
               {item.isWhatsApp ? (
-                <img 
-                  src="/assets/WhatsApp-Logo.svg" 
-                  alt="WhatsApp" 
+                <img
+                  src="/assets/WhatsApp-Logo.svg"
+                  alt="WhatsApp"
                   className="crm-nav-icon"
                   style={{
-                    width: '24px',
-                    height: '24px',
-                    objectFit: 'contain',
-                    flexShrink: 0
+                    width: "24px",
+                    height: "24px",
+                    objectFit: "contain",
+                    flexShrink: 0,
                   }}
                 />
               ) : (
@@ -95,11 +134,89 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
               {!isCollapsed && (
                 <span className="crm-nav-label">
                   {t(item.labelKey)}
-                  {item.isWhatsApp && <span style={{ marginLeft: '4px', fontSize: '12px' }}>🔥</span>}
+                  {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
                 </span>
               )}
             </NavLink>
           ))}
+
+          {canSeeAiCenter && (
+            <div className="crm-nav-group" style={{ marginTop: "4px" }}>
+              {isCollapsed ? (
+                <NavLink
+                  to="/dashboard/ai-center"
+                  className={({ isActive }) => `crm-nav-link ${isActive ? "active" : ""}`}
+                  onClick={onClose}
+                  title={t("nav.aiCenter.label")}
+                >
+                  <i data-lucide="bot" className="crm-nav-icon"></i>
+                </NavLink>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={`crm-nav-link ${isAiCenterActive ? "active" : ""}`}
+                    onClick={() => setAiCenterOpen((o) => !o)}
+                    style={{
+                      width: "100%",
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "var(--sidebar-link-padding, 10px 12px)",
+                      color: "inherit",
+                      textAlign: "left",
+                      font: "inherit",
+                    }}
+                  >
+                    <i data-lucide="bot" className="crm-nav-icon"></i>
+                    <span className="crm-nav-label">{t("nav.aiCenter.label")}</span>
+                    <i
+                      data-lucide={aiCenterOpen ? "chevron-down" : "chevron-right"}
+                      style={{ marginLeft: "auto", width: "16px", height: "16px" }}
+                    />
+                  </button>
+                  {aiCenterOpen && (
+                    <div className="crm-nav-sub" style={{ paddingLeft: "12px" }}>
+                      {AI_CENTER_ITEMS.map((item) => (
+                        <NavLink
+                          key={item.path}
+                          to={item.path}
+                          className={({ isActive }) =>
+                            `crm-nav-link crm-nav-link-sub ${isActive ? "active" : ""}`
+                          }
+                          onClick={onClose}
+                          style={{ paddingLeft: "24px", fontSize: "13px" }}
+                        >
+                          <span className="crm-nav-label">{t(item.labelKey)}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {canSeeAiCenter &&
+            bottomNavItems.map((item, index) => (
+              <NavLink
+                key={`${item.path}-${index}`}
+                to={item.path}
+                className={({ isActive }) =>
+                  `crm-nav-link ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+                title={isCollapsed ? t(item.labelKey) : undefined}
+              >
+                <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                {!isCollapsed && (
+                  <span className="crm-nav-label">{t(item.labelKey)}</span>
+                )}
+              </NavLink>
+            ))}
         </nav>
 
         {/* Sidebar Footer - Account Info */}

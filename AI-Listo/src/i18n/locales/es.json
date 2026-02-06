@@ -46,8 +46,15 @@
     "pipeline": "Embudo",
     "properties": "Propiedades",
     "contacts": "Contactos",
-    "aiAssistant": "Asistente IA",
-    "aiAutomations": "Automatizaciones IA",
+    "aiCenter": {
+      "label": "Centro IA",
+      "overview": "Resumen",
+      "autoReply": "Auto-respuesta IA",
+      "appointmentSetter": "Agendador IA",
+      "qualificationRules": "Reglas de calificación",
+      "messaging": "Mensajes y seguimientos",
+      "activityLogs": "Actividad y registros"
+    },
     "analytics": "Analíticas",
     "team": "Equipo",
     "integrations": "Integraciones"

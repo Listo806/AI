@@ -17,8 +17,12 @@ import LeadsList from "./pages/leads/LeadsList";
 import LeadDetail from "./pages/leads/LeadDetail";
 import Pipeline from "./pages/pipeline/Pipeline";
 import Contacts from "./pages/contacts/Contacts";
-import AIAssistant from "./pages/ai-assistant/AIAssistant";
-import AIAutomations from "./pages/ai-automations/AIAutomations";
+import AICenterOverview from "./pages/ai-center/AICenterOverview";
+import AIAutoReply from "./pages/ai-center/AIAutoReply";
+import AIAppointmentSetter from "./pages/ai-center/AIAppointmentSetter";
+import AIQualificationRules from "./pages/ai-center/AIQualificationRules";
+import AIMessaging from "./pages/ai-center/AIMessaging";
+import AIActivityLogs from "./pages/ai-center/AIActivityLogs";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import Integrations from "./pages/integrations/Integrations";
@@ -105,9 +109,13 @@ function AppRoutes() {
         {/* Contacts Route */}
         <Route path="contacts" element={<Contacts />} />
         
-        {/* AI Routes */}
-        <Route path="ai-assistant" element={<AIAssistant />} />
-        <Route path="ai-automations" element={<AIAutomations />} />
+        {/* AI Center Routes */}
+        <Route path="ai-center" element={<AICenterOverview />} />
+        <Route path="ai-auto-reply" element={<AIAutoReply />} />
+        <Route path="ai-appointment-setter" element={<AIAppointmentSetter />} />
+        <Route path="ai-qualification-rules" element={<AIQualificationRules />} />
+        <Route path="ai-messaging" element={<AIMessaging />} />
+        <Route path="ai-logs" element={<AIActivityLogs />} />
         
         {/* Analytics Route */}
         <Route path="analytics" element={<Analytics />} />

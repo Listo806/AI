@@ -46,8 +46,15 @@
     "pipeline": "Funil",
     "properties": "Propriedades",
     "contacts": "Contatos",
-    "aiAssistant": "Assistente IA",
-    "aiAutomations": "Automações IA",
+    "aiCenter": {
+      "label": "Centro IA",
+      "overview": "Visão geral",
+      "autoReply": "Auto-resposta IA",
+      "appointmentSetter": "Agendador IA",
+      "qualificationRules": "Regras de qualificação",
+      "messaging": "Mensagens e follow-ups",
+      "activityLogs": "Atividade e logs"
+    },
     "analytics": "Analíticas",
     "team": "Equipe",
     "integrations": "Integrações"

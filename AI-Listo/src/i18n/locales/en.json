@@ -46,8 +46,15 @@
     "pipeline": "Pipeline",
     "properties": "Properties",
     "contacts": "Contacts",
-    "aiAssistant": "AI Assistant",
-    "aiAutomations": "AI Automations",
+    "aiCenter": {
+      "label": "AI Center",
+      "overview": "Overview",
+      "autoReply": "AI Auto-Reply",
+      "appointmentSetter": "AI Appointment Setter",
+      "qualificationRules": "AI Qualification Rules",
+      "messaging": "AI Messaging & Follow-Ups",
+      "activityLogs": "AI Activity & Logs"
+    },
     "analytics": "Analytics",
     "team": "Team",
     "integrations": "Integrations"
