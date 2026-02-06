@@ -133,15 +133,22 @@ export class WhatsAppInboundService {
 
     if (conversation.source === 'ad' && created) {
       await this.twilioWhatsApp.sendAiReply(lead.id, conversation.id, AD_GREETING_TEXT);
+      if (lead.team_id) {
+        await this.logAiActivity(lead.team_id, 'auto_reply', lead.id, 'whatsapp', 'ad_greeting');
+      }
       return '<Response></Response>';
     }
 
-    const { action } = await this.routing.routeMessage(conversation.id, body);
+    const { action, reason } = await this.routing.routeMessage(conversation.id, body);
 
     if (action === 'reply_ai') {
       await this.aiReply.replyWithAi(conversation.id, lead.id, from);
+      if (lead.team_id) {
+        await this.logAiActivity(lead.team_id, 'auto_reply', lead.id, 'whatsapp', 'sent');
+      }
+    } else if (lead.team_id) {
+      await this.logAiActivity(lead.team_id, 'escalated', lead.id, 'whatsapp', reason || 'notify_agent');
     }
-    // notify_agent: no auto-send; agent sees conversation in CRM
 
     return '<Response></Response>';
   }
@@ -179,6 +186,24 @@ export class WhatsAppInboundService {
    * Upsert lead by phone when first inbound is from ad/landing. Creates lead so ad-first flow can continue.
    * Requires WHATSAPP_FIRST_LEAD_CREATED_BY (user UUID) in env. Lead remains eligible for broadcast (ai-owned).
    */
+  private async logAiActivity(
+    teamId: string,
+    action: string,
+    leadId: string,
+    channel: string,
+    outcome: string,
+  ): Promise<void> {
+    try {
+      await this.db.query(
+        `INSERT INTO ai_activity (team_id, action, lead_id, channel, outcome, created_at)
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [teamId, action, leadId, channel, outcome],
+      );
+    } catch (err: any) {
+      this.logger.warn(`logAiActivity failed: ${err?.message}`);
+    }
+  }
+
   private async upsertLeadFromAd(
     phone: string,
     payload: Record<string, string>,

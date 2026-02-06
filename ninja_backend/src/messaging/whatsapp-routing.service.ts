@@ -48,6 +48,19 @@ export class WhatsAppRoutingService {
       return { action: 'notify_agent', reason: 'ai_disabled' };
     }
 
+    // 2.5) Team-level AI Auto-Reply OFF (AI Center setting) -> notify_agent, no AI reply
+    const { rows: teamRows } = await this.db.query(
+      `SELECT t.ai_auto_reply_enabled FROM conversations c
+       INNER JOIN leads l ON l.id = c.lead_id
+       INNER JOIN teams t ON t.id = l.team_id
+       WHERE c.id = $1`,
+      [conversationId],
+    );
+    if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) {
+      await this.logRoutingEvent(conversationId, 'notify_agent', 'team_auto_reply_off');
+      return { action: 'notify_agent', reason: 'team_auto_reply_off' };
+    }
+
     // 3) intent escalation: use latest intent from DB (ORDER BY created_at DESC LIMIT 1)
     //    so routing reflects most recent intent from button action or prior message, not just current pass.
     const latestIntent = await this.intents.getLatestForConversation(conversationId);
