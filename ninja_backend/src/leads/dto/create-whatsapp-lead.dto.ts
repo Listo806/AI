@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsUUID, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum WhatsAppLeadSource {
@@ -7,7 +7,13 @@ export enum WhatsAppLeadSource {
   WEBSITE_WHATSAPP = 'website_whatsapp',
   FACEBOOK_WHATSAPP = 'facebook_whatsapp',
   OTHER_WHATSAPP = 'other_whatsapp',
+  /** Property flow: from search results */
+  PROPERTY_WHATSAPP_SEARCH = 'property_whatsapp_search',
+  /** Property flow: from property detail page */
+  PROPERTY_WHATSAPP_DETAIL = 'property_whatsapp_detail',
 }
+
+export type SellerType = 'agent' | 'owner' | 'developer';
 
 export class CreateWhatsAppLeadDto {
   @ApiProperty({
@@ -58,4 +64,40 @@ export class CreateWhatsAppLeadDto {
   @IsOptional()
   @IsString()
   channel?: string;
+
+  @ApiPropertyOptional({
+    example: '3BR Apartment in Quito',
+    description: 'Property title (required for property_whatsapp_* sources)',
+  })
+  @IsOptional()
+  @IsString()
+  propertyTitle?: string;
+
+  @ApiPropertyOptional({
+    example: 'agent',
+    description: 'Seller type: agent | owner | developer (required for property_whatsapp_* sources)',
+  })
+  @IsOptional()
+  @IsIn(['agent', 'owner', 'developer'])
+  sellerType?: SellerType;
+
+  @ApiPropertyOptional({
+    example: 'https://listoqasa.com/properties/123',
+    description: 'Landing page URL',
+  })
+  @IsOptional()
+  @IsString()
+  landingPage?: string;
+
+  @ApiPropertyOptional({ description: 'UTM params' })
+  @IsOptional()
+  utmSource?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  utmMedium?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  utmCampaign?: string;
 }

@@ -2,7 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { ConversationsService } from './conversations.service';
 
-export type IntentType = 'buy' | 'rent' | 'sell' | 'agent_request' | 'general';
+export type IntentType =
+  | 'buy'
+  | 'rent'
+  | 'sell'
+  | 'agent_request'
+  | 'general'
+  | 'buyer_search'
+  | 'seller_listing'
+  | 'agent_crm'
+  | 'general_support';
 export type DetectedFrom = 'text' | 'audio' | 'button';
 
 export interface IntentEvent {
@@ -66,18 +75,33 @@ export class IntentEventsService {
 
   /**
    * Minimal, safe intent detection (heuristics). No free-chat, no automation.
+   * Maps 1-4 and equivalent words to Master Funnel intents.
    */
   detectIntentFromText(text: string): { intent_type: IntentType; confidence: number } {
-    const t = (text || '').toLowerCase();
+    const t = (text || '').toLowerCase().trim();
 
     const has = (re: RegExp) => re.test(t);
+
+    // Master Funnel 1-4 mapping (highest priority for short replies)
+    if (/^1$|^uno$|^comprar|alquilar|buy|rent|busco\s*(comprar|alquilar)/i.test(t)) {
+      return { intent_type: 'buyer_search', confidence: 0.95 };
+    }
+    if (/^2$|^dos$|^vender|sell|listar|poner\s*en\s*venta/i.test(t)) {
+      return { intent_type: 'seller_listing', confidence: 0.95 };
+    }
+    if (/^3$|^tres$|^agente|crm|agent|soy\s*agente/i.test(t)) {
+      return { intent_type: 'agent_crm', confidence: 0.95 };
+    }
+    if (/^4$|^cuatro$|^soporte|support|otro|something\s*else|otra\s*cosa/i.test(t)) {
+      return { intent_type: 'general_support', confidence: 0.95 };
+    }
 
     // agent_request (highest priority)
     if (has(/\b(human|agent|call me)\b/) || has(/\b(asesor|agente|representante)\b/)) {
       return { intent_type: 'agent_request', confidence: 0.95 };
     }
 
-    // buy / rent / sell
+    // buy / rent / sell (legacy)
     if (has(/\b(comprar|compra|buy|purchase)\b/)) return { intent_type: 'buy', confidence: 0.9 };
     if (has(/\b(alquilar|alquiler|rent|lease)\b/)) return { intent_type: 'rent', confidence: 0.9 };
     if (has(/\b(vender|venta|sell|listing)\b/)) return { intent_type: 'sell', confidence: 0.85 };
@@ -107,8 +131,12 @@ export class IntentEventsService {
       confidence = detected.confidence;
     }
 
-    // Storage rules
-    const shouldStore = intent === 'agent_request' || confidence >= 0.6;
+    // Storage rules (store funnel intents and high-confidence)
+    const funnelIntents = ['buyer_search', 'seller_listing', 'agent_crm', 'general_support'];
+    const shouldStore =
+      intent === 'agent_request' ||
+      funnelIntents.includes(intent) ||
+      confidence >= 0.6;
     if (!shouldStore) return null;
 
     const { rows } = await this.db.query(

@@ -162,7 +162,13 @@ export class WhatsAppAiReplyService {
 
     // Deterministic next-question control (no free-chat).
     const latestIntent = await this.intents.getLatestForConversation(conversationId);
-    const intent: IntentType = (latestIntent?.intent_type as IntentType) || 'general';
+    const raw = (latestIntent?.intent_type as IntentType) || 'general';
+    // Map funnel intents to legacy for determineNextQuestion
+    const intent: IntentType =
+      raw === 'buyer_search' ? 'buy' :
+      raw === 'seller_listing' ? 'sell' :
+      raw === 'agent_crm' || raw === 'general_support' ? 'general' :
+      raw;
     if (intent === 'agent_request') {
       // routing should have escalated already, but never reply here
       return { reply: '' };

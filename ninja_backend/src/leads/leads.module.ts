@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '../config/config.module';
 import { LeadsService } from './leads.service';
 import { LeadsController } from './leads.controller';
 import { AnalyticsModule } from '../analytics/analytics.module';
@@ -15,7 +16,7 @@ import { IntelligenceModule } from '../intelligence/intelligence.module';
 import { MessagingModule } from '../messaging/messaging.module';
 
 @Module({
-  imports: [AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, MessagingModule],
+  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, MessagingModule],
   controllers: [AILeadController, LeadsController],
   providers: [
     LeadsService,

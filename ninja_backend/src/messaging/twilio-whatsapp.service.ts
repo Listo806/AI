@@ -78,6 +78,52 @@ export class TwilioWhatsAppService {
   }
 
   /**
+   * Find or create lead by phone. Never drops unknown phones.
+   * Uses WHATSAPP_FIRST_LEAD_CREATED_BY for team/created_by if set, else null.
+   */
+  async findOrCreateLeadByPhone(
+    phone: string,
+    profileName?: string,
+  ): Promise<{ id: string; team_id: string | null }> {
+    const existing = await this.findLeadByPhone(phone);
+    if (existing) return existing;
+
+    let createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY') || null;
+    let teamId: string | null = null;
+    if (createdBy) {
+      const { rows: userRows } = await this.db.query(
+        `SELECT team_id FROM users WHERE id = $1`,
+        [createdBy],
+      );
+      if (userRows.length) teamId = userRows[0].team_id ?? null;
+    } else {
+      // created_by is NOT NULL: use first active user as fallback for unassigned WhatsApp leads
+      const { rows: fallback } = await this.db.query(
+        `SELECT id, team_id FROM users WHERE is_active = true ORDER BY created_at ASC LIMIT 1`,
+      );
+      if (fallback.length) {
+        createdBy = fallback[0].id;
+        teamId = fallback[0].team_id ?? null;
+      }
+    }
+    if (!createdBy) {
+      this.logger.warn('Cannot create lead: no WHATSAPP_FIRST_LEAD_CREATED_BY and no users in system');
+      throw new Error('WhatsApp lead creation requires WHATSAPP_FIRST_LEAD_CREATED_BY or at least one user');
+    }
+
+    const name = (profileName || '').trim() || 'WhatsApp Lead';
+    const { rows } = await this.db.query(
+      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at)
+       VALUES ($1, $2, 'new', $3, $4, 'whatsapp', 'whatsapp', NOW(), NOW())
+       RETURNING id, team_id`,
+      [name, phone, createdBy, teamId],
+    );
+    if (!rows.length) throw new Error('Failed to create lead');
+    this.logger.log(`Created lead for unknown phone ${phone}`);
+    return { id: rows[0].id, team_id: rows[0].team_id ?? null };
+  }
+
+  /**
    * Send WhatsApp message for a lead (outbound from CRM). Per-lead, per-action only.
    * senderType: platform (default) | agent. Agent uses connected Twilio sub-account.
    * Routing safety: AI/automation must use senderType 'platform' only — never 'agent'.
@@ -153,8 +199,25 @@ export class TwilioWhatsAppService {
   }
 
   /**
+   * Check if last inbound (lead) message was within 24h for this conversation.
+   * Use to decide: within 24h = free-form OK; outside 24h = template only (contentSid required).
+   */
+  async isWithin24hWindow(conversationId: string): Promise<boolean> {
+    const { rows } = await this.db.query(
+      `SELECT created_at FROM lead_messages
+       WHERE conversation_id = $1 AND direction = 'inbound' AND sender_type = 'lead'
+       ORDER BY created_at DESC LIMIT 1`,
+      [conversationId],
+    );
+    if (!rows.length) return true;
+    const lastAt = new Date(rows[0].created_at).getTime();
+    return Date.now() - lastAt < 24 * 60 * 60 * 1000;
+  }
+
+  /**
    * Send AI reply to lead via platform WhatsApp. Stores message with sender_type='ai' and conversation_id.
    * Used by WhatsApp AI reply service after AiAssistantService.chat().
+   * Note: For proactive/follow-up sends outside 24h, use sendTemplate with contentSid instead.
    */
   async sendAiReply(leadId: string, conversationId: string, message: string): Promise<{ messageId: string; status: string }> {
     if (!this.isConfigured || !this.client) {

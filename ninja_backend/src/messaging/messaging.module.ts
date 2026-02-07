@@ -24,6 +24,7 @@ import { WhatsAppCardsService } from './whatsapp-cards.service';
 import { WhatsAppActionsService } from './whatsapp-actions.service';
 import { IntentEventsService } from './intent-events.service';
 import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
+import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
 
 @Module({
   imports: [ConfigModule, DatabaseModule, SubscriptionsModule, IntegrationsModule],
@@ -51,6 +52,7 @@ import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
     WhatsAppActionsService,
     IntentEventsService,
     WhatsAppBroadcastService,
+    WhatsAppFlowOrchestratorService,
   ],
   exports: [LeadMessagesService, ConversationsService],
 })

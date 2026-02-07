@@ -189,6 +189,19 @@ export class ConversationsService {
   }
 
   /**
+   * Update only source_meta (partial merge). Preserves source column.
+   */
+  async mergeSourceMeta(id: string, updates: Record<string, unknown>): Promise<void> {
+    const conv = await this.findById(id);
+    if (!conv) return;
+    const merged = { ...(conv.source_meta || {}), ...updates };
+    await this.db.query(
+      `UPDATE conversations SET source_meta = $1, updated_at = NOW() WHERE id = $2`,
+      [JSON.stringify(merged), id],
+    );
+  }
+
+  /**
    * Assert conversation belongs to team (via lead). Throws if not found or no access.
    */
   async assertTeamAccess(conversationId: string, teamId: string | null): Promise<Conversation> {

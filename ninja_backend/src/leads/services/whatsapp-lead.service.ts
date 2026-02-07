@@ -1,17 +1,24 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '../../config/config.service';
 import { DatabaseService } from '../../database/database.service';
-import { CreateWhatsAppLeadDto } from '../dto/create-whatsapp-lead.dto';
+import { CreateWhatsAppLeadDto, WhatsAppLeadSource } from '../dto/create-whatsapp-lead.dto';
 import { PhoneNormalizer } from '../utils/phone-normalizer';
 import { WhatsAppPhoneResolverService } from './whatsapp-phone-resolver.service';
 import { BuyerLinkerService } from './buyer-linker.service';
 import { LeadStatus } from '../entities/lead.entity';
 import { EventLoggerService } from '../../analytics/events/event-logger.service';
 
+const PROPERTY_SOURCES: string[] = [
+  WhatsAppLeadSource.PROPERTY_WHATSAPP_SEARCH,
+  WhatsAppLeadSource.PROPERTY_WHATSAPP_DETAIL,
+];
+
 @Injectable()
 export class WhatsAppLeadService {
   private readonly logger = new Logger(WhatsAppLeadService.name);
 
   constructor(
+    private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly whatsappPhoneResolver: WhatsAppPhoneResolverService,
     private readonly buyerLinker: BuyerLinkerService,
@@ -45,14 +52,21 @@ export class WhatsAppLeadService {
       throw new NotFoundException(`Property ${dto.propertyId} not found`);
     }
 
-    // Resolve WhatsApp phone number
-    const whatsappPhone = await this.whatsappPhoneResolver.resolveWhatsAppPhone(
-      dto.propertyId,
-    );
-    if (!whatsappPhone) {
-      throw new BadRequestException(
-        'No WhatsApp phone number available for this property',
-      );
+    // Property flow: use platform number so inbound goes to our webhook.
+    // Legacy flow: use property's agent/owner phone for direct contact.
+    const isPropertyFlow = PROPERTY_SOURCES.includes(dto.source);
+    let whatsappPhone: string | null;
+    if (isPropertyFlow) {
+      const from = this.config.get('TWILIO_WHATSAPP_FROM') || '';
+      whatsappPhone = from.replace(/^whatsapp:/i, '').trim() || null;
+      if (!whatsappPhone || !whatsappPhone.startsWith('+')) {
+        throw new BadRequestException('Platform WhatsApp not configured (TWILIO_WHATSAPP_FROM)');
+      }
+    } else {
+      whatsappPhone = await this.whatsappPhoneResolver.resolveWhatsAppPhone(dto.propertyId);
+      if (!whatsappPhone) {
+        throw new BadRequestException('No WhatsApp phone number available for this property');
+      }
     }
 
     // Resolve lead assignment
@@ -73,6 +87,12 @@ export class WhatsAppLeadService {
     let leadId: string;
     let firstSource: string | null = null;
 
+    const propertyTitle = dto.propertyTitle || property.title;
+    const sellerType = dto.sellerType || null;
+    const leadMetadata = isPropertyFlow && (propertyTitle || sellerType)
+      ? { property_title: propertyTitle, seller_type: sellerType }
+      : null;
+
     if (existingLead) {
       // Update existing lead (but preserve first_source)
       leadId = existingLead.id;
@@ -83,6 +103,7 @@ export class WhatsAppLeadService {
         source: dto.source,
         assignedTo: assignment.assignedTo,
         buyerId,
+        leadMetadata,
       });
     } else {
       // Create new lead
@@ -94,15 +115,14 @@ export class WhatsAppLeadService {
         createdBy: assignment.createdBy,
         buyerId,
         firstSource: dto.source, // Set first_source on creation
+        leadMetadata,
       });
     }
 
-    // Generate WhatsApp URL
-    const whatsappUrl = this.generateWhatsAppUrl(
-      whatsappPhone,
-      property.title,
-      dto.propertyId,
-    );
+    // Generate WhatsApp URL (property flow: prefilled tag for debugging)
+    const whatsappUrl = isPropertyFlow
+      ? this.generatePropertyFlowWhatsAppUrl(whatsappPhone, dto.propertyId)
+      : this.generateWhatsAppUrl(whatsappPhone, property.title, dto.propertyId);
 
     // Log event if assigned
     if (assignment.createdBy) {
@@ -253,13 +273,14 @@ export class WhatsAppLeadService {
     createdBy: string | null;
     buyerId: string | null;
     firstSource: string;
+    leadMetadata?: Record<string, unknown> | null;
   }): Promise<string> {
     const { rows } = await this.db.query(
       `INSERT INTO leads (
         name, email, phone, status, assigned_to, property_id, buyer_id,
-        created_by, team_id, source, first_source, created_at, updated_at
+        created_by, team_id, source, first_source, lead_metadata, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
       RETURNING id`,
       [
         data.name || null,
@@ -272,7 +293,8 @@ export class WhatsAppLeadService {
         data.createdBy,
         data.teamId,
         data.source,
-        data.firstSource, // Set first_source on creation
+        data.firstSource,
+        data.leadMetadata ? JSON.stringify(data.leadMetadata) : null,
       ],
     );
 
@@ -288,21 +310,24 @@ export class WhatsAppLeadService {
       source: string;
       assignedTo: string | null;
       buyerId: string | null;
+      leadMetadata?: Record<string, unknown> | null;
     },
   ): Promise<void> {
-    await this.db.query(
-      `UPDATE leads
-       SET source = $1,
-           assigned_to = $2,
-           buyer_id = COALESCE($3, buyer_id),
-           updated_at = NOW()
-       WHERE id = $4`,
-      [updates.source, updates.assignedTo, updates.buyerId, leadId],
-    );
+    if (updates.leadMetadata !== undefined) {
+      await this.db.query(
+        `UPDATE leads SET source = $1, assigned_to = $2, buyer_id = COALESCE($3, buyer_id), lead_metadata = $4, updated_at = NOW() WHERE id = $5`,
+        [updates.source, updates.assignedTo, updates.buyerId, updates.leadMetadata ? JSON.stringify(updates.leadMetadata) : null, leadId],
+      );
+    } else {
+      await this.db.query(
+        `UPDATE leads SET source = $1, assigned_to = $2, buyer_id = COALESCE($3, buyer_id), updated_at = NOW() WHERE id = $4`,
+        [updates.source, updates.assignedTo, updates.buyerId, leadId],
+      );
+    }
   }
 
   /**
-   * Generate WhatsApp URL with pre-filled message
+   * Generate WhatsApp URL with pre-filled message (legacy / direct agent contact)
    */
   private generateWhatsAppUrl(
     whatsappPhone: string,
@@ -311,6 +336,17 @@ export class WhatsAppLeadService {
   ): string {
     const cleanPhone = PhoneNormalizer.cleanForWhatsApp(whatsappPhone);
     const message = `Hi, I'm interested in the property: ${propertyTitle}. Ref: ${propertyId}`;
+    const encodedMessage = encodeURIComponent(message);
+
+    return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+  }
+
+  /**
+   * Property flow: wa.me URL with prefilled tag for debugging (messages come to platform webhook)
+   */
+  private generatePropertyFlowWhatsAppUrl(whatsappPhone: string, propertyId: string): string {
+    const cleanPhone = PhoneNormalizer.cleanForWhatsApp(whatsappPhone);
+    const message = `Hola 👋 [flow:property] [pid:${propertyId}]`;
     const encodedMessage = encodeURIComponent(message);
 
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;

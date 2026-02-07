@@ -342,6 +342,22 @@ async function setupDatabase() {
       await pool.query(migration30SQL);
       console.log('✓ AI CENTER migration completed');
     }
+
+    // WhatsApp Flow Intent Types (buyer_search, seller_listing, agent_crm, general_support)
+    const migration31Path = path.join(__dirname, '../src/database/migrations/031_whatsapp_flow_intent_types.sql');
+    if (fs.existsSync(migration31Path)) {
+      const migration31SQL = fs.readFileSync(migration31Path, 'utf8');
+      await pool.query(migration31SQL);
+      console.log('✓ WhatsApp Flow Intent Types migration completed');
+    }
+
+    // Leads metadata for property flow (property_title, seller_type)
+    const migration32Path = path.join(__dirname, '../src/database/migrations/032_leads_metadata.sql');
+    if (fs.existsSync(migration32Path)) {
+      const migration32SQL = fs.readFileSync(migration32Path, 'utf8');
+      await pool.query(migration32SQL);
+      console.log('✓ Leads metadata migration completed');
+    }
     
     
     console.log('Database schema created successfully!');

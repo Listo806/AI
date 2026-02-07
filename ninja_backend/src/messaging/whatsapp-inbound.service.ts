@@ -9,9 +9,7 @@ import { WhatsAppRoutingService } from './whatsapp-routing.service';
 import { WhatsAppAiReplyService } from './whatsapp-ai-reply.service';
 import { TwilioMediaService } from './twilio-media.service';
 import { IntentEventsService } from './intent-events.service';
-
-/** WhatsApp-first default: one immediate auto-reply for ad/landing first message (ES). */
-const AD_GREETING_TEXT = 'Hola 👋 Soy el asistente de CORTEXA. ¿Buscas comprar, alquilar o vender?';
+import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
 
 @Injectable()
 export class WhatsAppInboundService {
@@ -28,11 +26,12 @@ export class WhatsAppInboundService {
     private readonly aiReply: WhatsAppAiReplyService,
     private readonly twilioMedia: TwilioMediaService,
     private readonly intents: IntentEventsService,
+    private readonly flowOrchestrator: WhatsAppFlowOrchestratorService,
   ) {}
 
   /**
-   * Full inbound flow: resolve lead/conversation, handle audio, save message, detect ad,
-   * route (reply_ai or notify_agent), send AI reply or ad greeting when applicable.
+   * Full inbound flow: resolve lead/conversation (never drop), handle audio,
+   * parse source, route (reply_ai or notify_agent), send AI reply or entry greeting.
    */
   async handleInbound(payload: Record<string, string>): Promise<string> {
     const from = TwilioWhatsAppService.phoneFromTwilioAddress(payload.From || '');
@@ -40,6 +39,7 @@ export class WhatsAppInboundService {
     const messageSid = payload.MessageSid || '';
     const numMedia = parseInt(payload.NumMedia || '0', 10);
     const mediaUrl0 = payload.MediaUrl0 || '';
+    const profileName = payload.ProfileName || '';
 
     if (!from) {
       this.logger.warn('Inbound WhatsApp: missing or invalid From');
@@ -52,19 +52,8 @@ export class WhatsAppInboundService {
       return '<Response></Response>';
     }
 
-    const isAd = this.detectAdSource(payload);
-    let lead = await this.twilioWhatsApp.findLeadByPhone(from);
-    if (!lead && isAd) {
-      const createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY');
-      if (createdBy) {
-        lead = await this.upsertLeadFromAd(from, payload, createdBy);
-        if (lead) this.logger.log(`Inbound WhatsApp: created lead from ad for phone ${from}`);
-      }
-    }
-    if (!lead) {
-      this.logger.warn(`Inbound WhatsApp: no lead for phone ${from}, skipping store`);
-      return '<Response></Response>';
-    }
+    // RULE: Never drop first-time inbound. Create lead if unknown.
+    const lead = await this.twilioWhatsApp.findOrCreateLeadByPhone(from, profileName);
 
     let messageType: 'text' | 'audio' = 'text';
     if (numMedia > 0 && mediaUrl0) {
@@ -80,12 +69,30 @@ export class WhatsAppInboundService {
       }
     }
 
+    // Parse [src:xxx] from body for Master Funnel source tracking
+    const parsedSource = this.flowOrchestrator.parseSourceFromBody(body);
+    const sourceTag = parsedSource || 'organic_unknown';
+
+    // Strip [src:xxx] from body for cleaner message storage (optional)
+    const bodyForStorage = body.replace(/\[src:[a-z0-9_]+\]/gi, '').trim() || body;
+
+    const isAd = this.detectAdSource(payload);
+    const sourceMeta: Record<string, unknown> = {
+      source: sourceTag,
+      ...(isAd ? this.extractAdMeta(payload) : {}),
+    };
+
     const { conversation, created } = await this.conversations.getOrCreateForLead(lead.id, {
-      ownership: isAd ? 'ai' : undefined,
-      ai_enabled: isAd ? true : undefined,
+      ownership: 'ai',
+      ai_enabled: true,
       source: isAd ? 'ad' : 'organic',
-      source_meta: isAd ? this.extractAdMeta(payload) : null,
+      source_meta: sourceMeta,
     });
+
+    // Update source_meta with parsed source if conversation existed (first message sets it)
+    if (!created && parsedSource) {
+      await this.flowOrchestrator.mergeConversationSourceMeta(conversation.id, { source: sourceTag });
+    }
 
     const senderType = resolved.type === 'platform' ? 'platform' : 'agent';
     const agentId = resolved.type === 'agent' ? resolved.agentId : null;
@@ -99,7 +106,7 @@ export class WhatsAppInboundService {
       channel: 'whatsapp',
       direction: 'inbound',
       external_id: messageSid,
-      body: body || null,
+      body: bodyForStorage || null,
       status: 'sent',
       metadata: {
         From: payload.From,
@@ -117,12 +124,12 @@ export class WhatsAppInboundService {
       meta: metaVoice,
     });
 
-    // Intent detection (minimal, safe). Run after transcription if audio.
+    // Intent detection (supports 1-4 mapping and funnel intents)
     await this.intents.createIfAllowed({
       conversationId: conversation.id,
       leadId: lead.id,
       detectedFrom: messageType === 'audio' ? 'audio' : 'text',
-      text: body,
+      text: bodyForStorage,
     });
 
     await this.db.query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [conversation.id]);
@@ -131,15 +138,35 @@ export class WhatsAppInboundService {
       [lead.id],
     );
 
-    if (conversation.source === 'ad' && created) {
-      await this.twilioWhatsApp.sendAiReply(lead.id, conversation.id, AD_GREETING_TEXT);
+    // Immediate auto-reply for NEW conversations (Master or Property flow)
+    if (created) {
+      const flow = await this.flowOrchestrator.determineFlow(lead.id, conversation.id);
+      // Property flow: merge lead_metadata (property_title, seller_type) into conversation source_meta
+      if (flow === 'property') {
+        const { rows } = await this.db.query(
+          `SELECT property_id, lead_metadata FROM leads WHERE id = $1`,
+          [lead.id],
+        );
+        if (rows.length) {
+          const r = rows[0];
+          const meta: Record<string, unknown> = { ...sourceMeta };
+          if (r.property_id) meta.property_id = r.property_id;
+          if (r.lead_metadata && typeof r.lead_metadata === 'object') {
+            Object.assign(meta, r.lead_metadata);
+          }
+          await this.flowOrchestrator.mergeConversationSourceMeta(conversation.id, meta);
+        }
+      }
+      const entryMessage = this.flowOrchestrator.getEntryMessage(flow, true);
+      await this.twilioWhatsApp.sendAiReply(lead.id, conversation.id, entryMessage);
       if (lead.team_id) {
-        await this.logAiActivity(lead.team_id, 'auto_reply', lead.id, 'whatsapp', 'ad_greeting');
+        await this.logAiActivity(lead.team_id, 'auto_reply', lead.id, 'whatsapp', 'entry_greeting');
       }
       return '<Response></Response>';
     }
 
-    const { action, reason } = await this.routing.routeMessage(conversation.id, body);
+    // Existing conversation: route (AI vs agent)
+    const { action, reason } = await this.routing.routeMessage(conversation.id, bodyForStorage);
 
     if (action === 'reply_ai') {
       await this.aiReply.replyWithAi(conversation.id, lead.id, from);
@@ -182,10 +209,6 @@ export class WhatsAppInboundService {
     return meta;
   }
 
-  /**
-   * Upsert lead by phone when first inbound is from ad/landing. Creates lead so ad-first flow can continue.
-   * Requires WHATSAPP_FIRST_LEAD_CREATED_BY (user UUID) in env. Lead remains eligible for broadcast (ai-owned).
-   */
   private async logAiActivity(
     teamId: string,
     action: string,
@@ -202,30 +225,5 @@ export class WhatsAppInboundService {
     } catch (err: any) {
       this.logger.warn(`logAiActivity failed: ${err?.message}`);
     }
-  }
-
-  private async upsertLeadFromAd(
-    phone: string,
-    payload: Record<string, string>,
-    createdBy: string,
-  ): Promise<{ id: string; team_id: string | null } | null> {
-    const { rows: userRows } = await this.db.query(
-      `SELECT team_id FROM users WHERE id = $1`,
-      [createdBy],
-    );
-    if (!userRows.length) {
-      this.logger.warn(`Inbound WhatsApp: WHATSAPP_FIRST_LEAD_CREATED_BY user ${createdBy} not found`);
-      return null;
-    }
-    const teamId = userRows[0].team_id ?? null;
-    const name = (payload.ProfileName || '').trim() || 'WhatsApp Lead';
-    const { rows } = await this.db.query(
-      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at)
-       VALUES ($1, $2, 'new', $3, $4, 'whatsapp_ad', 'whatsapp_ad', NOW(), NOW())
-       RETURNING id, team_id`,
-      [name, phone, createdBy, teamId],
-    );
-    if (!rows.length) return null;
-    return { id: rows[0].id, team_id: rows[0].team_id ?? null };
   }
 }
