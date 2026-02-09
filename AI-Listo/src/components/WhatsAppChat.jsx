@@ -6,13 +6,15 @@ const AUTH_TOKEN_KEY = 'listo_access_token';
 
 /**
  * Reusable WhatsApp chat component.
- * Fetches messages from GET /api/leads/:id/messages and sends via POST /api/whatsapp/send.
+ * Fetches messages from GET /api/leads/:id/messages and sends via POST /api/whatsapp/send
+ * or POST /api/whatsapp/conversations/:id/send when conversationId is provided (sets ownership to human).
  * @param {string} leadId - Lead UUID
  * @param {string} leadPhone - Lead phone (E.164 or normalized). Required for send.
  * @param {string} leadName - Lead name (for display)
+ * @param {string} [conversationId] - When set, send uses conversations/:id/send so ownership becomes human.
  * @param {function} onSendSuccess - Callback after successful send (e.g. refresh lead)
  */
-export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSuccess }) {
+export default function WhatsAppChat({ leadId, leadPhone, leadName, conversationId, onSendSuccess }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -58,10 +60,17 @@ export default function WhatsAppChat({ leadId, leadPhone, leadName, onSendSucces
     setSending(true);
     setError(null);
     try {
-      await apiClient.request('/whatsapp/send', {
-        method: 'POST',
-        body: JSON.stringify({ leadId, message: text }),
-      });
+      if (conversationId) {
+        await apiClient.request(`/whatsapp/conversations/${conversationId}/send`, {
+          method: 'POST',
+          body: JSON.stringify({ message: text }),
+        });
+      } else {
+        await apiClient.request('/whatsapp/send', {
+          method: 'POST',
+          body: JSON.stringify({ leadId, message: text }),
+        });
+      }
       setDraft('');
       await loadMessages();
       onSendSuccess?.();

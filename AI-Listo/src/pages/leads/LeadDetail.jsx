@@ -27,6 +27,8 @@ export default function LeadDetail() {
     notes: '',
   });
 
+  const [conversationId, setConversationId] = useState(null);
+
   // WhatsApp phone number
   const whatsappPhone = user?.phone || 
                         import.meta.env.VITE_WHATSAPP_PHONE || 
@@ -38,6 +40,22 @@ export default function LeadDetail() {
       loadProperties();
     }
   }, [id, isAuthenticated, user, authLoading]);
+
+  useEffect(() => {
+    if (!id || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await apiClient.request('/whatsapp/conversations');
+        const arr = Array.isArray(list) ? list : list?.data ?? [];
+        const conv = arr.find((c) => c.lead_id === id);
+        if (!cancelled) setConversationId(conv?.id ?? null);
+      } catch {
+        if (!cancelled) setConversationId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user]);
 
   const loadLead = async () => {
     setLoading(true);
@@ -790,6 +808,7 @@ export default function LeadDetail() {
                 leadId={id}
                 leadPhone={formData.phone}
                 leadName={lead.name}
+                conversationId={conversationId}
                 onSendSuccess={loadLead}
               />
             </div>

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
 import ContactModal from '../../components/ContactModal';
+import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
 export default function ListingDetail() {
@@ -14,9 +14,7 @@ export default function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
-
-  // WhatsApp phone number from env
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '+1234567890';
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   useEffect(() => {
     loadProperty();
@@ -134,14 +132,13 @@ export default function ListingDetail() {
             {/* Action Buttons */}
             <div className="listings-detail-actions">
               <div className="listings-action-buttons">
-                <a
-                  href={buildWhatsAppLink(whatsappPhone, property)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setShowWhatsAppModal(true)}
                   className="listings-btn listings-btn-whatsapp"
                 >
                   💬 WhatsApp
-                </a>
+                </button>
                 <button
                   onClick={() => setShowContactModal(true)}
                   className="listings-btn listings-btn-contact"
@@ -214,6 +211,15 @@ export default function ListingDetail() {
           property={property}
           onClose={() => setShowContactModal(false)}
           onSubmit={handleContactSubmit}
+        />
+      )}
+
+      {/* Property WhatsApp Modal: creates lead via POST /leads/whatsapp then opens WhatsApp */}
+      {showWhatsAppModal && property && (
+        <PropertyWhatsAppModal
+          property={property}
+          source="property_whatsapp_detail"
+          onClose={() => setShowWhatsAppModal(false)}
         />
       )}
     </div>

@@ -38,6 +38,7 @@ class ApiClient {
                             endpoint.includes('/auth/signup') ||
                             endpoint.includes('/auth/login') ||
                             endpoint.includes('/properties/public') ||
+                            endpoint.includes('/leads/whatsapp') ||
                             endpoint.includes('/whatsapp/webview-resolve');
 
     // Only add auth header if we have a token and it's not a public endpoint

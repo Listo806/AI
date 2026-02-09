@@ -383,6 +383,7 @@ export default function WhatsApp() {
               leadId={selectedLead?.id}
               leadPhone={selectedLead?.phone}
               leadName={selectedLead?.name}
+              conversationId={selectedConversation?.id}
               onSendSuccess={() => {
                 loadLeads();
                 loadConversations();

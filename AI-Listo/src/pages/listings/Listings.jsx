@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
 import ContactModal from '../../components/ContactModal';
+import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
 export default function Listings() {
@@ -35,8 +35,8 @@ export default function Listings() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
 
-  // WhatsApp phone number from env
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '+1234567890';
+  // Property WhatsApp Modal (POST /leads/whatsapp then open WhatsApp)
+  const [whatsappProperty, setWhatsappProperty] = useState(null);
 
   // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -422,14 +422,13 @@ export default function Listings() {
                   {/* Action Buttons */}
                   <div className="listings-card-actions">
                     <div className="listings-action-buttons">
-                      <a
-                        href={buildWhatsAppLink(whatsappPhone, property)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => setWhatsappProperty(property)}
                         className="listings-btn listings-btn-whatsapp"
                       >
                         💬 WhatsApp
-                      </a>
+                      </button>
                       <button
                         onClick={() => handleContactAgent(property)}
                         className="listings-btn listings-btn-contact"
@@ -465,6 +464,15 @@ export default function Listings() {
             setSelectedProperty(null);
           }}
           onSubmit={handleContactSubmit}
+        />
+      )}
+
+      {/* Property WhatsApp Modal: creates lead via POST /leads/whatsapp then opens WhatsApp */}
+      {whatsappProperty && (
+        <PropertyWhatsAppModal
+          property={whatsappProperty}
+          source="property_whatsapp_search"
+          onClose={() => setWhatsappProperty(null)}
         />
       )}
     </div>
