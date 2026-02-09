@@ -70,7 +70,7 @@ export class AiCenterController {
   @Post('appointment-setter/enable')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Enable AI Appointment Setter' })
+  @ApiOperation({ summary: 'Enable AI Setter' })
   @ApiResponse({ status: 200, description: 'Enabled' })
   @ApiResponse({ status: 403, description: 'Edit requires Admin or Owner' })
   async enableAppointmentSetter(@CurrentUser() user: any) {
@@ -80,7 +80,7 @@ export class AiCenterController {
   @Post('appointment-setter/disable')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER)
-  @ApiOperation({ summary: 'Disable AI Appointment Setter' })
+  @ApiOperation({ summary: 'Disable AI Setter' })
   @ApiResponse({ status: 200, description: 'Disabled' })
   @ApiResponse({ status: 403, description: 'Edit requires Admin or Owner' })
   async disableAppointmentSetter(@CurrentUser() user: any) {
@@ -88,7 +88,7 @@ export class AiCenterController {
   }
 
   @Get('appointment-setter/status')
-  @ApiOperation({ summary: 'AI Appointment Setter status and metrics' })
+  @ApiOperation({ summary: 'AI Setter status and metrics' })
   @ApiResponse({ status: 200, description: 'enabled, metrics, channels, calendars' })
   async getAppointmentSetterStatus(@CurrentUser() user: any) {
     return this.service.getAppointmentSetterStatus(user.teamId);

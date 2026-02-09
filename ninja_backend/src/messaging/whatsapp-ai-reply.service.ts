@@ -4,6 +4,11 @@ import { LeadMessagesService, LeadMessage } from './lead-messages.service';
 import { ConversationsService } from './conversations.service';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { IntentEventsService, IntentType } from './intent-events.service';
+import { EntityParsingService } from './entity-parsing.service';
+import { LeadStateService } from '../leads/services/lead-state.service';
+import { PropertyMatchingService } from '../properties/property-matching.service';
+import { AiPropertyVisibilityService } from './ai-property-visibility.service';
+import { DatabaseService } from '../database/database.service';
 
 const CONTEXT_MESSAGE_LIMIT = 30;
 const WHATSAPP_SYSTEM_PROMPT = `You are a helpful real estate assistant replying over WhatsApp. Be concise, friendly, and professional. Answer in the same language the lead uses when possible.`;
@@ -18,6 +23,11 @@ export class WhatsAppAiReplyService {
     private readonly conversations: ConversationsService,
     private readonly twilioWhatsApp: TwilioWhatsAppService,
     private readonly intents: IntentEventsService,
+    private readonly entityParsing: EntityParsingService,
+    private readonly leadState: LeadStateService,
+    private readonly propertyMatching: PropertyMatchingService,
+    private readonly aiPropertyVisibility: AiPropertyVisibilityService,
+    private readonly db: DatabaseService,
   ) {}
 
   private detectSpanish(text: string): boolean {
@@ -144,43 +154,119 @@ export class WhatsAppAiReplyService {
   }
 
   /**
-   * Reply with AI: load last N messages, call AiAssistantService.chat(), send via Twilio, persist.
-   * Caller must ensure routing already decided reply_ai and conversation ownership/ai_enabled/status allow AI.
+   * Reply with AI: strict decision ladder.
+   * 1) Check missing required info -> ask only missing
+   * 2) When sufficient -> qualify
+   * 3) Attempt booking if calendar exists
+   * 4) If no calendar -> booking_blocked
+   * 5) Escalate only if lead requests human or qualified+blocked
    */
-  async replyWithAi(conversationId: string, leadId: string, leadPhone: string, leadContext?: string): Promise<{ reply: string; messageId?: string }> {
+  async replyWithAi(
+    conversationId: string,
+    leadId: string,
+    leadPhone: string,
+    leadContext?: string,
+  ): Promise<{ reply: string; messageId?: string; logMetadata?: Record<string, unknown> }> {
     const conv = await this.conversations.findById(conversationId);
     if (!conv) {
       this.logger.warn(`replyWithAi: conversation ${conversationId} not found`);
       return { reply: '' };
     }
     if (conv.ownership !== 'ai' || !conv.ai_enabled || conv.status !== 'open') {
-      this.logger.warn(`replyWithAi: conversation ${conversationId} not eligible (ownership=${conv.ownership}, ai_enabled=${conv.ai_enabled}, status=${conv.status})`);
+      this.logger.warn(`replyWithAi: conversation ${conversationId} not eligible`);
       return { reply: '' };
     }
 
-    const history = await this.leadMessages.findByConversation(conversationId, CONTEXT_MESSAGE_LIMIT);
+    const { rows: leadRows } = await this.db.query(
+      `SELECT team_id as "teamId" FROM leads WHERE id = $1`,
+      [leadId],
+    );
+    const teamId = leadRows[0]?.teamId;
 
-    // Deterministic next-question control (no free-chat).
+    const leadStateBefore = await this.leadState.getState(leadId);
+    if (leadStateBefore === 'escalated_to_human') {
+      return { reply: '' };
+    }
+
+    const persisted = await this.entityParsing.getForLead(leadId);
+    const history = await this.leadMessages.findByConversation(conversationId, CONTEXT_MESSAGE_LIMIT);
+    const signals = this.extractSignals(history);
+    const merged = {
+      city: persisted.city || signals.city,
+      budget: persisted.budget_max != null ? String(persisted.budget_max) : signals.budget,
+      monthly_budget: signals.monthly_budget || (persisted.budget_max != null && persisted.intent === 'rent' ? String(persisted.budget_max) : undefined),
+      property_type: signals.property_type,
+      zone: signals.zone,
+      lastLeadText: signals.lastLeadText,
+    };
+
     const latestIntent = await this.intents.getLatestForConversation(conversationId);
     const raw = (latestIntent?.intent_type as IntentType) || 'general';
-    // Map funnel intents to legacy for determineNextQuestion
     const intent: IntentType =
       raw === 'buyer_search' ? 'buy' :
       raw === 'seller_listing' ? 'sell' :
       raw === 'agent_crm' || raw === 'general_support' ? 'general' :
       raw;
+
     if (intent === 'agent_request') {
-      // routing should have escalated already, but never reply here
-      return { reply: '' };
+      await this.leadState.transition(leadId, 'escalated_to_human', 'lead_requested');
+      const logMeta = { parsed_entities: persisted, decision: 'escalate', reason: 'lead_requested', lead_state_before: leadStateBefore, lead_state_after: 'escalated_to_human' };
+      if (teamId) await this.logAiActivity(teamId, leadId, 'escalated', 'whatsapp', 'lead_requested', logMeta);
+      return { reply: '', logMetadata: logMeta };
     }
-    const signals = this.extractSignals(history);
-    const nextq = this.determineNextQuestion(intent, signals);
-    if (nextq.qualified) {
-      await this.conversations.advanceStage(conversationId, 'qualified');
-    }
+
+    const nextq = this.determineNextQuestion(intent, merged);
+
     if (nextq.block_ai && nextq.question) {
+      await this.leadState.transition(leadId, 'collecting_info', 'ask_missing');
       const sent = await this.twilioWhatsApp.sendAiReply(leadId, conversationId, nextq.question);
-      return { reply: nextq.question, messageId: sent.messageId };
+      const logMeta = {
+        parsed_entities: persisted,
+        decision: 'ask',
+        lead_state_before: leadStateBefore,
+        lead_state_after: 'collecting_info',
+        question_asked: 'missing_info',
+      };
+      if (teamId) await this.logAiActivity(teamId, leadId, 'auto_reply', 'whatsapp', 'ask_missing', logMeta);
+      return { reply: nextq.question, messageId: sent.messageId, logMetadata: logMeta };
+    }
+
+    if (nextq.qualified) {
+      await this.leadState.transition(leadId, 'qualified', 'info_complete');
+      await this.conversations.advanceStage(conversationId, 'qualified');
+
+      const { properties, matchCount } = await this.propertyMatching.findEligibleForLead(leadId, teamId ?? null);
+      const hasCalendar = false; // TODO: check team integrations for connected calendar
+
+      if (!hasCalendar) {
+        await this.leadState.transition(leadId, 'booking_blocked', 'no_calendar');
+        await this.leadState.transition(leadId, 'escalated_to_human', 'qualified_but_blocked');
+        const logMeta = {
+          parsed_entities: persisted,
+          decision: 'escalate',
+          reason: 'qualified_but_blocked',
+          lead_state_before: leadStateBefore,
+          lead_state_after: 'escalated_to_human',
+          booking_eligibility: 'blocked',
+          match_count: matchCount,
+        };
+        if (teamId) await this.logAiActivity(teamId, leadId, 'escalated', 'whatsapp', 'qualified_but_blocked', logMeta);
+        return { reply: '', logMetadata: logMeta };
+      }
+
+      // Record matched properties for visibility tracking
+      for (const p of properties.slice(0, 10)) {
+        await this.aiPropertyVisibility.recordMatched(leadId, p.id);
+      }
+      const logMeta = {
+        parsed_entities: persisted,
+        decision: 'qualify',
+        lead_state_before: leadStateBefore,
+        lead_state_after: 'qualified',
+        booking_eligibility: 'allowed',
+        match_count: matchCount,
+      };
+      if (teamId) await this.logAiActivity(teamId, leadId, 'auto_reply', 'whatsapp', 'qualified', logMeta);
     }
 
     const chatMessages = this.messagesToChatPayload(history, leadContext);
@@ -195,18 +281,43 @@ export class WhatsAppAiReplyService {
       reply = (result.message || '').trim();
     } catch (err: any) {
       this.logger.error(`replyWithAi: AI chat failed: ${err?.message}`);
-      reply = ''; // Do not send on AI failure; agent can pick up
-      return { reply };
+      return { reply: '' };
     }
 
     if (!reply) return { reply: '' };
 
     try {
       const sent = await this.twilioWhatsApp.sendAiReply(leadId, conversationId, reply);
-      return { reply, messageId: sent.messageId };
+      const logMeta = {
+        parsed_entities: persisted,
+        decision: 'chat',
+        lead_state_before: leadStateBefore,
+        lead_state_after: await this.leadState.getState(leadId),
+      };
+      if (teamId) await this.logAiActivity(teamId, leadId, 'auto_reply', 'whatsapp', 'sent', logMeta);
+      return { reply, messageId: sent.messageId, logMetadata: logMeta };
     } catch (err: any) {
       this.logger.error(`replyWithAi: Twilio send failed: ${err?.message}`);
-      return { reply }; // Reply was generated but not sent
+      return { reply };
+    }
+  }
+
+  private async logAiActivity(
+    teamId: string,
+    leadId: string,
+    action: string,
+    channel: string,
+    outcome: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      await this.db.query(
+        `INSERT INTO ai_activity (team_id, action, lead_id, channel, outcome, metadata, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+        [teamId, action, leadId, channel, outcome, metadata ? JSON.stringify(metadata) : null],
+      );
+    } catch (err: any) {
+      this.logger.warn(`logAiActivity failed: ${err?.message}`);
     }
   }
 }

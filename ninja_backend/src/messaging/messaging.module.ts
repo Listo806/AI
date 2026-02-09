@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '../config/config.module';
 import { DatabaseModule } from '../database/database.module';
+import { LeadsModule } from '../leads/leads.module';
+import { PropertiesModule } from '../properties/properties.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { LeadMessagesService } from './lead-messages.service';
@@ -25,9 +27,18 @@ import { WhatsAppActionsService } from './whatsapp-actions.service';
 import { IntentEventsService } from './intent-events.service';
 import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
 import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
+import { EntityParsingService } from './entity-parsing.service';
+import { AiPropertyVisibilityService } from './ai-property-visibility.service';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, IntegrationsModule],
+  imports: [
+    ConfigModule,
+    DatabaseModule,
+    SubscriptionsModule,
+    IntegrationsModule,
+    forwardRef(() => LeadsModule),
+    forwardRef(() => PropertiesModule),
+  ],
   controllers: [
     WhatsAppController,
     EmailController,
@@ -53,7 +64,9 @@ import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.se
     IntentEventsService,
     WhatsAppBroadcastService,
     WhatsAppFlowOrchestratorService,
+    EntityParsingService,
+    AiPropertyVisibilityService,
   ],
-  exports: [LeadMessagesService, ConversationsService],
+  exports: [LeadMessagesService, ConversationsService, EntityParsingService],
 })
 export class MessagingModule {}

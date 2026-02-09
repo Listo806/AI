@@ -125,7 +125,7 @@ async function bootstrap() {
     .addTag('agent-whatsapp', 'Agent-owned WhatsApp connect/disconnect')
     .addTag('instagram', 'Instagram DM send, OAuth callback, webhook')
     .addTag('agent-instagram', 'Agent Instagram connect, disconnect, status')
-    .addTag('ai-center', 'AI Center overview, auto-reply, appointment setter, activity')
+    .addTag('ai-center', 'AI Center overview, auto-reply, AI Setter, activity')
     .addTag('platform', 'Platform marketplace listings (Agent/Owner submit)')
     .addTag('va', 'VA uploader listings')
     .addTag('admin', 'Admin listings and user management')

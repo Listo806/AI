@@ -19,6 +19,7 @@ export interface RecentAiAction {
   lead_id: string | null;
   channel: string | null;
   outcome: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AutoReplyResponse {
@@ -134,7 +135,16 @@ export class AiCenterService {
     return this.getRecentAiActions(teamId, limit);
   }
 
-  async getQualificationRules(teamId: string): Promise<{ name: string; updated_at: string | null }> {
+  async getQualificationRules(teamId: string): Promise<{
+    name: string;
+    updated_at: string | null;
+    rule_summary: {
+      budget_constraint: string;
+      location_constraint: string;
+      booking_enabled: boolean;
+      escalation_thresholds: string[];
+    };
+  }> {
     await this.db.query(
       `INSERT INTO team_ai_config (team_id, name, updated_at)
        VALUES ($1, 'Default', NOW())
@@ -146,9 +156,19 @@ export class AiCenterService {
       [teamId],
     );
     const r = rows[0];
+    const connectedCalendars: string[] = [];
     return {
       name: r?.name ?? 'Default',
       updated_at: r?.updated_at ?? null,
+      rule_summary: {
+        budget_constraint: 'Property price <= lead parsed_budget_max',
+        location_constraint: 'Property city must match lead parsed_city (case-insensitive)',
+        booking_enabled: connectedCalendars.length > 0,
+        escalation_thresholds: [
+          'Lead requests human (agent_request intent)',
+          'Qualification complete but booking blocked (no calendar)',
+        ],
+      },
     };
   }
 
@@ -195,7 +215,7 @@ export class AiCenterService {
 
   private async getRecentAiActions(teamId: string, limit: number): Promise<RecentAiAction[]> {
     const { rows } = await this.db.query(
-      `SELECT id, action, lead_id, channel, outcome, created_at
+      `SELECT id, action, lead_id, channel, outcome, metadata, created_at
        FROM ai_activity
        WHERE team_id = $1
        ORDER BY created_at DESC
@@ -209,6 +229,7 @@ export class AiCenterService {
       lead_id: r.lead_id ?? null,
       channel: r.channel ?? null,
       outcome: r.outcome ?? null,
+      metadata: r.metadata ?? undefined,
     }));
   }
 }

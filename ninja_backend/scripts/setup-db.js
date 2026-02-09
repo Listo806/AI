@@ -366,7 +366,14 @@ async function setupDatabase() {
       await pool.query(migration33SQL);
       console.log('✓ Platform Auth and Admin migration completed');
     }
-    
+
+    // AI Setter - Lead state, parsed entities, property visibility
+    const migration34Path = path.join(__dirname, '../src/database/migrations/034_ai_setter_lead_state.sql');
+    if (fs.existsSync(migration34Path)) {
+      const migration34SQL = fs.readFileSync(migration34Path, 'utf8');
+      await pool.query(migration34SQL);
+      console.log('✓ AI Setter lead state migration completed');
+    }
     
     console.log('Database schema created successfully!');
 

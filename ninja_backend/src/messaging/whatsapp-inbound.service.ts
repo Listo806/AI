@@ -10,6 +10,7 @@ import { WhatsAppAiReplyService } from './whatsapp-ai-reply.service';
 import { TwilioMediaService } from './twilio-media.service';
 import { IntentEventsService } from './intent-events.service';
 import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
+import { EntityParsingService } from './entity-parsing.service';
 
 @Injectable()
 export class WhatsAppInboundService {
@@ -27,6 +28,7 @@ export class WhatsAppInboundService {
     private readonly twilioMedia: TwilioMediaService,
     private readonly intents: IntentEventsService,
     private readonly flowOrchestrator: WhatsAppFlowOrchestratorService,
+    private readonly entityParsing: EntityParsingService,
   ) {}
 
   /**
@@ -124,6 +126,16 @@ export class WhatsAppInboundService {
       meta: metaVoice,
     });
 
+    // Entity persistence BEFORE AI response: parse and persist to lead first
+    try {
+      const parsed = this.entityParsing.parseFromText(bodyForStorage);
+      if (Object.keys(parsed).length > 0) {
+        await this.entityParsing.persistToLead(lead.id, parsed);
+      }
+    } catch (err: any) {
+      this.logger.warn(`Entity parse/persist failed: ${err?.message}`);
+    }
+
     // Intent detection (supports 1-4 mapping and funnel intents)
     await this.intents.createIfAllowed({
       conversationId: conversation.id,
@@ -170,9 +182,7 @@ export class WhatsAppInboundService {
 
     if (action === 'reply_ai') {
       await this.aiReply.replyWithAi(conversation.id, lead.id, from);
-      if (lead.team_id) {
-        await this.logAiActivity(lead.team_id, 'auto_reply', lead.id, 'whatsapp', 'sent');
-      }
+      // AI reply service logs enriched ai_activity internally; no duplicate log here
     } else if (lead.team_id) {
       await this.logAiActivity(lead.team_id, 'escalated', lead.id, 'whatsapp', reason || 'notify_agent');
     }
