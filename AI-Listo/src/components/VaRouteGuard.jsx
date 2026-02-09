@@ -2,29 +2,38 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
- * Route guard that blocks VA users from accessing non-properties routes
- * VA users can ONLY access:
- * - /dashboard/properties (and all sub-routes)
- * 
- * All other routes are blocked and redirected to /dashboard/properties
+ * Route guard for restricted roles:
+ * - VA: can only access /dashboard/properties
+ * - VA_UPLOADER: can only access /dashboard/va-upload
+ * - SUPER_ADMIN / ADMIN: can only access /dashboard/admin/* and /account/*
+ * All other roles: full access.
  */
 export default function VaRouteGuard({ children }) {
   const { user } = useAuth();
   const location = useLocation();
 
-  // If user is not VA, allow access
-  if (!user || user.role !== 'va') {
-    return children;
+  if (!user) return children;
+
+  const role = user.role?.toLowerCase?.() || user.role;
+  const path = location.pathname;
+
+  // VA users: only properties
+  if (role === 'va') {
+    if (path.startsWith('/dashboard/properties')) return children;
+    return <Navigate to="/dashboard/properties" replace />;
   }
 
-  // VA users can only access properties routes
-  // Check if current path is a properties route (including /new, /:id, /:id/edit)
-  const isPropertiesRoute = location.pathname.startsWith('/dashboard/properties');
-
-  if (isPropertiesRoute) {
-    return children;
+  // VA_UPLOADER: only va-upload
+  if (role === 'va_uploader') {
+    if (path.startsWith('/dashboard/va-upload')) return children;
+    return <Navigate to="/dashboard/va-upload" replace />;
   }
 
-  // Block access - redirect to properties
-  return <Navigate to="/dashboard/properties" replace />;
+  // Super Admin / Admin: only admin and account routes
+  if (role === 'super_admin' || role === 'admin') {
+    if (path.startsWith('/dashboard/admin') || path.startsWith('/account')) return children;
+    return <Navigate to="/dashboard/admin/listings" replace />;
+  }
+
+  return children;
 }

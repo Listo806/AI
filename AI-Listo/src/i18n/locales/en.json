@@ -45,12 +45,16 @@
     "instagram": "Instagram",
     "pipeline": "Pipeline",
     "properties": "Properties",
+    "marketplace": "Marketplace",
+    "vaUpload": "VA Upload",
+    "adminListings": "Admin Listings",
+    "adminUsers": "Admin Users",
     "contacts": "Contacts",
     "aiCenter": {
       "label": "AI Center",
       "overview": "Overview",
       "autoReply": "AI Auto-Reply",
-      "appointmentSetter": "AI Appointment Setter",
+      "appointmentSetter": "AI Setter",
       "qualificationRules": "AI Qualification Rules",
       "messaging": "AI Messaging & Follow-Ups",
       "activityLogs": "AI Activity & Logs"

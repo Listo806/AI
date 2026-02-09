@@ -9,6 +9,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import "./i18n/config";
 import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
 import SignIn from "./pages/auth/SignIn";
+import SignUp from "./pages/auth/SignUp";
 import Dashboard from "./pages/dashboard/Dashboard";
 import PropertiesList from "./pages/properties/PropertiesList";
 import PropertyForm from "./pages/properties/PropertyForm";
@@ -36,6 +37,11 @@ import AccountSettings from "./pages/account/Settings";
 import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
 import View from "./pages/view/View";
+import PlatformListings from "./pages/platform/PlatformListings";
+import VaUpload from "./pages/va/VaUpload";
+import AdminListings from "./pages/admin/AdminListings";
+import AdminUsers from "./pages/admin/AdminUsers";
+import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
@@ -50,10 +56,11 @@ function RootRoute() {
   }
 
   if (isAuthenticated()) {
-    // VA users go directly to properties, others go to WhatsApp (default route)
-    if (user?.role === 'va') {
-      return <Navigate to="/dashboard/properties" replace />;
-    }
+    const role = user?.role?.toLowerCase?.() || user?.role;
+    if (role === 'va') return <Navigate to="/dashboard/properties" replace />;
+    if (role === 'va_uploader') return <Navigate to="/dashboard/va-upload" replace />;
+    if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/admin/listings" replace />;
+    if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
     return <Navigate to="/dashboard/whatsapp" replace />;
   }
 
@@ -67,6 +74,7 @@ function AppRoutes() {
       {/* Public Routes */}
       <Route path="/" element={<RootRoute />} />
       <Route path="/sign-in" element={<SignIn variant="crm" />} />
+      <Route path="/sign-up" element={<SignUp />} />
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />
       
@@ -87,8 +95,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* Dashboard Index - Redirect to WhatsApp (default route) */}
-        <Route index element={<Navigate to="/dashboard/whatsapp" replace />} />
+        {/* Dashboard Index - Redirect based on role */}
+        <Route index element={<DashboardIndexRedirect />} />
         
         {/* Dashboard Home Route - Actual dashboard page */}
         <Route path="home" element={<Dashboard />} />
@@ -105,6 +113,16 @@ function AppRoutes() {
         <Route path="properties/new" element={<PropertyForm />} />
         <Route path="properties/:id/edit" element={<PropertyForm />} />
         <Route path="properties/:id" element={<PropertyDetail />} />
+        
+        {/* Platform Marketplace (Agent/Owner/User) */}
+        <Route path="platform-listings" element={<PlatformListings />} />
+        
+        {/* VA Upload */}
+        <Route path="va-upload" element={<VaUpload />} />
+        
+        {/* Admin */}
+        <Route path="admin/listings" element={<AdminListings />} />
+        <Route path="admin/users" element={<AdminUsers />} />
         
         {/* Contacts Route */}
         <Route path="contacts" element={<Contacts />} />

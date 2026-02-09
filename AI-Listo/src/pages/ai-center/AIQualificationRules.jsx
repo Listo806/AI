@@ -63,7 +63,7 @@ export default function AIQualificationRules() {
           Last updated: {data?.updated_at ? new Date(data.updated_at).toLocaleString() : "—"}
         </p>
         <p style={{ marginTop: "8px", fontSize: "13px", color: "var(--text-muted)" }}>
-          Used by AI Appointment Setter and qualification modules. Full rule editor coming in Phase 2.
+          Used by AI Setter and qualification modules. Full rule editor coming in Phase 2.
         </p>
       </section>
     </div>

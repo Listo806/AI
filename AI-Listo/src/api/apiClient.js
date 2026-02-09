@@ -36,6 +36,7 @@ class ApiClient {
     const isPublicEndpoint = endpoint.includes('/public') || 
                             endpoint.includes('/auth/signin') || 
                             endpoint.includes('/auth/signup') ||
+                            endpoint.includes('/auth/login') ||
                             endpoint.includes('/properties/public') ||
                             endpoint.includes('/whatsapp/webview-resolve');
 

@@ -29,7 +29,7 @@ export default function AIAppointmentSetter() {
   }, [status]);
 
   const enable = async () => {
-    if (!window.confirm("Enable AI Appointment Setter? Billing may apply.")) return;
+    if (!window.confirm("Enable AI Setter? Billing may apply.")) return;
     setActionLoading(true);
     try {
       await apiClient.request("/ai-center/appointment-setter/enable", { method: "POST" });
@@ -79,7 +79,7 @@ export default function AIAppointmentSetter() {
     <div className="ai-center-page">
       <h1 className="ai-center-page-title">
         <i data-lucide="calendar-check" />
-        AI Appointment Setter
+        AI Setter
       </h1>
       <p className="ai-center-page-subtitle">
         AI can qualify leads and book appointments across connected channels. Enable to activate.
@@ -100,7 +100,7 @@ export default function AIAppointmentSetter() {
               onClick={enable}
               disabled={actionLoading}
             >
-              Enable AI Appointment Setter
+              Enable AI Setter
             </button>
           </div>
         </section>
@@ -186,7 +186,7 @@ export default function AIAppointmentSetter() {
               onClick={disable}
               disabled={actionLoading}
             >
-              Disable AI Appointment Setter
+              Disable AI Setter
             </button>
           </section>
         </>

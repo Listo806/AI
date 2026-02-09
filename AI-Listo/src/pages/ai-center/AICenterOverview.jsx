@@ -67,7 +67,7 @@ export default function AICenterOverview() {
           </div>
           <div className="ai-center-stat-card">
             <div className="stat-value">{data?.ai_appointment_setter?.enabled ? "ON" : "OFF"}</div>
-            <div className="stat-label">AI Appointment Setter</div>
+            <div className="stat-label">AI Setter</div>
           </div>
           <div className="ai-center-stat-card">
             <div className="stat-value">{data?.active_channels?.length ?? 0}</div>

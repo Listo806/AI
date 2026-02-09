@@ -71,10 +71,32 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
 
-  const canSeeAiCenter = user?.role && ["admin", "owner", "agent"].includes(user.role.toLowerCase());
-  const navItems = user?.role === "va"
-    ? topNavItems.filter((item) => item.path === "/dashboard/properties")
-    : [...topNavItems];
+  const role = user?.role?.toLowerCase?.() || user?.role;
+  const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
+  const canSeeAdmin = role === "super_admin" || role === "admin";
+  const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
+
+  let navItems = topNavItems;
+  if (role === "va") {
+    navItems = topNavItems.filter((item) => item.path === "/dashboard/properties");
+  } else if (role === "va_uploader") {
+    navItems = [{ path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" }];
+  } else if (canSeeAdmin) {
+    navItems = [
+      { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
+      { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
+    ];
+  } else {
+    if (canSeePlatformListings) {
+      navItems = [
+        ...topNavItems.slice(0, 6),
+        { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
+        ...topNavItems.slice(6),
+      ];
+    }
+  }
+
+  const showAiCenterAndBottom = canSeeAiCenter && !canSeeAdmin;
 
   return (
     <>
@@ -140,7 +162,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             </NavLink>
           ))}
 
-          {canSeeAiCenter && (
+          {showAiCenterAndBottom && (
             <div className="crm-nav-group" style={{ marginTop: "4px" }}>
               {isCollapsed ? (
                 <NavLink
@@ -200,7 +222,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             </div>
           )}
 
-          {canSeeAiCenter &&
+          {showAiCenterAndBottom &&
             bottomNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}

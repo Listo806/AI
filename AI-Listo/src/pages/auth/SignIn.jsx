@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
@@ -83,6 +84,9 @@ export default function SignIn({ variant = 'crm' }) {
           </button>
         </form>
 
+        <p className="auth-footer" style={{ marginTop: '20px' }}>
+          New user? <Link to="/sign-up">Sign Up</Link>
+        </p>
       </div>
     </div>
   );

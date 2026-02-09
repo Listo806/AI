@@ -1,0 +1,81 @@
+/**
+ * Platform API - Marketplace, VA, and Admin endpoints
+ * Used for platform authentication and admin controls (separate from CRM).
+ */
+import apiClient from './apiClient';
+
+// ============================================================================
+// PLATFORM LISTINGS (Agent/Owner/User - submit without CRM)
+// ============================================================================
+
+export async function getMyPlatformListings() {
+  const res = await apiClient.request('/platform/listings');
+  return Array.isArray(res?.data) ? res.data : res?.data || [];
+}
+
+export async function createPlatformListing(data) {
+  const res = await apiClient.request('/platform/listings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res?.data || res;
+}
+
+// ============================================================================
+// VA LISTINGS (VA_UPLOADER/VA - always PENDING_REVIEW)
+// ============================================================================
+
+export async function createVaListing(data) {
+  const res = await apiClient.request('/va/listings', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res?.data || res;
+}
+
+// ============================================================================
+// ADMIN LISTINGS (Super Admin / Admin)
+// ============================================================================
+
+export async function getAdminListings(filters = {}) {
+  const params = new URLSearchParams();
+  if (filters.status) params.append('status', filters.status);
+  if (filters.origin) params.append('origin', filters.origin);
+  if (filters.createdBy) params.append('createdBy', filters.createdBy);
+  const qs = params.toString();
+  const res = await apiClient.request(`/admin/listings${qs ? '?' + qs : ''}`);
+  return Array.isArray(res?.data) ? res.data : res?.data || [];
+}
+
+export async function getAdminListingById(id) {
+  const res = await apiClient.request(`/admin/listings/${id}`);
+  return res?.data || res;
+}
+
+export async function updateAdminListingStatus(id, status, rejectionReason = null) {
+  const body = { status };
+  if (rejectionReason != null) body.rejectionReason = rejectionReason;
+  const res = await apiClient.request(`/admin/listings/${id}/status`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+  return res?.data || res;
+}
+
+// ============================================================================
+// ADMIN USERS (Super Admin / Admin)
+// ============================================================================
+
+export async function getAdminUsers(role = null) {
+  const qs = role ? `?role=${encodeURIComponent(role)}` : '';
+  const res = await apiClient.request(`/admin/users${qs}`);
+  return Array.isArray(res?.data) ? res.data : res?.data || [];
+}
+
+export async function updateAdminUserRole(id, role) {
+  const res = await apiClient.request(`/admin/users/${id}/role`, {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
+  });
+  return res?.data || res;
+}

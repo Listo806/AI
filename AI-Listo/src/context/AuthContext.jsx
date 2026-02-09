@@ -46,13 +46,16 @@ export function AuthProvider({ children }) {
 
   const getDashboardPath = (role) => {
     const paths = {
-      owner: '/dashboard/owners',
-      agent: '/dashboard/agent',
-      developer: '/dashboard/developer',
-      admin: '/dashboard/admin',
+      owner: '/dashboard/whatsapp',
+      agent: '/dashboard/whatsapp',
+      developer: '/dashboard/whatsapp',
+      admin: '/dashboard/admin/listings',
+      super_admin: '/dashboard/admin/listings',
       wholesaler: '/dashboard/wholesalers',
       investor: '/dashboard/investors',
-      va: '/dashboard/properties', // VA users go directly to properties
+      va: '/dashboard/properties',
+      va_uploader: '/dashboard/va-upload',
+      user: '/dashboard/platform-listings',
     };
     return paths[role] || '/dashboard';
   };
@@ -70,9 +73,15 @@ export function AuthProvider({ children }) {
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
         
         // Redirect based on user role
-        // VA users go directly to properties page
-        if (response.user?.role === 'va') {
+        const role = response.user?.role;
+        if (role === 'va') {
           navigate('/dashboard/properties');
+        } else if (role === 'va_uploader') {
+          navigate('/dashboard/va-upload');
+        } else if (role === 'super_admin' || role === 'admin') {
+          navigate('/dashboard/admin/listings');
+        } else if (role === 'user') {
+          navigate('/dashboard/platform-listings');
         } else {
           navigate('/dashboard');
         }
