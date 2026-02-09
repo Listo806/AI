@@ -78,11 +78,11 @@ export class AdminListingsService {
 
     const { rows } = await this.db.query(
       `UPDATE properties SET
-        status = $1,
+        status = $1::varchar,
         reviewed_by = $2,
         reviewed_at = $3,
-        rejection_reason = $4,
-        published_at = CASE WHEN $1 = 'published' THEN COALESCE(published_at, NOW()) ELSE published_at END,
+        rejection_reason = $4::text,
+        published_at = CASE WHEN $1::varchar = 'published' THEN COALESCE(published_at, NOW()) ELSE published_at END,
         updated_at = NOW()
        WHERE id = $5
        RETURNING id, title, status, origin, reviewed_by as "reviewedBy", reviewed_at as "reviewedAt", rejection_reason as "rejectionReason", published_at as "publishedAt"`,
