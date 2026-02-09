@@ -18,6 +18,9 @@ import { ListingsModule } from './listings/listings.module';
 import { ZapierModule } from './zapier/zapier.module';
 import { MessagingModule } from './messaging/messaging.module';
 import { AiCenterModule } from './ai-center/ai-center.module';
+import { PlatformModule } from './platform/platform.module';
+import { VaModule } from './va/va.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { AiCenterModule } from './ai-center/ai-center.module';
     ZapierModule,
     MessagingModule,
     AiCenterModule,
+    PlatformModule,
+    VaModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })

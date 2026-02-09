@@ -5,11 +5,20 @@ export enum PropertyType {
 
 export enum PropertyStatus {
   DRAFT = 'draft',
+  PENDING_REVIEW = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
   PUBLISHED = 'published',
   RESERVED = 'reserved',
   SOLD = 'sold',
   RENTED = 'rented',
   ARCHIVED = 'archived',
+}
+
+export enum PropertyOrigin {
+  PLATFORM = 'platform',
+  VA = 'va',
+  CRM = 'crm',
 }
 
 export interface Property {
@@ -23,6 +32,7 @@ export interface Property {
   price: number | null;
   type: PropertyType;
   status: PropertyStatus;
+  origin: PropertyOrigin | null;
   bedrooms: number | null;
   bathrooms: number | null;
   squareFeet: number | null;
@@ -34,6 +44,9 @@ export interface Property {
   zoneId: string | null;
   latitude: number | null;
   longitude: number | null;
+  reviewedBy: string | null;
+  reviewedAt: Date | null;
+  rejectionReason: string | null;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;

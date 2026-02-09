@@ -29,9 +29,12 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
-    // Validate role
+    // Validate role (super_admin can only be created via env bootstrap)
     if (!Object.values(UserRole).includes(role as UserRole)) {
       throw new UnauthorizedException('Invalid role');
+    }
+    if (role === UserRole.SUPER_ADMIN) {
+      throw new UnauthorizedException('Super Admin cannot be created via signup');
     }
 
     // Hash password

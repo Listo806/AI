@@ -126,6 +126,9 @@ async function bootstrap() {
     .addTag('instagram', 'Instagram DM send, OAuth callback, webhook')
     .addTag('agent-instagram', 'Agent Instagram connect, disconnect, status')
     .addTag('ai-center', 'AI Center overview, auto-reply, appointment setter, activity')
+    .addTag('platform', 'Platform marketplace listings (Agent/Owner submit)')
+    .addTag('va', 'VA uploader listings')
+    .addTag('admin', 'Admin listings and user management')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

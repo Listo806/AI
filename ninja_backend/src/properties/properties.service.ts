@@ -233,9 +233,11 @@ export class PropertiesService {
   async findById(id: string): Promise<Property | null> {
     const { rows } = await this.db.query(
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+              COALESCE(origin, 'platform') as origin,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
               latitude, longitude,
+              reviewed_by as "reviewedBy", reviewed_at as "reviewedAt", rejection_reason as "rejectionReason",
               created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties WHERE id = $1`,
       [id],

@@ -358,6 +358,14 @@ async function setupDatabase() {
       await pool.query(migration32SQL);
       console.log('✓ Leads metadata migration completed');
     }
+
+    // Platform Auth and Admin (roles, property status, origin)
+    const migration33Path = path.join(__dirname, '../src/database/migrations/033_platform_auth_admin.sql');
+    if (fs.existsSync(migration33Path)) {
+      const migration33SQL = fs.readFileSync(migration33Path, 'utf8');
+      await pool.query(migration33SQL);
+      console.log('✓ Platform Auth and Admin migration completed');
+    }
     
     
     console.log('Database schema created successfully!');
