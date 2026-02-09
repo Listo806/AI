@@ -11,10 +11,19 @@ ALTER TABLE properties
   ADD COLUMN IF NOT EXISTS reserved_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ;
 
--- 2) Add status 'reserved' to properties
+-- 2) Add status 'reserved' (and future values) so re-running migrations never narrows the constraint
+-- Include pending_review/approved/rejected (033) to avoid violation when DB was previously migrated
+-- Fix invalid/NULL status before adding constraint
+UPDATE properties SET status = 'draft' WHERE status IS NULL OR status NOT IN (
+  'draft', 'pending_review', 'approved', 'rejected',
+  'published', 'sold', 'rented', 'archived', 'reserved'
+);
 ALTER TABLE properties DROP CONSTRAINT IF EXISTS properties_status_check;
 ALTER TABLE properties ADD CONSTRAINT properties_status_check
-  CHECK (status IN ('draft', 'published', 'sold', 'rented', 'archived', 'reserved'));
+  CHECK (status IN (
+    'draft', 'pending_review', 'approved', 'rejected',
+    'published', 'sold', 'rented', 'archived', 'reserved'
+  ));
 
 -- 3) Index for CRM filtering by project
 CREATE INDEX IF NOT EXISTS idx_properties_project_id ON properties(project_id)
