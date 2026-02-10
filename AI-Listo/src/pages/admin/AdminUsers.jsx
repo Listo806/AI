@@ -312,6 +312,7 @@ export default function AdminUsers() {
   const [showCreate, setShowCreate] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
+  const [reactivating, setReactivating] = useState(null);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -359,6 +360,19 @@ export default function AdminUsers() {
     showSuccess('User deactivated');
     loadUsers();
     setDeleteUser(null);
+  };
+
+  const handleReactivate = async (u) => {
+    setReactivating(u.id);
+    try {
+      await updateAdminUser(u.id, { isActive: true });
+      showSuccess('User reactivated');
+      loadUsers();
+    } catch (err) {
+      showError(err.message || 'Failed to reactivate');
+    } finally {
+      setReactivating(null);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -473,16 +487,29 @@ export default function AdminUsers() {
                       >
                         Edit
                       </button>
-                      <button
-                        type="button"
-                        className="crm-btn admin-action-btn"
-                        style={{ background: u.isActive ? '#dc2626' : '#16a34a', color: '#fff' }}
-                        onClick={() => handleDeleteClick(u)}
-                        disabled={isSelf(u)}
-                        title={isSelf(u) ? 'You cannot deactivate yourself' : (u.isActive ? 'Deactivate' : 'User already inactive')}
-                      >
-                        {u.isActive ? 'Deactivate' : 'Inactive'}
-                      </button>
+                      {u.isActive ? (
+                        <button
+                          type="button"
+                          className="crm-btn admin-action-btn"
+                          style={{ background: '#dc2626', color: '#fff' }}
+                          onClick={() => handleDeleteClick(u)}
+                          disabled={isSelf(u)}
+                          title={isSelf(u) ? 'You cannot deactivate yourself' : 'Deactivate'}
+                        >
+                          Deactivate
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="crm-btn admin-action-btn"
+                          style={{ background: '#16a34a', color: '#fff' }}
+                          onClick={() => handleReactivate(u)}
+                          disabled={reactivating === u.id}
+                          title="Reactivate user"
+                        >
+                          {reactivating === u.id ? '…' : 'Reactivate'}
+                        </button>
+                      )}
                     </div>
                     {updating === u.id && <span className="admin-table-muted" style={{ marginLeft: '8px', fontSize: '12px' }}>Updating...</span>}
                   </td>
