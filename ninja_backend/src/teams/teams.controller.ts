@@ -41,12 +41,39 @@ export class TeamsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get team by ID' })
+  @ApiOperation({ summary: 'Get team by ID (owner or member only)' })
   @ApiParam({ name: 'id', description: 'Team ID' })
   @ApiResponse({ status: 200, description: 'Team retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Not your team' })
   @ApiResponse({ status: 404, description: 'Team not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.teamsService.ensureCanAccessTeam(id, user.id);
     return this.teamsService.findById(id);
+  }
+
+  @Get(':id/members')
+  @ApiOperation({ summary: 'List team members (team members only)' })
+  @ApiParam({ name: 'id', description: 'Team ID' })
+  @ApiResponse({ status: 200, description: 'Members list' })
+  @ApiResponse({ status: 403, description: 'Not a team member' })
+  async getMembers(@Param('id') id: string, @CurrentUser() user: any) {
+    const members = await this.teamsService.getMembers(id, user.id);
+    return { data: members };
+  }
+
+  @Post(':id/members/invite')
+  @ApiOperation({ summary: 'Invite member by email (owner only)' })
+  @ApiParam({ name: 'id', description: 'Team ID' })
+  @ApiBody({ schema: { type: 'object', required: ['email'], properties: { email: { type: 'string' } } } })
+  @ApiResponse({ status: 200, description: 'Member added' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async inviteByEmail(
+    @Param('id') teamId: string,
+    @Body() body: { email: string },
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.addMemberByEmail(teamId, body.email?.trim?.() || '', user.id);
+    return { message: 'Member added successfully' };
   }
 
   @Put(':id')
@@ -64,10 +91,12 @@ export class TeamsController {
   }
 
   @Get(':id/seats')
-  @ApiOperation({ summary: 'Get team seat information' })
+  @ApiOperation({ summary: 'Get team seat information (owner or member only)' })
   @ApiParam({ name: 'id', description: 'Team ID' })
   @ApiResponse({ status: 200, description: 'Seat information retrieved successfully' })
-  async getSeatInfo(@Param('id') id: string) {
+  @ApiResponse({ status: 403, description: 'Not your team' })
+  async getSeatInfo(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.teamsService.ensureCanAccessTeam(id, user.id);
     const [seatCount, availableSeats] = await Promise.all([
       this.teamsService.getSeatCount(id),
       this.teamsService.getAvailableSeats(id),
@@ -77,6 +106,16 @@ export class TeamsController {
       used: seatCount,
       available: availableSeats,
     };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete team (owner only, own teams only)' })
+  @ApiParam({ name: 'id', description: 'Team ID' })
+  @ApiResponse({ status: 200, description: 'Team deleted' })
+  @ApiResponse({ status: 403, description: 'Not your team' })
+  @ApiResponse({ status: 404, description: 'Team not found' })
+  async remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.teamsService.remove(id, user.id);
   }
 
   @Post(':id/members/:userId')
