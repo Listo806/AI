@@ -24,11 +24,8 @@ export class TeamsService {
 
     const team = rows[0];
 
-    // Only set owner's team_id if they are not in any team yet (owner can have multiple teams)
-    const owner = await this.usersService.findById(ownerId);
-    if (owner && !owner.teamId) {
-      await this.usersService.update(ownerId, { teamId: team.id } as any);
-    }
+    // Set creating owner as a member of the new team (owner is always in the team they create)
+    await this.usersService.update(ownerId, { teamId: team.id } as any);
 
     return team;
   }
