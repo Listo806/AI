@@ -63,7 +63,7 @@ export async function updateAdminListingStatus(id, status, rejectionReason = nul
 }
 
 // ============================================================================
-// ADMIN USERS (Super Admin / Admin)
+// ADMIN USERS (Super Admin / Admin) - Full CRUD
 // ============================================================================
 
 export async function getAdminUsers(role = null) {
@@ -72,10 +72,38 @@ export async function getAdminUsers(role = null) {
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
+export async function getAdminUserById(id) {
+  const res = await apiClient.request(`/admin/users/${id}`);
+  return res?.data || res;
+}
+
+export async function createAdminUser(payload) {
+  const res = await apiClient.request('/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return res?.data || res;
+}
+
+export async function updateAdminUser(id, payload) {
+  const res = await apiClient.request(`/admin/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  return res?.data || res;
+}
+
 export async function updateAdminUserRole(id, role) {
   const res = await apiClient.request(`/admin/users/${id}/role`, {
     method: 'PUT',
     body: JSON.stringify({ role }),
+  });
+  return res?.data || res;
+}
+
+export async function deleteAdminUser(id) {
+  const res = await apiClient.request(`/admin/users/${id}`, {
+    method: 'DELETE',
   });
   return res?.data || res;
 }

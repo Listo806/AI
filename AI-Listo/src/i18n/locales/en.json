@@ -93,7 +93,8 @@
     "instagramLeads": "Instagram Leads",
     "next7Days": "Next 7 days",
     "requiresAttention": "Requires attention",
-    "newToday": "New today"
+    "newToday": "New today",
+    "recentActivity": "Recent Activity"
   },
   "leads": {
     "title": "Leads",

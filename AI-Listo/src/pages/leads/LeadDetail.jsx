@@ -25,6 +25,7 @@ export default function LeadDetail() {
     status: 'new',
     propertyId: '',
     notes: '',
+    assignedTo: '',
   });
 
   const [conversationId, setConversationId] = useState(null);
@@ -92,6 +93,7 @@ export default function LeadDetail() {
         status: normalizedLead.status || 'new',
         propertyId: normalizedLead.propertyId || '',
         notes: normalizedLead.notes || '',
+        assignedTo: normalizedLead.assignedTo || '',
       });
     } catch (err) {
       setError('Failed to load lead: ' + err.message);
@@ -131,6 +133,7 @@ export default function LeadDetail() {
         status: formData.status,
         propertyId: formData.propertyId || null,
         notes: formData.notes || null,
+        assignedTo: formData.assignedTo || null,
       };
 
       await apiClient.request(`/leads/${id}`, {
@@ -800,6 +803,39 @@ export default function LeadDetail() {
               </div>
             </div>
 
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h3 className="crm-section-title">Assign to Agent</h3>
+            <select
+              value={formData.assignedTo || ''}
+              onChange={async (e) => {
+                const v = e.target.value || null;
+                setFormData((prev) => ({ ...prev, assignedTo: v || '' }));
+                try {
+                  await apiClient.request(`/leads/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ assignedTo: v }),
+                  });
+                  loadLead();
+                } catch (err) {
+                  setError('Failed to update assignment: ' + err.message);
+                }
+              }}
+              style={{
+                minWidth: '220px',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border, #e5e7eb)',
+                background: 'var(--card, #fff)',
+                color: 'var(--text, #111)',
+              }}
+            >
+              <option value="">Unassigned</option>
+              {user?.id && (
+                <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
+              )}
+            </select>
+          </div>
+
           {/* WhatsApp Chat - in-app messaging */}
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h3 className="crm-section-title">WhatsApp Messages</h3>
@@ -847,7 +883,6 @@ export default function LeadDetail() {
             <div className="crm-item-details">
               <div><strong>Created:</strong> {formatDate(lead.createdAt)}</div>
               <div><strong>Updated:</strong> {formatDate(lead.updatedAt)}</div>
-              {lead.assignedTo && <div><strong>Assigned To:</strong> {lead.assignedTo}</div>}
             </div>
           </div>
 
@@ -959,6 +994,22 @@ export default function LeadDetail() {
                       {prop.title || 'Untitled Property'}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="assignedTo">Assign to Agent</label>
+                <select
+                  id="assignedTo"
+                  name="assignedTo"
+                  value={formData.assignedTo || ''}
+                  onChange={handleChange}
+                  disabled={saving}
+                >
+                  <option value="">Unassigned</option>
+                  {user?.id && (
+                    <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
+                  )}
                 </select>
               </div>
 

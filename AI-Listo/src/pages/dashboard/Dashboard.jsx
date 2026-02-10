@@ -361,6 +361,8 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [leadsTimeframe, setLeadsTimeframe] = useState('Today'); // 'Today', '7d', '30d'
   const [leadsOverTimeRange, setLeadsOverTimeRange] = useState('7d'); // '7d', '1 month', '6 month'
+  const [recentLeads, setRecentLeads] = useState([]);
+  const [recentProperties, setRecentProperties] = useState([]);
   const { isDark } = useTheme();
 
   // Main operational chart - Day-by-day inspection data
@@ -538,6 +540,20 @@ export default function Dashboard() {
           console.error('Failed to load properties:', propertiesErr);
         }
       }
+
+      // Recent activity (existing endpoints - may 403 for non-CRM users)
+      try {
+        const [leadsRes, propsRes] = await Promise.all([
+          apiClient.request('/crm/leads/recent?limit=10'),
+          apiClient.request('/crm/properties/recent?limit=10'),
+        ]);
+        setRecentLeads(Array.isArray(leadsRes?.data) ? leadsRes.data : leadsRes?.data ?? []);
+        setRecentProperties(Array.isArray(propsRes?.data) ? propsRes.data : propsRes?.data ?? []);
+      } catch (recentErr) {
+        if (recentErr.status !== 403) console.error('Failed to load recent activity:', recentErr);
+        setRecentLeads([]);
+        setRecentProperties([]);
+      }
     } catch (err) {
       console.error('Failed to load dashboard:', err);
       // Only show error if it's not a subscription error (subscription errors are handled above)
@@ -602,6 +618,58 @@ export default function Dashboard() {
               accentColor="#22C55E"
             />
           </div>
+
+          {/* RECENT ACTIVITY */}
+          {(recentLeads.length > 0 || recentProperties.length > 0) && (
+            <div className="crm-section" style={{ marginBottom: '24px' }}>
+              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: 'var(--text)' }}>
+                {t('dashboard.recentActivity') || 'Recent Activity'}
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                {recentLeads.length > 0 && (
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>Recent Leads</h3>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                      {recentLeads.slice(0, 5).map((lead) => (
+                        <li key={lead.id} style={{ marginBottom: '8px' }}>
+                          <Link to={`/dashboard/leads/${lead.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontSize: '14px' }}>
+                            {lead.name || 'Unnamed'} — <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{lead.status}</span>
+                          </Link>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : ''}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '12px', fontSize: '13px' }}>
+                      View all leads
+                    </Link>
+                  </div>
+                )}
+                {recentProperties.length > 0 && (
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
+                    <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>Recent Properties</h3>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                      {recentProperties.slice(0, 5).map((prop) => (
+                        <li key={prop.id} style={{ marginBottom: '8px' }}>
+                          <Link to={`/dashboard/properties/${prop.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontSize: '14px' }}>
+                            {prop.title || 'Untitled'}
+                          </Link>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                            {prop.location && `${prop.location} · `}
+                            {prop.created_at ? new Date(prop.created_at).toLocaleDateString() : ''}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/dashboard/properties" className="crm-btn crm-btn-secondary" style={{ marginTop: '12px', fontSize: '13px' }}>
+                      View all properties
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* SECOND ROW: Leads Over Time with Ladder Rectangles and Graph */}
           <div className="dashboard-second-row">

@@ -12,6 +12,9 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [assignedAgentId, setAssignedAgentId] = useState(null);
+  const [crmStatusUpdating, setCrmStatusUpdating] = useState(false);
+  const [assignAgentUpdating, setAssignAgentUpdating] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated() && user) {
@@ -19,12 +22,26 @@ export default function PropertyDetail() {
     }
   }, [id, isAuthenticated, user]);
 
+  const loadCrmFeedItem = async () => {
+    if (!id || !user) return;
+    try {
+      const feed = await apiClient.request('/crm/properties/feed');
+      const list = Array.isArray(feed) ? feed : feed?.data ?? [];
+      const item = list.find((p) => p.id === id);
+      if (item?.assigned_agent_id) setAssignedAgentId(item.assigned_agent_id);
+      else setAssignedAgentId(null);
+    } catch {
+      setAssignedAgentId(null);
+    }
+  };
+
   const loadProperty = async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await apiClient.request(`/properties/${id}`);
       setProperty(data);
+      loadCrmFeedItem();
     } catch (err) {
       setError('Failed to load property: ' + err.message);
     } finally {
@@ -51,6 +68,41 @@ export default function PropertyDetail() {
       loadProperty(); // Reload to get updated status
     } catch (err) {
       alert('Failed to publish property: ' + err.message);
+    }
+  };
+
+  const mapStatusToCrm = (s) => (s === 'published' ? 'available' : s === 'reserved' ? 'reserved' : s === 'sold' ? 'sold' : 'available');
+  const currentCrmStatus = mapStatusToCrm(property?.status);
+
+  const handleCrmStatusChange = async (status) => {
+    if (!id || crmStatusUpdating) return;
+    setCrmStatusUpdating(true);
+    try {
+      await apiClient.request(`/crm/properties/${id}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      });
+      loadProperty();
+    } catch (err) {
+      alert('Failed to update CRM status: ' + err.message);
+    } finally {
+      setCrmStatusUpdating(false);
+    }
+  };
+
+  const handleAssignAgent = async (agentId) => {
+    if (!id || assignAgentUpdating) return;
+    setAssignAgentUpdating(true);
+    try {
+      await apiClient.request(`/crm/properties/${id}/assign-agent`, {
+        method: 'POST',
+        body: JSON.stringify({ agent_id: agentId || null }),
+      });
+      setAssignedAgentId(agentId || null);
+    } catch (err) {
+      alert('Failed to assign agent: ' + err.message);
+    } finally {
+      setAssignAgentUpdating(false);
     }
   };
 
@@ -161,6 +213,54 @@ export default function PropertyDetail() {
           </div>
         </div>
       )}
+
+      {/* CRM: Assign agent + status (Available / Reserved / Sold) */}
+      <div className="crm-section" style={{ marginBottom: '24px' }}>
+        <h3 className="crm-section-title">CRM</h3>
+        <div className="crm-item-details" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <strong style={{ display: 'block', marginBottom: '6px' }}>Assign to Agent</strong>
+            <select
+              value={assignedAgentId || ''}
+              onChange={(e) => {
+                const v = e.target.value;
+                handleAssignAgent(v || null);
+              }}
+              disabled={assignAgentUpdating}
+              style={{
+                minWidth: '200px',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border, #e5e7eb)',
+                background: 'var(--card, #fff)',
+                color: 'var(--text, #111)',
+              }}
+            >
+              <option value="">Unassigned</option>
+              {user?.id && (
+                <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
+              )}
+            </select>
+          </div>
+          <div>
+            <strong style={{ display: 'block', marginBottom: '6px' }}>CRM Status</strong>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['available', 'reserved', 'sold'].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => handleCrmStatusChange(status)}
+                  disabled={crmStatusUpdating || currentCrmStatus === status}
+                  className={currentCrmStatus === status ? 'crm-btn crm-btn-primary' : 'crm-btn crm-btn-secondary'}
+                  style={{ textTransform: 'capitalize' }}
+                >
+                  {status === 'available' ? 'Available' : status === 'reserved' ? 'Reserved' : 'Sold'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="crm-section" style={{ marginBottom: '24px' }}>
         <h3 className="crm-section-title">Metadata</h3>
