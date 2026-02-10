@@ -158,3 +158,72 @@ export async function removeAdminTeamMember(teamId, userId) {
   });
   return res?.data || res;
 }
+
+// ============================================================================
+// OWNER TEAMS (current user's team(s) - create, members, seats)
+// ============================================================================
+
+export async function getMyTeams() {
+  const res = await apiClient.request('/teams');
+  return Array.isArray(res) ? res : res?.data ?? [];
+}
+
+export async function getTeam(id) {
+  const res = await apiClient.request(`/teams/${id}`);
+  return res?.data ?? res;
+}
+
+export async function getTeamSeats(teamId) {
+  const res = await apiClient.request(`/teams/${teamId}/seats`);
+  return res?.data ?? res;
+}
+
+export async function getTeamMembers(teamId) {
+  const res = await apiClient.request(`/teams/${teamId}/members`);
+  return Array.isArray(res?.data) ? res.data : res?.data ?? [];
+}
+
+export async function createTeam(payload) {
+  const res = await apiClient.request('/teams', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return res?.data ?? res;
+}
+
+export async function updateTeam(teamId, payload) {
+  const res = await apiClient.request(`/teams/${teamId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  return res?.data ?? res;
+}
+
+export async function inviteTeamMemberByEmail(teamId, email) {
+  const res = await apiClient.request(`/teams/${teamId}/members/invite`, {
+    method: 'POST',
+    body: JSON.stringify({ email: email?.trim?.() || '' }),
+  });
+  return res?.data ?? res;
+}
+
+export async function addTeamMember(teamId, userId) {
+  const res = await apiClient.request(`/teams/${teamId}/members/${userId}`, {
+    method: 'POST',
+  });
+  return res?.data ?? res;
+}
+
+export async function removeTeamMember(teamId, userId) {
+  const res = await apiClient.request(`/teams/${teamId}/members/${userId}`, {
+    method: 'DELETE',
+  });
+  return res?.data ?? res;
+}
+
+export async function deleteTeam(teamId) {
+  const res = await apiClient.request(`/teams/${teamId}`, {
+    method: 'DELETE',
+  });
+  return res?.data ?? res;
+}

@@ -121,14 +121,20 @@ export class TeamsService {
     return updatedTeam;
   }
 
+  /** Used seats: users with team_id = teamId, plus the owner if their team_id is not this team (owner always counts in every team they own). */
   async getSeatCount(teamId: string): Promise<number> {
+    const team = await this.findById(teamId);
+    if (!team) return 0;
     const { rows } = await this.db.query(
-      `SELECT COUNT(*) as count
-       FROM users
-       WHERE team_id = $1 AND is_active = true`,
+      `SELECT COUNT(*) as count FROM users WHERE team_id = $1 AND is_active = true`,
       [teamId],
     );
-    return parseInt(rows[0].count, 10);
+    let count = parseInt(rows[0].count, 10);
+    const owner = await this.usersService.findById(team.ownerId);
+    if (owner && owner.teamId !== teamId) {
+      count += 1; // owner has "owner membership" in this team
+    }
+    return count;
   }
 
   async getAvailableSeats(teamId: string): Promise<number> {
@@ -298,7 +304,7 @@ export class TeamsService {
     await this.eventLogger.logTeamMemberRemoved(teamId, requestingUserId, userId);
   }
 
-  /** List members of a team. Caller must be team owner or a member. */
+  /** List members of a team. Caller must be team owner or a member. Owner always appears as a member of every team they own (even if their user.team_id points to another team). */
   async getMembers(teamId: string, requestingUserId: string): Promise<any[]> {
     const team = await this.ensureCanAccessTeam(teamId, requestingUserId);
     const { rows } = await this.db.query(
@@ -306,13 +312,28 @@ export class TeamsService {
        FROM users WHERE team_id = $1 ORDER BY (id = $2) DESC`,
       [teamId, team.ownerId],
     );
-    return rows.map((m: any) => ({
+    const members = rows.map((m: any) => ({
       id: m.id,
       email: m.email,
       role: m.role,
       isActive: m.isActive,
       isOwner: m.id === team.ownerId,
     }));
+    // Include team owner in members list even if their team_id is another team (owner has "owner membership" in all their teams)
+    const ownerInList = members.some((m: any) => m.id === team.ownerId);
+    if (!ownerInList) {
+      const ownerUser = await this.usersService.findById(team.ownerId);
+      if (ownerUser) {
+        members.unshift({
+          id: ownerUser.id,
+          email: ownerUser.email,
+          role: ownerUser.role,
+          isActive: ownerUser.isActive,
+          isOwner: true,
+        });
+      }
+    }
+    return members;
   }
 
   /** Add a member to the team by email (owner only). */
