@@ -85,6 +85,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     navItems = [
       { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
       { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
+      { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
     ];
   } else {
     if (canSeePlatformListings) {

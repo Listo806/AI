@@ -41,6 +41,7 @@ import PlatformListings from "./pages/platform/PlatformListings";
 import VaUpload from "./pages/va/VaUpload";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminTeams from "./pages/admin/AdminTeams";
 import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
 
 // Root route handler - shows sign-in or redirects to dashboard
@@ -123,6 +124,7 @@ function AppRoutes() {
         {/* Admin */}
         <Route path="admin/listings" element={<AdminListings />} />
         <Route path="admin/users" element={<AdminUsers />} />
+        <Route path="admin/teams" element={<AdminTeams />} />
         
         {/* Contacts Route */}
         <Route path="contacts" element={<Contacts />} />

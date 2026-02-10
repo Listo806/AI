@@ -25,6 +25,7 @@ const getPageTitle = (pathname) => {
     "/dashboard/va-upload": "VA Upload",
     "/dashboard/admin/listings": "Admin: Listings",
     "/dashboard/admin/users": "Admin: Users",
+    "/dashboard/admin/teams": "Admin: Teams",
     "/dashboard/contacts": "Contacts",
     "/dashboard/ai-center": "AI Center",
     "/dashboard/ai-auto-reply": "AI Auto-Reply",

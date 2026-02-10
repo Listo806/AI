@@ -107,3 +107,54 @@ export async function deleteAdminUser(id) {
   });
   return res?.data || res;
 }
+
+// ============================================================================
+// ADMIN TEAMS (Super Admin / Admin) - Full CRUD + members
+// ============================================================================
+
+export async function getAdminTeams() {
+  const res = await apiClient.request('/admin/teams');
+  return Array.isArray(res?.data) ? res.data : res?.data || [];
+}
+
+export async function getAdminTeamById(id) {
+  const res = await apiClient.request(`/admin/teams/${id}`);
+  return res?.data || res;
+}
+
+export async function createAdminTeam(payload) {
+  const res = await apiClient.request('/admin/teams', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return res?.data || res;
+}
+
+export async function updateAdminTeam(id, payload) {
+  const res = await apiClient.request(`/admin/teams/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+  return res?.data || res;
+}
+
+export async function deleteAdminTeam(id) {
+  const res = await apiClient.request(`/admin/teams/${id}`, {
+    method: 'DELETE',
+  });
+  return res?.data || res;
+}
+
+export async function addAdminTeamMember(teamId, userId) {
+  const res = await apiClient.request(`/admin/teams/${teamId}/members/${userId}`, {
+    method: 'POST',
+  });
+  return res?.data || res;
+}
+
+export async function removeAdminTeamMember(teamId, userId) {
+  const res = await apiClient.request(`/admin/teams/${teamId}/members/${userId}`, {
+    method: 'DELETE',
+  });
+  return res?.data || res;
+}
