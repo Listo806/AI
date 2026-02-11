@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { SubscriptionEnforcementService } from '../services/subscription-enforcement.service';
+import { ConfigService } from '../../config/config.service';
 import { UserRole } from '../../users/entities/user.entity';
 
 /**
@@ -10,14 +11,24 @@ import { UserRole } from '../../users/entities/user.entity';
  */
 @Injectable()
 export class ListingLimitGuard implements CanActivate {
-  constructor(private readonly enforcementService: SubscriptionEnforcementService) {}
+  constructor(
+    private readonly enforcementService: SubscriptionEnforcementService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
+    const enforcementDisabled =
+      (this.configService.get('SUBSCRIPTION_ENFORCEMENT_DISABLED') ?? 'false') === 'true';
+
     // VA and OWNER users bypass listing limits
     if (user && (user.role === UserRole.VA || user.role === UserRole.OWNER)) {
+      return true;
+    }
+
+    if (enforcementDisabled) {
       return true;
     }
 

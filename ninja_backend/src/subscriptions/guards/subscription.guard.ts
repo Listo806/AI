@@ -1,11 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { ConfigService } from '../../config/config.service';
 import { UserRole } from '../../users/entities/user.entity';
 import { SubscriptionStatus } from '../entities/subscription.entity';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -26,6 +30,12 @@ export class SubscriptionGuard implements CanActivate {
         teamId = rows[0].id;
         user.teamId = teamId; // Attach for downstream use
       }
+    }
+
+    const enforcementDisabled =
+      (this.configService.get('SUBSCRIPTION_ENFORCEMENT_DISABLED') ?? 'false') === 'true';
+    if (enforcementDisabled) {
+      return true;
     }
 
     if (!teamId) {
