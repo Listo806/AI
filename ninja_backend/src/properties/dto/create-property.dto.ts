@@ -78,5 +78,9 @@ export class CreatePropertyDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  teamId?: string | null;
 }
 

@@ -3,6 +3,8 @@ import { DatabaseService } from '../database/database.service';
 import { Property, PropertyStatus, CreatePropertyDto, UpdatePropertyDto, PropertyMedia } from './entities/property.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 
+const MAX_IMAGES_PER_PROPERTY = 20;
+
 @Injectable()
 export class PropertiesService {
   constructor(
@@ -10,8 +12,64 @@ export class PropertiesService {
     private readonly eventLogger: EventLoggerService,
   ) {}
 
+  /** User can assign to team only if they belong to it (member or owner). */
+  private async ensureUserBelongsToTeam(userId: string, teamId: string): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM teams t WHERE t.id = $1 AND t.owner_id = $2
+       UNION ALL
+       SELECT 1 FROM users u WHERE u.id = $2 AND u.team_id = $1
+       LIMIT 1`,
+      [teamId, userId],
+    );
+    if (!rows.length) {
+      throw new ForbiddenException('You can only assign properties to teams you belong to');
+    }
+  }
+
+  /** Thumbnail fallback: primary image, else first by display_order. */
+  private async getThumbnailFallback(propertyId: string): Promise<string | null> {
+    const { rows } = await this.db.query(
+      `SELECT url FROM property_media
+       WHERE property_id = $1 AND type = 'image'
+       ORDER BY is_primary DESC, display_order ASC
+       LIMIT 1`,
+      [propertyId],
+    );
+    return rows[0]?.url ?? null;
+  }
+
+  private async attachThumbnailUrl<T extends { id: string; thumbnailUrl?: string | null }>(p: T): Promise<T & { thumbnailUrl: string | null }> {
+    const url = p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : await this.getThumbnailFallback(p.id);
+    return { ...p, thumbnailUrl: url || null };
+  }
+
+  private async attachThumbnailUrlList<T extends { id: string; thumbnailUrl?: string | null }>(list: T[]): Promise<(T & { thumbnailUrl: string | null })[]> {
+    const idsNeedingFallback = list.filter((p) => p.thumbnailUrl == null || p.thumbnailUrl === '').map((p) => p.id);
+    let fallbackMap: Record<string, string> = {};
+    if (idsNeedingFallback.length > 0) {
+      const { rows } = await this.db.query(
+        `SELECT DISTINCT ON (property_id) property_id as "propertyId", url
+         FROM property_media
+         WHERE property_id = ANY($1::uuid[]) AND type = 'image'
+         ORDER BY property_id, is_primary DESC, display_order ASC`,
+        [idsNeedingFallback],
+      );
+      fallbackMap = rows.reduce((acc, r) => ({ ...acc, [r.propertyId]: r.url }), {});
+    }
+    return list.map((p) => ({
+      ...p,
+      thumbnailUrl: (p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : fallbackMap[p.id]) || null,
+    }));
+  }
+
   async create(createPropertyDto: CreatePropertyDto, userId: string, teamId: string | null): Promise<Property> {
     const status = createPropertyDto.status || PropertyStatus.DRAFT;
+    const resolvedTeamId = createPropertyDto.teamId !== undefined && createPropertyDto.teamId !== null
+      ? createPropertyDto.teamId
+      : teamId;
+    if (resolvedTeamId) {
+      await this.ensureUserBelongsToTeam(userId, resolvedTeamId);
+    }
 
     const { rows } = await this.db.query(
       `INSERT INTO properties (
@@ -22,7 +80,8 @@ export class PropertiesService {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW(), $19)
       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                 bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
+                created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
+                thumbnail_url as "thumbnailUrl", latitude, longitude,
                 created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       [
         createPropertyDto.title,
@@ -40,17 +99,16 @@ export class PropertiesService {
         createPropertyDto.lotSize || null,
         createPropertyDto.yearBuilt || null,
         userId,
-        teamId,
+        resolvedTeamId,
         createPropertyDto.latitude || null,
         createPropertyDto.longitude || null,
         status === PropertyStatus.PUBLISHED ? new Date() : null,
       ],
     );
 
-    const property = rows[0];
+    const property = await this.attachThumbnailUrl(rows[0]);
 
-    // Log event
-    await this.eventLogger.logPropertyCreated(property.id, userId, teamId, {
+    await this.eventLogger.logPropertyCreated(property.id, userId, resolvedTeamId, {
       title: property.title,
       type: property.type,
       status: property.status,
@@ -64,7 +122,7 @@ export class PropertiesService {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-                        latitude, longitude,
+                        thumbnail_url as "thumbnailUrl", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -111,14 +169,14 @@ export class PropertiesService {
     query += ` ORDER BY created_at DESC`;
 
     const { rows } = await this.db.query(query, params);
-    return rows;
+    return this.attachThumbnailUrlList(rows);
   }
 
   async findPublic(filters?: { type?: string; search?: string }): Promise<Property[]> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-                        latitude, longitude,
+                        thumbnail_url as "thumbnailUrl", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -156,7 +214,7 @@ export class PropertiesService {
     query += ` ORDER BY published_at DESC, created_at DESC`;
 
     const { rows } = await this.db.query(query, params);
-    return rows;
+    return this.attachThumbnailUrlList(rows);
   }
 
   async findByBbox(
@@ -168,7 +226,7 @@ export class PropertiesService {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-                        latitude, longitude,
+                        thumbnail_url as "thumbnailUrl", latitude, longitude,
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -227,7 +285,7 @@ export class PropertiesService {
     query += ` ORDER BY created_at DESC`;
 
     const { rows } = await this.db.query(query, params);
-    return rows;
+    return this.attachThumbnailUrlList(rows);
   }
 
   async findById(id: string): Promise<Property | null> {
@@ -236,13 +294,14 @@ export class PropertiesService {
               COALESCE(origin, 'platform') as origin,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-              latitude, longitude,
+              thumbnail_url as "thumbnailUrl", latitude, longitude,
               reviewed_by as "reviewedBy", reviewed_at as "reviewedAt", rejection_reason as "rejectionReason",
               created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties WHERE id = $1`,
       [id],
     );
-    return rows[0] || null;
+    if (!rows[0]) return null;
+    return this.attachThumbnailUrl(rows[0]);
   }
 
   async update(id: string, updatePropertyDto: UpdatePropertyDto, userId: string, teamId: string | null): Promise<Property> {
@@ -257,6 +316,10 @@ export class PropertiesService {
     
     if (!isCreator && !isTeamMember) {
       throw new ForbiddenException('You do not have permission to update this property');
+    }
+
+    if (updatePropertyDto.teamId !== undefined && updatePropertyDto.teamId !== null) {
+      await this.ensureUserBelongsToTeam(userId, updatePropertyDto.teamId);
     }
 
     const oldStatus = property.status;
@@ -335,9 +398,17 @@ export class PropertiesService {
       updates.push(`longitude = $${paramCount++}`);
       values.push(updatePropertyDto.longitude);
     }
+    if (updatePropertyDto.teamId !== undefined) {
+      updates.push(`team_id = $${paramCount++}`);
+      values.push(updatePropertyDto.teamId);
+    }
+    if (updatePropertyDto.thumbnailUrl !== undefined) {
+      updates.push(`thumbnail_url = $${paramCount++}`);
+      values.push(updatePropertyDto.thumbnailUrl);
+    }
 
     if (updates.length === 0) {
-      return property;
+      return (await this.attachThumbnailUrl(property as any)) as Property;
     }
 
     // Track who edited the property
@@ -350,12 +421,13 @@ export class PropertiesService {
       `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                  bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", latitude, longitude,
+                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
+                 thumbnail_url as "thumbnailUrl", latitude, longitude,
                  created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       values,
     );
 
-    const updatedProperty = rows[0];
+    const updatedProperty = await this.attachThumbnailUrl(rows[0]);
 
     // Log status change if status was updated
     if (updatePropertyDto.status !== undefined && updatePropertyDto.status !== oldStatus) {
@@ -367,7 +439,7 @@ export class PropertiesService {
       }
     }
 
-    return updatedProperty;
+    return updatedProperty as Property;
   }
 
   async publish(id: string, userId: string, teamId: string | null): Promise<Property> {
@@ -413,6 +485,17 @@ export class PropertiesService {
     
     if (!isCreator && !isTeamMember) {
       throw new ForbiddenException('You do not have permission to add media to this property');
+    }
+
+    if (type === 'image') {
+      const { rows: countRows } = await this.db.query(
+        `SELECT COUNT(*) as c FROM property_media WHERE property_id = $1 AND type = 'image'`,
+        [propertyId],
+      );
+      const count = parseInt(countRows[0]?.c ?? '0', 10);
+      if (count >= MAX_IMAGES_PER_PROPERTY) {
+        throw new BadRequestException(`Maximum ${MAX_IMAGES_PER_PROPERTY} images per property. Cannot add more.`);
+      }
     }
 
     // If this is primary, unset other primary media

@@ -79,5 +79,13 @@ export class UpdatePropertyDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  teamId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  thumbnailUrl?: string | null;
 }
 

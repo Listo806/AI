@@ -47,6 +47,7 @@ export interface Property {
   reviewedBy: string | null;
   reviewedAt: Date | null;
   rejectionReason: string | null;
+  thumbnailUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -79,6 +80,7 @@ export interface CreatePropertyDto {
   yearBuilt?: number;
   latitude?: number;
   longitude?: number;
+  teamId?: string | null;
 }
 
 export interface UpdatePropertyDto {
@@ -98,5 +100,7 @@ export interface UpdatePropertyDto {
   yearBuilt?: number;
   latitude?: number;
   longitude?: number;
+  teamId?: string | null;
+  thumbnailUrl?: string | null;
 }
 

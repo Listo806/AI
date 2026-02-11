@@ -375,6 +375,14 @@ async function setupDatabase() {
       console.log('✓ AI Setter lead state migration completed');
     }
     
+    // Property Thumbnail url
+    const migration35Path = path.join(__dirname, '../src/database/migrations/035_property_thumbnail_url.sql');
+    if (fs.existsSync(migration35Path)) {
+      const migration35SQL = fs.readFileSync(migration35Path, 'utf8');
+      await pool.query(migration35SQL);
+      console.log('✓ Property thumbnail url migration completed');
+    }
+    
     console.log('Database schema created successfully!');
 
     await pool.end();
