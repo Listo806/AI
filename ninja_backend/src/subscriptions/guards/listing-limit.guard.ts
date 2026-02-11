@@ -21,12 +21,16 @@ export class ListingLimitGuard implements CanActivate {
       return true;
     }
 
-    if (!user || !user.teamId) {
+    let teamIdForLimit = user.teamId;
+    if (!teamIdForLimit && request.method === 'POST' && request.body && request.body.teamId) {
+      teamIdForLimit = request.body.teamId;
+    }
+    if (!user || !teamIdForLimit) {
       throw new ForbiddenException('User must be part of a team');
     }
 
     // Hard block if limit reached
-    await this.enforcementService.checkListingCreation(user.teamId);
+    await this.enforcementService.checkListingCreation(teamIdForLimit);
 
     return true;
   }
