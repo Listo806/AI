@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { SubscriptionEnforcementService } from '../services/subscription-enforcement.service';
-import { TeamsService } from '../../teams/teams.service';
+import { DatabaseService } from '../../database/database.service';
 import { UserRole } from '../../users/entities/user.entity';
 
 /**
@@ -15,7 +15,7 @@ import { UserRole } from '../../users/entities/user.entity';
 export class SubscriptionRequiredGuard implements CanActivate {
   constructor(
     private readonly enforcementService: SubscriptionEnforcementService,
-    private readonly teamsService: TeamsService,
+    private readonly db: DatabaseService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,9 +34,12 @@ export class SubscriptionRequiredGuard implements CanActivate {
     // Owners may own teams via owner_id but have user.team_id=null; resolve first owned team
     let teamId = user.teamId;
     if (!teamId && user.role === UserRole.OWNER) {
-      const teams = await this.teamsService.findByUserId(user.id);
-      if (teams.length > 0) {
-        teamId = teams[0].id;
+      const { rows } = await this.db.query(
+        `SELECT id FROM teams WHERE owner_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [user.id],
+      );
+      if (rows.length > 0) {
+        teamId = rows[0].id;
         user.teamId = teamId; // Attach for downstream use
       }
     }
