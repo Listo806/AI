@@ -5,8 +5,8 @@ import { UserRole } from '../../users/entities/user.entity';
 /**
  * Guard that enforces listing creation limits
  * Returns 403 FORBIDDEN if listing limit is reached
- * 
- * NOTE: VA users bypass listing limits (they can create unlimited listings)
+ *
+ * NOTE: VA and OWNER users bypass listing limits (they can create unlimited listings)
  */
 @Injectable()
 export class ListingLimitGuard implements CanActivate {
@@ -16,8 +16,8 @@ export class ListingLimitGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    // VA users bypass listing limits
-    if (user && user.role === UserRole.VA) {
+    // VA and OWNER users bypass listing limits
+    if (user && (user.role === UserRole.VA || user.role === UserRole.OWNER)) {
       return true;
     }
 
