@@ -29,12 +29,20 @@ export class PropertiesController {
   @ApiOperation({ summary: 'Get all published properties (public, no auth required)' })
   @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
   @ApiQuery({ name: 'search', required: false, description: 'Search query' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
+  @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
   @ApiResponse({ status: 200, description: 'Published properties retrieved successfully' })
   async findPublic(
     @Query('type') type?: string,
     @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
-    return this.propertiesService.findPublic({ type, search });
+    const pagination = {
+      limit: limit != null ? parseInt(limit, 10) : undefined,
+      offset: offset != null ? parseInt(offset, 10) : undefined,
+    };
+    return this.propertiesService.findPublic({ type, search }, pagination);
   }
 
   @Post()
@@ -46,7 +54,7 @@ export class PropertiesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Listing limit reached' })
   async create(@Body() createPropertyDto: CreatePropertyDto, @CurrentUser() user: any) {
-    return this.propertiesService.create(createPropertyDto, user.id, user.teamId);
+    return this.propertiesService.create(createPropertyDto, user.id, user.teamId, user.role);
   }
 
   @Get()
@@ -60,6 +68,8 @@ export class PropertiesController {
   @ApiQuery({ name: 'south', required: false, description: 'Bounding box south latitude' })
   @ApiQuery({ name: 'east', required: false, description: 'Bounding box east longitude' })
   @ApiQuery({ name: 'north', required: false, description: 'Bounding box north latitude' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
+  @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
   @ApiResponse({ status: 200, description: 'Properties retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(
@@ -71,7 +81,13 @@ export class PropertiesController {
     @Query('south') south?: string,
     @Query('east') east?: string,
     @Query('north') north?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
+    const pagination = {
+      limit: limit != null ? parseInt(limit, 10) : undefined,
+      offset: offset != null ? parseInt(offset, 10) : undefined,
+    };
     // If bbox parameters are provided, use bbox query
     if (west && south && east && north) {
       const bbox = {
@@ -82,7 +98,7 @@ export class PropertiesController {
       };
       return this.propertiesService.findByBbox(user.id, user.teamId, bbox, { type, status, search });
     }
-    return this.propertiesService.findAll(user.id, user.teamId, { type, status, search });
+    return this.propertiesService.findAll(user.id, user.teamId, { type, status, search }, pagination);
   }
 
   @Get(':id')

@@ -12,6 +12,9 @@ export interface UploadFileDto {
   teamId?: string;
 }
 
+const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
 export interface StoredFile {
   id: string;
   originalName: string;
@@ -88,6 +91,21 @@ export class StorageService {
 
     if (!file) {
       throw new BadRequestException('No file provided');
+    }
+
+    // Validate MIME type (jpg, png, webp only)
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: JPEG, PNG, WebP. Got: ${file.mimetype || 'unknown'}`,
+      );
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File too large. Maximum size: 5MB. Got: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      );
     }
 
     // Generate unique file name
@@ -175,6 +193,40 @@ export class StorageService {
       this.logger.error('Failed to generate signed URL', error.message);
       throw new BadRequestException('Failed to generate file URL');
     }
+  }
+
+  /**
+   * Delete file(s) by URL(s). Used when property/media is deleted to clean up S3 and stored_files.
+   * No user check - caller (properties service) already validated permissions.
+   */
+  async deleteFilesByUrls(urls: string[]): Promise<void> {
+    if (!this.isConfigured || !this.s3Client || urls.length === 0) {
+      return;
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, s3_key FROM stored_files WHERE url = ANY($1::text[])`,
+      [urls],
+    );
+    for (const row of rows) {
+      try {
+        await this.s3Client.send(
+          new DeleteObjectCommand({ Bucket: this.bucketName, Key: row.s3_key }),
+        );
+        await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
+        this.logger.log(`File deleted (orphan cleanup): ${row.s3_key}`);
+      } catch (err: any) {
+        this.logger.warn(`Failed to delete S3 object ${row.s3_key}: ${err.message}`);
+        // Still remove stored_files to avoid orphan records
+        await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
+      }
+    }
+  }
+
+  /**
+   * Delete a single file by URL.
+   */
+  async deleteFileByUrl(url: string): Promise<void> {
+    await this.deleteFilesByUrls([url]);
   }
 
   /**

@@ -382,6 +382,14 @@ async function setupDatabase() {
       await pool.query(migration35SQL);
       console.log('✓ Property thumbnail url migration completed');
     }
+
+    // Property media unique primary constraint
+    const migration36Path = path.join(__dirname, '../src/database/migrations/036_property_media_unique_primary.sql');
+    if (fs.existsSync(migration36Path)) {
+      const migration36SQL = fs.readFileSync(migration36Path, 'utf8');
+      await pool.query(migration36SQL);
+      console.log('✓ Property media unique primary migration completed');
+    }
     
     console.log('Database schema created successfully!');
 

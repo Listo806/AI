@@ -2,14 +2,18 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { DatabaseService } from '../database/database.service';
 import { Property, PropertyStatus, CreatePropertyDto, UpdatePropertyDto, PropertyMedia } from './entities/property.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
+import { StorageService } from '../integrations/storage/storage.service';
 
 const MAX_IMAGES_PER_PROPERTY = 20;
+const DEFAULT_PAGE_LIMIT = 20;
+const MAX_PAGE_LIMIT = 100;
 
 @Injectable()
 export class PropertiesService {
   constructor(
     private readonly db: DatabaseService,
     private readonly eventLogger: EventLoggerService,
+    private readonly storageService: StorageService,
   ) {}
 
   /** User can assign to team only if they belong to it (member or owner). */
@@ -62,9 +66,11 @@ export class PropertiesService {
     }));
   }
 
-  async create(createPropertyDto: CreatePropertyDto, userId: string, teamId: string | null): Promise<Property> {
+  async create(createPropertyDto: CreatePropertyDto, userId: string, teamId: string | null, userRole?: string): Promise<Property> {
     const status = createPropertyDto.status || PropertyStatus.DRAFT;
-    const resolvedTeamId = createPropertyDto.teamId !== undefined && createPropertyDto.teamId !== null
+    // Lock teamId to JWT for non-admin; only admin/super_admin can override
+    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+    const resolvedTeamId = isAdmin && createPropertyDto.teamId !== undefined && createPropertyDto.teamId !== null
       ? createPropertyDto.teamId
       : teamId;
     if (resolvedTeamId) {
@@ -118,7 +124,12 @@ export class PropertiesService {
     return property;
   }
 
-  async findAll(userId: string, teamId: string | null, filters?: { type?: string; status?: string; search?: string }): Promise<Property[]> {
+  async findAll(
+    userId: string,
+    teamId: string | null,
+    filters?: { type?: string; status?: string; search?: string },
+    pagination?: { limit?: number; offset?: number },
+  ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
@@ -166,13 +177,30 @@ export class PropertiesService {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
 
-    query += ` ORDER BY created_at DESC`;
+    const limit = Math.min(
+      Math.max(1, pagination?.limit ?? DEFAULT_PAGE_LIMIT),
+      MAX_PAGE_LIMIT,
+    );
+    const offset = Math.max(0, pagination?.offset ?? 0);
+
+    const { rows: countRows } = await this.db.query(
+      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''}`,
+      params,
+    );
+    const total = countRows[0]?.c ?? 0;
+
+    query += ` ORDER BY created_at DESC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
+    params.push(limit, offset);
 
     const { rows } = await this.db.query(query, params);
-    return this.attachThumbnailUrlList(rows);
+    const items = await this.attachThumbnailUrlList(rows);
+    return { items, total, limit, offset };
   }
 
-  async findPublic(filters?: { type?: string; search?: string }): Promise<Property[]> {
+  async findPublic(
+    filters?: { type?: string; search?: string },
+    pagination?: { limit?: number; offset?: number },
+  ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
@@ -211,10 +239,24 @@ export class PropertiesService {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
 
-    query += ` ORDER BY published_at DESC, created_at DESC`;
+    const limit = Math.min(
+      Math.max(1, pagination?.limit ?? DEFAULT_PAGE_LIMIT),
+      MAX_PAGE_LIMIT,
+    );
+    const offset = Math.max(0, pagination?.offset ?? 0);
+
+    const { rows: countRows } = await this.db.query(
+      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''}`,
+      params,
+    );
+    const total = countRows[0]?.c ?? 0;
+
+    query += ` ORDER BY published_at DESC, created_at DESC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
+    params.push(limit, offset);
 
     const { rows } = await this.db.query(query, params);
-    return this.attachThumbnailUrlList(rows);
+    const items = await this.attachThumbnailUrlList(rows);
+    return { items, total, limit, offset };
   }
 
   async findByBbox(
@@ -469,6 +511,16 @@ export class PropertiesService {
       throw new ForbiddenException('You do not have permission to delete this property');
     }
 
+    // Fetch all related media URLs before cascade deletes property_media
+    const { rows: mediaRows } = await this.db.query(
+      `SELECT url FROM property_media WHERE property_id = $1`,
+      [id],
+    );
+    const urls = mediaRows.map((r: { url: string }) => r.url);
+    if (urls.length > 0) {
+      await this.storageService.deleteFilesByUrls(urls);
+    }
+
     await this.db.query('DELETE FROM properties WHERE id = $1', [id]);
   }
 
@@ -619,6 +671,9 @@ export class PropertiesService {
     if (!isCreator && !isTeamMember) {
       throw new ForbiddenException('You do not have permission to delete this media');
     }
+
+    // Delete S3 object and stored_files record before removing property_media
+    await this.storageService.deleteFileByUrl(media.url);
 
     await this.db.query('DELETE FROM property_media WHERE id = $1', [mediaId]);
   }

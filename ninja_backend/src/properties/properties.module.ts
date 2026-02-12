@@ -5,9 +5,10 @@ import { PropertyMatchingService } from './property-matching.service';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { DatabaseModule } from '../database/database.module';
+import { StorageModule } from '../integrations/storage/storage.module';
 
 @Module({
-  imports: [DatabaseModule, AnalyticsModule, SubscriptionsModule],
+  imports: [DatabaseModule, AnalyticsModule, SubscriptionsModule, StorageModule],
   controllers: [PropertiesController],
   providers: [PropertiesService, PropertyMatchingService],
   exports: [PropertiesService, PropertyMatchingService],
