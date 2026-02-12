@@ -42,6 +42,31 @@ export class AdminListingsController {
     return { data };
   }
 
+  @Put('listings/:id')
+  @ApiOperation({ summary: 'Update listing (admin - e.g. assign team)' })
+  @ApiParam({ name: 'id' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        teamId: { type: 'string', nullable: true, description: 'Team ID to assign, or null to unassign' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 404 })
+  async update(
+    @Param('id') id: string,
+    @Body() body: { teamId?: string | null },
+  ) {
+    const teamId = body.teamId === undefined ? undefined : (body.teamId || null);
+    if (teamId === undefined) {
+      throw new BadRequestException('teamId is required');
+    }
+    const data = await this.adminListings.updateTeam(id, teamId);
+    return { data };
+  }
+
   @Put('listings/:id/status')
   @ApiOperation({ summary: 'Update listing status (approve, reject, publish)' })
   @ApiParam({ name: 'id' })
