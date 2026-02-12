@@ -10,6 +10,8 @@ export class AdminListingsService {
     status?: string;
     origin?: string;
     createdBy?: string;
+    title?: string;
+    uploaderEmail?: string;
   }): Promise<any[]> {
     const conditions: string[] = [];
     const params: any[] = [];
@@ -26,6 +28,14 @@ export class AdminListingsService {
     if (filters?.createdBy) {
       conditions.push(`p.created_by = $${i++}`);
       params.push(filters.createdBy);
+    }
+    if (filters?.title?.trim()) {
+      conditions.push(`p.title ILIKE $${i++}`);
+      params.push(`%${filters.title.trim()}%`);
+    }
+    if (filters?.uploaderEmail?.trim()) {
+      conditions.push(`u.email ILIKE $${i++}`);
+      params.push(`%${filters.uploaderEmail.trim()}%`);
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

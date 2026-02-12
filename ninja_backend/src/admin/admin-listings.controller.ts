@@ -21,13 +21,17 @@ export class AdminListingsController {
   @ApiQuery({ name: 'status', required: false })
   @ApiQuery({ name: 'origin', required: false })
   @ApiQuery({ name: 'createdBy', required: false })
+  @ApiQuery({ name: 'title', required: false })
+  @ApiQuery({ name: 'uploaderEmail', required: false })
   @ApiResponse({ status: 200, description: 'List of listings' })
   async list(
     @Query('status') status?: string,
     @Query('origin') origin?: string,
     @Query('createdBy') createdBy?: string,
+    @Query('title') title?: string,
+    @Query('uploaderEmail') uploaderEmail?: string,
   ) {
-    const data = await this.adminListings.findAll({ status, origin, createdBy });
+    const data = await this.adminListings.findAll({ status, origin, createdBy, title, uploaderEmail });
     return { data };
   }
 
