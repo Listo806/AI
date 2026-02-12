@@ -4,7 +4,10 @@ import {
   getAdminListings,
   getAdminListingById,
   updateAdminListingStatus,
+  updateAdminListing,
+  getAdminTeams,
 } from '../../api/platformApi';
+import { getPropertyMedia } from '../../api/propertiesApi';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import AdminPagination from './AdminPagination';
@@ -32,10 +35,13 @@ export default function AdminListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ status: '', origin: '', createdBy: '' });
+  const [filters, setFilters] = useState({ status: '', origin: '', createdBy: '', title: '', uploaderEmail: '' });
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
-  const [updating, setUpdating] = useState(null); // id of listing being updated
+  const [media, setMedia] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [updating, setUpdating] = useState(null);
+  const [updatingTeam, setUpdatingTeam] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectModalId, setRejectModalId] = useState(null);
   const [page, setPage] = useState(1);
@@ -49,6 +55,8 @@ export default function AdminListings() {
       if (filters.status) opts.status = filters.status;
       if (filters.origin) opts.origin = filters.origin;
       if (filters.createdBy) opts.createdBy = filters.createdBy;
+      if (filters.title) opts.title = filters.title;
+      if (filters.uploaderEmail) opts.uploaderEmail = filters.uploaderEmail;
       const data = await getAdminListings(opts);
       setListings(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -60,7 +68,13 @@ export default function AdminListings() {
 
   useEffect(() => {
     if (isAuthenticated() && user) loadListings();
-  }, [isAuthenticated, user, filters.status, filters.origin, filters.createdBy]);
+  }, [isAuthenticated, user, filters.status, filters.origin, filters.createdBy, filters.title, filters.uploaderEmail]);
+
+  useEffect(() => {
+    if (isAuthenticated() && user) {
+      getAdminTeams().then((list) => setTeams(Array.isArray(list) ? list : []));
+    }
+  }, [isAuthenticated, user]);
 
   const paginatedListings = listings.slice((page - 1) * pageSize, page * pageSize);
 
@@ -69,12 +83,31 @@ export default function AdminListings() {
   const loadDetail = async (id) => {
     setSelectedId(id);
     setDetail(null);
+    setMedia([]);
     setRejectionReason('');
     try {
-      const data = await getAdminListingById(id);
+      const [data, mediaList] = await Promise.all([
+        getAdminListingById(id),
+        getPropertyMedia(id),
+      ]);
       setDetail(data);
+      setMedia(Array.isArray(mediaList) ? mediaList.filter((m) => m.type === 'image') : []);
     } catch (err) {
       showError(err.message || 'Failed to load listing');
+    }
+  };
+
+  const handleTeamChange = async (id, teamId) => {
+    setUpdatingTeam(true);
+    try {
+      await updateAdminListing(id, { teamId: teamId || null });
+      showSuccess('Team assigned');
+      if (detail?.id === id) setDetail((d) => (d ? { ...d, teamId: teamId || null } : d));
+      loadListings();
+    } catch (err) {
+      showError(err.message || 'Failed to assign team');
+    } finally {
+      setUpdatingTeam(false);
     }
   };
 
@@ -141,7 +174,7 @@ export default function AdminListings() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
         <select
           value={filters.status}
           onChange={(e) => { setFilters((f) => ({ ...f, status: e.target.value })); resetPage(); }}
@@ -162,16 +195,30 @@ export default function AdminListings() {
         </select>
         <input
           type="text"
+          placeholder="Title (search)"
+          value={filters.title}
+          onChange={(e) => { setFilters((f) => ({ ...f, title: e.target.value })); resetPage(); }}
+          style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '160px' }}
+        />
+        <input
+          type="text"
+          placeholder="Uploader (email)"
+          value={filters.uploaderEmail}
+          onChange={(e) => { setFilters((f) => ({ ...f, uploaderEmail: e.target.value })); resetPage(); }}
+          style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '180px' }}
+        />
+        <input
+          type="text"
           placeholder="Created by (user ID)"
           value={filters.createdBy}
           onChange={(e) => { setFilters((f) => ({ ...f, createdBy: e.target.value })); resetPage(); }}
-          style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '180px' }}
+          style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '160px' }}
         />
       </div>
 
       {error && <div className="crm-error">{error}</div>}
 
-      <div style={{ display: 'grid', gridTemplateColumns: detail ? '1fr 340px' : '1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: detail ? '1fr 400px' : '1fr', gap: '24px' }}>
         <div>
           {loading ? (
             <div className="crm-loading">
@@ -186,9 +233,11 @@ export default function AdminListings() {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 48 }}></th>
                     <th>Title</th>
                     <th>Status</th>
                     <th>Origin</th>
+                    <th>Team</th>
                     <th>Uploader</th>
                     <th>Location</th>
                     <th>Price</th>
@@ -203,6 +252,15 @@ export default function AdminListings() {
                       className={`admin-table-row-clickable ${selectedId === item.id ? 'admin-table-row-selected' : ''}`}
                       onClick={() => loadDetail(item.id)}
                     >
+                      <td style={{ padding: 4 }}>
+                        {item.thumbnailUrl && (
+                          <img
+                            src={item.thumbnailUrl}
+                            alt=""
+                            style={{ width: 40, height: 32, objectFit: 'cover', borderRadius: 4 }}
+                          />
+                        )}
+                      </td>
                       <td><strong>{item.title || 'Untitled'}</strong></td>
                       <td>
                         <span className={`admin-status-badge ${item.status || 'pending_review'}`}>
@@ -210,6 +268,9 @@ export default function AdminListings() {
                         </span>
                       </td>
                       <td>{item.origin ? item.origin.charAt(0).toUpperCase() + item.origin.slice(1) : '—'}</td>
+                      <td className="admin-table-muted" style={{ fontSize: 12 }}>
+                        {teams.find((t) => t.id === item.teamId)?.name ?? '—'}
+                      </td>
                       <td className="admin-table-muted">{item.uploaderEmail || '—'}</td>
                       <td className="admin-table-muted">
                         {[item.address, item.city, item.state].filter(Boolean).join(', ') || '—'}
@@ -305,7 +366,17 @@ export default function AdminListings() {
         </div>
 
         {detail && (
-          <div className="platform-form" style={{ alignSelf: 'start' }}>
+          <div className="platform-form admin-listing-detail" style={{ alignSelf: 'start', maxHeight: '85vh', overflowY: 'auto' }}>
+            {/* Hero image */}
+            {(detail.thumbnailUrl || media.length > 0) && (
+              <div style={{ marginBottom: '12px', borderRadius: 8, overflow: 'hidden', aspectRatio: '16/10', background: 'var(--border)' }}>
+                <img
+                  src={detail.thumbnailUrl || media[0]?.url}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            )}
             <h3>{detail.title || 'Untitled'}</h3>
             <div className="property-meta" style={{ marginBottom: '12px' }}>
               Status: <strong>{detail.status}</strong> · Origin: {detail.origin}
@@ -313,6 +384,23 @@ export default function AdminListings() {
             {detail.uploaderEmail && (
               <div style={{ marginBottom: '12px', fontSize: '13px' }}>Uploaded by: {detail.uploaderEmail}</div>
             )}
+
+            {/* Team assignment */}
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 12, fontWeight: 600 }}>Assign to Team</label>
+              <select
+                value={detail.teamId || ''}
+                onChange={(e) => handleTeamChange(detail.id, e.target.value || null)}
+                disabled={updatingTeam}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8 }}
+              >
+                <option value="">— No team —</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div style={{ marginBottom: '12px' }}>
               {detail.address && <div>{detail.address}</div>}
               {detail.city && <div>{detail.city}, {detail.state} {detail.zipCode}</div>}
@@ -321,6 +409,24 @@ export default function AdminListings() {
                 <p style={{ marginTop: '8px', fontSize: '13px', maxHeight: '120px', overflow: 'auto' }}>{detail.description}</p>
               )}
             </div>
+
+            {/* Image gallery */}
+            {media.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Images ({media.length})</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {media.map((m) => (
+                    <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                      <img
+                        src={m.url}
+                        alt=""
+                        style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {detail.status === 'pending_review' && (
               <>

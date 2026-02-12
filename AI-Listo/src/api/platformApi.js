@@ -25,9 +25,22 @@ export async function createPlatformListing(data) {
 // VA LISTINGS (VA_UPLOADER/VA - always PENDING_REVIEW)
 // ============================================================================
 
+export async function getMyVaListings() {
+  const res = await apiClient.request('/va/listings');
+  return Array.isArray(res?.data) ? res.data : res?.data || [];
+}
+
 export async function createVaListing(data) {
   const res = await apiClient.request('/va/listings', {
     method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res?.data || res;
+}
+
+export async function updateVaListing(id, data) {
+  const res = await apiClient.request(`/va/listings/${id}`, {
+    method: 'PUT',
     body: JSON.stringify(data),
   });
   return res?.data || res;
@@ -42,6 +55,8 @@ export async function getAdminListings(filters = {}) {
   if (filters.status) params.append('status', filters.status);
   if (filters.origin) params.append('origin', filters.origin);
   if (filters.createdBy) params.append('createdBy', filters.createdBy);
+  if (filters.title) params.append('title', filters.title);
+  if (filters.uploaderEmail) params.append('uploaderEmail', filters.uploaderEmail);
   const qs = params.toString();
   const res = await apiClient.request(`/admin/listings${qs ? '?' + qs : ''}`);
   return Array.isArray(res?.data) ? res.data : res?.data || [];
@@ -58,6 +73,14 @@ export async function updateAdminListingStatus(id, status, rejectionReason = nul
   const res = await apiClient.request(`/admin/listings/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify(body),
+  });
+  return res?.data || res;
+}
+
+export async function updateAdminListing(id, { teamId }) {
+  const res = await apiClient.request(`/admin/listings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ teamId: teamId || null }),
   });
   return res?.data || res;
 }

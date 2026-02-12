@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import { getPropertyMedia } from '../../api/propertiesApi';
 import PropertyMap from '../../components/PropertyMap';
 import ContactModal from '../../components/ContactModal';
 import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
@@ -11,10 +12,12 @@ export default function ListingDetail() {
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || '';
   const [property, setProperty] = useState(null);
+  const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     loadProperty();
@@ -24,14 +27,17 @@ export default function ListingDetail() {
     setLoading(true);
     setError(null);
     try {
-      // Use public endpoint - no auth required
-      const data = await apiClient.request(`/properties/${id}`);
-      // Only show published properties to public
+      const [data, mediaList] = await Promise.all([
+        apiClient.request(`/properties/${id}`),
+        getPropertyMedia(id).catch(() => []),
+      ]);
       if (data.status !== 'published') {
         setError('Property not available');
         return;
       }
       setProperty(data);
+      setMedia(Array.isArray(mediaList) ? mediaList.filter((m) => m.type === 'image') : []);
+      setSlideIndex(0);
     } catch (err) {
       setError('Failed to load property: ' + err.message);
     } finally {
@@ -115,6 +121,58 @@ export default function ListingDetail() {
       <main className="listings-main">
         <div className="listings-container">
           <div className="listings-detail-card">
+            {/* Photo slider */}
+            {(() => {
+              const slides = media.length > 0
+                ? media
+                : (property.thumbnailUrl ? [{ url: property.thumbnailUrl }] : []);
+              if (slides.length === 0) return null;
+              const current = slides[slideIndex];
+              return (
+                <div className="listings-detail-slider">
+                  <div className="listings-detail-slider-track">
+                    <a href={current?.url} target="_blank" rel="noopener noreferrer" className="listings-detail-slider-image-wrap">
+                      <img src={current?.url} alt="" className="listings-detail-slider-image" />
+                    </a>
+                  </div>
+                  {slides.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="listings-detail-slider-btn listings-detail-slider-btn-prev"
+                        onClick={() => setSlideIndex((i) => (i <= 0 ? slides.length - 1 : i - 1))}
+                        aria-label="Previous"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        className="listings-detail-slider-btn listings-detail-slider-btn-next"
+                        onClick={() => setSlideIndex((i) => (i >= slides.length - 1 ? 0 : i + 1))}
+                        aria-label="Next"
+                      >
+                        ›
+                      </button>
+                      <div className="listings-detail-slider-dots">
+                        {slides.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className={`listings-detail-slider-dot ${i === slideIndex ? 'active' : ''}`}
+                            onClick={() => setSlideIndex(i)}
+                            aria-label={`Go to slide ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="listings-detail-slider-counter">
+                        {slideIndex + 1} / {slides.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="listings-detail-header">
               <h2 className="listings-detail-title">{property.title}</h2>
               {property.price && (

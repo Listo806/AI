@@ -390,6 +390,18 @@ export default function Listings() {
             <div className="listings-grid">
               {properties.map((property) => (
                 <div key={property.id} className="listings-card">
+                  {property.thumbnailUrl && (
+                    <Link
+                      to={urlType ? `/listings/${property.id}?type=${urlType}` : `/listings/${property.id}`}
+                      className="listings-card-image-wrap"
+                    >
+                      <img
+                        src={property.thumbnailUrl}
+                        alt=""
+                        className="listings-card-image"
+                      />
+                    </Link>
+                  )}
                   <div className="listings-card-header">
                     <h3 className="listings-card-title">{property.title || 'Untitled Property'}</h3>
                     {property.price && (

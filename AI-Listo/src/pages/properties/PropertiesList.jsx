@@ -119,6 +119,11 @@ export default function PropertiesList() {
             const statusClass = getStatusClassName(property.status);
             return (
               <div key={property.id} className={`property-card ${statusClass}`}>
+                {property.thumbnailUrl && (
+                  <div style={{ marginBottom: '10px', borderRadius: '8px', overflow: 'hidden', aspectRatio: '16/10', background: 'var(--border)' }}>
+                    <img src={property.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
                 {/* Header Row: Title + Status */}
                 <div style={{ 
                   display: 'flex', 
