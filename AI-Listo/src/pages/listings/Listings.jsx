@@ -13,9 +13,15 @@ export default function Listings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Get type from URL parameter
+  // Get type, search, page from URL parameters
   const urlType = searchParams.get('type') || '';
   const urlSearch = searchParams.get('search') || '';
+  const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
+
+  const PAGE_SIZE = 20;
+
+  // Pagination
+  const [pagination, setPagination] = useState({ total: 0, limit: PAGE_SIZE, offset: 0 });
   
   // Filters
   const [filters, setFilters] = useState({
@@ -62,7 +68,16 @@ export default function Listings() {
 
   useEffect(() => {
     loadProperties();
-  }, [urlType, urlSearch]);
+  }, [urlType, urlSearch, urlPage]);
+
+  // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
+  useEffect(() => {
+    if (pagination.total > 0 && urlPage > Math.ceil(pagination.total / PAGE_SIZE)) {
+      const params = new URLSearchParams(searchParams);
+      params.delete('page');
+      setSearchParams(params);
+    }
+  }, [pagination.total, urlPage, searchParams]);
 
   // Request user location for distance sorting
   useEffect(() => {
@@ -84,26 +99,47 @@ export default function Listings() {
     }
   }, [sortBy]);
 
+  const totalPages = Math.max(1, Math.ceil(pagination.total / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(1, urlPage), totalPages);
+  const effectivePage = pagination.total > 0 ? currentPage : Math.max(1, urlPage);
+
   const loadProperties = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Public endpoint - get all published properties (no auth required)
       const queryParams = new URLSearchParams();
       if (urlType) queryParams.append('type', urlType);
       if (urlSearch) queryParams.append('search', urlSearch);
-      
-      const url = `/properties/public${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      queryParams.append('limit', String(PAGE_SIZE));
+      queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
+
+      const url = `/properties/public?${queryParams.toString()}`;
       const response = await apiClient.request(url);
-      const propertiesData = Array.isArray(response) ? response : (response.data || []);
+      const propertiesData = Array.isArray(response) ? response : (response.items ?? response.data ?? []);
       setAllProperties(propertiesData);
+
+      if (response && typeof response === 'object' && !Array.isArray(response)) {
+        setPagination({
+          total: response.total ?? propertiesData.length,
+          limit: response.limit ?? PAGE_SIZE,
+          offset: response.offset ?? 0,
+        });
+      }
     } catch (err) {
       console.error('Failed to load properties:', err);
       setError(err.message || 'Failed to load properties');
     } finally {
       setLoading(false);
     }
+  };
+
+  const goToPage = (page) => {
+    const p = Math.max(1, Math.min(page, totalPages));
+    const params = new URLSearchParams(searchParams);
+    if (p === 1) params.delete('page');
+    else params.set('page', String(p));
+    setSearchParams(params);
   };
 
   // Apply client-side filtering and sorting
@@ -250,13 +286,11 @@ export default function Listings() {
                 onChange={(e) => {
                   const newSearch = e.target.value;
                   setFilters({ ...filters, search: newSearch });
-                  if (newSearch) {
-                    setSearchParams({ ...Object.fromEntries(searchParams), search: newSearch });
-                  } else {
-                    const params = new URLSearchParams(searchParams);
-                    params.delete('search');
-                    setSearchParams(params);
-                  }
+                  const params = new URLSearchParams(searchParams);
+                  params.delete('page'); // reset to page 1 when search changes
+                  if (newSearch) params.set('search', newSearch);
+                  else params.delete('search');
+                  setSearchParams(params);
                 }}
                 className="listings-search-input"
                 onKeyDown={(e) => {
@@ -289,11 +323,7 @@ export default function Listings() {
                 onChange={(e) => {
                   const newType = e.target.value;
                   setFilters({ ...filters, type: newType });
-                  if (newType) {
-                    setSearchParams({ type: newType });
-                  } else {
-                    setSearchParams({});
-                  }
+                  setSearchParams(newType ? { type: newType } : {}); // resets page
                 }}
                 className="listings-select"
               >
@@ -399,6 +429,7 @@ export default function Listings() {
                         src={property.thumbnailUrl}
                         alt=""
                         className="listings-card-image"
+                        loading="lazy"
                       />
                     </Link>
                   )}
@@ -462,6 +493,33 @@ export default function Listings() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && properties.length > 0 && pagination.total > PAGE_SIZE && (
+            <div className="listings-pagination">
+              <button
+                type="button"
+                className="listings-pagination-btn"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                aria-label="Previous page"
+              >
+                ‹ Previous
+              </button>
+              <span className="listings-pagination-info">
+                Page {currentPage} of {totalPages} ({pagination.total} properties)
+              </span>
+              <button
+                type="button"
+                className="listings-pagination-btn"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                aria-label="Next page"
+              >
+                Next ›
+              </button>
             </div>
           )}
         </div>

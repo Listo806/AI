@@ -26,7 +26,7 @@ export default function PropertiesList() {
 
     try {
       const response = await apiClient.request('/properties');
-      const propertiesData = Array.isArray(response) ? response : (response.data || response);
+      const propertiesData = Array.isArray(response) ? response : (response.items ?? response.data ?? response);
       // Sort by newest first
       const sorted = propertiesData.sort((a, b) => {
         return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);

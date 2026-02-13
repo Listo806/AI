@@ -132,7 +132,7 @@ export default function ListingDetail() {
                 <div className="listings-detail-slider">
                   <div className="listings-detail-slider-track">
                     <a href={current?.url} target="_blank" rel="noopener noreferrer" className="listings-detail-slider-image-wrap">
-                      <img src={current?.url} alt="" className="listings-detail-slider-image" />
+                      <img src={current?.url} alt="" className="listings-detail-slider-image" loading="lazy" />
                     </a>
                   </div>
                   {slides.length > 1 && (
