@@ -148,7 +148,7 @@ export class PropertiesController {
   @ApiResponse({ status: 403, description: 'Active subscription required' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
-    await this.propertiesService.delete(id, user.id, user.teamId);
+    await this.propertiesService.delete(id, user.id, user.teamId, user.role);
     return { message: 'Property deleted successfully' };
   }
 

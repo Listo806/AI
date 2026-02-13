@@ -196,8 +196,41 @@ export class StorageService {
   }
 
   /**
+   * Delete S3 objects by URLs. Does NOT touch stored_files.
+   * Throws on first S3 failure (for transaction safety in property delete).
+   * 404/NoSuchKey is ignored (idempotent).
+   */
+  async deleteS3ObjectsByUrls(urls: string[]): Promise<void> {
+    if (!this.isConfigured || !this.s3Client || urls.length === 0) {
+      return;
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, s3_key FROM stored_files WHERE url = ANY($1::text[])`,
+      [urls],
+    );
+    for (const row of rows) {
+      try {
+        await this.s3Client.send(
+          new DeleteObjectCommand({ Bucket: this.bucketName, Key: row.s3_key }),
+        );
+        this.logger.log(`S3 object deleted: ${row.s3_key}`);
+      } catch (err: any) {
+        // AWS returns NoSuchKey for missing objects - treat as success (idempotent)
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+          this.logger.debug(`S3 object already gone: ${row.s3_key}`);
+          continue;
+        }
+        this.logger.error(`S3 delete failed for ${row.s3_key}: ${err.message}`);
+        throw err;
+      }
+    }
+  }
+
+  /**
    * Delete file(s) by URL(s). Used when property/media is deleted to clean up S3 and stored_files.
    * No user check - caller (properties service) already validated permissions.
+   * For single media delete: S3 failures are tolerated (log + remove stored_files).
+   * For property delete: use deleteS3ObjectsByUrls first (throws), then transactional DB delete.
    */
   async deleteFilesByUrls(urls: string[]): Promise<void> {
     if (!this.isConfigured || !this.s3Client || urls.length === 0) {
@@ -212,13 +245,16 @@ export class StorageService {
         await this.s3Client.send(
           new DeleteObjectCommand({ Bucket: this.bucketName, Key: row.s3_key }),
         );
-        await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
         this.logger.log(`File deleted (orphan cleanup): ${row.s3_key}`);
       } catch (err: any) {
-        this.logger.warn(`Failed to delete S3 object ${row.s3_key}: ${err.message}`);
-        // Still remove stored_files to avoid orphan records
-        await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+          this.logger.debug(`S3 object already gone: ${row.s3_key}`);
+        } else {
+          this.logger.warn(`Failed to delete S3 object ${row.s3_key}: ${err.message}`);
+        }
+        // Still remove stored_files to avoid orphan records (resilient for single media delete)
       }
+      await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
     }
   }
 

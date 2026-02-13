@@ -500,28 +500,50 @@ export class PropertiesService {
     return result;
   }
 
-  async delete(id: string, userId: string, teamId: string | null): Promise<void> {
+  async delete(id: string, userId: string, teamId: string | null, userRole?: string): Promise<void> {
     const property = await this.findById(id);
     if (!property) {
       throw new NotFoundException('Property not found');
     }
 
-    // Check permissions: user must be creator
-    if (String(property.createdBy) !== String(userId)) {
+    // Authorization: admin/super_admin OR creator OR team member (matches update scope)
+    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+    const isCreator = String(property.createdBy) === String(userId);
+    const isTeamMember = property.teamId && teamId && String(property.teamId) === String(teamId);
+    if (!isAdmin && !isCreator && !isTeamMember) {
       throw new ForbiddenException('You do not have permission to delete this property');
     }
 
-    // Fetch all related media URLs before cascade deletes property_media
+    // Fetch media URLs (after auth pass)
     const { rows: mediaRows } = await this.db.query(
       `SELECT url FROM property_media WHERE property_id = $1`,
       [id],
     );
     const urls = mediaRows.map((r: { url: string }) => r.url);
+
+    // 1. S3 deletes first — throw on failure so property is NOT deleted
     if (urls.length > 0) {
-      await this.storageService.deleteFilesByUrls(urls);
+      await this.storageService.deleteS3ObjectsByUrls(urls);
     }
 
-    await this.db.query('DELETE FROM properties WHERE id = $1', [id]);
+    // 2. Transaction: stored_files + property (atomic)
+    const client = await this.db.getClient();
+    try {
+      await client.query('BEGIN');
+      if (urls.length > 0) {
+        await client.query(
+          `DELETE FROM stored_files WHERE url = ANY($1::text[])`,
+          [urls],
+        );
+      }
+      await client.query('DELETE FROM properties WHERE id = $1', [id]);
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 
   async addMedia(propertyId: string, url: string, type: 'image' | 'video' | 'document' = 'image', isPrimary: boolean = false, userId: string, teamId: string | null): Promise<PropertyMedia> {
@@ -550,7 +572,7 @@ export class PropertiesService {
       }
     }
 
-    // If this is primary, unset other primary media
+    // If this is primary, unset other primary media (race: unique index may still reject)
     if (isPrimary) {
       await this.db.query(
         `UPDATE property_media SET is_primary = false WHERE property_id = $1`,
@@ -558,14 +580,20 @@ export class PropertiesService {
       );
     }
 
-    const { rows } = await this.db.query(
-      `INSERT INTO property_media (property_id, url, type, is_primary, display_order, created_at)
-       VALUES ($1, $2, $3, $4, (SELECT COALESCE(MAX(display_order), 0) + 1 FROM property_media WHERE property_id = $1), NOW())
-       RETURNING id, property_id as "propertyId", url, type, is_primary as "isPrimary", display_order as "displayOrder", created_at as "createdAt"`,
-      [propertyId, url, type, isPrimary],
-    );
-
-    return rows[0];
+    try {
+      const { rows } = await this.db.query(
+        `INSERT INTO property_media (property_id, url, type, is_primary, display_order, created_at)
+         VALUES ($1, $2, $3, $4, (SELECT COALESCE(MAX(display_order), 0) + 1 FROM property_media WHERE property_id = $1), NOW())
+         RETURNING id, property_id as "propertyId", url, type, is_primary as "isPrimary", display_order as "displayOrder", created_at as "createdAt"`,
+        [propertyId, url, type, isPrimary],
+      );
+      return rows[0];
+    } catch (err: any) {
+      if (err.code === '23505') {
+        throw new BadRequestException('Another image was set as primary. Please try again.');
+      }
+      throw err;
+    }
   }
 
   async getMedia(propertyId: string): Promise<PropertyMedia[]> {
@@ -639,13 +667,19 @@ export class PropertiesService {
 
     values.push(mediaId);
 
-    const { rows: updatedRows } = await this.db.query(
-      `UPDATE property_media SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, property_id as "propertyId", url, type, is_primary as "isPrimary", display_order as "displayOrder", created_at as "createdAt"`,
-      values,
-    );
-
-    return updatedRows[0];
+    try {
+      const { rows: updatedRows } = await this.db.query(
+        `UPDATE property_media SET ${updates.join(', ')} WHERE id = $${paramCount}
+         RETURNING id, property_id as "propertyId", url, type, is_primary as "isPrimary", display_order as "displayOrder", created_at as "createdAt"`,
+        values,
+      );
+      return updatedRows[0];
+    } catch (err: any) {
+      if (err.code === '23505') {
+        throw new BadRequestException('Another image was set as primary. Please try again.');
+      }
+      throw err;
+    }
   }
 
   async deleteMedia(mediaId: string, userId: string, teamId: string | null): Promise<void> {
