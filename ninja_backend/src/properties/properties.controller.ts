@@ -28,7 +28,7 @@ export class PropertiesController {
   @Get('public')
   @ApiOperation({ summary: 'Marketplace search: published properties with structured filters (no auth)' })
   @ApiQuery({ name: 'city', required: false, description: 'Exact city filter (case-insensitive)' })
-  @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, condo, townhouse, land, commercial, other' })
+  @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, land, commercial, villa, office' })
   @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale or rent' })
   @ApiQuery({ name: 'search', required: false, description: 'Optional text search on title, address, city, description' })
   @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })

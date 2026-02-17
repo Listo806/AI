@@ -399,6 +399,14 @@ async function setupDatabase() {
       console.log('✓ Property type marketplace migration completed');
     }
     
+    // Property Type Enum
+    const migration38Path = path.join(__dirname, '../src/database/migrations/038_property_type_enum.sql');
+    if (fs.existsSync(migration38Path)) {
+      const migration38SQL = fs.readFileSync(migration38Path, 'utf8');
+      await pool.query(migration38SQL);
+      console.log('✓ Property type enum migration completed');
+    }
+    
     console.log('Database schema created successfully!');
 
     await pool.end();

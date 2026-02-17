@@ -8,6 +8,9 @@ const MAX_IMAGES_PER_PROPERTY = 20;
 const DEFAULT_PAGE_LIMIT = 20;
 const MAX_PAGE_LIMIT = 100;
 
+/** Allowed values for property_type (marketplace filter and validation) */
+const PROPERTY_TYPE_VALUES = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'] as const;
+
 @Injectable()
 export class PropertiesService {
   constructor(
@@ -225,8 +228,11 @@ export class PropertiesService {
       params.push(filters.city.trim());
     }
     if (filters?.propertyType?.trim()) {
-      conditions.push(`LOWER(TRIM(property_type)) = LOWER(TRIM($${paramCount++}))`);
-      params.push(filters.propertyType.trim());
+      const pt = filters.propertyType.trim().toLowerCase();
+      if (PROPERTY_TYPE_VALUES.includes(pt as any)) {
+        conditions.push(`LOWER(TRIM(property_type)) = $${paramCount++}`);
+        params.push(pt);
+      }
     }
     if (filters?.mode?.trim()) {
       const mode = filters.mode.trim().toLowerCase();
