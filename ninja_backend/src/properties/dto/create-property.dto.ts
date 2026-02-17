@@ -37,6 +37,10 @@ export class CreatePropertyDto {
   type: PropertyType;
 
   @IsOptional()
+  @IsString()
+  propertyType?: string | null;
+
+  @IsOptional()
   @IsEnum(PropertyStatus)
   status?: PropertyStatus;
 

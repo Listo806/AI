@@ -391,6 +391,14 @@ async function setupDatabase() {
       console.log('✓ Property media unique primary migration completed');
     }
     
+    //Property Type Marketplace
+    const migration37Path = path.join(__dirname, '../src/database/migrations/037_property_type_marketplace.sql');
+    if (fs.existsSync(migration37Path)) {
+      const migration37SQL = fs.readFileSync(migration37Path, 'utf8');
+      await pool.query(migration37SQL);
+      console.log('✓ Property type marketplace migration completed');
+    }
+    
     console.log('Database schema created successfully!');
 
     await pool.end();

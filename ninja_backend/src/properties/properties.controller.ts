@@ -26,14 +26,18 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Get('public')
-  @ApiOperation({ summary: 'Get all published properties (public, no auth required)' })
-  @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search query' })
+  @ApiOperation({ summary: 'Marketplace search: published properties with structured filters (no auth)' })
+  @ApiQuery({ name: 'city', required: false, description: 'Exact city filter (case-insensitive)' })
+  @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, condo, townhouse, land, commercial, other' })
+  @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale or rent' })
+  @ApiQuery({ name: 'search', required: false, description: 'Optional text search on title, address, city, description' })
   @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
   @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
   @ApiResponse({ status: 200, description: 'Published properties retrieved successfully' })
   async findPublic(
-    @Query('type') type?: string,
+    @Query('city') city?: string,
+    @Query('propertyType') propertyType?: string,
+    @Query('mode') mode?: string,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -42,7 +46,10 @@ export class PropertiesController {
       limit: limit != null ? parseInt(limit, 10) : undefined,
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
-    return this.propertiesService.findPublic({ type, search }, pagination);
+    return this.propertiesService.findPublic(
+      { city, propertyType, mode, search },
+      pagination,
+    );
   }
 
   @Post()

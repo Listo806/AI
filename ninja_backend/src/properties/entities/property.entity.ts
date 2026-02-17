@@ -48,6 +48,8 @@ export interface Property {
   reviewedAt: Date | null;
   rejectionReason: string | null;
   thumbnailUrl: string | null;
+  /** Kind of property for marketplace: house, apartment, condo, townhouse, land, commercial, other */
+  propertyType: string | null;
   createdAt: Date;
   updatedAt: Date;
   publishedAt: Date | null;
@@ -72,6 +74,8 @@ export interface CreatePropertyDto {
   zipCode?: string;
   price?: number;
   type: PropertyType;
+  /** Kind of property: house, apartment, condo, townhouse, land, commercial, other */
+  propertyType?: string | null;
   status?: PropertyStatus;
   bedrooms?: number;
   bathrooms?: number;
@@ -92,6 +96,7 @@ export interface UpdatePropertyDto {
   zipCode?: string;
   price?: number;
   type?: PropertyType;
+  propertyType?: string | null;
   status?: PropertyStatus;
   bedrooms?: number;
   bathrooms?: number;

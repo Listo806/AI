@@ -79,15 +79,16 @@ export class PropertiesService {
 
     const { rows } = await this.db.query(
       `INSERT INTO properties (
-        title, description, address, city, state, zip_code, price, type, status,
+        title, description, address, city, state, zip_code, price, type, property_type, status,
         bedrooms, bathrooms, square_feet, lot_size, year_built, created_by, team_id,
         latitude, longitude, created_at, updated_at, published_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW(), $19)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW(), $20)
       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                 bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                 thumbnail_url as "thumbnailUrl", latitude, longitude,
+                property_type as "propertyType",
                 created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       [
         createPropertyDto.title,
@@ -98,6 +99,7 @@ export class PropertiesService {
         createPropertyDto.zipCode || null,
         createPropertyDto.price || null,
         createPropertyDto.type,
+        createPropertyDto.propertyType ?? null,
         status,
         createPropertyDto.bedrooms || null,
         createPropertyDto.bathrooms || null,
@@ -134,6 +136,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
+                        property_type as "propertyType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -198,13 +201,14 @@ export class PropertiesService {
   }
 
   async findPublic(
-    filters?: { type?: string; search?: string },
+    filters?: { city?: string; propertyType?: string; mode?: string; search?: string },
     pagination?: { limit?: number; offset?: number },
   ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
+                        property_type as "propertyType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -215,14 +219,26 @@ export class PropertiesService {
     conditions.push(`status = $${paramCount++}`);
     params.push(PropertyStatus.PUBLISHED);
 
-    if (filters?.type) {
-      conditions.push(`type = $${paramCount++}`);
-      params.push(filters.type);
+    // Structured filters (exact match, case-insensitive for city and propertyType)
+    if (filters?.city?.trim()) {
+      conditions.push(`LOWER(TRIM(city)) = LOWER(TRIM($${paramCount++}))`);
+      params.push(filters.city.trim());
+    }
+    if (filters?.propertyType?.trim()) {
+      conditions.push(`LOWER(TRIM(property_type)) = LOWER(TRIM($${paramCount++}))`);
+      params.push(filters.propertyType.trim());
+    }
+    if (filters?.mode?.trim()) {
+      const mode = filters.mode.trim().toLowerCase();
+      if (mode === 'sale' || mode === 'rent') {
+        conditions.push(`type = $${paramCount++}`);
+        params.push(mode);
+      }
     }
 
-    // Add text search on address, city, state, title, and description
-    if (filters?.search) {
-      const searchTerm = `%${filters.search}%`;
+    // Optional text search (backward compatible)
+    if (filters?.search?.trim()) {
+      const searchTerm = `%${filters.search.trim()}%`;
       conditions.push(`(
         address ILIKE $${paramCount} OR
         city ILIKE $${paramCount} OR
@@ -269,6 +285,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
+                        property_type as "propertyType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -337,6 +354,7 @@ export class PropertiesService {
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
               thumbnail_url as "thumbnailUrl", latitude, longitude,
+              property_type as "propertyType",
               reviewed_by as "reviewedBy", reviewed_at as "reviewedAt", rejection_reason as "rejectionReason",
               created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
        FROM properties WHERE id = $1`,
@@ -403,6 +421,10 @@ export class PropertiesService {
       updates.push(`type = $${paramCount++}`);
       values.push(updatePropertyDto.type);
     }
+    if (updatePropertyDto.propertyType !== undefined) {
+      updates.push(`property_type = $${paramCount++}`);
+      values.push(updatePropertyDto.propertyType);
+    }
     if (updatePropertyDto.status !== undefined) {
       updates.push(`status = $${paramCount++}`);
       values.push(updatePropertyDto.status);
@@ -465,6 +487,7 @@ export class PropertiesService {
                  bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                  created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                  thumbnail_url as "thumbnailUrl", latitude, longitude,
+                 property_type as "propertyType",
                  created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"`,
       values,
     );
