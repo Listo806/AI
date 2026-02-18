@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
@@ -114,7 +115,11 @@ export class PropertiesController {
   @ApiResponse({ status: 200, description: 'Property retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async findOne(@Param('id') id: string) {
-    return this.propertiesService.findById(id);
+    const property = await this.propertiesService.findById(id);
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+    return property;
   }
 
   @Put(':id')
