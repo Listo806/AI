@@ -161,16 +161,24 @@ export class CrmPropertiesService {
     return { ok: true };
   }
 
+  /**
+   * User can update property if: they created it, or it belongs to their team (team_id),
+   * or it belongs to a team they own (owner_id = userId).
+   */
   private async getPropertyForUpdate(
     propertyId: string,
     userId: string,
     teamId: string | null,
   ): Promise<{ id: string } | null> {
-    const teamFilter = teamId ? 'AND team_id = $2' : 'AND created_by = $2';
-    const params = teamId ? [propertyId, teamId] : [propertyId, userId];
     const { rows } = await this.db.query(
-      `SELECT id FROM properties WHERE id = $1 ${teamFilter}`,
-      params,
+      `SELECT p.id FROM properties p
+       WHERE p.id = $1
+         AND (
+           p.created_by = $2
+           OR ($3::uuid IS NOT NULL AND p.team_id = $3)
+           OR (p.team_id IS NOT NULL AND EXISTS (SELECT 1 FROM teams t WHERE t.id = p.team_id AND t.owner_id = $2))
+         )`,
+      [propertyId, userId, teamId],
     );
     return rows[0] || null;
   }
