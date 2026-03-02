@@ -6,6 +6,9 @@ import { getMyTeams } from '../../api/platformApi';
 import { getPropertyMedia, uploadPropertyImage, setPropertyThumbnail, MAX_IMAGES_PER_PROPERTY } from '../../api/propertiesApi';
 import PropertyImageUpload from '../../components/PropertyImageUpload';
 import { useAuth } from '../../context/AuthContext';
+
+/** Allowed property type values (must match backend enum) */
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { useNotification } from '../../context/NotificationContext';
 
@@ -32,6 +35,7 @@ export default function PropertyForm() {
     zipCode: '',
     price: '',
     type: 'sale',
+    propertyType: '',
     status: 'draft',
     bedrooms: '',
     bathrooms: '',
@@ -78,6 +82,7 @@ export default function PropertyForm() {
         zipCode: property.zipCode || '',
         price: property.price || '',
         type: property.type || 'sale',
+        propertyType: property.propertyType || '',
         status: property.status || 'draft',
         bedrooms: property.bedrooms || '',
         bathrooms: property.bathrooms || '',
@@ -120,6 +125,7 @@ export default function PropertyForm() {
         zipCode: formData.zipCode || null,
         price: formData.price ? parseFloat(formData.price) : null,
         type: formData.type,
+        propertyType: formData.propertyType || null,
         status: formData.status,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
@@ -380,6 +386,24 @@ export default function PropertyForm() {
           <div className="crm-form-section">
             <h3 className="crm-form-section-title">{t('properties.propertyDetails')}</h3>
             
+            <div className="crm-form-field">
+              <label htmlFor="propertyType">{t('properties.propertyType')}</label>
+              <select
+                id="propertyType"
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="">{t('properties.propertyTypePlaceholder')}</option>
+                {PROPERTY_TYPE_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`properties.propertyType_${value}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="crm-form-row">
               <div className="crm-form-field">
                 <label htmlFor="bedrooms">{t('properties.bedrooms')}</label>

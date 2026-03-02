@@ -16,6 +16,11 @@ import { useNotification } from '../../context/NotificationContext';
 import '../platform/platform.css';
 import '../properties/properties.css';
 
+/** Allowed property type values (must match backend enum) */
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
+
+const PAGE_SIZE = 20;
+
 const EMPTY_FORM = {
   title: '',
   description: '',
@@ -25,6 +30,7 @@ const EMPTY_FORM = {
   zipCode: '',
   price: '',
   type: 'sale',
+  propertyType: '',
   bedrooms: '',
   bathrooms: '',
   squareFeet: '',
@@ -46,6 +52,7 @@ export default function VaUpload() {
   const [media, setMedia] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [mediaActionId, setMediaActionId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
@@ -63,6 +70,11 @@ export default function VaUpload() {
     }
   }, [editingId]);
 
+  useEffect(() => {
+    const totalP = Math.max(1, Math.ceil(listings.length / PAGE_SIZE));
+    if (currentPage > totalP) setCurrentPage(totalP);
+  }, [listings.length]);
+
   const loadListings = async () => {
     setLoading(true);
     setError(null);
@@ -75,6 +87,10 @@ export default function VaUpload() {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedListings = listings.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,6 +114,7 @@ export default function VaUpload() {
       zipCode: item.zipCode || '',
       price: item.price ?? '',
       type: item.type || 'sale',
+      propertyType: item.propertyType || '',
       bedrooms: item.bedrooms ?? '',
       bathrooms: item.bathrooms ?? '',
       squareFeet: item.squareFeet ?? '',
@@ -127,6 +144,7 @@ export default function VaUpload() {
         zipCode: formData.zipCode || null,
         price: formData.price ? parseFloat(formData.price) : null,
         type: formData.type,
+        propertyType: formData.propertyType || null,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
         squareFeet: formData.squareFeet ? parseFloat(formData.squareFeet) : null,
@@ -150,6 +168,7 @@ export default function VaUpload() {
             zipCode: created.zipCode || '',
             price: created.price ?? '',
             type: created.type || 'sale',
+            propertyType: created.propertyType || '',
             bedrooms: created.bedrooms ?? '',
             bathrooms: created.bathrooms ?? '',
             squareFeet: created.squareFeet ?? '',
@@ -289,6 +308,23 @@ export default function VaUpload() {
                   disabled={submitting}
                 />
               </div>
+            </div>
+            <div className="crm-form-field">
+              <label htmlFor="propertyType">{t('properties.propertyType')}</label>
+              <select
+                id="propertyType"
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleChange}
+                disabled={submitting}
+              >
+                <option value="">{t('properties.propertyTypePlaceholder')}</option>
+                {PROPERTY_TYPE_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`properties.propertyType_${value}`)}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="crm-form-field">
               <label htmlFor="address">Address</label>
@@ -603,8 +639,9 @@ export default function VaUpload() {
           No listings yet. Add your first listing above.
         </div>
       ) : (
+        <>
         <div className="properties-grid">
-          {listings.map((item) => {
+          {paginatedListings.map((item) => {
             const statusClass = getStatusClass(item.status);
             const canEdit = item.status === 'pending_review';
             return (
@@ -623,6 +660,7 @@ export default function VaUpload() {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 16px', marginBottom: '10px', fontSize: '12px', color: 'var(--property-text-muted, #64748b)' }}>
                   {item.price != null && <span><strong>Price:</strong> {formatPrice(item.price)}</span>}
+                  {item.propertyType && <span><strong>{t('properties.propertyType')}:</strong> {t(`properties.propertyType_${item.propertyType}`)}</span>}
                   {item.bedrooms != null && <span><strong>Beds:</strong> {item.bedrooms}</span>}
                   {item.bathrooms != null && <span><strong>Baths:</strong> {item.bathrooms}</span>}
                   {item.squareFeet != null && <span><strong>Sq Ft:</strong> {item.squareFeet.toLocaleString()}</span>}
@@ -658,6 +696,32 @@ export default function VaUpload() {
             );
           })}
         </div>
+        {listings.length > PAGE_SIZE && (
+          <div className="properties-pagination">
+            <button
+              type="button"
+              className="properties-pagination-btn"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+              aria-label="Previous"
+            >
+              ‹ Previous
+            </button>
+            <span className="properties-pagination-info">
+              Page {safePage} of {totalPages} ({listings.length} listings)
+            </span>
+            <button
+              type="button"
+              className="properties-pagination-btn"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+              aria-label="Next"
+            >
+              Next ›
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );

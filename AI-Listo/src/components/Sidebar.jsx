@@ -88,13 +88,13 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
       { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
     ];
   } else {
-    if (canSeePlatformListings) {
-      navItems = [
-        ...topNavItems.slice(0, 6),
-        { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
-        ...topNavItems.slice(6),
-      ];
-    }
+    // if (canSeePlatformListings) {
+    //   navItems = [
+    //     ...topNavItems.slice(0, 6),
+    //     { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
+    //     ...topNavItems.slice(6),
+    //   ];
+    // }
   }
 
   const showAiCenterAndBottom = canSeeAiCenter && !canSeeAdmin;

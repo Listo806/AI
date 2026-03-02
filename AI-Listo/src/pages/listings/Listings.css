@@ -166,6 +166,23 @@
   border-color: #3b82f6;
 }
 
+.listings-filter-city {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.listings-filter-city label {
+  font-size: 14px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.listings-filter-city input {
+  width: 160px;
+  min-width: 120px;
+}
+
 .listings-price-range {
   display: flex;
   gap: 8px;

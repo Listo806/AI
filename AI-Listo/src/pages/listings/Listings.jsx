@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
 import ContactModal from '../../components/ContactModal';
 import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
+
 export default function Listings() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Get type, search, page from URL parameters
+  // Get type, propertyType, search, city, page from URL parameters
   const urlType = searchParams.get('type') || '';
+  const urlPropertyType = searchParams.get('propertyType') || '';
   const urlSearch = searchParams.get('search') || '';
+  const urlCity = searchParams.get('city') || '';
   const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
 
   const PAGE_SIZE = 20;
@@ -26,6 +32,8 @@ export default function Listings() {
   // Filters
   const [filters, setFilters] = useState({
     type: urlType,
+    propertyType: urlPropertyType,
+    city: urlCity,
     search: urlSearch,
     minPrice: '',
     maxPrice: '',
@@ -62,13 +70,15 @@ export default function Listings() {
   // Update filters when URL changes
   useEffect(() => {
     const urlType = searchParams.get('type') || '';
+    const urlPropertyType = searchParams.get('propertyType') || '';
     const urlSearch = searchParams.get('search') || '';
-    setFilters(prev => ({ ...prev, type: urlType, search: urlSearch }));
+    const urlCity = searchParams.get('city') || '';
+    setFilters(prev => ({ ...prev, type: urlType, propertyType: urlPropertyType, city: urlCity, search: urlSearch }));
   }, [searchParams]);
 
   useEffect(() => {
     loadProperties();
-  }, [urlType, urlSearch, urlPage]);
+  }, [urlType, urlPropertyType, urlCity, urlSearch, urlPage]);
 
   // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
   useEffect(() => {
@@ -109,7 +119,9 @@ export default function Listings() {
 
     try {
       const queryParams = new URLSearchParams();
-      if (urlType) queryParams.append('type', urlType);
+      if (urlType) queryParams.append('mode', urlType);
+      if (urlPropertyType) queryParams.append('propertyType', urlPropertyType);
+      if (urlCity) queryParams.append('city', urlCity);
       if (urlSearch) queryParams.append('search', urlSearch);
       queryParams.append('limit', String(PAGE_SIZE));
       queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
@@ -157,6 +169,14 @@ export default function Listings() {
     // Apply filters
     if (filters.type) {
       filtered = filtered.filter(p => p.type === filters.type);
+    }
+
+    if (filters.propertyType) {
+      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+    }
+
+    if (filters.city) {
+      filtered = filtered.filter(p => p.city && p.city.toLowerCase() === filters.city.toLowerCase());
     }
 
     if (filters.search) {
@@ -265,6 +285,11 @@ export default function Listings() {
       <header className="listings-header">
         <div className="listings-header-content">
           <h1 className="listings-title">Property Listings</h1>
+          <div className="listings-header-actions">
+            <Link to="/sign-in" className="listings-btn listings-btn-secondary">
+              Sign In
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -323,13 +348,33 @@ export default function Listings() {
                 onChange={(e) => {
                   const newType = e.target.value;
                   setFilters({ ...filters, type: newType });
-                  setSearchParams(newType ? { type: newType } : {}); // resets page
+                  const params = new URLSearchParams(searchParams);
+                  if (newType) params.set('type', newType); else params.delete('type');
+                  params.delete('page');
+                  setSearchParams(params);
                 }}
                 className="listings-select"
               >
-                <option value="">All Types</option>
+                <option value="">All (Sale/Rent)</option>
                 <option value="sale">For Sale</option>
                 <option value="rent">For Rent</option>
+              </select>
+              <select
+                value={filters.propertyType}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setFilters({ ...filters, propertyType: newVal });
+                  const params = new URLSearchParams(searchParams);
+                  if (newVal) params.set('propertyType', newVal); else params.delete('propertyType');
+                  params.delete('page');
+                  setSearchParams(params);
+                }}
+                className="listings-select"
+              >
+                <option value="">Property type: Any</option>
+                {PROPERTY_TYPE_OPTIONS.map((value) => (
+                  <option key={value} value={value}>{t(`properties.propertyType_${value}`)}</option>
+                ))}
               </select>
               <select
                 value={sortBy}
@@ -345,6 +390,24 @@ export default function Listings() {
 
             {/* Advanced Filters */}
             <div className="listings-filters">
+              <div className="listings-filter-city">
+                <label htmlFor="listings-city">{t('properties.city')}</label>
+                <input
+                  id="listings-city"
+                  type="text"
+                  placeholder={t('properties.cityPlaceholder') || 'e.g. Quito'}
+                  value={filters.city}
+                  onChange={(e) => {
+                    const newCity = e.target.value.trim();
+                    setFilters({ ...filters, city: newCity });
+                    const params = new URLSearchParams(searchParams);
+                    if (newCity) params.set('city', newCity); else params.delete('city');
+                    params.delete('page');
+                    setSearchParams(params);
+                  }}
+                  className="listings-input"
+                />
+              </div>
               <div className="listings-price-range">
                 <label>Price Range:</label>
                 <input
@@ -388,9 +451,9 @@ export default function Listings() {
                 <option value="3">3+ Bathrooms</option>
                 <option value="4">4+ Bathrooms</option>
               </select>
-              {(filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms) && (
+              {(filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms || filters.propertyType || filters.city) && (
                 <button
-                  onClick={() => setFilters({ ...filters, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '' })}
+                  onClick={() => setFilters({ ...filters, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', propertyType: '', city: '' })}
                   className="listings-btn listings-btn-secondary"
                 >
                   Clear Filters
@@ -411,7 +474,7 @@ export default function Listings() {
               <div className="listings-empty-icon">🏠</div>
               <h3 className="listings-empty-title">No properties found</h3>
               <p className="listings-empty-text">
-                {filters.search || filters.type || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
+                {filters.search || filters.type || filters.propertyType || filters.city || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
                   ? 'Try adjusting your filters'
                   : 'No properties available at the moment'}
               </p>
@@ -450,6 +513,9 @@ export default function Listings() {
                   <div className="listings-card-details">
                     {property.type && (
                       <div><strong>Type:</strong> {property.type === 'sale' ? 'For Sale' : 'For Rent'}</div>
+                    )}
+                    {property.propertyType && (
+                      <div><strong>{t('properties.propertyType')}:</strong> {t(`properties.propertyType_${property.propertyType}`)}</div>
                     )}
                     {property.bedrooms && (
                       <div><strong>Bedrooms:</strong> {property.bedrooms}</div>

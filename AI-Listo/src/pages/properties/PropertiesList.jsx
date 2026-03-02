@@ -6,32 +6,37 @@ import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import './properties.css';
 
+const PAGE_SIZE = 20;
+
 export default function PropertiesList() {
   const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const [properties, setProperties] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, limit: PAGE_SIZE, offset: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
-      loadProperties();
+      loadProperties((currentPage - 1) * PAGE_SIZE);
     }
-  }, [isAuthenticated, user, authLoading]);
+  }, [isAuthenticated, user, authLoading, currentPage]);
 
-  const loadProperties = async () => {
+  const loadProperties = async (offset = 0) => {
     setDashboardLoading(true);
     setError(null);
 
     try {
-      const response = await apiClient.request('/properties');
-      const propertiesData = Array.isArray(response) ? response : (response.items ?? response.data ?? response);
-      // Sort by newest first
-      const sorted = propertiesData.sort((a, b) => {
-        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      });
+      const response = await apiClient.request(`/properties?limit=${PAGE_SIZE}&offset=${offset}`);
+      const items = response?.items ?? (Array.isArray(response) ? response : response?.data ?? []);
+      const total = response?.total ?? items.length;
+      const sorted = Array.isArray(items)
+        ? [...items].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        : [];
       setProperties(sorted);
+      setPagination({ total, limit: PAGE_SIZE, offset });
     } catch (err) {
       console.error('Failed to load properties:', err);
       handleError(err, 'Failed to load properties');
@@ -170,6 +175,9 @@ export default function PropertiesList() {
                   {property.price && (
                     <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
                   )}
+                  {property.propertyType && (
+                    <span><strong>{t('properties.propertyType')}:</strong> {property.propertyType}</span>
+                  )}
                   {property.type && (
                     <span><strong>{t('common.status')}:</strong> {property.type === 'sale' ? t('properties.published') : t('properties.draft')}</span>
                   )}
@@ -207,6 +215,32 @@ export default function PropertiesList() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {!dashboardLoading && properties.length > 0 && pagination.total > PAGE_SIZE && (
+        <div className="properties-pagination">
+          <button
+            type="button"
+            className="properties-pagination-btn"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            aria-label={t('common.previous')}
+          >
+            ‹ {t('common.previous')}
+          </button>
+          <span className="properties-pagination-info">
+            {t('common.page') || 'Page'} {currentPage} {t('common.of') || 'of'} {Math.ceil(pagination.total / PAGE_SIZE)} ({pagination.total} {t('properties.title')?.toLowerCase() || 'properties'})
+          </span>
+          <button
+            type="button"
+            className="properties-pagination-btn"
+            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={currentPage >= Math.ceil(pagination.total / PAGE_SIZE)}
+            aria-label={t('common.next')}
+          >
+            {t('common.next')} ›
+          </button>
         </div>
       )}
     </div>

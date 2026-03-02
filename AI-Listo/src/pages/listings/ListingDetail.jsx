@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { getPropertyMedia } from '../../api/propertiesApi';
 import PropertyMap from '../../components/PropertyMap';
@@ -8,6 +9,7 @@ import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
 export default function ListingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || '';
@@ -212,6 +214,9 @@ export default function ListingDetail() {
               <div className="listings-detail-grid">
                 {property.type && (
                   <div><strong>Type:</strong> {property.type === 'sale' ? 'For Sale' : 'For Rent'}</div>
+                )}
+                {property.propertyType && (
+                  <div><strong>{t('properties.propertyType')}:</strong> {t(`properties.propertyType_${property.propertyType}`)}</div>
                 )}
                 {property.bedrooms && (
                   <div><strong>Bedrooms:</strong> {property.bedrooms}</div>
