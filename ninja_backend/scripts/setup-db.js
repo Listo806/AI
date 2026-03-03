@@ -406,6 +406,14 @@ async function setupDatabase() {
       await pool.query(migration38SQL);
       console.log('✓ Property type enum migration completed');
     }
+
+    // Add name to users
+    const migration39Path = path.join(__dirname, '../src/database/migrations/039_add_name_to_users.sql');
+    if (fs.existsSync(migration39Path)) {
+      const migration39SQL = fs.readFileSync(migration39Path, 'utf8');
+      await pool.query(migration39SQL);
+      console.log('✓ Add name to users migration completed');
+    }
     
     console.log('Database schema created successfully!');
 
