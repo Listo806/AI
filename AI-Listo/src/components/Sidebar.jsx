@@ -246,11 +246,11 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
         {/* <div className="crm-sidebar-footer">
           <div className="crm-user-info">
             <div className="crm-user-avatar">
-              {user?.email ? user.email[0].toUpperCase() : 'U'}
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (
               <div className="crm-user-details">
-                <div className="crm-user-name">{user?.email || 'User'}</div>
+                <div className="crm-user-name">{user?.name || user?.email || 'User'}</div>
                 <div className="crm-user-role">{user?.role || 'user'}</div>
               </div>
             )}

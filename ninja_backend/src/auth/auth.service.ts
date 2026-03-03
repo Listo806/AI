@@ -55,6 +55,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name ?? null,
+        phone: user.phone ?? null,
         role: user.role,
         teamId: user.teamId,
       },
@@ -92,6 +94,8 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name ?? null,
+        phone: user.phone ?? null,
         role: user.role,
         teamId: user.teamId,
       },

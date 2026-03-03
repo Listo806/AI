@@ -1,11 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from './entities/user.entity';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('users')
 @ApiBearerAuth('JWT-auth')
@@ -24,9 +25,29 @@ export class UsersController {
     return {
       id: freshUser?.id,
       email: freshUser?.email,
+      name: freshUser?.name ?? null,
+      phone: freshUser?.phone ?? null,
       role: freshUser?.role,
       teamId: freshUser?.teamId,
       isActive: freshUser?.isActive,
+    };
+  }
+
+  @Patch('me')
+  @ApiOperation({ summary: 'Update current user profile (name, phone)' })
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+    const updated = await this.usersService.updateProfile(user.id, dto);
+    return {
+      id: updated.id,
+      email: updated.email,
+      name: updated.name ?? null,
+      phone: updated.phone ?? null,
+      role: updated.role,
+      teamId: updated.teamId,
+      isActive: updated.isActive,
     };
   }
 

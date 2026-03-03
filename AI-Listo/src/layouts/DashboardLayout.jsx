@@ -198,17 +198,17 @@ export default function DashboardLayout() {
                 aria-label="Account menu"
               >
                 <div className="crm-header-avatar">
-                  {user?.email ? user.email[0].toUpperCase() : 'U'}
+                  {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                 </div>
               </button>
               {accountDropdownOpen && (
                 <div className="crm-account-menu">
                   <div className="crm-account-menu-header">
                     <div className="crm-account-menu-avatar">
-                      {user?.email ? user.email[0].toUpperCase() : 'U'}
+                      {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="crm-account-menu-info">
-                      <div className="crm-account-menu-name">{user?.email || 'User'}</div>
+                      <div className="crm-account-menu-name">{user?.name || user?.email || 'User'}</div>
                       <div className="crm-account-menu-role">{user?.role || 'user'}</div>
                     </div>
                   </div>

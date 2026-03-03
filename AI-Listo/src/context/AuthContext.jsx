@@ -104,6 +104,17 @@ export function AuthProvider({ children }) {
     return !!apiClient.accessToken && !!user;
   };
 
+  const refreshUser = async () => {
+    if (!apiClient.accessToken) return;
+    try {
+      const currentUser = await apiClient.request('/users/me');
+      setUser(currentUser);
+      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser));
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -111,6 +122,7 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated,
     getDashboardPath,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
