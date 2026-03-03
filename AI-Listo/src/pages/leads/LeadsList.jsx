@@ -997,7 +997,6 @@ export default function LeadsList() {
                   <div className="lead-agent-info">
                     <div className="lead-agent-name">{user?.name || 'Unassigned'}</div>
                     <div className="lead-agent-role">{user?.role || 'Agent'}</div>
-                    <span className="lead-agent-status">Active</span>
                   </div>
                 </div>
                 <button className="lead-reassign-btn">

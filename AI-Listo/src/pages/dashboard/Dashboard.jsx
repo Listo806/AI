@@ -1,22 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import apiClient from '../../api/apiClient';
+import { getDashboardSummary, getAnalyticsDashboard, getOwnerLeads } from '../../api/analyticsApi';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { useTheme } from '../../theme/ThemeProvider';
-
-// Chart data - will be replaced with real API data
-const chartData = [
-  { name: 'Jan 1', blue: 8, green: 6 },
-  { name: 'Jan 8', blue: 14, green: 11 },
-  { name: 'Jan 15', blue: 12, green: 10 },
-  { name: 'Jan 22', blue: 18, green: 13 },
-  { name: 'Jan 29', blue: 16, green: 14 },
-  { name: 'Feb 5', blue: 20, green: 15 },
-  { name: 'Feb 12', blue: 19, green: 16 },
-];
 
 // New KPI Card with light theme and accent colors
 function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
@@ -342,45 +332,106 @@ export default function Dashboard() {
     return <Navigate to="/dashboard/properties" replace />;
   }
 
-  const [stats, setStats] = useState({
-    totalLeads: 0,
-    newLeadsToday: 0,
-    newLeads7d: 0,
-    newLeads30d: 0,
-    contactedLeads: 0,
-    dealsInPipeline: 0,
-    closedDeals: 0,
-    revenueClosed: 0,
-    pipelineValue: 0,
-    dealsClosingSoon: 0,
-    priorityAlerts: 0,
-    whatsappLeadsToday: 0,
-    instagramLeadsToday: 0,
-  });
+  const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [ownerLeads, setOwnerLeads] = useState([]);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [leadsTimeframe, setLeadsTimeframe] = useState('Today'); // 'Today', '7d', '30d'
-  const [leadsOverTimeRange, setLeadsOverTimeRange] = useState('7d'); // '7d', '1 month', '6 month'
+  const [dateFilter, setDateFilter] = useState('30d'); // 'Today', '7d', '30d' - applied to KPIs and charts
+  const [leadsTimeframe, setLeadsTimeframe] = useState('30d'); // synced with dateFilter for LeadsKpiCard
   const [recentLeads, setRecentLeads] = useState([]);
   const [recentProperties, setRecentProperties] = useState([]);
   const { isDark } = useTheme();
 
-  // Main operational chart - Day-by-day inspection data
-  // Data format: { date: "YYYY-MM-DD", leads: number, pipeline: number, deals: number }
-  const dashboardPerformanceData = [
-    { date: "2026-01-01", leads: 2, pipeline: 0, deals: 0 },
-    { date: "2026-01-02", leads: 5, pipeline: 50000, deals: 1 },
-    { date: "2026-01-03", leads: 8, pipeline: 120000, deals: 2 },
-    { date: "2026-01-04", leads: 6, pipeline: 150000, deals: 2 },
-    { date: "2026-01-05", leads: 10, pipeline: 180000, deals: 3 },
-    { date: "2026-01-06", leads: 14, pipeline: 220000, deals: 4 },
-    { date: "2026-01-07", leads: 18, pipeline: 245000, deals: 6 },
-    { date: "2026-01-08", leads: 22, pipeline: 280000, deals: 7 },
-    { date: "2026-01-09", leads: 26, pipeline: 320000, deals: 8 },
-    { date: "2026-01-10", leads: 32, pipeline: 380000, deals: 10 },
-    { date: "2026-01-11", leads: 38, pipeline: 420000, deals: 12 },
-    { date: "2026-01-12", leads: 45, pipeline: 480000, deals: 14 }
-  ];
+  // KPIs and chart data from API (match Leads page counts; no hardcoded values)
+  const stats = useMemo(() => {
+    const summary = dashboardSummary;
+    const analytics = analyticsData;
+    const lead = summary?.leads || {};
+    const periodLeads = analytics?.leads || {};
+    const byStatus = periodLeads.byStatus || {};
+    const createdInPeriod = typeof periodLeads.created === 'number' ? periodLeads.created : 0;
+    const new7d = lead.new ?? 0;
+    return {
+      totalLeads: lead.total ?? 0,
+      newLeadsToday: dateFilter === 'Today' ? createdInPeriod : new7d,
+      newLeads7d: new7d,
+      newLeads30d: createdInPeriod,
+      contactedLeads: byStatus.contacted ?? 0,
+      qualifiedLeads: lead.qualified ?? 0,
+      dealsInPipeline: 0,
+      closedDeals: byStatus.converted ?? 0,
+      revenueClosed: 0,
+      pipelineValue: 0,
+      dealsClosingSoon: 0,
+      priorityAlerts: 0,
+      whatsappLeadsToday: 0,
+      instagramLeadsToday: 0,
+    };
+  }, [dashboardSummary, analyticsData, dateFilter]);
+
+  // Funnel from analytics leads byStatus (same source as Analytics page)
+  const funnelData = useMemo(() => {
+    const a = analyticsData?.leads;
+    const by = a?.byStatus || {};
+    return {
+      newLeads: by.new ?? 0,
+      contacted: by.contacted ?? 0,
+      showings: by.qualified ?? 0,
+      offers: by.converted ?? 0,
+    };
+  }, [analyticsData]);
+
+  // Leads over time: real leads created per day (from owner leads, not events)
+  const dashboardPerformanceData = useMemo(() => {
+    const leads = Array.isArray(ownerLeads) ? ownerLeads : [];
+    if (leads.length === 0) return [];
+    const days = dateFilter === 'Today' ? 1 : dateFilter === '7d' ? 7 : 30;
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    const startStr = start.toISOString().split('T')[0];
+    const endStr = end.toISOString().split('T')[0];
+    const byDay = {};
+    leads.forEach((lead) => {
+      const created = lead.created_at ?? lead.createdAt;
+      if (!created) return;
+      const d = new Date(created);
+      const key = d.toISOString().split('T')[0];
+      if (key >= startStr && key <= endStr) {
+        byDay[key] = (byDay[key] || 0) + 1;
+      }
+    });
+    const sorted = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0]));
+    return sorted.map(([date, count]) => ({
+      date,
+      leads: count,
+      pipeline: 0,
+      deals: 0,
+    }));
+  }, [ownerLeads, dateFilter]);
+
+  // Conversion funnel chart (bar) from analytics
+  const conversionFunnelData = useMemo(() => {
+    const by = analyticsData?.leads?.byStatus || {};
+    return [
+      { stage: 'New', count: by.new ?? 0 },
+      { stage: 'Contacted', count: by.contacted ?? 0 },
+      { stage: 'Qualified', count: by.qualified ?? 0 },
+      { stage: 'Converted', count: by.converted ?? 0 },
+    ].filter((row) => row.count > 0);
+  }, [analyticsData]);
+
+  // Activity distribution from analytics
+  const activityDistributionData = useMemo(() => {
+    const ev = analyticsData?.activity?.eventsByType || {};
+    const entries = Object.entries(ev).filter(([, n]) => n > 0);
+    if (entries.length === 0) return [];
+    return entries.map(([activity, count]) => ({ activity, count }));
+  }, [analyticsData]);
+
+  // Lead source: no backend breakdown; show empty or minimal
+  const leadSourceData = useMemo(() => [], []);
 
   // Chart colors - theme-aware
   const chartColors = {
@@ -424,109 +475,44 @@ export default function Dashboard() {
           Leads: <strong style={{ color: chartColors.leads }}>{data.leads}</strong>
         </div>
         <div style={{ marginBottom: 4 }}>
-          Pipeline: <strong style={{ color: chartColors.pipeline }}>${data.pipeline.toLocaleString()}</strong>
+          Pipeline: <strong style={{ color: chartColors.pipeline }}>${(data.pipeline ?? 0).toLocaleString()}</strong>
         </div>
         <div>
-          Deals: <strong style={{ color: chartColors.deals }}>{data.deals}</strong>
+          Deals: <strong style={{ color: chartColors.deals }}>{data.deals ?? 0}</strong>
         </div>
       </div>
     );
   };
 
-  // Keep old data for other charts
-  const leadsOverTimeData = [
-    { date: "Jan 1", leads: 2, deals: 0, revenue: 0 },
-    { date: "Jan 8", leads: 5, deals: 1, revenue: 0 },
-    { date: "Jan 15", leads: 8, deals: 2, revenue: 2500 },
-    { date: "Jan 22", leads: 6, deals: 2, revenue: 5000 },
-    { date: "Jan 29", leads: 10, deals: 3, revenue: 7500 },
-    { date: "Feb 5", leads: 14, deals: 4, revenue: 12500 },
-    { date: "Feb 12", leads: 18, deals: 5, revenue: 18000 },
-    { date: "Feb 19", leads: 22, deals: 6, revenue: 24000 },
-    { date: "Feb 26", leads: 26, deals: 7, revenue: 31000 },
-    { date: "Mar 5", leads: 32, deals: 9, revenue: 42000 },
-    { date: "Mar 12", leads: 38, deals: 11, revenue: 56000 },
-    { date: "Mar 19", leads: 45, deals: 14, revenue: 72000 }
-  ];
-
-  // Demo data for funnel visualization
-  const funnelData = {
-    newLeads: 120,
-    contacted: 85,
-    showings: 42,
-    offers: 18
-  };
-
-  const leadSourceData = [
-    { name: 'Website', value: 45, color: '#3b82f6' },
-    { name: 'WhatsApp', value: 32, color: '#25D366' },
-    { name: 'Email', value: 18, color: '#8b5cf6' },
-    { name: 'Referral', value: 12, color: '#f59e0b' },
-    { name: 'Social Media', value: 8, color: '#ec4899' },
-  ];
-
-  const conversionFunnelData = [
-    { stage: 'New Leads', count: 150 },
-    { stage: 'Contacted', count: 120 },
-    { stage: 'Qualified', count: 85 },
-    { stage: 'Proposal', count: 45 },
-    { stage: 'Negotiation', count: 28 },
-    { stage: 'Closed Won', count: 18 },
-  ];
-
-  const activityDistributionData = [
-    { activity: 'Calls', count: 145 },
-    { activity: 'WhatsApp', count: 98 },
-    { activity: 'Emails', count: 67 },
-    { activity: 'Meetings', count: 34 },
-    { activity: 'Follow-ups', count: 52 },
-  ];
-
   useEffect(() => {
     if (isAuthenticated() && user) {
       loadDashboard();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, dateFilter]);
 
   const loadDashboard = async () => {
     setDashboardLoading(true);
     setError(null);
 
     try {
-      // Dashboard summary is available to all authenticated users (FREE/PRO/PRO PLUS+)
-      const summary = await apiClient.request('/crm/dashboard/summary');
+      const summaryPromise = getDashboardSummary();
+      const analyticsPromise = getAnalyticsDashboard(dateFilter === 'Today' ? 'today' : dateFilter);
+      const [summary, analytics] = await Promise.all([summaryPromise, analyticsPromise]);
 
-      // Update stats (available to all plans)
-      // Note: summary API returns: leads.total, leads.new (7 days), leads.qualified
-      // Pipeline and revenue data would come from separate endpoints in future phases
-      setStats({
-        totalLeads: summary.leads?.total || 0,
-        newLeadsToday: summary.leads?.new || 0, // Using 7d as today for now (API doesn't have separate today field)
-        newLeads7d: summary.leads?.new || 0,
-        newLeads30d: summary.leads?.total || 0, // Placeholder - would come from API
-        contactedLeads: summary.leads?.new || 0, // Placeholder - would come from API
-        dealsInPipeline: 1, // Placeholder - would come from pipeline endpoint
-        closedDeals: 0, // Placeholder - would come from pipeline endpoint
-        revenueClosed: 0, // Placeholder - would come from revenue endpoint
-        pipelineValue: 0, // Placeholder - would come from pipeline endpoint
-        dealsClosingSoon: 3, // Placeholder - deals closing in next 7 days
-        priorityAlerts: 2, // Placeholder - critical alerts count
-        whatsappLeadsToday: 5, // Placeholder - WhatsApp leads today
-        instagramLeadsToday: 3, // Placeholder - Instagram leads today
-      });
+      setDashboardSummary(summary || null);
+      setAnalyticsData(analytics || null);
 
-      // Load detailed lists (requires CRM access - PRO PLUS+)
-      // These will fail for FREE/PRO users, so we handle gracefully
+      // Owner leads for "Leads over Time" chart (real leads created per day)
       try {
-        const leadsResponse = await apiClient.request('/crm/owner/leads');
-        // Store leads if needed for future use
+        const leadsList = await getOwnerLeads();
+        setOwnerLeads(Array.isArray(leadsList) ? leadsList : []);
       } catch (leadsErr) {
-        // If CRM access is required, just ignore (don't show error)
         if (leadsErr.status === 403 && leadsErr.isSubscriptionError) {
-          // Don't show error notification - this is expected for FREE/PRO users
+          // Expected for FREE/PRO users
         } else {
           console.error('Failed to load leads:', leadsErr);
         }
+        setOwnerLeads([]);
       }
 
       try {
@@ -597,7 +583,10 @@ export default function Dashboard() {
             <LeadsKpiCard 
               stats={stats}
               timeframe={leadsTimeframe}
-              onTimeframeChange={setLeadsTimeframe}
+              onTimeframeChange={(value) => {
+                setLeadsTimeframe(value);
+                setDateFilter(value);
+              }}
             />
             <KpiCard 
               icon="phone" 
@@ -690,8 +679,12 @@ export default function Dashboard() {
                   {t('dashboard.leadsOverTime')}
                 </h2>
                 <select
-                  value={leadsOverTimeRange}
-                  onChange={(e) => setLeadsOverTimeRange(e.target.value)}
+                  value={dateFilter}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDateFilter(v);
+                    setLeadsTimeframe(v);
+                  }}
                   style={{
                     fontSize: '14px',
                     fontWeight: '500',
@@ -708,9 +701,9 @@ export default function Dashboard() {
                     backgroundPosition: 'right 12px center'
                   }}
                 >
+                  <option value="Today">{t('common.today')}</option>
                   <option value="7d">7d</option>
-                  <option value="1 month">1 month</option>
-                  <option value="6 month">6 month</option>
+                  <option value="30d">30d</option>
                 </select>
               </div>
 
@@ -746,6 +739,11 @@ export default function Dashboard() {
                       {t('dashboard.leadsOverTime')}
                     </h3>
                     <div style={{ flex: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}>
+                      {dashboardPerformanceData.length === 0 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
+                          No data for this period
+                        </div>
+                      ) : (
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                           data={dashboardPerformanceData}
@@ -836,6 +834,7 @@ export default function Dashboard() {
 
                         </LineChart>
                       </ResponsiveContainer>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -859,28 +858,34 @@ export default function Dashboard() {
                 border: '1px solid var(--border)',
                 padding: '16px'
               }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={conversionFunnelData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis type="number" stroke="var(--text-muted)" style={{ fontSize: '11px' }} />
-                    <YAxis 
-                      dataKey="stage" 
-                      type="category" 
-                      stroke="var(--text-muted)"
-                      style={{ fontSize: '11px' }}
-                      width={90}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'var(--card)', 
-                        border: '1px solid var(--border)',
-                        borderRadius: '6px',
-                        color: 'var(--text)'
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                {conversionFunnelData.length === 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
+                    No data for this period
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={conversionFunnelData} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis type="number" stroke="var(--text-muted)" style={{ fontSize: '11px' }} />
+                      <YAxis 
+                        dataKey="stage" 
+                        type="category" 
+                        stroke="var(--text-muted)"
+                        style={{ fontSize: '11px' }}
+                        width={90}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'var(--card)', 
+                          border: '1px solid var(--border)',
+                          borderRadius: '6px',
+                          color: 'var(--text)'
+                        }}
+                      />
+                      <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
 
@@ -898,25 +903,31 @@ export default function Dashboard() {
                 border: '1px solid var(--border)',
                 padding: '16px'
               }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={leadSourceData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {leadSourceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {leadSourceData.length === 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
+                    No data for this period
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={leadSourceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {leadSourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
               </div>
             </div>
 
@@ -934,8 +945,13 @@ export default function Dashboard() {
                 border: '1px solid var(--border)',
                 padding: '16px'
               }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activityDistributionData}>
+                {activityDistributionData.length === 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
+                    No data for this period
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={activityDistributionData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis 
                       dataKey="activity" 
@@ -957,6 +973,7 @@ export default function Dashboard() {
                     <Bar dataKey="count" fill="#22C55E" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                )}
               </div>
             </div>
 

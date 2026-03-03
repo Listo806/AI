@@ -73,26 +73,65 @@ export class AnalyticsService {
   constructor(private readonly db: DatabaseService) {}
 
   /**
-   * Get lead metrics for a time range
+   * Get lead metrics for a time range.
+   * Scope: when teamId is set, filter by team_id; when teamId is null and userId is set, filter by created_by (same as CRM summary).
    */
-  async getLeadMetrics(teamId: string | null, timeRange?: TimeRange): Promise<LeadMetrics> {
-    let query = `
-      SELECT 
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE status = 'new') as new_count,
-        COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
-        COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
-        COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
-        COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
-        COUNT(*) FILTER (WHERE created_at >= $1 AND created_at <= $2) as created_in_period
-      FROM leads
-      WHERE ($3::uuid IS NULL OR team_id = $3)
-    `;
-
+  async getLeadMetrics(
+    teamId: string | null,
+    userId: string | null,
+    timeRange?: TimeRange,
+  ): Promise<LeadMetrics> {
     const startDate = timeRange?.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = timeRange?.endDate || new Date();
 
-    const { rows } = await this.db.query(query, [startDate, endDate, teamId || null]);
+    let query: string;
+    let params: any[];
+
+    if (teamId) {
+      query = `
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE status = 'new') as new_count,
+          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
+          COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
+          COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
+          COUNT(*) FILTER (WHERE created_at >= $1 AND created_at <= $2) as created_in_period
+        FROM leads
+        WHERE team_id = $3
+      `;
+      params = [startDate, endDate, teamId];
+    } else if (userId) {
+      query = `
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE status = 'new') as new_count,
+          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
+          COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
+          COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
+          COUNT(*) FILTER (WHERE created_at >= $1 AND created_at <= $2) as created_in_period
+        FROM leads
+        WHERE created_by = $3
+      `;
+      params = [startDate, endDate, userId];
+    } else {
+      query = `
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE status = 'new') as new_count,
+          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
+          COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
+          COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
+          COUNT(*) FILTER (WHERE created_at >= $1 AND created_at <= $2) as created_in_period
+        FROM leads
+        WHERE 1=1
+      `;
+      params = [startDate, endDate];
+    }
+
+    const { rows } = await this.db.query(query, params);
 
     const row = rows[0];
     const total = parseInt(row.total) || 0;
@@ -333,11 +372,12 @@ export class AnalyticsService {
     teamId: string | null,
     timeRange?: TimeRange,
   ): Promise<DashboardMetrics> {
-    // Admin can see all metrics, others see only their team/user metrics
+    // Admin: all leads; else team scope or user scope (created_by) to match CRM summary
     const effectiveTeamId = userRole === 'admin' ? null : teamId;
+    const effectiveUserId = userRole === 'admin' ? null : (effectiveTeamId ? null : userId);
 
     const [leads, properties, subscriptions, teams, users, activity] = await Promise.all([
-      this.getLeadMetrics(effectiveTeamId, timeRange),
+      this.getLeadMetrics(effectiveTeamId, effectiveUserId, timeRange),
       this.getPropertyMetrics(effectiveTeamId, timeRange),
       this.getSubscriptionMetrics(effectiveTeamId),
       this.getTeamMetrics(effectiveTeamId),

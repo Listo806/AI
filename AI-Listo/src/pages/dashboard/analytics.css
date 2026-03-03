@@ -150,32 +150,32 @@
   accent-color: #3b82f6;
 }
 
-/* Content Container */
+/* Content Container - reduced vertical spacing */
 .analytics-content {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 32px; /* Clear spacing between major sections */
+  gap: 20px;
 }
 
-/* Section - SECONDARY EMPHASIS */
+/* Section - secondary emphasis, less vertical space */
 .analytics-section {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04); /* Subtle shadow */
-  margin-bottom: 24px; /* Clear spacing between sections */
+  padding: 18px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin-bottom: 0;
 }
 
 .analytics-section-title {
-  font-size: 18px; /* Slightly smaller than KPIs */
+  font-size: 17px;
   font-weight: 600;
   color: #0f172a;
-  margin-bottom: 20px; /* Less margin than KPIs */
-  padding-bottom: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -249,24 +249,24 @@
   }
 }
 
-/* KPI Grid - HIGHEST EMPHASIS */
+/* KPI Grid - highest emphasis, kept at top */
 .analytics-kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px; /* Increased spacing for prominence */
-  margin-bottom: 40px; /* More space after KPIs */
+  gap: 16px;
+  margin-bottom: 0;
 }
 
 .analytics-kpi-card {
   background: #fff;
-  border: 2px solid #e5e7eb; /* Stronger border */
-  border-left: 4px solid #3b82f6; /* Accent border for emphasis */
-  border-radius: 12px; /* More rounded */
-  padding: 24px; /* More padding */
+  border: 2px solid #e5e7eb;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06); /* Stronger shadow */
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
   transition: all 0.2s;
   position: relative;
 }
@@ -306,12 +306,28 @@
   color: #EF4444;
 }
 
-/* Funnel - Part of Secondary Sections */
+/* Funnel - compressed variant */
 .analytics-funnel-container {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Moderate spacing */
+  gap: 16px;
   width: 100%;
+}
+
+.analytics-funnel-compressed {
+  gap: 12px;
+}
+
+.analytics-funnel-compressed .recharts-responsive-container {
+  min-height: 200px;
+}
+
+.analytics-funnel-compressed .analytics-funnel-stats {
+  gap: 8px;
+}
+
+.analytics-funnel-compressed .analytics-funnel-stat {
+  padding: 10px 12px;
 }
 
 .analytics-funnel-container .recharts-wrapper {
@@ -321,8 +337,8 @@
 
 .analytics-funnel-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
 }
 
 .analytics-funnel-stat {
@@ -346,20 +362,39 @@
   color: #0f172a;
 }
 
-/* Chart Grid - Part of Secondary Sections */
+.analytics-empty-inline {
+  margin: 0;
+  padding: 16px 0;
+  font-size: 14px;
+  color: var(--text-muted, #64748b);
+}
+
+/* Chart Grid */
 .analytics-chart-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 20px; /* Moderate spacing */
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.analytics-chart-grid-tight {
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* Unified Source Performance block */
+.analytics-source-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .analytics-chart-card {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 18px; /* Slightly less padding than sections */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Very subtle shadow */
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .analytics-chart-title {
@@ -369,13 +404,18 @@
   margin-bottom: 14px;
 }
 
-/* Table - TERTIARY EMPHASIS */
+/* Table */
 .analytics-table-container {
   overflow-x: auto;
-  margin-top: 16px;
-  background: #fafbfc; /* Very subtle background */
+  margin-top: 12px;
+  background: #fafbfc;
   border-radius: 8px;
-  padding: 4px; /* Minimal padding */
+  padding: 4px;
+}
+
+.analytics-agent-table-wrap {
+  margin-top: 0;
+  padding: 12px 0;
 }
 
 .analytics-table {
@@ -391,20 +431,25 @@
 }
 
 .analytics-table th {
-  padding: 10px 14px; /* Less padding */
+  padding: 10px 14px;
   text-align: left;
-  font-weight: 500; /* Less bold */
-  color: #94a3b8; /* Lighter color */
-  font-size: 11px; /* Smaller */
+  font-weight: 500;
+  color: #94a3b8;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .analytics-table td {
-  padding: 10px 14px; /* Less padding */
-  color: #475569; /* Softer color */
-  border-bottom: 1px solid #f1f5f9; /* Very subtle border */
+  padding: 10px 14px;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
   font-size: 13px;
+}
+
+.analytics-agent-table-wrap .analytics-table th,
+.analytics-agent-table-wrap .analytics-table td {
+  padding: 12px 16px;
 }
 
 .analytics-table tbody tr:hover {
@@ -528,8 +573,8 @@
   }
 
   .analytics-content {
-    padding: 13px; /* Reduced from 16px by ~19% */
-    gap: 16px; /* Reduced from 32px by 50% - less spacing between collapsible sections */
+    padding: 14px 16px;
+    gap: 14px;
   }
 
   .analytics-kpi-grid {

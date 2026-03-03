@@ -56,10 +56,9 @@ export class AnalyticsController {
     @Query('endDate') endDateStr?: string,
   ) {
     const timeRange = this.parseTimeRange(startDateStr, endDateStr);
-    return this.analyticsService.getLeadMetrics(
-      user.role === 'admin' ? null : user.teamId,
-      timeRange,
-    );
+    const teamId = user.role === 'admin' ? null : user.teamId;
+    const userId = teamId ? null : user.id;
+    return this.analyticsService.getLeadMetrics(teamId, userId, timeRange);
   }
 
   /**

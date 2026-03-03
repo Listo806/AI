@@ -323,7 +323,8 @@
     "conversions": "Conversions",
     "closures": "Closures",
     "byAgent": "By Agent",
-    "bySource": "By Source"
+    "bySource": "By Source",
+    "noData": "No data for this period."
   },
   "aiAssistant": {
     "title": "AI Assistant",

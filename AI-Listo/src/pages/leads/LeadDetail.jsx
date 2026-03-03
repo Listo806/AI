@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
 import './Leads.css';
+import './lead-detail-page.css';
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -482,93 +483,55 @@ export default function LeadDetail() {
   const associatedProperty = properties.find(p => p.id === lead.propertyId);
 
   return (
-    <div style={{ maxWidth: '1000px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 600 }}>{lead.name || 'Unnamed Lead'}</h1>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {(() => {
-              const urgencyInfo = getUrgencyInfo(lead);
-              return urgencyInfo.badge && (
-                <span 
-                  style={{ 
-                    padding: '6px 12px', 
-                    borderRadius: '12px', 
-                    fontSize: '11px', 
-                    fontWeight: '600',
-                    backgroundColor: urgencyInfo.badge.bgColor,
-                    color: urgencyInfo.badge.color,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}
-                >
-                  {urgencyInfo.badge.text}
-                </span>
-              );
-          })()}
-          {/* Urgency State Badge (separate from AI tier - distinct labels) */}
-          {lead.urgencyState && (
-            <span 
-                style={{ 
-                  padding: '6px 12px', 
-                  borderRadius: '12px', 
-                  fontSize: '11px', 
-                  fontWeight: '600',
-                  ...getUrgencyStateStyle(lead.urgencyState),
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {getUrgencyStateStyle(lead.urgencyState).label}
-              </span>
-          )}
-          {/* AI Tier Badge */}
-          {lead.aiTier && (
-            <span 
-                style={{ 
-                  padding: '6px 12px', 
-                  borderRadius: '12px', 
-                  fontSize: '12px', 
-                  fontWeight: '600',
-                  backgroundColor: `${getAiTierColor(lead.aiTier)}20`,
-                  color: getAiTierColor(lead.aiTier),
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {lead.aiTier}
-              </span>
-          )}
-          {/* Status Badge (mapped) */}
-          <span className={getStatusBadgeClass(lead.status)}>
+    <div style={{ maxWidth: '1000px' }} className="lead-detail-page">
+      <h1 className="lead-detail-name">{lead.name || 'Unnamed Lead'}</h1>
+
+      {/* Compact summary block: AI Score, AI Temperature, Lead Status — clearly labeled and visually separated */}
+      <div className="lead-detail-summary">
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">AI Score</span>
+          <span className="lead-detail-summary-value lead-detail-ai-score" style={{ color: getAiScoreColor(lead.aiScore ?? null) }}>
+            {lead.aiScore !== undefined && lead.aiScore !== null ? formatAiScore(lead.aiScore) : '—'}
+          </span>
+        </div>
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">AI Temperature</span>
+          <span className={`lead-detail-temperature lead-detail-temperature-${(lead.aiTier || 'COLD').toLowerCase()}`}>
+            {lead.aiTier || 'COLD'}
+          </span>
+        </div>
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">Lead Status</span>
+          <span className="lead-detail-status-badge">
             {getStatusDisplayLabel(lead.status, lead.hasResponded)}
           </span>
-          {lead.aiScore !== undefined && lead.aiScore !== null && (
-            <div 
-                style={{ 
-                  padding: '6px 16px', 
-                  borderRadius: '12px', 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  backgroundColor: `${getAiScoreColor(lead.aiScore)}20`,
-                  color: getAiScoreColor(lead.aiScore),
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px'
-                }}
-              >
-                <span>AI Score: {formatAiScore(lead.aiScore)}</span>
-                {lead.aiScoreLabel && (
-                  <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.8 }}>
-                    {lead.aiScoreLabel}
-                  </span>
-                )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* AI-Recommended Action - Moved higher (right after header) */}
+      {/* AI Panel — structured labeled rows */}
+      <div className="crm-section lead-detail-ai-panel">
+        <h3 className="crm-section-title">AI Panel</h3>
+        <dl className="lead-detail-ai-rows">
+          <div className="lead-detail-ai-row">
+            <dt>Created</dt>
+            <dd>{formatDate(lead.createdAt)}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Contact Status</dt>
+            <dd>{getStatusDisplayLabel(lead.status, lead.hasResponded)}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Phone Available</dt>
+            <dd>{lead.phone ? 'Yes' : 'No'}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Recommendation</dt>
+            <dd>{lead.recommendedAction ? getActionLabel(lead.recommendedAction) : '—'}{lead.recommendedActionReason ? ` — ${lead.recommendedActionReason}` : ''}</dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* AI-Recommended Action */}
       {lead.recommendedAction && (
         <div className="crm-section" style={{ marginBottom: '24px', background: '#eff6ff', padding: '20px', borderRadius: '8px' }}>
           <h3 className="crm-section-title" style={{ marginBottom: '12px' }}>AI-Recommended Action</h3>
@@ -836,10 +799,10 @@ export default function LeadDetail() {
             </select>
           </div>
 
-          {/* WhatsApp Chat - in-app messaging */}
-          <div className="crm-section" style={{ marginBottom: '24px' }}>
+          {/* WhatsApp — compact panel, aligned input + send, clean empty state */}
+          <div className="crm-section lead-detail-whatsapp-panel">
             <h3 className="crm-section-title">WhatsApp Messages</h3>
-            <div style={{ height: '400px', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', background: '#fff' }}>
+            <div className="lead-detail-whatsapp-inner">
               <WhatsAppChat
                 leadId={id}
                 leadPhone={formData.phone}

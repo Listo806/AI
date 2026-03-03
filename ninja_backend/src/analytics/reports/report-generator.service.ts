@@ -86,11 +86,12 @@ export class ReportGeneratorService {
     endDate: Date,
   ): Promise<Report> {
     const effectiveTeamId = userRole === 'admin' ? null : teamId;
+    const effectiveUserId = userRole === 'admin' ? null : (effectiveTeamId ? null : userId);
     const timeRange = { startDate, endDate };
 
     // Get all metrics
     const [leads, properties, subscriptions, teams, users, activity] = await Promise.all([
-      this.analyticsService.getLeadMetrics(effectiveTeamId, timeRange),
+      this.analyticsService.getLeadMetrics(effectiveTeamId, effectiveUserId, timeRange),
       this.analyticsService.getPropertyMetrics(effectiveTeamId, timeRange),
       this.analyticsService.getSubscriptionMetrics(effectiveTeamId),
       this.analyticsService.getTeamMetrics(effectiveTeamId),
