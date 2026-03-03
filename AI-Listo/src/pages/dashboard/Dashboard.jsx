@@ -357,7 +357,7 @@ export default function Dashboard() {
       newLeadsToday: dateFilter === 'Today' ? createdInPeriod : new7d,
       newLeads7d: new7d,
       newLeads30d: createdInPeriod,
-      contactedLeads: byStatus.contacted ?? 0,
+      contactedLeads: lead.contacted ?? byStatus.contacted ?? 0,
       qualifiedLeads: lead.qualified ?? 0,
       dealsInPipeline: 0,
       closedDeals: byStatus.converted ?? 0,

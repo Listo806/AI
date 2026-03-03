@@ -25,12 +25,13 @@ export class CrmService {
     const params = teamId ? [teamId] : [userId];
 
     // Single query for all lead aggregations
-    // New leads: last 7 days (configurable - can be changed to 24 hours if needed)
+    // Contacted: same as Leads page — last_contacted_at IS NOT NULL (or status = 'contacted')
     const leadsQuery = `
       SELECT 
         COUNT(*)::int as total,
         COUNT(*) FILTER (WHERE l.created_at >= NOW() - INTERVAL '7 days')::int as new,
-        COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified
+        COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified,
+        COUNT(*) FILTER (WHERE l.last_contacted_at IS NOT NULL)::int as contacted
       FROM leads l
       WHERE 1=1 ${teamFilter}
     `;
@@ -50,7 +51,7 @@ export class CrmService {
       this.db.query(propertiesQuery, params),
     ]);
 
-    const leads = leadsResult.rows[0] || { total: 0, new: 0, qualified: 0 };
+    const leads = leadsResult.rows[0] || { total: 0, new: 0, qualified: 0, contacted: 0 };
     const properties = propertiesResult.rows[0] || { total: 0, published: 0 };
 
     return {
@@ -58,6 +59,7 @@ export class CrmService {
         total: leads.total || 0,
         new: leads.new || 0,
         qualified: leads.qualified || 0,
+        contacted: leads.contacted || 0,
       },
       properties: {
         total: properties.total || 0,

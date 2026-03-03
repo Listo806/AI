@@ -87,12 +87,14 @@ export class AnalyticsService {
     let query: string;
     let params: any[];
 
+    // Contacted: match Leads page — count leads with last_contacted_at set (or status = 'contacted')
+    const contactedFilter = `(last_contacted_at IS NOT NULL OR status = 'contacted')`;
     if (teamId) {
       query = `
         SELECT 
           COUNT(*) as total,
           COUNT(*) FILTER (WHERE status = 'new') as new_count,
-          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE ${contactedFilter}) as contacted_count,
           COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
           COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
           COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
@@ -106,7 +108,7 @@ export class AnalyticsService {
         SELECT 
           COUNT(*) as total,
           COUNT(*) FILTER (WHERE status = 'new') as new_count,
-          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE ${contactedFilter}) as contacted_count,
           COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
           COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
           COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
@@ -120,7 +122,7 @@ export class AnalyticsService {
         SELECT 
           COUNT(*) as total,
           COUNT(*) FILTER (WHERE status = 'new') as new_count,
-          COUNT(*) FILTER (WHERE status = 'contacted') as contacted_count,
+          COUNT(*) FILTER (WHERE ${contactedFilter}) as contacted_count,
           COUNT(*) FILTER (WHERE status = 'qualified') as qualified_count,
           COUNT(*) FILTER (WHERE status = 'converted') as converted_count,
           COUNT(*) FILTER (WHERE status = 'lost') as lost_count,
