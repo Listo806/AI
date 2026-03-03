@@ -70,17 +70,22 @@ export default function AICenterOverview() {
             <div className="stat-label">AI Setter</div>
           </div>
           <div className="ai-center-stat-card">
-            <div className="stat-value">{data?.active_channels?.length ?? 0}</div>
+            <div className="stat-value">{(data?.active_channels?.length ?? 0) > 0 ? data.active_channels.length : "—"}</div>
             <div className="stat-label">Active Channels</div>
-            {data?.active_channels?.length > 0 && (
+            {(data?.active_channels?.length ?? 0) > 0 ? (
               <div className="stat-label" style={{ marginTop: "4px" }}>
                 {data.active_channels.join(", ")}
               </div>
+            ) : (
+              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>None connected</div>
             )}
           </div>
           <div className="ai-center-stat-card">
-            <div className="stat-value">{data?.connected_calendars?.length ?? 0}</div>
+            <div className="stat-value">{(data?.connected_calendars?.length ?? 0) > 0 ? data.connected_calendars.length : "—"}</div>
             <div className="stat-label">Connected Calendars</div>
+            {(data?.connected_calendars?.length ?? 0) === 0 && (
+              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>Connect in Integrations</div>
+            )}
           </div>
         </div>
       </section>

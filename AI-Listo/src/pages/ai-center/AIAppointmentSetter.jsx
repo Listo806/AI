@@ -111,24 +111,38 @@ export default function AIAppointmentSetter() {
               <span className="ai-center-badge ai-center-badge-success">ACTIVE</span>
             </div>
             <h2>Metrics</h2>
-            <div className="ai-center-kpi-row">
-              <div className="ai-center-stat-card">
-                <div className="stat-value">{status?.appointments_booked_count ?? 0}</div>
-                <div className="stat-label">Appointments Booked</div>
-              </div>
-              <div className="ai-center-stat-card">
-                <div className="stat-value">{status?.conversion_rate ?? 0}%</div>
-                <div className="stat-label">Conversion Rate</div>
-              </div>
-              <div className="ai-center-stat-card">
-                <div className="stat-value">{status?.leads_qualified_count ?? 0}</div>
-                <div className="stat-label">Leads Qualified by AI</div>
-              </div>
-              <div className="ai-center-stat-card">
-                <div className="stat-value">{status?.escalated_to_human_count ?? 0}</div>
-                <div className="stat-label">Escalated to Human</div>
-              </div>
-            </div>
+            {(() => {
+              const booked = status?.appointments_booked_count ?? 0;
+              const rate = status?.conversion_rate ?? 0;
+              const qualified = status?.leads_qualified_count ?? 0;
+              const escalated = status?.escalated_to_human_count ?? 0;
+              const allZero = booked === 0 && rate === 0 && qualified === 0 && escalated === 0;
+              if (allZero) {
+                return (
+                  <p className="ai-center-metrics-empty">No AI activity yet.</p>
+                );
+              }
+              return (
+                <div className="ai-center-kpi-row">
+                  <div className="ai-center-stat-card">
+                    <div className="stat-value">{booked}</div>
+                    <div className="stat-label">Appointments Booked</div>
+                  </div>
+                  <div className="ai-center-stat-card">
+                    <div className="stat-value">{rate}%</div>
+                    <div className="stat-label">Conversion Rate</div>
+                  </div>
+                  <div className="ai-center-stat-card">
+                    <div className="stat-value">{qualified}</div>
+                    <div className="stat-label">Leads Qualified by AI</div>
+                  </div>
+                  <div className="ai-center-stat-card">
+                    <div className="stat-value">{escalated}</div>
+                    <div className="stat-label">Escalated to Human</div>
+                  </div>
+                </div>
+              );
+            })()}
           </section>
 
           <section className="ai-center-section">
@@ -142,11 +156,11 @@ export default function AIAppointmentSetter() {
                     <span style={{ textTransform: "capitalize" }}>{ch}</span>
                     <span>
                       {comingSoon ? (
-                        <span className="ai-center-badge ai-center-badge-neutral">Coming soon</span>
+                        <span className="ai-center-badge ai-center-badge-neutral">Coming Soon</span>
                       ) : connected ? (
                         <span className="ai-center-badge ai-center-badge-success">Connected</span>
                       ) : (
-                        <span className="ai-center-badge ai-center-badge-neutral">Not connected</span>
+                        <span className="ai-center-badge ai-center-badge-neutral">Not Connected</span>
                       )}
                     </span>
                   </li>
@@ -158,7 +172,9 @@ export default function AIAppointmentSetter() {
           <section className="ai-center-section">
             <h2>Calendar</h2>
             <p style={{ marginBottom: "16px" }}>
-              Connected calendars: {(status?.connected_calendars?.length ?? 0)}
+              {(status?.connected_calendars?.length ?? 0) === 0
+                ? "Connect a calendar to enable AI booking."
+                : `Connected calendars: ${status.connected_calendars.length}`}
             </p>
             <Link to="/dashboard/integrations" className="crm-btn crm-btn-secondary">
               Manage Calendar

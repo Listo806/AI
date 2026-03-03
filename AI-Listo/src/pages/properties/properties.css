@@ -28,6 +28,103 @@
   box-sizing: border-box;
 }
 
+/* Row Layout - Thumbnail left, details right (matches Marketplace 16/10 aspect ratio) */
+.properties-grid-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.properties-grid-rows .property-card {
+  margin-bottom: 0;
+}
+
+.property-card-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 10px 12px;
+  gap: 14px;
+}
+
+/* Thumbnail - Same dimensions as Marketplace listings (16/10 aspect ratio), compact size */
+.property-card-thumb {
+  flex-shrink: 0;
+  width: 140px;
+  height: 87.5px; /* 140 * 10/16 - matches Marketplace aspect-ratio */
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--property-card-border);
+}
+
+.property-card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.property-card-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #e2e8f0;
+}
+
+.property-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.property-card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.property-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--property-text-primary);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.property-card-address {
+  margin: 0;
+}
+
+.property-card-meta-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  font-size: 12px;
+  color: var(--property-text-muted);
+}
+
+.property-card-meta-inline strong {
+  font-weight: 600;
+  color: var(--property-text-primary);
+}
+
+.property-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.property-card-action-btn {
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  flex-shrink: 0;
+}
+
 .property-card:hover {
   border-color: #3b82f6;
   background: #f8fafc;
@@ -155,40 +252,43 @@
   gap: 10px;
 }
 
-/* Desktop Grid Layout */
+/* Desktop - Keep row layout (no 2-column grid for compact management view) */
 @media (min-width: 1024px) {
-  .properties-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+  .properties-grid-rows {
+    gap: 10px;
   }
 }
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  .property-card {
-    padding: 8px; /* Reduced from 10px by 20% */
-    margin-bottom: 6px; /* Reduced from 8px by 25% */
+  .property-card-row {
+    padding: 8px 10px;
+    gap: 12px;
   }
 
-  .property-card h3 {
-    font-size: 14px !important;
+  .property-card-thumb {
+    width: 100px;
+    height: 62.5px; /* 100 * 10/16 - same aspect ratio */
   }
 
-  .property-meta {
+  .property-card-title {
+    font-size: 14px;
+  }
+
+  .property-card-meta-inline {
     font-size: 11px;
   }
 
-  .property-action {
-    margin-top: 6px; /* Reduced from 8px by 25% */
+  .property-card-footer {
+    flex-wrap: wrap;
   }
 
   .properties-empty {
-    padding: 25px 13px; /* Reduced from 32px 16px by ~22-19% */
+    padding: 25px 13px;
   }
 
-  .properties-grid {
-    gap: 8px; /* Reduced from 10px by 20% */
+  .properties-grid-rows {
+    gap: 6px;
   }
 }
 

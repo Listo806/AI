@@ -50,7 +50,7 @@ export default function AIQualificationRules() {
         AI Qualification Rules
       </h1>
       <p className="ai-center-page-subtitle">
-        Lead qualification logic, booking eligibility, and escalation thresholds. Edit rules — Phase 2.
+        Lead qualification logic, booking eligibility, and escalation thresholds.
       </p>
 
       <section className="ai-center-section">
@@ -63,7 +63,7 @@ export default function AIQualificationRules() {
           Last updated: {data?.updated_at ? new Date(data.updated_at).toLocaleString() : "—"}
         </p>
         <p style={{ marginTop: "8px", fontSize: "13px", color: "var(--text-muted)" }}>
-          Used by AI Setter and qualification modules. Full rule editor coming in Phase 2.
+          Used by AI Setter and qualification modules.
         </p>
       </section>
     </div>

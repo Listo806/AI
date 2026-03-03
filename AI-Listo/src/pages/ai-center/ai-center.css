@@ -92,6 +92,13 @@
   font-weight: 500;
 }
 
+.ai-center-metrics-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+  padding: 16px 0;
+}
+
 /* Status badges */
 .ai-center-badge {
   display: inline-flex;

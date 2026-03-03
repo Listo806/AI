@@ -266,29 +266,24 @@
   },
   "instagram": {
     "title": "Instagram",
-    "connectionStatus": "Status de Conexão do Instagram",
-    "accountHandle": "Conta",
-    "dmInbox": "Caixa de DM",
-    "leadContext": "Contexto do Lead",
-    "automation": "Automação",
-    "responseTemplates": "Modelos de Resposta",
-    "engagementNotes": "Notas de Engajamento",
-    "sendMessage": "Digite uma mensagem...",
-    "send": "Enviar"
+    "dmHeader": "Mensagens Diretas do Instagram",
+    "dmSubtext": "Conecte sua conta Instagram Business para gerenciar DMs dentro do CORTEXA.",
+    "connectInstagram": "Conectar Instagram"
   },
   "integrations": {
     "title": "Integrações",
     "description": "Conecte serviços de terceiros para estender a funcionalidade do seu CRM. Para integrações de mensagens, visite as páginas do WhatsApp ou Instagram.",
     "emailProvider": "Provedor de E-mail",
-    "emailProviderDesc": "Conecte seu provedor de e-mail para sequências e campanhas automatizadas",
+    "emailProviderDesc": "Conecte seu provedor de e-mail para sequências e campanhas.",
     "zapier": "Zapier",
-    "zapierDesc": "Conecte o Zapier para fluxos de trabalho e integrações personalizadas",
+    "zapierDesc": "Fluxos de automação e integrações personalizadas.",
     "crmIntegration": "Integração CRM",
-    "crmIntegrationDesc": "Sincronize dados com sistemas CRM externos (em breve)",
+    "crmIntegrationDesc": "Sincronize dados com sistemas CRM externos.",
     "webhooks": "Webhooks",
-    "webhooksDesc": "Configure webhooks para sincronização de dados em tempo real (em breve)",
+    "webhooksDesc": "Configure webhooks para sincronização de dados em tempo real.",
     "connect": "Conectar",
-    "note": "Nota: As conexões de integração serão implementadas em uma fase futura. Esta é apenas a estrutura da interface."
+    "comingSoon": "Em breve",
+    "messagingHint": "Mensagens (WhatsApp, Instagram) são configuradas nas respectivas páginas."
   },
   "analytics": {
     "title": "Analíticas",
@@ -367,9 +362,25 @@
     "noMembers": "Ainda não há membros da equipe",
     "addMembersDescription": "Adicione membros da equipe para colaborar em leads e propriedades.",
     "seatsSummary": "Resumo de Assentos",
+    "seatsUsed": "Assentos usados",
     "used": "Usados",
     "available": "Disponíveis",
-    "seatsHelper": "O gerenciamento de assentos será conectado à cobrança e assinaturas em uma fase futura."
+    "total": "Total",
+    "seatsHelper": "O gerenciamento de assentos será conectado à cobrança e assinaturas em uma fase futura.",
+    "youAreOwner": "Você é o proprietário",
+    "inviteByEmail": "Convidar por e-mail",
+    "emailPlaceholder": "usuario@exemplo.com",
+    "members": "Membros",
+    "email": "E-mail",
+    "role": "Função",
+    "status": "Status",
+    "owner": "Proprietário",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "remove": "Remover",
+    "deleteTeam": "Excluir equipe",
+    "deleteConfirm": "Tem certeza que deseja excluir",
+    "deleteConfirmMembers": "Todos os membros serão desvinculados. Isso não pode ser desfeito."
   },
   "account": {
     "profile": {

@@ -119,98 +119,66 @@ export default function PropertiesList() {
           {t('properties.noProperties')}
         </div>
       ) : (
-        <div className="properties-grid">
+        <div className="properties-grid properties-grid-rows">
           {properties.map((property) => {
             const statusClass = getStatusClassName(property.status);
             return (
-              <div key={property.id} className={`property-card ${statusClass}`}>
-                {property.thumbnailUrl && (
-                  <div style={{ marginBottom: '10px', borderRadius: '8px', overflow: 'hidden', aspectRatio: '16/10', background: 'var(--border)' }}>
-                    <img src={property.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div key={property.id} className={`property-card property-card-row ${statusClass}`}>
+                {/* Thumbnail - Same aspect ratio as Marketplace (16/10), compact size */}
+                <div className="property-card-thumb">
+                  {property.thumbnailUrl ? (
+                    <img src={property.thumbnailUrl} alt="" className="property-card-thumb-img" loading="lazy" />
+                  ) : (
+                    <div className="property-card-thumb-placeholder" />
+                  )}
+                </div>
+                {/* Details - Aligned right of thumbnail */}
+                <div className="property-card-body">
+                  <div className="property-card-header-row">
+                    <h3 className="property-card-title">
+                      {property.title || 'Untitled Property'}
+                    </h3>
+                    <span className={`property-status ${statusClass}`}>
+                      {property.status === 'published' ? t('properties.published') :
+                       property.status === 'draft' ? t('properties.draft') :
+                       property.status === 'archived' || property.status === 'sold' || property.status === 'rented' ? t('properties.archived') :
+                       t('properties.draft')}
+                    </span>
                   </div>
-                )}
-                {/* Header Row: Title + Status */}
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'flex-start', 
-                  marginBottom: '8px',
-                  gap: '12px'
-                }}>
-                  <h3 style={{ 
-                    margin: 0, 
-                    fontSize: '15px', 
-                    fontWeight: '600',
-                    color: 'var(--property-text-primary, #E5E7EB)',
-                    lineHeight: '1.3',
-                    flex: 1
-                  }}>
-                    {property.title || 'Untitled Property'}
-                  </h3>
-                  <span className={`property-status ${statusClass}`}>
-                    {property.status === 'published' ? t('properties.published') :
-                     property.status === 'draft' ? t('properties.draft') :
-                     property.status === 'archived' || property.status === 'sold' || property.status === 'rented' ? t('properties.archived') :
-                     t('properties.draft')}
-                  </span>
-                </div>
-                
-                {/* Address - Compact */}
-                <div className="property-meta" style={{ marginBottom: '8px' }}>
-                  {property.address && `${property.address}, `}
-                  {property.city && `${property.city}, `}
-                  {property.state && property.state}
-                  {property.zipCode && ` ${property.zipCode}`}
-                </div>
-                
-                {/* Metadata - Inline, Compact */}
-                <div style={{ 
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '12px 16px',
-                  marginBottom: '10px',
-                  fontSize: '12px',
-                  color: 'var(--property-text-muted, rgba(255, 255, 255, 0.7))'
-                }}>
-                  {property.price && (
-                    <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
-                  )}
-                  {property.propertyType && (
-                    <span><strong>{t('properties.propertyType')}:</strong> {property.propertyType}</span>
-                  )}
-                  {property.type && (
-                    <span><strong>{t('common.status')}:</strong> {property.type === 'sale' ? t('properties.published') : t('properties.draft')}</span>
-                  )}
-                  {property.bedrooms && (
-                    <span><strong>{t('properties.bedrooms')}:</strong> {property.bedrooms}</span>
-                  )}
-                  {property.bathrooms && (
-                    <span><strong>{t('properties.bathrooms')}:</strong> {property.bathrooms}</span>
-                  )}
-                  {property.squareFeet && (
-                    <span><strong>{t('properties.sqft')}:</strong> {property.squareFeet.toLocaleString()}</span>
-                  )}
-                </div>
-
-                {/* Action Button - Prominent */}
-                <div className="property-action">
-                  <Link 
-                    to={`/dashboard/properties/${property.id}`} 
-                    className="crm-btn crm-btn-secondary" 
-                    style={{ 
-                      width: '100%', 
-                      justifyContent: 'center',
-                      padding: '8px 16px',
-                      fontSize: '13px'
-                    }}
-                  >
-                    {t('common.view')} / {t('common.edit')}
-                  </Link>
-                </div>
-
-                {/* Footer - Minimal */}
-                <div className="property-meta" style={{ marginTop: '8px', fontSize: '11px' }}>
-                  {t('properties.lastUpdated')} {formatDate(property.createdAt)}
+                  <div className="property-meta property-card-address">
+                    {property.address && `${property.address}, `}
+                    {property.city && `${property.city}, `}
+                    {property.state && property.state}
+                    {property.zipCode && ` ${property.zipCode}`}
+                  </div>
+                  <div className="property-card-meta-inline">
+                    {property.price && (
+                      <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
+                    )}
+                    {property.propertyType && (
+                      <span><strong>{t('properties.propertyType')}:</strong> {property.propertyType}</span>
+                    )}
+                    {property.bedrooms && (
+                      <span><strong>{t('properties.bedrooms')}:</strong> {property.bedrooms}</span>
+                    )}
+                    {property.bathrooms && (
+                      <span><strong>{t('properties.bathrooms')}:</strong> {property.bathrooms}</span>
+                    )}
+                    {property.squareFeet && (
+                      <span><strong>{t('properties.sqft')}:</strong> {property.squareFeet.toLocaleString()}</span>
+                    )}
+                  </div>
+                  <div className="property-card-footer">
+                    <span className="property-meta" style={{ fontSize: '11px' }}>
+                      {t('properties.lastUpdated')} {formatDate(property.createdAt)}
+                    </span>
+                    <Link
+                      to={`/dashboard/properties/${property.id}`}
+                      className="crm-btn crm-btn-secondary property-card-action-btn"
+                    >
+                      {t('common.view')} / {t('common.edit')}
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

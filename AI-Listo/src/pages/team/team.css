@@ -122,6 +122,24 @@
   font-size: 16px;
 }
 
+.team-seats-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-seats-line {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.team-seats-line.team-seats-muted {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 .team-seats-used {
   color: var(--text);
   font-weight: 500;
@@ -133,6 +151,44 @@
 
 .team-seats-available {
   color: var(--text-muted);
+}
+
+/* Invite section - compact row */
+.team-invite-section .team-seats-title {
+  margin-bottom: 12px;
+}
+
+.team-invite-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.team-invite-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+  margin: 0;
+}
+
+/* Owner badge next to email (no duplicate role) */
+.team-member-email-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.team-owner-you-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
 .team-seats-helper {

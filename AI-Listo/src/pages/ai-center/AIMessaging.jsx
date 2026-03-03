@@ -19,11 +19,11 @@ export default function AIMessaging() {
       <section className="ai-center-section">
         <h2>Scope</h2>
         <p>
-          This module will control AI-driven follow-ups, reminders, and nurture sequences. Explicitly excluded: cold outreach, ads, and bulk campaigns.
+          This module controls AI-driven follow-ups, reminders, and nurture sequences. Cold outreach, ads, and bulk campaigns are not included.
         </p>
-        <div className="ai-center-empty" style={{ marginTop: "24px" }}>
-          Placeholder — logic and controls coming in a future phase.
-        </div>
+        <p className="ai-center-metrics-empty" style={{ marginTop: "16px" }}>
+          Configure follow-ups and nurture sequences here.
+        </p>
       </section>
     </div>
   );

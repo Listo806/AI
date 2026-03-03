@@ -15,28 +15,28 @@ export default function Integrations() {
     {
       name: t('integrations.emailProvider'),
       nameKey: 'integrations.emailProvider',
-      status: 'not_connected',
+      status: 'coming_soon',
       description: t('integrations.emailProviderDesc'),
       icon: 'mail'
     },
     {
       name: t('integrations.zapier'),
       nameKey: 'integrations.zapier',
-      status: 'not_connected',
+      status: 'coming_soon',
       description: t('integrations.zapierDesc'),
       icon: 'zap'
     },
     {
       name: t('integrations.crmIntegration'),
       nameKey: 'integrations.crmIntegration',
-      status: 'not_connected',
+      status: 'coming_soon',
       description: t('integrations.crmIntegrationDesc'),
       icon: 'link'
     },
     {
       name: t('integrations.webhooks'),
       nameKey: 'integrations.webhooks',
-      status: 'not_connected',
+      status: 'coming_soon',
       description: t('integrations.webhooksDesc'),
       icon: 'plug'
     }
@@ -55,6 +55,21 @@ export default function Integrations() {
           border: '1px solid #86efac'
         }}>
           {t('common.connected')}
+        </span>
+      );
+    }
+    if (status === 'coming_soon') {
+      return (
+        <span style={{
+          padding: '6px 12px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          background: '#f1f5f9',
+          color: '#64748b',
+          border: '1px solid #cbd5e1'
+        }}>
+          {t('integrations.comingSoon')}
         </span>
       );
     }
@@ -131,35 +146,28 @@ export default function Integrations() {
             }}>
               {integration.description}
             </p>
-            
-            <button 
-              className={`crm-btn ${integration.status === 'connected' ? 'crm-btn-secondary' : 'crm-btn-primary'} integration-connect-btn`}
-              style={{ 
-                width: '100%',
-                padding: '14px 20px',
-                fontSize: '16px',
-                minHeight: '48px'
-              }}
-              disabled={integration.status === 'connected'}
-            >
-              {integration.status === 'connected' ? t('common.connected') : `${t('integrations.connect')} ${integration.name}`}
-            </button>
+
+            {integration.status !== 'coming_soon' && (
+              <button
+                className={`crm-btn ${integration.status === 'connected' ? 'crm-btn-secondary' : 'crm-btn-primary'} integration-connect-btn`}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  fontSize: '16px',
+                  minHeight: '48px'
+                }}
+                disabled={integration.status === 'connected'}
+              >
+                {integration.status === 'connected' ? t('common.connected') : `${t('integrations.connect')} ${integration.name}`}
+              </button>
+            )}
           </div>
         ))}
       </div>
 
-      <div style={{ 
-        padding: '16px', 
-        background: '#f8fafc', 
-        borderRadius: '8px',
-        fontSize: '14px',
-        color: '#64748b',
-        border: '1px solid #e5e7eb'
-      }}>
-        <p style={{ margin: 0 }}>
-          💡 <strong>{t('common.name')}:</strong> {t('integrations.note')}
-        </p>
-      </div>
+      <p style={{ fontSize: '14px', color: '#64748b', marginTop: '8px' }}>
+        {t('integrations.messagingHint')}
+      </p>
     </div>
   );
 }

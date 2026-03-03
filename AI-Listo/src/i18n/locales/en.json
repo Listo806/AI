@@ -272,29 +272,24 @@
   },
   "instagram": {
     "title": "Instagram",
-    "connectionStatus": "Instagram Connection Status",
-    "accountHandle": "Account Handle",
-    "dmInbox": "DM Inbox",
-    "leadContext": "Lead Context",
-    "automation": "Automation",
-    "responseTemplates": "Response Templates",
-    "engagementNotes": "Engagement Notes",
-    "sendMessage": "Type a message...",
-    "send": "Send"
+    "dmHeader": "Instagram Direct Messaging",
+    "dmSubtext": "Connect your Instagram Business account to manage DMs inside CORTEXA.",
+    "connectInstagram": "Connect Instagram"
   },
   "integrations": {
     "title": "Integrations",
     "description": "Connect third-party services to extend your CRM functionality. For messaging integrations, visit WhatsApp or Instagram pages.",
     "emailProvider": "Email Provider",
-    "emailProviderDesc": "Connect your email provider for automated email sequences and campaigns",
+    "emailProviderDesc": "Connect your email provider for email sequences and campaigns.",
     "zapier": "Zapier",
-    "zapierDesc": "Connect Zapier for custom automation workflows and integrations",
+    "zapierDesc": "Custom automation workflows and integrations.",
     "crmIntegration": "CRM Integration",
-    "crmIntegrationDesc": "Sync data with external CRM systems (coming soon)",
+    "crmIntegrationDesc": "Sync data with external CRM systems.",
     "webhooks": "Webhooks",
-    "webhooksDesc": "Configure webhooks for real-time data synchronization (coming soon)",
+    "webhooksDesc": "Configure webhooks for real-time data synchronization.",
     "connect": "Connect",
-    "note": "Note: Integration connections will be implemented in a future phase. This is the UI structure only."
+    "comingSoon": "Coming Soon",
+    "messagingHint": "Messaging (WhatsApp, Instagram) is configured from their respective pages."
   },
   "analytics": {
     "title": "Analytics",
@@ -373,6 +368,7 @@
     "noMembers": "No team members yet",
     "addMembersDescription": "Add team members to collaborate on leads and properties.",
     "seatsSummary": "Seats Summary",
+    "seatsUsed": "Seats Used",
     "used": "Used",
     "available": "Available",
     "total": "Total",

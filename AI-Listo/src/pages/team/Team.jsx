@@ -357,35 +357,28 @@ export default function Team() {
       {team && !showCreateForm && (
         <>
           <div className="team-seats-summary" style={{ marginBottom: 24 }}>
-            <h3 className="team-seats-title">
-              {team.name}
-              {isOwner && (
-                <span className="team-owner-badge" style={{ marginLeft: 8, fontSize: 12, fontWeight: 500 }}>
-                  {t('team.youAreOwner')}
-                </span>
-              )}
-            </h3>
-            <div className="team-seats-display">
-              <span className="team-seats-used">{t('team.used')}: {usedSeats}</span>
-              <span className="team-seats-separator">/</span>
-              <span className="team-seats-available">{t('team.available')}: {availableSeats}</span>
-              <span className="team-seats-separator">({t('team.total')} {totalSeats})</span>
+            <h3 className="team-seats-title">{team.name}</h3>
+            <div className="team-seats-block">
+              <div className="team-seats-line">
+                {t('team.seatsUsed')}: {usedSeats} / {totalSeats}
+              </div>
+              <div className="team-seats-line team-seats-muted">
+                {t('team.available')}: {availableSeats}
+              </div>
             </div>
-            {/* Billing/subscriptions helper hidden per request */}
           </div>
 
           {/* Invite by email (owner only) */}
           {isOwner && (
-            <div className="team-seats-summary" style={{ marginBottom: 24 }}>
+            <div className="team-seats-summary team-invite-section" style={{ marginBottom: 24 }}>
               <h3 className="team-seats-title">{t('team.inviteByEmail')}</h3>
-              <form onSubmit={handleInvite} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <form onSubmit={handleInvite} className="team-invite-form">
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder={t('team.emailPlaceholder') || 'user@example.com'}
-                  className="team-input"
-                  style={{ flex: 1, minWidth: 200 }}
+                  className="team-input team-invite-input"
                 />
                 <button type="submit" className="team-add-btn" disabled={inviting || !inviteEmail?.trim()}>
                   {inviting ? t('common.loading') : t('team.addMember')}
@@ -400,7 +393,7 @@ export default function Team() {
             {members.length === 0 ? (
               <p className="team-empty-text" style={{ margin: 0 }}>{t('team.noMembers')}</p>
             ) : (
-              <table className="admin-table" style={{ width: '100%', marginTop: 12 }}>
+              <table className="admin-table team-members-table" style={{ width: '100%', marginTop: 12 }}>
                 <thead>
                   <tr>
                     <th>{t('team.email')}</th>
@@ -410,34 +403,40 @@ export default function Team() {
                   </tr>
                 </thead>
                 <tbody>
-                  {members.map((m) => (
-                    <tr key={m.id}>
-                      <td>
-                        {m.email}
-                        {m.isOwner && (
-                          <span className="admin-status-badge approved" style={{ marginLeft: 8, fontSize: 11 }}>
-                            {t('team.owner')}
-                          </span>
-                        )}
-                      </td>
-                      <td className="admin-table-muted">{m.role}</td>
-                      <td>{m.isActive ? t('team.active') : t('team.inactive')}</td>
-                      {isOwner && (
+                  {members.map((m) => {
+                    const isCurrentUser = m.id === currentUser?.id;
+                    const showYouAreOwner = isCurrentUser && m.isOwner;
+                    const canRemove = isOwner && !m.isOwner && !isCurrentUser;
+                    const roleLabel = (m.role && String(m.role).charAt(0).toUpperCase() + String(m.role).slice(1).toLowerCase()) || (m.isOwner ? t('team.owner') : '—');
+                    return (
+                      <tr key={m.id}>
                         <td>
-                          {!m.isOwner && m.id !== currentUser?.id && (
-                            <button
-                              type="button"
-                              className="crm-btn crm-btn-secondary admin-action-btn"
-                              onClick={() => handleRemoveMember(m.id)}
-                              disabled={removing === m.id}
-                            >
-                              {removing === m.id ? '…' : t('team.remove')}
-                            </button>
-                          )}
+                          <span className="team-member-email-cell">
+                            {m.email}
+                            {showYouAreOwner && (
+                              <span className="team-owner-you-badge">{t('team.youAreOwner')}</span>
+                            )}
+                          </span>
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                        <td className="admin-table-muted">{roleLabel}</td>
+                        <td>{m.isActive ? t('team.active') : t('team.inactive')}</td>
+                        {isOwner && (
+                          <td>
+                            {canRemove && (
+                              <button
+                                type="button"
+                                className="crm-btn crm-btn-secondary admin-action-btn"
+                                onClick={() => handleRemoveMember(m.id)}
+                                disabled={removing === m.id}
+                              >
+                                {removing === m.id ? '…' : t('team.remove')}
+                              </button>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
