@@ -441,8 +441,10 @@ export class LeadsService {
       throw new NotFoundException('Lead not found');
     }
 
-    // Check permissions: user must be creator
-    if (lead.createdBy !== userId) {
+    // Allow delete if user created the lead, or if lead belongs to user's team (team members can remove team leads)
+    const isCreator = lead.createdBy === userId;
+    const isSameTeam = teamId && lead.teamId === teamId;
+    if (!isCreator && !isSameTeam) {
       throw new ForbiddenException('You do not have permission to delete this lead');
     }
 
