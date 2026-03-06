@@ -45,14 +45,46 @@ export class CrmService {
       WHERE 1=1 ${teamId ? 'AND p.team_id = $1' : 'AND p.created_by = $1'}
     `;
 
-    // Execute both queries in parallel
-    const [leadsResult, propertiesResult] = await Promise.all([
+    // Deals summary (only when user has team_id)
+    const dealsPromise = teamId
+      ? this.db.query(
+          `SELECT
+            COUNT(*)::int AS total,
+            COALESCE(SUM(value) FILTER (WHERE stage NOT IN ('won', 'lost')), 0)::numeric AS pipeline_value,
+            COALESCE(SUM(value) FILTER (WHERE stage = 'won'), 0)::numeric AS won_value,
+            COUNT(*) FILTER (WHERE stage = 'new')::int AS "new",
+            COUNT(*) FILTER (WHERE stage = 'qualified')::int AS qualified,
+            COUNT(*) FILTER (WHERE stage = 'proposal')::int AS proposal,
+            COUNT(*) FILTER (WHERE stage = 'negotiation')::int AS negotiation,
+            COUNT(*) FILTER (WHERE stage = 'won')::int AS won,
+            COUNT(*) FILTER (WHERE stage = 'lost')::int AS lost
+           FROM deals WHERE team_id = $1`,
+          [teamId],
+        )
+      : Promise.resolve({ rows: [{}] });
+
+    const [leadsResult, propertiesResult, dealsResult] = await Promise.all([
       this.db.query(leadsQuery, params),
       this.db.query(propertiesQuery, params),
+      dealsPromise,
     ]);
 
     const leads = leadsResult.rows[0] || { total: 0, new: 0, qualified: 0, contacted: 0 };
     const properties = propertiesResult.rows[0] || { total: 0, published: 0 };
+    const d = dealsResult.rows[0] || {};
+    const deals = {
+      total: Number(d.total) || 0,
+      pipelineValue: Number(d.pipeline_value) || 0,
+      wonValue: Number(d.won_value) || 0,
+      byStage: {
+        new: Number(d.new) || 0,
+        qualified: Number(d.qualified) || 0,
+        proposal: Number(d.proposal) || 0,
+        negotiation: Number(d.negotiation) || 0,
+        won: Number(d.won) || 0,
+        lost: Number(d.lost) || 0,
+      },
+    };
 
     return {
       leads: {
@@ -65,6 +97,7 @@ export class CrmService {
         total: properties.total || 0,
         published: properties.published || 0,
       },
+      deals,
       system: {
         ai_status: 'active',
         last_sync: new Date().toISOString(),
