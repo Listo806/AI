@@ -20,9 +20,11 @@ export class CrmService {
     teamId: string | null,
     role: string,
   ) {
-    // Build team/user filter
-    const teamFilter = teamId ? 'AND l.team_id = $1' : 'AND l.created_by = $1';
-    const params = teamId ? [teamId] : [userId];
+    // Build team/user filter: when user has a team, include both team leads and leads created by this user (e.g. team_id NULL)
+    const teamFilter = teamId
+      ? 'AND (l.team_id = $1 OR l.created_by = $2)'
+      : 'AND l.created_by = $1';
+    const params = teamId ? [teamId, userId] : [userId];
 
     // Single query for all lead aggregations
     // Contacted: same as Leads page — last_contacted_at IS NOT NULL (or status = 'contacted')
