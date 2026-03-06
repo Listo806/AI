@@ -7,14 +7,16 @@ import { CrmPropertiesService } from './crm-properties.service';
 import { CrmProjectsService } from './crm-projects.service';
 import { DealsController } from './deals/deals.controller';
 import { DealsService } from './deals/deals.service';
+import { ContactsController } from './contacts/contacts.controller';
+import { ContactsService } from './contacts/contacts.service';
 import { DatabaseModule } from '../database/database.module';
 import { LeadsModule } from '../leads/leads.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   imports: [DatabaseModule, LeadsModule, SubscriptionsModule],
-  controllers: [CrmController, CrmPropertiesController, CrmProjectsController, DealsController],
-  providers: [CrmService, CrmPropertiesService, CrmProjectsService, DealsService],
-  exports: [CrmService, CrmPropertiesService, CrmProjectsService, DealsService],
+  controllers: [CrmController, CrmPropertiesController, CrmProjectsController, DealsController, ContactsController],
+  providers: [CrmService, CrmPropertiesService, CrmProjectsService, DealsService, ContactsService],
+  exports: [CrmService, CrmPropertiesService, CrmProjectsService, DealsService, ContactsService],
 })
 export class CrmModule {}

@@ -430,6 +430,14 @@ async function setupDatabase() {
       await pool.query(migration41SQL);
       console.log('✓ Deals created_by/assigned_to migration completed');
     }
+
+    // Contacts table for CRM
+    const migration42Path = path.join(__dirname, '../src/database/migrations/042_contacts.sql');
+    if (fs.existsSync(migration42Path)) {
+      const migration42SQL = fs.readFileSync(migration42Path, 'utf8');
+      await pool.query(migration42SQL);
+      console.log('✓ Contacts migration completed');
+    }
     
     console.log('Database schema created successfully!');
 
