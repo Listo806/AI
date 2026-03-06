@@ -315,6 +315,28 @@
   border-color: #3b82f6;
 }
 
+.lead-cta-delete {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lead-cta-delete:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.lead-cta-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Section 2: AI Insights Panel */
 .lead-ai-insights {
   background: #fff;
@@ -581,6 +603,15 @@
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
+}
+
+.lead-attribution-delete-row {
+  margin-top: auto;
+}
+
+.lead-attribution-delete-row .lead-cta-delete {
+  width: 100%;
+  justify-content: center;
 }
 
 .lead-attribution-title {

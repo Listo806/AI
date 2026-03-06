@@ -1,0 +1,121 @@
+.contacts-error {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.contacts-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.contacts-modal {
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.contacts-label {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.contacts-label > span {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: var(--text, #1e293b);
+}
+
+.contacts-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--input-bg, #fff);
+  color: var(--text, #1e293b);
+}
+
+.contacts-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.contacts-modal textarea.contacts-input {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.contacts-table-wrapper {
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.contacts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.contacts-table th,
+.contacts-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.contacts-table th {
+  font-weight: 600;
+  background: var(--table-header-bg, #f8fafc);
+  color: var(--text, #1e293b);
+}
+
+.contacts-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.contacts-table tbody tr:hover {
+  background: var(--table-row-hover, #f8fafc);
+}
+
+.contacts-btn-icon {
+  padding: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  border-radius: 6px;
+  margin-right: 4px;
+}
+
+.contacts-btn-icon:hover {
+  background: var(--border, #e5e7eb);
+  color: var(--text, #1e293b);
+}
+
+.contacts-btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contacts-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}

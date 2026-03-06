@@ -133,7 +133,11 @@
     "website": "Sitio Web",
     "whatsappSource": "WhatsApp",
     "instagram": "Instagram",
-    "emailSource": "Email"
+    "emailSource": "Email",
+    "deleteLead": "Eliminar lead",
+    "deleteConfirm": "¿Eliminar este lead? Esta acción no se puede deshacer.",
+    "leadDeleted": "Lead eliminado",
+    "deleteError": "No se pudo eliminar el lead"
   },
   "pipeline": {
     "title": "Embudo",
@@ -270,7 +274,20 @@
     "noContacts": "Aún no hay contactos",
     "description": "Los contactos aparecerán aquí a medida que interactúes con leads y propiedades.",
     "linkedLeads": "Leads Vinculados",
-    "linkedProperties": "Propiedades Vinculadas"
+    "linkedProperties": "Propiedades Vinculadas",
+    "linkedLead": "Lead vinculado",
+    "addContact": "Añadir contacto",
+    "editContact": "Editar contacto",
+    "deleteContact": "Eliminar contacto",
+    "contactName": "Nombre",
+    "nameRequired": "El nombre es obligatorio",
+    "contactCreated": "Contacto creado",
+    "contactUpdated": "Contacto actualizado",
+    "contactDeleted": "Contacto eliminado",
+    "deleteConfirm": "¿Eliminar este contacto? No se puede deshacer.",
+    "saveContact": "Guardar",
+    "createContact": "Crear contacto",
+    "notes": "Notas"
   },
   "whatsapp": {
     "title": "WhatsApp",

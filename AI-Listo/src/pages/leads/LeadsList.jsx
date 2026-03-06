@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
+import { useNotification } from '../../context/NotificationContext';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
 import './Leads.css';
@@ -13,6 +14,8 @@ export default function LeadsList() {
   const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
+  const { showSuccess, showError } = useNotification();
+  const [deletingLeadId, setDeletingLeadId] = useState(null);
   const [allHotLeads, setAllHotLeads] = useState([]);
   const [allOtherLeads, setAllOtherLeads] = useState([]);
   const [filteredHotLeads, setFilteredHotLeads] = useState([]);
@@ -405,6 +408,21 @@ export default function LeadsList() {
     if (lead.email) {
       window.location.href = `mailto:${lead.email}`;
       logContactAction(lead.id, 'email');
+    }
+  };
+
+  const handleDeleteLead = async (lead) => {
+    if (!window.confirm(t('leads.deleteConfirm'))) return;
+    setDeletingLeadId(lead.id);
+    try {
+      await apiClient.request(`/leads/${lead.id}`, { method: 'DELETE' });
+      showSuccess(t('leads.leadDeleted'));
+      setSelectedLead((prev) => (prev?.id === lead.id ? null : prev));
+      loadLeads();
+    } catch (err) {
+      showError(err?.message || t('leads.deleteError'));
+    } finally {
+      setDeletingLeadId(null);
     }
   };
 
@@ -1019,6 +1037,19 @@ export default function LeadsList() {
                     {Math.round(allLeads.length / 1)}
                   </span>
                 </div>
+              </div>
+
+              {/* Last row: Delete lead */}
+              <div className="lead-attribution-section lead-attribution-delete-row">
+                <button
+                  type="button"
+                  className="lead-cta-delete"
+                  onClick={() => handleDeleteLead(selectedLead)}
+                  disabled={deletingLeadId === selectedLead.id}
+                  title={t('leads.deleteLead')}
+                >
+                  {deletingLeadId === selectedLead.id ? '…' : '🗑️'} {t('leads.deleteLead')}
+                </button>
               </div>
             </div>
           ) : (

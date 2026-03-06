@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink } from '../../utils/whatsapp';
@@ -8,6 +9,7 @@ import './Leads.css';
 import './lead-detail-page.css';
 
 export default function LeadDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -152,9 +154,7 @@ export default function LeadDetail() {
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this lead? This action cannot be undone.'
-    );
+    const confirmed = window.confirm(t('leads.deleteConfirm'));
 
     if (!confirmed) {
       return;
@@ -862,7 +862,7 @@ export default function LeadDetail() {
               className="crm-btn crm-btn-danger"
               disabled={saving}
             >
-              Delete
+              {t('leads.deleteLead')}
             </button>
             <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary">
               Back to List

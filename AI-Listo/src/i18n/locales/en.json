@@ -139,7 +139,11 @@
     "website": "Website",
     "whatsappSource": "WhatsApp",
     "instagram": "Instagram",
-    "emailSource": "Email"
+    "emailSource": "Email",
+    "deleteLead": "Delete lead",
+    "deleteConfirm": "Delete this lead? This action cannot be undone.",
+    "leadDeleted": "Lead deleted",
+    "deleteError": "Could not delete lead"
   },
   "pipeline": {
     "title": "Pipeline",
@@ -276,7 +280,20 @@
     "noContacts": "No contacts yet",
     "description": "Contacts will appear here as you interact with leads and properties.",
     "linkedLeads": "Linked Leads",
-    "linkedProperties": "Linked Properties"
+    "linkedProperties": "Linked Properties",
+    "linkedLead": "Linked lead",
+    "addContact": "Add contact",
+    "editContact": "Edit contact",
+    "deleteContact": "Delete contact",
+    "contactName": "Name",
+    "nameRequired": "Name is required",
+    "contactCreated": "Contact created",
+    "contactUpdated": "Contact updated",
+    "contactDeleted": "Contact deleted",
+    "deleteConfirm": "Delete this contact? This cannot be undone.",
+    "saveContact": "Save",
+    "createContact": "Create contact",
+    "notes": "Notes"
   },
   "whatsapp": {
     "title": "WhatsApp",

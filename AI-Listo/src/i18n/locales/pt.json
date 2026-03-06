@@ -133,7 +133,11 @@
     "website": "Site",
     "whatsappSource": "WhatsApp",
     "instagram": "Instagram",
-    "emailSource": "E-mail"
+    "emailSource": "E-mail",
+    "deleteLead": "Excluir lead",
+    "deleteConfirm": "Excluir este lead? Esta ação não pode ser desfeita.",
+    "leadDeleted": "Lead excluído",
+    "deleteError": "Não foi possível excluir o lead"
   },
   "pipeline": {
     "title": "Funil",
@@ -270,7 +274,20 @@
     "noContacts": "Ainda não há contatos",
     "description": "Os contatos aparecerão aqui conforme você interagir com leads e propriedades.",
     "linkedLeads": "Leads Vinculados",
-    "linkedProperties": "Propriedades Vinculadas"
+    "linkedProperties": "Propriedades Vinculadas",
+    "linkedLead": "Lead vinculado",
+    "addContact": "Adicionar contato",
+    "editContact": "Editar contato",
+    "deleteContact": "Excluir contato",
+    "contactName": "Nome",
+    "nameRequired": "O nome é obrigatório",
+    "contactCreated": "Contato criado",
+    "contactUpdated": "Contato atualizado",
+    "contactDeleted": "Contato excluído",
+    "deleteConfirm": "Excluir este contato? Esta ação não pode ser desfeita.",
+    "saveContact": "Salvar",
+    "createContact": "Criar contato",
+    "notes": "Notas"
   },
   "whatsapp": {
     "title": "WhatsApp",
