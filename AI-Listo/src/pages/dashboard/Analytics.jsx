@@ -194,14 +194,34 @@ export default function Analytics() {
     const total = dashboardSummary?.leads?.total ?? 0;
     const qualified = dashboardSummary?.leads?.qualified ?? 0;
     const conversionRate = total > 0 ? ((qualified / total) * 100).toFixed(1) : 0;
+    const deals = dashboardSummary?.deals || {};
     return {
       totalLeads: total,
       qualifiedLeads: qualified,
       conversionRate: parseFloat(conversionRate) || 0,
-      revenue: null,
+      revenue: deals.wonValue != null ? Number(deals.wonValue) : null,
+      pipelineValue: deals.pipelineValue != null ? Number(deals.pipelineValue) : null,
+      dealsTotal: deals.total ?? 0,
       avgTimeToFirstContact: null,
       changes: null,
     };
+  }, [dashboardSummary]);
+
+  // Deals by stage for chart (from dashboard summary)
+  const dealsByStageData = useMemo(() => {
+    const byStage = dashboardSummary?.deals?.byStage || {};
+    const stageLabels = [
+      { key: 'new', label: 'New' },
+      { key: 'qualified', label: 'Qualified' },
+      { key: 'proposal', label: 'Proposal' },
+      { key: 'negotiation', label: 'Negotiation' },
+      { key: 'won', label: 'Won' },
+      { key: 'lost', label: 'Lost' },
+    ];
+    return stageLabels.map(({ key, label }) => ({
+      stage: label,
+      count: Number(byStage[key]) || 0,
+    })).filter((d) => d.count > 0);
   }, [dashboardSummary]);
 
   // Funnel from analytics dashboard leads
@@ -541,6 +561,41 @@ export default function Analytics() {
               </>
             )}
           </div>
+        </CollapsibleSection>
+
+        {/* 2b. Pipeline & Deals */}
+        <CollapsibleSection 
+          title={t('analytics.pipelineDeals')}
+          defaultExpanded={true}
+          isMobile={isMobile}
+        >
+          <div className="analytics-kpi-grid" style={{ marginBottom: '16px' }}>
+            <div className="analytics-kpi-card">
+              <div className="analytics-kpi-label">{t('analytics.totalDeals')}</div>
+              <div className="analytics-kpi-value">{Number(kpiData.dealsTotal || 0).toLocaleString()}</div>
+            </div>
+            <div className="analytics-kpi-card">
+              <div className="analytics-kpi-label">{t('analytics.pipelineValue')}</div>
+              <div className="analytics-kpi-value">{kpiData.pipelineValue != null ? `$${Number(kpiData.pipelineValue).toLocaleString()}` : '—'}</div>
+            </div>
+            <div className="analytics-kpi-card">
+              <div className="analytics-kpi-label">{t('analytics.wonValue')}</div>
+              <div className="analytics-kpi-value">{kpiData.revenue != null ? `$${Number(kpiData.revenue).toLocaleString()}` : '—'}</div>
+            </div>
+          </div>
+          {dealsByStageData.length === 0 ? (
+            <p className="analytics-empty-inline">{t('analytics.noData')}</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
+              <BarChart data={dealsByStageData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="stage" stroke="#64748b" fontSize={isMobile ? 10 : 12} />
+                <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 12} />
+                <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
+                <Bar dataKey="count" fill="#22c55e" radius={[4, 4, 0, 0]} name={t('analytics.dealsByStage')} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </CollapsibleSection>
 
         {/* 3. Source Performance - unified block */}

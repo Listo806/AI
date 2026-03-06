@@ -352,6 +352,9 @@ export default function Dashboard() {
     const byStatus = periodLeads.byStatus || {};
     const createdInPeriod = typeof periodLeads.created === 'number' ? periodLeads.created : 0;
     const new7d = lead.new ?? 0;
+    const dealsData = summary?.deals || {};
+    const byStage = dealsData.byStage || {};
+    const openDeals = (byStage.new ?? 0) + (byStage.qualified ?? 0) + (byStage.proposal ?? 0) + (byStage.negotiation ?? 0);
     return {
       totalLeads: lead.total ?? 0,
       newLeadsToday: dateFilter === 'Today' ? createdInPeriod : new7d,
@@ -359,10 +362,12 @@ export default function Dashboard() {
       newLeads30d: createdInPeriod,
       contactedLeads: lead.contacted ?? byStatus.contacted ?? 0,
       qualifiedLeads: lead.qualified ?? 0,
-      dealsInPipeline: 0,
+      dealsInPipeline: openDeals,
       closedDeals: byStatus.converted ?? 0,
-      revenueClosed: 0,
-      pipelineValue: 0,
+      dealsWonCount: byStage.won ?? 0,
+      dealsLostCount: byStage.lost ?? 0,
+      revenueClosed: Number(dealsData.wonValue) ?? 0,
+      pipelineValue: Number(dealsData.pipelineValue) ?? 0,
       dealsClosingSoon: 0,
       priorityAlerts: 0,
       whatsappLeadsToday: 0,
