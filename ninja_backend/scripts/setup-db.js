@@ -422,6 +422,14 @@ async function setupDatabase() {
       await pool.query(migration40SQL);
       console.log('✓ Deals pipeline migration completed');
     }
+
+    // Deals: created_by, assigned_to
+    const migration41Path = path.join(__dirname, '../src/database/migrations/041_deals_created_by_assigned_to.sql');
+    if (fs.existsSync(migration41Path)) {
+      const migration41SQL = fs.readFileSync(migration41Path, 'utf8');
+      await pool.query(migration41SQL);
+      console.log('✓ Deals created_by/assigned_to migration completed');
+    }
     
     console.log('Database schema created successfully!');
 

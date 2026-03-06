@@ -26,10 +26,20 @@ export class CreateDealDto {
   @Min(0)
   position?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Link deal to a lead (must belong to same team)' })
   @IsOptional()
   @IsUUID()
   leadId?: string;
+
+  @ApiPropertyOptional({ description: 'Team for the deal (owners with multiple teams can specify)' })
+  @IsOptional()
+  @IsUUID()
+  teamId?: string;
+
+  @ApiPropertyOptional({ description: 'Assign deal to a team member (agent)' })
+  @IsOptional()
+  @IsUUID()
+  assignedTo?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

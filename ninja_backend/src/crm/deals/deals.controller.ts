@@ -6,9 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { DealsService } from './deals.service';
 import { CreateDealDto } from './dto/create-deal.dto';
 import { UpdateDealDto } from './dto/update-deal.dto';
@@ -25,20 +26,33 @@ export class DealsController {
   constructor(private readonly dealsService: DealsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a deal' })
+  @ApiOperation({ summary: 'Create a deal (team from context or body; optional lead, assignee)' })
   @ApiBody({ type: CreateDealDto })
   @ApiResponse({ status: 201, description: 'Deal created' })
   @ApiResponse({ status: 403, description: 'CRM access required' })
   async create(@Body() dto: CreateDealDto, @CurrentUser() user: any) {
-    return this.dealsService.create(dto, user.teamId);
+    return this.dealsService.create(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all deals for the team' })
+  @ApiOperation({ summary: 'List deals (optional teamId for owners; assignedTo=me for my deals)' })
+  @ApiQuery({ name: 'teamId', required: false, description: 'Filter by team (owners with multiple teams)' })
+  @ApiQuery({ name: 'assignedTo', required: false, description: 'Set to "me" to show only deals assigned to current user' })
   @ApiResponse({ status: 200, description: 'Deals list' })
   @ApiResponse({ status: 403, description: 'CRM access required' })
-  async findAll(@CurrentUser() user: any) {
-    return this.dealsService.findAll(user.teamId);
+  async findAll(
+    @CurrentUser() user: any,
+    @Query('teamId') teamId?: string,
+    @Query('assignedTo') assignedTo?: string,
+  ) {
+    const assignedToMe = assignedTo === 'me';
+    return this.dealsService.findAll(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      teamId || undefined,
+      assignedToMe,
+    );
   }
 
   @Get(':id')
@@ -47,7 +61,7 @@ export class DealsController {
   @ApiResponse({ status: 200, description: 'Deal' })
   @ApiResponse({ status: 404, description: 'Deal not found' })
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.dealsService.findOne(id, user.teamId);
+    return this.dealsService.findOne(id, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 
   @Patch(':id')
@@ -61,7 +75,7 @@ export class DealsController {
     @Body() dto: UpdateDealDto,
     @CurrentUser() user: any,
   ) {
-    return this.dealsService.update(id, dto, user.teamId);
+    return this.dealsService.update(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
   }
 
   @Patch(':id/stage')
@@ -79,7 +93,9 @@ export class DealsController {
       id,
       body.stage,
       body.position ?? 0,
-      user.teamId,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
     );
   }
 
@@ -89,7 +105,7 @@ export class DealsController {
   @ApiResponse({ status: 200, description: 'Deal deleted' })
   @ApiResponse({ status: 404, description: 'Deal not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
-    await this.dealsService.remove(id, user.teamId);
+    await this.dealsService.remove(id, user.id, user.teamId ?? null, user.role ?? 'owner');
     return { success: true };
   }
 }

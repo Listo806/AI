@@ -32,6 +32,11 @@ export class UpdateDealDto {
   @IsUUID()
   leadId?: string | null;
 
+  @ApiPropertyOptional({ description: 'Assign deal to a team member' })
+  @IsOptional()
+  @IsUUID()
+  assignedTo?: string | null;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

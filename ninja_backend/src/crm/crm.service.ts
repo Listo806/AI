@@ -12,22 +12,46 @@ export class CrmService {
   ) {}
 
   /**
+   * Resolve team IDs the user can see in summary: owner = all teams they own or belong to; others = their team_id only.
+   */
+  private async getSummaryTeamIds(userId: string, teamId: string | null, role: string): Promise<string[]> {
+    if (role === 'owner') {
+      const { rows } = await this.db.query(
+        `SELECT t.id FROM teams t
+         WHERE t.owner_id = $1
+            OR t.id = (SELECT team_id FROM users WHERE id = $1 AND team_id IS NOT NULL LIMIT 1)`,
+        [userId],
+      );
+      return rows.map((r: { id: string }) => r.id);
+    }
+    if (teamId) return [teamId];
+    return [];
+  }
+
+  /**
    * Get dashboard summary (single lightweight endpoint)
-   * Returns aggregated stats for leads, properties, and system status
+   * Returns aggregated stats for leads, properties, and system status.
+   * Owner: aggregates across all teams they own or belong to. Others: single team_id.
    */
   async getDashboardSummary(
     userId: string,
     teamId: string | null,
     role: string,
   ) {
-    // Build team/user filter: when user has a team, include both team leads and leads created by this user (e.g. team_id NULL)
-    const teamFilter = teamId
-      ? 'AND (l.team_id = $1 OR l.created_by = $2)'
-      : 'AND l.created_by = $1';
-    const params = teamId ? [teamId, userId] : [userId];
+    const teamIds = await this.getSummaryTeamIds(userId, teamId, role);
 
-    // Single query for all lead aggregations
-    // Contacted: same as Leads page — last_contacted_at IS NOT NULL (or status = 'contacted')
+    // Leads: team_id IN (…) or created_by = user (for leads without team)
+    const leadsParams: any[] = [];
+    const leadTeamFilter =
+      teamIds.length > 0
+        ? `AND (l.team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')}) OR l.created_by = $${teamIds.length + 1})`
+        : 'AND l.created_by = $1';
+    if (teamIds.length > 0) {
+      leadsParams.push(...teamIds, userId);
+    } else {
+      leadsParams.push(userId);
+    }
+
     const leadsQuery = `
       SELECT 
         COUNT(*)::int as total,
@@ -35,39 +59,46 @@ export class CrmService {
         COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified,
         COUNT(*) FILTER (WHERE l.last_contacted_at IS NOT NULL)::int as contacted
       FROM leads l
-      WHERE 1=1 ${teamFilter}
+      WHERE 1=1 ${leadTeamFilter}
     `;
 
-    // Single query for all property aggregations
+    // Properties: team_id IN (…) or created_by for non-team
+    const propTeamFilter =
+      teamIds.length > 0
+        ? `AND p.team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')})`
+        : 'AND p.created_by = $1';
+    const propertiesParams = teamIds.length > 0 ? teamIds : [userId];
+
     const propertiesQuery = `
       SELECT 
         COUNT(*)::int as total,
         COUNT(*) FILTER (WHERE p.status = 'published')::int as published
       FROM properties p
-      WHERE 1=1 ${teamId ? 'AND p.team_id = $1' : 'AND p.created_by = $1'}
+      WHERE 1=1 ${propTeamFilter}
     `;
 
-    // Deals summary (only when user has team_id)
-    const dealsPromise = teamId
-      ? this.db.query(
-          `SELECT
-            COUNT(*)::int AS total,
-            COALESCE(SUM(value) FILTER (WHERE stage NOT IN ('won', 'lost')), 0)::numeric AS pipeline_value,
-            COALESCE(SUM(value) FILTER (WHERE stage = 'won'), 0)::numeric AS won_value,
-            COUNT(*) FILTER (WHERE stage = 'new')::int AS "new",
-            COUNT(*) FILTER (WHERE stage = 'qualified')::int AS qualified,
-            COUNT(*) FILTER (WHERE stage = 'proposal')::int AS proposal,
-            COUNT(*) FILTER (WHERE stage = 'negotiation')::int AS negotiation,
-            COUNT(*) FILTER (WHERE stage = 'won')::int AS won,
-            COUNT(*) FILTER (WHERE stage = 'lost')::int AS lost
-           FROM deals WHERE team_id = $1`,
-          [teamId],
-        )
-      : Promise.resolve({ rows: [{}] });
+    // Deals: team_id IN (…) when user has teams
+    const dealsPromise =
+      teamIds.length > 0
+        ? this.db.query(
+            `SELECT
+              COUNT(*)::int AS total,
+              COALESCE(SUM(value) FILTER (WHERE stage NOT IN ('won', 'lost')), 0)::numeric AS pipeline_value,
+              COALESCE(SUM(value) FILTER (WHERE stage = 'won'), 0)::numeric AS won_value,
+              COUNT(*) FILTER (WHERE stage = 'new')::int AS "new",
+              COUNT(*) FILTER (WHERE stage = 'qualified')::int AS qualified,
+              COUNT(*) FILTER (WHERE stage = 'proposal')::int AS proposal,
+              COUNT(*) FILTER (WHERE stage = 'negotiation')::int AS negotiation,
+              COUNT(*) FILTER (WHERE stage = 'won')::int AS won,
+              COUNT(*) FILTER (WHERE stage = 'lost')::int AS lost
+             FROM deals WHERE team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')})`,
+            teamIds,
+          )
+        : Promise.resolve({ rows: [{}] });
 
     const [leadsResult, propertiesResult, dealsResult] = await Promise.all([
-      this.db.query(leadsQuery, params),
-      this.db.query(propertiesQuery, params),
+      this.db.query(leadsQuery, leadsParams),
+      this.db.query(propertiesQuery, propertiesParams),
       dealsPromise,
     ]);
 
