@@ -73,7 +73,38 @@ export class LeadsService {
       });
     }
 
+    // Auto-create a contact linked to this lead when we have a team
+    if (teamId) {
+      await this.createContactForLead(lead, assignedTo || null);
+    }
+
     return lead;
+  }
+
+  /**
+   * Create a contact record linked to a newly created lead (same name, email, phone, team).
+   * Only call when lead has team_id (contacts.team_id is NOT NULL).
+   */
+  private async createContactForLead(lead: { id: string; teamId: string | null; createdBy?: string | null; name: string; email?: string | null; phone?: string | null; notes?: string | null }, createdBy: string | null): Promise<void> {
+    if (!lead.teamId) return;
+    try {
+      await this.db.query(
+        `INSERT INTO contacts (team_id, created_by, name, email, phone, lead_id, notes, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [
+          lead.teamId,
+          createdBy ?? lead.createdBy ?? null,
+          lead.name?.trim() || 'Contact',
+          lead.email?.trim() || null,
+          lead.phone?.trim() || null,
+          lead.id,
+          lead.notes?.trim() || null,
+        ],
+      );
+    } catch (err) {
+      // Log but do not fail lead creation if contact insert fails (e.g. table missing)
+      console.warn('Failed to auto-create contact for lead:', lead.id, err);
+    }
   }
 
   async create(createLeadDto: CreateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
@@ -117,6 +148,11 @@ export class LeadsService {
       status: lead.status,
       source: lead.source,
     });
+
+    // Auto-create a contact linked to this lead when we have a team
+    if (teamId) {
+      await this.createContactForLead(lead, userId);
+    }
 
     return lead;
   }

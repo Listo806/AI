@@ -298,7 +298,26 @@ export class WhatsAppLeadService {
       ],
     );
 
-    return rows[0].id;
+    const leadId = rows[0].id;
+    if (data.teamId) {
+      try {
+        await this.db.query(
+          `INSERT INTO contacts (team_id, created_by, name, email, phone, lead_id, notes, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NULL, NOW())`,
+          [
+            data.teamId,
+            data.createdBy ?? null,
+            (data.name || '').trim() || 'Contact',
+            data.email?.trim() || null,
+            data.phone?.trim() || null,
+            leadId,
+          ],
+        );
+      } catch (err) {
+        console.warn('Failed to auto-create contact for lead', leadId, err);
+      }
+    }
+    return leadId;
   }
 
   /**

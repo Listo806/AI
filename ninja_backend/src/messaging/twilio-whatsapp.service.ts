@@ -119,8 +119,20 @@ export class TwilioWhatsAppService {
       [name, phone, createdBy, teamId],
     );
     if (!rows.length) throw new Error('Failed to create lead');
+    const leadId = rows[0].id;
+    if (teamId) {
+      try {
+        await this.db.query(
+          `INSERT INTO contacts (team_id, created_by, name, email, phone, lead_id, notes, updated_at)
+           VALUES ($1, $2, $3, NULL, $4, $5, NULL, NOW())`,
+          [teamId, createdBy, name, phone, leadId],
+        );
+      } catch (err) {
+        this.logger.warn?.('Failed to auto-create contact for WhatsApp lead', leadId, err);
+      }
+    }
     this.logger.log(`Created lead for unknown phone ${phone}`);
-    return { id: rows[0].id, team_id: rows[0].team_id ?? null };
+    return { id: leadId, team_id: rows[0].team_id ?? null };
   }
 
   /**
