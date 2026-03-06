@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 const AI_CENTER_PATHS = [
   "/dashboard/ai-center",
+  "/dashboard/ai-assistant",
   "/dashboard/ai-auto-reply",
   "/dashboard/ai-appointment-setter",
   "/dashboard/ai-qualification-rules",
@@ -14,6 +15,7 @@ const AI_CENTER_PATHS = [
 
 const AI_CENTER_ITEMS = [
   { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
+  { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
   { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
   { path: "/dashboard/ai-appointment-setter", labelKey: "nav.aiCenter.appointmentSetter" },
   { path: "/dashboard/ai-qualification-rules", labelKey: "nav.aiCenter.qualificationRules" },

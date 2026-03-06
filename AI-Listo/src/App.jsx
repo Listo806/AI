@@ -24,6 +24,7 @@ import AIAppointmentSetter from "./pages/ai-center/AIAppointmentSetter";
 import AIQualificationRules from "./pages/ai-center/AIQualificationRules";
 import AIMessaging from "./pages/ai-center/AIMessaging";
 import AIActivityLogs from "./pages/ai-center/AIActivityLogs";
+import AIAssistant from "./pages/ai-assistant/AIAssistant";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import Integrations from "./pages/integrations/Integrations";
@@ -131,6 +132,7 @@ function AppRoutes() {
         
         {/* AI Center Routes */}
         <Route path="ai-center" element={<AICenterOverview />} />
+        <Route path="ai-assistant" element={<AIAssistant />} />
         <Route path="ai-auto-reply" element={<AIAutoReply />} />
         <Route path="ai-appointment-setter" element={<AIAppointmentSetter />} />
         <Route path="ai-qualification-rules" element={<AIQualificationRules />} />

@@ -56,6 +56,7 @@
     "aiCenter": {
       "label": "AI Setter",
       "overview": "Overview",
+      "aiAssistant": "AI Assistant",
       "autoReply": "AI Auto-Reply",
       "appointmentSetter": "AI Setter",
       "qualificationRules": "AI Qualification Rules",
@@ -342,7 +343,11 @@
     "placeholderResponse": "This is a placeholder response. In a future phase, I'll provide intelligent assistance based on the {{context}} context.",
     "general": "General",
     "leads": "Leads",
-    "pipeline": "Pipeline"
+    "pipeline": "Pipeline",
+    "errorGeneric": "Sorry, I couldn't get a response. Please try again.",
+    "errorNoResponse": "No response from the assistant.",
+    "errorSubscription": "This feature requires an active subscription. Please upgrade your plan.",
+    "clearChat": "Clear chat"
   },
   "aiAutomations": {
     "title": "AI Automations",

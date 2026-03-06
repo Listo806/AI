@@ -51,6 +51,7 @@
     "aiCenter": {
       "label": "AI Setter",
       "overview": "Resumen",
+      "aiAssistant": "Asistente IA",
       "autoReply": "Auto-respuesta IA",
       "appointmentSetter": "AI Setter",
       "qualificationRules": "Reglas de calificación",
@@ -335,7 +336,11 @@
     "placeholderResponse": "Esta es una respuesta de ejemplo. En una fase futura, proporcionaré asistencia inteligente basada en el contexto de {{context}}.",
     "general": "General",
     "leads": "Leads",
-    "pipeline": "Embudo"
+    "pipeline": "Embudo",
+    "errorGeneric": "No pude obtener una respuesta. Por favor, inténtalo de nuevo.",
+    "errorNoResponse": "Sin respuesta del asistente.",
+    "errorSubscription": "Esta función requiere una suscripción activa. Por favor, actualiza tu plan.",
+    "clearChat": "Limpiar chat"
   },
   "aiAutomations": {
     "title": "Automatizaciones IA",

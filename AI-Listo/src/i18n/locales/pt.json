@@ -51,6 +51,7 @@
     "aiCenter": {
       "label": "AI Setter",
       "overview": "Visão geral",
+      "aiAssistant": "Assistente IA",
       "autoReply": "Auto-resposta IA",
       "appointmentSetter": "AI Setter",
       "qualificationRules": "Regras de qualificação",
@@ -335,7 +336,11 @@
     "placeholderResponse": "Esta é uma resposta de exemplo. Em uma fase futura, fornecerei assistência inteligente com base no contexto de {{context}}.",
     "general": "Geral",
     "leads": "Leads",
-    "pipeline": "Funil"
+    "pipeline": "Funil",
+    "errorGeneric": "Não foi possível obter uma resposta. Tente novamente.",
+    "errorNoResponse": "Nenhuma resposta do assistente.",
+    "errorSubscription": "Este recurso requer uma assinatura ativa. Atualize seu plano.",
+    "clearChat": "Limpar chat"
   },
   "aiAutomations": {
     "title": "Automações IA",

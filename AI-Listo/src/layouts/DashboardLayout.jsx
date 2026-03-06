@@ -28,6 +28,7 @@ const getPageTitle = (pathname) => {
     "/dashboard/admin/teams": "Admin: Teams",
     "/dashboard/contacts": "Contacts",
     "/dashboard/ai-center": "AI Center",
+    "/dashboard/ai-assistant": "AI Assistant",
     "/dashboard/ai-auto-reply": "AI Auto-Reply",
     "/dashboard/ai-appointment-setter": "AI Setter",
     "/dashboard/ai-qualification-rules": "AI Qualification Rules",
