@@ -414,6 +414,14 @@ async function setupDatabase() {
       await pool.query(migration39SQL);
       console.log('✓ Add name to users migration completed');
     }
+
+    // Deals table for CRM pipeline
+    const migration40Path = path.join(__dirname, '../src/database/migrations/040_deals.sql');
+    if (fs.existsSync(migration40Path)) {
+      const migration40SQL = fs.readFileSync(migration40Path, 'utf8');
+      await pool.query(migration40SQL);
+      console.log('✓ Deals pipeline migration completed');
+    }
     
     console.log('Database schema created successfully!');
 
