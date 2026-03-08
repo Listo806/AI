@@ -35,7 +35,7 @@ export class InstagramController {
   @Get('callback')
   @ApiOperation({
     summary: 'OAuth callback (Meta redirect)',
-    description: 'Meta redirects here after user authorizes. Exchanges code for token, stores connection, redirects to FRONTEND_URL/settings?instagram=connected. No auth required.',
+    description: 'Meta redirects here after user authorizes. Exchanges code for token, stores connection, redirects to FRONTEND_URL/dashboard/instagram?instagram=connected. No auth required.',
   })
   @ApiQuery({ name: 'code', required: true, description: 'OAuth authorization code from Meta' })
   @ApiQuery({ name: 'state', required: true, description: 'State (base64 agent id) from auth URL' })
@@ -49,7 +49,7 @@ export class InstagramController {
     await this.instagramConnections.handleCallback(code || '', state || '');
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const base = frontendUrl.split(',')[0].trim();
-    return res.redirect(302, `${base.replace(/\/$/, '')}/settings?instagram=connected`);
+    return res.redirect(302, `${base.replace(/\/$/, '')}/dashboard/instagram?instagram=connected`);
   }
 
   @Get('webhook')
