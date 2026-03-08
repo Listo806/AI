@@ -438,6 +438,14 @@ async function setupDatabase() {
       await pool.query(migration42SQL);
       console.log('✓ Contacts migration completed');
     }
+
+    // Per-agent Meta app settings for Instagram OAuth
+    const migration43Path = path.join(__dirname, '../src/database/migrations/043_agent_meta_app_settings.sql');
+    if (fs.existsSync(migration43Path)) {
+      const migration43SQL = fs.readFileSync(migration43Path, 'utf8');
+      await pool.query(migration43SQL);
+      console.log('✓ Agent Meta app settings migration completed');
+    }
     
     console.log('Database schema created successfully!');
 

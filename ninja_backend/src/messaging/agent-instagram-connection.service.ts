@@ -27,26 +27,78 @@ export class AgentInstagramConnectionService {
     private readonly db: DatabaseService,
   ) {}
 
-  getIsConfigured(): boolean {
-    const appId = this.config.get('META_APP_ID');
-    const secret = this.config.get('META_APP_SECRET');
-    const redirect = this.config.get('META_INSTAGRAM_REDIRECT_URI');
-    return !!(appId && secret && redirect);
+  /**
+   * Whether the agent has saved Meta app credentials and we have a public API URL for redirect.
+   */
+  async getIsConfigured(agentId: string): Promise<boolean> {
+    const baseUrl = this.config.get('API_PUBLIC_URL');
+    if (!baseUrl) return false;
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM agent_meta_app_settings WHERE agent_id = $1`,
+      [agentId],
+    );
+    return rows.length > 0;
+  }
+
+  async hasAppSettings(agentId: string): Promise<boolean> {
+    const { rows } = await this.db.query(
+      `SELECT 1 FROM agent_meta_app_settings WHERE agent_id = $1`,
+      [agentId],
+    );
+    return rows.length > 0;
+  }
+
+  /**
+   * Save or update Meta app credentials for an agent (secret stored encrypted).
+   */
+  async saveAppSettings(agentId: string, appId: string, appSecret: string): Promise<void> {
+    if (!appId?.trim() || !appSecret?.trim()) {
+      throw new BadRequestException('App ID and App Secret are required');
+    }
+    const encrypted = encrypt(appSecret.trim());
+    await this.db.query(
+      `INSERT INTO agent_meta_app_settings (agent_id, meta_app_id, encrypted_meta_app_secret, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (agent_id) DO UPDATE SET
+         meta_app_id = EXCLUDED.meta_app_id,
+         encrypted_meta_app_secret = EXCLUDED.encrypted_meta_app_secret,
+         updated_at = NOW()`,
+      [agentId, appId.trim(), encrypted],
+    );
+  }
+
+  private async getAppSettingsForOAuth(agentId: string): Promise<{ appId: string; appSecret: string } | null> {
+    const { rows } = await this.db.query(
+      `SELECT meta_app_id, encrypted_meta_app_secret FROM agent_meta_app_settings WHERE agent_id = $1`,
+      [agentId],
+    );
+    if (!rows.length) return null;
+    try {
+      const appSecret = decrypt(rows[0].encrypted_meta_app_secret);
+      return { appId: rows[0].meta_app_id, appSecret };
+    } catch {
+      return null;
+    }
   }
 
   /**
    * Build OAuth URL for Instagram (Meta) connect. state = base64(agentId).
+   * Uses agent's saved Meta app credentials; redirect_uri = API_PUBLIC_URL + /api/instagram/callback.
    */
-  getAuthUrl(agentId: string): string {
-    if (!this.getIsConfigured()) {
-      throw new BadRequestException('Instagram (Meta) is not configured');
+  async getAuthUrl(agentId: string): Promise<string> {
+    const baseUrl = this.config.get('API_PUBLIC_URL');
+    if (!baseUrl?.trim()) {
+      throw new BadRequestException('API_PUBLIC_URL is not configured. Set it in server environment.');
     }
-    const clientId = this.config.get('META_APP_ID');
-    const redirectUri = this.config.get('META_INSTAGRAM_REDIRECT_URI');
+    const settings = await this.getAppSettingsForOAuth(agentId);
+    if (!settings) {
+      throw new BadRequestException('Add your Meta app credentials first (App ID and App Secret)');
+    }
+    const redirectUri = `${baseUrl.replace(/\/$/, '')}/api/instagram/callback`;
     const state = Buffer.from(agentId, 'utf8').toString('base64url');
     const scope = ['instagram_basic', 'instagram_manage_messages', 'pages_show_list', 'pages_read_engagement'].join(',');
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: settings.appId,
       redirect_uri: redirectUri,
       scope,
       state,
@@ -67,15 +119,18 @@ export class AgentInstagramConnectionService {
     }
     if (!code || !agentId) throw new BadRequestException('Missing code or state');
 
-    const clientId = this.config.get('META_APP_ID');
-    const clientSecret = this.config.get('META_APP_SECRET');
-    const redirectUri = this.config.get('META_INSTAGRAM_REDIRECT_URI');
-    if (!clientId || !clientSecret || !redirectUri) {
-      throw new BadRequestException('Instagram (Meta) is not configured');
+    const baseUrl = this.config.get('API_PUBLIC_URL');
+    if (!baseUrl?.trim()) {
+      throw new BadRequestException('API_PUBLIC_URL is not configured');
     }
+    const settings = await this.getAppSettingsForOAuth(agentId);
+    if (!settings) {
+      throw new BadRequestException('Meta app credentials not found. Save App ID and App Secret first.');
+    }
+    const redirectUri = `${baseUrl.replace(/\/$/, '')}/api/instagram/callback`;
 
     const tokenRes = await fetch(
-      `${META_TOKEN_URL}?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(clientSecret)}&code=${encodeURIComponent(code)}`
+      `${META_TOKEN_URL}?client_id=${encodeURIComponent(settings.appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(settings.appSecret)}&code=${encodeURIComponent(code)}`
     );
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
