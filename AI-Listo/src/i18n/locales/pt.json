@@ -62,7 +62,11 @@
     },
     "analytics": "Analíticas",
     "team": "Equipe",
-    "integrations": "Integrações"
+    "integrations": "Integrações",
+    "adminListings": "Admin Listagens",
+    "adminUsers": "Admin Usuários",
+    "adminTeams": "Admin Times",
+    "adminPlans": "Planos"
   },
   "header": {
     "profile": "Perfil",
@@ -472,8 +476,8 @@
       "enterName": "Digite seu nome"
     },
     "billing": {
-      "title": "Cobrança",
-      "description": "Gerencie sua assinatura, método de pagamento e informações de cobrança.",
+      "title": "Cobrança e Plano",
+      "description": "Gerencie seu plano. Os recursos do CRM dependem do seu plano.",
       "currentPlan": "Plano Atual",
       "paymentMethod": "Método de Pagamento",
       "updateCard": "Atualizar Cartão",
@@ -481,7 +485,20 @@
       "month": "mês",
       "year": "ano",
       "expires": "Expira",
-      "active": "Ativo"
+      "active": "Ativo",
+      "noTeam": "Você não está em um time. Entre ou crie um para selecionar um plano.",
+      "planSelected": "Plano atualizado com sucesso.",
+      "noPlan": "Nenhum plano selecionado",
+      "noPaymentGateway": "Gateway de pagamento não conectado. Selecione um plano para ativar o CRM.",
+      "availablePlans": "Planos Disponíveis",
+      "noPlans": "Nenhum plano disponível. Contate o administrador.",
+      "selectPlan": "Selecionar plano",
+      "current": "Atual",
+      "featureCrm": "Acesso CRM",
+      "featureAi": "Recursos de IA",
+      "seats": "assentos",
+      "ownerSelects": "Apenas o dono do time pode alterar o plano.",
+      "crmIncluded": "Inclui acesso ao CRM."
     },
     "settings": {
       "title": "Configurações",
@@ -492,6 +509,35 @@
       "notificationsPlaceholder": "A interface de preferências de notificações será implementada em uma fase futura.",
       "preferencesPlaceholder": "A interface de preferências do usuário será implementada em uma fase futura.",
       "securityPlaceholder": "As configurações de segurança (alteração de senha, 2FA, etc.) serão implementadas em uma fase futura."
+    }
+  },
+  "admin": {
+    "plans": {
+      "title": "Planos de assinatura",
+      "createPlan": "Criar plano",
+      "editPlan": "Editar plano",
+      "name": "Nome",
+      "nameRequired": "Nome é obrigatório",
+      "description": "Descrição",
+      "price": "Preço",
+      "seatLimit": "Limite de assentos",
+      "seats": "assentos",
+      "listingLimit": "Limite de listagens",
+      "crmAccess": "Acesso CRM",
+      "aiFeatures": "Recursos de IA",
+      "enabled": "Ativo",
+      "status": "Status",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "enable": "Ativar",
+      "disable": "Desativar",
+      "noPlans": "Nenhum plano ainda.",
+      "created": "Plano criado.",
+      "updated": "Plano atualizado.",
+      "deleted": "Plano excluído.",
+      "enabledSuccess": "Plano ativado.",
+      "disabled": "Plano desativado.",
+      "deleteConfirm": "Excluir o plano \"{{name}}\"? Não é possível desfazer."
     }
   }
 }

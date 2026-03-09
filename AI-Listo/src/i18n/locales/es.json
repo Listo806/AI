@@ -62,7 +62,11 @@
     },
     "analytics": "Analíticas",
     "team": "Equipo",
-    "integrations": "Integraciones"
+    "integrations": "Integraciones",
+    "adminListings": "Admin Listados",
+    "adminUsers": "Admin Usuarios",
+    "adminTeams": "Admin Equipos",
+    "adminPlans": "Planes"
   },
   "header": {
     "profile": "Perfil",
@@ -481,7 +485,20 @@
       "month": "mes",
       "year": "año",
       "expires": "Vence",
-      "active": "Activo"
+      "active": "Activo",
+      "noTeam": "No perteneces a un equipo. Únete o crea uno para elegir un plan.",
+      "planSelected": "Plan actualizado correctamente.",
+      "noPlan": "Ningún plan seleccionado",
+      "noPaymentGateway": "Pasarela de pago no conectada. Selecciona un plan para activar CRM.",
+      "availablePlans": "Planes Disponibles",
+      "noPlans": "No hay planes. Contacta al administrador.",
+      "selectPlan": "Seleccionar plan",
+      "current": "Actual",
+      "featureCrm": "Acceso CRM",
+      "featureAi": "Funciones IA",
+      "seats": "plazas",
+      "ownerSelects": "Solo el dueño del equipo puede cambiar el plan.",
+      "crmIncluded": "Incluye acceso CRM."
     },
     "settings": {
       "title": "Configuración",
@@ -492,6 +509,35 @@
       "notificationsPlaceholder": "La interfaz de preferencias de notificaciones se implementará en una fase futura.",
       "preferencesPlaceholder": "La interfaz de preferencias de usuario se implementará en una fase futura.",
       "securityPlaceholder": "La configuración de seguridad (cambio de contraseña, 2FA, etc.) se implementará en una fase futura."
+    }
+  },
+  "admin": {
+    "plans": {
+      "title": "Planes de suscripción",
+      "createPlan": "Crear plan",
+      "editPlan": "Editar plan",
+      "name": "Nombre",
+      "nameRequired": "El nombre es obligatorio",
+      "description": "Descripción",
+      "price": "Precio",
+      "seatLimit": "Límite de plazas",
+      "seats": "plazas",
+      "listingLimit": "Límite de listados",
+      "crmAccess": "Acceso CRM",
+      "aiFeatures": "Funciones IA",
+      "enabled": "Activo",
+      "status": "Estado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "enable": "Activar",
+      "disable": "Desactivar",
+      "noPlans": "Aún no hay planes.",
+      "created": "Plan creado.",
+      "updated": "Plan actualizado.",
+      "deleted": "Plan eliminado.",
+      "enabledSuccess": "Plan activado.",
+      "disabled": "Plan desactivado.",
+      "deleteConfirm": "¿Eliminar el plan \"{{name}}\"? No se puede deshacer."
     }
   }
 }

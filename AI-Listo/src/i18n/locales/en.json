@@ -54,6 +54,7 @@
     "adminListings": "Admin Listings",
     "adminUsers": "Admin Users",
     "adminTeams": "Admin Teams",
+    "adminPlans": "Plans",
     "contacts": "Contacts",
     "aiCenter": {
       "label": "AI Setter",
@@ -491,8 +492,8 @@
       "enterName": "Enter your name"
     },
     "billing": {
-      "title": "Billing",
-      "description": "Manage your subscription, payment method, and billing information.",
+      "title": "Billing & Plan",
+      "description": "Manage your subscription plan. CRM features are controlled by your plan.",
       "currentPlan": "Current Plan",
       "paymentMethod": "Payment Method",
       "updateCard": "Update Card",
@@ -500,7 +501,20 @@
       "month": "month",
       "year": "year",
       "expires": "Expires",
-      "active": "Active"
+      "active": "Active",
+      "noTeam": "You are not in a team. Join or create a team to select a plan.",
+      "planSelected": "Plan updated successfully.",
+      "noPlan": "No plan selected",
+      "noPaymentGateway": "Payment gateway not connected yet. Select a plan below to enable CRM features.",
+      "availablePlans": "Available Plans",
+      "noPlans": "No plans available. Contact your administrator.",
+      "selectPlan": "Select plan",
+      "current": "Current",
+      "featureCrm": "CRM access",
+      "featureAi": "AI features",
+      "seats": "seats",
+      "ownerSelects": "Only the team owner can change the plan.",
+      "crmIncluded": "CRM access included."
     },
     "settings": {
       "title": "Settings",
@@ -511,6 +525,35 @@
       "notificationsPlaceholder": "Notification preferences UI will be implemented in a future phase.",
       "preferencesPlaceholder": "User preferences UI will be implemented in a future phase.",
       "securityPlaceholder": "Security settings (password change, 2FA, etc.) UI will be implemented in a future phase."
+    }
+  },
+  "admin": {
+    "plans": {
+      "title": "Subscription Plans",
+      "createPlan": "Create plan",
+      "editPlan": "Edit plan",
+      "name": "Name",
+      "nameRequired": "Name is required",
+      "description": "Description",
+      "price": "Price",
+      "seatLimit": "Seat limit",
+      "seats": "Seats",
+      "listingLimit": "Listing limit",
+      "crmAccess": "CRM access",
+      "aiFeatures": "AI features",
+      "enabled": "Enabled",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "enable": "Enable",
+      "disable": "Disable",
+      "noPlans": "No plans yet.",
+      "created": "Plan created.",
+      "updated": "Plan updated.",
+      "deleted": "Plan deleted.",
+      "enabledSuccess": "Plan enabled.",
+      "disabled": "Plan disabled.",
+      "deleteConfirm": "Delete plan \"{{name}}\"? This cannot be undone."
     }
   }
 }
