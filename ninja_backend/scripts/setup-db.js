@@ -446,6 +446,13 @@ async function setupDatabase() {
       await pool.query(migration43SQL);
       console.log('✓ Agent Meta app settings migration completed');
     }
+
+    const migration44Path = path.join(__dirname, '../src/database/migrations/044_subscription_provider_manual.sql');
+    if (fs.existsSync(migration44Path)) {
+      const migration44SQL = fs.readFileSync(migration44Path, 'utf8');
+      await pool.query(migration44SQL);
+      console.log('✓ Subscription provider manual migration completed');
+    }
     
     console.log('Database schema created successfully!');
 

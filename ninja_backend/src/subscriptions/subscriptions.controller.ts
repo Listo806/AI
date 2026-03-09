@@ -15,6 +15,9 @@ import { SubscriptionPlansService } from './subscription-plans.service';
 import { SubscriptionEnforcementService } from './services/subscription-enforcement.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { CreatePlanDto } from './dto/create-plan.dto';
@@ -92,6 +95,20 @@ export class SubscriptionsController {
   @ApiResponse({ status: 200, description: 'Subscription retrieved successfully' })
   async getTeamSubscription(@Param('teamId') teamId: string) {
     return this.subscriptionsService.findByTeamId(teamId);
+  }
+
+  @Post('team/:teamId/select-plan')
+  @ApiOperation({ summary: 'Select a plan for the team (no payment)' })
+  @ApiParam({ name: 'teamId', description: 'Team ID' })
+  @ApiBody({ schema: { type: 'object', properties: { planId: { type: 'string' } }, required: ['planId'] } })
+  @ApiResponse({ status: 200, description: 'Plan selected successfully' })
+  @ApiResponse({ status: 403, description: 'Only team owner can select plan' })
+  async selectPlan(
+    @Param('teamId') teamId: string,
+    @Body() body: { planId: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.subscriptionsService.selectPlanForTeam(teamId, body.planId, user.id);
   }
 
   @Get('team/:teamId/features')
