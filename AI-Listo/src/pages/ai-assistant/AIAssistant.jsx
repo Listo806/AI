@@ -40,8 +40,11 @@ export default function AIAssistant() {
   }, [i18n.language, t]);
 
   const handleQuickAction = (action) => {
-    setInput(t(action.labelKey));
+    const text = t(action.labelKey).trim();
     setShowQuickActions(false);
+    if (text && !loading) {
+      sendMessage(text);
+    }
   };
 
   // Close dropdown when clicking outside
@@ -76,9 +79,7 @@ export default function AIAssistant() {
     setInput('');
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    const text = input.trim();
+  const sendMessage = async (text) => {
     if (!text || loading) return;
 
     const userMessage = { id: Date.now(), role: 'user', content: text };
@@ -129,6 +130,11 @@ export default function AIAssistant() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendMessage(input.trim());
   };
 
   return (
