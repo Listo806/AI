@@ -1,0 +1,37 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '../config/config.module';
+import { DatabaseModule } from '../database/database.module';
+import { WhatsAppQrController } from './whatsapp-qr.controller';
+import { WhatsAppQrSessionService } from './whatsapp-qr-session.service';
+import { BaileysSocketService } from './baileys-socket.service';
+import { BaileysRedisAuthService } from './baileys-redis-auth.service';
+import { OutboundThrottleService } from './outbound-throttle.service';
+import { WhatsAppQrConversationService } from './whatsapp-qr-conversation.service';
+import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
+import { WhatsAppQrIntentService } from './whatsapp-qr-intent.service';
+import { WhatsAppQrRoutingService } from './whatsapp-qr-routing.service';
+import { WhatsAppQrInboundService } from './whatsapp-qr-inbound.service';
+import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
+import { WhatsAppQrAiReplyService } from './whatsapp-qr-ai-reply.service';
+import { WhatsAppQrFlowOrchestratorService } from './whatsapp-qr-flow-orchestrator.service';
+
+@Module({
+  imports: [ConfigModule, DatabaseModule],
+  controllers: [WhatsAppQrController],
+  providers: [
+    WhatsAppQrSessionService,
+    BaileysSocketService,
+    BaileysRedisAuthService,
+    OutboundThrottleService,
+    WhatsAppQrConversationService,
+    WhatsAppQrMessageService,
+    WhatsAppQrIntentService,
+    WhatsAppQrRoutingService,
+    WhatsAppQrInboundService,
+    WhatsAppQrOutboundService,
+    WhatsAppQrAiReplyService,
+    WhatsAppQrFlowOrchestratorService,
+  ],
+  exports: [WhatsAppQrSessionService, BaileysSocketService],
+})
+export class WhatsAppQrModule {}

@@ -21,6 +21,7 @@ import { AiCenterModule } from './ai-center/ai-center.module';
 import { PlatformModule } from './platform/platform.module';
 import { VaModule } from './va/va.module';
 import { AdminModule } from './admin/admin.module';
+import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdminModule } from './admin/admin.module';
     PlatformModule,
     VaModule,
     AdminModule,
+    WhatsAppQrModule,
   ],
   controllers: [AppController],
 })

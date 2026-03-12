@@ -38,6 +38,15 @@ export class TwilioWhatsAppService {
     private readonly leadMessages: LeadMessagesService,
     private readonly agentConnections: AgentWhatsAppConnectionService,
   ) {
+    const twilioDisabled = config.get('TWILIO_WHATSAPP_DISABLED') === 'true';
+    if (twilioDisabled) {
+      this.client = null;
+      this.from = '';
+      this.isConfigured = false;
+      this.logger.warn('Twilio WhatsApp disabled (TWILIO_WHATSAPP_DISABLED=true). QR module replaces dashboard path.');
+      return;
+    }
+
     const accountSid = config.get('TWILIO_ACCOUNT_SID');
     const authToken = config.get('TWILIO_AUTH_TOKEN');
     this.from = config.get('TWILIO_WHATSAPP_FROM') || '';
@@ -55,6 +64,16 @@ export class TwilioWhatsAppService {
 
   getIsConfigured(): boolean {
     return this.isConfigured;
+  }
+
+  /** Spec §16: structured disabled response when Twilio WhatsApp is turned off */
+  private assertNotDisabled(): void {
+    if (this.config.get('TWILIO_WHATSAPP_DISABLED') === 'true') {
+      throw new BadRequestException({
+        code: 'TWILIO_WHATSAPP_DISABLED',
+        message: 'Twilio WhatsApp is disabled. Use WhatsApp QR connection.',
+      });
+    }
   }
 
   /**
@@ -142,6 +161,7 @@ export class TwilioWhatsAppService {
    * AI must not send on Agent WhatsApp or Instagram DM; only allowed platform channels.
    */
   async sendForLead(dto: SendWhatsAppDto, userId: string, teamId: string | null): Promise<{ messageId: string; status: string }> {
+    this.assertNotDisabled();
     const senderType = dto.senderType ?? 'platform';
 
     const { rows } = await this.db.query(
@@ -232,6 +252,7 @@ export class TwilioWhatsAppService {
    * Note: For proactive/follow-up sends outside 24h, use sendTemplate with contentSid instead.
    */
   async sendAiReply(leadId: string, conversationId: string, message: string): Promise<{ messageId: string; status: string }> {
+    this.assertNotDisabled();
     if (!this.isConfigured || !this.client) {
       throw new BadRequestException('WhatsApp (Twilio) is not configured');
     }
@@ -279,6 +300,9 @@ export class TwilioWhatsAppService {
    * Handle inbound webhook from Twilio. Find lead by From, resolve To (platform vs agent), store with sender_type.
    */
   async handleInbound(payload: InboundWebhookPayload): Promise<string> {
+    if (this.config.get('TWILIO_WHATSAPP_DISABLED') === 'true') {
+      return '<Response></Response>';
+    }
     const from = TwilioWhatsAppService.phoneFromTwilioAddress(payload.From || '');
     const body = payload.Body || '';
     const messageSid = payload.MessageSid || '';
@@ -337,6 +361,7 @@ export class TwilioWhatsAppService {
     contentSid: string,
     options?: { contentVariables?: string | Record<string, string>; conversationId?: string },
   ): Promise<{ messageId: string; status: string }> {
+    this.assertNotDisabled();
     if (!this.isConfigured || !this.client) {
       throw new BadRequestException('WhatsApp (Twilio) is not configured');
     }
