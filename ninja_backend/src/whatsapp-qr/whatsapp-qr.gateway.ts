@@ -76,7 +76,10 @@ export class WhatsAppQrGateway
         if (uid === room) client.emit('disconnected', { reason });
       },
     );
-    this.subs.set(client.id, [subQr, subConn, subDisc]);
+    const subMsg = this.realtime.message$.subscribe((payload) => {
+      if (payload.userId === room) client.emit('message', payload);
+    });
+    this.subs.set(client.id, [subQr, subConn, subDisc, subMsg]);
     this.logger.log(`WS connected userId=${room} id=${client.id}`);
   }
 

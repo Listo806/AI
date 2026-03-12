@@ -55,4 +55,19 @@ export class WhatsAppQrMessageService {
       throw e;
     }
   }
+
+  async listByConversationId(
+    conversationId: string,
+    limit = 100,
+  ): Promise<any[]> {
+    const { rows } = await this.db.query(
+      `SELECT id, direction, sender_type, message_type, body, message_id, created_at
+       FROM whatsapp_qr_messages
+       WHERE conversation_id = $1
+       ORDER BY created_at ASC
+       LIMIT $2`,
+      [conversationId, limit],
+    );
+    return rows;
+  }
 }

@@ -8,6 +8,7 @@ import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
 import { WhatsAppQrIntentService } from './whatsapp-qr-intent.service';
 import { WhatsAppQrRoutingService } from './whatsapp-qr-routing.service';
 import { WhatsAppQrAiReplyService } from './whatsapp-qr-ai-reply.service';
+import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 
 /**
  * Baileys messages.upsert → normalize → lead find/create → QR conversation → message row
@@ -26,6 +27,7 @@ export class WhatsAppQrInboundService {
     private readonly intents: WhatsAppQrIntentService,
     private readonly routing: WhatsAppQrRoutingService,
     private readonly aiReply: WhatsAppQrAiReplyService,
+    private readonly realtime: WhatsAppQrRealtimeService,
   ) {}
 
   /**
@@ -86,6 +88,16 @@ export class WhatsAppQrInboundService {
     if (!inserted) return;
 
     await this.conversations.touchInbound(conv.id);
+    this.realtime.emitMessage({
+      userId,
+      conversationId: conv.id,
+      contactPhone: parsed.contactPhoneE164,
+      direction: 'inbound',
+      senderType: 'lead',
+      body: parsed.body || null,
+      messageType: parsed.messageType,
+      createdAt: new Date().toISOString(),
+    });
 
     const intent = this.intents.detectFromText(parsed.body);
     if (intent) {
