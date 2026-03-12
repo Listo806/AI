@@ -40,11 +40,18 @@ BEGIN
   ) THEN
     ALTER TABLE subscriptions DROP CONSTRAINT subscriptions_provider_check;
   END IF;
-  
-  -- Add new constraint with paddle
+
+  -- Normalize only invalid values; keep stripe|paypal|paddle|manual so 044 is not needed for CHECK alone
+  UPDATE subscriptions
+  SET provider = 'stripe'
+  WHERE provider IS NULL
+     OR trim(provider) = ''
+     OR lower(provider) NOT IN ('stripe', 'paypal', 'paddle', 'manual');
+
+  -- Add constraint including paddle (and manual if already present in DB)
   ALTER TABLE subscriptions
   ADD CONSTRAINT subscriptions_provider_check
-  CHECK (provider IN ('stripe', 'paypal', 'paddle'));
+  CHECK (provider IN ('stripe', 'paypal', 'paddle', 'manual'));
 END $$;
 
 -- Update webhook_events provider check to include 'paddle'
