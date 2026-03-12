@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 
 const DEFAULT_MAX_PER_MINUTE = 20;
 const WINDOW_MS = 60000;
@@ -24,5 +24,14 @@ export class OutboundThrottleService {
 
   reset(sessionId: string): void {
     this.windows.delete(sessionId);
+  }
+
+  assertAllowed(sessionId: string, maxPerMinute = DEFAULT_MAX_PER_MINUTE): void {
+    if (!this.allow(sessionId, maxPerMinute)) {
+      throw new BadRequestException({
+        code: 'WHATSAPP_QR_THROTTLE',
+        message: 'Outbound rate limit exceeded for this session',
+      });
+    }
   }
 }

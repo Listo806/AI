@@ -3,11 +3,14 @@ import {
   Logger,
   OnModuleDestroy,
   OnApplicationShutdown,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 import { BaileysRedisAuthService } from './baileys-redis-auth.service';
 import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 import { WhatsAppQrSessionService } from './whatsapp-qr-session.service';
+import { WhatsAppQrInboundService } from './whatsapp-qr-inbound.service';
 
 /**
  * One Baileys socket per userId. QR + connection events via WhatsAppQrRealtimeService.
@@ -41,6 +44,8 @@ export class BaileysSocketService
     private readonly redisAuth: BaileysRedisAuthService,
     private readonly realtime: WhatsAppQrRealtimeService,
     private readonly sessions: WhatsAppQrSessionService,
+    @Inject(forwardRef(() => WhatsAppQrInboundService))
+    private readonly inbound: WhatsAppQrInboundService,
   ) {}
 
   isQrEnabled(): boolean {
@@ -178,13 +183,31 @@ export class BaileysSocketService
       }
     });
 
-    // messages.upsert -> inbound pipeline later
+    sock.ev.on('messages.upsert', async (upsert: any) => {
+      const messages = upsert?.messages || [];
+      const type = upsert?.type || '';
+      if (!messages.length) return;
+      await this.inbound.handleUpsert(userId, sessionId, messages, type);
+    });
+
     const handle: SocketHandle = {
       userId,
       sessionId,
       connected: false,
     };
     this.handles.set(userId, handle);
+  }
+
+  /**
+   * Send text to E.164 contact over Baileys (outbound).
+   */
+  async sendText(userId: string, toE164: string, text: string): Promise<void> {
+    const ctx = this.contexts.get(userId);
+    if (!ctx?.sock) throw new Error('WhatsApp QR socket not connected');
+    const digits = toE164.replace(/\D/g, '');
+    if (digits.length < 10) throw new Error('Invalid phone for send');
+    const jid = `${digits}@s.whatsapp.net`;
+    await ctx.sock.sendMessage(jid, { text });
   }
 
   async disconnectUser(userId: string): Promise<void> {
