@@ -46,8 +46,8 @@ export class WhatsAppQrController {
       data: {
         sessionId: row.id,
         message: this.sockets.isQrEnabled()
-          ? 'Session ready; WebSocket QR pending gateway wiring'
-          : 'Set WHATSAPP_QR_ENABLED=true and add Baileys',
+          ? 'Session ready; connect Socket.IO namespace /whatsapp-qr with JWT to receive qr/connected events'
+          : 'Set WHATSAPP_QR_ENABLED=true and REDIS_URL for auth persistence',
       },
     };
   }
