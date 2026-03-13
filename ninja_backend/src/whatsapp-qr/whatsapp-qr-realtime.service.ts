@@ -26,11 +26,24 @@ export class WhatsAppQrRealtimeService {
   readonly disconnected$ = new Subject<DisconnectedPayload>();
   readonly message$ = new Subject<MessagePayload>();
 
+  /** Last QR per user — re-sent when client joins so they don't miss it */
+  private readonly lastQrByUser = new Map<string, string>();
+
   emitQr(userId: string, qr: string): void {
+    this.lastQrByUser.set(userId, qr);
     this.qr$.next({ userId, qr });
   }
 
+  getLastQr(userId: string): string | null {
+    return this.lastQrByUser.get(userId) ?? null;
+  }
+
+  clearQr(userId: string): void {
+    this.lastQrByUser.delete(userId);
+  }
+
   emitConnected(userId: string, phone?: string | null): void {
+    this.clearQr(userId);
     this.connected$.next({ userId, phone });
   }
 

@@ -63,6 +63,10 @@ export class WhatsAppQrGateway
     client.join(room);
     (client.data as any).userId = room;
 
+    // Re-send last QR if any (client may have joined after it was emitted)
+    const lastQr = this.realtime.getLastQr(room);
+    if (lastQr) client.emit('qr', { qr: lastQr });
+
     const subQr = this.realtime.qr$.subscribe(({ userId: uid, qr }) => {
       if (uid === room) client.emit('qr', { qr });
     });
