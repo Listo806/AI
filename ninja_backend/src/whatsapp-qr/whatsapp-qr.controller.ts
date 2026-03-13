@@ -21,6 +21,7 @@ import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
 import { SendQrMessageDto } from './dto/send-qr-message.dto';
 import { ToggleAiDto } from './dto/toggle-ai.dto';
 import { normalizeToE164 } from './utils/phone-normalize.util';
+import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 
 @ApiTags('whatsapp-qr')
 @Controller('whatsapp-qr')
@@ -31,10 +32,18 @@ export class WhatsAppQrController {
     private readonly sessions: WhatsAppQrSessionService,
     private readonly sockets: BaileysSocketService,
     private readonly redisAuth: BaileysRedisAuthService,
+    private readonly realtime: WhatsAppQrRealtimeService,
     private readonly conversations: WhatsAppQrConversationService,
     private readonly messages: WhatsAppQrMessageService,
     private readonly outbound: WhatsAppQrOutboundService,
   ) {}
+
+  @Get('pending-qr')
+  @ApiOperation({ summary: 'Get pending QR if any (fallback when socket event missed)' })
+  async pendingQr(@CurrentUser() user: any) {
+    const qr = this.realtime.getLastQr(user.id);
+    return { data: { qr: qr ?? null } };
+  }
 
   @Get('status')
   @ApiOperation({ summary: 'WhatsApp QR connection status' })
