@@ -42,21 +42,22 @@ export class WhatsAppQrSessionService {
   }
 
   async setStatus(sessionId: string, status: QrSessionStatus, phone?: string | null): Promise<void> {
+    const statusVar = status as string;
     if (phone != null) {
       await this.db.query(
-        `UPDATE whatsapp_qr_sessions SET status = $2, phone = $3,
-         connected_at = CASE WHEN $2 = 'connected' AND connected_at IS NULL THEN NOW() ELSE connected_at END,
-         disconnected_at = CASE WHEN $2 = 'disconnected' THEN NOW() ELSE disconnected_at END,
+        `UPDATE whatsapp_qr_sessions SET status = $2::varchar, phone = $3::varchar,
+         connected_at = CASE WHEN $2::varchar = 'connected' AND connected_at IS NULL THEN NOW() ELSE connected_at END,
+         disconnected_at = CASE WHEN $2::varchar = 'disconnected' THEN NOW() ELSE disconnected_at END,
          updated_at = NOW() WHERE id = $1`,
-        [sessionId, status, phone],
+        [sessionId, statusVar, phone],
       );
     } else {
       await this.db.query(
-        `UPDATE whatsapp_qr_sessions SET status = $2,
-         connected_at = CASE WHEN $2 = 'connected' AND connected_at IS NULL THEN NOW() ELSE connected_at END,
-         disconnected_at = CASE WHEN $2 = 'disconnected' THEN NOW() ELSE disconnected_at END,
+        `UPDATE whatsapp_qr_sessions SET status = $2::varchar,
+         connected_at = CASE WHEN $2::varchar = 'connected' AND connected_at IS NULL THEN NOW() ELSE connected_at END,
+         disconnected_at = CASE WHEN $2::varchar = 'disconnected' THEN NOW() ELSE disconnected_at END,
          updated_at = NOW() WHERE id = $1`,
-        [sessionId, status],
+        [sessionId, statusVar],
       );
     }
   }
