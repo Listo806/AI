@@ -27,16 +27,13 @@ export class WhatsAppQrRoutingService {
     conv: QrConversationRow,
     messageText: string,
   ): Promise<{ action: QrRouteAction; reason: string }> {
-    if (conv.owner_type === 'human' || !conv.ai_enabled) {
+    if (conv.owner_type === 'human') {
       await this.logRoute({
         qrConversationId: conv.id,
         leadId: conv.lead_id,
         route: 'notify_agent',
       });
-      return {
-        action: 'notify_agent',
-        reason: conv.owner_type === 'human' ? 'owner_human' : 'ai_disabled',
-      };
+      return { action: 'notify_agent', reason: 'owner_human' };
     }
 
     if (conv.team_id) {

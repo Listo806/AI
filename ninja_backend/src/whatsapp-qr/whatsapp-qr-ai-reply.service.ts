@@ -37,7 +37,8 @@ export class WhatsAppQrAiReplyService {
   }
 
   /**
-   * Load conversation context, call AI, and send reply via outbound. Falls back to placeholder if AI is not configured.
+   * Load conversation context, call AI, and send reply via outbound.
+   * Uses team-level ai_auto_reply_enabled (AI Auto-Reply page), not per-conversation flag.
    */
   async replyIfEnabled(
     qrConversationId: string,
@@ -45,14 +46,21 @@ export class WhatsAppQrAiReplyService {
     contactPhoneE164: string,
   ): Promise<void> {
     const { rows } = await this.db.query(
-      `SELECT c.id, c.session_id, c.user_id, c.team_id, c.contact_phone, c.ai_enabled, c.owner_type
+      `SELECT c.id, c.session_id, c.user_id, c.team_id, c.contact_phone, c.owner_type
        FROM whatsapp_qr_conversations c WHERE c.id = $1`,
       [qrConversationId],
     );
-    if (!rows.length || !rows[0].ai_enabled || rows[0].owner_type === 'human')
-      return;
+    if (!rows.length || rows[0].owner_type === 'human') return;
 
     const conv = rows[0];
+    if (conv.team_id) {
+      const { rows: teamRows } = await this.db.query(
+        `SELECT ai_auto_reply_enabled FROM teams WHERE id = $1`,
+        [conv.team_id],
+      );
+      if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) return;
+    }
+
     const history = await this.qrMessages.listByConversationId(qrConversationId, CONTEXT_MESSAGE_LIMIT);
     const messages = this.messagesToChatPayload(history);
     if (messages.length <= 1) {

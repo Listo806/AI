@@ -33,9 +33,11 @@ export class WhatsAppQrSessionService {
     user_id: string;
     phone: string | null;
     status: string;
+    connected_at: string | null;
+    updated_at: string;
   } | null> {
     const { rows } = await this.db.query(
-      `SELECT id, user_id, phone, status FROM whatsapp_qr_sessions WHERE user_id = $1`,
+      `SELECT id, user_id, phone, status, connected_at, updated_at FROM whatsapp_qr_sessions WHERE user_id = $1`,
       [userId],
     );
     return rows.length ? rows[0] : null;

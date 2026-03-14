@@ -59,6 +59,8 @@ export class WhatsAppQrController {
         connected,
         phone: row ? row.phone : null,
         status: dbStatus,
+        connected_at: row?.connected_at ?? null,
+        updated_at: row?.updated_at ?? null,
       },
     };
   }
