@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '../config/config.module';
 import { DatabaseModule } from '../database/database.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { AiAssistantModule } from '../integrations/ai/ai-assistant.module';
 import { WhatsAppQrController } from './whatsapp-qr.controller';
 import { WhatsAppQrSessionService } from './whatsapp-qr-session.service';
 import { BaileysSocketService } from './baileys-socket.service';
@@ -19,7 +20,7 @@ import { WhatsAppQrGateway } from './whatsapp-qr.gateway';
 import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule],
+  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule],
   controllers: [WhatsAppQrController],
   providers: [
     WhatsAppQrRealtimeService,

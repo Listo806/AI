@@ -1,9 +1,14 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
+import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
+import { AiAssistantService, ChatMessage } from '../integrations/ai/ai-assistant.service';
+
+const CONTEXT_MESSAGE_LIMIT = 30;
+const WHATSAPP_SYSTEM_PROMPT = `You are a helpful real estate assistant replying over WhatsApp. Be concise, friendly, and professional. Answer in the same language the lead uses when possible.`;
 
 /**
- * AI reply for QR channel. Minimal placeholder until full AiAssistant parity.
+ * AI reply for QR channel. Uses AiAssistantService with conversation history from whatsapp_qr_messages.
  */
 @Injectable()
 export class WhatsAppQrAiReplyService {
@@ -13,10 +18,26 @@ export class WhatsAppQrAiReplyService {
     private readonly db: DatabaseService,
     @Inject(forwardRef(() => WhatsAppQrOutboundService))
     private readonly outbound: WhatsAppQrOutboundService,
+    private readonly qrMessages: WhatsAppQrMessageService,
+    private readonly aiAssistant: AiAssistantService,
   ) {}
 
   /**
-   * Load conversation context and send a short reply via outbound (handoff after send).
+   * Build chat payload from whatsapp_qr_messages. Inbound/lead -> user; outbound -> assistant.
+   */
+  private messagesToChatPayload(rows: { direction: string; sender_type: string; body: string | null }[]): ChatMessage[] {
+    const out: ChatMessage[] = [{ role: 'system', content: WHATSAPP_SYSTEM_PROMPT }];
+    for (const m of rows) {
+      const content = (m.body || '').trim();
+      if (!content) continue;
+      const role = m.direction === 'inbound' || m.sender_type === 'lead' ? 'user' : 'assistant';
+      out.push({ role, content });
+    }
+    return out;
+  }
+
+  /**
+   * Load conversation context, call AI, and send reply via outbound. Falls back to placeholder if AI is not configured.
    */
   async replyIfEnabled(
     qrConversationId: string,
@@ -32,9 +53,22 @@ export class WhatsAppQrAiReplyService {
       return;
 
     const conv = rows[0];
-    // Placeholder reply; replace with AiAssistant + lead_messages context later
-    const text =
-      'Thanks for your message. An agent will continue the conversation shortly.';
+    const history = await this.qrMessages.listByConversationId(qrConversationId, CONTEXT_MESSAGE_LIMIT);
+    const messages = this.messagesToChatPayload(history);
+    if (messages.length <= 1) {
+      this.logger.debug(`replyIfEnabled: no user messages in conversation ${qrConversationId}`);
+      return;
+    }
+
+    let text: string;
+    try {
+      const { message } = await this.aiAssistant.chat({ messages });
+      text = (message || '').trim() || 'Thanks for your message. How can I help you today?';
+    } catch (err: any) {
+      this.logger.warn(`AI reply failed for conversation ${qrConversationId}: ${err?.message}`);
+      text = 'Thanks for your message. An agent will continue the conversation shortly.';
+    }
+
     await this.outbound.sendAiText({
       userId: conv.user_id,
       sessionId: conv.session_id,
