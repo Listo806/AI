@@ -28,7 +28,7 @@ import AIAssistant from "./pages/ai-assistant/AIAssistant";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import Integrations from "./pages/integrations/Integrations";
-import WhatsApp from "./pages/whatsapp/WhatsApp";
+import { WhatsAppPrimaryRoute, WhatsAppQrRoute } from "./components/WhatsAppRoute";
 import Instagram from "./pages/instagram/Instagram";
 import Billing from "./pages/billing/Billing";
 import Settings from "./pages/dashboard/Settings";
@@ -150,8 +150,9 @@ function AppRoutes() {
         {/* Integrations Route */}
         <Route path="integrations" element={<Integrations />} />
         
-        {/* WhatsApp Route */}
-        <Route path="whatsapp" element={<WhatsApp />} />
+        {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
+        <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />
+        <Route path="whatsapp-qr" element={<WhatsAppQrRoute />} />
         
         {/* Instagram Route */}
         <Route path="instagram" element={<Instagram />} />

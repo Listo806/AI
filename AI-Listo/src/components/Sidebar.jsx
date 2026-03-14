@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
+import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 
 const AI_CENTER_PATHS = [
   "/dashboard/ai-center",
@@ -57,8 +58,19 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
   const isAiCenterActive = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
 
+  // VITE_WHATSAPP_UI: twilio = original only | qr = QR at /dashboard/whatsapp only | both = two entries
+  const whatsappNavEntries =
+    whatsappUiMode === "both"
+      ? [
+          { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
+          { path: "/dashboard/whatsapp-qr", icon: "smartphone", label: "WhatsApp QR" },
+        ]
+      : primaryRouteIsQr
+        ? [{ path: "/dashboard/whatsapp", icon: "smartphone", label: "WhatsApp (QR)" }]
+        : [{ path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true }];
+
   const topNavItems = [
-    { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
+    ...whatsappNavEntries,
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
@@ -154,13 +166,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                     flexShrink: 0,
                   }}
                 />
+              ) : item.path === "/dashboard/whatsapp-qr" || (primaryRouteIsQr && item.path === "/dashboard/whatsapp" && item.icon === "smartphone") ? (
+                <i data-lucide="smartphone" className="crm-nav-icon"></i>
               ) : (
                 <i data-lucide={item.icon} className="crm-nav-icon"></i>
               )}
               {!isCollapsed && (
                 <span className="crm-nav-label">
-                  {t(item.labelKey)}
-                  {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
+                  {item.label || t(item.labelKey)}
                 </span>
               )}
             </NavLink>
