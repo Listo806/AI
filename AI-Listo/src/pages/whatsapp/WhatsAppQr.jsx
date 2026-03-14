@@ -24,7 +24,7 @@ function apiOrigin() {
  */
 export default function WhatsAppQr() {
   const { t } = useTranslation();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   const [status, setStatus] = useState(null);
   const [connecting, setConnecting] = useState(false);
@@ -40,6 +40,7 @@ export default function WhatsAppQr() {
   const socketRef = useRef(null);
   const statusLoadAtRef = useRef(0);
   const pendingQrIntervalRef = useRef(null);
+  const prevUserIdRef = useRef(null);
 
   const selectedConv = conversations.find((c) => c.contact_phone === selectedPhone);
 
@@ -90,11 +91,33 @@ export default function WhatsAppQr() {
     if (window.lucide) window.lucide.createIcons();
   }, []);
 
+  // Reset QR state when user identity changes (e.g. logout then login as different user)
+  // so we never show another user's status/conversations or stale "connected" state.
   useEffect(() => {
+    const userId = user?.id ?? null;
+    if (userId === prevUserIdRef.current) return;
+    prevUserIdRef.current = userId;
+
+    if (pendingQrIntervalRef.current) {
+      clearInterval(pendingQrIntervalRef.current);
+      pendingQrIntervalRef.current = null;
+    }
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+
+    setStatus(null);
+    setQrPayload(null);
+    setSocketConnected(false);
+    setConversations([]);
+    setSelectedPhone(null);
+    setMessages([]);
+
     if (!isAuthenticated() || authLoading) return;
     loadStatus();
     loadConversations();
-  }, [isAuthenticated, authLoading, loadStatus, loadConversations]);
+  }, [user?.id, isAuthenticated, authLoading, loadStatus, loadConversations]);
 
   useEffect(() => {
     if (selectedPhone) loadMessages(selectedPhone);

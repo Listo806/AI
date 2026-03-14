@@ -46,16 +46,19 @@ export class WhatsAppQrController {
   }
 
   @Get('status')
-  @ApiOperation({ summary: 'WhatsApp QR connection status' })
+  @ApiOperation({ summary: 'WhatsApp QR connection status (scoped to current user)' })
   async status(@CurrentUser() user: any) {
     const row = await this.sessions.findByUserId(user.id);
     const handle = this.sockets.getHandle(user.id);
+    const dbStatus = row?.status ?? 'disconnected';
+    const connected =
+      dbStatus === 'connected' && handle?.connected === true;
     return {
       data: {
         enabled: this.sockets.isQrEnabled(),
-        connected: handle ? handle.connected : false,
+        connected,
         phone: row ? row.phone : null,
-        status: row ? row.status : 'disconnected',
+        status: dbStatus,
       },
     };
   }
@@ -80,15 +83,15 @@ export class WhatsAppQrController {
   @Post('disconnect')
   @ApiOperation({ summary: 'Disconnect and clear Redis auth' })
   async disconnect(@CurrentUser() user: any) {
-    await this.redisAuth.clearAuth(user.id);
-    await this.sockets.disconnectUser(user.id);
     const row = await this.sessions.findByUserId(user.id);
     if (row) await this.sessions.setStatus(row.id, 'disconnected');
+    await this.redisAuth.clearAuth(user.id);
+    await this.sockets.disconnectUser(user.id);
     return { success: true };
   }
 
   @Get('conversations')
-  @ApiOperation({ summary: 'List QR conversations for current user' })
+  @ApiOperation({ summary: 'List QR conversations for current user only (by user_id)' })
   async listConversations(@CurrentUser() user: any) {
     const data = await this.conversations.listByUserId(user.id);
     return { data };
