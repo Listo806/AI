@@ -36,19 +36,20 @@ export class WhatsAppQrRoutingService {
       return { action: 'notify_agent', reason: 'owner_human' };
     }
 
-    if (conv.team_id) {
-      const { rows } = await this.db.query(
-        `SELECT ai_auto_reply_enabled FROM teams WHERE id = $1`,
-        [conv.team_id],
-      );
-      if (rows.length && rows[0].ai_auto_reply_enabled === false) {
-        await this.logRoute({
-          qrConversationId: conv.id,
-          leadId: conv.lead_id,
-          route: 'notify_agent',
-        });
-        return { action: 'notify_agent', reason: 'team_auto_reply_off' };
-      }
+    // Use session owner's team (same as AI Auto-Reply page) so "turn on" there applies here
+    const { rows: teamRows } = await this.db.query(
+      `SELECT t.ai_auto_reply_enabled FROM users u
+       INNER JOIN teams t ON t.id = u.team_id
+       WHERE u.id = $1`,
+      [conv.user_id],
+    );
+    if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) {
+      await this.logRoute({
+        qrConversationId: conv.id,
+        leadId: conv.lead_id,
+        route: 'notify_agent',
+      });
+      return { action: 'notify_agent', reason: 'team_auto_reply_off' };
     }
 
     const text = (messageText || '').toLowerCase();

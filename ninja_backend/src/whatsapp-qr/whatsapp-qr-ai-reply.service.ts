@@ -53,13 +53,14 @@ export class WhatsAppQrAiReplyService {
     if (!rows.length || rows[0].owner_type === 'human') return;
 
     const conv = rows[0];
-    if (conv.team_id) {
-      const { rows: teamRows } = await this.db.query(
-        `SELECT ai_auto_reply_enabled FROM teams WHERE id = $1`,
-        [conv.team_id],
-      );
-      if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) return;
-    }
+    // Use session owner's team (same as AI Auto-Reply page) so "turn on" there applies here
+    const { rows: teamRows } = await this.db.query(
+      `SELECT t.ai_auto_reply_enabled FROM users u
+       INNER JOIN teams t ON t.id = u.team_id
+       WHERE u.id = $1`,
+      [conv.user_id],
+    );
+    if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) return;
 
     const history = await this.qrMessages.listByConversationId(qrConversationId, CONTEXT_MESSAGE_LIMIT);
     const messages = this.messagesToChatPayload(history);
