@@ -104,4 +104,48 @@ export class WhatsAppQrOutboundService {
       createdAt: new Date().toISOString(),
     });
   }
+
+  /**
+   * Agent sends voice message via Baileys.
+   */
+  async sendAgentVoice(params: {
+    userId: string;
+    sessionId: string;
+    conversationId: string;
+    leadId: string;
+    teamId: string | null;
+    contactPhone: string;
+    audioBase64: string;
+  }): Promise<void> {
+    await this.throttle.assertAllowed(params.sessionId);
+    await this.sockets.sendVoice(params.userId, params.contactPhone, params.audioBase64);
+    await this.conversations.setOwnerHuman(params.conversationId);
+    await this.db.query(
+      `INSERT INTO whatsapp_qr_messages
+       (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id)
+       VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'audio', '[Voice message]', NULL)`,
+      [
+        params.sessionId,
+        params.conversationId,
+        params.leadId,
+        params.teamId,
+        params.contactPhone,
+      ],
+    );
+    await this.db.query(
+      `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),
+       last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      [params.leadId],
+    );
+    this.realtime.emitMessage({
+      userId: params.userId,
+      conversationId: params.conversationId,
+      contactPhone: params.contactPhone,
+      direction: 'outbound',
+      senderType: 'agent',
+      body: '[Voice message]',
+      messageType: 'audio',
+      createdAt: new Date().toISOString(),
+    });
+  }
 }

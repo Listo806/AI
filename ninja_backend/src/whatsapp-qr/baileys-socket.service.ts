@@ -210,6 +210,22 @@ export class BaileysSocketService
     await ctx.sock.sendMessage(jid, { text });
   }
 
+  /**
+   * Send voice message (audio/ogg) to E.164 contact over Baileys.
+   */
+  async sendVoice(userId: string, toE164: string, audioBase64: string): Promise<void> {
+    const ctx = this.contexts.get(userId);
+    if (!ctx?.sock) throw new Error('WhatsApp QR socket not connected');
+    const digits = toE164.replace(/\D/g, '');
+    if (digits.length < 10) throw new Error('Invalid phone for send');
+    const jid = `${digits}@s.whatsapp.net`;
+    const buffer = Buffer.from(audioBase64, 'base64');
+    await ctx.sock.sendMessage(jid, {
+      audio: buffer,
+      mimetype: 'audio/ogg; codecs=opus',
+    }, { sendAudioAsVoice: true });
+  }
+
   async disconnectUser(userId: string): Promise<void> {
     const ctx = this.contexts.get(userId);
     if (ctx) {

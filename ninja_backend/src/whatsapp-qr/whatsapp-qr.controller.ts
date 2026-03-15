@@ -19,6 +19,7 @@ import { WhatsAppQrConversationService } from './whatsapp-qr-conversation.servic
 import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
 import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
 import { SendQrMessageDto } from './dto/send-qr-message.dto';
+import { SendQrVoiceDto } from './dto/send-qr-voice.dto';
 import { ToggleAiDto } from './dto/toggle-ai.dto';
 import { normalizeToE164 } from './utils/phone-normalize.util';
 import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
@@ -143,6 +144,33 @@ export class WhatsAppQrController {
       teamId: conv.team_id,
       contactPhone,
       text: dto.message.trim(),
+    });
+    return { success: true };
+  }
+
+  @Post('send-voice')
+  @ApiOperation({ summary: 'Send voice message (audio/ogg base64) via Baileys' })
+  async sendVoice(@CurrentUser() user: any, @Body() dto: SendQrVoiceDto) {
+    const handle = this.sockets.getHandle(user.id);
+    if (!handle?.connected) {
+      throw new BadRequestException('WhatsApp QR not connected');
+    }
+    const contactPhone = normalizeToE164(dto.contactPhone);
+    if (!contactPhone) {
+      throw new BadRequestException('Invalid contactPhone; use E.164');
+    }
+    const conv = await this.conversations.findByUserAndPhone(user.id, contactPhone);
+    if (!conv) {
+      throw new NotFoundException('No conversation for this contact');
+    }
+    await this.outbound.sendAgentVoice({
+      userId: user.id,
+      sessionId: conv.session_id,
+      conversationId: conv.id,
+      leadId: conv.lead_id,
+      teamId: conv.team_id,
+      contactPhone,
+      audioBase64: dto.audioBase64,
     });
     return { success: true };
   }
