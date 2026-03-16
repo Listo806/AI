@@ -65,6 +65,7 @@ export class WhatsAppQrInboundService {
     const lead = await this.findOrCreateLeadByPhone(
       parsed.contactPhoneE164,
       parsed.pushName || undefined,
+      userId,
     );
 
     const { row: conv } = await this.conversations.getOrCreate({
@@ -135,11 +136,13 @@ export class WhatsAppQrInboundService {
   }
 
   /**
-   * Same logic as TwilioWhatsAppService.findOrCreateLeadByPhone (no Twilio dependency).
+   * Find existing lead by phone or create one. Uses sessionUserId when provided so the
+   * connected user owns the lead (shows on Leads page for that owner).
    */
   private async findOrCreateLeadByPhone(
     phone: string,
     profileName?: string,
+    sessionUserId?: string,
   ): Promise<{ id: string; team_id: string | null }> {
     const { rows: existing } = await this.db.query(
       `SELECT id, team_id FROM leads WHERE phone = $1 ORDER BY created_at DESC LIMIT 1`,
@@ -147,25 +150,38 @@ export class WhatsAppQrInboundService {
     );
     if (existing.length) return { id: existing[0].id, team_id: existing[0].team_id };
 
-    let createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY') || null;
+    let createdBy: string | null = null;
     let teamId: string | null = null;
-    if (createdBy) {
+    if (sessionUserId) {
       const { rows: userRows } = await this.db.query(
-        `SELECT team_id FROM users WHERE id = $1`,
-        [createdBy],
+        `SELECT id, team_id FROM users WHERE id = $1`,
+        [sessionUserId],
       );
-      if (userRows.length) teamId = userRows[0].team_id ?? null;
-    } else {
-      const { rows: fallback } = await this.db.query(
-        `SELECT id, team_id FROM users WHERE is_active = true ORDER BY created_at ASC LIMIT 1`,
-      );
-      if (fallback.length) {
-        createdBy = fallback[0].id;
-        teamId = fallback[0].team_id ?? null;
+      if (userRows.length) {
+        createdBy = userRows[0].id;
+        teamId = userRows[0].team_id ?? null;
       }
     }
     if (!createdBy) {
-      throw new Error('QR lead creation requires WHATSAPP_FIRST_LEAD_CREATED_BY or at least one user');
+      createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY') || null;
+      if (createdBy) {
+        const { rows: userRows } = await this.db.query(
+          `SELECT team_id FROM users WHERE id = $1`,
+          [createdBy],
+        );
+        if (userRows.length) teamId = userRows[0].team_id ?? null;
+      } else {
+        const { rows: fallback } = await this.db.query(
+          `SELECT id, team_id FROM users WHERE is_active = true ORDER BY created_at ASC LIMIT 1`,
+        );
+        if (fallback.length) {
+          createdBy = fallback[0].id;
+          teamId = fallback[0].team_id ?? null;
+        }
+      }
+    }
+    if (!createdBy) {
+      throw new Error('QR lead creation requires session user, WHATSAPP_FIRST_LEAD_CREATED_BY, or at least one user');
     }
 
     const name = (profileName || '').trim() || 'WhatsApp Lead';
