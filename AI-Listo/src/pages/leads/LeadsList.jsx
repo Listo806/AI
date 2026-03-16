@@ -5,8 +5,9 @@ import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { useNotification } from '../../context/NotificationContext';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
+import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
+import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
 import './Leads.css';
 import './leads-master-detail.css';
 
@@ -822,6 +823,15 @@ export default function LeadsList() {
         <div className="lead-detail-column">
           {selectedLead ? (
             <div className="lead-detail-scrollable">
+              <div style={{ marginBottom: '12px' }}>
+                <Link
+                  to={`/dashboard/leads/${selectedLead.id}`}
+                  className="crm-btn crm-btn-primary"
+                  style={{ fontSize: '13px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  View full lead details →
+                </Link>
+              </div>
               {/* Section 1: Lead Header Card */}
               <div className="lead-header-card">
                 <div className="lead-header-top">
@@ -942,6 +952,17 @@ export default function LeadsList() {
 
               {/* Section 5: WhatsApp — real chat with channel label in header */}
               <div className="lead-whatsapp-panel" style={{ minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+                {showQrRoute && selectedLead.phone && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <Link
+                      to={`${primaryRouteIsQr ? '/dashboard/whatsapp' : '/dashboard/whatsapp-qr'}?contactPhone=${encodeURIComponent(normalizePhoneToE164(selectedLead.phone) || selectedLead.phone)}`}
+                      className="crm-btn crm-btn-secondary"
+                      style={{ fontSize: '13px', padding: '8px 14px' }}
+                    >
+                      Open in WhatsApp Inbox (QR)
+                    </Link>
+                  </div>
+                )}
                 <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                   <WhatsAppChat
                     leadId={selectedLead.id}

@@ -3,8 +3,9 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
+import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
+import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
 import './Leads.css';
 import './lead-detail-page.css';
 
@@ -802,6 +803,17 @@ export default function LeadDetail() {
           {/* WhatsApp — compact panel, aligned input + send, clean empty state */}
           <div className="crm-section lead-detail-whatsapp-panel">
             <h3 className="crm-section-title">WhatsApp Messages</h3>
+            {showQrRoute && (formData.phone || lead.phone) && (
+              <div style={{ marginBottom: '12px' }}>
+                <Link
+                  to={`${primaryRouteIsQr ? '/dashboard/whatsapp' : '/dashboard/whatsapp-qr'}?contactPhone=${encodeURIComponent(normalizePhoneToE164(formData.phone || lead.phone) || formData.phone || lead.phone)}`}
+                  className="crm-btn crm-btn-secondary"
+                  style={{ fontSize: '13px', padding: '8px 14px' }}
+                >
+                  Open in WhatsApp Inbox (QR)
+                </Link>
+              </div>
+            )}
             <div className="lead-detail-whatsapp-inner">
               <WhatsAppChat
                 leadId={id}

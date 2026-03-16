@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { io } from 'socket.io-client';
 import { FiSmile, FiMic } from 'react-icons/fi';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+
+function normalizePhoneForMatch(phone) {
+  if (!phone || typeof phone !== 'string') return '';
+  const digits = phone.replace(/\D/g, '');
+  return digits.length > 0 ? `+${digits}` : '';
+}
 
 const EMOJI_LIST = ['😀','😊','😂','🥲','😍','🥰','😘','👍','👋','❤️','🙏','🎉','🔥','✨','💯','😅','🤔','👀','🙌','💪','😎','🤝','📌','✅','❌','⚠️','💬','📱','🏠','📞'];
 
@@ -27,6 +34,7 @@ function apiOrigin() {
  */
 export default function WhatsAppQr() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
 
   const [status, setStatus] = useState(null);
@@ -137,6 +145,25 @@ export default function WhatsAppQr() {
   useEffect(() => {
     if (selectedPhone) loadMessages(selectedPhone);
   }, [selectedPhone, loadMessages]);
+
+  // Open conversation from URL (e.g. from Leads page "Open in WhatsApp Inbox")
+  const contactPhoneParam = searchParams.get('contactPhone');
+  useEffect(() => {
+    if (!contactPhoneParam || conversations.length === 0) return;
+    const normalized = normalizePhoneForMatch(contactPhoneParam);
+    if (!normalized) return;
+    const match = conversations.find(
+      (c) => normalizePhoneForMatch(c.contact_phone) === normalized
+    );
+    if (match) {
+      setSelectedPhone(match.contact_phone);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('contactPhone');
+        return next;
+      }, { replace: true });
+    }
+  }, [contactPhoneParam, conversations]);
 
   // Auto-scroll message box to bottom when messages change (like common chat apps)
   useEffect(() => {
