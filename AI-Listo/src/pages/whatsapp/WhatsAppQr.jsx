@@ -2,8 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { io } from 'socket.io-client';
+import { FiSmile, FiMic } from 'react-icons/fi';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
+
+const EMOJI_LIST = ['😀','😊','😂','🥲','😍','🥰','😘','👍','👋','❤️','🙏','🎉','🔥','✨','💯','😅','🤔','👀','🙌','💪','😎','🤝','📌','✅','❌','⚠️','💬','📱','🏠','📞'];
 
 const STORAGE_PREFIX = 'listo_';
 const API_BASE_URL =
@@ -36,13 +39,25 @@ export default function WhatsAppQr() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  const [toggleLoading, setToggleLoading] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [sendingVoice, setSendingVoice] = useState(false);
   const socketRef = useRef(null);
   const statusLoadAtRef = useRef(0);
   const pendingQrIntervalRef = useRef(null);
   const prevUserIdRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const selectedPhoneRef = useRef(null);
+  const chatInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
 
   const selectedConv = conversations.find((c) => c.contact_phone === selectedPhone);
+
+  useEffect(() => {
+    selectedPhoneRef.current = selectedPhone;
+  }, [selectedPhone]);
 
   const loadStatus = useCallback(async (options = {}) => {
     const { throttleMs = 0 } = options;
@@ -123,6 +138,13 @@ export default function WhatsAppQr() {
     if (selectedPhone) loadMessages(selectedPhone);
   }, [selectedPhone, loadMessages]);
 
+  // Auto-scroll message box to bottom when messages change (like common chat apps)
+  useEffect(() => {
+    if (messages.length > 0 && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   // Poll for pending QR when socket is live but no QR yet (fallback if socket event missed)
   useEffect(() => {
     const isConnecting =
@@ -181,8 +203,21 @@ export default function WhatsAppQr() {
     });
     socket.on('message', (payload) => {
       loadConversations();
-      if (payload.contactPhone === selectedPhone) {
-        loadMessages(selectedPhone);
+      const current = selectedPhoneRef.current;
+      if (payload.contactPhone !== current || !current) return;
+      // Only append inbound (received) messages; our own sent messages are added optimistically
+      if (payload.direction === 'inbound') {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `rcvd-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+            direction: payload.direction,
+            sender_type: payload.senderType,
+            body: payload.body,
+            message_type: payload.messageType || 'text',
+            created_at: payload.createdAt,
+          },
+        ]);
       }
     });
 
@@ -191,7 +226,7 @@ export default function WhatsAppQr() {
       if (socket.connected) resolve();
       else socket.once('connect', resolve);
     });
-  }, [loadStatus, loadConversations, loadMessages, selectedPhone]);
+  }, [loadStatus, loadConversations]);
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -222,43 +257,117 @@ export default function WhatsAppQr() {
     }
   };
 
+  const handleReconnect = async () => {
+    setReconnecting(true);
+    setQrPayload(null);
+    try {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      setSocketConnected(false);
+      await apiClient.request('/whatsapp-qr/disconnect', { method: 'POST' });
+      await openSocket();
+      await apiClient.request('/whatsapp-qr/connect', { method: 'POST' });
+      await loadStatus();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setReconnecting(false);
+    }
+  };
+
+  const handleEmojiClick = (emoji) => {
+    setDraft((prev) => prev + emoji);
+    chatInputRef.current?.focus();
+  };
+
+  const handleVoiceStart = useCallback(async () => {
+    if (!selectedPhone || sendingVoice || recording) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (chunksRef.current.length === 0) return;
+        const blob = new Blob(chunksRef.current, { type: 'audio/ogg; codecs=opus' });
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64 = reader.result?.split(',')[1];
+          if (!base64) return;
+          setSendingVoice(true);
+          try {
+            await apiClient.request('/whatsapp-qr/send-voice', {
+              method: 'POST',
+              body: JSON.stringify({ contactPhone: selectedPhone, audioBase64: base64 }),
+            });
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `voice-${Date.now()}`,
+                direction: 'outbound',
+                sender_type: 'agent',
+                body: '[Voice message]',
+                message_type: 'audio',
+                created_at: new Date().toISOString(),
+              },
+            ]);
+            loadConversations();
+          } catch (e) {
+            console.error(e);
+          } finally {
+            setSendingVoice(false);
+          }
+        };
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+    } catch (e) {
+      console.error('Voice recording not available:', e);
+    }
+  }, [selectedPhone, sendingVoice, recording]);
+
+  const handleVoiceStop = useCallback(() => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+      setRecording(false);
+    }
+  }, [recording]);
+
   const handleSend = async () => {
     const text = draft.trim();
     if (!text || !selectedPhone || sending) return;
+    const tempId = `send-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const optimisticMsg = {
+      id: tempId,
+      direction: 'outbound',
+      sender_type: 'agent',
+      body: text,
+      message_type: 'text',
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setDraft('');
     setSending(true);
     try {
       await apiClient.request('/whatsapp-qr/send', {
         method: 'POST',
         body: JSON.stringify({ contactPhone: selectedPhone, message: text }),
       });
-      setDraft('');
-      await loadMessages(selectedPhone);
-      await loadConversations();
+      loadConversations();
     } catch (e) {
       console.error(e);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setDraft(text);
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleToggleAi = async () => {
-    if (!selectedPhone || !selectedConv || toggleLoading) return;
-    const next = !(selectedConv.ai_enabled && selectedConv.owner_type === 'ai');
-    setToggleLoading(true);
-    try {
-      const encoded = encodeURIComponent(selectedPhone);
-      await apiClient.request(
-        `/whatsapp-qr/conversations/${encoded}/toggle-ai`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ aiEnabled: next }),
-        },
-      );
-      await loadConversations();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setToggleLoading(false);
     }
   };
 
@@ -267,37 +376,64 @@ export default function WhatsAppQr() {
     return new Date(d).toLocaleString();
   };
 
+  const lastSyncLabel = () => {
+    const at = status?.connected_at || status?.updated_at;
+    if (!at) return '—';
+    const ms = Date.now() - new Date(at).getTime();
+    if (ms < 60000) return 'Just now';
+    if (ms < 3600000) return `${Math.floor(ms / 60000)} min ago`;
+    return formatTime(at);
+  };
+
   const enabled = status?.enabled !== false;
   const connected = status?.connected === true;
 
   return (
-    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>
-        {t('whatsapp.title', 'WhatsApp')} <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 500 }}>(QR)</span>
+    <div style={{ width: '100%', maxWidth: '900px', overflowX: 'hidden', boxSizing: 'border-box', margin: '0 auto' }}>
+      <h1 style={{ marginBottom: '12px', fontSize: '28px', fontWeight: 700 }}>
+        Connect Your WhatsApp Account
       </h1>
+      <p style={{ marginBottom: '28px', fontSize: '15px', color: '#475569', lineHeight: 1.6 }}>
+        Connect your WhatsApp number to the CORTEXA AI CRM so you can send and receive messages directly inside your dashboard.
+        <br />
+        Once connected, all conversations will appear in the WhatsApp Inbox where you can reply, automate responses, and manage leads.
+      </p>
 
-      <div className="crm-section" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>QR connection</h2>
+      <section style={{ marginBottom: '28px' }}>
+        <h2 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 600 }}>How to Connect</h2>
+        <ol style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '14px', lineHeight: 1.8 }}>
+          <li>Open WhatsApp on your phone</li>
+          <li>Tap Settings (iPhone) or Menu ⋮ (Android)</li>
+          <li>Select &quot;Linked Devices&quot;</li>
+          <li>Tap &quot;Link a Device&quot;</li>
+          <li>Scan the QR code displayed below</li>
+        </ol>
+      </section>
+
+      <div
+        className="crm-section"
+        style={{
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '24px',
+          background: '#fff',
+        }}
+      >
+        <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600 }}>WhatsApp Connection</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <span
             style={{
-              padding: '6px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
+              padding: '6px 14px',
+              borderRadius: '10px',
+              fontSize: '13px',
               fontWeight: 600,
-              background: connected ? '#f0fdf4' : '#fef2f2',
-              color: connected ? '#16a34a' : '#dc2626',
+              background: connected ? '#dcfce7' : '#fee2e2',
+              color: connected ? '#166534' : '#b91c1c',
             }}
           >
-            {connected ? 'Connected' : 'Disconnected'}
+            Status: {connected ? 'Connected' : 'Disconnected'}
           </span>
-        </div>
-        {!enabled && (
-          <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px' }}>
-            Set <code>WHATSAPP_QR_ENABLED=true</code> and <code>REDIS_URL</code> on the backend.
-          </p>
-        )}
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           {!connected && (
             <button
               type="button"
@@ -314,49 +450,156 @@ export default function WhatsAppQr() {
                 opacity: connecting ? 0.7 : 1,
               }}
             >
-              {connecting ? 'Starting…' : 'Connect & show QR'}
+              {connecting ? 'Starting…' : 'Connect & Show QR'}
             </button>
           )}
-          {connected && (
-            <button
-              type="button"
-              onClick={handleDisconnect}
-              style={{
-                padding: '10px 20px',
-                fontWeight: 600,
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                background: '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              Disconnect
-            </button>
-          )}
-          <span style={{ fontSize: '12px', color: '#64748b' }}>
-            Socket: {socketConnected ? 'live' : '—'} · {status?.phone && `Device: ${status.phone}`}
-          </span>
         </div>
-
-        {qrPayload && (
-          <div style={{ marginTop: '20px', padding: '16px', background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', display: 'inline-block' }}>
-            <div style={{ fontSize: '13px', marginBottom: '8px', color: '#64748b' }}>Scan with WhatsApp</div>
-            <QRCodeSVG value={qrPayload} size={220} level="M" />
+        {!enabled && (
+          <div
+            style={{
+              marginTop: '16px',
+              padding: '14px 16px',
+              borderRadius: '10px',
+              background: '#fffbeb',
+              borderLeft: '4px solid #f59e0b',
+              fontSize: '14px',
+              color: '#92400e',
+              lineHeight: 1.5,
+            }}
+          >
+            <strong style={{ display: 'block', marginBottom: '4px' }}>Setup required</strong>
+            Ask your admin to set <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>WHATSAPP_QR_ENABLED=true</code> and <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>REDIS_URL</code> on the backend so you can connect.
           </div>
         )}
       </div>
 
+      {qrPayload && (
+        <div
+          style={{
+            marginBottom: '24px',
+            padding: '28px',
+            background: '#f8fafc',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <p style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 500, color: '#334155' }}>
+            Scan this QR code with WhatsApp
+          </p>
+          <QRCodeSVG value={qrPayload} size={260} level="M" />
+          <p style={{ margin: '16px 0 0', fontSize: '13px', color: '#64748b' }}>
+            Open WhatsApp → Linked Devices → Link a Device
+          </p>
+        </div>
+      )}
+
+      {connected && (
+        <div
+          style={{
+            marginBottom: '24px',
+            padding: '20px',
+            background: '#f0fdf4',
+            borderRadius: '12px',
+            border: '1px solid #bbf7d0',
+          }}
+        >
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '16px' }}>
+            <div>
+              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Connected Device</span>
+              <div style={{ fontSize: '15px', color: '#14532d' }}>
+                {status?.phone ? `+${status.phone}` : '—'}
+              </div>
+            </div>
+            <div>
+              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Last Sync</span>
+              <div style={{ fontSize: '15px', color: '#14532d' }}>{lastSyncLabel()}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleReconnect}
+              disabled={reconnecting}
+              style={{
+                padding: '10px 18px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: '1px solid #16a34a',
+                background: '#fff',
+                color: '#16a34a',
+                cursor: reconnecting ? 'not-allowed' : 'pointer',
+                opacity: reconnecting ? 0.7 : 1,
+              }}
+            >
+              {reconnecting ? 'Generating…' : 'Reconnect Device'}
+            </button>
+            <button
+              type="button"
+              onClick={handleDisconnect}
+              style={{
+                padding: '10px 18px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: '1px solid #dc2626',
+                background: '#fff',
+                color: '#dc2626',
+                cursor: 'pointer',
+              }}
+            >
+              Disconnect WhatsApp
+            </button>
+          </div>
+        </div>
+      )}
+
+      {(qrPayload || connected) && (
+        <div
+          style={{
+            marginBottom: '24px',
+            padding: '16px 20px',
+            borderRadius: '10px',
+            backgroundColor: '#eff6ff',
+            border: '1px solid #93c5fd',
+            boxSizing: 'border-box',
+            fontSize: '14px',
+            color: '#1e40af',
+            lineHeight: 1.5,
+            fontWeight: 500,
+          }}
+        >
+          Once connected, incoming WhatsApp messages will automatically appear in the CRM WhatsApp Inbox below.
+        </div>
+      )}
+
       <div
         className="crm-section"
         style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
           overflow: 'hidden',
           background: '#fff',
+          marginTop: '28px',
         }}
       >
-        <h2 style={{ margin: '16px', fontSize: '18px', fontWeight: 600 }}>QR inbox</h2>
-        <div style={{ display: 'flex', flexDirection: 'row', height: '520px' }}>
+        <h2 style={{ margin: '16px', fontSize: '18px', fontWeight: 600 }}>WhatsApp Inbox</h2>
+        <div
+          style={{
+            margin: '0 16px 16px',
+            padding: '12px 14px',
+            borderRadius: '8px',
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            fontSize: '13px',
+            color: '#166534',
+            lineHeight: 1.5,
+          }}
+        >
+          AI auto-reply is controlled in the <strong>AI Auto-Reply</strong> page for your team. Turn it on there to let the assistant reply to new messages here.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row', height: '480px' }}>
           <div style={{ width: '280px', borderRight: '1px solid #e5e7eb', overflowY: 'auto' }}>
             {conversations.length === 0 ? (
               <div style={{ padding: '24px', color: '#64748b', fontSize: '14px' }}>
@@ -380,126 +623,199 @@ export default function WhatsAppQr() {
                     {c.unread_count > 0 && (
                       <span style={{ marginLeft: '8px', color: '#2563eb' }}>({c.unread_count})</span>
                     )}
+                    {c.owner_type === 'human' && (
+                      <span style={{ display: 'block', marginTop: '4px', color: '#94a3b8', fontSize: '11px' }}>Agent thread</span>
+                    )}
                   </div>
                 </div>
               ))
             )}
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            {selectedConv && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 16px',
-                  background: '#f8fafc',
-                  borderBottom: '1px solid #e5e7eb',
-                }}
-              >
-                <span style={{ fontSize: '13px', color: '#64748b' }}>
-                  {selectedConv.owner_type === 'human' && !selectedConv.ai_enabled
-                    ? 'AI off / agent thread'
-                    : selectedConv.ai_enabled
-                      ? 'AI on'
-                      : 'AI off'}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleToggleAi}
-                  disabled={toggleLoading}
-                  style={{
-                    padding: '6px 14px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    background: selectedConv.ai_enabled ? '#f1f5f9' : '#25D366',
-                    color: selectedConv.ai_enabled ? '#475569' : '#fff',
-                    cursor: toggleLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {toggleLoading ? '…' : selectedConv.ai_enabled ? 'Turn AI off' : 'Turn AI on'}
-                </button>
-              </div>
-            )}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column' }}>
               {messagesLoading ? (
                 <div style={{ color: '#64748b' }}>Loading…</div>
               ) : !selectedPhone ? (
                 <div style={{ color: '#64748b' }}>Select a conversation</div>
               ) : (
-                messages.map((m) => (
-                  <div
-                    key={m.id}
-                    style={{
-                      marginBottom: '12px',
-                      textAlign: m.direction === 'outbound' ? 'right' : 'left',
-                    }}
-                  >
+                <>
+                  {messages.map((m) => (
                     <div
+                      key={m.id}
                       style={{
-                        display: 'inline-block',
-                        maxWidth: '85%',
-                        padding: '8px 12px',
-                        borderRadius: '12px',
-                        background: m.direction === 'outbound' ? '#dcf8c6' : '#f1f5f9',
-                        fontSize: '14px',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
+                        marginBottom: '12px',
+                        textAlign: m.direction === 'outbound' ? 'right' : 'left',
                       }}
                     >
-                      {m.body || `[${m.message_type}]`}
+                      <div
+                        style={{
+                          display: 'inline-block',
+                          maxWidth: '85%',
+                          padding: '8px 12px',
+                          borderRadius: '12px',
+                          background: m.direction === 'outbound' ? '#dcf8c6' : '#f1f5f9',
+                          fontSize: '14px',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {m.body || `[${m.message_type}]`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                        {m.sender_type} · {formatTime(m.created_at)}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
-                      {m.sender_type} · {formatTime(m.created_at)}
-                    </div>
-                  </div>
-                ))
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
               )}
             </div>
             {selectedPhone && connected && (
-              <div style={{ padding: '12px 16px', borderTop: '1px solid #e5e7eb', display: 'flex', gap: '8px' }}>
-                <input
-                  type="text"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Type a message…"
-                  style={{
-                    flex: 1,
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb',
-                    fontSize: '14px',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleSend}
-                  disabled={sending || !draft.trim()}
-                  style={{
-                    padding: '10px 18px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: '#25D366',
-                    color: '#fff',
-                    cursor: sending ? 'not-allowed' : 'pointer',
-                    opacity: sending ? 0.7 : 1,
-                  }}
-                >
-                  Send
-                </button>
+              <div style={{ padding: '12px 16px', borderTop: '1px solid #e5e7eb' }}>
+                {showEmojiPicker && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px',
+                      padding: '10px',
+                      marginBottom: '10px',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      maxHeight: '140px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {EMOJI_LIST.map((emoji, i) => (
+                      <button
+                        type="button"
+                        key={i}
+                        onClick={() => handleEmojiClick(emoji)}
+                        style={{
+                          padding: '4px',
+                          fontSize: '20px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          lineHeight: 1,
+                        }}
+                        aria-label={`Insert ${emoji}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker((p) => !p)}
+                    style={{
+                      padding: '10px',
+                      background: showEmojiPicker ? '#e2e8f0' : 'transparent',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    aria-label="Insert emoji"
+                  >
+                    <FiSmile size={20} color="#64748b" />
+                  </button>
+                  {recording ? (
+                    <button
+                      type="button"
+                      onClick={handleVoiceStop}
+                      style={{
+                        padding: '10px 16px',
+                        background: '#dc2626',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Stop & send
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleVoiceStart}
+                      disabled={sendingVoice}
+                      style={{
+                        padding: '10px',
+                        background: 'transparent',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        cursor: sendingVoice ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: sendingVoice ? 0.6 : 1,
+                      }}
+                      aria-label="Record voice message"
+                    >
+                      <FiMic size={20} color="#64748b" />
+                    </button>
+                  )}
+                  <input
+                    ref={chatInputRef}
+                    type="text"
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                    placeholder="Type a message…"
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      fontSize: '14px',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSend}
+                    disabled={sending || !draft.trim()}
+                    style={{
+                      padding: '10px 18px',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: '#25D366',
+                      color: '#fff',
+                      cursor: sending ? 'not-allowed' : 'pointer',
+                      opacity: sending ? 0.7 : 1,
+                    }}
+                  >
+                    Send
+                  </button>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      <div className="crm-section" style={{ marginTop: '24px' }}>
-        <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-          Classic Twilio WhatsApp (leads + property cards) stays on <strong>/dashboard/whatsapp</strong>. This page is QR-only.
+      <div
+        style={{
+          marginTop: '32px',
+          padding: '20px 24px',
+          borderRadius: '12px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}
+      >
+        <h3 style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: 600, color: '#334155' }}>
+          Security Notice
+        </h3>
+        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+          Your WhatsApp account remains secure. This connection uses the same encrypted session method used by WhatsApp Web — no passwords are stored and messages are end-to-end encrypted.
         </p>
       </div>
     </div>

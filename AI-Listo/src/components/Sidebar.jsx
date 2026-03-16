@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           { path: "/dashboard/whatsapp-qr", icon: "smartphone", label: "WhatsApp QR" },
         ]
       : primaryRouteIsQr
-        ? [{ path: "/dashboard/whatsapp", icon: "smartphone", label: "WhatsApp (QR)" }]
+        ? [{ path: "/dashboard/whatsapp-qr", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true }]
         : [{ path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true }];
 
   const topNavItems = [
@@ -174,6 +174,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
               {!isCollapsed && (
                 <span className="crm-nav-label">
                   {item.label || t(item.labelKey)}
+                  {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
                 </span>
               )}
             </NavLink>
