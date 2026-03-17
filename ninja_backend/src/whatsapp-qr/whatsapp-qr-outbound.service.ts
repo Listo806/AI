@@ -47,6 +47,12 @@ export class WhatsAppQrOutboundService {
       ],
     );
     await this.db.query(
+      `UPDATE whatsapp_qr_conversations
+       SET last_message_at = NOW(), last_message = $2, last_message_type = 'text', updated_at = NOW()
+       WHERE id = $1`,
+      [params.conversationId, params.text.slice(0, 500)],
+    );
+    await this.db.query(
       `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),
        last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
       [params.leadId],
@@ -131,6 +137,12 @@ export class WhatsAppQrOutboundService {
         params.teamId,
         params.contactPhone,
       ],
+    );
+    await this.db.query(
+      `UPDATE whatsapp_qr_conversations
+       SET last_message_at = NOW(), last_message = '[Voice message]', last_message_type = 'audio', updated_at = NOW()
+       WHERE id = $1`,
+      [params.conversationId],
     );
     await this.db.query(
       `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),

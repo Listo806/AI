@@ -62,20 +62,34 @@ export class WhatsAppQrAiReplyService {
     );
     if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) return;
 
-    const history = await this.qrMessages.listByConversationId(qrConversationId, CONTEXT_MESSAGE_LIMIT);
+    const history = await this.qrMessages.listByConversationId(qrConversationId, {
+      limit: CONTEXT_MESSAGE_LIMIT,
+    });
     const messages = this.messagesToChatPayload(history);
     if (messages.length <= 1) {
       this.logger.debug(`replyIfEnabled: no user messages in conversation ${qrConversationId}`);
       return;
     }
 
+    const AI_REPLY_MS = 8000;
     let text: string;
     try {
-      const { message } = await this.aiAssistant.chat({ messages });
+      const chatPromise = this.aiAssistant.chat({ messages });
+      const timeoutPromise = new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error('AI reply timeout')), AI_REPLY_MS),
+      );
+      const { message } = await Promise.race([chatPromise, timeoutPromise]);
       text = (message || '').trim() || 'Thanks for your message. How can I help you today?';
     } catch (err: any) {
-      this.logger.warn(`AI reply failed for conversation ${qrConversationId}: ${err?.message}`);
-      text = 'Thanks for your message. An agent will continue the conversation shortly.';
+      if (err?.message === 'AI reply timeout') {
+        this.logger.warn(`AI reply timeout (${AI_REPLY_MS}ms) conversation ${qrConversationId}`);
+      }
+      else
+        this.logger.warn(`AI reply failed for conversation ${qrConversationId}: ${err?.message}`);
+      text =
+        err?.message === 'AI reply timeout'
+          ? 'Thanks for your message. Our team will reply shortly.'
+          : 'Thanks for your message. An agent will continue the conversation shortly.';
     }
 
     await this.outbound.sendAiText({

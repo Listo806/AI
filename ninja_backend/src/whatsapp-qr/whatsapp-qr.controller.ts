@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Query,
   UseGuards,
   BadRequestException,
   NotFoundException,
@@ -101,10 +102,15 @@ export class WhatsAppQrController {
   }
 
   @Get('conversations/:contactPhone/messages')
-  @ApiOperation({ summary: 'Messages for contact (E.164 in path, URL-encoded + allowed)' })
+  @ApiOperation({
+    summary:
+      'Messages for contact (E.164). Pagination: limit (default 50, max 200), before (ISO timestamp — older messages)',
+  })
   async listMessages(
     @CurrentUser() user: any,
     @Param('contactPhone') contactPhoneParam: string,
+    @Query('limit') limitRaw?: string,
+    @Query('before') before?: string,
   ) {
     const contactPhone = normalizeToE164(
       decodeURIComponent(contactPhoneParam || ''),
@@ -117,7 +123,11 @@ export class WhatsAppQrController {
       return { data: [] };
     }
     await this.conversations.resetUnread(conv.id);
-    const data = await this.messages.listByConversationId(conv.id);
+    const limit = limitRaw ? parseInt(limitRaw, 10) : undefined;
+    const data = await this.messages.listByConversationId(conv.id, {
+      limit: Number.isFinite(limit) ? limit : 50,
+      before: before || null,
+    });
     return { data, conversationId: conv.id };
   }
 

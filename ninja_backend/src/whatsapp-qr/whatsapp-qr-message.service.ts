@@ -48,6 +48,16 @@ export class WhatsAppQrMessageService {
           params.messageId,
         ],
       );
+      const preview =
+        (params.body || '').trim().slice(0, 500) ||
+        `[${params.messageType}]`;
+      await this.db.query(
+        `UPDATE whatsapp_qr_conversations
+         SET last_message_at = NOW(), last_message = $2, last_message_type = $3,
+             unread_count = unread_count + 1, updated_at = NOW()
+         WHERE id = $1`,
+        [params.conversationId, preview, params.messageType],
+      );
       return true;
     } catch (e: any) {
       // 23505 unique_violation on message_id
@@ -56,18 +66,24 @@ export class WhatsAppQrMessageService {
     }
   }
 
+  /**
+   * Messages oldest-first for UI. Pagination: before = load messages strictly older than this timestamp.
+   */
   async listByConversationId(
     conversationId: string,
-    limit = 100,
+    opts: { limit?: number; before?: string | null } = {},
   ): Promise<any[]> {
+    const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+    const before = opts.before || null;
     const { rows } = await this.db.query(
       `SELECT id, direction, sender_type, message_type, body, message_id, created_at
        FROM whatsapp_qr_messages
        WHERE conversation_id = $1
-       ORDER BY created_at ASC
-       LIMIT $2`,
-      [conversationId, limit],
+         AND ($2::timestamptz IS NULL OR created_at < $2::timestamptz)
+       ORDER BY created_at DESC
+       LIMIT $3`,
+      [conversationId, before, limit],
     );
-    return rows;
+    return rows.reverse();
   }
 }

@@ -74,11 +74,6 @@ export class BaileysSocketService
       return handle;
     }
 
-    const ctx = this.contexts.get(userId);
-    if (ctx && !ctx.closing) {
-      return this.handles.get(userId) || { userId, sessionId, connected: false };
-    }
-
     await this.startSocket(userId, sessionId, authResult);
     return this.handles.get(userId) || { userId, sessionId, connected: false };
   }
@@ -88,6 +83,26 @@ export class BaileysSocketService
     sessionId: string,
     authResult: { state: any; saveCreds: () => Promise<void> },
   ): Promise<void> {
+    const oldCtx = this.contexts.get(userId);
+    if (oldCtx?.sock) {
+      try {
+        oldCtx.sock.ev?.removeAllListeners?.();
+        await oldCtx.sock.end?.(undefined);
+      } catch {
+        /* ignore */
+      }
+      try {
+        oldCtx.sock.ws?.close?.();
+      } catch {
+        /* ignore */
+      }
+      if (oldCtx.reconnectTimer) {
+        clearTimeout(oldCtx.reconnectTimer);
+        oldCtx.reconnectTimer = null;
+      }
+      this.contexts.delete(userId);
+    }
+
     const baileys = await import('@whiskeysockets/baileys');
     const makeWASocket = baileys.default || baileys.makeWASocket;
     const { DisconnectReason } = baileys;
@@ -135,6 +150,7 @@ export class BaileysSocketService
         this.handles.set(userId, handle);
         await this.sessions.setStatus(sessionId, 'connected', phone);
         this.realtime.emitConnected(userId, phone);
+        await this.redisAuth.refreshAuthTtl(userId);
         this.logger.log(`WhatsApp QR connected user=${userId} phone=${phone}`);
       }
 
@@ -234,8 +250,17 @@ export class BaileysSocketService
         clearTimeout(ctx.reconnectTimer);
         ctx.reconnectTimer = null;
       }
+      const sock = ctx.sock;
       try {
-        await ctx.sock?.end?.(undefined);
+        if (sock?.ev?.removeAllListeners) {
+          sock.ev.removeAllListeners();
+        }
+        await sock?.end?.(undefined);
+      } catch {
+        // ignore
+      }
+      try {
+        if (sock?.ws?.close) sock.ws.close();
       } catch {
         // ignore
       }

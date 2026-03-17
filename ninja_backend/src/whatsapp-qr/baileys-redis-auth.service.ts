@@ -3,6 +3,9 @@ import Redis from 'ioredis';
 import { Mutex } from 'async-mutex';
 import { ConfigService } from '../config/config.service';
 
+/** TTL for each auth key: 30 days; refreshed on write and on connect */
+const AUTH_KEY_TTL_SEC = 30 * 24 * 60 * 60;
+
 /**
  * Redis-backed auth state mirroring Baileys useMultiFileAuthState (multi-file layout).
  * Keys: baileys:auth:{userId}:{file} where file is creds.json or {type}-{id}.json
@@ -73,6 +76,7 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
       const mutex = this.getLock(rkey);
       await mutex.runExclusive(async () => {
         await redis.set(rkey, JSON.stringify(data, BufferJSON.replacer));
+        await redis.expire(rkey, AUTH_KEY_TTL_SEC);
       });
     };
 
@@ -164,6 +168,30 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
       if (keys.length) await redis.del(...keys);
     } while (cursor !== '0');
     this.logger.log(`clearAuth: removed Redis keys for user ${userId}`);
+  }
+
+  /**
+   * Refresh TTL on all auth keys for user (call on successful connect).
+   */
+  async refreshAuthTtl(userId: string): Promise<void> {
+    const redis = this.getRedis();
+    if (!redis) return;
+    await redis.connect().catch(() => {});
+    const pattern = `${this.keyPrefix(userId)}:*`;
+    let cursor = '0';
+    do {
+      const [next, keys] = await redis.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      );
+      cursor = next;
+      for (const k of keys) {
+        await redis.expire(k, AUTH_KEY_TTL_SEC).catch(() => {});
+      }
+    } while (cursor !== '0');
   }
 
   async onModuleDestroy(): Promise<void> {

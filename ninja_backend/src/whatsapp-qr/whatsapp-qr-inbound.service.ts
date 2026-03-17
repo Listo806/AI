@@ -74,6 +74,7 @@ export class WhatsAppQrInboundService {
       teamId: lead.team_id,
       leadId: lead.id,
       contactPhone: parsed.contactPhoneE164,
+      propertyId: lead.property_id ?? null,
     });
 
     const inserted = await this.messages.insertInbound({
@@ -88,7 +89,6 @@ export class WhatsAppQrInboundService {
     });
     if (!inserted) return;
 
-    await this.conversations.touchInbound(conv.id);
     this.realtime.emitMessage({
       userId,
       conversationId: conv.id,
@@ -143,12 +143,17 @@ export class WhatsAppQrInboundService {
     phone: string,
     profileName?: string,
     sessionUserId?: string,
-  ): Promise<{ id: string; team_id: string | null }> {
+  ): Promise<{ id: string; team_id: string | null; property_id: string | null }> {
     const { rows: existing } = await this.db.query(
-      `SELECT id, team_id FROM leads WHERE phone = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT id, team_id, property_id FROM leads WHERE phone = $1 ORDER BY created_at DESC LIMIT 1`,
       [phone],
     );
-    if (existing.length) return { id: existing[0].id, team_id: existing[0].team_id };
+    if (existing.length)
+      return {
+        id: existing[0].id,
+        team_id: existing[0].team_id,
+        property_id: existing[0].property_id ?? null,
+      };
 
     let createdBy: string | null = null;
     let teamId: string | null = null;
@@ -186,8 +191,8 @@ export class WhatsAppQrInboundService {
 
     const name = (profileName || '').trim() || 'WhatsApp Lead';
     const { rows } = await this.db.query(
-      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at)
-       VALUES ($1, $2, 'new', $3, $4, 'whatsapp', 'whatsapp', NOW(), NOW())
+      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at, property_id)
+       VALUES ($1, $2, 'new', $3, $4, 'whatsapp', 'whatsapp', NOW(), NOW(), NULL)
        RETURNING id, team_id`,
       [name, phone, createdBy, teamId],
     );
@@ -205,7 +210,7 @@ export class WhatsAppQrInboundService {
       }
     }
     this.logger.log(`QR created lead for phone ${phone}`);
-    return { id: leadId, team_id: rows[0].team_id ?? null };
+    return { id: leadId, team_id: rows[0].team_id ?? null, property_id: null };
   }
 
   private async logAiActivity(
