@@ -461,6 +461,13 @@ async function setupDatabase() {
       console.log('✓ WhatsApp QR enterprise migration completed');
     }
 
+    const migration46Path = path.join(__dirname, '../src/database/migrations/046_whatsapp_qr_production_hardening.sql');
+    if (fs.existsSync(migration46Path)) {
+      const migration46SQL = fs.readFileSync(migration46Path, 'utf8');
+      await pool.query(migration46SQL);
+      console.log('✓ WhatsApp QR production hardening migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
