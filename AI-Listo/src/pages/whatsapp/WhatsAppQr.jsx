@@ -407,8 +407,9 @@ export default function WhatsAppQr() {
     const at = status?.connected_at || status?.updated_at;
     if (!at) return '—';
     const ms = Date.now() - new Date(at).getTime();
-    if (ms < 60000) return 'Just now';
-    if (ms < 3600000) return `${Math.floor(ms / 60000)} min ago`;
+    if (ms < 60000) return t('whatsappQr.justNow');
+    if (ms < 3600000)
+      return t('whatsappQr.minAgo', { count: Math.floor(ms / 60000) });
     return formatTime(at);
   };
 
@@ -418,22 +419,25 @@ export default function WhatsAppQr() {
   return (
     <div style={{ width: '100%', maxWidth: '900px', overflowX: 'hidden', boxSizing: 'border-box', margin: '0 auto' }}>
       <h1 style={{ marginBottom: '12px', fontSize: '28px', fontWeight: 700 }}>
-        Connect Your WhatsApp Account
+        {t('whatsappQr.pageTitle')}
       </h1>
       <p style={{ marginBottom: '28px', fontSize: '15px', color: '#475569', lineHeight: 1.6 }}>
-        Connect your WhatsApp number to the CORTEXA AI CRM so you can send and receive messages directly inside your dashboard.
+        {t('whatsappQr.descriptionLine1')}
         <br />
-        Once connected, all conversations will appear in the WhatsApp Inbox where you can reply, automate responses, and manage leads.
+        <br />
+        {t('whatsappQr.descriptionLine2')}
       </p>
 
       <section style={{ marginBottom: '28px' }}>
-        <h2 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 600 }}>How to Connect</h2>
+        <h2 style={{ margin: '0 0 12px', fontSize: '16px', fontWeight: 600 }}>
+          {t('whatsappQr.howToConnect')}
+        </h2>
         <ol style={{ margin: 0, paddingLeft: '20px', color: '#475569', fontSize: '14px', lineHeight: 1.8 }}>
-          <li>Open WhatsApp on your phone</li>
-          <li>Tap Settings (iPhone) or Menu ⋮ (Android)</li>
-          <li>Select &quot;Linked Devices&quot;</li>
-          <li>Tap &quot;Link a Device&quot;</li>
-          <li>Scan the QR code displayed below</li>
+          <li>{t('whatsappQr.howStep1')}</li>
+          <li>{t('whatsappQr.howStep2')}</li>
+          <li>{t('whatsappQr.howStep3')}</li>
+          <li>{t('whatsappQr.howStep4')}</li>
+          <li>{t('whatsappQr.howStep5')}</li>
         </ol>
       </section>
 
@@ -447,7 +451,9 @@ export default function WhatsAppQr() {
           background: '#fff',
         }}
       >
-        <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600 }}>WhatsApp Connection</h2>
+        <h2 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600 }}>
+          {t('whatsappQr.connectionTitle')}
+        </h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <span
             style={{
@@ -459,7 +465,7 @@ export default function WhatsAppQr() {
               color: connected ? '#166534' : '#b91c1c',
             }}
           >
-            Status: {connected ? 'Connected' : 'Disconnected'}
+            {t('whatsappQr.statusLabel')}: {connected ? t('whatsappQr.connected') : t('whatsappQr.disconnected')}
           </span>
           {!connected && (
             <button
@@ -477,7 +483,7 @@ export default function WhatsAppQr() {
                 opacity: connecting ? 0.7 : 1,
               }}
             >
-              {connecting ? 'Starting…' : 'Connect & Show QR'}
+              {connecting ? t('whatsappQr.starting') : t('whatsappQr.connectShowQr')}
             </button>
           )}
         </div>
@@ -494,8 +500,12 @@ export default function WhatsAppQr() {
               lineHeight: 1.5,
             }}
           >
-            <strong style={{ display: 'block', marginBottom: '4px' }}>Setup required</strong>
-            Ask your admin to set <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>WHATSAPP_QR_ENABLED=true</code> and <code style={{ background: '#fef3c7', padding: '2px 6px', borderRadius: '4px' }}>REDIS_URL</code> on the backend so you can connect.
+            <strong style={{ display: 'block', marginBottom: '4px' }}>
+              {t('whatsappQr.setupRequired')}
+            </strong>
+            <span style={{ display: 'block', marginTop: '6px' }}>
+              {t('whatsappQr.setupHint')}
+            </span>
           </div>
         )}
       </div>
@@ -514,11 +524,11 @@ export default function WhatsAppQr() {
           }}
         >
           <p style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: 500, color: '#334155' }}>
-            Scan this QR code with WhatsApp
+            {t('whatsappQr.scanQrTitle')}
           </p>
           <QRCodeSVG value={qrPayload} size={260} level="M" />
           <p style={{ margin: '16px 0 0', fontSize: '13px', color: '#64748b' }}>
-            Open WhatsApp → Linked Devices → Link a Device
+            {t('whatsappQr.scanQrHint')}
           </p>
         </div>
       )}
@@ -535,13 +545,17 @@ export default function WhatsAppQr() {
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '16px' }}>
             <div>
-              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Connected Device</span>
+              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>
+                {t('whatsappQr.connectedDevice')}
+              </span>
               <div style={{ fontSize: '15px', color: '#14532d' }}>
                 {status?.phone ? `+${status.phone}` : '—'}
               </div>
             </div>
             <div>
-              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>Last Sync</span>
+              <span style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>
+                {t('whatsappQr.lastSync')}
+              </span>
               <div style={{ fontSize: '15px', color: '#14532d' }}>{lastSyncLabel()}</div>
             </div>
           </div>
@@ -561,7 +575,7 @@ export default function WhatsAppQr() {
                 opacity: reconnecting ? 0.7 : 1,
               }}
             >
-              {reconnecting ? 'Generating…' : 'Reconnect Device'}
+              {reconnecting ? t('whatsappQr.generating') : t('whatsappQr.reconnectDevice')}
             </button>
             <button
               type="button"
@@ -576,7 +590,7 @@ export default function WhatsAppQr() {
                 cursor: 'pointer',
               }}
             >
-              Disconnect WhatsApp
+              {t('whatsappQr.disconnectWhatsApp')}
             </button>
           </div>
         </div>
@@ -597,7 +611,7 @@ export default function WhatsAppQr() {
             fontWeight: 500,
           }}
         >
-          Once connected, incoming WhatsApp messages will automatically appear in the CRM WhatsApp Inbox below.
+          {t('whatsappQr.inboxNote')}
         </div>
       )}
 
@@ -611,7 +625,9 @@ export default function WhatsAppQr() {
           marginTop: '28px',
         }}
       >
-        <h2 style={{ margin: '16px', fontSize: '18px', fontWeight: 600 }}>WhatsApp Inbox</h2>
+        <h2 style={{ margin: '16px', fontSize: '18px', fontWeight: 600 }}>
+          {t('whatsappQr.inboxTitle')}
+        </h2>
         <div
           style={{
             margin: '0 16px 16px',
@@ -621,16 +637,23 @@ export default function WhatsAppQr() {
             border: '1px solid #bbf7d0',
             fontSize: '13px',
             color: '#166534',
-            lineHeight: 1.5,
+            lineHeight: 1.6,
           }}
         >
-          AI auto-reply is controlled in the <strong>AI Auto-Reply</strong> page for your team. Turn it on there to let the assistant reply to new messages here.
+          <p style={{ margin: '0 0 8px' }}>{t('whatsappQr.aiAutoReplyIntro')}</p>
+          <p style={{ margin: '0 0 6px' }}>{t('whatsappQr.aiAutoReplyTurnOn')}</p>
+          <ul style={{ margin: 0, paddingLeft: '18px' }}>
+            <li>{t('whatsappQr.aiAutoReplyBullet1')}</li>
+            <li>{t('whatsappQr.aiAutoReplyBullet2')}</li>
+            <li>{t('whatsappQr.aiAutoReplyBullet3')}</li>
+            <li>{t('whatsappQr.aiAutoReplyBullet4')}</li>
+          </ul>
         </div>
         <div style={{ display: 'flex', flexDirection: 'row', height: '480px' }}>
           <div style={{ width: '280px', borderRight: '1px solid #e5e7eb', overflowY: 'auto' }}>
             {conversations.length === 0 ? (
               <div style={{ padding: '24px', color: '#64748b', fontSize: '14px' }}>
-                {connected ? 'No conversations yet.' : 'Connect first.'}
+                {connected ? t('whatsappQr.noConversations') : t('whatsappQr.connectFirst')}
               </div>
             ) : (
               conversations.map((c) => (
@@ -651,7 +674,9 @@ export default function WhatsAppQr() {
                       <span style={{ marginLeft: '8px', color: '#2563eb' }}>({c.unread_count})</span>
                     )}
                     {c.owner_type === 'human' && (
-                      <span style={{ display: 'block', marginTop: '4px', color: '#94a3b8', fontSize: '11px' }}>Agent thread</span>
+                      <span style={{ display: 'block', marginTop: '4px', color: '#94a3b8', fontSize: '11px' }}>
+                        {t('whatsappQr.agentThread')}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -661,9 +686,9 @@ export default function WhatsAppQr() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column' }}>
               {messagesLoading ? (
-                <div style={{ color: '#64748b' }}>Loading…</div>
+                <div style={{ color: '#64748b' }}>{t('whatsappQr.loading')}</div>
               ) : !selectedPhone ? (
-                <div style={{ color: '#64748b' }}>Select a conversation</div>
+                <div style={{ color: '#64748b' }}>{t('whatsappQr.selectConversation')}</div>
               ) : (
                 <>
                   {messages.map((m) => (
@@ -766,7 +791,7 @@ export default function WhatsAppQr() {
                         cursor: 'pointer',
                       }}
                     >
-                      Stop & send
+                      {t('whatsappQr.stopAndSend')}
                     </button>
                   ) : (
                     <button
@@ -795,7 +820,7 @@ export default function WhatsAppQr() {
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                    placeholder="Type a message…"
+                    placeholder={t('whatsappQr.typeMessage')}
                     style={{
                       flex: 1,
                       padding: '10px 12px',
@@ -819,7 +844,7 @@ export default function WhatsAppQr() {
                       opacity: sending ? 0.7 : 1,
                     }}
                   >
-                    Send
+                    {t('whatsappQr.send')}
                   </button>
                 </div>
               </div>
@@ -839,11 +864,27 @@ export default function WhatsAppQr() {
         }}
       >
         <h3 style={{ margin: '0 0 10px', fontSize: '15px', fontWeight: 600, color: '#334155' }}>
-          Security Notice
+          {t('whatsappQr.securityTitle')}
         </h3>
-        <p style={{ margin: 0, fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
-          Your WhatsApp account remains secure. This connection uses the same encrypted session method used by WhatsApp Web — no passwords are stored and messages are end-to-end encrypted.
+        <p style={{ margin: '0 0 8px', fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+          {t('whatsappQr.securityLine1')}
         </p>
+        <p style={{ margin: '0 0 10px', fontSize: '14px', color: '#475569', lineHeight: 1.6 }}>
+          {t('whatsappQr.securityLine2')}
+        </p>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: '18px',
+            fontSize: '14px',
+            color: '#475569',
+            lineHeight: 1.65,
+          }}
+        >
+          <li>{t('whatsappQr.securityBullet1')}</li>
+          <li>{t('whatsappQr.securityBullet2')}</li>
+          <li>{t('whatsappQr.securityBullet3')}</li>
+        </ul>
       </div>
     </div>
   );

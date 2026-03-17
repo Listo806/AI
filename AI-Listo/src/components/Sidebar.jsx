@@ -144,44 +144,48 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
         <nav className="crm-nav">
           {navItems.map((item, index) => (
-            <NavLink
-              key={`${item.path}-${index}`}
-              to={item.path}
-              className={({ isActive }) =>
-                `crm-nav-link ${isActive ? "active" : ""}`
-              }
-              onClick={onClose}
-              end={item.path === "/dashboard/home"}
-              title={isCollapsed ? t(item.labelKey) : undefined}
-            >
-              {item.isWhatsApp ? (
-                <img
-                  src="/assets/WhatsApp-Logo.svg"
-                  alt="WhatsApp"
-                  className="crm-nav-icon"
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    objectFit: "contain",
-                    flexShrink: 0,
-                  }}
-                />
-              ) : item.path === "/dashboard/whatsapp-qr" || (primaryRouteIsQr && item.path === "/dashboard/whatsapp" && item.icon === "smartphone") ? (
-                <i data-lucide="smartphone" className="crm-nav-icon"></i>
-              ) : (
-                <i data-lucide={item.icon} className="crm-nav-icon"></i>
-              )}
-              {!isCollapsed && (
-                <span className="crm-nav-label">
-                  {item.label || t(item.labelKey)}
-                  {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
-                </span>
-              )}
-            </NavLink>
+            <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `crm-nav-link ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+                end={item.path === "/dashboard/home"}
+                title={isCollapsed ? t(item.labelKey) : undefined}
+              >
+                {item.isWhatsApp ? (
+                  <img
+                    src="/assets/WhatsApp-Logo.svg"
+                    alt="WhatsApp"
+                    className="crm-nav-icon"
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      objectFit: "contain",
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : item.path === "/dashboard/whatsapp-qr" || (primaryRouteIsQr && item.path === "/dashboard/whatsapp" && item.icon === "smartphone") ? (
+                  <i data-lucide="smartphone" className="crm-nav-icon"></i>
+                ) : (
+                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                )}
+                {!isCollapsed && (
+                  <span className="crm-nav-label">
+                    {item.label || t(item.labelKey)}
+                    {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
+                  </span>
+                )}
+              </NavLink>
+              {index === 0 && item.isWhatsApp && <div className="crm-nav-spacer" aria-hidden="true" />}
+            </span>
           ))}
 
           {showAiCenterAndBottom && (
-            <div className="crm-nav-group" style={{ marginTop: "4px" }}>
+            <>
+              <div className="crm-nav-spacer" aria-hidden="true" />
+              <div className="crm-nav-group crm-nav-group-ai">
               {isCollapsed ? (
                 <NavLink
                   to="/dashboard/ai-center"
@@ -238,10 +242,14 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 </>
               )}
             </div>
+            </>
           )}
 
-          {showAiCenterAndBottom &&
-            bottomNavItems.map((item, index) => (
+          {showAiCenterAndBottom && (
+            <>
+              {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
+              <div className="crm-nav-group-bottom">
+            {bottomNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
                 to={item.path}
@@ -257,7 +265,29 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                 )}
               </NavLink>
             ))}
+            </div>
+            </>
+          )}
         </nav>
+
+        <div
+          className={`crm-sidebar-powered ${isCollapsed ? "crm-sidebar-powered--collapsed" : ""}`}
+          aria-label="Powered by CORTEXA Intelligence Core"
+        >
+          <div className="crm-nav-spacer" aria-hidden="true" />
+          <div className="crm-sidebar-powered-sep" role="separator" />
+          {!isCollapsed && (
+            <>
+              <p className="crm-sidebar-powered-by">powered by</p>
+              <p className="crm-sidebar-powered-brand">CORTEXA Intelligence Core</p>
+            </>
+          )}
+          {isCollapsed && (
+            <span className="crm-sidebar-powered-abbr" title="CORTEXA Intelligence Core">
+              Cx
+            </span>
+          )}
+        </div>
 
         {/* Sidebar Footer - Account Info */}
         {/* <div className="crm-sidebar-footer">
