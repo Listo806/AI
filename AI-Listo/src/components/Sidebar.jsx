@@ -134,10 +134,10 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             <>
               <img 
                 src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
-                alt="Listo Qasa Logo"
+                alt="ListoQasa Logo"
                 className="crm-sidebar-logo"
               />
-              <span className="crm-sidebar-brand">Listo Qasa</span>
+              <span className="crm-sidebar-brand">ListoQasa</span>
             </>
           )}
         </div>
@@ -178,7 +178,6 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                   </span>
                 )}
               </NavLink>
-              {index === 0 && item.isWhatsApp && <div className="crm-nav-spacer" aria-hidden="true" />}
             </span>
           ))}
 
@@ -269,8 +268,27 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             </>
           )}
         </nav>
+        {!isCollapsed && (
+        <div style={{marginTop: "auto", padding: "20px 16px", borderTop: "1px solid #eef2f7"}}>
+  
+          <div style={{fontSize: "11px", color: "#9ca3af", marginBottom: "6px"}}>
+            Powered by
+          </div>
 
-        <div
+          <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+            <img src="/assets/header-logo.png" style={{width: "18px", height: "18px"}} />
+            <span style={{fontSize: "13px", fontWeight: "600", color: "#1f2937"}}>
+              CORTEXA
+            </span>
+          </div>
+
+          <div style={{fontSize: "11px", color: "#6b7280", marginTop: "2px"}}>
+            Intelligence Core
+          </div>
+        </div>
+        )}
+
+        {/* <div
           className={`crm-sidebar-powered ${isCollapsed ? "crm-sidebar-powered--collapsed" : ""}`}
           aria-label="Powered by CORTEXA Intelligence Core"
         >
@@ -278,16 +296,17 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           <div className="crm-sidebar-powered-sep" role="separator" />
           {!isCollapsed && (
             <>
-              <p className="crm-sidebar-powered-by">powered by</p>
-              <p className="crm-sidebar-powered-brand">CORTEXA Intelligence Core</p>
+              <p className="crm-sidebar-powered-by">Powered by</p>
+              <p className="crm-sidebar-powered-brand"><img src="/assets/header-logo.png" className="icon" alt="CORTEXA" /> CORTEXA</p>
+              <p className="crm-sidebar-powered-text">Intelligence Core</p>
             </>
           )}
           {isCollapsed && (
             <span className="crm-sidebar-powered-abbr" title="CORTEXA Intelligence Core">
-              Cx
+              <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
             </span>
           )}
-        </div>
+        </div> */}
 
         {/* Sidebar Footer - Account Info */}
         {/* <div className="crm-sidebar-footer">

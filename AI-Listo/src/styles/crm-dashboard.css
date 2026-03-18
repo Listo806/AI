@@ -93,7 +93,7 @@ body {
 .crm-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 8px; /* Reduced from 12px for tighter spacing */
+  gap: 0px; /* Reduced from 12px for tighter spacing */
   padding: 14px 10px 12px; /* Slightly more breathing room */
   margin-bottom: 4px;
   flex-shrink: 0;
@@ -150,10 +150,10 @@ body {
 
 .crm-sidebar-powered-by {
   margin: 0 0 4px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  text-transform: lowercase;
+  text-transform: none;
   color: var(--text-muted);
   opacity: 0.85;
   line-height: 1.3;
@@ -161,12 +161,40 @@ body {
 
 .crm-sidebar-powered-brand {
   margin: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--text);
   line-height: 1.35;
   opacity: 0.95;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+.crm-sidebar-powered-brand .icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.crm-sidebar-powered-abbr .icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+.crm-sidebar-powered-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  line-height: 1.35;
 }
 
 .crm-sidebar-powered--collapsed {
