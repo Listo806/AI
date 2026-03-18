@@ -139,15 +139,18 @@
     root.appendChild(fab);
     document.body.appendChild(root);
 
-    function panelBottomPx() {
-      var h = panel.offsetHeight || 400;
-      var gap = 12;
-      return h + fab.offsetHeight + gap + CONFIG.buttonMargin + (window.innerWidth <= 768 ? CONFIG.buttonLiftMobile : 0);
-    }
-
+    /**
+     * Panel uses position:fixed; bottom = px from viewport bottom to panel's BOTTOM edge.
+     * It must sit just above the FAB — NOT (panel height + fab), which wrongly shoves the panel to the top.
+     */
     function positionPanel() {
-      var bottom = panelBottomPx();
-      panel.style.bottom = 'calc(' + bottom + 'px + env(safe-area-inset-bottom))';
+      if (!open) return;
+      var gap = 12;
+      var fabTop = fab.getBoundingClientRect().top;
+      var bottomPx = window.innerHeight - fabTop + gap;
+      if (bottomPx < 8) bottomPx = 8;
+      panel.style.bottom = bottomPx + 'px';
+      panel.style.top = 'auto';
     }
 
     var open = false;
@@ -157,7 +160,10 @@
       fab.setAttribute('aria-expanded', v ? 'true' : 'false');
       if (v) {
         positionPanel();
-        requestAnimationFrame(function () { input.focus(); });
+        requestAnimationFrame(function () {
+          positionPanel();
+          input.focus();
+        });
       }
     }
 
@@ -253,8 +259,6 @@
       }, { root: null, rootMargin: '0px', threshold: 0.05 });
       footers.forEach(function (f) { obs.observe(f); });
     }
-
-    positionPanel();
   }
 
   if (document.readyState === 'loading') {
