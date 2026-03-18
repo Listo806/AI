@@ -65,11 +65,11 @@
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-label', 'AI Assist');
 
-    var closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = NS + '-close';
-    closeBtn.setAttribute('aria-label', 'Close');
-    closeBtn.innerHTML = '&times;';
+    // var closeBtn = document.createElement('button');
+    // closeBtn.type = 'button';
+    // closeBtn.className = NS + '-close';
+    // closeBtn.setAttribute('aria-label', 'Close');
+    // closeBtn.innerHTML = '&times;';
 
     var chat = document.createElement('div');
     chat.className = NS + '-chat';
@@ -132,7 +132,7 @@
     foot.appendChild(mic);
     foot.appendChild(send);
 
-    panel.appendChild(closeBtn);
+    // panel.appendChild(closeBtn);
     panel.appendChild(chat);
     panel.appendChild(foot);
     root.appendChild(panel);
@@ -168,7 +168,7 @@
     }
 
     fab.addEventListener('click', function () { setOpen(!open); });
-    closeBtn.addEventListener('click', function () { setOpen(false); });
+    // closeBtn.addEventListener('click', function () { setOpen(false); });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && open) setOpen(false);
