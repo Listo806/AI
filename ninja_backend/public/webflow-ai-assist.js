@@ -76,18 +76,19 @@
 
     var welcome = document.createElement('div');
     welcome.className = NS + '-welcome';
-    welcome.textContent = "Hi, I'm your AI Real Estate Assistant. What would you like to explore today?";
+    welcome.innerHTML = "AI Property Matchmaker <br> Tell me what you're looking for";
+    // welcome.textContent = "AI Property Matchmaker Tell me what you're looking for";
 
     var promptsWrap = document.createElement('div');
     promptsWrap.className = NS + '-prompts';
     var prompts = [
-      'Find homes under $200K',
-      'Best areas for families in Quito',
-      'Compare Cumbayá vs Tumbaco',
-      'Best investment zones right now',
-      'Show me 3-bedroom homes in La Carolina',
-      'How do I list my property?',
-      'How does your AI match buyers?'
+      // 'Find homes under $200K',
+      // 'Best areas for families in Quito',
+      // 'Compare Cumbayá vs Tumbaco',
+      // 'Best investment zones right now',
+      // 'Show me 3-bedroom homes in La Carolina',
+      // 'How do I list my property?',
+      // 'How does your AI match buyers?'
     ];
     var input = document.createElement('input');
     prompts.forEach(function (t) {
@@ -145,7 +146,7 @@
      */
     function positionPanel() {
       if (!open) return;
-      var gap = 12;
+      var gap = 4;
       var fabTop = fab.getBoundingClientRect().top;
       var bottomPx = window.innerHeight - fabTop + gap;
       if (bottomPx < 8) bottomPx = 8;
