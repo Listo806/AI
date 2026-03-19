@@ -276,7 +276,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
           </div>
 
           <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
-            <img src="/assets/header-logo.png" style={{width: "18px", height: "18px"}} />
+            <img src="/assets/header-logo.png" style={{width: "15px", height: "15px"}} />
             <span style={{fontSize: "13px", fontWeight: "600", color: "#1f2937"}}>
               CORTEXA
             </span>
