@@ -14,6 +14,9 @@ async function bootstrap() {
     rawBody: true, // Enable raw body for webhook signature verification
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
+
+  // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
+  app.set('trust proxy', 1);
   
   // Serve static files from public folder (for Webflow JS files)
   app.useStaticAssets(join(__dirname, '..', 'public'), {

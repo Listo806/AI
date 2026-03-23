@@ -22,6 +22,7 @@ import { PlatformModule } from './platform/platform.module';
 import { VaModule } from './va/va.module';
 import { AdminModule } from './admin/admin.module';
 import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
+import { SiteAssistModule } from './site-assist/site-assist.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
     VaModule,
     AdminModule,
     WhatsAppQrModule,
+    SiteAssistModule,
   ],
   controllers: [AppController],
 })

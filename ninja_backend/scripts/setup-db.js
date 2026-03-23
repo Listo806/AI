@@ -468,6 +468,13 @@ async function setupDatabase() {
       console.log('✓ WhatsApp QR production hardening migration completed');
     }
 
+    const migration47Path = path.join(__dirname, '../src/database/migrations/047_site_assist.sql');
+    if (fs.existsSync(migration47Path)) {
+      const migration47SQL = fs.readFileSync(migration47Path, 'utf8');
+      await pool.query(migration47SQL);
+      console.log('✓ Site assist (Webflow) migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
