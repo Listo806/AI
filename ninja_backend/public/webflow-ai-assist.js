@@ -4,14 +4,13 @@
  * Webflow → Site settings → Custom code → Footer:
  *   <script src="https://YOUR_API_HOST/static/webflow-ai-assist.js" defer></script>
  *
- * Base URL resolution (first match wins):
+ * Base URL (first match wins):
  *   1) CORTEXA_AI_CONFIG.apiBaseUrl
- *   2) window.BACKEND_API_BASE_URL (your shared Webflow head variable — must be on window)
+ *   2) window.BACKEND_API_BASE_URL
+ *   3) Global BACKEND_API_BASE_URL from another classic script (const/var — NOT type="module")
  *
+ * Script order: define BACKEND_API_BASE_URL in a <script> that runs BEFORE this file.
  * Optional CORTEXA_AI_CONFIG: apiPrefix, siteAssistApiKey, footerSelector, …
- *
- * If your head uses only `const BACKEND_API_BASE_URL = "..."`, add:
- *   window.BACKEND_API_BASE_URL = BACKEND_API_BASE_URL;
  *
  * Locale: reads localStorage "marketplace_lang" → en | es | pt (maps to API).
  * Session: localStorage "cortexa_site_assist_session" (server session id).
@@ -24,15 +23,30 @@
     window.__CORTEXA_AI_ASSIST__ = true;
 
     var userCfg = window.CORTEXA_AI_CONFIG || {};
-    var rawBase =
-      (userCfg.apiBaseUrl && String(userCfg.apiBaseUrl)) ||
-      (typeof window.BACKEND_API_BASE_URL === 'string' && window.BACKEND_API_BASE_URL) ||
-      '';
+
+    /**
+     * Same host may define `const BACKEND_API_BASE_URL = "..."` in another script — that is NOT
+     * on window, but (classic scripts) it is a global binding. `typeof NAME` is safe if missing.
+     */
+    function resolveRawApiBase() {
+      var cfg = window.CORTEXA_AI_CONFIG || {};
+      var a = cfg.apiBaseUrl && String(cfg.apiBaseUrl).trim();
+      if (a) return a;
+      if (typeof window.BACKEND_API_BASE_URL === 'string' && window.BACKEND_API_BASE_URL.trim()) {
+        return window.BACKEND_API_BASE_URL.trim();
+      }
+      if (typeof BACKEND_API_BASE_URL !== 'undefined' && BACKEND_API_BASE_URL != null) {
+        var g = String(BACKEND_API_BASE_URL).trim();
+        if (g) return g;
+      }
+      return '';
+    }
+
     var CONFIG = {
       footerSelector: userCfg.footerSelector || 'footer, [data-footer], .footer, #footer',
       buttonMargin: userCfg.buttonMargin != null ? userCfg.buttonMargin : 20,
       buttonLiftMobile: userCfg.buttonLiftMobile != null ? userCfg.buttonLiftMobile : 88,
-      apiBaseUrl: rawBase.replace(/\/$/, ''),
+      apiBaseUrl: resolveRawApiBase().replace(/\/$/, ''),
       apiPrefix: (userCfg.apiPrefix || 'api').replace(/^\/|\/$/g, ''),
       siteAssistApiKey: userCfg.siteAssistApiKey || userCfg.siteAssistKey || ''
     };
@@ -126,6 +140,7 @@
     var sessionId = loadSessionId();
     var requestBusy = false;
     var panelBootstrapped = false;
+    var warnedNoApi = false;
 
     function turnUrl() {
       return CONFIG.apiBaseUrl + '/' + CONFIG.apiPrefix + '/public/site-assist/turn';
@@ -197,6 +212,19 @@
     chat.appendChild(promptsWrap);
     chat.appendChild(messagesEl);
 
+    function syncApiBaseFromPage() {
+      var next = resolveRawApiBase().replace(/\/$/, '');
+      if (!next) return;
+      var wasOff = !useApi;
+      CONFIG.apiBaseUrl = next;
+      useApi = true;
+      if (wasOff) {
+        chat.classList.add(NS + '-api-mode');
+        welcome.style.display = 'none';
+        promptsWrap.style.display = 'none';
+      }
+    }
+
     var foot = document.createElement('div');
     foot.className = NS + '-foot';
     var input = document.createElement('input');
@@ -243,6 +271,15 @@
       panel.classList.toggle(NS + '-open', v);
       fab.setAttribute('aria-expanded', v ? 'true' : 'false');
       if (v) {
+        syncApiBaseFromPage();
+        if (!useApi && !warnedNoApi && typeof console !== 'undefined' && console.warn) {
+          warnedNoApi = true;
+          console.warn(
+            '[CORTEXA AI Assist] No API base URL — placeholder mode. ' +
+              'Use const BACKEND_API_BASE_URL = "https://..."; in a script that runs before this file, ' +
+              'or window.BACKEND_API_BASE_URL / CORTEXA_AI_CONFIG.apiBaseUrl. Check script order in Webflow (head vs footer).'
+          );
+        }
         if (useApi && !panelBootstrapped) {
           panelBootstrapped = true;
           if (sessionId) {
