@@ -43,8 +43,9 @@ export class SiteAssistOrchestratorService {
 
   private propertyUrl(propertyId: string): string {
     const origin = (this.config.get('SITE_ASSIST_PUBLIC_ORIGIN') || '').replace(/\/$/, '');
-    const pathTpl = this.config.get('SITE_ASSIST_PROPERTY_PATH') || '/property/{id}';
-    const path = pathTpl.replace('{id}', propertyId);
+    // Default matches marketplace frontends like /listings/{uuid} (override with SITE_ASSIST_PROPERTY_PATH)
+    const pathTpl = this.config.get('SITE_ASSIST_PROPERTY_PATH') || '/listings/{id}';
+    const path = pathTpl.replace(/\{id\}/g, propertyId);
     const pathNorm = path.startsWith('/') ? path : `/${path}`;
     return origin ? `${origin}${pathNorm}` : pathNorm;
   }
@@ -285,7 +286,7 @@ export class SiteAssistOrchestratorService {
 
   private localeInstruction(locale: SiteAssistLocale): string {
     const names = { en: 'English', es: 'Spanish', pt: 'Portuguese' };
-    return `Always reply in ${names[locale]} (${locale}). Do not invent listing URLs; only use URLs from the listing context when provided.`;
+    return `Always reply in ${names[locale]} (${locale}). Do not invent listing URLs; copy full https URLs exactly from the listing context. When you mention a property, include its full URL on its own line or after the title so users can open the listing page.`;
   }
 
   private async runLlm(

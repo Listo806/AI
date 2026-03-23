@@ -78,6 +78,8 @@
       '.' + NS + '-msg { margin-bottom: 10px; max-width: 92%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-break: break-word; }',
       '.' + NS + '-msg-user { margin-left: auto; background: linear-gradient(135deg, var(--cortexa-blue1), var(--cortexa-blue2)); color: #fff; border-bottom-right-radius: 4px; }',
       '.' + NS + '-msg-ai { margin-right: auto; background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; }',
+      '.' + NS + '-msg-ai .' + NS + '-inmsg-link { color: var(--cortexa-blue1); font-weight: 600; text-decoration: underline; word-break: break-all; }',
+      '.' + NS + '-msg-ai .' + NS + '-inmsg-link:hover { opacity: 0.9; }',
       '.' + NS + '-api-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 4px; }',
       '.' + NS + '-linkrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }',
       '.' + NS + '-linkbtn { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 10px; background: #eff6ff; color: var(--cortexa-blue1); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(15,98,254,.2); }',
@@ -277,10 +279,45 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
+    /** Strip trailing punctuation often glued to pasted URLs */
+    function trimUrlForHref(raw) {
+      return raw.replace(/[),.;:!?'"\]]+$/g, '');
+    }
+
+    /** Assistant bubbles: turn http(s) URLs into real <a> links (safe — no HTML injection). */
+    function fillAssistantMessageEl(el, text) {
+      var s = text == null ? '' : String(text);
+      var re = /https?:\/\/[^\s<>\u00A0]+/gi;
+      var last = 0;
+      var m;
+      while ((m = re.exec(s)) !== null) {
+        if (m.index > last) {
+          el.appendChild(document.createTextNode(s.slice(last, m.index)));
+        }
+        var raw = m[0];
+        var href = trimUrlForHref(raw);
+        var a = document.createElement('a');
+        a.href = href;
+        a.textContent = raw;
+        a.className = NS + '-inmsg-link';
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        el.appendChild(a);
+        last = m.index + raw.length;
+      }
+      if (last < s.length) {
+        el.appendChild(document.createTextNode(s.slice(last)));
+      }
+    }
+
     function addMsg(text, isUser) {
       var d = document.createElement('div');
       d.className = NS + '-msg ' + (isUser ? NS + '-msg-user' : NS + '-msg-ai');
-      d.textContent = text;
+      if (isUser) {
+        d.textContent = text;
+      } else {
+        fillAssistantMessageEl(d, text);
+      }
       messagesEl.appendChild(d);
       scrollChat();
       positionPanel();
@@ -302,7 +339,7 @@
 
       var msg = document.createElement('div');
       msg.className = NS + '-msg ' + NS + '-msg-ai';
-      msg.textContent = data.text || '';
+      fillAssistantMessageEl(msg, data.text || '');
       wrap.appendChild(msg);
 
       if (data.links && data.links.length) {
