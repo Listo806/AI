@@ -86,8 +86,9 @@ export class SiteAssistOrchestratorService {
     const next: SiteAssistSlots = { ...slots };
 
     const cityMatch =
-      t.match(/(?:ciudad|city|cidade)\s*[:-]\s*([a-záéíóúãõç\s]{2,40})/i) ||
-      t.match(/\b(?:en|in|em)\s+([a-záéíóúãõç\s]{2,30})\b/i);
+      t.match(/(?:ciudad|city|cidade)\s*[:-]\s*([a-záéíóúãõç0-9\s\-'.]{2,50})/i) ||
+      t.match(/\b(?:en|in|em|at|near|around)\s+([a-záéíóúãõç][a-záéíóúãõç0-9\s\-'.]{1,48})\b/i) ||
+      t.match(/\b(?:looking\s+in|busco\s+en|searching\s+in)\s+([a-záéíóúãõç][a-záéíóúãõç0-9\s\-'.]{1,48})\b/i);
     if (cityMatch) next.city = (cityMatch[1] || '').trim();
 
     const typeMap: Array<[RegExp, string]> = [
@@ -117,6 +118,51 @@ export class SiteAssistOrchestratorService {
     if (zoneMatch) next.zone = (zoneMatch[1] || '').trim();
 
     return next;
+  }
+
+  /**
+   * When the user answers with just a place name ("Sydney", "Quito", "Australia"),
+   * structured patterns above miss it — fill the missing city/zone slot so we don't loop the same question.
+   */
+  private applyPlainLocationFallback(
+    rawMessage: string,
+    intent: SiteAssistIntent,
+    slots: SiteAssistSlots,
+  ): SiteAssistSlots {
+    if (intent !== 'buy' && intent !== 'rent' && intent !== 'sell') return slots;
+    const msg = rawMessage.trim();
+    if (msg.length < 2 || msg.length > 100) return slots;
+
+    const lower = msg.toLowerCase();
+    if (
+      /^(yes|no|yeah|yep|nope|ok|okay|sure|thanks?|thank you|si|sí|vale|sim|não|nao|claro|please)$/i.test(
+        lower,
+      )
+    ) {
+      return slots;
+    }
+
+    if (!/^[a-záéíóúãõçüñß0-9\s\-'.]+$/i.test(msg)) return slots;
+    if (/^[\d\s$,.\-€£]+$/.test(msg)) return slots;
+
+    const out: SiteAssistSlots = { ...slots };
+    if (intent === 'buy' || intent === 'rent') {
+      if (!out.city) {
+        out.city = msg.replace(/\s+/g, ' ');
+        return out;
+      }
+    }
+    if (intent === 'sell') {
+      if (!out.city) {
+        out.city = msg.replace(/\s+/g, ' ');
+        return out;
+      }
+      if (!out.zone) {
+        out.zone = msg.replace(/\s+/g, ' ');
+        return out;
+      }
+    }
+    return slots;
   }
 
   private nextCollectingQuestion(
@@ -392,6 +438,7 @@ export class SiteAssistOrchestratorService {
     if (state.stage === 'collecting' && state.intent && ['buy', 'rent', 'sell'].includes(state.intent)) {
       if (args.message?.trim()) {
         state.slots = this.extractSignals(args.message, state.slots || {});
+        state.slots = this.applyPlainLocationFallback(args.message, state.intent, state.slots || {});
       }
       const { question, qualified } = this.nextCollectingQuestion(state.intent, state.slots || {}, locale);
       if (!qualified) {
