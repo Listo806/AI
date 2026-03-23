@@ -13,7 +13,8 @@
  * Optional CORTEXA_AI_CONFIG: apiPrefix, siteAssistApiKey, footerSelector, …
  *
  * Locale: reads localStorage "marketplace_lang" → en | es | pt (maps to API).
- * Session: localStorage "cortexa_site_assist_session" (server session id).
+ * Session: in-memory only (per page load). Each new visit / reload gets welcome + buttons again;
+ *   same tab keeps chat while the page stays open.
  *
  * Optional: footerSelector, buttonMargin, buttonLiftMobile
  */
@@ -97,8 +98,6 @@
     ].join('');
     document.head.appendChild(style);
 
-    var SESSION_KEY = 'cortexa_site_assist_session';
-
     function getLocale() {
       try {
         var raw = (localStorage.getItem('marketplace_lang') || 'en').toLowerCase();
@@ -117,27 +116,7 @@
       return 'en-US';
     }
 
-    function loadSessionId() {
-      try {
-        return localStorage.getItem(SESSION_KEY) || '';
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function saveSessionId(id) {
-      try {
-        if (id) localStorage.setItem(SESSION_KEY, id);
-      } catch (e) {}
-    }
-
-    function clearSessionId() {
-      try {
-        localStorage.removeItem(SESSION_KEY);
-      } catch (e) {}
-    }
-
-    var sessionId = loadSessionId();
+    var sessionId = '';
     var requestBusy = false;
     var panelBootstrapped = false;
     var warnedNoApi = false;
@@ -196,10 +175,6 @@
       welcome.innerHTML = "AI Property Matchmaker <br> Tell me what you're looking for";
     }
 
-    var resumeHint = document.createElement('div');
-    resumeHint.className = NS + '-hint';
-    resumeHint.style.display = 'none';
-
     var promptsWrap = document.createElement('div');
     promptsWrap.className = NS + '-prompts';
     promptsWrap.style.display = useApi ? 'none' : '';
@@ -208,7 +183,6 @@
     messagesEl.className = NS + '-messages';
 
     chat.appendChild(welcome);
-    chat.appendChild(resumeHint);
     chat.appendChild(promptsWrap);
     chat.appendChild(messagesEl);
 
@@ -282,17 +256,7 @@
         }
         if (useApi && !panelBootstrapped) {
           panelBootstrapped = true;
-          if (sessionId) {
-            resumeHint.textContent =
-              getLocale() === 'es'
-                ? 'Tu conversación continúa. Escribe para seguir.'
-                : getLocale() === 'pt'
-                  ? 'Sua conversa continua. Digite para seguir.'
-                  : 'Your chat continues — type a message to pick up.';
-            resumeHint.style.display = 'block';
-          } else {
-            bootstrapPanel();
-          }
+          bootstrapPanel();
         }
         positionPanel();
         requestAnimationFrame(function () {
@@ -332,10 +296,7 @@
     }
 
     function addAssistantTurn(data) {
-      if (data.sessionId) {
-        sessionId = data.sessionId;
-        saveSessionId(sessionId);
-      }
+      if (data.sessionId) sessionId = data.sessionId;
       var wrap = document.createElement('div');
       wrap.className = NS + '-turn';
 
@@ -422,26 +383,16 @@
         .then(function (data) {
           removeTyping();
           if (!data) return;
-          if (data.sessionId) {
-            sessionId = data.sessionId;
-            saveSessionId(sessionId);
-          }
+          if (data.sessionId) sessionId = data.sessionId;
           addAssistantTurn(data);
         })
         .catch(function (err) {
           removeTyping();
           var m = (err && err.message) || 'Something went wrong.';
           if (m.indexOf('404') !== -1 || /session not found/i.test(m)) {
-            clearSessionId();
             sessionId = '';
-            panelBootstrapped = false;
-            addError(
-              getLocale() === 'es'
-                ? 'Sesión expirada. Cierra y abre el panel de nuevo.'
-                : getLocale() === 'pt'
-                  ? 'Sessão expirada. Feche e abra o painel novamente.'
-                  : 'Session expired. Close and reopen the chat.'
-            );
+            messagesEl.innerHTML = '';
+            if (open) bootstrapPanel();
             return;
           }
           if (!sessionId) panelBootstrapped = false;
