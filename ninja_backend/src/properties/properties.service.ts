@@ -204,7 +204,16 @@ export class PropertiesService {
   }
 
   async findPublic(
-    filters?: { city?: string; propertyType?: string; mode?: string; search?: string },
+    filters?: {
+      city?: string;
+      propertyType?: string;
+      mode?: string;
+      search?: string;
+      /** Inclusive; listing price must be >= priceMin when set */
+      priceMin?: number;
+      /** Inclusive; listing price must be <= priceMax when set */
+      priceMax?: number;
+    },
     pagination?: { limit?: number; offset?: number },
   ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
@@ -240,6 +249,15 @@ export class PropertiesService {
         conditions.push(`type = $${paramCount++}`);
         params.push(mode);
       }
+    }
+
+    if (filters?.priceMin != null && Number.isFinite(filters.priceMin)) {
+      conditions.push(`price IS NOT NULL AND price >= $${paramCount++}`);
+      params.push(filters.priceMin);
+    }
+    if (filters?.priceMax != null && Number.isFinite(filters.priceMax)) {
+      conditions.push(`price IS NOT NULL AND price <= $${paramCount++}`);
+      params.push(filters.priceMax);
     }
 
     // Optional text search (backward compatible)

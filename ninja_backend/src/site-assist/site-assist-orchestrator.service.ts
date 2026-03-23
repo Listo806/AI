@@ -104,14 +104,6 @@ export class SiteAssistOrchestratorService {
       }
     }
 
-    const money = t.match(/(\$|usd|eur)?\s*([0-9]{2,3}(?:[.,][0-9]{3})+|[0-9]{3,7})/);
-    if (money) {
-      const amount = money[2].replace(/\./g, '').replace(/,/g, '');
-      const isMonthly = /(mensual|al mes|por mes|\/mes|per month|monthly|mês|por mês)/i.test(t);
-      if (isMonthly) next.monthly_budget = amount;
-      else next.budget = amount;
-    }
-
     const zoneMatch =
       t.match(/(?:zona|barrio|vecindario|neighborhood|bairro)\s*[:-]?\s*([a-z0-9áéíóúãõç\s]{2,60})/i) ||
       t.match(/(?:direcci[oó]n|address|endereço)\s*[:-]?\s*([a-z0-9áéíóúãõç\s]{5,80})/i);
@@ -165,6 +157,107 @@ export class SiteAssistOrchestratorService {
     return slots;
   }
 
+  private hasBuyBudget(s: SiteAssistSlots): boolean {
+    if (s.budget_min != null || s.budget_max != null) return true;
+    return !!(s.budget && String(s.budget).trim().length > 0);
+  }
+
+  private hasRentBudget(s: SiteAssistSlots): boolean {
+    if (s.budget_min != null || s.budget_max != null) return true;
+    return !!(s.monthly_budget && String(s.monthly_budget).trim().length > 0);
+  }
+
+  /**
+   * Parse purchase / rent budget phrases: 100k~200k, less than 200k, over 200k, over than 200k (typo), etc.
+   */
+  private extractBudgetFromText(message: string, slots: SiteAssistSlots): SiteAssistSlots {
+    const next: SiteAssistSlots = { ...slots };
+    const t = (message || '').trim().toLowerCase();
+    if (!t) return next;
+
+    const parseK = (numStr: string, unit: string): number => {
+      const n = parseFloat(numStr);
+      if (Number.isNaN(n)) return NaN;
+      const u = (unit || '').toLowerCase();
+      if (u === 'k') return Math.round(n * 1000);
+      if (u === 'm') return Math.round(n * 1_000_000);
+      return Math.round(n);
+    };
+
+    const rangeDash = t.match(/(\d+(?:\.\d+)?)\s*k\s*[~–-]\s*(\d+(?:\.\d+)?)\s*k/i);
+    if (rangeDash) {
+      const a = parseK(rangeDash[1], 'k');
+      const b = parseK(rangeDash[2], 'k');
+      if (!Number.isNaN(a) && !Number.isNaN(b)) {
+        next.budget_min = Math.min(a, b);
+        next.budget_max = Math.max(a, b);
+        next.budget = `${next.budget_min}-${next.budget_max}`;
+      }
+      return next;
+    }
+
+    const rangeBetween = t.match(
+      /between\s+(\d+(?:\.\d+)?)\s*k\s+and\s+(\d+(?:\.\d+)?)\s*k/i,
+    );
+    if (rangeBetween) {
+      const a = parseK(rangeBetween[1], 'k');
+      const b = parseK(rangeBetween[2], 'k');
+      if (!Number.isNaN(a) && !Number.isNaN(b)) {
+        next.budget_min = Math.min(a, b);
+        next.budget_max = Math.max(a, b);
+        next.budget = `${next.budget_min}-${next.budget_max}`;
+      }
+      return next;
+    }
+
+    const under = t.match(
+      /(?:less than|under|below|max|up to|at most|maximum|no more than)\s+\$?\s*(\d+(?:\.\d+)?)\s*k\b/i,
+    );
+    if (under) {
+      const n = parseK(under[1], 'k');
+      if (!Number.isNaN(n)) {
+        next.budget_max = n;
+        next.budget = `max ${n}`;
+      }
+      return next;
+    }
+
+    const over = t.match(
+      /(?:more than|over|above|at least|greater than|minimum|min)\s+(?:than\s+)?\$?\s*(\d+(?:\.\d+)?)\s*k\b/i,
+    );
+    if (over) {
+      const n = parseK(over[1], 'k');
+      if (!Number.isNaN(n)) {
+        next.budget_min = n;
+        next.budget = `min ${n}`;
+      }
+      return next;
+    }
+
+    if (next.budget_min != null || next.budget_max != null) return next;
+
+    const singleK = t.match(/\$?\s*(\d+(?:\.\d+)?)\s*k\b/i);
+    if (singleK) {
+      const n = parseK(singleK[1], 'k');
+      if (!Number.isNaN(n) && n > 0) {
+        next.budget_max = n;
+        next.budget = String(n);
+      }
+      return next;
+    }
+
+    const plain = t.match(/\b(\d{5,9})\b/);
+    if (plain) {
+      const n = parseInt(plain[1], 10);
+      if (!Number.isNaN(n) && n >= 1000) {
+        next.budget_max = n;
+        next.budget = String(n);
+      }
+    }
+
+    return next;
+  }
+
   private nextCollectingQuestion(
     intent: SiteAssistIntent,
     slots: SiteAssistSlots,
@@ -196,7 +289,7 @@ export class SiteAssistOrchestratorService {
             locale,
           ),
         };
-      if (!s.budget)
+      if (!this.hasBuyBudget(s))
         return {
           qualified: false,
           question: pick(
@@ -235,7 +328,7 @@ export class SiteAssistOrchestratorService {
             locale,
           ),
         };
-      if (!s.monthly_budget)
+      if (!this.hasRentBudget(s))
         return {
           qualified: false,
           question: pick(
@@ -298,16 +391,65 @@ export class SiteAssistOrchestratorService {
     const slots = state.slots || {};
     const mode =
       state.intent === 'rent' ? 'rent' : state.intent === 'buy' ? 'sale' : undefined;
+    const city = slots.city?.trim();
+    const pt = slots.property_type?.trim();
+    const priceMin = slots.budget_min != null ? slots.budget_min : undefined;
+    const priceMax = slots.budget_max != null ? slots.budget_max : undefined;
+
+    const fetchList = async (filters: Parameters<PropertiesService['findPublic']>[0]) => {
+      const { items } = await this.propertiesService.findPublic(filters, { limit: 12, offset: 0 });
+      return items;
+    };
+
     try {
-      const { items } = await this.propertiesService.findPublic(
-        {
-          city: slots.city,
-          propertyType: slots.property_type,
+      let items: Awaited<ReturnType<typeof fetchList>> = [];
+
+      if (city) {
+        items = await fetchList({
+          city,
+          propertyType: pt,
           mode,
-          search: [slots.city, slots.zone].filter(Boolean).join(' ') || undefined,
-        },
-        { limit: 8, offset: 0 },
-      );
+          priceMin,
+          priceMax,
+        });
+      }
+      if (!items.length && city) {
+        items = await fetchList({
+          search: city,
+          propertyType: pt,
+          mode,
+          priceMin,
+          priceMax,
+        });
+      }
+      if (!items.length && city) {
+        items = await fetchList({
+          search: city,
+          propertyType: pt,
+          mode,
+        });
+      }
+      if (!items.length) {
+        items = await fetchList({
+          propertyType: pt,
+          mode,
+          priceMin,
+          priceMax,
+        });
+      }
+      if (!items.length) {
+        items = await fetchList({ propertyType: pt, mode });
+      }
+      if (!items.length) {
+        items = await fetchList({ mode, priceMin, priceMax });
+      }
+      if (!items.length) {
+        items = await fetchList({ mode });
+      }
+      if (!items.length) {
+        items = await fetchList({});
+      }
+
       if (!items.length) {
         return pick(
           {
@@ -318,6 +460,7 @@ export class SiteAssistOrchestratorService {
           locale,
         );
       }
+
       const lines = items.map((p) => {
         const url = this.propertyUrl(p.id);
         const price = p.price != null ? String(p.price) : '—';
@@ -332,7 +475,7 @@ export class SiteAssistOrchestratorService {
 
   private localeInstruction(locale: SiteAssistLocale): string {
     const names = { en: 'English', es: 'Spanish', pt: 'Portuguese' };
-    return `Always reply in ${names[locale]} (${locale}). Do not invent listing URLs; copy full https URLs exactly from the listing context. When you mention a property, include its full URL on its own line or after the title so users can open the listing page.`;
+    return `Always reply in ${names[locale]} (${locale}). Do not invent listing URLs; copy full https URLs exactly from the listing context. When you mention a property, include its full URL on its own line or after the title so users can open the listing page. If the context lists properties, those are real published listings from the database—do not claim there are none unless the context explicitly says no rows were found.`;
   }
 
   private async runLlm(
@@ -345,6 +488,15 @@ export class SiteAssistOrchestratorService {
       'You are a helpful real estate marketplace assistant on a public website.',
       this.localeInstruction(locale),
     ];
+    const slots = state.slots || {};
+    const bn: string[] = [];
+    if (slots.budget_min != null) bn.push(`min ${slots.budget_min}`);
+    if (slots.budget_max != null) bn.push(`max ${slots.budget_max}`);
+    if (bn.length) {
+      systemParts.push(
+        `User stated budget (numeric, same currency as listing prices): ${bn.join(', ')}.`,
+      );
+    }
     if (listingBlock) {
       systemParts.push('Published listings (use these links when relevant):\n' + listingBlock);
     }
@@ -435,11 +587,15 @@ export class SiteAssistOrchestratorService {
       };
     }
 
-    if (state.stage === 'collecting' && state.intent && ['buy', 'rent', 'sell'].includes(state.intent)) {
-      if (args.message?.trim()) {
-        state.slots = this.extractSignals(args.message, state.slots || {});
+    if (args.message?.trim()) {
+      state.slots = this.extractSignals(args.message, state.slots || {});
+      state.slots = this.extractBudgetFromText(args.message, state.slots || {});
+      if (state.intent === 'buy' || state.intent === 'rent' || state.intent === 'sell') {
         state.slots = this.applyPlainLocationFallback(args.message, state.intent, state.slots || {});
       }
+    }
+
+    if (state.stage === 'collecting' && state.intent && ['buy', 'rent', 'sell'].includes(state.intent)) {
       const { question, qualified } = this.nextCollectingQuestion(state.intent, state.slots || {}, locale);
       if (!qualified) {
         return {
