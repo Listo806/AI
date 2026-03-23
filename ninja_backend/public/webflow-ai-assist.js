@@ -1,9 +1,22 @@
 /**
  * CORTEXA AI Assist — Webflow widget (hosted).
+ *
  * Webflow → Site settings → Custom code → Footer:
  *   <script src="https://YOUR_API_HOST/static/webflow-ai-assist.js" defer></script>
- * Optional before that script:
- *   <script>window.CORTEXA_AI_CONFIG={ footerSelector:'#site-footer', buttonMargin:20, buttonLiftMobile:88 };</script>
+ *
+ * Base URL resolution (first match wins):
+ *   1) CORTEXA_AI_CONFIG.apiBaseUrl
+ *   2) window.BACKEND_API_BASE_URL (your shared Webflow head variable — must be on window)
+ *
+ * Optional CORTEXA_AI_CONFIG: apiPrefix, siteAssistApiKey, footerSelector, …
+ *
+ * If your head uses only `const BACKEND_API_BASE_URL = "..."`, add:
+ *   window.BACKEND_API_BASE_URL = BACKEND_API_BASE_URL;
+ *
+ * Locale: reads localStorage "marketplace_lang" → en | es | pt (maps to API).
+ * Session: localStorage "cortexa_site_assist_session" (server session id).
+ *
+ * Optional: footerSelector, buttonMargin, buttonLiftMobile
  */
 (function () {
   function boot() {
@@ -11,11 +24,20 @@
     window.__CORTEXA_AI_ASSIST__ = true;
 
     var userCfg = window.CORTEXA_AI_CONFIG || {};
+    var rawBase =
+      (userCfg.apiBaseUrl && String(userCfg.apiBaseUrl)) ||
+      (typeof window.BACKEND_API_BASE_URL === 'string' && window.BACKEND_API_BASE_URL) ||
+      '';
     var CONFIG = {
       footerSelector: userCfg.footerSelector || 'footer, [data-footer], .footer, #footer',
       buttonMargin: userCfg.buttonMargin != null ? userCfg.buttonMargin : 20,
-      buttonLiftMobile: userCfg.buttonLiftMobile != null ? userCfg.buttonLiftMobile : 88
+      buttonLiftMobile: userCfg.buttonLiftMobile != null ? userCfg.buttonLiftMobile : 88,
+      apiBaseUrl: rawBase.replace(/\/$/, ''),
+      apiPrefix: (userCfg.apiPrefix || 'api').replace(/^\/|\/$/g, ''),
+      siteAssistApiKey: userCfg.siteAssistApiKey || userCfg.siteAssistKey || ''
     };
+
+    var useApi = !!CONFIG.apiBaseUrl;
 
     var NS = 'cortexa-ai';
     var style = document.createElement('style');
@@ -30,25 +52,108 @@
       '.' + NS + '-close { position: absolute; top: 10px; right: 10px; z-index: 2; width: 36px; height: 36px; border: none; border-radius: 10px; background: rgba(15,23,42,.06); color: #64748b; cursor: pointer; font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }',
       '.' + NS + '-close:hover { background: rgba(15,23,42,.1); color: #0f172a; }',
       '.' + NS + '-chat { flex: 1; min-height: 0; overflow-y: auto; padding: 44px 16px 12px; -webkit-overflow-scrolling: touch; }',
+      '.' + NS + '-chat.' + NS + '-api-mode { padding-top: 16px; }',
       '.' + NS + '-welcome { font-size: 14px; line-height: 1.55; color: #334155; margin-bottom: 14px; padding: 12px 14px; background: linear-gradient(135deg, rgba(15,98,254,.08), rgba(61,139,253,.06)); border-radius: 12px; border: 1px solid rgba(15,98,254,.12); }',
+      '.' + NS + '-hint { font-size: 12px; color: #64748b; margin-bottom: 10px; padding: 0 4px; }',
       '.' + NS + '-prompts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }',
       '.' + NS + '-chip { font-size: 12px; padding: 8px 12px; border-radius: 999px; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; cursor: pointer; text-align: left; transition: border-color .15s, background .15s; max-width: 100%; }',
       '.' + NS + '-chip:active, .' + NS + '-chip:hover { border-color: var(--cortexa-blue2); background: #eff6ff; color: var(--cortexa-blue1); }',
+      '.' + NS + '-chip:disabled { opacity: 0.5; cursor: not-allowed; }',
+      '.' + NS + '-turn { margin-bottom: 14px; }',
       '.' + NS + '-msg { margin-bottom: 10px; max-width: 92%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; word-break: break-word; }',
       '.' + NS + '-msg-user { margin-left: auto; background: linear-gradient(135deg, var(--cortexa-blue1), var(--cortexa-blue2)); color: #fff; border-bottom-right-radius: 4px; }',
       '.' + NS + '-msg-ai { margin-right: auto; background: #f1f5f9; color: #1e293b; border-bottom-left-radius: 4px; border: 1px solid #e2e8f0; }',
+      '.' + NS + '-api-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 4px; }',
+      '.' + NS + '-linkrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }',
+      '.' + NS + '-linkbtn { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 10px; background: #eff6ff; color: var(--cortexa-blue1); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(15,98,254,.2); }',
+      '.' + NS + '-linkbtn:hover { background: #dbeafe; }',
       '.' + NS + '-foot { flex-shrink: 0; padding: 12px; border-top: 1px solid #e2e8f0; background: #fafafa; display: flex; gap: 8px; align-items: stretch; }',
       '.' + NS + '-input { flex: 1; min-width: 0; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 15px; outline: none; transition: border-color .15s; }',
       '.' + NS + '-input:focus { border-color: var(--cortexa-blue2); }',
+      '.' + NS + '-input:disabled { background: #f1f5f9; color: #94a3b8; }',
       '.' + NS + '-iconbtn { flex-shrink: 0; width: 44px; min-height: 44px; border: none; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: background .15s, opacity .15s; }',
+      '.' + NS + '-iconbtn:disabled { opacity: 0.45; cursor: not-allowed; }',
       '.' + NS + '-mic { background: #f1f5f9; color: #475569; }',
       '.' + NS + '-mic:hover { background: #e2e8f0; }',
       '.' + NS + '-mic.' + NS + '-listening { background: #fee2e2; color: #b91c1c; }',
       '.' + NS + '-send { background: linear-gradient(135deg, var(--cortexa-blue1), var(--cortexa-blue2)); color: #fff; }',
       '.' + NS + '-send:hover { opacity: .92; }',
-      '.' + NS + '-typing { font-size: 12px; color: #94a3b8; padding: 0 4px 8px; }'
+      '.' + NS + '-typing { font-size: 12px; color: #94a3b8; padding: 0 4px 8px; }',
+      '.' + NS + '-err { font-size: 13px; color: #b91c1c; padding: 8px 12px; background: #fef2f2; border-radius: 10px; margin-bottom: 8px; }'
     ].join('');
     document.head.appendChild(style);
+
+    var SESSION_KEY = 'cortexa_site_assist_session';
+
+    function getLocale() {
+      try {
+        var raw = (localStorage.getItem('marketplace_lang') || 'en').toLowerCase();
+        var code = raw.split('-')[0];
+        if (code === 'es') return 'es';
+        if (code === 'pt') return 'pt';
+        return 'en';
+      } catch (e) {
+        return 'en';
+      }
+    }
+
+    function getSpeechLang(locale) {
+      if (locale === 'es') return 'es-ES';
+      if (locale === 'pt') return 'pt-BR';
+      return 'en-US';
+    }
+
+    function loadSessionId() {
+      try {
+        return localStorage.getItem(SESSION_KEY) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function saveSessionId(id) {
+      try {
+        if (id) localStorage.setItem(SESSION_KEY, id);
+      } catch (e) {}
+    }
+
+    function clearSessionId() {
+      try {
+        localStorage.removeItem(SESSION_KEY);
+      } catch (e) {}
+    }
+
+    var sessionId = loadSessionId();
+    var requestBusy = false;
+    var panelBootstrapped = false;
+
+    function turnUrl() {
+      return CONFIG.apiBaseUrl + '/' + CONFIG.apiPrefix + '/public/site-assist/turn';
+    }
+
+    function callTurn(body) {
+      var headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+      if (CONFIG.siteAssistApiKey) headers['X-Site-Assist-Key'] = CONFIG.siteAssistApiKey;
+      return fetch(turnUrl(), {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body),
+        credentials: 'omit'
+      }).then(function (res) {
+        return res.text().then(function (text) {
+          var data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {}
+          if (!res.ok) {
+            var msg = (data && data.message) || text || res.statusText || 'Request failed';
+            if (Array.isArray(msg)) msg = msg.join(' ');
+            throw new Error(typeof msg === 'string' ? msg : 'Request failed');
+          }
+          return data;
+        });
+      });
+    }
 
     var root = document.createElement('div');
     root.className = NS + '-root';
@@ -65,53 +170,36 @@
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-label', 'AI Assist');
 
-    // var closeBtn = document.createElement('button');
-    // closeBtn.type = 'button';
-    // closeBtn.className = NS + '-close';
-    // closeBtn.setAttribute('aria-label', 'Close');
-    // closeBtn.innerHTML = '&times;';
-
     var chat = document.createElement('div');
-    chat.className = NS + '-chat';
+    chat.className = NS + '-chat' + (useApi ? ' ' + NS + '-api-mode' : '');
 
     var welcome = document.createElement('div');
     welcome.className = NS + '-welcome';
-    welcome.innerHTML = "AI Property Matchmaker <br> Tell me what you're looking for";
-    // welcome.textContent = "AI Property Matchmaker Tell me what you're looking for";
+    if (useApi) {
+      welcome.style.display = 'none';
+    } else {
+      welcome.innerHTML = "AI Property Matchmaker <br> Tell me what you're looking for";
+    }
+
+    var resumeHint = document.createElement('div');
+    resumeHint.className = NS + '-hint';
+    resumeHint.style.display = 'none';
 
     var promptsWrap = document.createElement('div');
     promptsWrap.className = NS + '-prompts';
-    var prompts = [
-      // 'Find homes under $200K',
-      // 'Best areas for families in Quito',
-      // 'Compare Cumbayá vs Tumbaco',
-      // 'Best investment zones right now',
-      // 'Show me 3-bedroom homes in La Carolina',
-      // 'How do I list my property?',
-      // 'How does your AI match buyers?'
-    ];
-    var input = document.createElement('input');
-    prompts.forEach(function (t) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = NS + '-chip';
-      b.textContent = t;
-      b.addEventListener('click', function () {
-        input.value = t;
-        input.focus();
-      });
-      promptsWrap.appendChild(b);
-    });
+    promptsWrap.style.display = useApi ? 'none' : '';
 
     var messagesEl = document.createElement('div');
     messagesEl.className = NS + '-messages';
 
     chat.appendChild(welcome);
+    chat.appendChild(resumeHint);
     chat.appendChild(promptsWrap);
     chat.appendChild(messagesEl);
 
     var foot = document.createElement('div');
     foot.className = NS + '-foot';
+    var input = document.createElement('input');
     input.type = 'text';
     input.className = NS + '-input';
     input.placeholder = 'Ask anything…';
@@ -133,17 +221,12 @@
     foot.appendChild(mic);
     foot.appendChild(send);
 
-    // panel.appendChild(closeBtn);
     panel.appendChild(chat);
     panel.appendChild(foot);
     root.appendChild(panel);
     root.appendChild(fab);
     document.body.appendChild(root);
 
-    /**
-     * Panel uses position:fixed; bottom = px from viewport bottom to panel's BOTTOM edge.
-     * It must sit just above the FAB — NOT (panel height + fab), which wrongly shoves the panel to the top.
-     */
     function positionPanel() {
       if (!open) return;
       var gap = 4;
@@ -160,6 +243,20 @@
       panel.classList.toggle(NS + '-open', v);
       fab.setAttribute('aria-expanded', v ? 'true' : 'false');
       if (v) {
+        if (useApi && !panelBootstrapped) {
+          panelBootstrapped = true;
+          if (sessionId) {
+            resumeHint.textContent =
+              getLocale() === 'es'
+                ? 'Tu conversación continúa. Escribe para seguir.'
+                : getLocale() === 'pt'
+                  ? 'Sua conversa continua. Digite para seguir.'
+                  : 'Your chat continues — type a message to pick up.';
+            resumeHint.style.display = 'block';
+          } else {
+            bootstrapPanel();
+          }
+        }
         positionPanel();
         requestAnimationFrame(function () {
           positionPanel();
@@ -168,18 +265,12 @@
       }
     }
 
-    fab.addEventListener('click', function () { setOpen(!open); });
-    // closeBtn.addEventListener('click', function () { setOpen(false); });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && open) setOpen(false);
-    });
-
-    document.addEventListener('click', function (e) {
-      if (!open) return;
-      if (root.contains(e.target)) return;
-      setOpen(false);
-    });
+    function setBusy(b) {
+      requestBusy = b;
+      input.disabled = b;
+      send.disabled = b;
+      mic.disabled = b;
+    }
 
     function scrollChat() {
       chat.scrollTop = chat.scrollHeight;
@@ -194,26 +285,180 @@
       positionPanel();
     }
 
-    function sendMessage() {
-      var t = (input.value || '').trim();
-      if (!t) return;
-      input.value = '';
-      addMsg(t, true);
-      if (typeof console !== 'undefined' && console.log) console.log('[CORTEXA AI Assist] send:', t);
+    function addError(text) {
+      var d = document.createElement('div');
+      d.className = NS + '-err';
+      d.textContent = text;
+      messagesEl.appendChild(d);
+      scrollChat();
+      positionPanel();
+    }
+
+    function addAssistantTurn(data) {
+      if (data.sessionId) {
+        sessionId = data.sessionId;
+        saveSessionId(sessionId);
+      }
+      var wrap = document.createElement('div');
+      wrap.className = NS + '-turn';
+
+      var msg = document.createElement('div');
+      msg.className = NS + '-msg ' + NS + '-msg-ai';
+      msg.textContent = data.text || '';
+      wrap.appendChild(msg);
+
+      if (data.links && data.links.length) {
+        var lk = document.createElement('div');
+        lk.className = NS + '-linkrow';
+        data.links.forEach(function (l) {
+          if (!l || !l.url) return;
+          var a = document.createElement('a');
+          a.href = l.url;
+          a.textContent = l.label || l.url;
+          a.className = NS + '-linkbtn';
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          lk.appendChild(a);
+        });
+        if (lk.children.length) wrap.appendChild(lk);
+      }
+
+      if (data.buttons && data.buttons.length) {
+        var br = document.createElement('div');
+        br.className = NS + '-api-btns';
+        data.buttons.forEach(function (b) {
+          if (!b || !b.id) return;
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = NS + '-chip';
+          btn.textContent = b.label || b.id;
+          (function (actionId, label) {
+            btn.addEventListener('click', function () {
+              if (requestBusy) return;
+              addMsg(label, true);
+              sendTurn({ actionId: actionId });
+            });
+          })(b.id, b.label || b.id);
+          br.appendChild(btn);
+        });
+        if (br.children.length) wrap.appendChild(br);
+      }
+
+      messagesEl.appendChild(wrap);
+      scrollChat();
+      positionPanel();
+    }
+
+    function removeTyping() {
+      var t = messagesEl.querySelector('.' + NS + '-typing');
+      if (t) t.remove();
+    }
+
+    function showTyping() {
+      removeTyping();
       var typing = document.createElement('div');
       typing.className = NS + '-typing';
       typing.textContent = '…';
       messagesEl.appendChild(typing);
       scrollChat();
+    }
+
+    function sendTurn(opts) {
+      opts = opts || {};
+      if (!useApi) return;
+      if (requestBusy) return;
+
+      var body = { locale: getLocale() };
+      if (sessionId) body.sessionId = sessionId;
+      if (opts.message) body.message = opts.message;
+      if (opts.actionId) body.actionId = opts.actionId;
+
+      if (body.sessionId && !body.message && !body.actionId) {
+        addError('Invalid request.');
+        return;
+      }
+
+      setBusy(true);
+      showTyping();
+
+      callTurn(body)
+        .then(function (data) {
+          removeTyping();
+          if (!data) return;
+          if (data.sessionId) {
+            sessionId = data.sessionId;
+            saveSessionId(sessionId);
+          }
+          addAssistantTurn(data);
+        })
+        .catch(function (err) {
+          removeTyping();
+          var m = (err && err.message) || 'Something went wrong.';
+          if (m.indexOf('404') !== -1 || /session not found/i.test(m)) {
+            clearSessionId();
+            sessionId = '';
+            panelBootstrapped = false;
+            addError(
+              getLocale() === 'es'
+                ? 'Sesión expirada. Cierra y abre el panel de nuevo.'
+                : getLocale() === 'pt'
+                  ? 'Sessão expirada. Feche e abra o painel novamente.'
+                  : 'Session expired. Close and reopen the chat.'
+            );
+            return;
+          }
+          if (!sessionId) panelBootstrapped = false;
+          addError(m);
+        })
+        .finally(function () {
+          setBusy(false);
+          positionPanel();
+        });
+    }
+
+    function bootstrapPanel() {
+      sendTurn({});
+    }
+
+    fab.addEventListener('click', function () {
+      setOpen(!open);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && open) setOpen(false);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!open) return;
+      if (root.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    function sendMessage() {
+      var t = (input.value || '').trim();
+      if (!t || requestBusy) return;
+      input.value = '';
+      addMsg(t, true);
+
+      if (useApi) {
+        sendTurn({ message: t });
+        return;
+      }
+
+      if (typeof console !== 'undefined' && console.log) console.log('[CORTEXA AI Assist] send:', t);
+      showTyping();
       setTimeout(function () {
-        typing.remove();
+        removeTyping();
         addMsg('Thanks for your message. Connect your webhook or API here to return real answers. (Placeholder response)', false);
       }, 600);
     }
 
     send.addEventListener('click', sendMessage);
     input.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -222,21 +467,27 @@
       recog = new SpeechRecognition();
       recog.continuous = false;
       recog.interimResults = false;
-      recog.lang = 'en-US';
+      recog.lang = getSpeechLang(getLocale());
       recog.onresult = function (e) {
         var txt = e.results[0] && e.results[0][0] && e.results[0][0].transcript;
         if (txt) input.value = (input.value ? input.value + ' ' : '') + txt.trim();
         mic.classList.remove(NS + '-listening');
       };
-      recog.onerror = function () { mic.classList.remove(NS + '-listening'); };
-      recog.onend = function () { mic.classList.remove(NS + '-listening'); };
+      recog.onerror = function () {
+        mic.classList.remove(NS + '-listening');
+      };
+      recog.onend = function () {
+        mic.classList.remove(NS + '-listening');
+      };
     }
     mic.addEventListener('click', function () {
+      if (requestBusy) return;
       if (!recog) {
         alert('Speech recognition is not supported in this browser.');
         return;
       }
       try {
+        recog.lang = getSpeechLang(getLocale());
         mic.classList.add(NS + '-listening');
         recog.start();
       } catch (err) {
@@ -244,21 +495,37 @@
       }
     });
 
-    window.addEventListener('resize', function () { if (open) positionPanel(); });
+    window.addEventListener('resize', function () {
+      if (open) positionPanel();
+    });
 
     var footers = [];
     try {
-      document.querySelectorAll(CONFIG.footerSelector).forEach(function (el) { footers.push(el); });
+      document.querySelectorAll(CONFIG.footerSelector).forEach(function (el) {
+        footers.push(el);
+      });
     } catch (e) {}
     if (footers.length && 'IntersectionObserver' in window) {
       var extraBottom = 0;
-      var obs = new IntersectionObserver(function (entries) {
-        var any = entries.some(function (en) { return en.isIntersecting; });
-        extraBottom = any ? 72 : 0;
-        fab.style.bottom = 'calc(' + (CONFIG.buttonMargin + extraBottom) + 'px + env(safe-area-inset-bottom)' + (window.innerWidth <= 768 ? ' + ' + CONFIG.buttonLiftMobile + 'px' : '') + ')';
-        if (open) positionPanel();
-      }, { root: null, rootMargin: '0px', threshold: 0.05 });
-      footers.forEach(function (f) { obs.observe(f); });
+      var obs = new IntersectionObserver(
+        function (entries) {
+          var any = entries.some(function (en) {
+            return en.isIntersecting;
+          });
+          extraBottom = any ? 72 : 0;
+          fab.style.bottom =
+            'calc(' +
+            (CONFIG.buttonMargin + extraBottom) +
+            'px + env(safe-area-inset-bottom)' +
+            (window.innerWidth <= 768 ? ' + ' + CONFIG.buttonLiftMobile + 'px' : '') +
+            ')';
+          if (open) positionPanel();
+        },
+        { root: null, rootMargin: '0px', threshold: 0.05 }
+      );
+      footers.forEach(function (f) {
+        obs.observe(f);
+      });
     }
   }
 
