@@ -220,6 +220,8 @@
     send.className = NS + '-iconbtn ' + NS + '-send';
     send.setAttribute('aria-label', 'Send');
     send.textContent = '\u279C';
+    var sendDefaultLabel = send.textContent;
+    var inputDefaultPlaceholder = input.placeholder;
 
     foot.appendChild(input);
     foot.appendChild(mic);
@@ -273,6 +275,18 @@
       input.disabled = b;
       send.disabled = b;
       mic.disabled = b;
+      if (b) {
+        send.textContent = '...';
+        input.placeholder =
+          getLocale() === 'es'
+            ? 'Pensando...'
+            : getLocale() === 'pt'
+              ? 'Pensando...'
+              : 'Thinking...';
+      } else {
+        send.textContent = sendDefaultLabel;
+        input.placeholder = inputDefaultPlaceholder;
+      }
     }
 
     function scrollChat() {
@@ -438,6 +452,15 @@
         .finally(function () {
           setBusy(false);
           positionPanel();
+          if (open) {
+            requestAnimationFrame(function () {
+              try {
+                input.focus({ preventScroll: true });
+              } catch (e) {
+                input.focus();
+              }
+            });
+          }
         });
     }
 
