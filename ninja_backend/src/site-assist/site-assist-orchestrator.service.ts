@@ -168,94 +168,262 @@ export class SiteAssistOrchestratorService {
   }
 
   /**
-   * Parse purchase / rent budget phrases: 100k~200k, less than 200k, over 200k, over than 200k (typo), etc.
+   * Parse purchase / rent budget phrases:
+   * - 100k~200k / 250,000-400,000
+   * - less than 200k / under 250,000
+   * - over than 200k / above 300000
+   * - two hundred thousand (handles common typo: handred)
    */
   private extractBudgetFromText(message: string, slots: SiteAssistSlots): SiteAssistSlots {
     const next: SiteAssistSlots = { ...slots };
     const t = (message || '').trim().toLowerCase();
     if (!t) return next;
 
-    const parseK = (numStr: string, unit: string): number => {
-      const n = parseFloat(numStr);
+    const parseAmount = (rawNum: string, rawUnit?: string): number => {
+      const cleaned = (rawNum || '').replace(/[,\s]/g, '');
+      if (!cleaned) return NaN;
+      const n = parseFloat(cleaned);
       if (Number.isNaN(n)) return NaN;
-      const u = (unit || '').toLowerCase();
-      if (u === 'k') return Math.round(n * 1000);
-      if (u === 'm') return Math.round(n * 1_000_000);
+      const unit = (rawUnit || '').toLowerCase();
+      if (unit === 'k' || unit === 'thousand') return Math.round(n * 1000);
+      if (unit === 'm' || unit === 'million') return Math.round(n * 1_000_000);
       return Math.round(n);
     };
 
-    const rangeDash = t.match(/(\d+(?:\.\d+)?)\s*k\s*[~–-]\s*(\d+(?:\.\d+)?)\s*k/i);
-    if (rangeDash) {
-      const a = parseK(rangeDash[1], 'k');
-      const b = parseK(rangeDash[2], 'k');
-      if (!Number.isNaN(a) && !Number.isNaN(b)) {
-        next.budget_min = Math.min(a, b);
-        next.budget_max = Math.max(a, b);
-        next.budget = `${next.budget_min}-${next.budget_max}`;
+    const parseWordsNumber = (input: string): number => {
+      const normalized = input
+        .toLowerCase()
+        .replace(/handred/g, 'hundred')
+        .replace(/-/g, ' ')
+        .replace(/\sand\s/g, ' ')
+        .trim();
+      const tokens = normalized.split(/\s+/).filter(Boolean);
+      const small: Record<string, number> = {
+        zero: 0,
+        one: 1,
+        two: 2,
+        three: 3,
+        four: 4,
+        five: 5,
+        six: 6,
+        seven: 7,
+        eight: 8,
+        nine: 9,
+        ten: 10,
+        eleven: 11,
+        twelve: 12,
+        thirteen: 13,
+        fourteen: 14,
+        fifteen: 15,
+        sixteen: 16,
+        seventeen: 17,
+        eighteen: 18,
+        nineteen: 19,
+        twenty: 20,
+        thirty: 30,
+        forty: 40,
+        fifty: 50,
+        sixty: 60,
+        seventy: 70,
+        eighty: 80,
+        ninety: 90,
+      };
+      let current = 0;
+      let total = 0;
+      for (const tok of tokens) {
+        if (small[tok] != null) {
+          current += small[tok];
+          continue;
+        }
+        if (tok === 'hundred') {
+          if (current === 0) current = 1;
+          current *= 100;
+          continue;
+        }
+        if (tok === 'thousand') {
+          if (current === 0) current = 1;
+          total += current * 1000;
+          current = 0;
+          continue;
+        }
+        if (tok === 'million') {
+          if (current === 0) current = 1;
+          total += current * 1_000_000;
+          current = 0;
+          continue;
+        }
+        return NaN;
       }
-      return next;
-    }
+      const out = total + current;
+      return out > 0 ? out : NaN;
+    };
 
-    const rangeBetween = t.match(
-      /between\s+(\d+(?:\.\d+)?)\s*k\s+and\s+(\d+(?:\.\d+)?)\s*k/i,
+    const extractWordBudget = (): number => {
+      const wordsOnly = t.replace(/[^a-z\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!wordsOnly) return NaN;
+      return parseWordsNumber(wordsOnly);
+    };
+
+    const range = t.match(
+      /(\d+(?:\.\d+)?(?:,\d{3})*)\s*(k|m|thousand|million)?\s*[~–-]\s*(\d+(?:\.\d+)?(?:,\d{3})*)\s*(k|m|thousand|million)?/i,
     );
-    if (rangeBetween) {
-      const a = parseK(rangeBetween[1], 'k');
-      const b = parseK(rangeBetween[2], 'k');
+    if (range) {
+      const a = parseAmount(range[1], range[2]);
+      const b = parseAmount(range[3], range[4] || range[2]);
       if (!Number.isNaN(a) && !Number.isNaN(b)) {
         next.budget_min = Math.min(a, b);
         next.budget_max = Math.max(a, b);
         next.budget = `${next.budget_min}-${next.budget_max}`;
+        return next;
       }
-      return next;
     }
 
     const under = t.match(
-      /(?:less than|under|below|max|up to|at most|maximum|no more than)\s+\$?\s*(\d+(?:\.\d+)?)\s*k\b/i,
+      /(?:less than|under|below|max|up to|at most|maximum|no more than)\s+\$?\s*(\d+(?:\.\d+)?(?:,\d{3})*)\s*(k|m|thousand|million)?\b/i,
     );
     if (under) {
-      const n = parseK(under[1], 'k');
+      const n = parseAmount(under[1], under[2]);
       if (!Number.isNaN(n)) {
         next.budget_max = n;
         next.budget = `max ${n}`;
+        return next;
       }
-      return next;
     }
 
     const over = t.match(
-      /(?:more than|over|above|at least|greater than|minimum|min)\s+(?:than\s+)?\$?\s*(\d+(?:\.\d+)?)\s*k\b/i,
+      /(?:more than|over|above|at least|greater than|minimum|min)\s+(?:than\s+)?\$?\s*(\d+(?:\.\d+)?(?:,\d{3})*)\s*(k|m|thousand|million)?\b/i,
     );
     if (over) {
-      const n = parseK(over[1], 'k');
+      const n = parseAmount(over[1], over[2]);
       if (!Number.isNaN(n)) {
         next.budget_min = n;
         next.budget = `min ${n}`;
+        return next;
       }
-      return next;
     }
 
     if (next.budget_min != null || next.budget_max != null) return next;
 
-    const singleK = t.match(/\$?\s*(\d+(?:\.\d+)?)\s*k\b/i);
-    if (singleK) {
-      const n = parseK(singleK[1], 'k');
+    const single = t.match(/\$?\s*(\d+(?:\.\d+)?(?:,\d{3})*)\s*(k|m|thousand|million)?\b/i);
+    if (single) {
+      const n = parseAmount(single[1], single[2]);
       if (!Number.isNaN(n) && n > 0) {
         next.budget_max = n;
         next.budget = String(n);
+        return next;
       }
+    }
+
+    const wordAmount = extractWordBudget();
+    if (!Number.isNaN(wordAmount) && wordAmount >= 1000) {
+      next.budget_max = wordAmount;
+      next.budget = String(wordAmount);
       return next;
     }
 
-    const plain = t.match(/\b(\d{5,9})\b/);
-    if (plain) {
-      const n = parseInt(plain[1], 10);
-      if (!Number.isNaN(n) && n >= 1000) {
-        next.budget_max = n;
-        next.budget = String(n);
-      }
-    }
-
     return next;
+  }
+
+  private mergeExtractedSlots(base: SiteAssistSlots, extracted: Partial<SiteAssistSlots>): SiteAssistSlots {
+    const out: SiteAssistSlots = { ...base };
+    const cleanText = (v?: string) => (v || '').trim();
+    if (cleanText(extracted.city)) out.city = cleanText(extracted.city);
+    if (cleanText(extracted.property_type)) out.property_type = cleanText(extracted.property_type).toLowerCase();
+    if (cleanText(extracted.zone)) out.zone = cleanText(extracted.zone);
+    if (cleanText(extracted.budget)) out.budget = cleanText(extracted.budget);
+    if (cleanText(extracted.monthly_budget)) out.monthly_budget = cleanText(extracted.monthly_budget);
+    if (typeof extracted.budget_min === 'number' && Number.isFinite(extracted.budget_min)) {
+      out.budget_min = Math.round(extracted.budget_min);
+    }
+    if (typeof extracted.budget_max === 'number' && Number.isFinite(extracted.budget_max)) {
+      out.budget_max = Math.round(extracted.budget_max);
+    }
+    if (
+      out.budget_min != null &&
+      out.budget_max != null &&
+      out.budget_min > out.budget_max
+    ) {
+      const t = out.budget_min;
+      out.budget_min = out.budget_max;
+      out.budget_max = t;
+    }
+    return out;
+  }
+
+  /**
+   * AI extraction layer for typo / natural language robustness.
+   * Returns partial slots only; deterministic validators/fallback still run after this.
+   */
+  private async extractSignalsWithAi(
+    message: string,
+    locale: SiteAssistLocale,
+    intent: SiteAssistIntent | undefined,
+    current: SiteAssistSlots,
+  ): Promise<Partial<SiteAssistSlots> | null> {
+    const system = [
+      'Extract structured real-estate search slots from a user message.',
+      'Return ONLY valid JSON (no markdown).',
+      'JSON schema:',
+      '{',
+      '  "city": string|null,',
+      '  "property_type": "house"|"apartment"|"land"|"commercial"|"villa"|"office"|null,',
+      '  "zone": string|null,',
+      '  "budget_min": number|null,',
+      '  "budget_max": number|null,',
+      '  "monthly_budget": string|null,',
+      '  "budget": string|null',
+      '}',
+      'Handle misspells and informal phrasing.',
+      'If unknown, set null for that field.',
+      'Do not invent values.',
+    ].join('\n');
+
+    const user = JSON.stringify({
+      locale,
+      intent: intent || 'general',
+      current_slots: current || {},
+      message,
+    });
+
+    try {
+      const result = await this.aiAssistant.chat({
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      });
+      const raw = (result.message || '').trim();
+      if (!raw) return null;
+      const jsonChunk = raw.match(/\{[\s\S]*\}/)?.[0] || raw;
+      const obj = JSON.parse(jsonChunk);
+      if (!obj || typeof obj !== 'object') return null;
+      return obj as Partial<SiteAssistSlots>;
+    } catch (e: any) {
+      this.logger.warn(`extractSignalsWithAi: ${e?.message}`);
+      return null;
+    }
+  }
+
+  private slotProgress(before: SiteAssistSlots, after: SiteAssistSlots): { changed: boolean } {
+    if ((before.city || '') !== (after.city || '')) return { changed: true };
+    if ((before.property_type || '') !== (after.property_type || '')) return { changed: true };
+    if ((before.zone || '') !== (after.zone || '')) return { changed: true };
+    if ((before.budget || '') !== (after.budget || '')) return { changed: true };
+    if ((before.monthly_budget || '') !== (after.monthly_budget || '')) return { changed: true };
+    if ((before.budget_min ?? null) !== (after.budget_min ?? null)) return { changed: true };
+    if ((before.budget_max ?? null) !== (after.budget_max ?? null)) return { changed: true };
+    return { changed: false };
+  }
+
+  private clarifyPrefix(locale: SiteAssistLocale): string {
+    return pick(
+      {
+        en: "I couldn't fully understand that input. ",
+        es: 'No pude entender completamente ese dato. ',
+        pt: 'Não consegui entender completamente esse dado. ',
+      },
+      locale,
+    );
   }
 
   private nextCollectingQuestion(
@@ -587,20 +755,36 @@ export class SiteAssistOrchestratorService {
       };
     }
 
+    let parseProgress = { changed: false };
     if (args.message?.trim()) {
+      const before = { ...(state.slots || {}) };
+      const aiExtracted = await this.extractSignalsWithAi(
+        args.message,
+        locale,
+        state.intent,
+        state.slots || {},
+      );
+      if (aiExtracted) {
+        state.slots = this.mergeExtractedSlots(state.slots || {}, aiExtracted);
+      }
       state.slots = this.extractSignals(args.message, state.slots || {});
       state.slots = this.extractBudgetFromText(args.message, state.slots || {});
       if (state.intent === 'buy' || state.intent === 'rent' || state.intent === 'sell') {
         state.slots = this.applyPlainLocationFallback(args.message, state.intent, state.slots || {});
       }
+      parseProgress = this.slotProgress(before, state.slots || {});
     }
 
     if (state.stage === 'collecting' && state.intent && ['buy', 'rent', 'sell'].includes(state.intent)) {
       const { question, qualified } = this.nextCollectingQuestion(state.intent, state.slots || {}, locale);
       if (!qualified) {
+        const text =
+          args.message?.trim() && !parseProgress.changed
+            ? this.clarifyPrefix(locale) + question
+            : question;
         return {
           newState: state,
-          response: { sessionId, type: 'message', text: question, buttons: [], links: [] },
+          response: { sessionId, type: 'message', text, buttons: [], links: [] },
         };
       }
       state = { ...state, stage: 'chat' };
