@@ -122,6 +122,20 @@
       return 'en-US';
     }
 
+    /** Input placeholder strings — follow site/toggle language (uiLocale), not API lock. */
+    function placeholderAsk(loc) {
+      if (loc === 'es') return 'Pregunta lo que quieras...';
+      if (loc === 'pt') return 'Pergunte qualquer coisa...';
+      return 'Ask anything...';
+    }
+    function placeholderThinking(loc) {
+      if (loc === 'es' || loc === 'pt') return 'Pensando...';
+      return 'Thinking...';
+    }
+
+    /** Site-visible language (localStorage + toggle). API body still uses getLockedLocale(). */
+    var uiLocale = getLocale();
+
     var sessionId = '';
     var requestBusy = false;
     var panelBootstrapped = false;
@@ -253,12 +267,7 @@
     send.textContent = '\u279C';
     var sendDefaultLabel = send.textContent;
     var inputDefaultPlaceholder = input.placeholder;
-    input.placeholder =
-      getLockedLocale() === 'es'
-        ? 'Pregunta lo que quieras...'
-        : getLockedLocale() === 'pt'
-          ? 'Pergunte qualquer coisa...'
-          : 'Ask anything...';
+    input.placeholder = placeholderAsk(uiLocale);
     inputDefaultPlaceholder = input.placeholder;
 
     foot.appendChild(input);
@@ -315,12 +324,7 @@
       mic.disabled = b;
       if (b) {
         send.textContent = '...';
-        input.placeholder =
-          getLockedLocale() === 'es'
-            ? 'Pensando...'
-            : getLockedLocale() === 'pt'
-              ? 'Pensando...'
-              : 'Thinking...';
+        input.placeholder = placeholderThinking(uiLocale);
       } else {
         send.textContent = sendDefaultLabel;
         input.placeholder = inputDefaultPlaceholder;
@@ -558,7 +562,7 @@
       recog = new SpeechRecognition();
       recog.continuous = false;
       recog.interimResults = false;
-      recog.lang = getSpeechLang(getLockedLocale());
+      recog.lang = getSpeechLang(uiLocale);
       recog.onresult = function (e) {
         var txt = e.results[0] && e.results[0][0] && e.results[0][0].transcript;
         if (txt) input.value = (input.value ? input.value + ' ' : '') + txt.trim();
@@ -578,7 +582,7 @@
         return;
       }
       try {
-        recog.lang = getSpeechLang(getLockedLocale());
+        recog.lang = getSpeechLang(uiLocale);
         mic.classList.add(NS + '-listening');
         recog.start();
       } catch (err) {
@@ -590,21 +594,14 @@
       if (open) positionPanel();
     });
 
-    // Language toggle integration: mirror CRM-like consistency by reacting to one source of truth.
-    // We only update AI lock before conversation starts; once chat starts, locale is fixed.
+    // UI follows site toggle immediately; API locale remains getLockedLocale() after chat starts.
     window.addEventListener('languageChanged', function (ev) {
-      var next = ev && ev.detail && ev.detail.language ? ev.detail.language : getLocale();
-      setLockedLocale(next, false);
-      if (recog) recog.lang = getSpeechLang(getLockedLocale());
-      if (!requestBusy) {
-        input.placeholder =
-          getLockedLocale() === 'es'
-            ? 'Pregunta lo que quieras...'
-            : getLockedLocale() === 'pt'
-              ? 'Pergunte qualquer coisa...'
-              : 'Ask anything...';
-        inputDefaultPlaceholder = input.placeholder;
-      }
+      var raw = ev && ev.detail && ev.detail.language != null ? ev.detail.language : getLocale();
+      uiLocale = normalizeLocale(raw);
+      setLockedLocale(uiLocale, false);
+      if (recog) recog.lang = getSpeechLang(uiLocale);
+      inputDefaultPlaceholder = placeholderAsk(uiLocale);
+      input.placeholder = requestBusy ? placeholderThinking(uiLocale) : inputDefaultPlaceholder;
     });
 
     var footers = [];
