@@ -12,7 +12,8 @@
  * Script order: define BACKEND_API_BASE_URL in a <script> that runs BEFORE this file.
  * Optional CORTEXA_AI_CONFIG: apiPrefix, siteAssistApiKey, footerSelector, …
  *
- * Locale: reads localStorage "marketplace_lang" → en | es | pt (maps to API).
+ * Locale: uses session-locked language (sessionStorage "marketplace_ai_lang_lock")
+ *   derived from marketplace_lang/browser on first use; never changes mid-conversation.
  * Session: in-memory only (per page load). Each new visit / reload gets welcome + buttons again;
  *   same tab keeps chat while the page stays open.
  *
@@ -100,13 +101,16 @@
     ].join('');
     document.head.appendChild(style);
 
+    function normalizeLocale(raw) {
+      var code = String(raw || '').toLowerCase().split('-')[0];
+      if (code === 'es') return 'es';
+      if (code === 'pt') return 'pt';
+      return 'en';
+    }
+
     function getLocale() {
       try {
-        var raw = (localStorage.getItem('marketplace_lang') || 'en').toLowerCase();
-        var code = raw.split('-')[0];
-        if (code === 'es') return 'es';
-        if (code === 'pt') return 'pt';
-        return 'en';
+        return normalizeLocale(localStorage.getItem('marketplace_lang') || 'en');
       } catch (e) {
         return 'en';
       }
@@ -122,6 +126,33 @@
     var requestBusy = false;
     var panelBootstrapped = false;
     var warnedNoApi = false;
+    var messagesCount = 0;
+    var AI_LANG_LOCK_KEY = 'marketplace_ai_lang_lock';
+
+    function hasConversationStarted() {
+      return !!sessionId || messagesCount > 0;
+    }
+
+    function getLockedLocale() {
+      try {
+        var locked = sessionStorage.getItem(AI_LANG_LOCK_KEY);
+        if (locked) return normalizeLocale(locked);
+      } catch (e) {}
+      var initial = getLocale();
+      try {
+        sessionStorage.setItem(AI_LANG_LOCK_KEY, initial);
+      } catch (e) {}
+      return initial;
+    }
+
+    function setLockedLocale(nextLocale, force) {
+      var next = normalizeLocale(nextLocale || 'en');
+      if (!force && hasConversationStarted()) return getLockedLocale();
+      try {
+        sessionStorage.setItem(AI_LANG_LOCK_KEY, next);
+      } catch (e) {}
+      return next;
+    }
 
     function turnUrl() {
       return CONFIG.apiBaseUrl + '/' + CONFIG.apiPrefix + '/public/site-assist/turn';
@@ -222,6 +253,13 @@
     send.textContent = '\u279C';
     var sendDefaultLabel = send.textContent;
     var inputDefaultPlaceholder = input.placeholder;
+    input.placeholder =
+      getLockedLocale() === 'es'
+        ? 'Pregunta lo que quieras...'
+        : getLockedLocale() === 'pt'
+          ? 'Pergunte qualquer coisa...'
+          : 'Ask anything...';
+    inputDefaultPlaceholder = input.placeholder;
 
     foot.appendChild(input);
     foot.appendChild(mic);
@@ -278,9 +316,9 @@
       if (b) {
         send.textContent = '...';
         input.placeholder =
-          getLocale() === 'es'
+          getLockedLocale() === 'es'
             ? 'Pensando...'
-            : getLocale() === 'pt'
+            : getLockedLocale() === 'pt'
               ? 'Pensando...'
               : 'Thinking...';
       } else {
@@ -333,6 +371,7 @@
         fillAssistantMessageEl(d, text);
       }
       messagesEl.appendChild(d);
+      messagesCount += 1;
       scrollChat();
       positionPanel();
     }
@@ -394,6 +433,7 @@
       }
 
       messagesEl.appendChild(wrap);
+      messagesCount += 1;
       scrollChat();
       positionPanel();
     }
@@ -417,7 +457,7 @@
       if (!useApi) return;
       if (requestBusy) return;
 
-      var body = { locale: getLocale() };
+      var body = { locale: getLockedLocale() };
       if (sessionId) body.sessionId = sessionId;
       if (opts.message) body.message = opts.message;
       if (opts.actionId) body.actionId = opts.actionId;
@@ -443,6 +483,8 @@
           if (m.indexOf('404') !== -1 || /session not found/i.test(m)) {
             sessionId = '';
             messagesEl.innerHTML = '';
+            messagesCount = 0;
+            setLockedLocale(getLocale(), true);
             if (open) bootstrapPanel();
             return;
           }
@@ -465,6 +507,7 @@
     }
 
     function bootstrapPanel() {
+      setLockedLocale(getLocale(), false);
       sendTurn({});
     }
 
@@ -515,7 +558,7 @@
       recog = new SpeechRecognition();
       recog.continuous = false;
       recog.interimResults = false;
-      recog.lang = getSpeechLang(getLocale());
+      recog.lang = getSpeechLang(getLockedLocale());
       recog.onresult = function (e) {
         var txt = e.results[0] && e.results[0][0] && e.results[0][0].transcript;
         if (txt) input.value = (input.value ? input.value + ' ' : '') + txt.trim();
@@ -535,7 +578,7 @@
         return;
       }
       try {
-        recog.lang = getSpeechLang(getLocale());
+        recog.lang = getSpeechLang(getLockedLocale());
         mic.classList.add(NS + '-listening');
         recog.start();
       } catch (err) {
@@ -545,6 +588,23 @@
 
     window.addEventListener('resize', function () {
       if (open) positionPanel();
+    });
+
+    // Language toggle integration: mirror CRM-like consistency by reacting to one source of truth.
+    // We only update AI lock before conversation starts; once chat starts, locale is fixed.
+    window.addEventListener('languageChanged', function (ev) {
+      var next = ev && ev.detail && ev.detail.language ? ev.detail.language : getLocale();
+      setLockedLocale(next, false);
+      if (recog) recog.lang = getSpeechLang(getLockedLocale());
+      if (!requestBusy) {
+        input.placeholder =
+          getLockedLocale() === 'es'
+            ? 'Pregunta lo que quieras...'
+            : getLockedLocale() === 'pt'
+              ? 'Pergunte qualquer coisa...'
+              : 'Ask anything...';
+        inputDefaultPlaceholder = input.placeholder;
+      }
     });
 
     var footers = [];
