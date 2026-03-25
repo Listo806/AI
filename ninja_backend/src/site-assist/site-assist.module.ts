@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { ConfigModule } from '../config/config.module';
-import { AiAssistantModule } from '../integrations/ai/ai-assistant.module';
-import { PropertiesModule } from '../properties/properties.module';
+import { ConversationAssistModule } from '../conversation-assist/conversation-assist.module';
 import { SiteAssistController } from './site-assist.controller';
 import { SiteAssistService } from './site-assist.service';
 import { SiteAssistOrchestratorService } from './site-assist-orchestrator.service';
 
 @Module({
-  imports: [DatabaseModule, ConfigModule, AiAssistantModule, PropertiesModule],
+  imports: [DatabaseModule, ConfigModule, ConversationAssistModule],
   controllers: [SiteAssistController],
   providers: [SiteAssistService, SiteAssistOrchestratorService],
 })
