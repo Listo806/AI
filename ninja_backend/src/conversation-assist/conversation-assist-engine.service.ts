@@ -5,7 +5,6 @@ import { PropertiesService } from '../properties/properties.service';
 import {
   SiteAssistButton,
   SiteAssistIntent,
-  SiteAssistLink,
   SiteAssistLocale,
   SiteAssistSlots,
   SiteAssistState,
@@ -27,19 +26,6 @@ export class ConversationAssistEngineService {
     private readonly aiAssistant: AiAssistantService,
     private readonly propertiesService: PropertiesService,
   ) {}
-
-  private handoffLinks(): SiteAssistLink[] {
-    const raw = this.config.get('SITE_ASSIST_HANDOFF_LINKS');
-    if (!raw?.trim()) return [];
-    try {
-      const parsed = JSON.parse(raw) as SiteAssistLink[];
-      return Array.isArray(parsed)
-        ? parsed.filter((x) => x && typeof x.url === 'string' && typeof x.label === 'string')
-        : [];
-    } catch {
-      return [];
-    }
-  }
 
   private propertyUrl(propertyId: string): string {
     const origin = (this.config.get('SITE_ASSIST_PUBLIC_ORIGIN') || '').replace(/\/$/, '');
@@ -64,21 +50,20 @@ export class ConversationAssistEngineService {
       { id: 'welcome_rent', label: pick({ en: 'I want to rent', es: 'Quiero alquilar', pt: 'Quero alugar' }, locale) },
       { id: 'welcome_sell', label: pick({ en: 'I want to sell', es: 'Quiero vender', pt: 'Quero vender' }, locale) },
       { id: 'welcome_browse', label: pick({ en: 'Browse listings', es: 'Ver anuncios', pt: 'Ver anúncios' }, locale) },
-      { id: 'welcome_human', label: pick({ en: 'Talk to a person', es: 'Hablar con una persona', pt: 'Falar com uma pessoa' }, locale) },
     ];
     return { sessionId, type: 'message', text, buttons, links: [] };
   }
 
-  private handoffResponse(sessionId: string, locale: SiteAssistLocale): SiteAssistTurnResponse {
-    const text = pick(
+  /** Legacy / edge: human handoff is not supported; keep users in AI flow. */
+  private directHelpMessage(locale: SiteAssistLocale): string {
+    return pick(
       {
-        en: 'Here are the best ways to reach our team:',
-        es: 'Aquí tienes las mejores formas de contactar a nuestro equipo:',
-        pt: 'Aqui estão as melhores formas de falar com nossa equipe:',
+        en: 'I can help you directly. What would you like to do?',
+        es: 'Puedo ayudarte directamente. ¿Qué te gustaría hacer?',
+        pt: 'Posso ajudar você diretamente. O que você gostaria de fazer?',
       },
       locale,
     );
-    return { sessionId, type: 'handoff', text, buttons: [], links: this.handoffLinks() };
   }
 
   private extractSignals(text: string, slots: SiteAssistSlots): SiteAssistSlots {
@@ -695,9 +680,18 @@ export class ConversationAssistEngineService {
     if (args.message?.trim()) userParts.push(args.message.trim());
     const userLine = userParts.join(' ');
 
-    if (args.actionId === 'welcome_human') {
-      state = { ...state, stage: 'handoff', intent: 'human' };
-      return { newState: state, response: this.handoffResponse(sessionId, locale) };
+    if (args.actionId === 'welcome_human' || args.actionId === 'talk_to_person') {
+      state = { ...state, stage: 'chat', intent: 'general', slots: { ...state.slots } };
+      return {
+        newState: state,
+        response: {
+          sessionId,
+          type: 'message',
+          text: this.directHelpMessage(locale),
+          buttons: [],
+          links: [],
+        },
+      };
     }
 
     if (args.actionId === 'welcome_buy') {
@@ -807,10 +801,6 @@ export class ConversationAssistEngineService {
         newState: state,
         response: { sessionId, type: 'message', text: reply, buttons: [], links: [] },
       };
-    }
-
-    if (state.stage === 'handoff') {
-      return { newState: state, response: this.handoffResponse(sessionId, locale) };
     }
 
     // chat / general
