@@ -16,7 +16,7 @@
       ATTR_TEXT_KEY: 'data-text-key',
       CLASS_LANG_BLOCK: 'lq-lang-block',
       /** Served as GET {base}/language/{lang}.json (Nest static: public/language/) */
-      LANG_JSON_PREFIX: '/static/language'
+      LANG_JSON_PREFIX: '/language'
     };
 
     // Flat maps: langBundles[lang][messageKey] = string (from en.json / es.json / pt.json)

@@ -22,6 +22,10 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/static/',
   });
+  // Serve language JSON directly at /language/{lang}.json
+  app.useStaticAssets(join(__dirname, '..', 'public', 'language'), {
+    prefix: '/language/',
+  });
   
   // Global prefix for all routes
   app.setGlobalPrefix(process.env.API_PREFIX || 'api');
