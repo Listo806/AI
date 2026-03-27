@@ -13,7 +13,59 @@
       ATTR_ACTIVE: 'data-lang-active',
       ATTR_LANG: 'data-lang',
       ATTR_SET_LANG: 'data-set-lang',
+      ATTR_TEXT_KEY: 'data-text-key',
       CLASS_LANG_BLOCK: 'lq-lang-block'
+    };
+
+    // =====================================================
+    // TRANSLATIONS (i18n map for data-text-key)
+    // =====================================================
+    const translations = {
+      hero_title: {
+        en: 'Find Homes That Match You',
+        es: 'Encuentra hogares que coinciden contigo',
+        pt: 'Encontre casas que combinam com voce'
+      },
+      hero_sub: {
+        en: 'Search smarter. Search faster.',
+        es: 'Busca mas inteligente. Busca mas rapido.',
+        pt: 'Busque de forma mais inteligente. Busque mais rapido.'
+      },
+      search_placeholder: {
+        en: 'Enter city',
+        es: 'Ingresa ciudad',
+        pt: 'Digite a cidade'
+      },
+      search_button: {
+        en: 'Search',
+        es: 'Buscar',
+        pt: 'Pesquisar'
+      },
+      buy_tab: {
+        en: 'Buy',
+        es: 'Comprar',
+        pt: 'Comprar'
+      },
+      rent_tab: {
+        en: 'Rent',
+        es: 'Alquilar',
+        pt: 'Alugar'
+      },
+      vacation_tab: {
+        en: 'Vacation Rentals',
+        es: 'Alquiler Vacacional',
+        pt: 'Aluguel por Temporada'
+      },
+      list_property_btn: {
+        en: 'List Your Property',
+        es: 'Publicar Propiedad',
+        pt: 'Anunciar Imovel'
+      },
+      find_agent: {
+        en: 'Find Agent',
+        es: 'Encontrar Agente',
+        pt: 'Encontrar Agente'
+      }
     };
   
     console.log('🌐 Language Engine: Initializing on marketplace');
@@ -141,6 +193,73 @@
     // =====================================================
     // DOM UPDATER
     // =====================================================
+    function getTranslationValue(key, lang) {
+      if (!key || !translations[key]) return '';
+      return (
+        translations[key][lang] ||
+        translations[key][CONFIG.DEFAULT_LANG] ||
+        ''
+      );
+    }
+
+    function applyTextToElement(el, translated) {
+      if (!el || !translated) return;
+
+      // Optional explicit target override: text|html|placeholder|value|title|aria-label
+      const target = (el.getAttribute('data-text-target') || '').toLowerCase();
+      if (target === 'html') {
+        el.innerHTML = translated;
+        return;
+      }
+      if (target === 'placeholder') {
+        el.setAttribute('placeholder', translated);
+        return;
+      }
+      if (target === 'value') {
+        el.value = translated;
+        return;
+      }
+      if (target === 'title') {
+        el.setAttribute('title', translated);
+        return;
+      }
+      if (target === 'aria-label') {
+        el.setAttribute('aria-label', translated);
+        return;
+      }
+
+      // Smart defaults by element type
+      const tag = (el.tagName || '').toLowerCase();
+      const inputType = (el.getAttribute('type') || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') {
+        if (inputType === 'button' || inputType === 'submit' || inputType === 'reset') {
+          el.value = translated;
+        } else {
+          el.setAttribute('placeholder', translated);
+        }
+      } else {
+        el.textContent = translated;
+      }
+    }
+
+    function applyTranslations(lang, root) {
+      const base = root && root.querySelectorAll ? root : document;
+      if (!base) return;
+      const scopedRoot = root && root.nodeType === 1 ? root : null;
+
+      // Include the root itself when it carries data-text-key
+      if (scopedRoot && scopedRoot.hasAttribute && scopedRoot.hasAttribute(CONFIG.ATTR_TEXT_KEY)) {
+        const ownKey = scopedRoot.getAttribute(CONFIG.ATTR_TEXT_KEY);
+        applyTextToElement(scopedRoot, getTranslationValue(ownKey, lang));
+      }
+
+      const nodes = base.querySelectorAll(`[${CONFIG.ATTR_TEXT_KEY}]`);
+      nodes.forEach(el => {
+        const key = el.getAttribute(CONFIG.ATTR_TEXT_KEY);
+        applyTextToElement(el, getTranslationValue(key, lang));
+      });
+    }
+
     function setActiveLanguage(lang) {
       if (!CONFIG.SUPPORTED_LANGS.includes(lang)) {
         console.warn(`Unsupported language: ${lang}`);
@@ -162,6 +281,9 @@
           block.setAttribute('hidden', '');
         }
       });
+
+      // Apply i18n text map for any [data-text-key] node
+      applyTranslations(lang);
       
       // Update any custom toggle buttons if they exist
       const langToggles = document.querySelectorAll(`[${CONFIG.ATTR_SET_LANG}]`);
@@ -338,6 +460,9 @@
                     block.style.display = blockLang === currentLang ? '' : 'none';
                   });
                 }
+
+                // Apply i18n texts for dynamically injected nodes
+                applyTranslations(currentLang, node);
               }
             });
           }
