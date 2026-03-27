@@ -22,6 +22,16 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/static/',
   });
+  // Allow cross-origin reads for static i18n JSON used by Webflow embeds.
+  app.use('/language', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    return next();
+  });
   // Serve language JSON directly at /language/{lang}.json
   app.useStaticAssets(join(__dirname, '..', 'public', 'language'), {
     prefix: '/language/',
