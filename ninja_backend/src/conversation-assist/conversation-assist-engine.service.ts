@@ -49,7 +49,6 @@ export class ConversationAssistEngineService {
       { id: 'welcome_buy', label: pick({ en: 'I want to buy', es: 'Quiero comprar', pt: 'Quero comprar' }, locale) },
       { id: 'welcome_rent', label: pick({ en: 'I want to rent', es: 'Quiero alquilar', pt: 'Quero alugar' }, locale) },
       { id: 'welcome_sell', label: pick({ en: 'I want to sell', es: 'Quiero vender', pt: 'Quero vender' }, locale) },
-      { id: 'welcome_browse', label: pick({ en: 'Browse listings', es: 'Ver anuncios', pt: 'Ver anúncios' }, locale) },
     ];
     return { sessionId, type: 'message', text, buttons, links: [] };
   }
