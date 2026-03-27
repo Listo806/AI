@@ -14,60 +14,88 @@
       ATTR_LANG: 'data-lang',
       ATTR_SET_LANG: 'data-set-lang',
       ATTR_TEXT_KEY: 'data-text-key',
-      CLASS_LANG_BLOCK: 'lq-lang-block'
+      CLASS_LANG_BLOCK: 'lq-lang-block',
+      /** Served as GET {base}/language/{lang}.json (Nest static: public/language/) */
+      LANG_JSON_PREFIX: '/language'
     };
 
-    // =====================================================
-    // TRANSLATIONS (i18n map for data-text-key)
-    // =====================================================
-    const translations = {
-      hero_title: {
-        en: 'Find Homes That Match You',
-        es: 'Encuentra hogares que coinciden contigo',
-        pt: 'Encontre casas que combinam com voce'
-      },
-      hero_sub: {
-        en: 'Search smarter. Search faster.',
-        es: 'Busca mas inteligente. Busca mas rapido.',
-        pt: 'Busque de forma mais inteligente. Busque mais rapido.'
-      },
-      search_placeholder: {
-        en: 'Enter city',
-        es: 'Ingresa ciudad',
-        pt: 'Digite a cidade'
-      },
-      search_button: {
-        en: 'Search',
-        es: 'Buscar',
-        pt: 'Pesquisar'
-      },
-      buy_tab: {
-        en: 'Buy',
-        es: 'Comprar',
-        pt: 'Comprar'
-      },
-      rent_tab: {
-        en: 'Rent',
-        es: 'Alquilar',
-        pt: 'Alugar'
-      },
-      vacation_tab: {
-        en: 'Vacation Rentals',
-        es: 'Alquiler Vacacional',
-        pt: 'Aluguel por Temporada'
-      },
-      list_property_btn: {
-        en: 'List Your Property',
-        es: 'Publicar Propiedad',
-        pt: 'Anunciar Imovel'
-      },
-      find_agent: {
-        en: 'Find Agent',
-        es: 'Encontrar Agente',
-        pt: 'Encontrar Agente'
-      }
+    // Flat maps: langBundles[lang][messageKey] = string (from en.json / es.json / pt.json)
+    const langBundles = {
+      en: {},
+      es: {},
+      pt: {}
     };
-  
+
+    let languageBundlesLoadPromise = null;
+
+    /**
+     * Base URL for fetching JSON (no trailing slash). Same sources as webflow-ai-assist.js.
+     * Optional: window.CORTEXA_LANG_CONFIG.apiBaseUrl
+     */
+    function resolveLangBaseUrl() {
+      const cfg = window.CORTEXA_LANG_CONFIG || {};
+      let a = cfg.apiBaseUrl && String(cfg.apiBaseUrl).trim();
+      if (a) return a.replace(/\/$/, '');
+      if (typeof window.BACKEND_API_BASE_URL === 'string' && window.BACKEND_API_BASE_URL.trim()) {
+        return window.BACKEND_API_BASE_URL.trim().replace(/\/$/, '');
+      }
+      if (typeof BACKEND_API_BASE_URL !== 'undefined' && BACKEND_API_BASE_URL != null) {
+        const g = String(BACKEND_API_BASE_URL).trim();
+        if (g) return g.replace(/\/$/, '');
+      }
+      const ai = window.CORTEXA_AI_CONFIG || {};
+      a = ai.apiBaseUrl && String(ai.apiBaseUrl).trim();
+      if (a) return a.replace(/\/$/, '');
+      try {
+        const scripts = document.getElementsByTagName('script');
+        for (let i = scripts.length - 1; i >= 0; i--) {
+          const src = scripts[i].src || '';
+          if (src.indexOf('webflow-toggle-lang') !== -1) {
+            return new URL('..', src).href.replace(/\/$/, '');
+          }
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function mergeFlatJsonIntoBundle(lang, data) {
+      if (!data || typeof data !== 'object') return;
+      const target = langBundles[lang] || (langBundles[lang] = {});
+      Object.keys(data).forEach((k) => {
+        const v = data[k];
+        if (v != null && typeof v === 'string') target[k] = v;
+      });
+    }
+
+    function loadLanguageBundles() {
+      if (languageBundlesLoadPromise) return languageBundlesLoadPromise;
+      const base = resolveLangBaseUrl();
+      const prefix = (CONFIG.LANG_JSON_PREFIX || '/language').replace(/\/$/, '');
+      if (!base) {
+        console.warn(
+          '[Language Engine] No API base URL for /language/*.json. Set window.BACKEND_API_BASE_URL or CORTEXA_LANG_CONFIG.apiBaseUrl (same host as backend public files).'
+        );
+        languageBundlesLoadPromise = Promise.resolve();
+        return languageBundlesLoadPromise;
+      }
+
+      languageBundlesLoadPromise = Promise.all(
+        CONFIG.SUPPORTED_LANGS.map((lang) => {
+          const url = base + prefix + '/' + lang + '.json';
+          return fetch(url, { credentials: 'omit', mode: 'cors' }).then((res) => {
+            if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+            return res.json();
+          }).then((obj) => {
+            mergeFlatJsonIntoBundle(lang, obj);
+          });
+        })
+      ).catch((err) => {
+        console.warn('[Language Engine] Failed to load translation JSON:', err.message || err);
+      });
+
+      return languageBundlesLoadPromise;
+    }
+
     console.log('🌐 Language Engine: Initializing on marketplace');
   
     // =====================================================
@@ -194,12 +222,16 @@
     // DOM UPDATER
     // =====================================================
     function getTranslationValue(key, lang) {
-      if (!key || !translations[key]) return '';
-      return (
-        translations[key][lang] ||
-        translations[key][CONFIG.DEFAULT_LANG] ||
-        ''
-      );
+      if (!key) return '';
+      const primary = langBundles[lang];
+      const fallback = langBundles[CONFIG.DEFAULT_LANG] || {};
+      if (primary && Object.prototype.hasOwnProperty.call(primary, key) && primary[key]) {
+        return String(primary[key]);
+      }
+      if (fallback && Object.prototype.hasOwnProperty.call(fallback, key) && fallback[key]) {
+        return String(fallback[key]);
+      }
+      return '';
     }
 
     function applyTextToElement(el, translated) {
@@ -379,115 +411,88 @@
     // INITIALIZATION
     // =====================================================
     function initLanguageEngine() {
-      // First, fix the URL if it has language prefix
       fixUrlOnLoad();
-      
-      // Detect initial language
       const initialLang = detectLanguage();
-      
-      // Apply language without flicker
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          setTimeout(() => {
-            setActiveLanguage(initialLang);
-            updateDropdownActiveState(initialLang);
-            interceptLocalizationLinks();
-            
-            // Add click outside listener to ensure dropdown closes properly
-            document.addEventListener('click', function(e) {
-              const dropdown = document.querySelector('.w-dropdown');
-              if (dropdown && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('w--open');
-                const toggle = dropdown.querySelector('.w-dropdown-toggle');
-                if (toggle) {
-                  toggle.classList.remove('w--open');
-                  toggle.setAttribute('aria-expanded', 'false');
-                }
-                const list = dropdown.querySelector('.w-dropdown-list');
-                if (list) {
-                  list.classList.remove('w--open');
-                }
-              }
-            });
-          }, 0);
-        });
-      } else {
-        setActiveLanguage(initialLang);
-        updateDropdownActiveState(initialLang);
-        interceptLocalizationLinks();
-        
-        // Add click outside listener
-        document.addEventListener('click', function(e) {
-          const dropdown = document.querySelector('.w-dropdown');
-          if (dropdown && !dropdown.contains(e.target)) {
-            dropdown.classList.remove('w--open');
-            const toggle = dropdown.querySelector('.w-dropdown-toggle');
-            if (toggle) {
-              toggle.classList.remove('w--open');
-              toggle.setAttribute('aria-expanded', 'false');
-            }
-            const list = dropdown.querySelector('.w-dropdown-list');
-            if (list) {
-              list.classList.remove('w--open');
-            }
-          }
-        });
-      }
-      
-      // MutationObserver for dynamic content
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            const currentLang = document.documentElement.getAttribute(CONFIG.ATTR_ACTIVE) || CONFIG.DEFAULT_LANG;
-            
-            mutation.addedNodes.forEach(node => {
-              if (node.nodeType === 1) {
-                // Check for new locale links and attach interceptors
-                if (node.matches && node.matches('.w-locales-item a[hreflang]')) {
-                  node.addEventListener('click', handleLocaleClick);
-                }
-                
-                // Handle language blocks
-                if (node.hasAttribute && node.hasAttribute(CONFIG.ATTR_LANG)) {
-                  const nodeLang = node.getAttribute(CONFIG.ATTR_LANG);
-                  node.style.display = nodeLang === currentLang ? '' : 'none';
-                }
-                
-                if (node.querySelectorAll) {
-                  const childLangBlocks = node.querySelectorAll(`[${CONFIG.ATTR_LANG}]`);
-                  childLangBlocks.forEach(block => {
-                    const blockLang = block.getAttribute(CONFIG.ATTR_LANG);
-                    block.style.display = blockLang === currentLang ? '' : 'none';
-                  });
-                }
 
-                // Apply i18n texts for dynamically injected nodes
-                applyTranslations(currentLang, node);
-              }
-            });
+      function wireDomAndObserver() {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+              setActiveLanguage(initialLang);
+              updateDropdownActiveState(initialLang);
+              interceptLocalizationLinks();
+              document.addEventListener('click', closeDropdownOnClickOutside);
+            }, 0);
+          });
+        } else {
+          setActiveLanguage(initialLang);
+          updateDropdownActiveState(initialLang);
+          interceptLocalizationLinks();
+          document.addEventListener('click', closeDropdownOnClickOutside);
+        }
+
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+              const currentLang =
+                document.documentElement.getAttribute(CONFIG.ATTR_ACTIVE) || CONFIG.DEFAULT_LANG;
+              mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1) {
+                  if (node.matches && node.matches('.w-locales-item a[hreflang]')) {
+                    node.addEventListener('click', handleLocaleClick);
+                  }
+                  if (node.hasAttribute && node.hasAttribute(CONFIG.ATTR_LANG)) {
+                    const nodeLang = node.getAttribute(CONFIG.ATTR_LANG);
+                    node.style.display = nodeLang === currentLang ? '' : 'none';
+                  }
+                  if (node.querySelectorAll) {
+                    node.querySelectorAll(`[${CONFIG.ATTR_LANG}]`).forEach((block) => {
+                      const blockLang = block.getAttribute(CONFIG.ATTR_LANG);
+                      block.style.display = blockLang === currentLang ? '' : 'none';
+                    });
+                  }
+                  applyTranslations(currentLang, node);
+                }
+              });
+            }
+          });
+        });
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.body, { childList: true, subtree: true });
+          });
+        } else {
+          observer.observe(document.body, { childList: true, subtree: true });
+        }
+
+        window.addEventListener('popstate', () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const urlLang = urlParams.get('lang');
+          if (urlLang && CONFIG.SUPPORTED_LANGS.includes(urlLang)) {
+            setActiveLanguage(urlLang);
+            updateDropdownActiveState(urlLang);
           }
         });
-      });
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          observer.observe(document.body, { childList: true, subtree: true });
-        });
-      } else {
-        observer.observe(document.body, { childList: true, subtree: true });
       }
-      
-      // Handle popstate (back/forward buttons)
-      window.addEventListener('popstate', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlLang = urlParams.get('lang');
-        if (urlLang && CONFIG.SUPPORTED_LANGS.includes(urlLang)) {
-          setActiveLanguage(urlLang);
-          updateDropdownActiveState(urlLang);
+
+      function closeDropdownOnClickOutside(e) {
+        const dropdown = document.querySelector('.w-dropdown');
+        if (dropdown && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('w--open');
+          const toggle = dropdown.querySelector('.w-dropdown-toggle');
+          if (toggle) {
+            toggle.classList.remove('w--open');
+            toggle.setAttribute('aria-expanded', 'false');
+          }
+          const list = dropdown.querySelector('.w-dropdown-list');
+          if (list) list.classList.remove('w--open');
         }
-      });
+      }
+
+      loadLanguageBundles().then(wireDomAndObserver).catch(wireDomAndObserver);
     }
-  
+
     // Start the engine
     initLanguageEngine();
   
