@@ -1,25 +1,95 @@
 {
-    "hero_title": "VENDE TU PROPIEDAD",
-    "hero_subtitle": "Impulsado por IA",
-    "cta_primary": "Comenzar",
-  
-    "nav_buy": "Comprar",
-    "nav_sell": "Vender",
-    "nav_rent": "Alquilar",
-    "nav_agents": "Agentes",
-    "nav_developers": "Desarrolladores",
-    "nav_ai_crm": "CRM IA",
-    "nav_signin": "Iniciar sesión",
-  
-    "section_whatsapp_title": "WHATSAPP A ESCALA",
-    "section_whatsapp_sub": "Llega a miles de compradores al instante",
-  
-    "section_ai_title": "IA QUE CALIFICA Y AGENDA",
-    "section_ai_sub": "Desde el primer mensaje hasta la visita confirmada — automáticamente",
-  
-    "section_distribution_title": "MOTOR DE DISTRIBUCIÓN IA",
-    "section_distribution_sub": "Distribuye tus propiedades a compradores con alta intención",
-  
-    "section_leads_title": "RECIBE LEADS CALIFICADOS",
-    "section_leads_sub": "Solo compradores reales — filtrados por IA"
-  }
+  "home_hero_title": "VENDE TU PROPIEDAD",
+  "home_hero_sub": "Publica tu propiedad y obtén exposición inmediata",
+  "home_search_placeholder": "Buscar por ciudad, barrio o propiedad",
+
+  "nav_buy": "Comprar",
+  "nav_rent": "Alquilar",
+  "nav_vacation": "Alquileres Vacacionales",
+  "nav_agents": "Agentes",
+  "nav_developers": "Desarrolladores",
+  "nav_investors": "Inversionistas",
+  "nav_ai_crm": "CRM IA",
+  "nav_login": "Iniciar sesión",
+
+  "cta_search": "Buscar",
+  "cta_get_started": "Comenzar",
+  "cta_list_property": "Publicar propiedad",
+  "cta_contact": "Contactar",
+  "cta_save": "Guardar",
+  "cta_cancel": "Cancelar",
+  "cta_submit": "Enviar",
+
+  "filters_price": "Precio",
+  "filters_bedrooms": "Habitaciones",
+  "filters_bathrooms": "Baños",
+  "filters_property_type": "Tipo de propiedad",
+  "filters_amenities": "Amenidades",
+
+  "results_title": "Resultados de búsqueda",
+  "results_found": "Propiedades encontradas",
+  "no_results": "No se encontraron resultados",
+
+  "property_price": "Precio",
+  "property_location": "Ubicación",
+  "property_bedrooms": "Habitaciones",
+  "property_bathrooms": "Baños",
+  "property_area": "Área",
+  "property_contact": "Contactar agente",
+
+  "section_save_rent_title": "DEJA DE REGALAR TU DINERO",
+  "section_save_rent_sub": "¿Por qué pagar comisiones cuando puedes quedarte con todo?",
+
+  "problem_title": "EL PROBLEMA",
+  "solution_title": "LA SOLUCIÓN",
+
+  "problem_1": "Pagar altas comisiones",
+  "problem_2": "Esperar a los agentes",
+  "problem_3": "Perder control",
+
+  "solution_1": "Publica al instante",
+  "solution_2": "Recibe leads directamente",
+  "solution_3": "Quédate con el 100% de tu dinero",
+
+  "dashboard_title": "Panel",
+  "dashboard_unread": "Conversaciones sin leer",
+  "dashboard_active": "Leads activos",
+  "dashboard_new": "Leads nuevos",
+  "dashboard_closed": "Cerrados",
+
+  "leads_title": "Leads",
+  "leads_new": "Nuevos",
+  "leads_contacted": "Contactados",
+  "leads_converted": "Convertidos",
+
+  "analytics_title": "Analítica",
+  "analytics_leads": "Leads",
+  "analytics_conversion": "Conversión",
+  "analytics_performance": "Rendimiento",
+
+  "settings_title": "Configuración",
+  "settings_profile": "Perfil",
+  "settings_billing": "Facturación",
+  "settings_notifications": "Notificaciones",
+
+  "whatsapp_title": "WhatsApp",
+  "whatsapp_connect": "Conectar WhatsApp",
+  "whatsapp_disconnect": "Desconectar",
+  "whatsapp_status_connected": "Conectado",
+  "whatsapp_status_disconnected": "No conectado",
+
+  "ai_title": "Asistente IA",
+  "ai_toggle_on": "Activar IA",
+  "ai_toggle_off": "Desactivar IA",
+  "ai_placeholder": "Escribe tu mensaje...",
+
+  "auth_login": "Iniciar sesión",
+  "auth_signup": "Crear cuenta",
+  "auth_email": "Correo",
+  "auth_password": "Contraseña",
+  "auth_forgot": "¿Olvidaste tu contraseña?",
+
+  "loading": "Cargando...",
+  "error": "Algo salió mal",
+  "success": "Éxito"
+}
