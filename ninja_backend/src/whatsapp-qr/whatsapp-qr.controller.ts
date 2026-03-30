@@ -95,9 +95,12 @@ export class WhatsAppQrController {
   }
 
   @Get('conversations')
-  @ApiOperation({ summary: 'List QR conversations for current user only (by user_id)' })
+  @ApiOperation({
+    summary:
+      'List QR conversations (role-scoped): admin = site-wide, owner = all their teams, agent = own team. No message bodies.',
+  })
   async listConversations(@CurrentUser() user: any) {
-    const data = await this.conversations.listByUserId(user.id);
+    const data = await this.conversations.listScopedForUser(user);
     return { data };
   }
 
@@ -118,7 +121,7 @@ export class WhatsAppQrController {
     if (!contactPhone) {
       throw new BadRequestException('Invalid contactPhone; use E.164');
     }
-    const conv = await this.conversations.findByUserAndPhone(user.id, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
     if (!conv) {
       return { data: [] };
     }
@@ -134,20 +137,20 @@ export class WhatsAppQrController {
   @Post('send')
   @ApiOperation({ summary: 'Agent send outbound via Baileys' })
   async send(@CurrentUser() user: any, @Body() dto: SendQrMessageDto) {
-    const handle = this.sockets.getHandle(user.id);
-    if (!handle?.connected) {
-      throw new BadRequestException('WhatsApp QR not connected');
-    }
     const contactPhone = normalizeToE164(dto.contactPhone);
     if (!contactPhone) {
       throw new BadRequestException('Invalid contactPhone; use E.164');
     }
-    const conv = await this.conversations.findByUserAndPhone(user.id, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
     if (!conv) {
       throw new NotFoundException('No conversation for this contact');
     }
+    const handle = this.sockets.getHandle(conv.user_id);
+    if (!handle?.connected) {
+      throw new BadRequestException('WhatsApp QR session for this conversation is not connected');
+    }
     await this.outbound.sendAgentText({
-      userId: user.id,
+      userId: conv.user_id,
       sessionId: conv.session_id,
       conversationId: conv.id,
       leadId: conv.lead_id,
@@ -161,20 +164,20 @@ export class WhatsAppQrController {
   @Post('send-voice')
   @ApiOperation({ summary: 'Send voice message (audio/ogg base64) via Baileys' })
   async sendVoice(@CurrentUser() user: any, @Body() dto: SendQrVoiceDto) {
-    const handle = this.sockets.getHandle(user.id);
-    if (!handle?.connected) {
-      throw new BadRequestException('WhatsApp QR not connected');
-    }
     const contactPhone = normalizeToE164(dto.contactPhone);
     if (!contactPhone) {
       throw new BadRequestException('Invalid contactPhone; use E.164');
     }
-    const conv = await this.conversations.findByUserAndPhone(user.id, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
     if (!conv) {
       throw new NotFoundException('No conversation for this contact');
     }
+    const handle = this.sockets.getHandle(conv.user_id);
+    if (!handle?.connected) {
+      throw new BadRequestException('WhatsApp QR session for this conversation is not connected');
+    }
     await this.outbound.sendAgentVoice({
-      userId: user.id,
+      userId: conv.user_id,
       sessionId: conv.session_id,
       conversationId: conv.id,
       leadId: conv.lead_id,
@@ -198,11 +201,11 @@ export class WhatsAppQrController {
     if (!contactPhone) {
       throw new BadRequestException('Invalid contactPhone');
     }
-    const ok = await this.conversations.toggleAi(
-      user.id,
-      contactPhone,
-      dto.aiEnabled,
-    );
+    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
+    if (!conv) {
+      throw new NotFoundException('Conversation not found');
+    }
+    const ok = await this.conversations.setAiEnabledByConversationId(conv.id, dto.aiEnabled);
     if (!ok) {
       throw new NotFoundException('Conversation not found');
     }

@@ -12,6 +12,22 @@ export class CrmService {
   ) {}
 
   /**
+   * Dashboard / QR scope: admin & super_admin see entire site; owner sees all their teams; others see one team (or personal leads only).
+   */
+  async resolveDashboardDataScope(
+    userId: string,
+    teamId: string | null,
+    role: string,
+  ): Promise<{ isGlobal: boolean; teamIds: string[] }> {
+    const r = (role || '').toLowerCase();
+    if (r === 'admin' || r === 'super_admin') {
+      return { isGlobal: true, teamIds: [] };
+    }
+    const teamIds = await this.getSummaryTeamIds(userId, teamId, r);
+    return { isGlobal: false, teamIds };
+  }
+
+  /**
    * Resolve team IDs the user can see in summary: owner = all teams they own or belong to; others = their team_id only.
    */
   private async getSummaryTeamIds(userId: string, teamId: string | null, role: string): Promise<string[]> {
