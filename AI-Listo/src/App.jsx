@@ -10,26 +10,11 @@ export default function App() {
   return (
     <main className="min-h-screen bg-white text-slate-900 relative">
 
-      {/* 🌐 LANGUAGE TOGGLE */}
+      {/* LANGUAGE TOGGLE */}
       <div className="absolute top-6 right-6 flex gap-2 z-50">
-        <button
-          onClick={() => i18n.changeLanguage("en")}
-          className="px-3 py-1 bg-gray-200 rounded"
-        >
-          EN
-        </button>
-        <button
-          onClick={() => i18n.changeLanguage("es")}
-          className="px-3 py-1 bg-gray-200 rounded"
-        >
-          ES
-        </button>
-        <button
-          onClick={() => i18n.changeLanguage("pt")}
-          className="px-3 py-1 bg-gray-200 rounded"
-        >
-          PT
-        </button>
+        <button onClick={() => i18n.changeLanguage("en")} className="px-3 py-1 bg-gray-200 rounded">EN</button>
+        <button onClick={() => i18n.changeLanguage("es")} className="px-3 py-1 bg-gray-200 rounded">ES</button>
+        <button onClick={() => i18n.changeLanguage("pt")} className="px-3 py-1 bg-gray-200 rounded">PT</button>
       </div>
 
       {/* HERO */}
@@ -38,11 +23,11 @@ export default function App() {
 
           <div className="flex-1">
             <h1 className="text-5xl md:text-6xl font-semibold leading-tight mb-6 text-slate-900">
-              {t("hero_title")}
+              {t("dashboard.title")}
             </h1>
 
             <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-              {t("hero_sub")}
+              {t("dashboard.newLeads")}
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -50,14 +35,14 @@ export default function App() {
                 onClick={() => navigate("/buy")}
                 className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition"
               >
-                {t("cta_explore") || "Explore Listings"}
+                {t("common.view")}
               </button>
 
               <button
                 onClick={() => navigate("/list-property")}
                 className="px-6 py-3 border border-blue-500 text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition"
               >
-                {t("cta_list") || "List Your Property"}
+                {t("common.add")}
               </button>
             </div>
           </div>
