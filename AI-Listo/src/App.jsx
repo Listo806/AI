@@ -1,156 +1,83 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import ThemeProvider from "./theme/ThemeProvider";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { NotificationProvider } from "./context/NotificationContext";
-import NotificationToast from "./components/NotificationToast";
-import ProtectedRoute from "./components/ProtectedRoute";
-import DashboardLayout from "./layouts/DashboardLayout";
-import "./i18n/config";
-import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
-import SignIn from "./pages/auth/SignIn";
-import Dashboard from "./pages/dashboard/Dashboard";
-import PropertiesList from "./pages/properties/PropertiesList";
-import PropertyForm from "./pages/properties/PropertyForm";
-import PropertyDetail from "./pages/properties/PropertyDetail";
-import LeadsList from "./pages/leads/LeadsList";
-import LeadDetail from "./pages/leads/LeadDetail";
-import Pipeline from "./pages/pipeline/Pipeline";
-import Contacts from "./pages/contacts/Contacts";
-import AIAssistant from "./pages/ai-assistant/AIAssistant";
-import AIAutomations from "./pages/ai-automations/AIAutomations";
-import Analytics from "./pages/dashboard/Analytics";
-import Team from "./pages/team/Team";
-import Integrations from "./pages/integrations/Integrations";
-import WhatsApp from "./pages/whatsapp/WhatsApp";
-import Instagram from "./pages/instagram/Instagram";
-import Billing from "./pages/billing/Billing";
-import Settings from "./pages/dashboard/Settings";
-import Profile from "./pages/account/Profile";
-import AccountBilling from "./pages/account/Billing";
-import AccountSettings from "./pages/account/Settings";
-import Listings from "./pages/listings/Listings";
-import ListingDetail from "./pages/listings/ListingDetail";
-
-// Root route handler - shows sign-in or redirects to dashboard
-function RootRoute() {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  if (isAuthenticated()) {
-    // User is authenticated - redirect to dashboard
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Not authenticated - show sign-in
-  return <Navigate to="/sign-in" replace />;
-}
-
-function AppRoutes() {
-  return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<RootRoute />} />
-      <Route path="/sign-in" element={<SignIn />} />
-      
-      {/* Public Listings (no auth required) */}
-      <Route path="/listings" element={<Listings />} />
-      <Route path="/listings/:id" element={<ListingDetail />} />
-
-      {/* Protected Dashboard Routes - All under /dashboard */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        {/* Dashboard Index */}
-        <Route index element={<Dashboard />} />
-        
-        {/* Leads Routes */}
-        <Route path="leads" element={<LeadsList />} />
-        <Route path="leads/:id" element={<LeadDetail />} />
-        
-        {/* Pipeline Route */}
-        <Route path="pipeline" element={<Pipeline />} />
-        
-        {/* Properties Routes */}
-        <Route path="properties" element={<PropertiesList />} />
-        <Route path="properties/new" element={<PropertyForm />} />
-        <Route path="properties/:id/edit" element={<PropertyForm />} />
-        <Route path="properties/:id" element={<PropertyDetail />} />
-        
-        {/* Contacts Route */}
-        <Route path="contacts" element={<Contacts />} />
-        
-        {/* AI Routes */}
-        <Route path="ai-assistant" element={<AIAssistant />} />
-        <Route path="ai-automations" element={<AIAutomations />} />
-        
-        {/* Analytics Route */}
-        <Route path="analytics" element={<Analytics />} />
-        
-        {/* Team Route */}
-        <Route path="team" element={<Team />} />
-        
-        {/* Integrations Route */}
-        <Route path="integrations" element={<Integrations />} />
-        
-        {/* WhatsApp Route */}
-        <Route path="whatsapp" element={<WhatsApp />} />
-        
-        {/* Instagram Route */}
-        <Route path="instagram" element={<Instagram />} />
-        
-        {/* Billing Route (legacy - redirects to account/billing) */}
-        <Route path="billing" element={<Navigate to="/account/billing" replace />} />
-        
-        {/* Settings Route (legacy - redirects to account/settings) */}
-        <Route path="settings" element={<Navigate to="/account/settings" replace />} />
-      </Route>
-
-      {/* Account Routes - Outside dashboard but still protected */}
-      <Route
-        path="/account"
-        element={
-          <ProtectedRoute>
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="profile" element={<Profile />} />
-        <Route path="billing" element={<AccountBilling />} />
-        <Route path="settings" element={<AccountSettings />} />
-      </Route>
-
-      {/* Legacy Routes - Redirect to dashboard */}
-      <Route path="/properties" element={<Navigate to="/dashboard/properties" replace />} />
-      <Route path="/properties/:id" element={<LegacyPropertyRedirect />} />
-      <Route path="/leads" element={<Navigate to="/dashboard/leads" replace />} />
-      <Route path="/leads/:id" element={<LegacyLeadRedirect />} />
-    </Routes>
-  );
-}
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import hero from "./assets/aicrm-hero.png";
 
 export default function App() {
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <NotificationProvider>
-            <AppRoutes />
-            <NotificationToast />
-          </NotificationProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+    <main className="min-h-screen bg-white text-slate-900 relative">
+
+      {/* 🌐 LANGUAGE TOGGLE */}
+      <div className="absolute top-6 right-6 flex gap-2 z-50">
+        <button
+          onClick={() => i18n.changeLanguage("en")}
+          className="px-3 py-1 bg-gray-200 rounded"
+        >
+          EN
+        </button>
+        <button
+          onClick={() => i18n.changeLanguage("es")}
+          className="px-3 py-1 bg-gray-200 rounded"
+        >
+          ES
+        </button>
+        <button
+          onClick={() => i18n.changeLanguage("pt")}
+          className="px-3 py-1 bg-gray-200 rounded"
+        >
+          PT
+        </button>
+      </div>
+
+      {/* HERO */}
+      <section className="w-full bg-gradient-to-br from-white via-slate-50 to-blue-50/30 pt-32 pb-20">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12">
+
+          <div className="flex-1">
+            <h1 className="text-5xl md:text-6xl font-semibold leading-tight mb-6 text-slate-900">
+              {t("hero_title")}
+            </h1>
+
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+              {t("hero_sub")}
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => navigate("/buy")}
+                className="px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition"
+              >
+                {t("cta_explore") || "Explore Listings"}
+              </button>
+
+              <button
+                onClick={() => navigate("/list-property")}
+                className="px-6 py-3 border border-blue-500 text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition"
+              >
+                {t("cta_list") || "List Your Property"}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <img
+              src={hero}
+              alt="Listo Qasa Hero"
+              className="w-full max-w-lg rounded-2xl shadow-xl border border-slate-200"
+            />
+          </div>
+
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="w-full py-10 bg-slate-50 text-center text-xs text-slate-400">
+        © {new Date().getFullYear()} Listo Qasa — AI Real Estate Platform
+      </footer>
+
+    </main>
   );
 }
