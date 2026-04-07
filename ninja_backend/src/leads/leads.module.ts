@@ -15,9 +15,10 @@ import { AILeadController } from './controllers/ai-lead.controller';
 import { IntegrationsModule } from '../integrations/integrations.module';
 import { IntelligenceModule } from '../intelligence/intelligence.module';
 import { MessagingModule } from '../messaging/messaging.module';
+import { WebhooksModule } from '../integrations/webhooks/webhooks.module';
 
 @Module({
-  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule)],
+  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule],
   controllers: [AILeadController, LeadsController],
   providers: [
     LeadsService,

@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import { Property, PropertyStatus, CreatePropertyDto, UpdatePropertyDto, PropertyMedia } from './entities/property.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { StorageService } from '../integrations/storage/storage.service';
+import { WebhooksService } from '../integrations/webhooks/webhooks.service';
 
 const MAX_IMAGES_PER_PROPERTY = 20;
 const DEFAULT_PAGE_LIMIT = 20;
@@ -17,6 +18,7 @@ export class PropertiesService {
     private readonly db: DatabaseService,
     private readonly eventLogger: EventLoggerService,
     private readonly storageService: StorageService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   /** User can assign to team only if they belong to it (member or owner). */
@@ -125,6 +127,19 @@ export class PropertiesService {
       status: property.status,
       price: property.price,
     });
+
+    // Fire webhooks (async, never blocks)
+    if (resolvedTeamId) {
+      this.webhooksService.triggerWebhooks('property.created', resolvedTeamId, {
+        id: property.id,
+        title: property.title,
+        type: property.type,
+        status: property.status,
+        price: property.price,
+        address: property.address,
+        city: property.city,
+      });
+    }
 
     return property;
   }

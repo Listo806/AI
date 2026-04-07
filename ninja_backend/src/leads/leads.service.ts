@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import { Lead, LeadStatus, CreateLeadDto, UpdateLeadDto } from './entities/lead.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { LeadAIService } from './lead-ai.service';
+import { WebhooksService } from '../integrations/webhooks/webhooks.service';
 
 @Injectable()
 export class LeadsService {
@@ -10,6 +11,7 @@ export class LeadsService {
     private readonly db: DatabaseService,
     private readonly eventLogger: EventLoggerService,
     private readonly leadAI: LeadAIService,
+    private readonly webhooksService: WebhooksService,
   ) {}
 
   async createPublic(createLeadDto: CreateLeadDto): Promise<Lead> {
@@ -76,6 +78,18 @@ export class LeadsService {
     // Auto-create a contact linked to this lead when we have a team
     if (teamId) {
       await this.createContactForLead(lead, assignedTo || null);
+    }
+
+    // Fire webhooks (async, never blocks)
+    if (teamId) {
+      this.webhooksService.triggerWebhooks('lead.created', teamId, {
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        status: lead.status,
+        source: lead.source,
+      });
     }
 
     return lead;
@@ -152,6 +166,18 @@ export class LeadsService {
     // Auto-create a contact linked to this lead when we have a team
     if (teamId) {
       await this.createContactForLead(lead, userId);
+    }
+
+    // Fire webhooks (async, never blocks)
+    if (teamId) {
+      this.webhooksService.triggerWebhooks('lead.created', teamId, {
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        status: lead.status,
+        source: lead.source,
+      });
     }
 
     return lead;
@@ -362,6 +388,27 @@ export class LeadsService {
     // Log status change if status was updated
     if (updateLeadDto.status !== undefined && updateLeadDto.status !== oldStatus) {
       await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updateLeadDto.status);
+
+      // Fire webhooks for status change (async, never blocks)
+      if (teamId) {
+        this.webhooksService.triggerWebhooks('lead.status.changed', teamId, {
+          id: updatedLead.id,
+          name: updatedLead.name,
+          old_status: oldStatus,
+          new_status: updateLeadDto.status,
+        });
+
+        // Fire additional webhook if lead was qualified
+        if (updateLeadDto.status === LeadStatus.QUALIFIED) {
+          this.webhooksService.triggerWebhooks('lead.qualified', teamId, {
+            id: updatedLead.id,
+            name: updatedLead.name,
+            email: updatedLead.email,
+            phone: updatedLead.phone,
+            status: updatedLead.status,
+          });
+        }
+      }
     }
 
     // Log assignment if assignedTo was updated
@@ -429,6 +476,16 @@ export class LeadsService {
     
     if (oldStatus === 'new' && updatedLead.status === 'contacted') {
       await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updatedLead.status);
+
+      // Fire webhook for status change (async, never blocks)
+      if (teamId) {
+        this.webhooksService.triggerWebhooks('lead.status.changed', teamId, {
+          id: updatedLead.id,
+          name: updatedLead.name,
+          old_status: oldStatus,
+          new_status: updatedLead.status,
+        });
+      }
     }
 
     // Return full lead with AI fields by calling findById

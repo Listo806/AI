@@ -475,6 +475,14 @@ async function setupDatabase() {
       console.log('✓ Site assist (Webflow) migration completed');
     }
 
+    // Webhooks & Email Provider
+    const migration48Path = path.join(__dirname, '../src/database/migrations/048_webhooks_email.sql');
+    if (fs.existsSync(migration48Path)) {
+      const migration48SQL = fs.readFileSync(migration48Path, 'utf8');
+      await pool.query(migration48SQL);
+      console.log('✓ Webhooks & email provider migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();
