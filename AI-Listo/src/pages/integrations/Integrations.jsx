@@ -26,14 +26,7 @@ export default function Integrations() {
       status: 'available',
       description: t('integrations.zapierDescUpdated'),
       icon: 'zap',
-      path: '/dashboard/integrations/webhooks',
-    },
-    {
-      name: t('integrations.crmIntegration'),
-      status: 'coming_soon',
-      description: t('integrations.crmIntegrationDesc'),
-      icon: 'link',
-      path: null,
+      path: '/dashboard/integrations/zapier',
     },
     {
       name: t('integrations.webhooks'),

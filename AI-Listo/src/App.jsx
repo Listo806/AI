@@ -30,6 +30,7 @@ import Team from "./pages/team/Team";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
+import ZapierPage from "./pages/integrations/ZapierPage";
 import { WhatsAppPrimaryRoute, WhatsAppQrRoute } from "./components/WhatsAppRoute";
 import Instagram from "./pages/instagram/Instagram";
 import Billing from "./pages/billing/Billing";
@@ -153,6 +154,7 @@ function AppRoutes() {
         <Route path="integrations" element={<Integrations />} />
         <Route path="integrations/webhooks" element={<WebhooksPage />} />
         <Route path="integrations/email" element={<EmailProviderPage />} />
+        <Route path="integrations/zapier" element={<ZapierPage />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />
