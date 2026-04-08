@@ -23,6 +23,7 @@ import { VaModule } from './va/va.module';
 import { AdminModule } from './admin/admin.module';
 import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
 import { SiteAssistModule } from './site-assist/site-assist.module';
+import { VacationRentalsModule } from './vacation-rentals/vacation-rentals.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { SiteAssistModule } from './site-assist/site-assist.module';
     AdminModule,
     WhatsAppQrModule,
     SiteAssistModule,
+    VacationRentalsModule,
   ],
   controllers: [AppController],
 })

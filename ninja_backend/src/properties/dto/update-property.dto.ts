@@ -1,6 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsNumber, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PropertyType, PropertyStatus } from '../entities/property.entity';
+import { PropertyType, PropertyStatus, ListingType } from '../entities/property.entity';
 
 export class UpdatePropertyDto {
   @IsOptional()
@@ -36,6 +36,10 @@ export class UpdatePropertyDto {
   @IsOptional()
   @IsEnum(PropertyType)
   type?: PropertyType;
+
+  @IsOptional()
+  @IsEnum(ListingType)
+  listingType?: ListingType;
 
   @IsOptional()
   @IsString()

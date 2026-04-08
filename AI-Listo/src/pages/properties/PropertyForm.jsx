@@ -35,6 +35,7 @@ export default function PropertyForm() {
     zipCode: '',
     price: '',
     type: 'sale',
+    listingType: 'sale',
     propertyType: '',
     status: 'draft',
     bedrooms: '',
@@ -82,6 +83,7 @@ export default function PropertyForm() {
         zipCode: property.zipCode || '',
         price: property.price || '',
         type: property.type || 'sale',
+        listingType: property.listingType || property.type || 'sale',
         propertyType: property.propertyType || '',
         status: property.status || 'draft',
         bedrooms: property.bedrooms || '',
@@ -125,6 +127,7 @@ export default function PropertyForm() {
         zipCode: formData.zipCode || null,
         price: formData.price ? parseFloat(formData.price) : null,
         type: formData.type,
+        listingType: formData.listingType,
         propertyType: formData.propertyType || null,
         status: formData.status,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
@@ -252,6 +255,23 @@ export default function PropertyForm() {
                 </select>
               </div>
 
+              <div className="crm-form-field">
+                <label htmlFor="listingType">Listing Type</label>
+                <select
+                  id="listingType"
+                  name="listingType"
+                  value={formData.listingType}
+                  onChange={handleChange}
+                  disabled={loading}
+                >
+                  <option value="sale">Sale</option>
+                  <option value="rent">Rent</option>
+                  <option value="vacation">Vacation Rental</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="crm-form-row">
               <div className="crm-form-field">
                 <label htmlFor="price">{t('properties.price')}</label>
                 <input

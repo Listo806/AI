@@ -483,6 +483,14 @@ async function setupDatabase() {
       console.log('✓ Webhooks & email provider migration completed');
     }
 
+    // Vacation Rentals - Hard Data Separation
+    const migration49Path = path.join(__dirname, '../src/database/migrations/049_vacation_rentals.sql');
+    if (fs.existsSync(migration49Path)) {
+      const migration49SQL = fs.readFileSync(migration49Path, 'utf8');
+      await pool.query(migration49SQL);
+      console.log('✓ Vacation rentals migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

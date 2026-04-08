@@ -82,14 +82,18 @@ export class PropertiesService {
       await this.ensureUserBelongsToTeam(userId, resolvedTeamId);
     }
 
+    // Resolve listing_type: use explicit value, or derive from type
+    const listingType = createPropertyDto.listingType || createPropertyDto.type;
+
     const { rows } = await this.db.query(
       `INSERT INTO properties (
-        title, description, address, city, state, zip_code, price, type, property_type, status,
+        title, description, address, city, state, zip_code, price, type, property_type, listing_type, status,
         bedrooms, bathrooms, square_feet, lot_size, year_built, created_by, team_id,
         latitude, longitude, created_at, updated_at, published_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(), NOW(), $20)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW(), $21)
       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+                listing_type as "listingType",
                 bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                 thumbnail_url as "thumbnailUrl", latitude, longitude,
@@ -105,6 +109,7 @@ export class PropertiesService {
         createPropertyDto.price || null,
         createPropertyDto.type,
         createPropertyDto.propertyType ?? null,
+        listingType,
         status,
         createPropertyDto.bedrooms || null,
         createPropertyDto.bathrooms || null,
@@ -154,7 +159,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
-                        property_type as "propertyType",
+                        property_type as "propertyType", listing_type as "listingType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -235,7 +240,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
-                        property_type as "propertyType",
+                        property_type as "propertyType", listing_type as "listingType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];
@@ -245,6 +250,9 @@ export class PropertiesService {
     // Only published properties
     conditions.push(`status = $${paramCount++}`);
     params.push(PropertyStatus.PUBLISHED);
+
+    // HARD ENFORCEMENT: Regular search NEVER returns vacation listings
+    conditions.push(`listing_type IN ('sale', 'rent')`);
 
     // Structured filters (exact match, case-insensitive for city and propertyType)
     if (filters?.city?.trim()) {
@@ -324,7 +332,7 @@ export class PropertiesService {
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
-                        property_type as "propertyType",
+                        property_type as "propertyType", listing_type as "listingType",
                         created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
                  FROM properties`;
     const conditions: string[] = [];

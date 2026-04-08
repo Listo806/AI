@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PropertyType, PropertyStatus } from '../entities/property.entity';
+import { PropertyType, PropertyStatus, ListingType } from '../entities/property.entity';
 
 export class CreatePropertyDto {
   @IsString()
@@ -35,6 +35,10 @@ export class CreatePropertyDto {
 
   @IsEnum(PropertyType)
   type: PropertyType;
+
+  @IsOptional()
+  @IsEnum(ListingType)
+  listingType?: ListingType;
 
   @IsOptional()
   @IsString()

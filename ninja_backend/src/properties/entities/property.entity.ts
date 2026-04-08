@@ -3,6 +3,12 @@ export enum PropertyType {
   RENT = 'rent',
 }
 
+export enum ListingType {
+  SALE = 'sale',
+  RENT = 'rent',
+  VACATION = 'vacation',
+}
+
 export enum PropertyStatus {
   DRAFT = 'draft',
   PENDING_REVIEW = 'pending_review',
@@ -31,6 +37,7 @@ export interface Property {
   zipCode: string | null;
   price: number | null;
   type: PropertyType;
+  listingType: ListingType;
   status: PropertyStatus;
   origin: PropertyOrigin | null;
   bedrooms: number | null;
@@ -74,6 +81,7 @@ export interface CreatePropertyDto {
   zipCode?: string;
   price?: number;
   type: PropertyType;
+  listingType?: ListingType;
   /** Kind of property: house, apartment, condo, townhouse, land, commercial, other */
   propertyType?: string | null;
   status?: PropertyStatus;
@@ -96,6 +104,7 @@ export interface UpdatePropertyDto {
   zipCode?: string;
   price?: number;
   type?: PropertyType;
+  listingType?: ListingType;
   propertyType?: string | null;
   status?: PropertyStatus;
   bedrooms?: number;
