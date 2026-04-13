@@ -9,6 +9,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ComparableListingsService } from './services/comparable-listings.service';
 import { MatchExplanationService } from './services/match-explanation.service';
+import { PropertiesService } from '../properties/properties.service';
 
 @ApiTags('listings')
 @Controller('listings')
@@ -17,7 +18,45 @@ export class ListingsController {
   constructor(
     private readonly comparableListingsService: ComparableListingsService,
     private readonly matchExplanationService: MatchExplanationService,
+    private readonly propertiesService: PropertiesService,
   ) {}
+
+  /**
+   * GET /api/listings
+   * Published sale/rent marketplace search only. Hard-enforced in PropertiesService:
+   * listing_type IN ('sale','rent') — never vacation, regardless of query params.
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Public marketplace search (sale & rent only)',
+    description:
+      'Returns published properties with listing_type sale or rent only. Vacation listings are excluded at the database query level. Same filters as GET /properties/public (kept for backward compatibility).',
+  })
+  @ApiQuery({ name: 'city', required: false })
+  @ApiQuery({ name: 'propertyType', required: false })
+  @ApiQuery({ name: 'mode', required: false, description: 'sale or rent' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'offset', required: false })
+  @ApiResponse({ status: 200, description: 'Published sale/rent listings' })
+  async searchPublishedSaleRent(
+    @Query('city') city?: string,
+    @Query('propertyType') propertyType?: string,
+    @Query('mode') mode?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+  ) {
+    const pagination = {
+      limit: limit != null ? parseInt(limit, 10) : undefined,
+      offset: offset != null ? parseInt(offset, 10) : undefined,
+    };
+    return this.propertiesService.findPublic(
+      { city, propertyType, mode, search },
+      pagination,
+    );
+  }
 
   /**
    * GET /api/listings/:id/comps?buyerId=...

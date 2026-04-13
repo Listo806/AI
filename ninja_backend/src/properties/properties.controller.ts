@@ -27,7 +27,11 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Get('public')
-  @ApiOperation({ summary: 'Marketplace search: published properties with structured filters (no auth)' })
+  @ApiOperation({
+    summary: 'Marketplace search: published properties with structured filters (no auth)',
+    description:
+      'Same data as GET /listings (sale/rent only). Prefer GET /listings for the public marketplace; this route remains for backward compatibility.',
+  })
   @ApiQuery({ name: 'city', required: false, description: 'Exact city filter (case-insensitive)' })
   @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, land, commercial, villa, office' })
   @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale or rent' })

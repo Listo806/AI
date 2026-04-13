@@ -32,14 +32,21 @@ class ApiClient {
       ...options.headers,
     };
 
+    const pathOnly = endpoint.split('?')[0];
+
     // Check if this is a public endpoint (doesn't require auth)
-    const isPublicEndpoint = endpoint.includes('/public') || 
-                            endpoint.includes('/auth/signin') || 
-                            endpoint.includes('/auth/signup') ||
-                            endpoint.includes('/auth/login') ||
-                            endpoint.includes('/properties/public') ||
-                            endpoint.includes('/leads/whatsapp') ||
-                            endpoint.includes('/whatsapp/webview-resolve');
+    const isPublicEndpoint =
+      endpoint.includes('/public') ||
+      endpoint.includes('/auth/signin') ||
+      endpoint.includes('/auth/signup') ||
+      endpoint.includes('/auth/login') ||
+      endpoint.includes('/properties/public') ||
+      pathOnly === '/listings' ||
+      pathOnly.startsWith('/listings/') ||
+      pathOnly === '/vacation-rentals/search' ||
+      pathOnly.startsWith('/vacation-rentals/search') ||
+      endpoint.includes('/leads/whatsapp') ||
+      endpoint.includes('/whatsapp/webview-resolve');
 
     // Only add auth header if we have a token and it's not a public endpoint
     if (this.accessToken && !isPublicEndpoint) {

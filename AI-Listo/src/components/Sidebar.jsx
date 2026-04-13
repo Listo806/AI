@@ -151,7 +151,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
                   `crm-nav-link ${isActive ? "active" : ""}`
                 }
                 onClick={onClose}
-                end={item.path === "/dashboard/home"}
+                end={item.path === "/dashboard/home" || item.path === "/vacation-rentals/search"}
                 title={isCollapsed ? t(item.labelKey) : undefined}
               >
                 {item.isWhatsApp ? (

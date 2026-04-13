@@ -3,10 +3,31 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './PropertyMap.css';
 
-// You'll need to set VITE_MAPBOX_TOKEN in your .env file
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+// VITE_MAPBOX_TOKEN (primary) or VITE_MAPBOX_ACCESS_TOKEN (common alternate name)
+const MAPBOX_TOKEN =
+  import.meta.env.VITE_MAPBOX_TOKEN ||
+  import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
+  '';
 
-export default function PropertyMap({ properties = [], selectedProperty = null, onPropertyClick = null }) {
+function formatMarkerPrice(property, variant) {
+  const n = variant === 'perNight' ? property.pricePerNight ?? property.price : property.price;
+  if (n == null || Number.isNaN(Number(n))) return null;
+  const formatted = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(Number(n));
+  return variant === 'perNight' ? `${formatted}/nt` : formatted;
+}
+
+export default function PropertyMap({
+  properties = [],
+  selectedProperty = null,
+  onPropertyClick = null,
+  /** 'dot' | 'pricePill' — pricePill shows price (or pricePerNight + /nt when priceMarkerVariant is perNight) */
+  markerStyle = 'dot',
+  priceMarkerVariant = 'default',
+}) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef([]);
@@ -14,24 +35,34 @@ export default function PropertyMap({ properties = [], selectedProperty = null, 
 
   useEffect(() => {
     if (!mapContainer.current || !MAPBOX_TOKEN) {
-      console.warn('Mapbox token not found. Set VITE_MAPBOX_TOKEN in your .env file');
+      console.warn(
+        'Mapbox token not found. Set VITE_MAPBOX_TOKEN (or VITE_MAPBOX_ACCESS_TOKEN) in .env and restart the dev server.',
+      );
       return;
     }
 
-    // Initialize map
     if (!map.current) {
       mapboxgl.accessToken = MAPBOX_TOKEN;
-      
+
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: selectedProperty 
+        center: selectedProperty
           ? [selectedProperty.longitude || -122.4194, selectedProperty.latitude || 37.7749]
-          : [-122.4194, 37.7749], // Default to San Francisco
+          : [-122.4194, 37.7749],
         zoom: selectedProperty ? 14 : 10,
       });
 
-      map.current.on('load', () => {
+      const m = map.current;
+      const bumpResize = () => {
+        try {
+          m.resize();
+        } catch (_) {}
+      };
+
+      m.on('load', () => {
+        bumpResize();
+        requestAnimationFrame(bumpResize);
         setMapLoaded(true);
       });
     }
@@ -57,10 +88,31 @@ export default function PropertyMap({ properties = [], selectedProperty = null, 
       if (!property.latitude || !property.longitude) return;
 
       const el = document.createElement('div');
-      el.className = 'property-marker';
+      const pillText = markerStyle === 'pricePill' ? formatMarkerPrice(property, priceMarkerVariant) : null;
+      if (markerStyle === 'pricePill' && pillText) {
+        el.className = 'property-marker-price-pill';
+        el.textContent = pillText;
+      } else {
+        el.className = 'property-marker';
+        if (markerStyle === 'pricePill' && !pillText) {
+          el.title = property.title || 'Listing';
+        }
+      }
       if (selectedProperty && selectedProperty.id === property.id) {
         el.className += ' property-marker-selected';
       }
+
+      const popupPrice =
+        priceMarkerVariant === 'perNight' && (property.pricePerNight != null || property.price != null)
+          ? (() => {
+              const v = property.pricePerNight ?? property.price;
+              return v != null
+                ? `<p><strong>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(v))}/night</strong></p>`
+                : '';
+            })()
+          : property.price
+            ? `<p><strong>$${Number(property.price).toLocaleString()}</strong></p>`
+            : '';
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([property.longitude, property.latitude])
@@ -70,7 +122,7 @@ export default function PropertyMap({ properties = [], selectedProperty = null, 
               <div class="map-popup">
                 <h4>${property.title || 'Untitled Property'}</h4>
                 <p>${property.address || ''} ${property.city || ''} ${property.state || ''}</p>
-                ${property.price ? `<p><strong>$${property.price.toLocaleString()}</strong></p>` : ''}
+                ${popupPrice}
                 ${onPropertyClick ? `<button class="map-popup-btn" data-property-id="${property.id}">View Details</button>` : ''}
               </div>
             `)
@@ -114,7 +166,7 @@ export default function PropertyMap({ properties = [], selectedProperty = null, 
         });
       }
     }
-  }, [properties, mapLoaded, selectedProperty, onPropertyClick]);
+  }, [properties, mapLoaded, selectedProperty, onPropertyClick, markerStyle, priceMarkerVariant]);
 
   // Center map on selected property
   useEffect(() => {
@@ -129,10 +181,42 @@ export default function PropertyMap({ properties = [], selectedProperty = null, 
     }
   }, [selectedProperty, mapLoaded]);
 
+  // Grid/sticky panels often get size after first paint — Mapbox needs an explicit resize.
+  useEffect(() => {
+    const el = mapContainer.current;
+    if (!el || !map.current) return;
+
+    const ro = new ResizeObserver(() => {
+      if (map.current) {
+        try {
+          map.current.resize();
+        } catch (_) {}
+      }
+    });
+    ro.observe(el);
+
+    const onWin = () => {
+      if (map.current) {
+        try {
+          map.current.resize();
+        } catch (_) {}
+      }
+    };
+    window.addEventListener('resize', onWin);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', onWin);
+    };
+  }, [mapLoaded]);
+
   if (!MAPBOX_TOKEN) {
     return (
       <div className="property-map-container property-map-error">
-        <p>Mapbox token not configured. Please set VITE_MAPBOX_TOKEN in your .env file.</p>
+        <p>
+          Mapbox token not configured. Add VITE_MAPBOX_TOKEN or VITE_MAPBOX_ACCESS_TOKEN to{' '}
+          <code>.env</code> and restart <code>npm run dev</code>.
+        </p>
       </div>
     );
   }

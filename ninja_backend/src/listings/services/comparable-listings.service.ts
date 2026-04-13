@@ -70,7 +70,9 @@ export class ComparableListingsService {
       return []; // Can't match without zone
     }
 
-    // Build query
+    const targetListingType = (targetListing as { listingType?: string }).listingType || 'sale';
+
+    // Build query (same listing_type vertical as target — no cross-type comps)
     let query = `
       SELECT 
         p.id, p.title, p.description, p.address, p.city, p.state, 
@@ -85,13 +87,15 @@ export class ComparableListingsService {
       FROM properties p
       WHERE p.id != $1
       AND p.status = 'published'
-      AND p.type = $2
-      AND p.bedrooms = $3
-      AND p.zone_id = $4
+      AND p.listing_type = $2
+      AND p.type = $3
+      AND p.bedrooms = $4
+      AND p.zone_id = $5
     `;
 
     const params: any[] = [
       listingId,
+      targetListingType,
       targetListing.type,
       targetListing.bedrooms,
       targetListing.zoneId,
@@ -169,6 +173,7 @@ export class ComparableListingsService {
   private async getListing(listingId: string): Promise<(Property & { zoneId: string | null }) | null> {
     const { rows } = await this.db.query(
       `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+              listing_type as "listingType",
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
               latitude, longitude,

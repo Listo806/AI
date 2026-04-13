@@ -4,9 +4,98 @@ import { DatabaseService } from '../database/database.service';
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
+const PROPERTY_TYPE_VALUES = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'] as const;
+
+type VacationSearchRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zipCode: string | null;
+  price: number | string | null;
+  type: string;
+  status: string;
+  listingType: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  squareFeet: number | null;
+  lotSize: number | null;
+  yearBuilt: number | null;
+  thumbnailUrl: string | null;
+  latitude: string | number | null;
+  longitude: string | number | null;
+  propertyType: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+};
+
 @Injectable()
 export class VacationRentalsService {
   constructor(private readonly db: DatabaseService) {}
+
+  /** Primary image fallback: first image by display_order when thumbnail_url is empty. */
+  private async attachThumbnailUrlList(rows: VacationSearchRow[]): Promise<VacationSearchRow[]> {
+    const idsNeedingFallback = rows.filter((p) => p.thumbnailUrl == null || p.thumbnailUrl === '').map((p) => p.id);
+    let fallbackMap: Record<string, string> = {};
+    if (idsNeedingFallback.length > 0) {
+      const { rows: mediaRows } = await this.db.query(
+        `SELECT DISTINCT ON (property_id) property_id as "propertyId", url
+         FROM property_media
+         WHERE property_id = ANY($1::uuid[]) AND type = 'image'
+         ORDER BY property_id, is_primary DESC, display_order ASC`,
+        [idsNeedingFallback],
+      );
+      fallbackMap = mediaRows.reduce((acc: Record<string, string>, r: { propertyId: string; url: string }) => {
+        acc[r.propertyId] = r.url;
+        return acc;
+      }, {});
+    }
+    return rows.map((p) => ({
+      ...p,
+      thumbnailUrl: (p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : fallbackMap[p.id]) || null,
+    }));
+  }
+
+  private shortDescription(text: string | null, max = 140): string | null {
+    if (!text) return null;
+    const t = text.replace(/\s+/g, ' ').trim();
+    if (!t) return null;
+    return t.length <= max ? t : `${t.slice(0, max - 1)}…`;
+  }
+
+  private mapVacationApiRow(row: VacationSearchRow, hadDateAvailabilityFilter: boolean) {
+    const priceNum = row.price != null && row.price !== '' ? Number(row.price) : null;
+    const lat = row.latitude != null ? parseFloat(String(row.latitude)) : null;
+    const lng = row.longitude != null ? parseFloat(String(row.longitude)) : null;
+    return {
+      id: row.id,
+      title: row.title,
+      primaryImage: row.thumbnailUrl,
+      city: row.city,
+      neighborhood: null as string | null,
+      state: row.state,
+      address: row.address,
+      zipCode: row.zipCode,
+      pricePerNight: priceNum,
+      listingType: 'vacation' as const,
+      availabilityStatus: hadDateAvailabilityFilter ? ('available' as const) : ('unknown' as const),
+      latitude: lat,
+      longitude: lng,
+      shortDescription: this.shortDescription(row.description),
+      description: row.description,
+      bedrooms: row.bedrooms,
+      bathrooms: row.bathrooms,
+      squareFeet: row.squareFeet,
+      propertyType: row.propertyType,
+      publishedAt: row.publishedAt,
+      createdAt: row.createdAt,
+      thumbnailUrl: row.thumbnailUrl,
+      price: priceNum,
+    };
+  }
 
   /**
    * Search vacation listings with hard enforcement.
@@ -20,6 +109,18 @@ export class VacationRentalsService {
     search?: string;
     limit?: number;
     offset?: number;
+    /** Inclusive minimum nightly price */
+    minPrice?: number;
+    /** Inclusive maximum nightly price */
+    maxPrice?: number;
+    /** Minimum bedroom count (listings must have bedrooms >= this) */
+    bedroomsMin?: number;
+    /** Minimum bathrooms (listings must have bathrooms >= this) */
+    bathroomsMin?: number;
+    /** Exact property kind (house, apartment, …) */
+    propertyType?: string;
+    /** Server-side ordering (listing_type=vacation still hard-enforced) */
+    sort?: 'recommended' | 'price_asc' | 'price_desc';
   }) {
     const conditions: string[] = [];
     const params: any[] = [];
@@ -35,6 +136,14 @@ export class VacationRentalsService {
       params.push(filters.city.trim());
     }
 
+    if (filters?.propertyType?.trim()) {
+      const pt = filters.propertyType.trim().toLowerCase();
+      if (PROPERTY_TYPE_VALUES.includes(pt as (typeof PROPERTY_TYPE_VALUES)[number])) {
+        conditions.push(`LOWER(TRIM(p.property_type)) = $${paramCount++}`);
+        params.push(pt);
+      }
+    }
+
     if (filters?.search?.trim()) {
       const searchTerm = `%${filters.search.trim()}%`;
       conditions.push(`(
@@ -45,6 +154,32 @@ export class VacationRentalsService {
       )`);
       params.push(searchTerm);
       paramCount++;
+    }
+
+    if (filters?.minPrice != null && Number.isFinite(filters.minPrice) && filters.minPrice >= 0) {
+      conditions.push(`p.price IS NOT NULL AND p.price >= $${paramCount++}`);
+      params.push(filters.minPrice);
+    }
+    if (filters?.maxPrice != null && Number.isFinite(filters.maxPrice) && filters.maxPrice >= 0) {
+      conditions.push(`p.price IS NOT NULL AND p.price <= $${paramCount++}`);
+      params.push(filters.maxPrice);
+    }
+    if (
+      filters?.bedroomsMin != null &&
+      Number.isFinite(filters.bedroomsMin) &&
+      Number.isInteger(filters.bedroomsMin) &&
+      filters.bedroomsMin >= 1
+    ) {
+      conditions.push(`p.bedrooms IS NOT NULL AND p.bedrooms >= $${paramCount++}`);
+      params.push(filters.bedroomsMin);
+    }
+    if (
+      filters?.bathroomsMin != null &&
+      Number.isFinite(filters.bathroomsMin) &&
+      filters.bathroomsMin > 0
+    ) {
+      conditions.push(`p.bathrooms IS NOT NULL AND p.bathrooms >= $${paramCount++}`);
+      params.push(filters.bathroomsMin);
     }
 
     // ── Availability: exclude listings with overlapping bookings ──
@@ -67,6 +202,14 @@ export class VacationRentalsService {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const sort = filters?.sort ?? 'recommended';
+    let orderBy = `ORDER BY p.published_at DESC NULLS LAST, p.created_at DESC`;
+    if (sort === 'price_asc') {
+      orderBy = `ORDER BY p.price ASC NULLS LAST, p.published_at DESC NULLS LAST, p.created_at DESC`;
+    } else if (sort === 'price_desc') {
+      orderBy = `ORDER BY p.price DESC NULLS LAST, p.published_at DESC NULLS LAST, p.created_at DESC`;
+    }
 
     // Count
     const { rows: countRows } = await this.db.query(
@@ -91,12 +234,16 @@ export class VacationRentalsService {
               p.published_at AS "publishedAt"
        FROM properties p
        ${whereClause}
-       ORDER BY p.published_at DESC, p.created_at DESC
+       ${orderBy}
        LIMIT $${paramCount++} OFFSET $${paramCount++}`,
       [...params, limit, offset],
     );
 
-    return { items: rows, total, limit, offset };
+    const hadDateAvailabilityFilter = Boolean(filters?.checkIn && filters?.checkOut);
+    const withThumbs = await this.attachThumbnailUrlList(rows as VacationSearchRow[]);
+    const items = withThumbs.map((r) => this.mapVacationApiRow(r, hadDateAvailabilityFilter));
+
+    return { items, total, limit, offset };
   }
 
   // ── Bookings ────────────────────────────────────────────────────

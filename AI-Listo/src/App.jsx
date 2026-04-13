@@ -40,6 +40,8 @@ import AccountBilling from "./pages/account/Billing";
 import AccountSettings from "./pages/account/Settings";
 import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
+import VacationRentalsSearch from "./pages/vacation-rentals/VacationRentalsSearch";
+import VacationRentalsSearchDetail from "./pages/vacation-rentals/VacationRentalsSearchDetail";
 import View from "./pages/view/View";
 import PlatformListings from "./pages/platform/PlatformListings";
 import VaUpload from "./pages/va/VaUpload";
@@ -87,6 +89,8 @@ function AppRoutes() {
       {/* Public Listings (no auth required) */}
       <Route path="/listings" element={<Listings />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
+      <Route path="/vacation-rentals/search" element={<VacationRentalsSearch />} />
+      <Route path="/vacation-rentals/search/:id" element={<VacationRentalsSearchDetail />} />
       {/* Tokenized webview link from WhatsApp property card */}
       <Route path="/view" element={<View />} />
 
