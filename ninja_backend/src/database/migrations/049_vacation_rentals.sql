@@ -19,9 +19,16 @@ UPDATE properties SET listing_type = type WHERE listing_type IS NULL;
 ALTER TABLE properties ALTER COLUMN listing_type SET NOT NULL;
 
 -- 5. Add CHECK constraint to enforce allowed values
+-- Skip if migration 051 has already replaced it with the marketplace/vacation vertical
 DO $$ BEGIN
-  ALTER TABLE properties ADD CONSTRAINT chk_listing_type
-    CHECK (listing_type IN ('sale', 'rent', 'vacation'));
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chk_properties_listing_type_vertical'
+      AND conrelid = 'properties'::regclass
+  ) THEN
+    ALTER TABLE properties ADD CONSTRAINT chk_listing_type
+      CHECK (listing_type IN ('sale', 'rent', 'vacation'));
+  END IF;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

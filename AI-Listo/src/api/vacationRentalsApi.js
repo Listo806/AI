@@ -12,6 +12,8 @@ export async function searchVacationRentals({
   maxPrice,
   bedrooms,
   bathrooms,
+  guests,
+  amenities,
   propertyType,
   sort,
   limit = 20,
@@ -26,9 +28,17 @@ export async function searchVacationRentals({
   if (maxPrice != null && maxPrice !== '') q.set('maxPrice', String(maxPrice));
   if (bedrooms != null && bedrooms !== '') q.set('bedrooms', String(bedrooms));
   if (bathrooms != null && bathrooms !== '') q.set('bathrooms', String(bathrooms));
+  if (guests != null && guests !== '') q.set('guests', String(guests));
+  if (amenities && String(amenities).trim()) q.set('amenities', String(amenities).trim());
   if (propertyType?.trim()) q.set('propertyType', propertyType.trim());
   if (sort && sort !== 'recommended') q.set('sort', String(sort));
   q.set('limit', String(limit));
   q.set('offset', String(offset));
   return apiClient.request(`/vacation-rentals/search?${q.toString()}`);
 }
+
+/** Public — list reviews for a property */
+export async function getPropertyReviews(propertyId) {
+  return apiClient.request(`/properties/${propertyId}/reviews`);
+}
+

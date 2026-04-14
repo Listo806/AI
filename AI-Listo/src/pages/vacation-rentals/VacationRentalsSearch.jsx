@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import PropertyMap from "../../components/PropertyMap";
 import ContactModal from "../../components/ContactModal";
 import PropertyWhatsAppModal from "../../components/PropertyWhatsAppModal";
+import ImageCarousel from "../../components/ImageCarousel";
+import { AMENITIES, formatAmenity } from "../../lib/amenities";
 import { searchVacationRentals } from "../../api/vacationRentalsApi";
 import "../listings/Listings.css";
 import "./VacationRentalsSearch.css";
@@ -20,9 +22,16 @@ const PROPERTY_TYPE_OPTIONS = [
 const PAGE_SIZE = 20;
 
 function normalizeVacationProperty(p) {
+  const thumb = p.thumbnailUrl || p.primaryImage || null;
+  const rawImages = Array.isArray(p.images) ? p.images.filter(Boolean) : [];
+  const images = rawImages.length > 0 ? rawImages : (thumb ? [thumb] : []);
   return {
     ...p,
-    thumbnailUrl: p.thumbnailUrl || p.primaryImage || null,
+    thumbnailUrl: thumb,
+    images,
+    amenities: Array.isArray(p.amenities) ? p.amenities : [],
+    ratingAvg: p.ratingAvg != null ? Number(p.ratingAvg) : 0,
+    ratingCount: p.ratingCount != null ? Number(p.ratingCount) : 0,
     price: p.pricePerNight ?? p.price ?? null,
   };
 }
@@ -65,11 +74,14 @@ function exploreCardSubtitle(property, t) {
     parts.push(`${property.bedrooms} bd`);
   if (property.bathrooms != null && property.bathrooms !== "")
     parts.push(`${property.bathrooms} ba`);
+  if (property.maxGuests != null && property.maxGuests !== "")
+    parts.push(`${property.maxGuests} guest${Number(property.maxGuests) === 1 ? "" : "s"}`);
   return parts.join(" · ") || property.address || "";
 }
 
 export default function VacationRentalsSearch() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,13 +93,12 @@ export default function VacationRentalsSearch() {
   const urlCheckIn = searchParams.get("checkIn") || "";
   const urlCheckOut = searchParams.get("checkOut") || "";
   const urlGuests = searchParams.get("guests") || "";
-  const urlPage = parseInt(searchParams.get("page") || "1", 10) || 1;
-
   const [pagination, setPagination] = useState({
     total: 0,
     limit: PAGE_SIZE,
     offset: 0,
   });
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [draftCity, setDraftCity] = useState(urlCity);
   const [draftCheckIn, setDraftCheckIn] = useState(urlCheckIn);
@@ -115,6 +126,11 @@ export default function VacationRentalsSearch() {
     return () => document.removeEventListener("mousedown", onDown);
   }, [searchPopover]);
 
+  const urlAmenities = (searchParams.get("amenities") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   const [filters, setFilters] = useState({
     propertyType: urlPropertyType,
     search: urlSearch,
@@ -122,6 +138,7 @@ export default function VacationRentalsSearch() {
     maxPrice: "",
     bedrooms: "",
     bathrooms: "",
+    amenities: urlAmenities,
   });
 
   const [sortBy, setSortBy] = useState("newest");
@@ -146,25 +163,23 @@ export default function VacationRentalsSearch() {
   }, [urlPropertyType, urlSearch]);
 
   useEffect(() => {
-    loadProperties();
+    // Any filter/sort change resets the result set from offset 0
+    loadProperties({ reset: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     urlPropertyType,
     urlCity,
     urlSearch,
     urlCheckIn,
     urlCheckOut,
-    urlPage,
+    urlGuests,
     filters.minPrice,
     filters.maxPrice,
     filters.bedrooms,
     filters.bathrooms,
+    filters.amenities.join(","),
     sortBy,
   ]);
-
-  const totalPages = Math.max(1, Math.ceil(pagination.total / PAGE_SIZE));
-  const currentPage = Math.min(Math.max(1, urlPage), totalPages);
-  const effectivePage =
-    pagination.total > 0 ? currentPage : Math.max(1, urlPage);
 
   const vacationDetailPath = (propertyId) => {
     const q = searchParams.toString();
@@ -173,25 +188,18 @@ export default function VacationRentalsSearch() {
       : `/vacation-rentals/search/${propertyId}`;
   };
 
-  useEffect(() => {
-    if (
-      pagination.total > 0 &&
-      urlPage > Math.ceil(pagination.total / PAGE_SIZE)
-    ) {
-      const params = new URLSearchParams(searchParams);
-      params.delete("page");
-      setSearchParams(params);
-    }
-  }, [pagination.total, urlPage, searchParams, setSearchParams]);
-
   const sortToApi = () => {
     if (sortBy === "price-low") return "price-low";
     if (sortBy === "price-high") return "price-high";
     return "recommended";
   };
 
-  const loadProperties = async () => {
-    setLoading(true);
+  const loadProperties = async ({ reset = true, offsetOverride = null } = {}) => {
+    if (reset) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError(null);
 
     try {
@@ -211,6 +219,12 @@ export default function VacationRentalsSearch() {
         filters.bathrooms !== "" && !Number.isNaN(parseFloat(filters.bathrooms))
           ? parseFloat(filters.bathrooms)
           : undefined;
+      const guestsNum =
+        urlGuests !== "" && !Number.isNaN(parseInt(urlGuests, 10))
+          ? parseInt(urlGuests, 10)
+          : undefined;
+
+      const nextOffset = offsetOverride != null ? offsetOverride : (reset ? 0 : properties.length);
 
       const res = await searchVacationRentals({
         city: urlCity || undefined,
@@ -222,36 +236,46 @@ export default function VacationRentalsSearch() {
         maxPrice: maxP,
         bedrooms: bed,
         bathrooms: bath,
+        guests: guestsNum,
+        amenities: filters.amenities.length > 0 ? filters.amenities.join(",") : undefined,
         sort: sortToApi(),
         limit: PAGE_SIZE,
-        offset: (effectivePage - 1) * PAGE_SIZE,
+        offset: nextOffset,
       });
 
       const raw = Array.isArray(res?.items) ? res.items : [];
-      setProperties(raw.map(normalizeVacationProperty));
+      const normalized = raw.map(normalizeVacationProperty);
+
+      if (reset) {
+        setProperties(normalized);
+        setSelectedId(null);
+      } else {
+        setProperties((prev) => {
+          const seen = new Set(prev.map((p) => p.id));
+          return [...prev, ...normalized.filter((p) => !seen.has(p.id))];
+        });
+      }
 
       if (res && typeof res === "object" && !Array.isArray(res)) {
         setPagination({
           total: res.total ?? raw.length,
           limit: res.limit ?? PAGE_SIZE,
-          offset: res.offset ?? 0,
+          offset: res.offset ?? nextOffset,
         });
       }
     } catch (err) {
       console.error("Failed to load vacation rentals:", err);
       setError(err.message || "Failed to load vacation rentals");
-      setProperties([]);
+      if (reset) setProperties([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
-  const goToPage = (page) => {
-    const p = Math.max(1, Math.min(page, totalPages));
-    const params = new URLSearchParams(searchParams);
-    if (p === 1) params.delete("page");
-    else params.set("page", String(p));
-    setSearchParams(params);
+  const loadMore = () => {
+    if (loadingMore || loading) return;
+    loadProperties({ reset: false });
   };
 
   const patchUrl = (updates) => {
@@ -334,7 +358,8 @@ export default function VacationRentalsSearch() {
     filters.minPrice ||
     filters.maxPrice ||
     filters.bedrooms ||
-    filters.bathrooms;
+    filters.bathrooms ||
+    (filters.amenities && filters.amenities.length > 0);
 
   const clearAllFilters = () => {
     const next = new URLSearchParams();
@@ -350,6 +375,7 @@ export default function VacationRentalsSearch() {
       maxPrice: "",
       bedrooms: "",
       bathrooms: "",
+      amenities: [],
     });
     setSelectedId(null);
   };
@@ -537,14 +563,6 @@ export default function VacationRentalsSearch() {
             )}
           </div>
 
-          <div className="vacation-sticky-util">
-            <Link to="/buy" className="vacation-sticky-link">
-              Marketplace listings
-            </Link>
-            <Link to="/sign-in" className="vacation-sticky-link">
-              Sign In
-            </Link>
-          </div>
         </div>
       </header>
 
@@ -686,6 +704,40 @@ export default function VacationRentalsSearch() {
                   </button>
                 )}
               </div>
+
+              {/* Amenities */}
+              <div className="vacation-amenities-filter">
+                <p className="vacation-amenities-label">Amenities</p>
+                <div className="vacation-amenities-grid">
+                  {AMENITIES.map((a) => {
+                    const active = filters.amenities.includes(a.slug);
+                    return (
+                      <button
+                        type="button"
+                        key={a.slug}
+                        className={`vacation-amenity-pill ${active ? "is-active" : ""}`}
+                        onClick={() => {
+                          setFilters((f) => ({
+                            ...f,
+                            amenities: active
+                              ? f.amenities.filter((s) => s !== a.slug)
+                              : [...f.amenities, a.slug],
+                          }));
+                          // Also reflect in URL for shareability
+                          const next = active
+                            ? filters.amenities.filter((s) => s !== a.slug)
+                            : [...filters.amenities, a.slug];
+                          patchUrl({ amenities: next.join(",") });
+                        }}
+                        aria-pressed={active}
+                      >
+                        <span className="vacation-amenity-icon" aria-hidden>{a.icon}</span>
+                        <span>{a.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -768,28 +820,18 @@ export default function VacationRentalsSearch() {
                         }}
                       >
                         <div className="listings-card-media">
-                          <Link
-                            to={vacationDetailPath(property.id)}
-                            className="listings-card-image-wrap"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {property.thumbnailUrl ? (
-                              <img
-                                src={property.thumbnailUrl}
-                                alt=""
-                                className="listings-card-image"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div
-                                className="listings-card-image listings-card-image--placeholder"
-                                aria-hidden
-                              />
-                            )}
-                          </Link>
+                          <ImageCarousel
+                            images={property.images}
+                            alt={property.title || ''}
+                            onClickImage={(e) => {
+                              e.stopPropagation();
+                              navigate(vacationDetailPath(property.id));
+                            }}
+                            className="vacation-card-carousel"
+                          />
                         </div>
                         <div className="listings-card-body">
-                          <div className="listings-card-topline">
+                          <div className="listings-card-topline vacation-card-topline">
                             <h3 className="listings-card-title">
                               <Link
                                 to={vacationDetailPath(property.id)}
@@ -798,17 +840,35 @@ export default function VacationRentalsSearch() {
                                 {property.title || "Untitled Property"}
                               </Link>
                             </h3>
+                            {Number(property.ratingAvg) > 0 && (
+                              <span className="vacation-card-rating" aria-label={`Rating ${Number(property.ratingAvg).toFixed(1)} out of 5`}>
+                                ★ {Number(property.ratingAvg).toFixed(1)}
+                                {Number(property.ratingCount) > 0 && (
+                                  <span className="vacation-card-rating-count"> ({property.ratingCount})</span>
+                                )}
+                              </span>
+                            )}
                           </div>
                           <p className="listings-card-subtitle">
                             {exploreCardSubtitle(property, t)}
                           </p>
-                          {dateLine && (
-                            <p className="listings-card-meta-line">{dateLine}</p>
-                          )}
-                          {!dateLine && (
-                            <p className="listings-card-meta-line">
-                              Vacation rental
-                            </p>
+                          {Array.isArray(property.amenities) && property.amenities.length > 0 && (
+                            <div className="vacation-card-amenities">
+                              {property.amenities.slice(0, 3).map((slug) => {
+                                const tag = formatAmenity(slug);
+                                if (!tag) return null;
+                                return (
+                                  <span key={slug} className="vacation-card-amenity-tag">
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                              {property.amenities.length > 3 && (
+                                <span className="vacation-card-amenity-tag vacation-card-amenity-more">
+                                  +{property.amenities.length - 3} more
+                                </span>
+                              )}
+                            </div>
                           )}
                           <div className="listings-card-price-row">
                             {property.price != null ? (
@@ -828,63 +888,30 @@ export default function VacationRentalsSearch() {
                             )}
                           </div>
                           <div
-                            className="listings-card-actions listings-card-actions--compact"
+                            className="vacation-card-cta-row"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <div className="listings-action-buttons">
-                              <button
-                                type="button"
-                                onClick={() => setWhatsappProperty(property)}
-                                className="listings-btn listings-btn-whatsapp listings-btn--sm"
-                              >
-                                WhatsApp
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleContactAgent(property)}
-                                className="listings-btn listings-btn-contact listings-btn--sm"
-                              >
-                                Contact
-                              </button>
-                            </div>
                             <Link
                               to={vacationDetailPath(property.id)}
-                              className="listings-card-detail-link"
+                              className="vacation-card-detail-link"
                             >
-                              View details
+                              View details →
                             </Link>
                           </div>
-                          <p className="listings-card-footnote">
-                            Listed {formatDate(property.createdAt)}
-                          </p>
                         </div>
                       </article>
                     ))}
                   </div>
 
-                  {pagination.total > PAGE_SIZE && (
-                    <div className="listings-pagination">
+                  {properties.length < pagination.total && (
+                    <div className="vacation-load-more">
                       <button
                         type="button"
-                        className="listings-pagination-btn"
-                        onClick={() => goToPage(currentPage - 1)}
-                        disabled={currentPage <= 1}
-                        aria-label="Previous page"
+                        className="listings-btn listings-btn-secondary vacation-load-more-btn"
+                        onClick={loadMore}
+                        disabled={loadingMore}
                       >
-                        ‹ Previous
-                      </button>
-                      <span className="listings-pagination-info">
-                        Page {currentPage} of {totalPages} ({pagination.total}{" "}
-                        properties)
-                      </span>
-                      <button
-                        type="button"
-                        className="listings-pagination-btn"
-                        onClick={() => goToPage(currentPage + 1)}
-                        disabled={currentPage >= totalPages}
-                        aria-label="Next page"
-                      >
-                        Next ›
+                        {loadingMore ? "Loading…" : `Load more (${pagination.total - properties.length} more)`}
                       </button>
                     </div>
                   )}

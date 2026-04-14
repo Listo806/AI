@@ -398,3 +398,212 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+/* Card carousel: override listings-card-media default size */
+.vacation-rentals-page .listings-card-media {
+  margin: -20px -20px 14px -20px;
+  padding: 0;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+}
+
+.vacation-rentals-page .vacation-card-carousel {
+  border-radius: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.vacation-rentals-page .vacation-card-carousel .ic-slide {
+  border-radius: 0;
+}
+
+/* Clean "View details →" CTA (subtle, no buttons) */
+.vacation-rentals-page .vacation-card-cta-row {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vacation-rentals-page .vacation-card-detail-link {
+  color: #0f172a;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0;
+  transition: color 0.15s;
+}
+
+.vacation-rentals-page .vacation-card-detail-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+/* Airbnb-style card spacing */
+.vacation-rentals-page .listings-card {
+  min-height: auto;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid transparent;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.vacation-rentals-page .listings-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.vacation-rentals-page .listings-card-body {
+  padding: 0;
+  gap: 4px;
+}
+
+.vacation-rentals-page .listings-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.vacation-rentals-page .listings-card-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.vacation-rentals-page .listings-card-meta-line {
+  display: none;
+}
+
+.vacation-rentals-page .listings-card-price-row {
+  margin-top: 6px;
+}
+
+.vacation-rentals-page .listings-card-price {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.vacation-rentals-page .listings-card-price-note {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+/* Rating star inline next to title */
+.vacation-rentals-page .vacation-card-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.vacation-rentals-page .vacation-card-rating {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-top: 3px;
+}
+
+.vacation-rentals-page .vacation-card-rating-count {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 12px;
+  margin-left: 2px;
+}
+
+/* Amenity chips on cards */
+.vacation-rentals-page .vacation-card-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 2px 0;
+}
+
+.vacation-rentals-page .vacation-card-amenity-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.vacation-rentals-page .vacation-card-amenity-more {
+  background: transparent;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* Amenities filter grid (in expanded filter panel) */
+.vacation-amenities-filter {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.vacation-amenities-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vacation-amenities-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vacation-amenity-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vacation-amenity-pill:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.vacation-amenity-pill.is-active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+.vacation-amenity-icon {
+  font-size: 14px;
+}
+
+/* Load More */
+.vacation-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0 16px 0;
+}
+
+.vacation-load-more-btn {
+  min-width: 220px;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+}

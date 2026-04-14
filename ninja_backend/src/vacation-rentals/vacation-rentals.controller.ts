@@ -70,6 +70,8 @@ export class VacationRentalsController {
   @ApiQuery({ name: 'maxPrice', required: false, description: 'Maximum nightly price (inclusive)' })
   @ApiQuery({ name: 'bedrooms', required: false, description: 'Minimum bedrooms (integer ≥ 1)' })
   @ApiQuery({ name: 'bathrooms', required: false, description: 'Minimum bathrooms (e.g. 1, 1.5, 2)' })
+  @ApiQuery({ name: 'guests', required: false, description: 'Minimum guest capacity (integer ≥ 1)' })
+  @ApiQuery({ name: 'amenities', required: false, description: 'Comma-separated amenity slugs (e.g. wifi,pool,kitchen)' })
   @ApiQuery({ name: 'propertyType', required: false, description: 'house | apartment | land | commercial | villa | office' })
   @ApiQuery({
     name: 'sort',
@@ -93,6 +95,8 @@ export class VacationRentalsController {
     @Query('maxPrice') maxPrice?: string,
     @Query('bedrooms') bedrooms?: string,
     @Query('bathrooms') bathrooms?: string,
+    @Query('guests') guests?: string,
+    @Query('amenities') amenities?: string,
     @Query('propertyType') propertyType?: string,
     @Query('sort') sort?: string,
     @Query('listing_type') _ignoredListingType?: string,
@@ -114,6 +118,8 @@ export class VacationRentalsController {
       maxPrice: maxP,
       bedroomsMin: parseOptionalMinBedrooms(bedrooms),
       bathroomsMin: parseOptionalMinBathrooms(bathrooms),
+      guestsMin: parseOptionalMinBedrooms(guests),
+      amenities: amenities ? amenities.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
       propertyType: propertyType?.trim() || undefined,
       sort: parseVacationSort(sort),
     });

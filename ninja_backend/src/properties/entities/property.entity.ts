@@ -50,6 +50,8 @@ export interface Property {
   origin: PropertyOrigin | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  maxGuests: number | null;
+  amenities: string[];
   squareFeet: number | null;
   lotSize: number | null;
   yearBuilt: number | null;
@@ -96,6 +98,8 @@ export interface CreatePropertyDto {
   status?: PropertyStatus;
   bedrooms?: number;
   bathrooms?: number;
+  maxGuests?: number;
+  amenities?: string[];
   squareFeet?: number;
   lotSize?: number;
   yearBuilt?: number;
@@ -118,6 +122,8 @@ export interface UpdatePropertyDto {
   status?: PropertyStatus;
   bedrooms?: number;
   bathrooms?: number;
+  maxGuests?: number;
+  amenities?: string[];
   squareFeet?: number;
   lotSize?: number;
   yearBuilt?: number;

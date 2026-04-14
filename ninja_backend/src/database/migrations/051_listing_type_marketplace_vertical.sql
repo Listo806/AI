@@ -5,6 +5,8 @@
 
 ALTER TABLE properties DROP CONSTRAINT IF EXISTS chk_listing_type;
 ALTER TABLE properties DROP CONSTRAINT IF EXISTS properties_type_check;
+ALTER TABLE properties DROP CONSTRAINT IF EXISTS chk_properties_listing_type_vertical;
+ALTER TABLE properties DROP CONSTRAINT IF EXISTS chk_properties_marketplace_type;
 
 ALTER TABLE properties ALTER COLUMN type DROP NOT NULL;
 

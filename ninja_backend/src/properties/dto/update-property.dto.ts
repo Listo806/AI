@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsNumber, Min, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNumber, Min, IsIn, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PropertyType, PropertyStatus, ListingCategory } from '../entities/property.entity';
 
@@ -61,6 +61,17 @@ export class UpdatePropertyDto {
   @IsNumber()
   @Min(0)
   bathrooms?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  maxGuests?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  amenities?: string[];
 
   @IsOptional()
   @Type(() => Number)

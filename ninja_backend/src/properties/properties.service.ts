@@ -13,6 +13,7 @@ import {
   PropertyMedia,
   ListingCategory,
 } from './entities/property.entity';
+import { sanitizeAmenities } from './amenities.constants';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { StorageService } from '../integrations/storage/storage.service';
 import { WebhooksService } from '../integrations/webhooks/webhooks.service';
@@ -111,16 +112,26 @@ export class PropertiesService {
       insertType = createPropertyDto.type;
     }
 
+    // Auto-derive max_guests for vacation listings if not provided
+    const resolvedMaxGuests = createPropertyDto.maxGuests != null
+      ? createPropertyDto.maxGuests
+      : (insertListingType === ListingCategory.VACATION
+          ? Math.max(1, (createPropertyDto.bedrooms || 1) * 2)
+          : null);
+
+    const cleanAmenities = sanitizeAmenities(createPropertyDto.amenities);
+
     const { rows } = await this.db.query(
       `INSERT INTO properties (
         title, description, address, city, state, zip_code, price, type, property_type, listing_type, status,
-        bedrooms, bathrooms, square_feet, lot_size, year_built, created_by, team_id,
+        bedrooms, bathrooms, max_guests, amenities, square_feet, lot_size, year_built, created_by, team_id,
         latitude, longitude, created_at, updated_at, published_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, NOW(), NOW(), $21)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb, $16, $17, $18, $19, $20, $21, $22, NOW(), NOW(), $23)
       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                 listing_type as "listingType",
-                bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                bedrooms, bathrooms, max_guests as "maxGuests", amenities,
+                square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                 created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                 thumbnail_url as "thumbnailUrl", latitude, longitude,
                 property_type as "propertyType",
@@ -139,6 +150,8 @@ export class PropertiesService {
         status,
         createPropertyDto.bedrooms || null,
         createPropertyDto.bathrooms || null,
+        resolvedMaxGuests,
+        JSON.stringify(cleanAmenities),
         createPropertyDto.squareFeet || null,
         createPropertyDto.lotSize || null,
         createPropertyDto.yearBuilt || null,
@@ -447,16 +460,25 @@ export class PropertiesService {
 
   async findById(id: string): Promise<Property | null> {
     const { rows } = await this.db.query(
-      `SELECT id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
-              listing_type as "listingType",
-              COALESCE(origin, 'platform') as origin,
-              bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-              created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-              thumbnail_url as "thumbnailUrl", latitude, longitude,
-              property_type as "propertyType",
-              reviewed_by as "reviewedBy", reviewed_at as "reviewedAt", rejection_reason as "rejectionReason",
-              created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
-       FROM properties WHERE id = $1`,
+      `SELECT p.id, p.title, p.description, p.address, p.city, p.country, p.state,
+              p.zip_code as "zipCode", p.price, p.type, p.status,
+              p.listing_type as "listingType",
+              COALESCE(p.origin, 'platform') as origin,
+              p.bedrooms, p.bathrooms, p.max_guests as "maxGuests", p.amenities,
+              p.square_feet as "squareFeet", p.lot_size as "lotSize", p.year_built as "yearBuilt",
+              p.created_by as "createdBy", p.edited_by as "editedBy", p.team_id as "teamId", p.zone_id as "zoneId",
+              p.thumbnail_url as "thumbnailUrl", p.latitude, p.longitude,
+              p.property_type as "propertyType",
+              p.reviewed_by as "reviewedBy", p.reviewed_at as "reviewedAt", p.rejection_reason as "rejectionReason",
+              p.created_at as "createdAt", p.updated_at as "updatedAt", p.published_at as "publishedAt",
+              COALESCE(r.rating_avg, 0)::float as "ratingAvg",
+              COALESCE(r.rating_count, 0)::int as "ratingCount"
+       FROM properties p
+       LEFT JOIN (
+         SELECT property_id, AVG(rating)::numeric(2,1) as rating_avg, COUNT(*)::int as rating_count
+         FROM property_reviews GROUP BY property_id
+       ) r ON r.property_id = p.id
+       WHERE p.id = $1`,
       [id],
     );
     if (!rows[0]) return null;
@@ -565,6 +587,14 @@ export class PropertiesService {
       updates.push(`bathrooms = $${paramCount++}`);
       values.push(updatePropertyDto.bathrooms);
     }
+    if ((updatePropertyDto as any).maxGuests !== undefined) {
+      updates.push(`max_guests = $${paramCount++}`);
+      values.push((updatePropertyDto as any).maxGuests);
+    }
+    if (updatePropertyDto.amenities !== undefined) {
+      updates.push(`amenities = $${paramCount++}::jsonb`);
+      values.push(JSON.stringify(sanitizeAmenities(updatePropertyDto.amenities)));
+    }
     if (updatePropertyDto.squareFeet !== undefined) {
       updates.push(`square_feet = $${paramCount++}`);
       values.push(updatePropertyDto.squareFeet);
@@ -608,7 +638,8 @@ export class PropertiesService {
       `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
                  listing_type as "listingType",
-                 bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
+                 bedrooms, bathrooms, max_guests as "maxGuests", amenities,
+                 square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                  created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                  thumbnail_url as "thumbnailUrl", latitude, longitude,
                  property_type as "propertyType",

@@ -506,6 +506,22 @@ async function setupDatabase() {
       console.log('✓ Listing type marketplace/vacation vertical migration completed');
     }
 
+    // Max guests for vacation rentals
+    const migration52Path = path.join(__dirname, '../src/database/migrations/052_max_guests.sql');
+    if (fs.existsSync(migration52Path)) {
+      const migration52SQL = fs.readFileSync(migration52Path, 'utf8');
+      await pool.query(migration52SQL);
+      console.log('✓ Max guests for vacation rentals migration completed');
+    }
+
+    // Amenities + reviews for vacation rentals
+    const migration53Path = path.join(__dirname, '../src/database/migrations/053_amenities_reviews.sql');
+    if (fs.existsSync(migration53Path)) {
+      const migration53SQL = fs.readFileSync(migration53Path, 'utf8');
+      await pool.query(migration53SQL);
+      console.log('✓ Amenities + reviews migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

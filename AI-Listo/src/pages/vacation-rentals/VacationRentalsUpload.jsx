@@ -8,6 +8,7 @@ import PropertyImageUpload from '../../components/PropertyImageUpload';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { useNotification } from '../../context/NotificationContext';
+import { AMENITIES } from '../../lib/amenities';
 
 const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
 
@@ -40,6 +41,8 @@ export default function VacationRentalsUpload() {
     status: 'draft',
     bedrooms: '',
     bathrooms: '',
+    maxGuests: '',
+    amenities: [],
     squareFeet: '',
     lotSize: '',
     yearBuilt: '',
@@ -91,6 +94,8 @@ export default function VacationRentalsUpload() {
         status: property.status || 'draft',
         bedrooms: property.bedrooms || '',
         bathrooms: property.bathrooms || '',
+        maxGuests: property.maxGuests || '',
+        amenities: Array.isArray(property.amenities) ? property.amenities : [],
         squareFeet: property.squareFeet || '',
         lotSize: property.lotSize || '',
         yearBuilt: property.yearBuilt || '',
@@ -130,6 +135,8 @@ export default function VacationRentalsUpload() {
         status: formData.status,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms, 10) : null,
         bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
+        maxGuests: formData.maxGuests ? parseInt(formData.maxGuests, 10) : null,
+        amenities: Array.isArray(formData.amenities) ? formData.amenities : [],
         squareFeet: formData.squareFeet ? parseFloat(formData.squareFeet) : null,
         lotSize: formData.lotSize ? parseFloat(formData.lotSize) : null,
         yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt, 10) : null,
@@ -364,6 +371,64 @@ export default function VacationRentalsUpload() {
                 disabled={loading}
               />
             </div>
+            <div className="crm-form-field">
+              <label htmlFor="maxGuests">Max Guests</label>
+              <input
+                id="maxGuests"
+                name="maxGuests"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="e.g. 4"
+                value={formData.maxGuests}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Amenities */}
+        <div className="crm-form-section">
+          <h3 className="crm-form-section-title">Amenities</h3>
+          <p className="crm-form-hint" style={{ marginBottom: 12 }}>
+            Select what your guests will have access to.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {AMENITIES.map((a) => {
+              const active = formData.amenities.includes(a.slug);
+              return (
+                <button
+                  type="button"
+                  key={a.slug}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      amenities: active
+                        ? prev.amenities.filter((s) => s !== a.slug)
+                        : [...prev.amenities, a.slug],
+                    }))
+                  }
+                  disabled={loading}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 14px',
+                    borderRadius: 999,
+                    border: active ? '1px solid #0f172a' : '1px solid #cbd5e1',
+                    background: active ? '#0f172a' : '#fff',
+                    color: active ? '#fff' : '#334155',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span aria-hidden>{a.icon}</span>
+                  <span>{a.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

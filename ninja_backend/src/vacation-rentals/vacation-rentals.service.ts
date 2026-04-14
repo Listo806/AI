@@ -20,10 +20,15 @@ type VacationSearchRow = {
   listingType: string;
   bedrooms: number | null;
   bathrooms: number | null;
+  maxGuests: number | null;
+  amenities: string[] | null;
+  ratingAvg: number | string | null;
+  ratingCount: number | string | null;
   squareFeet: number | null;
   lotSize: number | null;
   yearBuilt: number | null;
   thumbnailUrl: string | null;
+  images?: string[];
   latitude: string | number | null;
   longitude: string | number | null;
   propertyType: string | null;
@@ -36,27 +41,49 @@ type VacationSearchRow = {
 export class VacationRentalsService {
   constructor(private readonly db: DatabaseService) {}
 
-  /** Primary image fallback: first image by display_order when thumbnail_url is empty. */
+  /**
+   * Fetches up to 6 images per listing for the card carousel and
+   * backfills thumbnailUrl when the property row has none.
+   * Images are ordered: is_primary first, then by display_order.
+   */
   private async attachThumbnailUrlList(rows: VacationSearchRow[]): Promise<VacationSearchRow[]> {
-    const idsNeedingFallback = rows.filter((p) => p.thumbnailUrl == null || p.thumbnailUrl === '').map((p) => p.id);
-    let fallbackMap: Record<string, string> = {};
-    if (idsNeedingFallback.length > 0) {
-      const { rows: mediaRows } = await this.db.query(
-        `SELECT DISTINCT ON (property_id) property_id as "propertyId", url
-         FROM property_media
-         WHERE property_id = ANY($1::uuid[]) AND type = 'image'
-         ORDER BY property_id, is_primary DESC, display_order ASC`,
-        [idsNeedingFallback],
-      );
-      fallbackMap = mediaRows.reduce((acc: Record<string, string>, r: { propertyId: string; url: string }) => {
-        acc[r.propertyId] = r.url;
-        return acc;
-      }, {});
+    const ids = rows.map((p) => p.id);
+    if (ids.length === 0) return rows;
+
+    const { rows: mediaRows } = await this.db.query(
+      `SELECT property_id AS "propertyId", url, is_primary AS "isPrimary", display_order AS "displayOrder"
+       FROM property_media
+       WHERE property_id = ANY($1::uuid[]) AND type = 'image'
+       ORDER BY property_id,
+                is_primary DESC,
+                display_order ASC NULLS LAST,
+                created_at ASC`,
+      [ids],
+    );
+
+    const imagesByProperty: Record<string, string[]> = {};
+    for (const m of mediaRows as { propertyId: string; url: string }[]) {
+      if (!imagesByProperty[m.propertyId]) imagesByProperty[m.propertyId] = [];
+      if (imagesByProperty[m.propertyId].length < 6) {
+        imagesByProperty[m.propertyId].push(m.url);
+      }
     }
-    return rows.map((p) => ({
-      ...p,
-      thumbnailUrl: (p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : fallbackMap[p.id]) || null,
-    }));
+
+    return rows.map((p) => {
+      const propImages = imagesByProperty[p.id] || [];
+      const thumb = p.thumbnailUrl && p.thumbnailUrl !== '' ? p.thumbnailUrl : (propImages[0] || null);
+      // Build ordered images list: ensure the thumbnail is first, then the rest (deduped)
+      let images = propImages;
+      if (thumb) {
+        const rest = propImages.filter((u) => u !== thumb);
+        images = [thumb, ...rest];
+      }
+      return {
+        ...p,
+        thumbnailUrl: thumb,
+        images,
+      };
+    });
   }
 
   private shortDescription(text: string | null, max = 140): string | null {
@@ -88,11 +115,16 @@ export class VacationRentalsService {
       description: row.description,
       bedrooms: row.bedrooms,
       bathrooms: row.bathrooms,
+      maxGuests: row.maxGuests,
+      amenities: Array.isArray(row.amenities) ? row.amenities : [],
+      ratingAvg: row.ratingAvg != null ? Number(row.ratingAvg) : 0,
+      ratingCount: row.ratingCount != null ? Number(row.ratingCount) : 0,
       squareFeet: row.squareFeet,
       propertyType: row.propertyType,
       publishedAt: row.publishedAt,
       createdAt: row.createdAt,
       thumbnailUrl: row.thumbnailUrl,
+      images: Array.isArray(row.images) ? row.images : (row.thumbnailUrl ? [row.thumbnailUrl] : []),
       price: priceNum,
     };
   }
@@ -117,6 +149,10 @@ export class VacationRentalsService {
     bedroomsMin?: number;
     /** Minimum bathrooms (listings must have bathrooms >= this) */
     bathroomsMin?: number;
+    /** Minimum guests (listings must have max_guests >= this) */
+    guestsMin?: number;
+    /** Required amenity slugs — listing must have ALL of them */
+    amenities?: string[];
     /** Exact property kind (house, apartment, …) */
     propertyType?: string;
     /** Server-side ordering (listing_type=vacation still hard-enforced) */
@@ -181,6 +217,26 @@ export class VacationRentalsService {
       conditions.push(`p.bathrooms IS NOT NULL AND p.bathrooms >= $${paramCount++}`);
       params.push(filters.bathroomsMin);
     }
+    if (
+      filters?.guestsMin != null &&
+      Number.isFinite(filters.guestsMin) &&
+      Number.isInteger(filters.guestsMin) &&
+      filters.guestsMin >= 1
+    ) {
+      conditions.push(`p.max_guests IS NOT NULL AND p.max_guests >= $${paramCount++}`);
+      params.push(filters.guestsMin);
+    }
+
+    // Amenities filter — listing must contain ALL requested slugs
+    if (Array.isArray(filters?.amenities) && filters.amenities.length > 0) {
+      const cleanSlugs = filters.amenities
+        .map((s) => String(s || '').trim().toLowerCase())
+        .filter(Boolean);
+      if (cleanSlugs.length > 0) {
+        conditions.push(`p.amenities @> $${paramCount++}::jsonb`);
+        params.push(JSON.stringify(cleanSlugs));
+      }
+    }
 
     // ── Availability: exclude listings with overlapping bookings ──
     if (filters?.checkIn && filters?.checkOut) {
@@ -226,13 +282,21 @@ export class VacationRentalsService {
       `SELECT p.id, p.title, p.description, p.address, p.city, p.state,
               p.zip_code AS "zipCode", p.price, p.type, p.status,
               p.listing_type AS "listingType",
-              p.bedrooms, p.bathrooms, p.square_feet AS "squareFeet",
+              p.bedrooms, p.bathrooms, p.max_guests AS "maxGuests",
+              COALESCE(p.amenities, '[]'::jsonb) AS amenities,
+              p.square_feet AS "squareFeet",
               p.lot_size AS "lotSize", p.year_built AS "yearBuilt",
               p.thumbnail_url AS "thumbnailUrl", p.latitude, p.longitude,
               p.property_type AS "propertyType",
               p.created_at AS "createdAt", p.updated_at AS "updatedAt",
-              p.published_at AS "publishedAt"
+              p.published_at AS "publishedAt",
+              COALESCE(rev.rating_avg, 0)::float AS "ratingAvg",
+              COALESCE(rev.rating_count, 0)::int AS "ratingCount"
        FROM properties p
+       LEFT JOIN (
+         SELECT property_id, AVG(rating)::numeric(2,1) AS rating_avg, COUNT(*)::int AS rating_count
+         FROM property_reviews GROUP BY property_id
+       ) rev ON rev.property_id = p.id
        ${whereClause}
        ${orderBy}
        LIMIT $${paramCount++} OFFSET $${paramCount++}`,
