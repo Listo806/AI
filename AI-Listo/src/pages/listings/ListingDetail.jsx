@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { getPropertyMedia } from '../../api/propertiesApi';
@@ -11,6 +11,7 @@ import './Listings.css';
 export default function ListingDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || '';
   const [property, setProperty] = useState(null);
@@ -35,6 +36,11 @@ export default function ListingDetail() {
       ]);
       if (data.status !== 'published') {
         setError('Property not available');
+        return;
+      }
+      const lt = (data.listingType || data.listing_type || '').toLowerCase();
+      if (lt === 'vacation') {
+        navigate(`/vacation-rentals/search/${id}`, { replace: true });
         return;
       }
       setProperty(data);
@@ -257,8 +263,14 @@ export default function ListingDetail() {
             )}
 
             <div style={{ marginTop: '32px', textAlign: 'center' }}>
-              <Link 
-                to={typeParam ? `/listings?type=${typeParam}` : '/listings'} 
+              <Link
+                to={
+                  typeParam === 'sale'
+                    ? '/buy'
+                    : typeParam === 'rent'
+                      ? '/rent'
+                      : '/listings'
+                }
                 className="listings-btn listings-btn-secondary"
               >
                 ← Back to Listings

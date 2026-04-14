@@ -538,8 +538,8 @@ export default function VacationRentalsSearch() {
           </div>
 
           <div className="vacation-sticky-util">
-            <Link to="/listings" className="vacation-sticky-link">
-              Property listings
+            <Link to="/buy" className="vacation-sticky-link">
+              Marketplace listings
             </Link>
             <Link to="/sign-in" className="vacation-sticky-link">
               Sign In
@@ -895,6 +895,7 @@ export default function VacationRentalsSearch() {
                     className={`vacation-map-panel ${mobilePanel === "list" ? "" : "vacation-map-visible-mobile"}`}
                   >
                     <PropertyMap
+                      mapRegion="ecuador"
                       properties={mapProperties}
                       selectedProperty={selectedMapProperty}
                       onPropertyClick={handleMapPropertyClick}

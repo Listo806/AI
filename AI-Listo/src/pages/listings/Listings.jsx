@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
@@ -24,14 +24,18 @@ function marketExploreSubtitle(property, t) {
 export default function Listings() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Get type, propertyType, search, city, page from URL parameters
-  const urlType = searchParams.get('type') || '';
+
+  /** BUY (/buy) → sale; RENT (/rent) → rent; /listings → browse both unless ?type= */
+  const pathDefaultType =
+    location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+  const urlTypeFromQuery = searchParams.get('type') || '';
+  const effectiveMode = urlTypeFromQuery || pathDefaultType;
   const urlPropertyType = searchParams.get('propertyType') || '';
   const urlSearch = searchParams.get('search') || '';
   const urlCity = searchParams.get('city') || '';
@@ -44,7 +48,7 @@ export default function Listings() {
   
   // Filters
   const [filters, setFilters] = useState({
-    type: urlType,
+    type: effectiveMode,
     propertyType: urlPropertyType,
     city: urlCity,
     search: urlSearch,
@@ -84,16 +88,25 @@ export default function Listings() {
 
   // Update filters when URL changes
   useEffect(() => {
-    const urlType = searchParams.get('type') || '';
+    const qpType = searchParams.get('type') || '';
+    const pathDef =
+      location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+    const mode = qpType || pathDef;
     const urlPropertyType = searchParams.get('propertyType') || '';
     const urlSearch = searchParams.get('search') || '';
     const urlCity = searchParams.get('city') || '';
-    setFilters(prev => ({ ...prev, type: urlType, propertyType: urlPropertyType, city: urlCity, search: urlSearch }));
-  }, [searchParams]);
+    setFilters((prev) => ({
+      ...prev,
+      type: mode,
+      propertyType: urlPropertyType,
+      city: urlCity,
+      search: urlSearch,
+    }));
+  }, [searchParams, location.pathname]);
 
   useEffect(() => {
     loadProperties();
-  }, [urlType, urlPropertyType, urlCity, urlSearch, urlPage]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage]);
 
   // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
   useEffect(() => {
@@ -134,7 +147,7 @@ export default function Listings() {
 
     try {
       const queryParams = new URLSearchParams();
-      if (urlType) queryParams.append('mode', urlType);
+      if (effectiveMode) queryParams.append('mode', effectiveMode);
       if (urlPropertyType) queryParams.append('propertyType', urlPropertyType);
       if (urlCity) queryParams.append('city', urlCity);
       if (urlSearch) queryParams.append('search', urlSearch);
@@ -299,7 +312,7 @@ export default function Listings() {
     <div className="listings-page">
       <header className="listings-header">
         <div className="listings-header-content">
-          <h1 className="listings-title">Property Listings</h1>
+          <h1 className="listings-title">Marketplace Listings</h1>
           <div className="listings-header-actions">
             <Link to="/vacation-rentals/search" className="listings-btn listings-btn-secondary">
               Vacation rentals
@@ -354,15 +367,20 @@ export default function Listings() {
                   const newType = e.target.value;
                   setFilters({ ...filters, type: newType });
                   const params = new URLSearchParams(searchParams);
-                  if (newType) params.set('type', newType); else params.delete('type');
+                  if (newType) params.set('type', newType);
+                  else params.delete('type');
                   params.delete('page');
-                  setSearchParams(params);
+                  let nextPath = location.pathname;
+                  if (newType === 'sale') nextPath = '/buy';
+                  else if (newType === 'rent') nextPath = '/rent';
+                  else nextPath = '/listings';
+                  navigate({ pathname: nextPath, search: params.toString() ? `?${params.toString()}` : '' });
                 }}
                 className="listings-select"
               >
-                <option value="">All (Sale/Rent)</option>
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
+                <option value="">All (Buy / Rent)</option>
+                <option value="sale">Buy</option>
+                <option value="rent">Rent</option>
               </select>
               <select
                 value={filters.propertyType}
@@ -516,8 +534,11 @@ export default function Listings() {
                 >
                   <div className="listings-grid listings-grid--split">
                     {properties.map((property) => {
-                      const detailPath = urlType ? `/listings/${property.id}?type=${urlType}` : `/listings/${property.id}`;
-                      const typeLabel = property.type === 'sale' ? 'For sale' : property.type === 'rent' ? 'For rent' : '';
+                      const detailPath = effectiveMode
+                        ? `/listings/${property.id}?type=${effectiveMode}`
+                        : `/listings/${property.id}`;
+                      const typeLabel =
+                        property.type === 'sale' ? 'Buy' : property.type === 'rent' ? 'Rent' : '';
                       return (
                         <article key={property.id} className="listings-card listings-card--explore">
                           <div className="listings-card-media">
@@ -616,10 +637,13 @@ export default function Listings() {
                     className={`listings-map-panel ${mobilePanel === 'list' ? '' : 'listings-map-panel--visible-mobile'}`}
                   >
                     <PropertyMap
+                      mapRegion="ecuador"
                       properties={mapProperties}
                       markerStyle="pricePill"
                       onPropertyClick={(property) => {
-                        const path = urlType ? `/listings/${property.id}?type=${urlType}` : `/listings/${property.id}`;
+                        const path = effectiveMode
+                          ? `/listings/${property.id}?type=${effectiveMode}`
+                          : `/listings/${property.id}`;
                         navigate(path);
                       }}
                     />

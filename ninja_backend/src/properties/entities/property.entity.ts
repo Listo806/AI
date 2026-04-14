@@ -1,11 +1,16 @@
+/** Transaction type for marketplace listings only (BUY → sale, RENT → rent). */
 export enum PropertyType {
   SALE = 'sale',
   RENT = 'rent',
 }
 
-export enum ListingType {
-  SALE = 'sale',
-  RENT = 'rent',
+/**
+ * Product vertical: shared `properties` table, different rules.
+ * - marketplace: homes for sale or for rent (long-term); `type` is sale | rent
+ * - vacation: short-term only; `type` must be NULL
+ */
+export enum ListingCategory {
+  MARKETPLACE = 'marketplace',
   VACATION = 'vacation',
 }
 
@@ -33,11 +38,14 @@ export interface Property {
   description: string | null;
   address: string | null;
   city: string | null;
+  /** Normalized lowercase for marketplace (e.g. ecuador) */
+  country: string | null;
   state: string | null;
   zipCode: string | null;
   price: number | null;
-  type: PropertyType;
-  listingType: ListingType;
+  /** sale | rent for marketplace; NULL for vacation */
+  type: PropertyType | null;
+  listingType: ListingCategory;
   status: PropertyStatus;
   origin: PropertyOrigin | null;
   bedrooms: number | null;
@@ -80,8 +88,9 @@ export interface CreatePropertyDto {
   state?: string;
   zipCode?: string;
   price?: number;
-  type: PropertyType;
-  listingType?: ListingType;
+  /** Required when listingType is marketplace; must be omitted/null for vacation */
+  type?: PropertyType | null;
+  listingType?: ListingCategory;
   /** Kind of property: house, apartment, condo, townhouse, land, commercial, other */
   propertyType?: string | null;
   status?: PropertyStatus;
@@ -103,8 +112,8 @@ export interface UpdatePropertyDto {
   state?: string;
   zipCode?: string;
   price?: number;
-  type?: PropertyType;
-  listingType?: ListingType;
+  type?: PropertyType | null;
+  listingType?: ListingCategory;
   propertyType?: string | null;
   status?: PropertyStatus;
   bedrooms?: number;
@@ -117,4 +126,3 @@ export interface UpdatePropertyDto {
   teamId?: string | null;
   thumbnailUrl?: string | null;
 }
-

@@ -35,7 +35,7 @@ export default function PropertyForm() {
     zipCode: '',
     price: '',
     type: 'sale',
-    listingType: 'sale',
+    listingType: 'marketplace',
     propertyType: '',
     status: 'draft',
     bedrooms: '',
@@ -74,6 +74,11 @@ export default function PropertyForm() {
     setLoading(true);
     try {
       const property = await apiClient.request(`/properties/${id}`);
+      const lt = (property.listingType || property.listing_type || '').toLowerCase();
+      if (lt === 'vacation') {
+        navigate(`/dashboard/vacation-rentals/upload/${id}`, { replace: true });
+        return;
+      }
       setFormData({
         title: property.title || '',
         description: property.description || '',
@@ -83,7 +88,7 @@ export default function PropertyForm() {
         zipCode: property.zipCode || '',
         price: property.price || '',
         type: property.type || 'sale',
-        listingType: property.listingType || property.type || 'sale',
+        listingType: 'marketplace',
         propertyType: property.propertyType || '',
         status: property.status || 'draft',
         bedrooms: property.bedrooms || '',
@@ -127,7 +132,7 @@ export default function PropertyForm() {
         zipCode: formData.zipCode || null,
         price: formData.price ? parseFloat(formData.price) : null,
         type: formData.type,
-        listingType: formData.listingType,
+        listingType: 'marketplace',
         propertyType: formData.propertyType || null,
         status: formData.status,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
@@ -241,7 +246,7 @@ export default function PropertyForm() {
 
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="type">{t('properties.type')}</label>
+                <label htmlFor="type">{t('properties.marketplaceListingType')}</label>
                 <select
                   id="type"
                   name="type"
@@ -250,23 +255,8 @@ export default function PropertyForm() {
                   required
                   disabled={loading}
                 >
-                  <option value="sale">{t('properties.forSale')}</option>
-                  <option value="rent">{t('properties.forRent')}</option>
-                </select>
-              </div>
-
-              <div className="crm-form-field">
-                <label htmlFor="listingType">Listing Type</label>
-                <select
-                  id="listingType"
-                  name="listingType"
-                  value={formData.listingType}
-                  onChange={handleChange}
-                  disabled={loading}
-                >
-                  <option value="sale">Sale</option>
-                  <option value="rent">Rent</option>
-                  <option value="vacation">Vacation Rental</option>
+                  <option value="sale">{t('properties.buy')}</option>
+                  <option value="rent">{t('properties.rent')}</option>
                 </select>
               </div>
             </div>

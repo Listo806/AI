@@ -21,6 +21,7 @@ const getPageTitle = (pathname) => {
     "/dashboard/leads": "Leads",
     "/dashboard/pipeline": "Pipeline",
     "/dashboard/properties": "Properties",
+    "/dashboard/vacation-rentals/upload": "Vacation listing",
     "/dashboard/platform-listings": "Marketplace Listings",
     "/dashboard/va-upload": "VA Upload",
     "/dashboard/admin/listings": "Admin: Listings",

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
-import { Property } from '../../properties/entities/property.entity';
+import { Property, ListingCategory } from '../../properties/entities/property.entity';
 
 @Injectable()
 export class ComparableListingsService {
@@ -30,6 +30,10 @@ export class ComparableListingsService {
     const targetListing = await this.getListing(listingId);
     if (!targetListing) {
       return []; // Return empty array if listing not found
+    }
+
+    if ((targetListing as { listingType?: string }).listingType === ListingCategory.VACATION) {
+      return [];
     }
 
     // Validate buyer exists
@@ -70,9 +74,7 @@ export class ComparableListingsService {
       return []; // Can't match without zone
     }
 
-    const targetListingType = (targetListing as { listingType?: string }).listingType || 'sale';
-
-    // Build query (same listing_type vertical as target — no cross-type comps)
+    // Build query (same marketplace vertical + transaction type as target — no cross-type comps)
     let query = `
       SELECT 
         p.id, p.title, p.description, p.address, p.city, p.state, 
@@ -95,7 +97,7 @@ export class ComparableListingsService {
 
     const params: any[] = [
       listingId,
-      targetListingType,
+      ListingCategory.MARKETPLACE,
       targetListing.type,
       targetListing.bedrooms,
       targetListing.zoneId,

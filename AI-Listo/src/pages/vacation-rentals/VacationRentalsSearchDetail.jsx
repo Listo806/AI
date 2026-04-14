@@ -244,6 +244,7 @@ export default function VacationRentalsSearchDetail() {
                 <h3 className="listings-detail-section-title">Location</h3>
                 <div style={{ height: '400px', borderRadius: '8px', overflow: 'hidden', marginTop: '16px' }}>
                   <PropertyMap
+                    mapRegion="ecuador"
                     properties={[property]}
                     selectedProperty={property}
                   />

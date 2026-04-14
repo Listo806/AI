@@ -491,6 +491,21 @@ async function setupDatabase() {
       console.log('✓ Vacation rentals migration completed');
     }
 
+    // Marketplace: country column + Ecuador defaults (public listings filter)
+    const migration50Path = path.join(__dirname, '../src/database/migrations/050_properties_country_ecuador.sql');
+    if (fs.existsSync(migration50Path)) {
+      const migration50SQL = fs.readFileSync(migration50Path, 'utf8');
+      await pool.query(migration50SQL);
+      console.log('✓ Properties country (Ecuador marketplace) migration completed');
+    }
+
+    const migration51Path = path.join(__dirname, '../src/database/migrations/051_listing_type_marketplace_vertical.sql');
+    if (fs.existsSync(migration51Path)) {
+      const migration51SQL = fs.readFileSync(migration51Path, 'utf8');
+      await pool.query(migration51SQL);
+      console.log('✓ Listing type marketplace/vacation vertical migration completed');
+    }
+
     console.log('Database schema created successfully!');
 
     await pool.end();

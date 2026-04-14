@@ -1,6 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { Property, PropertyStatus, CreatePropertyDto, UpdatePropertyDto, PropertyMedia } from './entities/property.entity';
+import {
+  Property,
+  PropertyStatus,
+  CreatePropertyDto,
+  UpdatePropertyDto,
+  PropertyMedia,
+  ListingCategory,
+} from './entities/property.entity';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
 import { StorageService } from '../integrations/storage/storage.service';
 import { WebhooksService } from '../integrations/webhooks/webhooks.service';
@@ -82,8 +94,22 @@ export class PropertiesService {
       await this.ensureUserBelongsToTeam(userId, resolvedTeamId);
     }
 
-    // Resolve listing_type: use explicit value, or derive from type
-    const listingType = createPropertyDto.listingType || createPropertyDto.type;
+    const category = createPropertyDto.listingType ?? ListingCategory.MARKETPLACE;
+    let insertListingType: string;
+    let insertType: string | null;
+    if (category === ListingCategory.VACATION) {
+      if (createPropertyDto.type != null) {
+        throw new BadRequestException('type must not be set for vacation listings');
+      }
+      insertListingType = ListingCategory.VACATION;
+      insertType = null;
+    } else {
+      if (!createPropertyDto.type) {
+        throw new BadRequestException('type (sale or rent) is required for marketplace listings');
+      }
+      insertListingType = ListingCategory.MARKETPLACE;
+      insertType = createPropertyDto.type;
+    }
 
     const { rows } = await this.db.query(
       `INSERT INTO properties (
@@ -107,9 +133,9 @@ export class PropertiesService {
         createPropertyDto.state || null,
         createPropertyDto.zipCode || null,
         createPropertyDto.price || null,
-        createPropertyDto.type,
+        insertType,
         createPropertyDto.propertyType ?? null,
-        listingType,
+        insertListingType,
         status,
         createPropertyDto.bedrooms || null,
         createPropertyDto.bathrooms || null,
@@ -229,6 +255,8 @@ export class PropertiesService {
       propertyType?: string;
       mode?: string;
       search?: string;
+      /** If set, must be ecuador (only supported marketplace region) */
+      country?: string;
       /** Inclusive; listing price must be >= priceMin when set */
       priceMin?: number;
       /** Inclusive; listing price must be <= priceMax when set */
@@ -236,7 +264,14 @@ export class PropertiesService {
     },
     pagination?: { limit?: number; offset?: number },
   ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
-    let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+    if (filters?.country?.trim()) {
+      const c = filters.country.trim().toLowerCase();
+      if (c !== 'ecuador') {
+        throw new BadRequestException('Only country=ecuador is supported for marketplace listings.');
+      }
+    }
+
+    let query = `SELECT id, title, description, address, city, country, state, zip_code as "zipCode", price, type, type as "listing_type", status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                         thumbnail_url as "thumbnailUrl", latitude, longitude,
@@ -251,8 +286,16 @@ export class PropertiesService {
     conditions.push(`status = $${paramCount++}`);
     params.push(PropertyStatus.PUBLISHED);
 
-    // HARD ENFORCEMENT: Regular search NEVER returns vacation listings
-    conditions.push(`listing_type IN ('sale', 'rent')`);
+    // HARD ENFORCEMENT: marketplace only — sale or rent; never vacation
+    conditions.push(`listing_type = 'marketplace'`);
+    conditions.push(`type IN ('sale', 'rent')`);
+
+    // Marketplace: Ecuador only (query-level; do not rely on frontend)
+    conditions.push(`LOWER(TRIM(country)) = $${paramCount++}`);
+    params.push('ecuador');
+
+    // Map-ready rows: require coordinates
+    conditions.push(`latitude IS NOT NULL AND longitude IS NOT NULL`);
 
     // Structured filters (exact match, case-insensitive for city and propertyType)
     if (filters?.city?.trim()) {
@@ -266,12 +309,11 @@ export class PropertiesService {
         params.push(pt);
       }
     }
-    if (filters?.mode?.trim()) {
-      const mode = filters.mode.trim().toLowerCase();
-      if (mode === 'sale' || mode === 'rent') {
-        conditions.push(`type = $${paramCount++}`);
-        params.push(mode);
-      }
+    const modeRaw = filters?.mode?.trim()?.toLowerCase();
+    const modeNorm = modeRaw === 'buy' ? 'sale' : modeRaw;
+    if (modeNorm === 'sale' || modeNorm === 'rent') {
+      conditions.push(`type = $${paramCount++}`);
+      params.push(modeNorm);
     }
 
     if (filters?.priceMin != null && Number.isFinite(filters.priceMin)) {
@@ -318,7 +360,16 @@ export class PropertiesService {
     params.push(limit, offset);
 
     const { rows } = await this.db.query(query, params);
-    const items = await this.attachThumbnailUrlList(rows);
+    const withThumbs = await this.attachThumbnailUrlList(rows);
+    const items = withThumbs.map((row: any) => ({
+      ...row,
+      // Map consumers expect numeric values.
+      price: row.price != null ? Number(row.price) : null,
+      latitude: row.latitude != null ? Number(row.latitude) : null,
+      longitude: row.longitude != null ? Number(row.longitude) : null,
+      // Compatibility for integrations expecting listing_type as sale|rent.
+      listing_type: row.type ?? null,
+    }));
     return { items, total, limit, offset };
   }
 
@@ -396,7 +447,8 @@ export class PropertiesService {
 
   async findById(id: string): Promise<Property | null> {
     const { rows } = await this.db.query(
-      `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+      `SELECT id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
+              listing_type as "listingType",
               COALESCE(origin, 'platform') as origin,
               bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
               created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
@@ -427,6 +479,23 @@ export class PropertiesService {
 
     if (updatePropertyDto.teamId !== undefined && updatePropertyDto.teamId !== null) {
       await this.ensureUserBelongsToTeam(userId, updatePropertyDto.teamId);
+    }
+
+    const curListingType =
+      (property as Property & { listingType?: string }).listingType ?? ListingCategory.MARKETPLACE;
+    const nextListingType =
+      updatePropertyDto.listingType !== undefined ? updatePropertyDto.listingType : curListingType;
+    const nextType =
+      updatePropertyDto.type !== undefined ? updatePropertyDto.type : property.type;
+
+    if (nextListingType === ListingCategory.VACATION) {
+      if (updatePropertyDto.type !== undefined && updatePropertyDto.type !== null) {
+        throw new BadRequestException('type must not be set for vacation listings');
+      }
+    } else if (nextListingType === ListingCategory.MARKETPLACE) {
+      if (!nextType) {
+        throw new BadRequestException('type (sale or rent) is required for marketplace listings');
+      }
     }
 
     const oldStatus = property.status;
@@ -464,7 +533,14 @@ export class PropertiesService {
       updates.push(`price = $${paramCount++}`);
       values.push(updatePropertyDto.price);
     }
-    if (updatePropertyDto.type !== undefined) {
+    if (updatePropertyDto.listingType !== undefined) {
+      updates.push(`listing_type = $${paramCount++}`);
+      values.push(updatePropertyDto.listingType);
+      if (updatePropertyDto.listingType === ListingCategory.VACATION) {
+        updates.push(`type = NULL`);
+      }
+    }
+    if (updatePropertyDto.type !== undefined && nextListingType !== ListingCategory.VACATION) {
       updates.push(`type = $${paramCount++}`);
       values.push(updatePropertyDto.type);
     }
@@ -530,7 +606,8 @@ export class PropertiesService {
 
     const { rows } = await this.db.query(
       `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
+       RETURNING id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
+                 listing_type as "listingType",
                  bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                  created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
                  thumbnail_url as "thumbnailUrl", latitude, longitude,

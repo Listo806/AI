@@ -28,13 +28,18 @@ export class PropertiesController {
 
   @Get('public')
   @ApiOperation({
-    summary: 'Marketplace search: published properties with structured filters (no auth)',
+    summary: 'Marketplace search: published Ecuador sale/rent with coordinates (no auth)',
     description:
-      'Same data as GET /listings (sale/rent only). Prefer GET /listings for the public marketplace; this route remains for backward compatibility.',
+      'Same rules as GET /listings: Ecuador only, lat/lng required, sale/rent only, vacation excluded. mode=buy maps to sale.',
   })
   @ApiQuery({ name: 'city', required: false, description: 'Exact city filter (case-insensitive)' })
   @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, land, commercial, villa, office' })
-  @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale or rent' })
+  @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale, rent, or buy (buy = sale)' })
+  @ApiQuery({
+    name: 'country',
+    required: false,
+    description: 'Optional; only ecuador is allowed. Results are always Ecuador-only regardless.',
+  })
   @ApiQuery({ name: 'search', required: false, description: 'Optional text search on title, address, city, description' })
   @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
   @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
@@ -43,6 +48,7 @@ export class PropertiesController {
     @Query('city') city?: string,
     @Query('propertyType') propertyType?: string,
     @Query('mode') mode?: string,
+    @Query('country') country?: string,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -52,7 +58,7 @@ export class PropertiesController {
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
     return this.propertiesService.findPublic(
-      { city, propertyType, mode, search },
+      { city, propertyType, mode, country, search },
       pagination,
     );
   }

@@ -23,19 +23,24 @@ export class ListingsController {
 
   /**
    * GET /api/listings
-   * Published sale/rent marketplace search only. Hard-enforced in PropertiesService:
-   * listing_type IN ('sale','rent') — never vacation, regardless of query params.
+   * Published marketplace only. Hard-enforced in PropertiesService:
+   * listing_type = 'marketplace' AND type IN ('sale','rent') — never vacation, regardless of query params.
    */
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Public marketplace search (sale & rent only)',
+    summary: 'Public marketplace search (sale & rent only, Ecuador only)',
     description:
-      'Returns published properties with listing_type sale or rent only. Vacation listings are excluded at the database query level. Same filters as GET /properties/public (kept for backward compatibility).',
+      'Published sale/rent listings in Ecuador only (country enforced in SQL), with latitude/longitude required. Vacation excluded. mode=buy is treated as sale. Same filters as GET /properties/public.',
   })
   @ApiQuery({ name: 'city', required: false })
   @ApiQuery({ name: 'propertyType', required: false })
-  @ApiQuery({ name: 'mode', required: false, description: 'sale or rent' })
+  @ApiQuery({ name: 'mode', required: false, description: 'sale, rent, or buy (buy = sale)' })
+  @ApiQuery({
+    name: 'country',
+    required: false,
+    description: 'Optional; only ecuador is allowed. Results are always Ecuador-only regardless.',
+  })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'offset', required: false })
@@ -44,6 +49,7 @@ export class ListingsController {
     @Query('city') city?: string,
     @Query('propertyType') propertyType?: string,
     @Query('mode') mode?: string,
+    @Query('country') country?: string,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -53,7 +59,7 @@ export class ListingsController {
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
     return this.propertiesService.findPublic(
-      { city, propertyType, mode, search },
+      { city, propertyType, mode, country, search },
       pagination,
     );
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +11,7 @@ const PAGE_SIZE = 20;
 
 export default function PropertiesList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const [properties, setProperties] = useState([]);
@@ -17,6 +19,7 @@ export default function PropertiesList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
@@ -95,10 +98,88 @@ export default function PropertiesList() {
 
       {/* Add Property Button */}
       <div style={{ marginBottom: '24px' }}>
-        <Link to="/dashboard/properties/new" className="crm-btn crm-btn-primary">
+        <button
+          type="button"
+          className="crm-btn crm-btn-primary"
+          onClick={() => setShowAddPropertyModal(true)}
+        >
           + {t('properties.addProperty')}
-        </Link>
+        </button>
       </div>
+
+      {showAddPropertyModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+          onClick={() => setShowAddPropertyModal(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choose listing type"
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              background: '#fff',
+              borderRadius: '14px',
+              padding: '22px',
+              boxShadow: '0 24px 48px rgba(15, 23, 42, 0.24)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#0f172a' }}>
+              Add Property
+            </h3>
+            <p style={{ marginTop: '10px', marginBottom: '18px', color: '#64748b' }}>
+              Select which listing flow you want to use.
+            </p>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <button
+                type="button"
+                className="crm-btn crm-btn-primary"
+                onClick={() => {
+                  setShowAddPropertyModal(false);
+                  navigate('/dashboard/properties/new');
+                }}
+              >
+                Marketplace
+              </button>
+              <button
+                type="button"
+                className="crm-btn crm-btn-secondary"
+                onClick={() => {
+                  setShowAddPropertyModal(false);
+                  navigate('/dashboard/vacation-rentals/upload');
+                }}
+              >
+                Vacation Rental
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddPropertyModal(false)}
+              style={{
+                marginTop: '14px',
+                border: 'none',
+                background: 'transparent',
+                color: '#64748b',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="crm-error">

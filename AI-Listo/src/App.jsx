@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -42,6 +42,7 @@ import Listings from "./pages/listings/Listings";
 import ListingDetail from "./pages/listings/ListingDetail";
 import VacationRentalsSearch from "./pages/vacation-rentals/VacationRentalsSearch";
 import VacationRentalsSearchDetail from "./pages/vacation-rentals/VacationRentalsSearchDetail";
+import VacationRentalsUpload from "./pages/vacation-rentals/VacationRentalsUpload";
 import View from "./pages/view/View";
 import PlatformListings from "./pages/platform/PlatformListings";
 import VaUpload from "./pages/va/VaUpload";
@@ -50,6 +51,11 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTeams from "./pages/admin/AdminTeams";
 import AdminPlans from "./pages/admin/AdminPlans";
 import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
+
+function VacationUploadPublicRedirect() {
+  const { id } = useParams();
+  return <Navigate to={`/dashboard/vacation-rentals/upload/${id}`} replace />;
+}
 
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
@@ -86,11 +92,15 @@ function AppRoutes() {
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />
       
-      {/* Public Listings (no auth required) */}
+      {/* Public Listings (no auth required) — /buy = sale, /rent = rent, /listings = browse */}
+      <Route path="/buy" element={<Listings />} />
+      <Route path="/rent" element={<Listings />} />
       <Route path="/listings" element={<Listings />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
       <Route path="/vacation-rentals/search" element={<VacationRentalsSearch />} />
       <Route path="/vacation-rentals/search/:id" element={<VacationRentalsSearchDetail />} />
+      <Route path="/vacation-rentals/upload" element={<Navigate to="/dashboard/vacation-rentals/upload" replace />} />
+      <Route path="/vacation-rentals/upload/:id" element={<VacationUploadPublicRedirect />} />
       {/* Tokenized webview link from WhatsApp property card */}
       <Route path="/view" element={<View />} />
 
@@ -123,6 +133,8 @@ function AppRoutes() {
         <Route path="properties/new" element={<PropertyForm />} />
         <Route path="properties/:id/edit" element={<PropertyForm />} />
         <Route path="properties/:id" element={<PropertyDetail />} />
+        <Route path="vacation-rentals/upload" element={<VacationRentalsUpload />} />
+        <Route path="vacation-rentals/upload/:id" element={<VacationRentalsUpload />} />
         
         {/* Platform Marketplace (Agent/Owner/User) */}
         <Route path="platform-listings" element={<PlatformListings />} />
