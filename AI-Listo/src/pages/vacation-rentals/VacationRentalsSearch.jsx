@@ -741,66 +741,84 @@ export default function VacationRentalsSearch() {
             </div>
           )}
 
-          {loading ? (
-            <div className="listings-loading">
-              <div className="listings-skeleton"></div>
-              <div className="listings-skeleton"></div>
-              <div className="listings-skeleton"></div>
-            </div>
-          ) : properties.length === 0 ? (
-            <div className="listings-empty-state vacation-empty-state">
-              <div className="listings-empty-icon">🏠</div>
-              <h3 className="listings-empty-title">
-                No vacation rentals available for these dates.
-              </h3>
-              <p className="listings-empty-text">
-                Try different dates or adjust filters. Results are always
-                vacation stays only.
-              </p>
-              <div className="vacation-empty-actions">
-                <button
-                  type="button"
-                  className="listings-btn listings-btn-secondary"
-                  onClick={modifyDatesOnly}
-                >
-                  Modify dates
-                </button>
-                <button
-                  type="button"
-                  className="listings-btn listings-btn-secondary"
-                  onClick={clearAllFilters}
-                >
-                  Clear filters
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="vacation-mobile-toggle">
-                <button
-                  type="button"
-                  className={
-                    mobilePanel === "list" ? "vacation-mobile-active" : ""
-                  }
-                  onClick={() => setMobilePanel("list")}
-                >
-                  List view
-                </button>
-                <button
-                  type="button"
-                  className={
-                    mobilePanel === "map" ? "vacation-mobile-active" : ""
-                  }
-                  onClick={() => setMobilePanel("map")}
-                >
-                  Map view
-                </button>
-              </div>
+          <div className="vacation-mobile-toggle">
+            <button
+              type="button"
+              className={
+                mobilePanel === "list" ? "vacation-mobile-active" : ""
+              }
+              onClick={() => setMobilePanel("list")}
+            >
+              List view
+            </button>
+            <button
+              type="button"
+              className={
+                mobilePanel === "map" ? "vacation-mobile-active" : ""
+              }
+              onClick={() => setMobilePanel("map")}
+            >
+              Map view
+            </button>
+          </div>
 
-              <div className="vacation-split">
-                <div
-                  className={`vacation-grid-panel ${mobilePanel === "map" ? "vacation-panel-hidden-mobile" : ""}`}
-                >
+          <div className="vacation-split">
+            <div
+              className={`vacation-grid-panel ${mobilePanel === "map" ? "vacation-panel-hidden-mobile" : ""}`}
+            >
+              {loading ? (
+                <div className="listings-grid listings-grid--split">
+                  {[1,2,3,4,5,6].map((n) => (
+                    <div key={n} className="vacation-skeleton-card">
+                      <div className="vacation-skeleton-image" />
+                      <div className="vacation-skeleton-line vacation-skeleton-line--title" />
+                      <div className="vacation-skeleton-line vacation-skeleton-line--sub" />
+                      <div className="vacation-skeleton-line vacation-skeleton-line--price" />
+                    </div>
+                  ))}
+                </div>
+              ) : properties.length === 0 ? (
+                <>
+                  <div className="listings-empty-state vacation-empty-state">
+                    <div className="listings-empty-icon">🏠</div>
+                    <h3 className="listings-empty-title">
+                      No vacation rentals available for these dates.
+                    </h3>
+                    <p className="listings-empty-text">
+                      Try different dates or adjust filters. Results are always
+                      vacation stays only.
+                    </p>
+                    <div className="vacation-empty-actions">
+                      <button
+                        type="button"
+                        className="listings-btn listings-btn-secondary"
+                        onClick={modifyDatesOnly}
+                      >
+                        Modify dates
+                      </button>
+                      <button
+                        type="button"
+                        className="listings-btn listings-btn-secondary"
+                        onClick={clearAllFilters}
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  </div>
+                  {/* Show skeleton placeholder cards below empty state */}
+                  <div className="listings-grid listings-grid--split" style={{ marginTop: 24, opacity: 0.4 }}>
+                    {[1,2,3,4,5,6].map((n) => (
+                      <div key={n} className="vacation-skeleton-card">
+                        <div className="vacation-skeleton-image" />
+                        <div className="vacation-skeleton-line vacation-skeleton-line--title" />
+                        <div className="vacation-skeleton-line vacation-skeleton-line--sub" />
+                        <div className="vacation-skeleton-line vacation-skeleton-line--price" />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div>
                   <div className="listings-grid listings-grid--split">
                     {properties.map((property) => (
                       <article
@@ -916,24 +934,23 @@ export default function VacationRentalsSearch() {
                     </div>
                   )}
                 </div>
+              )}
+            </div>
 
-                {mapProperties.length > 0 && (
-                  <div
-                    className={`vacation-map-panel ${mobilePanel === "list" ? "" : "vacation-map-visible-mobile"}`}
-                  >
-                    <PropertyMap
-                      mapRegion="ecuador"
-                      properties={mapProperties}
-                      selectedProperty={selectedMapProperty}
-                      onPropertyClick={handleMapPropertyClick}
-                      markerStyle="pricePill"
-                      priceMarkerVariant="perNight"
-                    />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+            {/* Map — ALWAYS visible (even with zero results) */}
+            <div
+              className={`vacation-map-panel ${mobilePanel === "list" ? "" : "vacation-map-visible-mobile"}`}
+            >
+              <PropertyMap
+                mapRegion="ecuador"
+                properties={mapProperties}
+                selectedProperty={selectedMapProperty}
+                onPropertyClick={handleMapPropertyClick}
+                markerStyle="pricePill"
+                priceMarkerVariant="perNight"
+              />
+            </div>
+          </div>
         </div>
       </main>
 

@@ -632,23 +632,21 @@ export default function Listings() {
                   )}
                 </div>
 
-                {mapProperties.length > 0 && (
-                  <div
-                    className={`listings-map-panel ${mobilePanel === 'list' ? '' : 'listings-map-panel--visible-mobile'}`}
-                  >
-                    <PropertyMap
-                      mapRegion="ecuador"
-                      properties={mapProperties}
-                      markerStyle="pricePill"
-                      onPropertyClick={(property) => {
-                        const path = effectiveMode
-                          ? `/listings/${property.id}?type=${effectiveMode}`
-                          : `/listings/${property.id}`;
-                        navigate(path);
-                      }}
-                    />
-                  </div>
-                )}
+                <div
+                  className={`listings-map-panel ${mobilePanel === 'list' ? '' : 'listings-map-panel--visible-mobile'}`}
+                >
+                  <PropertyMap
+                    mapRegion="ecuador"
+                    properties={mapProperties}
+                    markerStyle="pricePill"
+                    onPropertyClick={(property) => {
+                      const path = effectiveMode
+                        ? `/listings/${property.id}?type=${effectiveMode}`
+                        : `/listings/${property.id}`;
+                      navigate(path);
+                    }}
+                  />
+                </div>
               </div>
             </>
           )}
