@@ -1,0 +1,677 @@
+ html {
+     scroll-behavior: smooth;
+ }
+
+ body {
+     margin: 0;
+ }
+
+ #cortexa-ai-crm-landing {
+     --bg: #f7f9fc;
+     --card: #ffffff;
+     --text: #0f172a;
+     --muted: #5b6475;
+     --line: #e5eaf2;
+     --blue: #2563eb;
+     --blue-dark: #1d4ed8;
+     --blue-soft: #eef4ff;
+     --black: #061225;
+     --radius-xl: 28px;
+     --radius-lg: 22px;
+     --shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+     --max: 1220px;
+     background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+     color: var(--text);
+     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+     padding: 0;
+ }
+
+ #cortexa-ai-crm-landing * {
+     box-sizing: border-box;
+ }
+
+ #cortexa-ai-crm-landing .cx-wrap {
+     width: min(var(--max), calc(100% - 40px));
+     margin: 0 auto;
+ }
+
+ #cortexa-ai-crm-landing .cx-section {
+     padding: 84px 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-eyebrow {
+     display: inline-block;
+     font-size: 12px;
+     font-weight: 800;
+     letter-spacing: 0.12em;
+     text-transform: uppercase;
+     color: var(--blue);
+     margin-bottom: 16px;
+ }
+
+ #cortexa-ai-crm-landing h1,
+ #cortexa-ai-crm-landing h2,
+ #cortexa-ai-crm-landing h3,
+ #cortexa-ai-crm-landing h4,
+ #cortexa-ai-crm-landing p {
+     margin: 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-title-xl {
+     font-size: clamp(42px, 6vw, 72px);
+     line-height: 0.95;
+     letter-spacing: -0.05em;
+     font-weight: 800;
+     max-width: 640px;
+ }
+
+ #cortexa-ai-crm-landing .cx-title-lg {
+     font-size: clamp(34px, 4vw, 54px);
+     line-height: 1;
+     letter-spacing: -0.04em;
+     font-weight: 800;
+ }
+
+ #cortexa-ai-crm-landing .cx-title-md {
+     font-size: clamp(28px, 3vw, 38px);
+     line-height: 1.05;
+     letter-spacing: -0.03em;
+     font-weight: 800;
+ }
+
+ #cortexa-ai-crm-landing .cx-sub {
+     font-size: 18px;
+     line-height: 1.75;
+     color: var(--muted);
+     max-width: 650px;
+     margin-top: 22px;
+ }
+
+ #cortexa-ai-crm-landing .cx-center {
+     text-align: center;
+ }
+
+ #cortexa-ai-crm-landing .cx-btns {
+     display: flex;
+     gap: 14px;
+     flex-wrap: wrap;
+     margin-top: 30px;
+     align-items: center;
+ }
+
+ #cortexa-ai-crm-landing .cx-btn {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 10px;
+     min-height: 56px;
+     padding: 0 24px;
+     border-radius: 999px;
+     font-weight: 700;
+     text-decoration: none;
+     transition: 0.25s ease;
+     border: 1px solid transparent;
+ }
+
+ #cortexa-ai-crm-landing .cx-btn-primary {
+     background: linear-gradient(135deg, var(--blue), #3b82f6);
+     color: #fff;
+     box-shadow: 0 12px 30px rgba(37, 99, 235, 0.28);
+ }
+
+ #cortexa-ai-crm-landing .cx-btn-primary:hover {
+     transform: translateY(-2px);
+     background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+ }
+
+ #cortexa-ai-crm-landing .cx-btn-secondary {
+     background: #fff;
+     color: var(--text);
+     border-color: var(--line);
+ }
+
+ #cortexa-ai-crm-landing .cx-hero {
+     padding: 70px 0 46px;
+     position: relative;
+ }
+
+ #cortexa-ai-crm-landing .cx-hero-grid {
+     display: grid;
+     grid-template-columns: 1.02fr 1.1fr;
+     gap: 42px;
+     align-items: center;
+ }
+
+ #cortexa-ai-crm-landing .cx-highlight {
+     color: var(--blue);
+ }
+
+ #cortexa-ai-crm-landing .cx-proof {
+     display: flex;
+     align-items: center;
+     gap: 18px;
+     margin-top: 26px;
+     flex-wrap: wrap;
+ }
+
+ #cortexa-ai-crm-landing .cx-proof-badges {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+ }
+
+ #cortexa-ai-crm-landing .cx-avatar {
+     width: 42px;
+     height: 42px;
+     border-radius: 999px;
+     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+     border: 2px solid #fff;
+     margin-left: -8px;
+     box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+ }
+
+ #cortexa-ai-crm-landing .cx-avatar:first-child {
+     margin-left: 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-proof-text {
+     font-size: 14px;
+     color: var(--muted);
+ }
+
+ #cortexa-ai-crm-landing .cx-shot {
+     position: relative;
+     background: linear-gradient(180deg, #ffffff, #f4f8ff);
+     border: 1px solid #e8eef8;
+     border-radius: 26px;
+     box-shadow: var(--shadow);
+     padding: 14px;
+ }
+
+ #cortexa-ai-crm-landing .cx-shot img {
+     width: 100%;
+     display: block;
+     border-radius: 18px;
+     object-fit: cover;
+ }
+
+ #cortexa-ai-crm-landing .cx-logos {
+     display: grid;
+     grid-template-columns: repeat(6, 1fr);
+     gap: 18px;
+     align-items: center;
+     opacity: 0.72;
+     margin-top: 44px;
+ }
+
+ #cortexa-ai-crm-landing .cx-logo {
+     text-align: center;
+     font-weight: 700;
+     font-size: 15px;
+     color: #6b7280;
+ }
+
+ #cortexa-ai-crm-landing .cx-comp {
+     padding-top: 32px;
+     padding-bottom: 58px;
+ }
+
+ #cortexa-ai-crm-landing .cx-comp-grid {
+     margin-top: 40px;
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 36px;
+     max-width: 940px;
+     margin-left: auto;
+     margin-right: auto;
+ }
+
+ #cortexa-ai-crm-landing .cx-comp-col {
+     border-top: 1px solid var(--line);
+     padding-top: 18px;
+ }
+
+ #cortexa-ai-crm-landing .cx-comp-col h4 {
+     font-size: 24px;
+     margin-bottom: 18px;
+     letter-spacing: -0.03em;
+ }
+
+ #cortexa-ai-crm-landing .cx-list {
+     list-style: none;
+     padding: 0;
+     margin: 0;
+     display: grid;
+     gap: 14px;
+ }
+
+ #cortexa-ai-crm-landing .cx-list li {
+     color: var(--muted);
+     font-size: 16px;
+     line-height: 1.55;
+     padding-left: 28px;
+     position: relative;
+ }
+
+ #cortexa-ai-crm-landing .cx-list li::before {
+     position: absolute;
+     left: 0;
+     top: 0;
+     font-weight: 800;
+ }
+
+ #cortexa-ai-crm-landing .cx-list.neg li::before {
+     content: "×";
+     color: #ef4444;
+     font-size: 20px;
+     line-height: 1;
+ }
+
+ #cortexa-ai-crm-landing .cx-list.pos li::before {
+     content: "✓";
+     color: var(--blue);
+     font-size: 18px;
+     line-height: 1.1;
+ }
+
+ #cortexa-ai-crm-landing .cx-stack-wrap {
+     padding: 76px 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-stack-block {
+     background: linear-gradient(180deg, #f4f8ff 0%, #edf3ff 100%);
+     border: 1px solid #dce7fb;
+     border-radius: 34px;
+     overflow: hidden;
+     box-shadow: var(--shadow);
+ }
+
+ #cortexa-ai-crm-landing .cx-stack-row {
+     display: grid;
+     grid-template-columns: 1fr 1.06fr;
+     gap: 40px;
+     align-items: center;
+     padding: 42px;
+     border-top: 1px solid rgba(37, 99, 235, 0.08);
+ }
+
+ #cortexa-ai-crm-landing .cx-stack-row:first-child {
+     border-top: 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-stack-row.reverse {
+     grid-template-columns: 1.06fr 1fr;
+ }
+
+ #cortexa-ai-crm-landing .cx-copy p {
+     font-size: 17px;
+     line-height: 1.75;
+     color: var(--muted);
+     margin-top: 18px;
+     max-width: 520px;
+ }
+
+ #cortexa-ai-crm-landing .cx-shot.soft {
+     background: rgba(255, 255, 255, 0.82);
+ }
+
+ #cortexa-ai-crm-landing .cx-strip {
+     padding: 0 0 66px;
+ }
+
+ #cortexa-ai-crm-landing .cx-strip-inner {
+     background: radial-gradient(circle at left top, rgba(37, 99, 235, .12), transparent 32%), linear-gradient(135deg, #030b18, #071833 60%, #0a1e40);
+     border-radius: 30px;
+     color: #fff;
+     padding: 42px;
+     display: grid;
+     grid-template-columns: 1.2fr .9fr;
+     gap: 30px;
+     align-items: center;
+     overflow: hidden;
+ }
+
+ #cortexa-ai-crm-landing .cx-strip .cx-sub {
+     color: rgba(255, 255, 255, .74);
+     margin-top: 16px;
+     max-width: 520px;
+ }
+
+ #cortexa-ai-crm-landing .cx-phone {
+     max-width: 360px;
+     margin-left: auto;
+     background: #fff;
+     border-radius: 26px;
+     padding: 10px;
+     box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+ }
+
+ #cortexa-ai-crm-landing .cx-phone img {
+     width: 100%;
+     display: block;
+     border-radius: 18px;
+ }
+
+ #cortexa-ai-crm-landing .cx-grid-intro {
+     margin-bottom: 28px;
+ }
+
+ #cortexa-ai-crm-landing .cx-grid4 {
+     display: grid;
+     grid-template-columns: repeat(2, 1fr);
+     gap: 20px;
+ }
+
+ #cortexa-ai-crm-landing .cx-card {
+     background: #fff;
+     border: 1px solid var(--line);
+     border-radius: 24px;
+     box-shadow: var(--shadow);
+     padding: 24px;
+     display: grid;
+     gap: 18px;
+     min-height: 280px;
+ }
+
+ #cortexa-ai-crm-landing .cx-card h3 {
+     font-size: 28px;
+     line-height: 1.08;
+     letter-spacing: -0.03em;
+ }
+
+ #cortexa-ai-crm-landing .cx-card p {
+     color: var(--muted);
+     line-height: 1.7;
+     font-size: 16px;
+ }
+
+ #cortexa-ai-crm-landing .cx-card .cx-shot {
+     padding: 10px;
+ }
+
+ #cortexa-ai-crm-landing .cx-tools {
+     padding-top: 56px;
+ }
+
+ #cortexa-ai-crm-landing .cx-tools-grid {
+     display: grid;
+     grid-template-columns: repeat(5, 1fr);
+     gap: 18px;
+     margin-top: 34px;
+ }
+
+ #cortexa-ai-crm-landing .cx-tool {
+     background: #fff;
+     border: 1px solid var(--line);
+     border-radius: 22px;
+     padding: 22px 18px;
+     box-shadow: var(--shadow);
+     text-align: left;
+ }
+
+ #cortexa-ai-crm-landing .cx-icon {
+     width: 48px;
+     height: 48px;
+     border-radius: 14px;
+     display: grid;
+     place-items: center;
+     background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+     color: var(--blue);
+     font-weight: 800;
+     margin-bottom: 14px;
+     font-size: 18px;
+ }
+
+ #cortexa-ai-crm-landing .cx-tool h4 {
+     font-size: 20px;
+     line-height: 1.1;
+     letter-spacing: -0.02em;
+     margin-bottom: 8px;
+ }
+
+ #cortexa-ai-crm-landing .cx-tool p {
+     color: var(--muted);
+     font-size: 14px;
+     line-height: 1.65;
+ }
+
+ #cortexa-ai-crm-landing .cx-trust {
+     padding-top: 64px;
+     padding-bottom: 40px;
+ }
+
+ #cortexa-ai-crm-landing .cx-trust-grid {
+     display: grid;
+     grid-template-columns: repeat(4, 1fr);
+     gap: 18px;
+     margin-top: 30px;
+ }
+
+ #cortexa-ai-crm-landing .cx-trust-item {
+     border: 1px solid var(--line);
+     background: #fff;
+     border-radius: 22px;
+     padding: 24px;
+     box-shadow: var(--shadow);
+     text-align: center;
+ }
+
+ #cortexa-ai-crm-landing .cx-trust-item h4 {
+     font-size: 18px;
+     margin-bottom: 8px;
+ }
+
+ #cortexa-ai-crm-landing .cx-trust-item p {
+     color: var(--muted);
+     font-size: 15px;
+     line-height: 1.6;
+ }
+
+ #cortexa-ai-crm-landing .cx-faq {
+     padding-top: 24px;
+     padding-bottom: 70px;
+ }
+
+ #cortexa-ai-crm-landing .cx-faq-list {
+     max-width: 900px;
+     margin: 30px auto 0;
+     display: grid;
+     gap: 14px;
+ }
+
+ #cortexa-ai-crm-landing .cx-faq-item {
+     background: #fff;
+     border: 1px solid var(--line);
+     border-radius: 18px;
+     overflow: hidden;
+     box-shadow: var(--shadow);
+ }
+
+ #cortexa-ai-crm-landing .cx-faq-q {
+     width: 100%;
+     background: transparent;
+     border: 0;
+     text-align: left;
+     padding: 22px 24px;
+     font-size: 18px;
+     font-weight: 700;
+     color: var(--text);
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     cursor: pointer;
+ }
+
+ #cortexa-ai-crm-landing .cx-faq-a {
+     display: none;
+     padding: 0 24px 22px;
+     color: var(--muted);
+     line-height: 1.75;
+     font-size: 16px;
+ }
+
+ #cortexa-ai-crm-landing .cx-faq-item.active .cx-faq-a {
+     display: block;
+ }
+
+ #cortexa-ai-crm-landing .cx-final {
+     padding: 0 0 20px;
+ }
+
+ #cortexa-ai-crm-landing .cx-final-box {
+     background: linear-gradient(135deg, #7c3aed 0%, #ec4899 40%, #f97316 100%);
+     border-radius: 34px;
+     color: #fff;
+     padding: 46px 34px 18px;
+     text-align: center;
+     box-shadow: 0 25px 60px rgba(124, 58, 237, 0.22);
+     overflow: hidden;
+ }
+
+ #cortexa-ai-crm-landing .cx-final-box .cx-sub {
+     color: rgba(255, 255, 255, .88);
+     margin-left: auto;
+     margin-right: auto;
+ }
+
+ #cortexa-ai-crm-landing .cx-final-shot {
+     margin-top: 28px;
+     background: rgba(255, 255, 255, .18);
+     border-radius: 26px 26px 0 0;
+     padding: 14px 14px 0;
+     backdrop-filter: blur(12px);
+ }
+
+ #cortexa-ai-crm-landing .cx-final-shot img {
+     width: 100%;
+     display: block;
+     border-radius: 18px 18px 0 0;
+ }
+
+ #cortexa-ai-crm-landing .cx-note {
+     margin-top: 12px;
+     font-size: 13px;
+     color: #74809a;
+ }
+
+ .cx-topbar {
+     position: sticky;
+     top: 0;
+     z-index: 9999;
+     background: #0b1220;
+     color: #fff;
+     text-align: center;
+     padding: 10px;
+     font-size: 13px;
+ }
+
+ .cx-header {
+     position: sticky;
+     top: 0;
+     z-index: 9999;
+     width: 100%;
+     background: #000106;
+ }
+
+ .cx-header-inner {
+     max-width: 1200px;
+     margin: 0 auto;
+     padding: 0px 20px;
+
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+ }
+
+ .cx-nav button {
+     background: none;
+     border: none;
+     cursor: pointer;
+     color: #cbd5e1;
+     font-size: 14px;
+     transition: 0.2s;
+     margin: 0 25px;
+ }
+
+ .cx-nav button:hover {
+     color: #fff;
+ }
+
+ .cx-logo-img {
+     height: 84px;
+     width: auto;
+     object-fit: contain;
+ }
+
+ .cx-login {
+     margin-right: 15px;
+     color: #fff;
+     text-decoration: none;
+ }
+
+ @media (max-width: 1100px) {
+
+     #cortexa-ai-crm-landing .cx-hero-grid,
+     #cortexa-ai-crm-landing .cx-stack-row,
+     #cortexa-ai-crm-landing .cx-stack-row.reverse,
+     #cortexa-ai-crm-landing .cx-strip-inner {
+         grid-template-columns: 1fr;
+     }
+
+     #cortexa-ai-crm-landing .cx-tools-grid {
+         grid-template-columns: repeat(3, 1fr);
+     }
+
+     #cortexa-ai-crm-landing .cx-trust-grid {
+         grid-template-columns: repeat(2, 1fr);
+     }
+
+     #cortexa-ai-crm-landing .cx-logos {
+         grid-template-columns: repeat(3, 1fr);
+     }
+
+     #cortexa-ai-crm-landing .cx-phone {
+         margin: 0 auto;
+     }
+ }
+
+ @media (max-width: 760px) {
+     #cortexa-ai-crm-landing .cx-wrap {
+         width: min(var(--max), calc(100% - 24px));
+     }
+
+     #cortexa-ai-crm-landing .cx-section,
+     #cortexa-ai-crm-landing .cx-stack-wrap {
+         padding: 58px 0;
+     }
+
+     #cortexa-ai-crm-landing .cx-grid4,
+     #cortexa-ai-crm-landing .cx-tools-grid,
+     #cortexa-ai-crm-landing .cx-trust-grid,
+     #cortexa-ai-crm-landing .cx-comp-grid {
+         grid-template-columns: 1fr;
+     }
+
+     #cortexa-ai-crm-landing .cx-stack-row,
+     #cortexa-ai-crm-landing .cx-strip-inner,
+     #cortexa-ai-crm-landing .cx-final-box {
+         padding: 24px;
+     }
+
+     #cortexa-ai-crm-landing .cx-title-xl {
+         font-size: 42px;
+     }
+
+     #cortexa-ai-crm-landing .cx-title-lg {
+         font-size: 34px;
+     }
+
+     #cortexa-ai-crm-landing .cx-title-md {
+         font-size: 28px;
+     }
+
+     #cortexa-ai-crm-landing .cx-sub {
+         font-size: 16px;
+         line-height: 1.7;
+     }
+ }
