@@ -18,6 +18,7 @@ import AICRMInterface from "./components/AICRMInterface.jsx";
 import Checkout from "./Checkout.jsx";
 import ThankYou from "./ThankYou.jsx";
 import SignInLandingPage from "./components/SignInLandingPage.jsx";
+import CortexaLandingPage from "./components/CortexaLandingPage.jsx";
 
 import "./index.css";
 
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/thank-you" element={<ThankYou />} />
         <Route path="/sign-in" element={<SignInLandingPage />} />
+        <Route path="/landing" element={<CortexaLandingPage />} />
       </Routes>
     </Router>
   </React.StrictMode>
