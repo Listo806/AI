@@ -4,14 +4,21 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from "react-router-dom";
 import App from './App';
+import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./theme/ThemeProvider";
+import { NotificationProvider } from "./context/NotificationContext";
 
 // Render app
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter>
+    <AuthProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  </BrowserRouter>
 );
 
 // Lucide icons init (keep your logic)
