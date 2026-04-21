@@ -378,8 +378,38 @@ export default function Landing() {
             </div>
           </div>
         </section>
-
+        
       </div>
+      {/* ================= FOOTER ================= */}
+        <footer className="cx-footer">
+          <div className="cx-footer-inner">
+
+            {/* LEFT */}
+            <div className="cx-footer-left">
+              <img src={logoImg} alt="CORTEXA" className="cx-logo-img" />
+            </div>
+
+            {/* NAV */}
+            <div className="cx-footer-nav">
+              <button onClick={() => scrollTo("features")}>Features</button>
+              <button onClick={() => scrollTo("ai-setter")}>AI</button>
+              <button onClick={() => scrollTo("whatsapp")}>Integrations</button>
+              <button onClick={() => scrollTo("pricing")}>Pricing</button>
+              <button onClick={() => scrollTo("trial")}>Resources</button>
+            </div>
+
+            {/* LEGAL */}
+            <div className="cx-footer-legal">
+              <a href="/privacy-policy">Privacy Policy</a>
+              <a href="/terms">Terms</a>
+            </div>
+
+          </div>
+
+          <div className="cx-footer-bottom">
+            © CORTEXA
+          </div>
+        </footer>
     </div>
   );
 }

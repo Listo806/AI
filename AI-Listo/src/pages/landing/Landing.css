@@ -609,7 +609,63 @@
      color: #fff;
      text-decoration: none;
  }
+ .cx-footer {
+  background: #fff;
+  border-top: 1px solid #eee;
+  margin-top: 80px;
+}
 
+.cx-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 20px;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  align-items: center;
+  gap: 20px;
+}
+
+.cx-footer-nav {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.cx-footer-nav button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.cx-footer-nav button:hover {
+  color: #000;
+}
+
+.cx-footer-legal {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.cx-footer-legal a {
+  font-size: 14px;
+  color: #777;
+  text-decoration: none;
+}
+
+.cx-footer-legal a:hover {
+  color: #000;
+}
+
+.cx-footer-bottom {
+  text-align: center;
+  padding: 16px;
+  font-size: 13px;
+  color: #888;
+  border-top: 1px solid #eee;
+}
  @media (max-width: 1100px) {
 
      #cortexa-ai-crm-landing .cx-hero-grid,
