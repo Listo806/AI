@@ -13,6 +13,9 @@ import Profile from "./pages/account/Profile";
 import Billing from "./pages/account/Billing";
 import Settings from "./pages/account/Settings";
 import SignIn from "./pages/auth/SignIn";
+import Privacy from "./pages/common/Privacy";
+import Refund from "./pages/common/Refund";
+import Terms from "./pages/common/Terms";
 
 export default function App() {
     return (
@@ -32,6 +35,10 @@ export default function App() {
           <Route path="/account/profile" element={<Profile />} />
           <Route path="/account/billing" element={<Billing />} />
           <Route path="/account/settings" element={<Settings />} />
+          
+          <Route path="/privacy-policy" element={<Privacy />} />
+          <Route path="/refund-policy" element={<Refund />} />
+          <Route path="/terms" element={<Terms />} />
           
         </Routes>
       );

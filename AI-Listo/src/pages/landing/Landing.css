@@ -111,6 +111,7 @@
      text-decoration: none;
      transition: 0.25s ease;
      border: 1px solid transparent;
+     color: #000;
  }
 
  #cortexa-ai-crm-landing .cx-btn-primary {
@@ -353,7 +354,7 @@
  }
 
  #cortexa-ai-crm-landing .cx-grid-intro {
-     margin-bottom: 28px;
+     margin-bottom: 50px;
  }
 
  #cortexa-ai-crm-landing .cx-grid4 {
@@ -578,8 +579,6 @@
  .cx-header-inner {
      max-width: 1200px;
      margin: 0 auto;
-     padding: 0px 20px;
-
      display: flex;
      align-items: center;
      justify-content: space-between;
@@ -589,7 +588,7 @@
      background: none;
      border: none;
      cursor: pointer;
-     color: #1d4ed8;
+     color: #000;
      font-size: 14px;
      transition: 0.2s;
      margin: 0 25px;
@@ -608,8 +607,9 @@
 
  .cx-login {
      margin-left: 15px;
-     color: #fff;
+     color: #000;
      text-decoration: none;
+     font-weight: bold;
  }
  .cx-footer {
   background: #fff;
@@ -676,11 +676,220 @@ section img{
     width:100%;
 }
 .pt-20{
-    padding-top:30px!important;
+    padding-top:50px!important;
 }
-.cx-strip.pt-20{
+.pt-50{
+    padding-top:70px!important;
+}
+.cx-strip, .cx-final{
     padding-left:30px!important;
     padding-right: 30px!important;
+}
+.cx-section, .cx-trust{
+    padding-left:10px!important;
+    padding-right: 10px!important;
+}
+.lang-wrapper {
+  position: relative;
+  margin: 0 12px;
+}
+
+.lang-toggle {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 140px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.lang-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.lang-item:hover {
+  background: #f5f5f5;
+}
+.img-local {
+    width: 23px;
+}
+.cx-actions{
+    display: flex;
+    align-items: center;
+}
+.footer {
+  background: #f7f8fb;
+  border-radius: 20px;
+  padding: 40px;
+  font-family: Arial, sans-serif;
+  color: #656c89;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 30px;
+}
+
+.footer-col h4 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.footer-col ul li {
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.footer-col ul li a{
+  text-decoration: none;
+}
+.footer-col ul li:hover {
+  color: #000;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #4f46e5, #a855f7);
+}
+
+.logo h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.logo span {
+  font-size: 12px;
+  color: #4f46e5;
+}
+
+/* Left */
+.desc {
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+.btn {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  font-size: 14px;
+}
+
+.features li {
+  margin-bottom: 6px;
+}
+
+/* Newsletter */
+.newsletter p {
+  font-size: 14px;
+}
+
+.email-box {
+  display: flex;
+  margin: 10px 0;
+}
+
+.email-box input {
+  flex: 1;
+  padding: 12px 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px 0 0 6px;
+}
+
+.email-box button {
+  background: #4c42fb;
+  color: #fff;
+  border: none;
+  padding: 0 12px;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Bottom */
+.footer-bottom {
+  border-top: 1px solid #ddd;
+  margin-top: 30px;
+  padding-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: green;
+  border-radius: 50%;
+}
+
+.social span {
+  margin-left: 20px;
+    cursor: pointer;
+    font-size: 20px;
+}
+section#footer {
+    text-align: left;
+    line-height: 1.5;
+    font-size: 13px;
+}
+.footer-col{
+    margin-top: 40px;
+}
+#footer .footer-col:first-child{
+    margin-top: 0;
+}
+#footer .btn{
+    margin-bottom: 0;
+    margin-top: 20px;
+    background: #eae8fd;
+    color: #3f3afe;
+    font-weight: bold;
+}
+#footer .newsletter p{
+    margin: 20px 0;
 }
  @media (max-width: 1100px) {
 
