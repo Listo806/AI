@@ -3,7 +3,7 @@ import "./Landing.css";
 
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
-import heroImgES from "../../assets/cortexa/hero-es.jpg";
+import heroImgES from "../../assets/cortexa/hero-es.png";
 import heroImgPT from "../../assets/cortexa/hero-pt.png";
 
 import sec2Img from "../../assets/cortexa/Cortexa sec 2.png";
@@ -25,6 +25,7 @@ import feaImg2 from "../../assets/cortexa/featured2.png";
 import feaImg3 from "../../assets/cortexa/featured3.png";
 import feaImg4 from "../../assets/cortexa/featured4.png";
 import finalImg from "../../assets/cortexa/final.png";
+import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 
 export default function Landing() {
 
@@ -151,7 +152,18 @@ export default function Landing() {
           title: "Your CRM shouldn’t slow you down.",
           sub: "Join teams using CORTEXA...",
           btn: "Start Free Trial"
-        }
+        },
+       aiTitle: "AI Setter — Your 24/7 Appointment Engine",
+       aisubTitle: "Responds instantly, qualifies buyers, and books appointments — automatically.",
+       aipointTitle1: "Instant Responses",
+       aipointText1: "Every message answered in seconds.",
+       aipointTitle2: "Smart Qualification",
+       aipointText2: "Filters serious buyers automatically.",
+       aipointTitle3: "Automatic Booking",
+       aipointText3: "Appointments scheduled without back-and-forth.",
+       ailine: "No missed messages. No slow follow-ups. No lost deals.",
+       aialt: "AI Setter handling conversations and booking appointments",
+       reinforcement: "No missed messages. No slow follow-ups. No lost deals.",
     },
 
     es: {
@@ -238,7 +250,23 @@ export default function Landing() {
           title: "Tu CRM no debería ralentizarte.",
           sub: "Únete a equipos que usan CORTEXA...",
           btn: "Prueba gratis"
-        }
+        },
+      aiTitle: "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
+      aisubTitle: "Responde al instante, califica a los compradores y programa citas automáticamente.",
+
+        aipointTitle1: "Respuestas instantáneas",
+        aipointText1: "Cada mensaje se responde en segundos.",
+
+        aipointTitle2: "Calificación inteligente",
+        aipointText2: "Filtra automáticamente a los compradores serios.",
+
+        aipointTitle3: "Reserva automática",
+        aipointText3: "Citas programadas sin idas y venidas.",
+
+        ailine: "Sin mensajes perdidos. Sin seguimientos lentos. Sin oportunidades perdidas.",
+
+        aialt: "IA que gestiona conversaciones y agenda citas automáticamente",
+        reinforcement: "Sin mensajes perdidos. Sin seguimientos lentos. Sin negocios perdidos.",
     },
 
     pt: {
@@ -325,7 +353,23 @@ export default function Landing() {
           title: "Seu CRM não deve te atrasar.",
           sub: "Junte-se a equipes usando CORTEXA...",
           btn: "Teste grátis"
-        }
+        },
+      aiTitle: "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
+      aisubTitle: "Responde instantaneamente, qualifica os compradores e agenda compromissos automaticamente.",
+
+        aipointTitle1: "Respostas instantâneas",
+        aipointText1: "Cada mensagem é respondida em segundos.",
+
+        aipointTitle2: "Qualificação inteligente",
+        aipointText2: "Filtra automaticamente os compradores sérios.",
+
+        aipointTitle3: "Agendamento automático",
+        aipointText3: "Compromissos agendados sem idas e vindas.",
+
+        ailine: "Sem mensagens perdidas. Sem follow-ups lentos. Sem negócios perdidos.",
+
+        aialt: "IA que gerencia conversas e agenda compromissos automaticamente",
+        reinforcement: "Sem mensagens perdidas. Sem atrasos no acompanhamento. Sem negócios perdidos.",
     }
   };
 
@@ -519,6 +563,52 @@ export default function Landing() {
           ))}
         </div>
       </section>
+      <section className="ai-setter-section pt-50">
+          <div className="container ai-setter-wrapper">
+
+            {/* LEFT SIDE (TEXT) */}
+            <div className="ai-setter-text">
+              <h2>{tr.aiTitle}</h2>
+
+              <p>
+                {tr.aisubTitle}
+              </p>
+
+              <div className="ai-setter-points">
+
+                <div className="point">
+                  <h4>{tr.aipointTitle1}</h4>
+                  <p>{tr.aipointText1}</p>
+                </div>
+
+                <div className="point">
+                  <h4>{tr.aipointTitle2}</h4>
+                  <p>{tr.aipointText2}</p>
+                </div>
+
+                <div className="point">
+                  <h4>{tr.aipointTitle3}</h4>
+                  <p>{tr.aipointText3}</p>
+                </div>
+
+              </div>
+
+              {/* OPTIONAL REINFORCEMENT LINE */}
+              <p className="ai-setter-reinforcement">
+                {tr.ailine}
+              </p>
+            </div>
+
+            {/* RIGHT SIDE (IMAGE) */}
+            <div className="ai-setter-image">
+              <img
+                src={aiSetterImg}
+                alt={tr.aialt}
+              />
+            </div>
+
+          </div>
+        </section>
 
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50">
@@ -567,6 +657,9 @@ export default function Landing() {
             <a className="cx-btn cx-btn-secondary">
               {tr.trial}
             </a>
+            <p className="final-reinforcement">
+                {tr.reinforcement}
+            </p>
             <div className="cx-final-shot">
               <img src={finalImg} alt="" />
             </div>
