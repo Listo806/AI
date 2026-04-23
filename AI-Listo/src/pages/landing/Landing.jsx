@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Landing.css";
 
+import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
 import heroImgES from "../../assets/cortexa/hero-es.png";
@@ -25,7 +26,19 @@ import feaImg2 from "../../assets/cortexa/featured2.png";
 import feaImg3 from "../../assets/cortexa/featured3.png";
 import feaImg4 from "../../assets/cortexa/featured4.png";
 import finalImg from "../../assets/cortexa/final.png";
+
 import aiSetterImg from "../../assets/cortexa/aiSetter.png";
+import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
+import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
+
+import beitem1 from "../../assets/cortexa/beitem1.png";
+import beitem2 from "../../assets/cortexa/beitem2.png";
+import beitem3 from "../../assets/cortexa/beitem3.png";
+import beitem4 from "../../assets/cortexa/beitem4.png";
+
+import testimonialsImg from "../../assets/cortexa/testimonials.png";
+import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
+import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
 
 export default function Landing() {
 
@@ -54,7 +67,7 @@ export default function Landing() {
     en: {
       top: "Meet Your AI CRM. Maximize human productivity with your custom AI teammates.",
 
-      nav: ["Features", "AI", "Integrations", "Pricing", "Resources"],
+      nav: ["Features", "AI Assistant", "Automation", "Pipeline", "Analytics", "Testimonials"],
 
       trial: "Start Free Trial",
       login: "Log in",
@@ -113,24 +126,36 @@ export default function Landing() {
 
       faq: [
         {
-          q: "Do I need a credit card to start?",
-          a: "No. You can start your free trial without entering a credit card if you want to test the experience first."
+          q: "What does CORTEXA actually do?",
+          a: "CORTEXA automates your lead follow-ups, conversations, pipeline updates, and appointment scheduling — all in one system."
         },
         {
-          q: "Can I manage leads from multiple channels?",
-          a: "Yes. CORTEXA centralizes WhatsApp, Instagram, website forms, and more."
+          q: "How does the AI Assistant work?",
+          a: "The AI responds instantly to leads, qualifies them, books appointments, and keeps every conversation moving automatically."
         },
         {
-          q: "Does CORTEXA help automate follow-ups?",
-          a: "Yes. AI Auto Reply and AI Setter handle follow-ups and booking automatically."
+          q: "Can I manage all my leads in one place?",
+          a: "Yes. All your leads, messages, and deal stages are centralized in one dashboard so nothing gets lost."
         },
         {
-          q: "Can teams use CORTEXA together?",
-          a: "Yes. Teams can collaborate, assign tasks, and track everything in real time."
+          q: "Does it update my pipeline automatically?",
+          a: "Yes. As leads interact, the system moves them through your pipeline without manual input."
         },
         {
-          q: "Is this only for real estate?",
-          a: "No. It works best for real estate but also supports service and sales businesses."
+          q: "Will I still need to follow up manually?",
+          a: "No. CORTEXA is designed to handle follow-ups automatically while keeping leads engaged."
+        },
+        {
+          q: "Can my team use this together?",
+          a: "Yes. You can add team members, assign leads, and manage deals collaboratively."
+        },
+        {
+          q: "What kind of businesses is this for?",
+          a: "CORTEXA is built for real estate agents, teams, and any business that relies on lead generation and closing deals."
+        },
+        {
+          q: "What happens after a lead comes in?",
+          a: "The system responds instantly, qualifies the lead, and pushes them toward booking or closing — automatically."
         }
       ],
 
@@ -168,7 +193,7 @@ export default function Landing() {
 
     es: {
       top: "Conoce tu CRM con IA. Maximiza la productividad con asistentes inteligentes.",
-      nav: ["Funciones", "IA", "Integraciones", "Precios", "Recursos"],
+      nav: ["Características", "Asistente de IA", "Automatización", "Pipeline", "Análisis", "Testimonios"],
       trial: "Prueba gratis",
       login: "Iniciar sesión",
 
@@ -225,12 +250,39 @@ export default function Landing() {
       faqTitle: "Preguntas frecuentes",
 
       faq: [
-        { q: "¿Necesito tarjeta?", a: "No necesitas tarjeta." },
-        { q: "¿Puedo gestionar leads?", a: "Sí, todos los canales." },
-        { q: "¿Automatiza seguimientos?", a: "Sí, la IA lo hace." },
-        { q: "¿Uso en equipo?", a: "Sí, multiusuario." },
-        { q: "¿Solo inmobiliaria?", a: "Funciona en varios sectores." }
-      ],
+        {
+          q: "¿Qué hace exactamente CORTEXA?",
+          a: "CORTEXA automatiza el seguimiento de clientes potenciales, las conversaciones, las actualizaciones del embudo de ventas y la programación de citas, todo en un solo sistema."
+        },
+        {
+          q: "¿Cómo funciona el Asistente de IA?",
+          a: "La IA responde instantáneamente a los clientes potenciales, los califica, agenda citas y mantiene la conversación en marcha automáticamente."
+        },
+        {
+          q: "¿Puedo gestionar todos mis clientes potenciales en un solo lugar?",
+          a: "Sí. Todos tus clientes potenciales, mensajes y etapas del pipeline están centralizados en un panel para que no se pierda nada."
+        },
+        {
+          q: "¿Actualiza mi pipeline automáticamente?",
+          a: "Sí. A medida que los clientes potenciales interactúan, el sistema los mueve a través de tu pipeline sin intervención manual."
+        },
+        {
+          q: "¿Aún tendré que hacer seguimiento manualmente?",
+          a: "No. CORTEXA está diseñado para gestionar el seguimiento automáticamente y mantener a los clientes potenciales comprometidos."
+        },
+        {
+          q: "¿Puede mi equipo usarlo en conjunto?",
+          a: "Sí. Puedes agregar miembros del equipo, asignar clientes potenciales y gestionar acuerdos de forma colaborativa."
+        },
+        {
+          q: "¿Para qué tipo de negocios es esto?",
+          a: "CORTEXA está diseñado para agentes inmobiliarios, equipos y cualquier negocio que dependa de generación de leads y cierre de ventas."
+        },
+        {
+          q: "¿Qué sucede después de que llega un cliente potencial?",
+          a: "El sistema responde al instante, califica al cliente potencial y lo impulsa hacia la reserva o el cierre automáticamente."
+        }
+        ],
 
       finalTitle: "Empieza a cerrar más ventas con CORTEXA",
       finalDesc: "Un CRM con IA para leads y automatización...",
@@ -271,7 +323,7 @@ export default function Landing() {
 
     pt: {
       top: "Conheça seu CRM com IA. Maximize a produtividade com assistentes inteligentes.",
-      nav: ["Recursos", "IA", "Integrações", "Preços", "Recursos"],
+      nav: ["Recursos", "Assistente de IA", "Automação", "Pipeline", "Análises", "Testemunhos"],
       trial: "Teste grátis",
       login: "Entrar",
 
@@ -326,14 +378,40 @@ export default function Landing() {
       trust: ["Fluxos seguros", "Visibilidade em tempo real", "Sistema escalável", "Eficiência com IA"],
 
       faqTitle: "Perguntas frequentes",
-
-      faq: [
-        { q: "Preciso de cartão?", a: "Não precisa cartão." },
-        { q: "Gerenciar leads?", a: "Sim, todos canais." },
-        { q: "Automatiza follow-ups?", a: "Sim, com IA." },
-        { q: "Uso em equipe?", a: "Sim, multiusuário." },
-        { q: "Só imobiliário?", a: "Funciona em vários setores." }
-      ],
+        faq: [
+            {
+              q: "O que exatamente o CORTEXA faz?",
+              a: "O CORTEXA automatiza o acompanhamento de leads, conversas, atualizações do pipeline e agendamento de compromissos, tudo em um único sistema."
+            },
+            {
+              q: "Como funciona o Assistente de IA?",
+              a: "A IA responde instantaneamente aos leads, faz a qualificação, agenda compromissos e mantém a conversa fluindo automaticamente."
+            },
+            {
+              q: "Posso gerenciar todos os meus leads em um só lugar?",
+              a: "Sim. Todos os seus leads, mensagens e etapas do pipeline ficam centralizados em um único painel para que nada se perca."
+            },
+            {
+              q: "Ele atualiza meu pipeline automaticamente?",
+              a: "Sim. À medida que os leads interagem, o sistema os move pelo seu pipeline sem necessidade de intervenção manual."
+            },
+            {
+              q: "Ainda preciso fazer follow-up manualmente?",
+              a: "Não. O CORTEXA foi projetado para gerenciar o follow-up automaticamente e manter os leads engajados."
+            },
+            {
+              q: "Minha equipe pode usar em conjunto?",
+              a: "Sim. Você pode adicionar membros da equipe, atribuir leads e gerenciar negociações de forma colaborativa."
+            },
+            {
+              q: "Para que tipo de negócio isso serve?",
+              a: "O CORTEXA é ideal para corretores imobiliários, equipes e qualquer negócio que dependa de geração de leads e fechamento de vendas."
+            },
+            {
+              q: "O que acontece depois que um lead chega?",
+              a: "O sistema responde instantaneamente, qualifica o lead e o conduz automaticamente para o agendamento ou fechamento."
+            }
+        ],
 
       finalTitle: "Comece a fechar mais negócios com CORTEXA",
       finalDesc: "CRM com IA para leads e automação...",
@@ -409,6 +487,20 @@ export default function Landing() {
     : lang === "pt"
     ? sec4ImgPT
     : sec4Img;
+   
+  const currentaiSetterImg=
+  lang === "es"
+    ? aiSetterImgES
+    : lang === "pt"
+    ? aiSetterImgPT
+    : aiSetterImg;
+    
+  const currenttestimonialsImg=
+  lang === "es"
+    ? testimonialsImgES
+    : lang === "pt"
+    ? testimonialsImgPT
+    : testimonialsImg;
 
   return (
     <div id="cortexa-ai-crm-landing">
@@ -419,14 +511,27 @@ export default function Landing() {
         <div className="cx-header-inner">
 
           <div className="cx-left">
-            <img src={logoImg} className="cx-logo-img" />
+            <img src={headlogoImg} className="cx-logo-img" />
           </div>
 
           <nav className="cx-nav">
-            {tr.nav.map((n, i) => (
-              <button key={i}>{n}</button>
-            ))}
-          </nav>
+              {tr.nav.map((n, i) => {
+                const ids = [
+                  "features",
+                  "ai-assistant",
+                  "automation",
+                  "pipeline",
+                  "analytics",
+                  "testimonials"
+                ];
+
+                return (
+                  <button key={i} onClick={() => scrollTo(ids[i])}>
+                    {n}
+                  </button>
+                );
+              })}
+            </nav>
 
           <div className="cx-actions">
 
@@ -482,12 +587,12 @@ export default function Landing() {
       </header>
 
       {/* HERO */}
-      <section id="features" className="cx-hero">
+      <section className="cx-hero">
         <img src={currentHero} />
       </section>
 
       {/* COMPARE */}
-      <section className="cx-comp cx-center pt-50">
+      <section id="features" className="cx-comp cx-center pt-50">
         <h2 className="cx-title-md">{tr.dashboardTitle}</h2>
 
         <div className="cx-comp-grid">
@@ -508,13 +613,58 @@ export default function Landing() {
 
         </div>
       </section>
-        <section id="ai-setter" className="cx-hero pt-50">
+        <section id="analytics" className="cx-hero pt-50">
             <img src={currentSec2} alt="" />
         </section>
+        <section className="benefits-section pt-50">
+              <div className="benefits-container">
+
+                <h2 className="cx-title-lg">
+                  What This Actually Does For You
+                </h2>
+
+                <p className="benefits-sub">
+                  Automation handles the work. Communication never stops. Every lead keeps moving forward — without you chasing it.
+                </p>
+
+                <div className="benefits-grid">
+
+                  <div className="benefits-item">
+                    <div className="benefits-icon"><img src={beitem1} /></div>
+                    <h3>Work Happens Automatically</h3>
+                    <p>Follow-ups, tracking, and organization run in the background.</p>
+                  </div>
+
+                  <div className="benefits-item">
+                    <div className="benefits-icon"><img src={beitem2} /></div>
+                    <h3>Conversations Stay Active</h3>
+                    <p>Leads get responses, reminders, and engagement 24/7.</p>
+                  </div>
+
+                  <div className="benefits-item">
+                    <div className="benefits-icon"><img src={beitem3} /></div>
+                    <h3>Clarity Without Guesswork</h3>
+                    <p>You always know who to focus on and what to do next.</p>
+                  </div>
+
+                  <div className="benefits-item">
+                    <div className="benefits-icon"><img src={beitem4} /></div>
+                    <h3>More Deals, Less Effort</h3>
+                    <p>Less manual work, faster movement, better outcomes.</p>
+                  </div>
+
+                </div>
+
+                <p className="benefits-bottom">
+                  Everything keeps moving — even when you’re not.
+                </p>
+
+              </div>
+            </section>
         <section id="whatsapp" className="cx-hero pt-50">
             <img src={currentSec3} alt="" />
         </section>
-        <section id="pricing" className="cx-hero pt-20">
+        <section id="pipeline" className="cx-hero pt-20">
             <img src={currentSec4} alt="" />
         </section>
       <section className="cx-strip pt-50">
@@ -543,7 +693,7 @@ export default function Landing() {
           </div>
         </section>
       {/* FEATURES */}
-      <section className="cx-section pt-50">
+      <section id="automation" className="cx-section pt-50">
         <div className="cx-center cx-grid-intro">
             <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
           </div>
@@ -563,10 +713,12 @@ export default function Landing() {
           ))}
         </div>
       </section>
-      <section className="ai-setter-section pt-50">
+      <section id="ai-assistant" className="cx-hero pt-20">
+            <img src={currentaiSetterImg} alt="" />
+        </section>
+        {/*<section className="ai-setter-section pt-50">
           <div className="container ai-setter-wrapper">
 
-            {/* LEFT SIDE (TEXT) */}
             <div className="ai-setter-text">
               <h2>{tr.aiTitle}</h2>
 
@@ -593,13 +745,11 @@ export default function Landing() {
 
               </div>
 
-              {/* OPTIONAL REINFORCEMENT LINE */}
               <p className="ai-setter-reinforcement">
                 {tr.ailine}
               </p>
             </div>
 
-            {/* RIGHT SIDE (IMAGE) */}
             <div className="ai-setter-image">
               <img
                 src={aiSetterImg}
@@ -608,7 +758,7 @@ export default function Landing() {
             </div>
 
           </div>
-        </section>
+        </section>*/}
 
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50">
@@ -641,7 +791,9 @@ export default function Landing() {
           ))}
         </div>
       </section>
-
+        <section id="testimonials" className="cx-hero pt-50">
+            <img src={currenttestimonialsImg} alt="" />
+        </section>
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
           <div className="cx-final-box">
