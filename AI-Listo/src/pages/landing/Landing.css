@@ -131,7 +131,6 @@
  }
 
  #cortexa-ai-crm-landing .cx-hero {
-     padding: 70px 0 46px;
      position: relative;
  }
 
@@ -689,12 +688,21 @@
  }
 
  #analytics, #whatsapp, #pipeline, .cx-strip,
- .cx-final, .cx-section,
- .cx-trust, .ai-setter-section {
+ .cx-final,
+ .ai-setter-section {
      padding-left: 24px !important;
      padding-right: 24px !important;
  }
-
+ .land-container, .roi-container{
+     max-width: 1152px; 
+      margin: 0 auto;
+      padding-left: 24px;
+      padding-right: 24px;
+ }
+ .img-container{
+     max-width: 1182px; 
+     margin: 0 auto;
+ }
  .lang-wrapper {
      position: relative;
      margin: 0 12px;
@@ -1081,6 +1089,7 @@
   flex-wrap: wrap;
   font-size: 13px;
   color: #9ca3af;
+  justify-content: center;
 }
 
 .cta-benefits div {
@@ -1171,7 +1180,6 @@
 }
 
 .roi-container {
-  max-width: 1152px;
   margin: 0 auto;
   text-align: center;
 }
@@ -1244,7 +1252,88 @@
   color: #4b5563;
   line-height: 1.6;
 }
+.ai-crm-section {
+  background: linear-gradient(to bottom, #0b0f1a, #0f172a);
+  color: #fff;
+  text-align: center;
+}
 
+.ai-crm-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.ai-crm-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  margin-bottom: 20px;
+}
+
+.ai-crm-title {
+  font-size: 40px;
+  font-weight: 600;
+}
+
+.ai-crm-highlight {
+  background: linear-gradient(90deg,#a78bfa,#60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ai-crm-sub {
+  margin-top: 16px;
+  color: #cbd5e1;
+}
+
+.ai-crm-support {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.ai-crm-grid {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.ai-crm-card {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.ai-crm-card:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.ai-crm-card h3 {
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+.ai-crm-card p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.ai-icon {
+  font-size: 22px;
+}
+#whatsapp{
+    margin-bottom: 130px;
+}
+@media (max-width: 900px) {
+  .ai-crm-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 @media (min-width: 640px) {
   .roi-grid {
     grid-template-columns: repeat(2, 1fr);

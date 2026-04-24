@@ -216,7 +216,6 @@ export default function Landing() {
       stripBtn: "Start Your Free Trial →",
       stripTrust: "No risk. Cancel anytime.",
       stripBenefit1: "Get started in minutes",
-      stripBenefit2: "No credit card required",
       stripBenefit3: "Cancel anytime",
       stripCardTitle: "Pipeline Overview",
       stripCardPeriod: "This Month",
@@ -241,6 +240,27 @@ export default function Landing() {
       roiStat4Number: "< 30 Days",
       roiStat4Label: "Payback",
       roiStat4Desc: "Most users recover their investment within the first month from deals that would have otherwise been lost.",
+
+      aiCrmBadge: "AI-Powered CRM",
+      aiCrmTitle1: "Meet Your",
+      aiCrmTitleHighlight: "AI CRM",
+      aiCrmSub: "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
+      aiCrmSupport: "Capture more leads. Close more deals. Never miss an opportunity.",
+
+      aiCrmF1Title: "Fills Your Pipeline",
+      aiCrmF1Desc: "AI finds, qualifies, and engages new leads for you.",
+
+      aiCrmF2Title: "Chats & Closes",
+      aiCrmF2Desc: "AI handles conversations, answers questions, and closes deals.",
+
+      aiCrmF3Title: "Shows You the Money",
+      aiCrmF3Desc: "Real-time insights, revenue tracking, and growth visibility.",
+
+      aiCrmF4Title: "Works 24/7",
+      aiCrmF4Desc: "Always on. Always working. Never misses a lead or opportunity.",
+
+      aiCrmF5Title: "Keeps Customers Happy",
+      aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
     },
 
     es: {
@@ -409,7 +429,6 @@ export default function Landing() {
       stripBtn: "Empieza tu prueba gratis →",
       stripTrust: "Sin riesgo. Cancela en cualquier momento.",
       stripBenefit1: "Empieza en minutos",
-      stripBenefit2: "No se requiere tarjeta de crédito",
       stripBenefit3: "Cancela en cualquier momento",
       stripCardTitle: "Resumen del pipeline",
       stripCardPeriod: "Este mes",
@@ -434,6 +453,27 @@ export default function Landing() {
       roiStat4Number: "< 30 días",
       roiStat4Label: "Recuperación",
       roiStat4Desc: "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
+
+      aiCrmBadge: "CRM con IA",
+      aiCrmTitle1: "Conoce tu",
+      aiCrmTitleHighlight: "CRM con IA",
+      aiCrmSub: "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
+      aiCrmSupport: "Captura más leads. Cierra más ventas. Nunca pierdas una oportunidad.",
+
+      aiCrmF1Title: "Llena tu pipeline",
+      aiCrmF1Desc: "La IA encuentra, califica y conecta nuevos leads por ti.",
+
+      aiCrmF2Title: "Chatea y cierra",
+      aiCrmF2Desc: "La IA gestiona conversaciones, responde preguntas y cierra ventas.",
+
+      aiCrmF3Title: "Te muestra el dinero",
+      aiCrmF3Desc: "Insights en tiempo real, seguimiento de ingresos y crecimiento.",
+
+      aiCrmF4Title: "Funciona 24/7",
+      aiCrmF4Desc: "Siempre activo. Nunca pierde un lead ni una oportunidad.",
+
+      aiCrmF5Title: "Clientes felices",
+      aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
     },
 
     pt: {
@@ -598,7 +638,6 @@ export default function Landing() {
       stripBtn: "Comece seu teste grátis →",
       stripTrust: "Sem risco. Cancele a qualquer momento.",
       stripBenefit1: "Comece em minutos",
-      stripBenefit2: "Sem necessidade de cartão de crédito",
       stripBenefit3: "Cancele a qualquer momento",
       stripCardTitle: "Visão geral do pipeline",
       stripCardPeriod: "Este mês",
@@ -623,6 +662,27 @@ export default function Landing() {
       roiStat4Number: "< 30 dias",
       roiStat4Label: "Retorno",
       roiStat4Desc: "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",  
+
+      aiCrmBadge: "CRM com IA",
+      aiCrmTitle1: "Conheça seu",
+      aiCrmTitleHighlight: "CRM com IA",
+      aiCrmSub: "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
+      aiCrmSupport: "Capture mais leads. Feche mais negócios. Nunca perca oportunidades.",
+
+      aiCrmF1Title: "Enche seu pipeline",
+      aiCrmF1Desc: "A IA encontra, qualifica e engaja novos leads para você.",
+
+      aiCrmF2Title: "Conversa e fecha",
+      aiCrmF2Desc: "A IA gerencia conversas, responde dúvidas e fecha negócios.",
+
+      aiCrmF3Title: "Mostra o dinheiro",
+      aiCrmF3Desc: "Insights em tempo real, acompanhamento de receita e crescimento.",
+
+      aiCrmF4Title: "Funciona 24/7",
+      aiCrmF4Desc: "Sempre ativo. Nunca perde leads ou oportunidades.",
+
+      aiCrmF5Title: "Clientes felizes",
+      aiCrmF5Desc: "A IA cuida do relacionamento e oferece suporte instantâneo.",
     },
   };
 
@@ -822,6 +882,71 @@ export default function Landing() {
         <img src={currentSec3} alt="" />
       </section>
 
+      <section className="ai-crm-section pt-20">
+        <div className="ai-crm-container">
+
+          <div className="ai-crm-badge">
+            {tr.aiCrmBadge}
+          </div>
+
+          {/* Title */}
+          <h2 className="ai-crm-title">
+            {tr.aiCrmTitle1}{" "}
+            <span className="ai-crm-highlight">
+              {tr.aiCrmTitleHighlight}
+            </span>
+          </h2>
+
+          {/* Sub */}
+          <p className="ai-crm-sub">
+            {tr.aiCrmSub}
+          </p>
+
+          <p className="ai-crm-support">
+            {tr.aiCrmSupport}
+          </p>
+
+          {/* Grid */}
+          <div className="ai-crm-grid">
+
+            <div className="ai-crm-card">
+              <div className="ai-icon purple">⚡</div>
+              <h3>{tr.aiCrmF1Title}</h3>
+              <p>{tr.aiCrmF1Desc}</p>
+            </div>
+
+            <div className="ai-crm-card">
+              <div className="ai-icon blue">💬</div>
+              <h3>{tr.aiCrmF2Title}</h3>
+              <p>{tr.aiCrmF2Desc}</p>
+            </div>
+
+            <div className="ai-crm-card">
+              <div className="ai-icon green">💰</div>
+              <h3>{tr.aiCrmF3Title}</h3>
+              <p>{tr.aiCrmF3Desc}</p>
+            </div>
+
+            <div className="ai-crm-card">
+              <div className="ai-icon yellow">⏱</div>
+              <h3>{tr.aiCrmF4Title}</h3>
+              <p>{tr.aiCrmF4Desc}</p>
+            </div>
+
+            <div className="ai-crm-card">
+              <div className="ai-icon pink">❤️</div>
+              <h3>{tr.aiCrmF5Title}</h3>
+              <p>{tr.aiCrmF5Desc}</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline" className="cx-hero pt-50">
+        <img src={currentSec4} alt="" />
+      </section>
+      
       <section className="roi-section pt-50">
         <div className="roi-container">
           <h2 className="roi-title">
@@ -866,12 +991,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
-      </section>
-
-      <section id="pipeline" className="cx-hero pt-20">
-        <img src={currentSec4} alt="" />
-      </section>
-
+      </section>        
       <section className="cx-strip pt-50 cta-section">
         <div className="cta-container">
           <div className="cta-box">
@@ -886,9 +1006,6 @@ export default function Landing() {
               <div className="cta-benefits">
                 <div>
                   ⚡ <span>{tr.stripBenefit1}</span>
-                </div>
-                <div>
-                  ✔ <span>{tr.stripBenefit2}</span>
                 </div>
                 <div>
                   🔒 <span>{tr.stripBenefit3}</span>
@@ -929,22 +1046,24 @@ export default function Landing() {
       </section>
       {/* FEATURES */}
       <section id="automation" className="cx-section pt-50">
-        <div className="cx-center cx-grid-intro">
-          <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
-        </div>
-        <div className="cx-grid4">
-          {[feaImg1, feaImg2, feaImg3, feaImg4].map((img, i) => (
-            <div className="cx-card" key={i}>
-              <div>
-                <span className="cx-eyebrow">{tr.cards[i].eyebrow}</span>
-                <h3>{tr.cards[i].title}</h3>
-                <p>{tr.cards[i].desc}</p>
+        <div className="land-container">
+          <div className="cx-center cx-grid-intro">
+            <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
+          </div>
+          <div className="cx-grid4">
+            {[feaImg1, feaImg2, feaImg3, feaImg4].map((img, i) => (
+              <div className="cx-card" key={i}>
+                <div>
+                  <span className="cx-eyebrow">{tr.cards[i].eyebrow}</span>
+                  <h3>{tr.cards[i].title}</h3>
+                  <p>{tr.cards[i].desc}</p>
+                </div>
+                <div className="cx-shot">
+                  <img src={img} />
+                </div>
               </div>
-              <div className="cx-shot">
-                <img src={img} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
       <section id="ai-assistant" className="cx-hero pt-20">
@@ -952,14 +1071,15 @@ export default function Landing() {
       </section>
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50">
-        <h2 className="cx-title-md">{tr.trustTitle}</h2>
-
-        <div className="cx-trust-grid">
-          {tr.trust.map((t, i) => (
-            <div className="cx-trust-item" key={i}>
-              <h4>{t}</h4>
-            </div>
-          ))}
+        <div className="land-container">
+          <h2 className="cx-title-md">{tr.trustTitle}</h2>
+          <div className="cx-trust-grid">
+            {tr.trust.map((t, i) => (
+              <div className="cx-trust-item" key={i}>
+                <h4>{t}</h4>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -983,7 +1103,10 @@ export default function Landing() {
         </div>
       </section>
       <section id="testimonials" className="cx-hero pt-50">
-        <img src={currenttestimonialsImg} alt="" />
+        <div className="img-container">
+            <img src={currenttestimonialsImg} alt="" />
+        </div>
+        
       </section>
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
