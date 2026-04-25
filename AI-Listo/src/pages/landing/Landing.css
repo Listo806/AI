@@ -73,10 +73,10 @@
  }
 
  #cortexa-ai-crm-landing .cx-title-md {
-     font-size: clamp(28px, 3vw, 38px);
-     line-height: 1.05;
-     letter-spacing: -0.03em;
-     font-weight: 800;
+     font-size: clamp(34px, 4vw, 54px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-weight: 800;
  }
 
  #cortexa-ai-crm-landing .cx-sub {
@@ -352,20 +352,45 @@
  }
 
  #cortexa-ai-crm-landing .cx-grid-intro {
-     margin-bottom: 50px;
+     margin-bottom: 20px;
+     border-bottom: 1px solid #d4cccc;
+     padding-bottom: 30px;
  }
 
  #cortexa-ai-crm-landing .cx-grid4 {
      display: grid;
      grid-template-columns: repeat(2, 1fr);
      gap: 20px;
+     position: relative;
  }
+ /* LINE DỌC */
+#cortexa-ai-crm-landing .cx-grid4::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: #d4cccc;
+  transform: translateX(-50%);
+}
 
+/* LINE NGANG */
+#cortexa-ai-crm-landing .cx-grid4::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: #d4cccc;
+  transform: translateY(-50%);
+}   
  #cortexa-ai-crm-landing .cx-card {
-     background: #fff;
+     /*background: #fff;
      border: 1px solid var(--line);
      border-radius: 24px;
-     box-shadow: var(--shadow);
+     box-shadow: var(--shadow);*/
      padding: 24px;
      display: grid;
      gap: 18px;
@@ -445,17 +470,24 @@
      grid-template-columns: repeat(4, 1fr);
      gap: 18px;
      margin-top: 30px;
+     border-top: 1px solid #e1e1e1;
  }
 
  #cortexa-ai-crm-landing .cx-trust-item {
-     border: 1px solid var(--line);
-     background: #fff;
-     border-radius: 22px;
-     padding: 24px;
-     box-shadow: var(--shadow);
-     text-align: center;
- }
-
+  position: relative;
+  border: none; 
+  padding: 24px;
+  text-align: center;
+}
+#cortexa-ai-crm-landing .cx-trust-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 20%;
+  right: 0;
+  height: 60%;
+  width: 1px;
+  background: #e1e1e1;
+}
  #cortexa-ai-crm-landing .cx-trust-item h4 {
      font-size: 18px;
      margin-bottom: 8px;
@@ -1273,8 +1305,10 @@
 }
 
 .ai-crm-title {
-  font-size: 40px;
-  font-weight: 600;
+  font-size: clamp(34px, 4vw, 54px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-weight: 800;
 }
 
 .ai-crm-highlight {
@@ -1325,6 +1359,122 @@
 
 .ai-icon {
   font-size: 22px;
+}
+.hero {
+  width: 100%;
+  background: #fff;
+  padding: 80px 20px;
+}
+
+.hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+#cortexa-ai-crm-landing .hero-title {
+  font-size: clamp(34px, 4vw, 49px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-weight: 800;
+  color: #111827;
+  margin-bottom:10px;
+}
+
+.hero-sub {
+  margin-top: 16px;
+  font-size: 18px;
+  color: #4b5563;
+  max-width: 500px;
+}
+
+.hero-checks {
+  margin-top: 24px;
+}
+
+.check-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+.check {
+  color: #16a34a;
+}
+
+.hero-btn {
+  margin-top: 30px;
+  background: #2563eb;
+  color: #fff;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.hero-btn:hover {
+  background: #1d4ed8;
+}
+
+.hero-tags {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hero-image {
+  width: 100%;
+  height: 400px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+.roi-grid{
+    border-top: 1px solid #e1e1e1;
+    padding-top: 10px;
+}
+.hero-head{
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+.roi-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.roi-item {
+  flex: 1;
+  text-align: center;
+  padding: 0 20px;
+  position: relative;
+}
+.roi-item:not(:last-child) {
+  border-right: 1px solid #e1e1e1;
+}
+@media (max-width: 768px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .hero-image {
+    height: 300px;
+  }
 }
 #whatsapp{
     margin-bottom: 130px;

@@ -246,21 +246,35 @@ export default function Landing() {
       aiCrmTitleHighlight: "AI CRM",
       aiCrmSub: "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
       aiCrmSupport: "Capture more leads. Close more deals. Never miss an opportunity.",
-
       aiCrmF1Title: "Fills Your Pipeline",
       aiCrmF1Desc: "AI finds, qualifies, and engages new leads for you.",
-
       aiCrmF2Title: "Chats & Closes",
       aiCrmF2Desc: "AI handles conversations, answers questions, and closes deals.",
-
       aiCrmF3Title: "Shows You the Money",
       aiCrmF3Desc: "Real-time insights, revenue tracking, and growth visibility.",
-
       aiCrmF4Title: "Works 24/7",
       aiCrmF4Desc: "Always on. Always working. Never misses a lead or opportunity.",
-
       aiCrmF5Title: "Keeps Customers Happy",
       aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
+
+      heroTitleLine1: "Get Instant Leads.",
+      heroTitleLine2: "Close More Deals — 24/7.",
+      heroSubtitle:
+        "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
+      heroCheck1: "Capture every lead automatically",
+      heroCheck2: "AI follows up instantly for you",
+      heroCheck3: "Never lose another opportunity",
+      heroCheck4: "Track every deal in one pipeline",
+      heroCheck5: "Connect all your apps into one system",
+      heroCheck6: "Everything organized, analyzed, and ready to close",
+      heroCTA: "Start Your Free Trial",
+      heroTag1: "Get Leads",
+      heroTag2: "Automate Follow-Up",
+      heroTag3: "Close Deals",
+      heroTag4: "Track Everything",
+      heroTag5: "AI Engine",
+      heroTag6: "Connect Your Apps",
+      heroHead: "Real Estate Agents & Teams",
     },
 
     es: {
@@ -459,21 +473,35 @@ export default function Landing() {
       aiCrmTitleHighlight: "CRM con IA",
       aiCrmSub: "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
       aiCrmSupport: "Captura más leads. Cierra más ventas. Nunca pierdas una oportunidad.",
-
       aiCrmF1Title: "Llena tu pipeline",
       aiCrmF1Desc: "La IA encuentra, califica y conecta nuevos leads por ti.",
-
       aiCrmF2Title: "Chatea y cierra",
       aiCrmF2Desc: "La IA gestiona conversaciones, responde preguntas y cierra ventas.",
-
       aiCrmF3Title: "Te muestra el dinero",
       aiCrmF3Desc: "Insights en tiempo real, seguimiento de ingresos y crecimiento.",
-
       aiCrmF4Title: "Funciona 24/7",
       aiCrmF4Desc: "Siempre activo. Nunca pierde un lead ni una oportunidad.",
-
       aiCrmF5Title: "Clientes felices",
       aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
+
+      heroTitleLine1: "Obtén leads al instante.",
+      heroTitleLine2: "Cierra más ventas — 24/7.",
+      heroSubtitle:
+        "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
+      heroCheck1: "Captura cada lead automáticamente",
+      heroCheck2: "La IA hace el seguimiento por ti al instante",
+      heroCheck3: "Nunca pierdas otra oportunidad",
+      heroCheck4: "Gestiona cada venta en un solo pipeline",
+      heroCheck5: "Conecta todas tus aplicaciones en un solo sistema",
+      heroCheck6: "Todo organizado, analizado y listo para cerrar",
+      heroCTA: "Comienza tu prueba gratuita",
+      heroTag1: "Generar Leads",
+      heroTag2: "Automatizar Seguimiento",
+      heroTag3: "Cerrar Ventas",
+      heroTag4: "Seguimiento Total",
+      heroTag5: "Motor de IA",
+      heroTag6: "Conecta tus Apps",
+      heroHead: "Agentes y equipos inmobiliarios",
     },
 
     pt: {
@@ -488,31 +516,24 @@ export default function Landing() {
       ],
       trial: "Teste grátis",
       login: "Entrar",
-
       dashboardTitle: "Painéis para trabalhar, não apenas visualizar",
-
       without: "Sem CORTEXA",
       with: "Com CORTEXA",
-
       withoutList: [
         "Leads espalhados em apps e planilhas",
         "Follow-ups manuais lentos e mensagens perdidas",
         "Sem visão em tempo real do pipeline",
         "Difícil saber o que o time faz",
       ],
-
       withList: [
         "Tudo em um painel poderoso",
         "Respostas instantâneas no WhatsApp com IA",
         "Atualizações em tempo real do pipeline",
         "Saber exatamente o que está acontecendo",
       ],
-
       stripTitle: "Seu CRM não deve te atrasar.",
       stripSub: "Junte-se a equipes usando CORTEXA...",
-
       featuresTitle: "Transforme dados em decisões",
-
       cards: [
         {
           eyebrow: "Assistente de IA",
@@ -603,13 +624,10 @@ export default function Landing() {
         "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
       aisubTitle:
         "Responde instantaneamente, qualifica os compradores e agenda compromissos automaticamente.",
-
       aipointTitle1: "Respostas instantâneas",
       aipointText1: "Cada mensagem é respondida em segundos.",
-
       aipointTitle2: "Qualificação inteligente",
       aipointText2: "Filtra automaticamente os compradores sérios.",
-
       aipointTitle3: "Agendamento automático",
       aipointText3: "Compromissos agendados sem idas e vindas.",
       aialt: "IA que gerencia conversas e agenda compromissos automaticamente",
@@ -622,7 +640,6 @@ export default function Landing() {
       beitem2: "As conversas continuam ativas",
       beitem3: "Clareza sem achismos",
       beitem4: "Mais vendas, menos esforço",
-
       beitemtext1:
         "Follow-ups, controle e organização funcionam em segundo plano.",
       beitemtext2: "Os leads recebem respostas, lembretes e interação 24/7.",
@@ -668,21 +685,35 @@ export default function Landing() {
       aiCrmTitleHighlight: "CRM com IA",
       aiCrmSub: "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
       aiCrmSupport: "Capture mais leads. Feche mais negócios. Nunca perca oportunidades.",
-
       aiCrmF1Title: "Enche seu pipeline",
       aiCrmF1Desc: "A IA encontra, qualifica e engaja novos leads para você.",
-
       aiCrmF2Title: "Conversa e fecha",
       aiCrmF2Desc: "A IA gerencia conversas, responde dúvidas e fecha negócios.",
-
       aiCrmF3Title: "Mostra o dinheiro",
       aiCrmF3Desc: "Insights em tempo real, acompanhamento de receita e crescimento.",
-
       aiCrmF4Title: "Funciona 24/7",
       aiCrmF4Desc: "Sempre ativo. Nunca perde leads ou oportunidades.",
-
       aiCrmF5Title: "Clientes felizes",
       aiCrmF5Desc: "A IA cuida do relacionamento e oferece suporte instantâneo.",
+
+      heroTitleLine1: "Gere leads instantaneamente.",
+      heroTitleLine2: "Feche mais negócios — 24/7.",
+      heroSubtitle:
+        "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
+      heroCheck1: "Capture cada lead automaticamente",
+      heroCheck2: "A IA faz o acompanhamento instantaneamente",
+      heroCheck3: "Nunca perca outra oportunidade",
+      heroCheck4: "Gerencie cada negócio em um único pipeline",
+      heroCheck5: "Conecte todos os seus aplicativos em um único sistema",
+      heroCheck6: "Tudo organizado, analisado e pronto para fechar",
+      heroCTA: "Inicie seu teste gratuito",
+      heroTag1: "Gerar Leads",
+      heroTag2: "Automatizar Follow-up",
+      heroTag3: "Fechar Negócios",
+      heroTag4: "Acompanhar Tudo",
+      heroTag5: "Motor de IA",
+      heroTag6: "Conecte seus Apps",
+      heroHead: "Agentes e equipes imobiliárias",
     },
   };
 
@@ -803,9 +834,65 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* HERO */}
+      {/* HERO 
       <section className="cx-hero">
         <img src={currentHero} />
+      </section>*/}
+      <section className="hero pt-50">
+        <div className="hero-container">
+
+          <div className="hero-left">
+            <p class="hero-head">{tr.heroHead}</p>
+            <h1 className="hero-title">
+              {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
+            </h1>
+
+            <p className="hero-sub">
+              {tr.heroSubtitle}
+            </p>
+
+            <div className="hero-checks">
+              {[
+                tr.heroCheck1,
+                tr.heroCheck2,
+                tr.heroCheck3,
+                tr.heroCheck4,
+                tr.heroCheck5,
+                tr.heroCheck6,
+              ].map((item, index) => (
+                <div className="check-item" key={index}>
+                  <span className="check">✔</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="hero-btn">
+              {tr.heroCTA}
+            </button>
+
+            <div className="hero-tags">
+              <span>{tr.heroTag1}</span>
+              <span>•</span>
+              <span>{tr.heroTag2}</span>
+              <span>•</span>
+              <span>{tr.heroTag3}</span>
+              <span>•</span>
+              <span>{tr.heroTag4}</span>
+              <span>•</span>
+              <span>{tr.heroTag5}</span>
+              <span>•</span>
+              <span>{tr.heroTag6}</span>
+            </div>
+          </div>
+
+          <div className="hero-right">
+            <div className="hero-image">
+              <img src={heroImg} />
+            </div>
+          </div>
+
+        </div>
       </section>
 
       {/* COMPARE */}
@@ -1066,7 +1153,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      <section id="ai-assistant" className="cx-hero pt-20">
+      <section id="ai-assistant" className="cx-hero pt-50">
         <img src={currentaiSetterImg} alt="" />
       </section>
       {/* TRUST */}
