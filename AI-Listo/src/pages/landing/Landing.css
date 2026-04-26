@@ -1042,7 +1042,6 @@
   margin: 0 auto;
 }
 
-/* BOX */
 .cta-box {
   position: relative;
   overflow: hidden;
@@ -1057,9 +1056,7 @@
   box-shadow: 0 20px 60px rgba(0,0,0,0.4);
 }
 
-/* LEFT */
 .cta-left {
-  max-width: 520px;
   z-index: 2;
 }
 
@@ -1805,6 +1802,28 @@
 
 
 
+.footer-final{background:#fff;border-top:1px solid #eee;padding:80px 30px 40px}
+.footer-final .footer-grid{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:40px;margin-bottom:60px;text-align: left;}
+#cortexa-ai-crm-landing .footer-final .footer-brand h2{font-size:24px;margin-bottom:16px}
+#cortexa-ai-crm-landing .footer-final .footer-brand p{color:#666;margin-bottom:20px;line-height:1.6}
+.footer-final .btn-primary{display:inline-block;background:#2563eb;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none}
+.footer-final .footer-tags{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:#666;flex-direction: column;}
+#cortexa-ai-crm-landing .footer-final .footer-col h3{font-size:14px;margin-bottom:15px}
+.footer-final .footer-col ul{list-style:none;padding:0;margin:0}
+.footer-final .footer-col li{margin-bottom:10px}
+.footer-final .footer-col a{text-decoration:none;color:#666}
+.footer-final .footer-location{display:grid;grid-template-columns:1fr 1fr;gap:40px;border-top:1px solid #eee;padding-top:40px;margin-bottom:60px}
+.footer-final .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.footer-final .footer-location a{text-decoration:none;color:#666}
+.footer-final .footer-newsletter{border-top:1px solid #eee;padding-top:40px;text-align:center;max-width:500px;margin:auto}
+#cortexa-ai-crm-landing .footer-final .footer-newsletter h3{font-size:18px;margin-bottom:10px}
+#cortexa-ai-crm-landing .footer-final .footer-newsletter p{color:#666;margin-bottom:20px}
+.footer-final .newsletter-form{display:flex;border:1px solid #ddd;border-radius:10px;overflow:hidden}
+.footer-final .newsletter-form input{flex:1;padding:12px;border:none;outline:none}
+.footer-final .newsletter-form button{background:#2563eb;color:#fff;padding:0 20px;border:none;cursor:pointer}
+.footer-final .small{font-size:12px;color:#999;margin-top:10px}
+@media(max-width:1024px){.footer-final .footer-grid{grid-template-columns:1fr 1fr}.footer-final .footer-brand{grid-column:span 2}}
+@media(max-width:768px){.footer-final .footer-grid{grid-template-columns:1fr}.footer-final .footer-location{grid-template-columns:1fr}}
 
 
 
@@ -1819,6 +1838,21 @@
 
 
 
+
+@media (max-width: 1024px) {
+    .cta-box {
+        flex-direction: column;
+    }
+    .hero-left-in {
+        padding-left: 6%;
+    }
+    #cortexa-ai-crm-landing .cx-comp-grid {
+        padding: 0 16px;
+    }
+    .benefits-grid {
+        gap: 20px;
+    }
+}
 @media (max-width: 768px) {
   .hero-title {
     font-size: 24px;
@@ -1881,7 +1915,9 @@
 }
 
 @media (min-width: 1024px) {
- 
+  .cta-left {
+      max-width: 520px;
+    }
   .roi-sub {
     font-size: 20px;
   }
