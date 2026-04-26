@@ -266,8 +266,8 @@ export default function Landing() {
       aiCrmF5Title: "Keeps Customers Happy",
       aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
 
-      heroTitleLine1: "Get Instant Leads.",
-      heroTitleLine2: "Close More Deals — 24/7.",
+      heroTitleLine1: "Get Instant Leads",
+      heroTitleLine2: "Close More Deals 24/7",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
       heroCheck1: "Capture every lead automatically",
@@ -342,6 +342,11 @@ export default function Landing() {
       smartFlow3Desc: "Every deal is tracked, every action is analyzed, and your performance is organized into clear insights you can act on.",
       smartBottom: "Your entire operation — connected, automated, and optimized in one intelligent system.",
       smartCTA: "Turn your business into an automated machine",
+
+      topLine1: "Meet Your AI CRM.",
+      topLine2: "Powered by",
+      topHighlight: "AI Agents",
+      topLine3: "that capture, follow up, and close your leads automatically."
 
     },
 
@@ -552,8 +557,8 @@ export default function Landing() {
       aiCrmF5Title: "Clientes felices",
       aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
 
-      heroTitleLine1: "Obtén leads al instante.",
-      heroTitleLine2: "Cierra más ventas — 24/7.",
+      heroTitleLine1: "Obtén leads al instante",
+      heroTitleLine2: "Cierra más ventas 24/7",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
       heroCheck1: "Captura cada lead automáticamente",
@@ -627,7 +632,12 @@ export default function Landing() {
       smartFlow3Title: "Pipeline → Seguimiento con IA → Insights de Rendimiento",
       smartFlow3Desc: "Cada operación se rastrea, cada acción se analiza y tu rendimiento se organiza en insights claros que puedes usar.",
       smartBottom: "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
-      smartCTA: "Convierte tu negocio en una máquina automatizada"
+      smartCTA: "Convierte tu negocio en una máquina automatizada",
+
+      topLine1: "Conoce tu CRM con IA.",
+      topLine2: "Impulsado por",
+      topHighlight: "Agentes de IA",
+      topLine3: "que capturan, dan seguimiento y cierran tus leads automáticamente."
     },
 
     pt: {
@@ -822,8 +832,8 @@ export default function Landing() {
       aiCrmF5Title: "Clientes felizes",
       aiCrmF5Desc: "A IA cuida do relacionamento e oferece suporte instantâneo.",
 
-      heroTitleLine1: "Gere leads instantaneamente.",
-      heroTitleLine2: "Feche mais negócios — 24/7.",
+      heroTitleLine1: "Gere leads instantaneamente",
+      heroTitleLine2: "Feche mais negócios 24/7",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
       heroCheck1: "Capture cada lead automaticamente",
@@ -897,7 +907,12 @@ export default function Landing() {
       smartFlow3Title: "Pipeline → Monitoramento com IA → Insights de Performance",
       smartFlow3Desc: "Cada negócio é monitorado, cada ação é analisada e sua performance é organizada em insights claros para tomada de decisão.",
       smartBottom: "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
-      smartCTA: "Transforme seu negócio em uma máquina automatizada"
+      smartCTA: "Transforme seu negócio em uma máquina automatizada",
+
+      topLine1: "Conheça o seu CRM com IA.",
+      topLine2: "Impulsionado por",
+      topHighlight: "Agentes de IA",
+      topLine3: "que capturam, fazem follow-up e fecham seus leads automaticamente."
     },
   };
 
@@ -950,8 +965,14 @@ export default function Landing() {
   ];
   return (
     <div id="cortexa-ai-crm-landing">
-      <p className="top-head">{tr.top}</p>
-
+      <div className="hero-text">
+        <h2 className="hero-title">
+          {tr.topLine1}
+          {tr.topLine2}{" "}
+          <span className="highlight">{tr.topHighlight}</span>{" "}
+          {tr.topLine3}
+        </h2>
+      </div>
       <header className="cx-header">
         <div className="cx-header-inner">
           <div className="cx-left">
@@ -1038,36 +1059,47 @@ export default function Landing() {
         <div className="hero-container">
 
           <div className="hero-left">
-            <p class="hero-head">{tr.heroHead}</p>
-            <h1 className="hero-title">
-              {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
-            </h1>
+            <div className="hero-left-in">
+              <p class="hero-head">{tr.heroHead}</p>
+              <h1 className="hero-title">
+                {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
+              </h1>
 
-            <p className="hero-sub">
-              {tr.heroSubtitle}
-            </p>
+              <p className="hero-sub">
+                {tr.heroSubtitle}
+              </p>
 
-            <div className="hero-checks">
-              {[
-                tr.heroCheck1,
-                tr.heroCheck2,
-                tr.heroCheck3,
-                tr.heroCheck4,
-                tr.heroCheck5,
-                tr.heroCheck6,
-              ].map((item, index) => (
-                <div className="check-item" key={index}>
-                  <span className="check">✔</span>
-                  <span>{item}</span>
-                </div>
-              ))}
+              <div className="hero-checks">
+                {[
+                  tr.heroCheck1,
+                  tr.heroCheck2,
+                  tr.heroCheck3,
+                  tr.heroCheck4,
+                  tr.heroCheck5,
+                  tr.heroCheck6,
+                ].map((item, index) => (
+                  <div className="check-item" key={index}>
+                    <span className="check">✔</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button className="hero-btn">
+                {tr.heroCTA}
+              </button>
+            </div>    
+            
+          </div>
+
+          <div className="hero-right">
+            <div className="hero-image">
+              <img src={heroImg} />
             </div>
-
-            <button className="hero-btn">
-              {tr.heroCTA}
-            </button>
-
-            <div className="hero-tags">
+          </div>
+                
+        </div>
+        <div className="hero-tags">
               <UserPlus className="icon blue" />
               <span>{tr.heroTag1}</span>
               <RefreshCcw className="icon purple" />
@@ -1081,15 +1113,6 @@ export default function Landing() {
               <Plug className="icon pink" />
               <span>{tr.heroTag6}</span>
             </div>
-          </div>
-
-          <div className="hero-right">
-            <div className="hero-image">
-              <img src={heroImg} />
-            </div>
-          </div>
-
-        </div>
       </section>
 
       {/* COMPARE */}
@@ -1166,7 +1189,7 @@ export default function Landing() {
         <img src={currentSec3} alt="" />
       </section>
 
-      <section className="ai-crm-section pt-20 mb-100">
+      <section className="ai-crm-section pt-20">
         <div className="ai-crm-container">
 
           <div className="ai-crm-badge">
@@ -1282,7 +1305,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="dominant section-light  pt-50">
+      <section className="dominant section-light pt-50 mb-100">
         <div className="container center">
           <h2 className="heading-dark">{tr.dominantHowTitle}</h2>
 
