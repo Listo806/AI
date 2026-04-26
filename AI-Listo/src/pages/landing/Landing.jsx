@@ -1,4 +1,13 @@
 import { useState, useEffect } from "react";
+import {
+    UserPlus,
+    RefreshCcw,
+    DollarSign,
+    BarChart3,
+    Brain,
+    Plug,
+    ArrowRight 
+  } from "lucide-react";
 import "./Landing.css";
 
 import headlogoImg from "../../assets/cortexa/headlogo.png";
@@ -275,6 +284,65 @@ export default function Landing() {
       heroTag5: "AI Engine",
       heroTag6: "Connect Your Apps",
       heroHead: "Real Estate Agents & Teams",
+
+      dominantTitleLine1: "A Real Estate Platform",
+      dominantTitleLine2: "Built for Real Estate",
+      dominantSubtitle:
+        "Everything you need is already here. Bring your workflow into one system built to handle your leads, listings, deals, analytics, and AI — all working together.",
+      dominantItem1Title: "Built for Your Business",
+      dominantItem1Desc:
+        "Manage listings, track leads, and move deals — all in one place.",
+      dominantItem2Title: "Everything Connected — Automatically",
+      dominantItem2Desc:
+        "Your pipeline, analytics, and AI all communicate together. Nothing is separate. Nothing is missing.",
+      dominantItem3Title: "Ready to Go",
+      dominantItem3Desc:
+        "No guessing what you need. No building systems. It’s already built for you.",
+      dominantPowerLine1: "Bring your workflow here —",
+      dominantPowerLine2: "and let the system run it the right way.",
+      dominantCTA: "Start Your Free Trial",
+      dominantHowTitle: "How It Works",
+      dominantHowSubtitle:
+        "Bring your workflow in — and the system takes over.",
+      dominantStep1Title: "Bring Your Workflow",
+      dominantStep1Desc:
+        "Import your leads, listings, and deals into the system.",
+      dominantStep2Title: "AI Activates",
+      dominantStep2Desc:
+        "AI captures, responds, and follows up instantly.",
+      dominantStep3Title: "Pipeline Moves",
+      dominantStep3Desc:
+        "Leads move through your pipeline automatically.",
+      dominantBottom1Title: "Deals Close",
+      dominantBottom1Desc:
+        "Your system keeps momentum until deals are closed.",
+      dominantBottom2Title: "Analytics Track Everything",
+      dominantBottom2Desc:
+        "See exactly where your business stands in real time.",
+      dominantBottom3Title: "You Stay in Control",
+      dominantBottom3Desc:
+        "Clear visibility, better decisions, stronger performance.",
+      dominantFinal:
+        "From first lead to closing — everything is handled inside one system.",
+
+      smartEyebrow: "Intelligent Integrations",
+      smartTitle: "Turn your entire real estate business into an automated revenue machine",
+      smartSubtitle: "Bring your listings, leads, messages, and funnels into one place. Cortexa connects everything, organizes everything, and uses AI to track, analyze, and move every deal forward — automatically.",
+      smartFlow: "Flow",
+      smartAutomated: "Automated",
+      smartOptimized: "Optimized",
+      smartFlow1Label: "Lead Capture & Follow-Up",
+      smartFlow1Title: "Ads → CRM → WhatsApp → AI",
+      smartFlow1Desc: "Every lead is captured instantly, qualified, and followed up automatically — so you never miss another opportunity.",
+      smartFlow2Label: "Listings, Funnels & Automation",
+      smartFlow2Title: "Website + Listings → CRM → Smart Sequences",
+      smartFlow2Desc: "Your properties, landing pages, and funnels feed into one system — triggering intelligent follow-ups until leads are ready to buy.",
+      smartFlow3Label: "Deals, Data & Analytics",
+      smartFlow3Title: "Pipeline → AI Tracking → Performance Insights",
+      smartFlow3Desc: "Every deal is tracked, every action is analyzed, and your performance is organized into clear insights you can act on.",
+      smartBottom: "Your entire operation — connected, automated, and optimized in one intelligent system.",
+      smartCTA: "Turn your business into an automated machine",
+
     },
 
     es: {
@@ -502,6 +570,64 @@ export default function Landing() {
       heroTag5: "Motor de IA",
       heroTag6: "Conecta tus Apps",
       heroHead: "Agentes y equipos inmobiliarios",
+
+      dominantTitleLine1: "Una plataforma inmobiliaria",
+      dominantTitleLine2: "Diseñada para el sector inmobiliario",
+      dominantSubtitle:
+        "Todo lo que necesitas ya está aquí. Lleva tu flujo de trabajo a un solo sistema diseñado para gestionar tus leads, propiedades, negocios, analíticas e IA — todo funcionando en conjunto.",
+      dominantItem1Title: "Diseñado para tu negocio",
+      dominantItem1Desc:
+        "Gestiona propiedades, sigue leads y avanza operaciones — todo en un solo lugar.",
+      dominantItem2Title: "Todo conectado — automáticamente",
+      dominantItem2Desc:
+        "Tu pipeline, analíticas e IA trabajan juntos. Nada está separado. Nada falta.",
+      dominantItem3Title: "Listo para usar",
+      dominantItem3Desc:
+        "Sin adivinar qué necesitas. Sin construir sistemas. Ya está listo para ti.",
+      dominantPowerLine1: "Trae tu flujo de trabajo aquí —",
+      dominantPowerLine2: "y deja que el sistema lo ejecute correctamente.",
+      dominantCTA: "Comienza tu prueba gratuita",
+      dominantHowTitle: "Cómo funciona",
+      dominantHowSubtitle:
+        "Trae tu flujo de trabajo — y el sistema se encarga del resto.",
+      dominantStep1Title: "Trae tu flujo de trabajo",
+      dominantStep1Desc:
+        "Importa tus leads, propiedades y operaciones al sistema.",
+      dominantStep2Title: "La IA se activa",
+      dominantStep2Desc:
+        "La IA captura, responde y da seguimiento al instante.",
+      dominantStep3Title: "El pipeline avanza",
+      dominantStep3Desc:
+        "Los leads avanzan automáticamente en tu pipeline.",
+      dominantBottom1Title: "Las ventas se cierran",
+      dominantBottom1Desc:
+        "Tu sistema mantiene el impulso hasta cerrar las operaciones.",
+      dominantBottom2Title: "Analíticas en tiempo real",
+      dominantBottom2Desc:
+        "Visualiza exactamente cómo está tu negocio en tiempo real.",
+      dominantBottom3Title: "Tú mantienes el control",
+      dominantBottom3Desc:
+        "Visibilidad clara, mejores decisiones y mayor rendimiento.",
+      dominantFinal:
+        "Desde el primer lead hasta el cierre — todo se gestiona dentro de un solo sistema.",
+      
+      smartEyebrow: "Integraciones Inteligentes",
+      smartTitle: "Convierte todo tu negocio inmobiliario en una máquina de ingresos automatizada",
+      smartSubtitle: "Lleva tus propiedades, leads, mensajes y embudos a un solo lugar. Cortexa conecta todo, organiza todo y utiliza IA para rastrear, analizar y avanzar cada oportunidad automáticamente.",
+      smartFlow: "Flujo",
+      smartAutomated: "Automatizado",
+      smartOptimized: "Optimizado",
+      smartFlow1Label: "Captación de Leads y Seguimiento",
+      smartFlow1Title: "Anuncios → CRM → WhatsApp → IA",
+      smartFlow1Desc: "Cada lead se captura al instante, se califica y se sigue automáticamente — para que nunca pierdas otra oportunidad.",
+      smartFlow2Label: "Propiedades, Funnels y Automatización",
+      smartFlow2Title: "Sitio Web + Propiedades → CRM → Secuencias Inteligentes",
+      smartFlow2Desc: "Tus propiedades, páginas de aterrizaje y embudos se integran en un solo sistema — activando seguimientos inteligentes hasta que los leads estén listos para comprar.",
+      smartFlow3Label: "Ventas, Datos y Analítica",
+      smartFlow3Title: "Pipeline → Seguimiento con IA → Insights de Rendimiento",
+      smartFlow3Desc: "Cada operación se rastrea, cada acción se analiza y tu rendimiento se organiza en insights claros que puedes usar.",
+      smartBottom: "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
+      smartCTA: "Convierte tu negocio en una máquina automatizada"
     },
 
     pt: {
@@ -714,6 +840,64 @@ export default function Landing() {
       heroTag5: "Motor de IA",
       heroTag6: "Conecte seus Apps",
       heroHead: "Agentes e equipes imobiliárias",
+
+      dominantTitleLine1: "Uma plataforma imobiliária",
+      dominantTitleLine2: "Construída para o mercado imobiliário",
+      dominantSubtitle:
+        "Tudo o que você precisa já está aqui. Traga seu fluxo de trabalho para um único sistema criado para gerenciar seus leads, imóveis, negociações, análises e IA — tudo funcionando junto.",
+      dominantItem1Title: "Feito para o seu negócio",
+      dominantItem1Desc:
+        "Gerencie imóveis, acompanhe leads e avance negociações — tudo em um só lugar.",
+      dominantItem2Title: "Tudo conectado — automaticamente",
+      dominantItem2Desc:
+        "Seu pipeline, análises e IA trabalham juntos. Nada fica separado. Nada está faltando.",
+      dominantItem3Title: "Pronto para usar",
+      dominantItem3Desc:
+        "Sem precisar adivinhar o que você precisa. Sem construir sistemas. Já está pronto para você.",
+      dominantPowerLine1: "Traga seu fluxo de trabalho para cá —",
+      dominantPowerLine2: "e deixe o sistema rodar da forma correta.",
+      dominantCTA: "Comece seu teste gratuito",
+      dominantHowTitle: "Como funciona",
+      dominantHowSubtitle:
+        "Traga seu fluxo de trabalho — e o sistema assume a partir daí.",
+      dominantStep1Title: "Traga seu fluxo de trabalho",
+      dominantStep1Desc:
+        "Importe seus leads, imóveis e negociações para o sistema.",
+      dominantStep2Title: "A IA é ativada",
+      dominantStep2Desc:
+        "A IA captura, responde e faz follow-up instantaneamente.",
+      dominantStep3Title: "O pipeline avança",
+      dominantStep3Desc:
+        "Os leads avançam automaticamente no seu pipeline.",
+      dominantBottom1Title: "Negócios são fechados",
+      dominantBottom1Desc:
+        "Seu sistema mantém o ritmo até fechar as negociações.",
+      dominantBottom2Title: "Análises em tempo real",
+      dominantBottom2Desc:
+        "Veja exatamente como está o seu negócio em tempo real.",
+      dominantBottom3Title: "Você mantém o controle",
+      dominantBottom3Desc:
+        "Visibilidade clara, melhores decisões e desempenho mais forte.",
+      dominantFinal:
+        "Do primeiro lead ao fechamento — tudo é gerenciado dentro de um único sistema.",
+
+      smartEyebrow: "Integrações Inteligentes",
+      smartTitle: "Transforme todo o seu negócio imobiliário em uma máquina de receita automatizada",
+      smartSubtitle: "Traga seus imóveis, leads, mensagens e funis para um só lugar. O Cortexa conecta tudo, organiza tudo e usa IA para rastrear, analisar e impulsionar cada oportunidade automaticamente.",
+      smartFlow: "Fluxo",
+      smartAutomated: "Automatizado",
+      smartOptimized: "Otimizado",
+      smartFlow1Label: "Captação de Leads e Follow-up",
+      smartFlow1Title: "Anúncios → CRM → WhatsApp → IA",
+      smartFlow1Desc: "Cada lead é capturado instantaneamente, qualificado e acompanhado automaticamente — para que você nunca perca outra oportunidade.",
+      smartFlow2Label: "Imóveis, Funis e Automação",
+      smartFlow2Title: "Website + Imóveis → CRM → Sequências Inteligentes",
+      smartFlow2Desc: "Seus imóveis, páginas e funis alimentam um único sistema — ativando follow-ups inteligentes até que os leads estejam prontos para comprar.",
+      smartFlow3Label: "Vendas, Dados e Análises",
+      smartFlow3Title: "Pipeline → Monitoramento com IA → Insights de Performance",
+      smartFlow3Desc: "Cada negócio é monitorado, cada ação é analisada e sua performance é organizada em insights claros para tomada de decisão.",
+      smartBottom: "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
+      smartCTA: "Transforme seu negócio em uma máquina automatizada"
     },
   };
 
@@ -747,7 +931,23 @@ export default function Landing() {
       : lang === "pt"
         ? testimonialsImgPT
         : testimonialsImg;
-
+  const flows = [
+    {
+      label: tr.smartFlow1Label,
+      title: tr.smartFlow1Title,
+      text: tr.smartFlow1Desc,
+    },
+    {
+      label: tr.smartFlow2Label,
+      title: tr.smartFlow2Title,
+      text: tr.smartFlow2Desc,
+    },
+    {
+      label: tr.smartFlow3Label,
+      title: tr.smartFlow3Title,
+      text: tr.smartFlow3Desc,
+    },
+  ];
   return (
     <div id="cortexa-ai-crm-landing">
       <p className="top-head">{tr.top}</p>
@@ -834,11 +1034,7 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* HERO 
-      <section className="cx-hero">
-        <img src={currentHero} />
-      </section>*/}
-      <section className="hero pt-50">
+      <section className="hero pt-20">
         <div className="hero-container">
 
           <div className="hero-left">
@@ -872,16 +1068,17 @@ export default function Landing() {
             </button>
 
             <div className="hero-tags">
+              <UserPlus className="icon blue" />
               <span>{tr.heroTag1}</span>
-              <span>•</span>
+              <RefreshCcw className="icon purple" />
               <span>{tr.heroTag2}</span>
-              <span>•</span>
+              <DollarSign className="icon green" />
               <span>{tr.heroTag3}</span>
-              <span>•</span>
+              <BarChart3 className="icon blue2" />
               <span>{tr.heroTag4}</span>
-              <span>•</span>
+              <Brain className="icon indigo" />
               <span>{tr.heroTag5}</span>
-              <span>•</span>
+              <Plug className="icon pink" />
               <span>{tr.heroTag6}</span>
             </div>
           </div>
@@ -969,7 +1166,7 @@ export default function Landing() {
         <img src={currentSec3} alt="" />
       </section>
 
-      <section className="ai-crm-section pt-20">
+      <section className="ai-crm-section pt-20 mb-100">
         <div className="ai-crm-container">
 
           <div className="ai-crm-badge">
@@ -1029,6 +1226,186 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <section className="dominant section-dark pt-50">
+        <div className="grid-bg"></div>
+        <div className="glow-line">
+          <div className="glow-bar"></div>
+        </div>
+
+        <div className="container center">
+          <h2 className="heading">
+            <span className="text-gradient-white">
+              {tr.dominantTitleLine1}
+            </span>
+            <br />
+            <span className="text-gradient-blue">
+              {tr.dominantTitleLine2}
+            </span>
+          </h2>
+
+          <p className="subline">
+            {tr.dominantSubtitle}
+          </p>
+        </div>
+
+        <div className="divider"></div>
+
+        <div className="container grid-3">
+          <div className="item">
+            <h3>{tr.dominantItem1Title}</h3>
+            <p>{tr.dominantItem1Desc}</p>
+          </div>
+
+          <div className="item highlight">
+            <h3>{tr.dominantItem2Title}</h3>
+            <p>{tr.dominantItem2Desc}</p>
+          </div>
+
+          <div className="item">
+            <h3>{tr.dominantItem3Title}</h3>
+            <p>{tr.dominantItem3Desc}</p>
+          </div>
+        </div>
+
+        <div className="divider"></div>
+
+        <div className="container center power">
+          <p>
+            {tr.dominantPowerLine1} <br />
+            {tr.dominantPowerLine2}
+          </p>
+
+          <button className="btn-gradient">
+            {tr.dominantCTA}
+          </button>
+        </div>
+      </section>
+
+      <section className="dominant section-light  pt-50">
+        <div className="container center">
+          <h2 className="heading-dark">{tr.dominantHowTitle}</h2>
+
+          <p className="subline-dark">
+            {tr.dominantHowSubtitle}
+          </p>
+
+          <div className="flow">
+            <div className="step">
+              <span>01</span>
+              <h3>{tr.dominantStep1Title}</h3>
+              <p>{tr.dominantStep1Desc}</p>
+            </div>
+
+            <div className="arrow">→</div>
+            <div className="step">
+              <span>02</span>
+              <h3>{tr.dominantStep2Title}</h3>
+              <p>{tr.dominantStep2Desc}</p>
+            </div>
+
+            <div className="arrow">→</div>
+            <div className="step">
+              <span>03</span>
+              <h3>{tr.dominantStep3Title}</h3>
+              <p>{tr.dominantStep3Desc}</p>
+            </div>
+          </div>
+
+          <div className="grid-3 mt">
+            <div>
+              <h3>{tr.dominantBottom1Title}</h3>
+              <p>{tr.dominantBottom1Desc}</p>
+            </div>
+
+            <div>
+              <h3>{tr.dominantBottom2Title}</h3>
+              <p>{tr.dominantBottom2Desc}</p>
+            </div>
+
+            <div>
+              <h3>{tr.dominantBottom3Title}</h3>
+              <p>{tr.dominantBottom3Desc}</p>
+            </div>
+          </div>
+          <p className="final-line">
+            {tr.dominantFinal}
+          </p>
+        </div>
+      </section>
+
+      <section className="smart">
+        <div className="smart-container">
+          <div className="smart-head">
+            <p className="smart-eyebrow">{tr.smartEyebrow}</p>
+
+            <h2 className="smart-title">
+              {tr.smartTitle}
+            </h2>
+
+            <p className="smart-sub">
+              {tr.smartSubtitle}
+            </p>
+          </div>
+
+          <div className="smart-flow">
+
+            <div className="smart-line"></div>
+
+            {flows.map((flow, index) => (
+              <div key={index} className="smart-item">
+
+                {index !== 0 && <div className="smart-divider"></div>}
+
+                <div className="smart-grid">
+
+                  <div className="smart-left">
+                    <p>{flow.label}</p>
+                  </div>
+
+                  <div className="smart-right">
+
+                    <h3>{flow.title}</h3>
+
+                    <div className="smart-arrow">
+                      <span>{tr.smartFlow}</span>
+                      <span>→</span>
+                      <span>{tr.smartAutomated}</span>
+                      <span>→</span>
+                      <span>{tr.smartOptimized}</span>
+                    </div>
+
+                    <p className="smart-desc">
+                      {flow.text}
+                    </p>
+
+                  </div>
+                </div>
+
+                {index !== flows.length - 1 && (
+                  <div className="smart-connector">
+                    <span>↓</span>
+                    <div className="line"></div>
+                  </div>
+                )}
+
+              </div>
+            ))}
+
+          </div>
+
+          <div className="smart-bottom">
+            <p>{tr.smartBottom}</p>
+          </div>
+
+          <div className="smart-cta">
+            <button>
+              {tr.smartCTA} →
+            </button>
+          </div>
+
+        </div>
+      </section>       
 
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
