@@ -270,11 +270,20 @@ export default function Landing() {
       heroTitleLine2: "Close More Deals 24/7",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
-      heroCheck1: "AI finds & qualifies leads automatically",
-      heroCheck2: "Instant follow-up across calls, texts & WhatsApp",
-      heroCheck3: "Books appointments directly on your calendar",
-      heroCheck4: "Manage leads, deals & performance in one dashboard",
+      heroCheck1: "Replace multiple agents with one AI system",
+      heroCheck2: "Save thousands per month on staffing & missed opportunities",
+      heroCheck3: "Works 24/7 — never misses a lead or opportunity",
+      heroCheck4: "Close more deals with zero manual follow-up",
+      heroCheck5: "Your AI Agent finds & qualifies leads automatically",
+      heroCheck6: "Capture every lead from ads, listings & funnels — in one place",
+      heroCheck7: "No missed opportunities — everything flows in instantly",
+      heroCheck8: "Start getting leads without lifting a finger",
+      heroCheck9: "Your AI Agent follows up instantly via calls, texts & WhatsApp",
+      heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
+      heroCheck11: "Books appointments directly on your calendar",
+      heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
+      heroUnlock: "Unlock potential today!",
       heroTag1: "Get Leads",
       heroTag2: "Automate Follow-Up",
       heroTag3: "Close Deals",
@@ -559,11 +568,20 @@ export default function Landing() {
       heroTitleLine2: "Cierra más ventas 24/7",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
-      heroCheck1: "La IA encuentra y califica leads automáticamente",
-      heroCheck2: "Seguimiento instantáneo por llamadas, mensajes y WhatsApp",
-      heroCheck3: "Agenda citas directamente en tu calendario",
-      heroCheck4: "Gestiona leads, negocios y rendimiento en un solo panel",
+      heroCheck1: "Reemplaza múltiples agentes con un solo sistema de IA",
+      heroCheck2: "Ahorra miles al mes en personal y oportunidades perdidas",
+      heroCheck3: "Funciona 24/7 — nunca pierde un lead u oportunidad",
+      heroCheck4: "Cierra más ventas sin seguimiento manual",
+      heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
+      heroCheck6: "Captura cada lead de anuncios, listados y embudos — en un solo lugar",
+      heroCheck7: "Sin oportunidades perdidas — todo fluye instantáneamente",
+      heroCheck8: "Empieza a recibir leads sin mover un dedo",
+      heroCheck9: "Tu agente de IA hace seguimiento instantáneo vía llamadas, mensajes y WhatsApp",
+      heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
+      heroCheck11: "Agenda citas directamente en tu calendario",
+      heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza tu prueba gratuita",
+      heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Generar Leads",
       heroTag2: "Automatizar Seguimiento",
       heroTag3: "Cerrar Ventas",
@@ -832,11 +850,20 @@ export default function Landing() {
       heroTitleLine2: "Feche mais negócios 24/7",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
-      heroCheck1: "A IA encontra e qualifica leads automaticamente",
-      heroCheck2: "Follow-up instantâneo por chamadas, mensagens e WhatsApp",
-      heroCheck3: "Agenda compromissos diretamente no seu calendário",
-      heroCheck4: "Gerencie leads, negócios e desempenho em um único painel",
+      heroCheck1: "Substitua vários agentes por um único sistema de IA",
+      heroCheck2: "Economize milhares por mês com equipe e oportunidades perdidas",
+      heroCheck3: "Funciona 24/7 — nunca perde um lead ou oportunidade",
+      heroCheck4: "Feche mais negócios sem acompanhamento manual",
+      heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
+      heroCheck6: "Capture todos os leads de anúncios, listagens e funis — em um só lugar",
+      heroCheck7: "Sem oportunidades perdidas — tudo flui instantaneamente",
+      heroCheck8: "Comece a gerar leads sem esforço",
+      heroCheck9: "Seu agente de IA faz follow-up instantâneo via chamadas, mensagens e WhatsApp",
+      heroCheck10: "Gerencia conversas, qualifica e nutre cada lead",
+      heroCheck11: "Agenda compromissos diretamente no seu calendário",
+      heroCheck12: "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
+      heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Gerar Leads",
       heroTag2: "Automatizar Follow-up",
       heroTag3: "Fechar Negócios",
@@ -1058,11 +1085,6 @@ export default function Landing() {
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
               </h1>
-
-              <p className="hero-sub">
-                {tr.heroSubtitle}
-              </p>
-
               <div className="hero-checks">
                 {[
                   tr.heroCheck1,
@@ -1076,10 +1098,30 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-
-              <button className="hero-btn">
-                {tr.heroCTA}
-              </button>
+              <div className="hero-inline">
+                <button className="hero-btn">
+                  {tr.heroCTA}
+                </button>  
+                <p>{tr.heroUnlock}</p>
+              </div>
+              
+              <div className="hero-checks">
+                {[
+                  tr.heroCheck5,
+                  tr.heroCheck6,
+                  tr.heroCheck7,
+                  tr.heroCheck8,
+                  tr.heroCheck9,
+                  tr.heroCheck10,
+                  tr.heroCheck11,
+                  tr.heroCheck12,
+                ].map((item, index) => (
+                  <div className="check-item" key={index}>
+                    <span className="check">✔</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>    
             
           </div>
@@ -1710,7 +1752,7 @@ export default function Landing() {
               <div class="footer-grid">
                 
                 <div class="footer-brand">
-                  <h2>Cortexa</h2>
+                  <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
                   <p>
                     The AI-powered CRM that helps you capture leads, automate follow-ups, 
                     and close more deals — faster.
@@ -1771,8 +1813,8 @@ export default function Landing() {
                   <h3>Legal</h3>
                   <ul>
                     <li><a href="/terms">Terms & Conditions</a></li>
-                    <li><a href="/privacy">Privacy Policy</a></li>
-                    <li><a href="/refund">Refund Policy</a></li>
+                    <li><a href="/privacy-policy">Privacy Policy</a></li>
+                    <li><a href="/refund-policy">Refund Policy</a></li>
                     <li><a href="/cancellation">Cancellation Policy</a></li>
                   </ul>
                 </div>
