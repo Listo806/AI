@@ -16,6 +16,7 @@ import SignIn from "./pages/auth/SignIn";
 import Privacy from "./pages/common/Privacy";
 import Refund from "./pages/common/Refund";
 import Terms from "./pages/common/Terms";
+import Cancellation from "./pages/common/Cancellation";
 
 export default function App() {
     return (
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/privacy-policy" element={<Privacy />} />
           <Route path="/refund-policy" element={<Refund />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/cancellation" element={<Cancellation />} />
           
         </Routes>
       );

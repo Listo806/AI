@@ -9,161 +9,196 @@ const Terms = () => {
       </p>
 
       <p>
-        These Terms of Service (“Terms”) are a legally binding agreement between
-        you (“User”, “Customer”) and <strong>Cortexa CRM</strong> (“Cortexa”, “we”,
-        “our”, “us”) governing your access to and use of our platform.
+        These Terms of Service (“Terms”) govern your access to and use of <strong>Cortexa CRM</strong> (“Cortexa”, “we”, “our”, “us”). By using our platform, you agree to these Terms.
       </p>
 
-      <p>By using Cortexa CRM, you agree to these Terms.</p>
-
       <Section title="1. Eligibility">
-        <ul>
-          <li>At least 18 years old</li>
-          <li>Operating a legitimate business or professional service</li>
-        </ul>
-        <p>
-          You may not use Cortexa if your business involves illegal, fraudulent,
-          or prohibited activities.
-        </p>
-      </Section>
+          <p>You must:</p>
+          <ul style={styles.ul}>
+            <li>Be at least 18 years old</li>
+            <li>Operate a legitimate business or professional service</li>
+          </ul>
+          <p>
+            You may not use Cortexa for illegal, fraudulent, or prohibited activities.
+          </p>
+        </Section>
 
-      <Section title="2. Services Provided">
-        <ul>
-          <li>Lead management tools</li>
-          <li>CRM functionality</li>
-          <li>Automation and analytics tools</li>
-        </ul>
-        <p>
-          We reserve the right to modify, update, or discontinue features at any
-          time.
-        </p>
-      </Section>
+        <Section title="2. Services">
+          <p>Cortexa provides:</p>
+          <ul style={styles.ul}>
+            <li>Lead management tools</li>
+            <li>CRM functionality</li>
+            <li>Automation and analytics tools</li>
+          </ul>
+          <p>
+            We may modify, update, or discontinue features at any time without notice.
+          </p>
+        </Section>
 
-      <Section title="3. Account Responsibility">
-        <ul>
-          <li>Maintaining account security</li>
-          <li>All activity under your account</li>
-          <li>Ensuring your data is accurate</li>
-        </ul>
-        <p>
-          We may suspend accounts for suspicious or abusive activity.
-        </p>
-      </Section>
+        <Section title="3. Account Responsibility">
+          <p>You are responsible for:</p>
+          <ul style={styles.ul}>
+            <li>Maintaining account security</li>
+            <li>All activity under your account</li>
+            <li>Providing accurate information</li>
+          </ul>
+          <p>
+            We may suspend or terminate accounts for suspicious, abusive, or prohibited activity.
+          </p>
+        </Section>
 
-      <Section title="4. Acceptable Use">
-        <ul>
-          <li>Fraudulent activity</li>
-          <li>Spam or unauthorized messaging</li>
-          <li>Violating privacy laws</li>
-          <li>Misleading or deceptive practices</li>
-        </ul>
-        <p>Violation may result in immediate termination.</p>
-      </Section>
+        <Section title="4. Acceptable Use">
+          <p>You agree NOT to:</p>
+          <ul style={styles.ul}>
+            <li>Engage in fraud or illegal activity</li>
+            <li>Send spam or unauthorized messages</li>
+            <li>Violate data protection or privacy laws</li>
+            <li>Mislead or deceive users</li>
+          </ul>
+          <p>Violation may result in immediate account termination.</p>
+        </Section>
 
-      <Section title="5. Subscription & Billing">
-        <ul>
-          <li>Subscription-based service</li>
-          <li>Billed monthly or annually</li>
-          <li>Recurring billing upon signup</li>
-          <li>Payments via third-party providers (e.g., PayPal)</li>
-        </ul>
-        <p>Failure to pay may result in account suspension.</p>
-      </Section>
+        <Section title="5. Free Trial, Activation Fee & Billing">
+          <p>Cortexa offers a 14-day free trial.</p>
 
-      <Section title="6. Refund Policy">
-        <ul>
-          <li>All payments are non-refundable</li>
-          <li>Cancel before billing if trial is offered</li>
-          <li>No refunds after charges are processed</li>
-        </ul>
-        <p>
-          Exceptions may be made only at our discretion or where required by law.
-        </p>
-      </Section>
+          <p>To activate your account:</p>
+          <ul style={styles.ul}>
+            <li>A one-time activation fee of $27 may be charged at signup</li>
+          </ul>
 
-      <Section title="7. User Data & Ownership">
-        <ul>
-          <li>You retain ownership of your data</li>
-          <li>We process data only to provide services</li>
-          <li>We do NOT sell your data</li>
-        </ul>
-        <p>
-          You are responsible for ensuring your data complies with laws.
-        </p>
-      </Section>
+          <p>During the trial:</p>
+          <ul style={styles.ul}>
+            <li>You have full access to the platform</li>
+          </ul>
 
-      <Section title="8. Third-Party Services">
-        <p>
-          Cortexa may integrate with third-party tools. We are not responsible
-          for third-party service performance or policies.
-        </p>
-      </Section>
+          <p>After the 14-day trial:</p>
+          <ul style={styles.ul}>
+            <li>Your subscription will automatically convert to a paid plan</li>
+            <li>
+              You will be charged the applicable subscription fee (e.g., $299/month or selected plan)
+            </li>
+          </ul>
 
-      <Section title="9. Intellectual Property">
-        <p>All platform content, design, and software are owned by Cortexa.</p>
-        <ul>
-          <li>Copy</li>
-          <li>Distribute</li>
-          <li>Reverse engineer</li>
-        </ul>
-        <p>are prohibited without permission.</p>
-      </Section>
+          <p>Billing terms:</p>
+          <ul style={styles.ul}>
+            <li>Subscriptions are billed monthly or annually depending on your selection</li>
+            <li>Billing is recurring and will continue until canceled</li>
+            <li>Payments are processed through third-party providers (e.g., PayPal)</li>
+          </ul>
 
-      <Section title="10. Service Availability">
-        <p>We do not guarantee uninterrupted service.</p>
-        <ul>
-          <li>Maintenance</li>
-          <li>System modifications</li>
-          <li>Temporary suspension</li>
-        </ul>
-      </Section>
+          <p>
+            By signing up, you authorize Cortexa to charge your payment method according to these terms.
+          </p>
+        </Section>
 
-      <Section title="11. Limitation of Liability">
-        <p>
-          To the maximum extent permitted by law, Cortexa is NOT liable for:
-        </p>
-        <ul>
-          <li>Loss of profits</li>
-          <li>Data loss</li>
-          <li>Business interruption</li>
-        </ul>
-      </Section>
+        <Section title="6. Cancellation & Refund Policy">
+          <ul style={styles.ul}>
+            <li>You may cancel your subscription at any time before the next billing cycle</li>
+            <li>Cancellation prevents future charges but does not retroactively refund past payments</li>
+            <li>All payments are non-refundable unless required by law</li>
+          </ul>
 
-      <Section title="12. Indemnification">
-        <p>
-          You agree to defend and hold Cortexa harmless from claims arising from:
-        </p>
-        <ul>
-          <li>Your use of the platform</li>
-          <li>Violations of laws or these Terms</li>
-        </ul>
-      </Section>
+          <p>No refunds will be issued for:</p>
+          <ul style={styles.ul}>
+            <li>Partial billing periods</li>
+            <li>Failure to cancel before renewal</li>
+            <li>Lack of usage</li>
+          </ul>
+        </Section>
 
-      <Section title="13. Termination">
-        <ul>
-          <li>Violation of Terms</li>
-          <li>Prohibited activity</li>
-          <li>Legal or risk reasons</li>
-        </ul>
-      </Section>
+        <Section title="7. User Data & Responsibility">
+          <ul style={styles.ul}>
+            <li>You retain ownership of your data</li>
+            <li>Cortexa processes data only to provide services</li>
+            <li>We do NOT sell your data</li>
+          </ul>
 
-      <Section title="14. Changes to Terms">
-        <p>
-          We may update these Terms at any time. Continued use means acceptance.
-        </p>
-      </Section>
+          <p>You are responsible for ensuring your data:</p>
+          <ul style={styles.ul}>
+            <li>Complies with applicable laws</li>
+            <li>Is accurate and lawful to use</li>
+          </ul>
+        </Section>
 
-      <Section title="15. Governing Law">
-        <p>
-          These Terms are governed by applicable laws in your operating
-          jurisdiction.
-        </p>
-      </Section>
+        <Section title="8. Third-Party Services">
+          <p>Cortexa may integrate with third-party services.</p>
+          <p>We are not responsible for:</p>
+          <ul style={styles.ul}>
+            <li>Third-party performance</li>
+            <li>External service outages</li>
+            <li>Third-party policies or data handling</li>
+          </ul>
+        </Section>
 
-      <Section title="16. Contact">
-        <p>Email: support@cortexa.ai</p>
-        <p>Company: Cortexa CRM</p>
-      </Section>
+        <Section title="9. Intellectual Property">
+          <p>All Cortexa platform content, design, and software are owned by Cortexa.</p>
+          <p>You may not:</p>
+          <ul style={styles.ul}>
+            <li>Copy</li>
+            <li>Distribute</li>
+            <li>Modify</li>
+            <li>Reverse engineer</li>
+          </ul>
+          <p>without prior written permission.</p>
+        </Section>
+
+        <Section title="10. Service Availability">
+          <p>We do not guarantee uninterrupted service.</p>
+          <p>Service may be affected by:</p>
+          <ul style={styles.ul}>
+            <li>Maintenance</li>
+            <li>Updates</li>
+            <li>System changes</li>
+            <li>External factors</li>
+          </ul>
+        </Section>
+
+        <Section title="11. Limitation of Liability">
+          <p>To the maximum extent permitted by law, Cortexa is not liable for:</p>
+          <ul style={styles.ul}>
+            <li>Loss of profits</li>
+            <li>Data loss</li>
+            <li>Business interruption</li>
+            <li>Indirect or consequential damages</li>
+          </ul>
+        </Section>
+
+        <Section title="12. Indemnification">
+          <p>
+            You agree to defend and hold Cortexa harmless from any claims arising from:
+          </p>
+          <ul style={styles.ul}>
+            <li>Your use of the platform</li>
+            <li>Violations of these Terms</li>
+            <li>Violations of applicable laws</li>
+          </ul>
+        </Section>
+
+        <Section title="13. Termination">
+          <p>We may suspend or terminate your account for:</p>
+          <ul style={styles.ul}>
+            <li>Violation of these Terms</li>
+            <li>Fraudulent or prohibited activity</li>
+            <li>Legal or compliance reasons</li>
+          </ul>
+        </Section>
+
+        <Section title="14. Changes to Terms">
+          <p>
+            We may update these Terms at any time. Continued use of the platform constitutes acceptance of the updated Terms.
+          </p>
+        </Section>
+
+        <Section title="15. Governing Law">
+          <p>
+            These Terms are governed by applicable laws in your operating jurisdiction.
+          </p>
+        </Section>
+
+        <Section title="16. Contact">
+          <p>Support Email: support@cortexa.ai</p>
+          <p>Company: Cortexa CRM</p>
+        </Section>
     </div>
   );
 };
@@ -202,6 +237,11 @@ const styles = {
   sectionContent: {
     fontSize: "15px",
   },
+  ul: {
+      paddingLeft: "24px",
+      marginTop: "8px",
+      marginBottom: "12px",
+    },
 };
 
 export default Terms;

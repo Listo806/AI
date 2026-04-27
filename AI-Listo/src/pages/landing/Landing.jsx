@@ -266,7 +266,7 @@ export default function Landing() {
       aiCrmF5Title: "Keeps Customers Happy",
       aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
 
-      heroTitleLine1: "Get Instant Leads",
+      heroTitleLine1: "Get Instant Leads —",
       heroTitleLine2: "Close More Deals 24/7",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
@@ -564,7 +564,7 @@ export default function Landing() {
       aiCrmF5Title: "Clientes felices",
       aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
 
-      heroTitleLine1: "Obtén leads al instante",
+      heroTitleLine1: "Obtén leads al instante —",
       heroTitleLine2: "Cierra más ventas 24/7",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
@@ -846,7 +846,7 @@ export default function Landing() {
       aiCrmF5Title: "Clientes felizes",
       aiCrmF5Desc: "A IA cuida do relacionamento e oferece suporte instantâneo.",
 
-      heroTitleLine1: "Gere leads instantaneamente",
+      heroTitleLine1: "Gere leads instantaneamente —",
       heroTitleLine2: "Feche mais negócios 24/7",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
