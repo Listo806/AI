@@ -3,7 +3,7 @@
   color: #111;
 }
 
-.container {
+.sub_container {
   max-width: 1200px;
   margin: auto;
   padding: 0 20px;
@@ -154,12 +154,6 @@
 .help-page {
   font-family: Arial, sans-serif;
   color: #111;
-}
-
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
 }
 
 .center {
@@ -394,12 +388,6 @@
   color: #111;
 }
 
-/* container */
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
-}
 
 /* HERO */
 .about-hero {

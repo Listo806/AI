@@ -92,7 +92,7 @@ export default function Contact() {
     <main className="contact-page">
 
       <section className="contact-hero">
-        <div className="container center">
+        <div className="sub_container center">
           <p className="contact-label">Contact Support</p>
           <h1>Need help? Talk to our AI first.</h1>
           <p className="contact-sub">
@@ -102,7 +102,7 @@ export default function Contact() {
       </section>
 
       <section className="contact-main">
-        <div className="container grid">
+        <div className="sub_container grid">
 
           <div className="chat-box">
 

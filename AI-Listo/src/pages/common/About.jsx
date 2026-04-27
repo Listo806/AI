@@ -18,7 +18,7 @@ export default function About() {
 
       {/* HERO */}
       <section className="about-hero">
-        <div className="container hero-grid">
+        <div className="sub_container hero-grid">
 
           <div className="hero-left">
             <p className="label">About Cortexa</p>
@@ -64,7 +64,7 @@ export default function About() {
 
       {/* WHY */}
       <section className="section">
-        <div className="container center">
+        <div className="sub_container center">
           <h2>Real estate has a systems problem, not a lead problem.</h2>
           <p>
             Leads come from many channels but are rarely connected in one system.
@@ -74,7 +74,7 @@ export default function About() {
 
       {/* PROBLEMS */}
       <section className="section">
-        <div className="container grid-3">
+        <div className="sub_container grid-3">
 
           <div className="card">
             <MessageCircle />
@@ -99,7 +99,7 @@ export default function About() {
 
       {/* INTELLIGENCE */}
       <section className="dark-section">
-        <div className="container split">
+        <div className="sub_container split">
 
           <div>
             <h2>Cortexa thinks with your business.</h2>
@@ -128,7 +128,7 @@ export default function About() {
 
       {/* CTA */}
       <section className="cta">
-        <div className="container cta-box">
+        <div className="sub_container cta-box">
           <h2>Ready to connect your business to the brain?</h2>
           <p>Start your free trial today.</p>
 

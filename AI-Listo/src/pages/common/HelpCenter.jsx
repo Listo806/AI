@@ -63,7 +63,7 @@ export default function HelpCenterPage() {
 
       {/* HERO */}
       <section className="help-hero">
-        <div className="container center">
+        <div className="sub_container center">
           <p className="label">Cortexa Help Center</p>
           <h1>Get help with every part of your CRM.</h1>
           <p className="sub">
@@ -83,7 +83,7 @@ export default function HelpCenterPage() {
 
       {/* CONTENT */}
       <section className="help-content">
-        <div className="container">
+        <div className="sub_container">
 
           {!selectedTopic ? (
             <>
