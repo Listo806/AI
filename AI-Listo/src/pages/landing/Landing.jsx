@@ -1803,9 +1803,10 @@ export default function Landing() {
                 <div class="footer-col">
                   <h3>Support</h3>
                   <ul>
+                    <li><a href="/support">24-7 Support</a></li>
                     <li><a href="/help">Help Center</a></li>
                     <li><a href="/contact">Contact Us</a></li>
-                    <li><a href="/contact">AI Support</a></li>
+                    <li><a href="/about">About Us</a></li>
                   </ul>
                 </div>
 

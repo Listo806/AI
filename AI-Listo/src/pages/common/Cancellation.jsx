@@ -1,6 +1,6 @@
 import React from "react";
 
-const Refund = () => {
+const Cancellation = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Cancellation Policy</h1>
@@ -150,4 +150,4 @@ const styles = {
     },
 };
 
-export default Refund;
+export default Cancellation;

@@ -17,6 +17,10 @@ import Privacy from "./pages/common/Privacy";
 import Refund from "./pages/common/Refund";
 import Terms from "./pages/common/Terms";
 import Cancellation from "./pages/common/Cancellation";
+import Contact from "./pages/common/Contact";
+import HelpCenter from "./pages/common/HelpCenter";
+import About from "./pages/common/About";
+import Support from "./pages/common/Support";
 
 export default function App() {
     return (
@@ -41,6 +45,10 @@ export default function App() {
           <Route path="/refund-policy" element={<Refund />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/cancellation" element={<Cancellation />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/support" element={<Support />} />
           
         </Routes>
       );
