@@ -24,6 +24,8 @@ import Support from "./pages/common/Support";
 import CityPage from "./pages/common/CityPage";
 import CountryPage from "./pages/common/CountryPage";
 
+import Pricing from "./pages/common/Pricing";
+
 export default function App() {
     return (
         <Routes>
@@ -53,6 +55,8 @@ export default function App() {
           <Route path="/support" element={<Support />} />
           <Route path="/:country/:city" element={<CityPage />} />
           <Route path="/:country" element={<CountryPage />} />
+          
+          <Route path="/pricing" element={<Pricing />} />
           
         </Routes>
       );

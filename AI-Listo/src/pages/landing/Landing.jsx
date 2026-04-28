@@ -354,7 +354,8 @@ export default function Landing() {
       topLine1: "Meet Your AI CRM.",
       topLine2: "Powered by",
       topHighlight: "AI Agents",
-      topLine3: "that capture, follow up, and close your leads automatically."
+      topLine3: "that capture, follow up, and close your leads automatically.",
+      pricing: "Pricing",
 
     },
 
@@ -652,7 +653,8 @@ export default function Landing() {
       topLine1: "Conoce tu CRM con IA.",
       topLine2: "Impulsado por",
       topHighlight: "Agentes de IA",
-      topLine3: "que capturan, dan seguimiento y cierran tus leads automáticamente."
+      topLine3: "que capturan, dan seguimiento y cierran tus leads automáticamente.",
+      pricing: "Precios"
     },
 
     pt: {
@@ -934,7 +936,8 @@ export default function Landing() {
       topLine1: "Conheça o seu CRM com IA.",
       topLine2: "Impulsionado por",
       topHighlight: "Agentes de IA",
-      topLine3: "que capturam, fazem follow-up e fecham seus leads automaticamente."
+      topLine3: "que capturam, fazem follow-up e fecham seus leads automaticamente.",
+      pricing: "Preços"
     },
   };
 
@@ -1018,6 +1021,7 @@ export default function Landing() {
                 </button>
               );
             })}
+            <a className="nav-menu" href="/pricing">{tr.pricing}</a>
           </nav>
 
           <div className="cx-actions">
@@ -1103,7 +1107,7 @@ export default function Landing() {
                 <button className="hero-btn">
                   {tr.heroCTA}
                 </button>  
-                <p>{tr.heroUnlock}</p>
+                <p className="next-btn">{tr.heroUnlock}</p>
               </div>
               
               <div className="hero-checks">

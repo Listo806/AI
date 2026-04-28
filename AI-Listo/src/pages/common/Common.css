@@ -378,18 +378,11 @@
   color: #111;
 }
 
-
-
-
-
-
 .about-page {
   font-family: Arial, sans-serif;
   color: #111;
 }
 
-
-/* HERO */
 .about-hero {
   padding: 90px 20px!important;
   background: linear-gradient(to bottom right, #fff, #eef6ff);
@@ -561,11 +554,6 @@
   border-radius: 10px;
   text-decoration: none;
 }
-
-
-
-
-
 .support-page {
   min-height: 100vh;
   background: white;
@@ -573,7 +561,6 @@
   font-family: Arial, sans-serif;
 }
 
-/* HERO */
 .support-hero {
   max-width: 900px;
   margin: 0 auto;
@@ -586,7 +573,6 @@
   margin-bottom: 30px;
 }
 
-/* SEARCH */
 .support-search {
   display: flex;
   justify-content: center;
@@ -613,7 +599,6 @@
   cursor: pointer;
 }
 
-/* PILLS */
 .support-pills {
   display: flex;
   flex-wrap: wrap;
@@ -628,7 +613,6 @@
   font-size: 13px;
 }
 
-/* CARDS */
 .support-cards {
   max-width: 1000px;
   margin: 50px auto 0;
@@ -660,7 +644,6 @@
   color: #666;
 }
 
-/* FAQ */
 .support-faq {
   max-width: 700px;
   margin: 80px auto 0;
@@ -687,7 +670,6 @@
   color: black;
 }
 
-/* CTA */
 .support-cta {
   text-align: center;
   margin-top: 80px;
@@ -706,3 +688,358 @@
   border-radius: 999px;
   cursor: pointer;
 }
+
+.pricing-page {
+  background: #fbfbfd;
+  color: #0f172a;
+  font-family: system-ui, sans-serif;
+}
+
+.pricing-page .container {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 32px!important;
+  background:#fbfbfd;
+}
+
+.pricing-page .header {
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid #e2e8f0;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  background:#fbfbfd;
+  padding: 10px 0;
+}
+
+.pricing-page .header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.pricing-page .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  margin-bottom:0;
+  margin-top: 0;
+}
+
+.pricing-page .logo-box {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #4f46e5;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}
+
+.pricing-page .nav a {
+  margin: 0 20px;
+  text-decoration: none;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.pricing-page .nav a.active {
+  color: #4f46e5;
+}
+
+.pricing-page .actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin: 0;
+}
+
+.pricing-page .header-inner .actions a.btn-primary {
+  background:#302feb;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+.pricing-page .footer-final .btn-primary{
+    background: linear-gradient(to right, #350fd9, #4c21f5);
+}
+.pricing-page .btn-primary.full {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px 16px;
+  background:#302feb;
+}
+
+.pricing-page .hero {
+  padding: 40px 0;
+}
+
+.pricing-page .hero-text {
+  text-align: center;
+  margin: auto;
+  background:#fbfbfd;
+}
+.pricing-page  .cx-logo-img {
+    height: auto;
+}
+.pricing-page .hero h1 {
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -2.1px;
+  margin-top: 10px;
+}
+
+.pricing-page .hero .sidebar p {
+  margin-top: 25px;
+  color: #64748b;
+  font-size: 16px;
+  margin-bottom: 25px;
+}
+
+.pricing-page .content {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 40px;
+  margin-top: 40px;
+  padding:0 40px;
+}
+
+.pricing-page .features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.pricing-page .feature-card {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 20px;
+  text-align: left;
+}
+
+.pricing-page .feature-title {
+  display: flex;
+  align-items: center;
+}
+
+.pricing-page .feature-title h3 {
+  font-size: 13px;
+  font-weight: 700;
+  width: 100%;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+.pricing-page .icon {
+  color: #4f46e5;
+  font-size: 20px;
+  background:none;
+}
+
+.pricing-page .feature-card ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+  padding-left: 9px;
+}
+
+.pricing-page .feature-card li {
+  font-size: 13px;
+  margin: 6px 0;
+  display: flex;
+  gap: 11px;
+  color: #334155;
+}
+
+.pricing-page .check {
+  color: #4f46e5;
+  font-weight: 900;
+}
+
+.pricing-page .sidebar {
+  border: 1px solid #e2e8f0;
+  padding: 40px 20px;
+  border-radius: 12px;
+  text-align: center;
+  background: #fff;
+}
+.pricing-page .sidebar h3{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.pricing-page .sidebar h3 img{
+    width:auto;
+}
+.pricing-page .price-box {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 0;
+  margin: 25px 0;
+  
+}
+.pricing-page .price-box p{
+    margin: 10px 0;
+}
+.pricing-page .hero p.desc{
+    color: #fff;
+    font-size: 13px;
+    margin: 0;
+}
+.pricing-page .hero p.tagline{
+    color: #a78bfa;
+    font-size: 13px;
+    margin: 0;
+}
+.pricing-page .price-box div{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.pricing-page .price-box strong {
+  display: block;
+  font-size: 32px;
+  color: #4f46e5;
+}
+
+.pricing-page .bottom-section {
+  margin-top: 30px;
+  background: #000d24;
+  color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.pricing-page .bottom-grid {
+  display: grid;
+  grid-template-columns: 2.4fr repeat(4, 1fr) 1.1fr;
+  gap: 0px;
+}
+.pricing-page .bottom-grid >div{
+    text-align:left;
+  }
+.pricing-page .power-item{
+    padding: 0 10px;
+}
+.pricing-page .tagline {
+  color: #a78bfa;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pricing-page .bottom-grid h2{
+  font-size: 18px;
+  margin: 8px 0;
+}
+.pricing-page .bottom-grid h2 span {
+  color: #a78bfa;
+}
+
+.pricing-page .power-item .icon {
+  font-size: 28px;
+}
+
+.pricing-page .power-item h3 {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pricing-page .power-item p {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.pricing-page .power-final {
+  border-left: 1px solid rgba(255,255,255,0.2);
+  padding-left: 10px;
+}
+
+.pricing-page .power-final h3 {
+  color: #a78bfa;
+  margin-top: 10px;
+}
+.pricing-page .footer-final {
+    border-top: 0;
+    padding: 20px 0px 0px;
+}
+.pricing-page .header-inner .actions a{
+    color: #0f172a;
+    font-weight: 600;
+    text-decoration:none;
+}
+.pricing-page .power-item + .power-item {
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+.pricing-page .footer-final .footer-col h3 {
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+.pricing-page .footer-final .footer-brand p {
+    color: #fff;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.pricing-page .footer-final .container {
+    background: #010e25;
+}
+.pricing-page .footer-final .footer-tags, .pricing-page  .footer-final .footer-col a,
+.pricing-page .footer-final .footer-col h3{
+    color: #fff;
+}
+.pricing-page  .footer-final .footer-grid{
+    margin-bottom: 0 ;
+    padding: 20px 0;
+}
+.pricing-page .cx-logo-img {
+    height: 64px; 
+}
+.pricing-page .footer-brand .cx-logo-img {
+    height: auto; 
+}
+@media (min-width: 1024px) {
+  .pricing-page .feature-card {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .pricing-page .feature-card:nth-child(-n + 3) {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+  }
+}
+@media (min-width: 1025px) {
+    .pricing-page .power-item .icon {
+        margin: 0 auto 10px;
+    }
+    .pricing-page .power-item h3 {
+        text-align: center;
+    }
+}
+@media (max-width: 1024px) {
+  .pricing-page .content {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-page .features {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pricing-page .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .pricing-page .features {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+
