@@ -199,27 +199,7 @@ export default function CityPage() {
         </div>
       </div>
 
-      <div style={{ marginTop: "50px" }}>
-        <h3>Other cities in {countryName}</h3>
-
-        <div style={{ marginTop: "15px" }}>
-          {nearbyCities.map((c) => (
-            <Link
-              key={c}
-              to={`/${country}/${c}`}
-              style={{
-                display: "inline-block",
-                marginRight: "10px",
-                marginTop: "10px",
-                color: "#2563eb",
-              }}
-            >
-              {unslug(c)}
-            </Link>
-          ))}
-        </div>
-      </div>
-
+     
     </main>
   );
 }

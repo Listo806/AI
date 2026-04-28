@@ -1646,105 +1646,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      {/*<section id="footer" className="cx-hero">
-        <footer className="footer">
-          <div className="footer-container">
-            <div className="footer-col">
-              <div className="logo">
-                <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
-              </div>
-
-              <p className="desc">{tr.footer.desc}</p>
-
-              <button className="btn">{tr.footer.btn}</button>
-
-              <ul className="features">
-                <li>✨ AI-Powered</li>
-                <li>🛡 Secure by Design</li>
-                <li>⚡ Automate Workflows</li>
-                <li>📊 Real-Time Insights</li>
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h4>{tr.footer.product}</h4>
-              <ul>
-                <li>Features</li>
-                <li>AI Assistant</li>
-                <li>Analytics</li>
-                <li>Automations</li>
-                <li>Integrations</li>
-                <li>Pricing</li>
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h4>{tr.footer.solutions}</h4>
-              <ul>
-                <li>Sales Teams</li>
-                <li>Real Estate</li>
-                <li>Agencies</li>
-                <li>Startups</li>
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h4>{tr.footer.resources}</h4>
-              <ul>
-                <li>Help Center</li>
-                <li>Guides</li>
-                <li>Templates</li>
-                <li>Blog</li>
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h4>{tr.footer.company}</h4>
-              <ul>
-                <li>About Us</li>
-                <li>Careers</li>
-                <li>
-                  <a href="/privacy-policy">Privacy Policy</a>
-                </li>
-                <li>
-                  <a href="/refund-policy">Refund Policy</a>
-                </li>
-                <li>
-                  <a href="/terms">Terms</a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-col newsletter">
-              <h4>{tr.footer.newsletter}</h4>
-
-              <p>{tr.footer.newsletterDesc}</p>
-
-              <div className="email-box">
-                <input type="email" placeholder="Email" />
-                <button>→</button>
-              </div>
-
-              <p>{tr.footer.privacy}</p>
-            </div>
-          </div>
-
-          <div className="footer-bottom">
-            <p>© 2025 Cortexa AI CRM</p>
-
-            <div className="status">
-              <span className="dot"></span> {tr.footer.status}
-            </div>
-
-            <div className="social">
-              <span>in</span>
-              <span>t</span>
-              <span>▶</span>
-              <span>◎</span>
-            </div>
-          </div>
-        </footer>
-      </section>*/}
 
       <section>
           <footer className="footer-final">
@@ -1825,8 +1726,6 @@ export default function Landing() {
 
               <div className="footer-location">
                 <div className="section">
-                  <h3 className="title">🏙 Cities</h3>
-
                   <div className="cities-grid">
                     <div className="country-block">
                       <h4 className="country-name">Brazil</h4>
