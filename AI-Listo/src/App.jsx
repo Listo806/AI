@@ -21,6 +21,8 @@ import Contact from "./pages/common/Contact";
 import HelpCenter from "./pages/common/HelpCenter";
 import About from "./pages/common/About";
 import Support from "./pages/common/Support";
+import CityPage from "./pages/common/CityPage";
+import CountryPage from "./pages/common/CountryPage";
 
 export default function App() {
     return (
@@ -49,6 +51,8 @@ export default function App() {
           <Route path="/help" element={<HelpCenter />} />
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/:country/:city" element={<CityPage />} />
+          <Route path="/:country" element={<CountryPage />} />
           
         </Routes>
       );

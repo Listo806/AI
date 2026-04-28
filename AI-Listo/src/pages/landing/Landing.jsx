@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
     UserPlus,
     RefreshCcw,
@@ -1822,30 +1823,30 @@ export default function Landing() {
 
               </div>
 
-              <div class="footer-location">
+              <div className="footer-location">
                 <div>
                   <h3>🌎 Countries</h3>
-                  <div class="grid-2">
-                    <a href="/brazil">Brazil</a>
-                    <a href="/mexico">Mexico</a>
-                    <a href="/argentina">Argentina</a>
-                    <a href="/chile">Chile</a>
-                    <a href="/peru">Peru</a>
-                    <a href="/ecuador">Ecuador</a>
-                    <a href="/colombia">Colombia</a>
+                  <div className="grid-2">
+                    <Link to="/brazil">Brazil</Link>
+                    <Link to="/mexico">Mexico</Link>
+                    <Link to="/argentina">Argentina</Link>
+                    <Link to="/chile">Chile</Link>
+                    <Link to="/peru">Peru</Link>
+                    <Link to="/ecuador">Ecuador</Link>
+                    <Link to="/colombia">Colombia</Link>
                   </div>
                 </div>
 
                 <div>
                   <h3>🏙 Popular Cities</h3>
-                  <div class="grid-2">
-                    <a href="/brazil/sao-paulo">São Paulo</a>
-                    <a href="/mexico/mexico-city">Mexico City</a>
-                    <a href="/argentina/buenos-aires">Buenos Aires</a>
-                    <a href="/chile/santiago">Santiago</a>
-                    <a href="/peru/lima">Lima</a>
-                    <a href="/ecuador/quito">Quito</a>
-                    <a href="/colombia/bogota">Bogotá</a>
+                  <div className="grid-2">
+                    <Link to="/brazil/sao-paulo">São Paulo</Link>
+                    <Link to="/mexico/mexico-city">Mexico City</Link>
+                    <Link to="/argentina/buenos-aires">Buenos Aires</Link>
+                    <Link to="/chile/santiago">Santiago</Link>
+                    <Link to="/peru/lima">Lima</Link>
+                    <Link to="/ecuador/quito">Quito</Link>
+                    <Link to="/colombia/bogota">Bogotá</Link>
                   </div>
                 </div>
               </div>
