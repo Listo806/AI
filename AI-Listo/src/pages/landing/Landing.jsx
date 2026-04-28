@@ -1082,7 +1082,7 @@ export default function Landing() {
 
           <div className="hero-left">
             <div className="hero-left-in">
-              <p class="hero-head">{tr.heroHead}</p>
+              <p className="hero-head">{tr.heroHead}</p>
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
               </h1>
@@ -1747,20 +1747,20 @@ export default function Landing() {
       </section>*/}
 
       <section>
-          <footer class="footer-final">
-            <div class="container">
+          <footer className="footer-final">
+            <div className="container">
 
-              <div class="footer-grid">
+              <div className="footer-grid">
                 
-                <div class="footer-brand">
+                <div className="footer-brand">
                   <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
                   <p>
                     The AI-powered CRM that helps you capture leads, automate follow-ups, 
                     and close more deals — faster.
                   </p>
-                  <a href="/signup" class="btn-primary">Start Your Free Trial →</a>
+                  <a href="/signup" className="btn-primary">Start Your Free Trial →</a>
 
-                  <div class="footer-tags">
+                  <div className="footer-tags">
                     <span>✨ AI-Powered</span>
                     <span>🛡 Secure</span>
                     <span>⚡ Automation</span>
@@ -1768,7 +1768,7 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <div class="footer-col">
+                <div className="footer-col">
                   <h3>Product</h3>
                   <ul>
                     <li><a href="/features">Features</a></li>
@@ -1780,7 +1780,7 @@ export default function Landing() {
                   </ul>
                 </div>
 
-                <div class="footer-col">
+                <div className="footer-col">
                   <h3>Get Started</h3>
                   <ul>
                     <li><a href="/signup">Create Account</a></li>
@@ -1790,7 +1790,7 @@ export default function Landing() {
                   </ul>
                 </div>
 
-                <div class="footer-col">
+                <div className="footer-col">
                   <h3>Connect</h3>
                   <ul>
                     <li><a href="/integrations">Connect Your Apps</a></li>
@@ -1801,7 +1801,7 @@ export default function Landing() {
                   </ul>
                 </div>
 
-                <div class="footer-col">
+                <div className="footer-col">
                   <h3>Support</h3>
                   <ul>
                     <li><a href="/support">24-7 Support</a></li>
@@ -1811,7 +1811,7 @@ export default function Landing() {
                   </ul>
                 </div>
 
-                <div class="footer-col">
+                <div className="footer-col">
                   <h3>Legal</h3>
                   <ul>
                     <li><a href="/terms">Terms & Conditions</a></li>
@@ -1824,43 +1824,122 @@ export default function Landing() {
               </div>
 
               <div className="footer-location">
-                <div>
-                  <h3>🌎 Countries</h3>
-                  <div className="grid-2">
-                    <Link to="/brazil">Brazil</Link>
-                    <Link to="/mexico">Mexico</Link>
-                    <Link to="/argentina">Argentina</Link>
-                    <Link to="/chile">Chile</Link>
-                    <Link to="/peru">Peru</Link>
-                    <Link to="/ecuador">Ecuador</Link>
-                    <Link to="/colombia">Colombia</Link>
+                <div className="section">
+                  <h3 className="title">🏙 Cities</h3>
+
+                  <div className="cities-grid">
+                    <div className="country-block">
+                      <h4 className="country-name">Brazil</h4>
+                      <div className="cities">
+                        <Link to="/brazil/sao-paulo">São Paulo</Link> ·
+                        <Link to="/brazil/rio-de-janeiro">Rio de Janeiro</Link> ·
+                        <Link to="/brazil/brasilia">Brasília</Link> ·
+                        <Link to="/brazil/salvador">Salvador</Link> ·
+                        <Link to="/brazil/fortaleza">Fortaleza</Link> ·
+                        <Link to="/brazil/curitiba">Curitiba</Link> ·
+                        <Link to="/brazil/belo-horizonte">Belo Horizonte</Link> ·
+                        <Link to="/brazil/recife">Recife</Link>
+                      </div>
+                    </div>
+
+                    <div className="country-block">
+                      <h4 className="country-name">Mexico</h4>
+                      <div className="cities">
+                        <Link to="/mexico/mexico-city">Mexico City</Link> ·
+                        <Link to="/mexico/guadalajara">Guadalajara</Link> ·
+                        <Link to="/mexico/monterrey">Monterrey</Link> ·
+                        <Link to="/mexico/cancun">Cancún</Link> ·
+                        <Link to="/mexico/tulum">Tulum</Link> ·
+                        <Link to="/mexico/playa-del-carmen">Playa del Carmen</Link> ·
+                        <Link to="/mexico/puebla">Puebla</Link> ·
+                        <Link to="/mexico/merida">Mérida</Link>
+                      </div>
+                    </div>
+                    <div className="country-block">
+                      <h4 className="country-name">Argentina</h4>
+                      <div className="cities">
+                        <Link to="/argentina/buenos-aires">Buenos Aires</Link> ·
+                        <Link to="/argentina/cordoba">Córdoba</Link> ·
+                        <Link to="/argentina/rosario">Rosario</Link> ·
+                        <Link to="/argentina/mendoza">Mendoza</Link> ·
+                        <Link to="/argentina/salta">Salta</Link> ·
+                        <Link to="/argentina/mar-del-plata">Mar del Plata</Link> ·
+                        <Link to="/argentina/la-plata">La Plata</Link> ·
+                        <Link to="/argentina/bariloche">Bariloche</Link>
+                      </div>
+                    </div>
+
+                    <div className="country-block">
+                      <h4 className="country-name">Chile</h4>
+                      <div className="cities">
+                        <Link to="/chile/santiago">Santiago</Link> ·
+                        <Link to="/chile/valparaiso">Valparaíso</Link> ·
+                        <Link to="/chile/vina-del-mar">Viña del Mar</Link> ·
+                        <Link to="/chile/concepcion">Concepción</Link> ·
+                        <Link to="/chile/antofagasta">Antofagasta</Link> ·
+                        <Link to="/chile/la-serena">La Serena</Link> ·
+                        <Link to="/chile/pucon">Pucón</Link> ·
+                        <Link to="/chile/temuco">Temuco</Link>
+                      </div>
+                    </div>
+
+                    <div className="country-block">
+                      <h4 className="country-name">Colombia</h4>
+                      <div className="cities">
+                        <Link to="/colombia/bogota">Bogotá</Link> ·
+                        <Link to="/colombia/medellin">Medellín</Link> ·
+                        <Link to="/colombia/cali">Cali</Link> ·
+                        <Link to="/colombia/cartagena">Cartagena</Link> ·
+                        <Link to="/colombia/barranquilla">Barranquilla</Link> ·
+                        <Link to="/colombia/santa-marta">Santa Marta</Link> ·
+                        <Link to="/colombia/pereira">Pereira</Link> ·
+                        <Link to="/colombia/manizales">Manizales</Link>
+                      </div>
+                    </div>
+
+                    <div className="country-block">
+                      <h4 className="country-name">Peru</h4>
+                      <div className="cities">
+                        <Link to="/peru/lima">Lima</Link> ·
+                        <Link to="/peru/cusco">Cusco</Link> ·
+                        <Link to="/peru/arequipa">Arequipa</Link> ·
+                        <Link to="/peru/trujillo">Trujillo</Link> ·
+                        <Link to="/peru/piura">Piura</Link> ·
+                        <Link to="/peru/chiclayo">Chiclayo</Link> ·
+                        <Link to="/peru/ica">Ica</Link> ·
+                        <Link to="/peru/huancayo">Huancayo</Link>
+                      </div>
+                    </div>
+
+                    <div className="country-block">
+                      <h4 className="country-name">Ecuador</h4>
+                      <div className="cities">
+                        <Link to="/ecuador/quito">Quito</Link> ·
+                        <Link to="/ecuador/guayaquil">Guayaquil</Link> ·
+                        <Link to="/ecuador/cuenca">Cuenca</Link> ·
+                        <Link to="/ecuador/manta">Manta</Link> ·
+                        <Link to="/ecuador/ambato">Ambato</Link> ·
+                        <Link to="/ecuador/loja">Loja</Link> ·
+                        <Link to="/ecuador/portoviejo">Portoviejo</Link> ·
+                        <Link to="/ecuador/santo-domingo">Santo Domingo</Link>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
-                <div>
-                  <h3>🏙 Popular Cities</h3>
-                  <div className="grid-2">
-                    <Link to="/brazil/sao-paulo">São Paulo</Link>
-                    <Link to="/mexico/mexico-city">Mexico City</Link>
-                    <Link to="/argentina/buenos-aires">Buenos Aires</Link>
-                    <Link to="/chile/santiago">Santiago</Link>
-                    <Link to="/peru/lima">Lima</Link>
-                    <Link to="/ecuador/quito">Quito</Link>
-                    <Link to="/colombia/bogota">Bogotá</Link>
-                  </div>
-                </div>
               </div>
 
-              <div class="footer-newsletter">
+              <div className="footer-newsletter">
                 <h3>Stay updated</h3>
                 <p>Get CRM updates, AI automation tips, and product news.</p>
 
-                <div class="newsletter-form">
+                <div className="newsletter-form">
                   <input type="email" placeholder="Your email" />
                   <button>→</button>
                 </div>
 
-                <p class="small">
+                <p className="small">
                   We respect your privacy. Unsubscribe anytime.
                 </p>
               </div>

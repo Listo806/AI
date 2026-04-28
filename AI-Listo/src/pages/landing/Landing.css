@@ -1818,7 +1818,7 @@
 .footer-final .footer-col ul{list-style:none;padding:0;margin:0}
 .footer-final .footer-col li{margin-bottom:10px}
 .footer-final .footer-col a{text-decoration:none;color:#666}
-.footer-final .footer-location{display:grid;grid-template-columns:1fr 1fr;gap:40px;border-top:1px solid #eee;padding-top:40px;margin-bottom:60px}
+.footer-final .footer-location{display:grid;grid-template-columns:1fr;gap:40px;border-top:1px solid #eee;padding-top:40px;margin-bottom:60px}
 .footer-final .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .footer-final .footer-location a{text-decoration:none;color:#666}
 .footer-final .footer-newsletter{border-top:1px solid #eee;padding-top:40px;text-align:center;max-width:500px;margin:auto}
@@ -1832,7 +1832,95 @@
 @media(max-width:768px){.footer-final .footer-grid{grid-template-columns:1fr}.footer-final .footer-location{grid-template-columns:1fr}}
 
 
+.footer-location {
+  background: #fafafa;
+  padding: 60px 20px;
+}
 
+.footer-location .section {
+  margin-bottom: 40px;
+}
+
+.footer-location .title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Countries small grid */
+.footer-location .countries-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.footer-location .countries-grid a {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+/* Cities grid responsive */
+.footer-location .cities-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 30px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .footer-location .cities-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .footer-location .countries-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-location .cities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer-location .countries-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-location .cities-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Country block */
+.footer-location .country-block {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.footer-location .country-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+/* Cities inline style */
+.footer-location .cities a {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.footer-location .cities {
+  color: #999;
+}
+
+.footer-location .cities a:hover {
+  text-decoration: underline;
+}
 
 
 
