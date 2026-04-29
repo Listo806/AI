@@ -4,6 +4,7 @@ const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const TrialUser = require("../models/TrialUser");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 router.post("/login", authController.login);
 router.post("/register", authController.register);
 router.get("/me", authMiddleware, authController.me);
