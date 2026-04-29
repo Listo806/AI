@@ -22,10 +22,10 @@ const chartData = [
 function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
   // Initialize Lucide icons when component renders
   React.useEffect(() => {
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-  });
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }, []);
 
   return (
     <div className="dashboard-kpi-card" style={{
@@ -222,10 +222,10 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
   
   // Initialize Lucide icons
   React.useEffect(() => {
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-  });
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }, []);
   
   const getLeadsValue = () => {
     switch (timeframe) {
@@ -326,16 +326,16 @@ function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, initialized  } = useAuth();
   const { handleError } = useApiErrorHandler();
   const navigate = useNavigate();
 
   // Redirect to sign-in if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/sign-in');
-    }
-  }, [loading, user, navigate]);
+    useEffect(() => {
+      if (initialized && !isAuthenticated()) {
+        navigate('/sign-in');
+      }
+    }, [initialized, isAuthenticated, navigate]);
 
   const [stats, setStats] = useState({
     totalLeads: 0,
@@ -475,12 +475,7 @@ export default function Dashboard() {
     { activity: 'Follow-ups', count: 52 },
   ];
 
-  useEffect(() => {
-    if (isAuthenticated() && user) {
-      loadDashboard();
-    }
-  }, [isAuthenticated, user]);
-
+  
   const loadDashboard = async () => {
     setDashboardLoading(true);
     setError(null);
@@ -544,6 +539,12 @@ export default function Dashboard() {
       setDashboardLoading(false);
     }
   };
+    
+    useEffect(() => {
+      if (isAuthenticated() && user) {
+        loadDashboard();
+      }
+    }, [isAuthenticated, user, loadDashboard]);
 
   // Show loading while checking auth
   if (loading) {
@@ -553,9 +554,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  // Don't render if not authenticated (will redirect)
-  if (!token) navigate('/sign-in')
 
   return (
     <div className="dashboard-page-dark">
@@ -590,7 +588,7 @@ export default function Dashboard() {
             />
             <KpiCard 
               icon="dollar-sign" 
-              value={`$${stats.revenueClosed.toLocaleString() || 0}`} 
+              value={`$${(stats.revenueClosed || 0).toLocaleString()}`} 
               label={t('dashboard.revenue')}
               accentColor="#22C55E"
             />
@@ -893,7 +891,7 @@ export default function Dashboard() {
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
                 <div style={{ fontSize: '24px', fontWeight: '600', color: '#22C55E' }}>
-                  ${stats.revenueClosed.toLocaleString()}
+                  ${(stats.revenueClosed || 0).toLocaleString()}
                 </div>
               </div>
               <div>

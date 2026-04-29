@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
           const userData = JSON.parse(userStr);
           // Verify token is still valid
           try {
-            const currentUser = await apiClient.request('/users/me');
+            const currentUser = await apiClient.request('/auth/me');
             // Token is valid - update user data
             setUser(currentUser);
             localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser));
