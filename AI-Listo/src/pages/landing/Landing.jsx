@@ -1025,7 +1025,7 @@ export default function Landing() {
           </nav>
 
           <div className="cx-actions">
-            <a href="#trial" className="cx-btn cx-btn-primary- small">
+            <a href="/trial" className="cx-btn cx-btn-primary- small">
               {tr.trial}
             </a>
 
@@ -1104,9 +1104,9 @@ export default function Landing() {
                 ))}
               </div>
               <div className="hero-inline">
-                <button className="hero-btn">
+                <a href="/trial" className="hero-btn">
                   {tr.heroCTA}
-                </button>  
+                </a>  
                 <p className="next-btn">{tr.heroUnlock}</p>
               </div>
               
@@ -1337,10 +1337,9 @@ export default function Landing() {
             {tr.dominantPowerLine1} <br />
             {tr.dominantPowerLine2}
           </p>
-
-          <button className="btn-gradient">
+          <a href="/trial" className="btn-gradient">
             {tr.dominantCTA}
-          </button>
+          </a> 
         </div>
       </section>
 
@@ -1461,9 +1460,9 @@ export default function Landing() {
           </div>
 
           <div className="smart-cta">
-            <button>
+            <a href="/trial">
               {tr.smartCTA} →
-            </button>
+            </a>
           </div>
 
         </div>
@@ -1482,9 +1481,9 @@ export default function Landing() {
             {tr.roiSub}
           </p>
           <div className="roi-cta">
-            <button className="roi-btn">
+            <a href="/trial" className="roi-btn">
               {tr.roiBtn}
-            </button>
+            </a>
           </div>
           <div className="roi-grid">
             <div className="roi-item">
@@ -1526,7 +1525,7 @@ export default function Landing() {
               <h2 className="cta-title">{tr.stripTitle}</h2>
               <p className="cta-sub">{tr.stripSub}</p>
               <div className="cta-actions">
-                <button className="cta-btn">{tr.stripBtn}</button>
+                <a href="/trial" className="cta-btn">{tr.stripBtn}</a>
               </div>
               <p className="cta-trust">{tr.stripTrust}</p>
               <div className="cta-benefits">
@@ -1643,7 +1642,7 @@ export default function Landing() {
 
           <p className="cx-sub">{tr.finalDesc}</p>
 
-          <a className="cx-btn cx-btn-secondary">{tr.trial}</a>
+          <a href="/trial" className="cx-btn cx-btn-secondary">{tr.trial}</a>
           <p className="final-reinforcement">{tr.reinforcement}</p>
           <div className="cx-final-shot">
             <img src={finalImg} alt="" />
@@ -1663,7 +1662,7 @@ export default function Landing() {
                     The AI-powered CRM that helps you capture leads, automate follow-ups, 
                     and close more deals — faster.
                   </p>
-                  <a href="/signup" className="btn-primary">Start Your Free Trial →</a>
+                  <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
 
                   <div className="footer-tags">
                     <span>✨ AI-Powered</span>

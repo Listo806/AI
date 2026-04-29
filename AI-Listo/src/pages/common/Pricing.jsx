@@ -135,7 +135,7 @@ export default function PricingPage() {
 </nav>*/}
 
           <div className="actions">
-            <a href="/start-trial">Start Free Trial</a>
+            <a href="/trial">Start Free Trial</a>
             <a href="/login">Log in</a>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function PricingPage() {
                 <p>One-time access fee</p>
               </div>
                 
-              <a href="/start-trial" className="btn-primary full">
+              <a href="/trial" className="btn-primary full">
                 Start My Free Trial
               </a>
 
@@ -246,7 +246,7 @@ export default function PricingPage() {
                 The AI-powered CRM that helps you capture leads, automate follow-ups, 
                 and close more deals — faster.
               </p>
-              <a href="/signup" className="btn-primary">Start Your Free Trial →</a>
+              <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
 
               <div className="footer-tags">
                 <span>✨ AI-Powered</span>

@@ -25,6 +25,7 @@ import CityPage from "./pages/common/CityPage";
 import CountryPage from "./pages/common/CountryPage";
 
 import Pricing from "./pages/common/Pricing";
+import Trial from "./pages/common/Trial";
 
 export default function App() {
     return (
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/:country" element={<CountryPage />} />
           
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/trial" element={<Trial />} />
           
         </Routes>
       );
