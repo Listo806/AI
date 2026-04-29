@@ -31,7 +31,7 @@ router.post("/start-trial", async (req, res) => {
         console.error("ERROR:", err);
         return res.status(500).json({
             success: false,
-            message: "Server error",
+            message: err.message,
         });
     }
 });
