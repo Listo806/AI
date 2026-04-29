@@ -8,9 +8,7 @@ export default function StartTrial() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    password: "",
     phone: "",
-    acceptedTerms: false,
   });
 
   const [loading, setLoading] = useState(false);
@@ -37,7 +35,7 @@ export default function StartTrial() {
             });
 
             const data = await res.json();
-
+            console.log("RESPONSE:", data);
             if (data.success) {
                 // SAVE userId for next step (checkout)
                 localStorage.setItem("trialUserId", data.userId);
@@ -45,11 +43,12 @@ export default function StartTrial() {
                 // REDIRECT TO CHECKOUT
                 navigate("/checkout");
             } else {
-                alert(data.message || "Something went wrong");
+                console.log("API ERROR:", data);
+                alert(data.message);
             }
 
         } catch (error) {
-            console.error("SUBMIT ERROR:", error);
+            console.error("SUBMIT ERROR:", error.message);
             alert("Server error");
         }
     };
@@ -104,6 +103,7 @@ export default function StartTrial() {
               type="tel"
               name="phone"
               placeholder="Phone Number (Required)"
+              required   
               value={form.phone}
               onChange={handleChange}
             />

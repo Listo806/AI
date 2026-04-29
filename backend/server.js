@@ -1,43 +1,46 @@
-
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 const app = express();
 
-// REQUIRED
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+    console.log("➡️", req.method, req.url);
+  next();
+});
+
+/* ======================
+   BODY PARSER
+====================== */
 app.use(express.json());
 
-// ROUTES
+/* ======================
+   ROUTES
+====================== */
 const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
 
+/* ======================
+   DB
+====================== */
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
-// MONGODB CONNECTION
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.error(err));
-
-// PORT (Render will override this)
+/* ======================
+   SERVER
+====================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
+  console.log("Server running on port " + PORT);
 });
 
-
-
-const cors = require("cors");
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://www.cortexaaicrm.com"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true
-}));
-
-app.options("*", cors());
+console.log("🔥 SERVER FILE RUNNING: server.js");
