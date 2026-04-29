@@ -10,16 +10,16 @@ router.get("/me", authMiddleware, authController.me);
 
 router.post("/start-trial", async (req, res) => {
     try {
-        const { name, email, phone } = req.body;
+        const { name, email, phone , password} = req.body;
 
-        if (!name || !email || !phone) {
+        if (!name || !email || !phone || !password) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required",
             });
         }
-
-        const user = new TrialUser({ name, email, phone });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new TrialUser({ name, email, phone, password: hashedPassword });
         await user.save();
 
         return res.json({

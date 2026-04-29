@@ -33,4 +33,25 @@ router.post("/create-checkout", async (req, res) => {
   }
 });
 
+router.post("/payment-success", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false });
+    }
+
+    await TrialUser.findByIdAndUpdate(userId, {
+      paymentStatus: "paid",
+      isActive: true,
+    });
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
 module.exports = router;

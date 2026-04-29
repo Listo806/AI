@@ -9,7 +9,7 @@ export default function PaymentSuccess() {
       localStorage.setItem("trialUserId", userId);
 
       // REDIRECT TO ONBOARDING
-      window.location.href = "/onboarding";
+      window.location.href = "/dashboard";
     } else {
       window.location.href = "/trial";
     }

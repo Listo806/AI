@@ -9,6 +9,7 @@ export default function StartTrial() {
     name: "",
     email: "",
     phone: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function StartTrial() {
                 localStorage.setItem("trialUserId", data.userId);
                 localStorage.setItem("email", form.email);
                 localStorage.setItem("name", form.name);
+                localStorage.setItem("password", form.password);
                 // REDIRECT TO CHECKOUT
                 navigate("/checkout");
             } else {
@@ -106,6 +108,15 @@ export default function StartTrial() {
               placeholder="Phone Number (Required)"
               required   
               value={form.phone}
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              required   
+              minlength="6"
+              value={form.password}
               onChange={handleChange}
             />
 
