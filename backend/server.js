@@ -44,3 +44,6 @@ app.listen(PORT, () => {
 });
 
 console.log("🔥 SERVER FILE RUNNING: server.js");
+
+const paymentRoutes = require("./routes/paymentRoutes");
+app.use("/api/payment", paymentRoutes);
