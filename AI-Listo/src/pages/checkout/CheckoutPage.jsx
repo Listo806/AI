@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Common.css";
 
 const API_BASE = "https://ai-2-7ikc.onrender.com";
@@ -13,11 +14,11 @@ export default function CheckoutPage() {
     email: localStorage.getItem("email") || "",
     userId: localStorage.getItem("trialUserId") || "",
   };
-
+  const navigate = useNavigate();  
   // PROTECT ROUTE
   useEffect(() => {
-    if (!user.email || !user.userId) {
-      window.location.href = "/start-trial";
+    if (!user.userId) {
+      navigate("/trial");
       return;
     }
 

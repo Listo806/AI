@@ -14,7 +14,11 @@ export function AuthProvider({ children }) {
     // Check if user is already logged in and verify token
     const checkAuth = async () => {
       const userStr = localStorage.getItem(STORAGE_PREFIX + 'user');
-      const token = apiClient.accessToken;
+        const token = apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + 'token');
+
+        if (token && !apiClient.accessToken) {
+          apiClient.setTokens(token, null);
+        }
 
       if (userStr && token) {
         try {
@@ -86,7 +90,7 @@ export function AuthProvider({ children }) {
   };
 
   const isAuthenticated = () => {
-    return !!apiClient.accessToken && !!user;
+    return !!user;
   };
 
   const value = {

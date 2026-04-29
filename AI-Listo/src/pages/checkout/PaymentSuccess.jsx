@@ -11,7 +11,7 @@ export default function PaymentSuccess() {
       // REDIRECT TO ONBOARDING
       window.location.href = "/onboarding";
     } else {
-      window.location.href = "/start-trial";
+      window.location.href = "/trial";
     }
   }, []);
 

@@ -37,28 +37,28 @@ router.post("/start-trial", async (req, res) => {
 });
 
 router.get("/user/:id", async (req, res) => {
-try {
-const user = await TrialUser.findById(req.params.id);
+    try {
+        const user = await TrialUser.findById(req.params.id);
 
-if (!user) {
-return res.status(404).json({
-success: false,
-message: "User not found",
-});
-}
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
 
-return res.json({
-success: true,
-user,
-});
+        return res.json({
+            success: true,
+            user,
+        });
 
-} catch (err) {
-console.error("GET USER ERROR:", err);
-return res.status(500).json({
-success: false,
-message: "Server error",
-});
-}
+    } catch (err) {
+        console.error("GET USER ERROR:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
 });
 
 router.post("/save-onboarding", async (req, res) => {
@@ -90,7 +90,11 @@ router.post("/save-onboarding", async (req, res) => {
             },
             { new: true }
         );
-
+        const token = jwt.sign(
+          { id: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: "7d" }
+        );
         if (!user) {
             return res.status(404).json({
                 success: false,

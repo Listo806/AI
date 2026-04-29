@@ -103,8 +103,8 @@ export default function Landing() {
         "Know exactly what’s happening and what to do next",
       ],
 
-      stripTitle: "Your CRM shouldn’t slow you down.",
-      stripSub: "Join teams using CORTEXA...",
+      stripTitlebk: "Your CRM shouldn’t slow you down.",
+      stripSubbk: "Join teams using CORTEXA...",
 
       featuresTitle: "Turn your data into decisions",
 
@@ -391,8 +391,8 @@ export default function Landing() {
         "Saber exactamente qué pasa y qué hacer",
       ],
 
-      stripTitle: "Tu CRM no debería ralentizarte.",
-      stripSub: "Únete a equipos que usan CORTEXA...",
+      stripTitlebk: "Tu CRM no debería ralentizarte.",
+      stripSubbk: "Únete a equipos que usan CORTEXA...",
 
       featuresTitle: "Convierte tus datos en decisiones",
 
@@ -684,8 +684,8 @@ export default function Landing() {
         "Atualizações em tempo real do pipeline",
         "Saber exatamente o que está acontecendo",
       ],
-      stripTitle: "Seu CRM não deve te atrasar.",
-      stripSub: "Junte-se a equipes usando CORTEXA...",
+      stripTitlebk: "Seu CRM não deve te atrasar.",
+      stripSubbk: "Junte-se a equipes usando CORTEXA...",
       featuresTitle: "Transforme dados em decisões",
       cards: [
         {

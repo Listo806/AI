@@ -39,7 +39,8 @@ export default function StartTrial() {
             if (data.success) {
                 // SAVE userId for next step (checkout)
                 localStorage.setItem("trialUserId", data.userId);
-
+                localStorage.setItem("email", form.email);
+                localStorage.setItem("name", form.name);
                 // REDIRECT TO CHECKOUT
                 navigate("/checkout");
             } else {

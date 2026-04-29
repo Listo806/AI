@@ -332,10 +332,10 @@ export default function Dashboard() {
 
   // Redirect to sign-in if not authenticated
   useEffect(() => {
-    if (!loading && !isAuthenticated()) {
+    if (!loading && !user) {
       navigate('/sign-in');
     }
-  }, [loading, isAuthenticated, navigate]);
+  }, [loading, user, navigate]);
 
   const [stats, setStats] = useState({
     totalLeads: 0,
