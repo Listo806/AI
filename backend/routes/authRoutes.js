@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
 const TrialUser = require("../models/TrialUser");
-
+const jwt = require("jsonwebtoken");
 router.post("/login", authController.login);
 router.post("/register", authController.register);
 router.get("/me", authMiddleware, authController.me);
@@ -62,59 +62,59 @@ router.get("/user/:id", async (req, res) => {
 });
 
 router.post("/save-onboarding", async (req, res) => {
-    try {
-        const { userId, businessType, leadSources, mainGoal } = req.body;
+  try {
+    const { userId, businessType, leadSources, mainGoal } = req.body;
 
-        if (!userId) {
-            return res.status(400).json({
-                success: false,
-                message: "User ID required",
-            });
-        }
+    if (!userId) {
+      return res.status(400).json({ success: false, message: "User ID required" });
+    }
 
-        if (!businessType || !mainGoal) {
-            return res.status(400).json({
-                success: false,
-                message: "Business type and main goal are required",
-            });
-        }
+    if (!businessType || !mainGoal) {
+      return res.status(400).json({
+        success: false,
+        message: "Business type and main goal are required",
+      });
+    }
 
-        const user = await TrialUser.findByIdAndUpdate(
-            userId,
-            {
-                businessType,
-                leadSources: leadSources || [],
-                mainGoal,
-                onboardingCompleted: true,
-                firstDashboardVisit: true,
-            },
-            { new: true }
-        );
-        const token = jwt.sign(
-          { id: user._id },
-          process.env.JWT_SECRET,
-          { expiresIn: "7d" }
-        );
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
+    const user = await TrialUser.findByIdAndUpdate(
+      userId,
+      {
+        businessType,
+        leadSources: leadSources || [],
+        mainGoal,
+        onboardingCompleted: true,
+        firstDashboardVisit: true,
+      },
+      { new: true }
+    );
 
-        return res.json({
-            success: true,
-            message: "Onboarding saved",
-            user,
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-    } catch (err) {
-        console.error("SAVE ONBOARDING ERROR:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
-    }   
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.json({
+      success: true,
+      message: "Onboarding saved",
+      user,
+      token,
+    });
+
+  } catch (err) {
+    console.error("SAVE ONBOARDING ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Server error",
+    });
+  }
 });
 
 router.post("/dashboard-visited", async (req, res) => {

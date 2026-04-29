@@ -95,9 +95,13 @@ export default function Onboarding() {
 
     setLoading(true);
     setError("");
-
+    console.log("ONBOARDING PAYLOAD:", {
+      userId,
+      ...form,
+    });
+    
     try {
-      const res = await fetch(`${API_BASE}/api/auth/save-onboarding`, {
+      const data = await apiClient.request('/auth/save-onboarding', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,15 +112,16 @@ export default function Onboarding() {
         }),
       });
 
-      if (!res.ok) throw new Error("API error");
+      //if (!res.ok) throw new Error("API error");
 
-      const data = await res.json();
-
+      //const data = await res.json();
+        console.log("SAVE ONBOARDING RESPONSE:", data);
       if (data.success) {
           apiClient.setTokens(data.token, null);
-          localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(data.user));
-          localStorage.setItem('listo_token', data.token);
-          localStorage.setItem("onboardingComplete", "true");
+
+          localStorage.setItem('listo_access_token', data.token);
+          localStorage.setItem('listo_user', JSON.stringify(data.user));
+
           navigate("/dashboard");
       } else {
         setError(data.message || "Could not save onboarding.");

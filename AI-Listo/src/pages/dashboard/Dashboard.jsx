@@ -555,9 +555,7 @@ export default function Dashboard() {
   }
 
   // Don't render if not authenticated (will redirect)
-  if (!isAuthenticated() || !user) {
-    return null;
-  }
+  if (!token) navigate('/sign-in')
 
   return (
     <div className="dashboard-page-dark">

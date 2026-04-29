@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
     // Check if user is already logged in and verify token
     const checkAuth = async () => {
       const userStr = localStorage.getItem(STORAGE_PREFIX + 'user');
-        const token = apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + 'token');
+        const token = apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
 
         if (token && !apiClient.accessToken) {
           apiClient.setTokens(token, null);
@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
         apiClient.setTokens(response.accessToken, response.refreshToken);
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
-        
+        console.log('API TOKEN:', apiClient.accessToken);
         // Redirect to dashboard (all users go to /dashboard now)
         navigate('/dashboard');
       }
