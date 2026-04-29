@@ -8,8 +8,9 @@ const app = express();
 app.use(express.json());
 
 // ROUTES
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/authRoutes");
 app.use("/api/auth", authRoutes);
+
 
 // MONGODB CONNECTION
 mongoose.connect(process.env.MONGO_URI, {
