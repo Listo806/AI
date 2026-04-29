@@ -113,7 +113,7 @@ export default function StartTrial() {
             <button type="submit" disabled={loading}>
               {loading ? "Creating Account..." : "Continue to Secure Checkout"}
             </button>
-            <p className="small-text">🔒 Secure checkout · 💳 All major cards accepted · 🔁 Cancel anytime</p>
+            
             <p className="small-text">You will be redirected to secure checkout to activate your account with a one-time setup fee.</p>
             
           </form>

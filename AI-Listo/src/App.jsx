@@ -26,6 +26,8 @@ import CountryPage from "./pages/common/CountryPage";
 
 import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
+import CheckoutPage from "./pages/checkout/CheckoutPage";
+import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 
 export default function App() {
     return (
@@ -59,6 +61,8 @@ export default function App() {
           
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/trial" element={<Trial />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           
         </Routes>
       );

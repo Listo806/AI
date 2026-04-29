@@ -1,0 +1,28 @@
+
+.checkout-page .container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkout-page .box {
+  text-align: center;
+  padding: 20px;
+}
+
+.checkout-page .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 15px 0;
+}
+
+.checkout-page button {
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+
+
+

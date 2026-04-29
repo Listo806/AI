@@ -190,7 +190,10 @@ export default function PricingPage() {
               </a>
 
               <p>Cancel anytime.</p>
-              <h3><img src={userImg} alt="Cortexa" /> 3 users included</h3>
+              <p><span class="check">✓</span> 3 users included</p>
+              <p><span class="check">✓</span> Add team members anytime</p>
+              
+
             </aside>
           </div>
 
