@@ -56,3 +56,9 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.me = (req, res) => {
+    res.json({
+        success: true,
+        user: req.user
+    });
+};
