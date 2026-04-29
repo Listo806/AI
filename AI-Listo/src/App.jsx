@@ -28,6 +28,7 @@ import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
+import Onboarding from "./pages/checkout/Onboarding";
 
 export default function App() {
     return (
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/trial" element={<Trial />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           
         </Routes>
       );

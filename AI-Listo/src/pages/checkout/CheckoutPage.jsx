@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Common.css";
 
-const API_BASE = "https://YOUR-RENDER-URL.onrender.com";
+const API_BASE = "https://ai-2-7ikc.onrender.com";
 
 export default function CheckoutPage() {
   const [loadingScreen, setLoadingScreen] = useState(true);

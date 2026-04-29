@@ -36,5 +36,111 @@ router.post("/start-trial", async (req, res) => {
     }
 });
 
+router.get("/user/:id", async (req, res) => {
+try {
+const user = await TrialUser.findById(req.params.id);
+
+if (!user) {
+return res.status(404).json({
+success: false,
+message: "User not found",
+});
+}
+
+return res.json({
+success: true,
+user,
+});
+
+} catch (err) {
+console.error("GET USER ERROR:", err);
+return res.status(500).json({
+success: false,
+message: "Server error",
+});
+}
+});
+
+router.post("/save-onboarding", async (req, res) => {
+    try {
+        const { userId, businessType, leadSources, mainGoal } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID required",
+            });
+        }
+
+        if (!businessType || !mainGoal) {
+            return res.status(400).json({
+                success: false,
+                message: "Business type and main goal are required",
+            });
+        }
+
+        const user = await TrialUser.findByIdAndUpdate(
+            userId,
+            {
+                businessType,
+                leadSources: leadSources || [],
+                mainGoal,
+                onboardingCompleted: true,
+                firstDashboardVisit: true,
+            },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Onboarding saved",
+            user,
+        });
+
+    } catch (err) {
+        console.error("SAVE ONBOARDING ERROR:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }   
+});
+
+router.post("/dashboard-visited", async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID required",
+            });
+        }
+
+        await TrialUser.findByIdAndUpdate(userId, {
+            firstDashboardVisit: false,
+        });
+
+        return res.json({
+            success: true,
+            message: "Dashboard visit saved",
+        });
+
+    } catch (err) {
+        console.error("DASHBOARD VISIT ERROR:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server error",
+        });
+    }
+});
+
 module.exports = router;
 
