@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { PropertiesService } from './properties.service';
@@ -26,15 +27,40 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Get('public')
-  @ApiOperation({ summary: 'Get all published properties (public, no auth required)' })
-  @ApiQuery({ name: 'type', required: false, description: 'Filter by property type' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search query' })
+  @ApiOperation({
+    summary: 'Marketplace search: published Ecuador sale/rent with coordinates (no auth)',
+    description:
+      'Same rules as GET /listings: Ecuador only, lat/lng required, sale/rent only, vacation excluded. mode=buy maps to sale.',
+  })
+  @ApiQuery({ name: 'city', required: false, description: 'Exact city filter (case-insensitive)' })
+  @ApiQuery({ name: 'propertyType', required: false, description: 'Exact property kind: house, apartment, land, commercial, villa, office' })
+  @ApiQuery({ name: 'mode', required: false, description: 'Listing mode: sale, rent, or buy (buy = sale)' })
+  @ApiQuery({
+    name: 'country',
+    required: false,
+    description: 'Optional; only ecuador is allowed. Results are always Ecuador-only regardless.',
+  })
+  @ApiQuery({ name: 'search', required: false, description: 'Optional text search on title, address, city, description' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
+  @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
   @ApiResponse({ status: 200, description: 'Published properties retrieved successfully' })
   async findPublic(
-    @Query('type') type?: string,
+    @Query('city') city?: string,
+    @Query('propertyType') propertyType?: string,
+    @Query('mode') mode?: string,
+    @Query('country') country?: string,
     @Query('search') search?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
-    return this.propertiesService.findPublic({ type, search });
+    const pagination = {
+      limit: limit != null ? parseInt(limit, 10) : undefined,
+      offset: offset != null ? parseInt(offset, 10) : undefined,
+    };
+    return this.propertiesService.findPublic(
+      { city, propertyType, mode, country, search },
+      pagination,
+    );
   }
 
   @Post()
@@ -46,7 +72,7 @@ export class PropertiesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Listing limit reached' })
   async create(@Body() createPropertyDto: CreatePropertyDto, @CurrentUser() user: any) {
-    return this.propertiesService.create(createPropertyDto, user.id, user.teamId);
+    return this.propertiesService.create(createPropertyDto, user.id, user.teamId, user.role);
   }
 
   @Get()
@@ -60,6 +86,8 @@ export class PropertiesController {
   @ApiQuery({ name: 'south', required: false, description: 'Bounding box south latitude' })
   @ApiQuery({ name: 'east', required: false, description: 'Bounding box east longitude' })
   @ApiQuery({ name: 'north', required: false, description: 'Bounding box north latitude' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 20, max 100)' })
+  @ApiQuery({ name: 'offset', required: false, description: 'Offset for pagination' })
   @ApiResponse({ status: 200, description: 'Properties retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(
@@ -71,7 +99,13 @@ export class PropertiesController {
     @Query('south') south?: string,
     @Query('east') east?: string,
     @Query('north') north?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
   ) {
+    const pagination = {
+      limit: limit != null ? parseInt(limit, 10) : undefined,
+      offset: offset != null ? parseInt(offset, 10) : undefined,
+    };
     // If bbox parameters are provided, use bbox query
     if (west && south && east && north) {
       const bbox = {
@@ -82,7 +116,7 @@ export class PropertiesController {
       };
       return this.propertiesService.findByBbox(user.id, user.teamId, bbox, { type, status, search });
     }
-    return this.propertiesService.findAll(user.id, user.teamId, { type, status, search });
+    return this.propertiesService.findAll(user.id, user.teamId, { type, status, search }, pagination);
   }
 
   @Get(':id')
@@ -91,7 +125,11 @@ export class PropertiesController {
   @ApiResponse({ status: 200, description: 'Property retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async findOne(@Param('id') id: string) {
-    return this.propertiesService.findById(id);
+    const property = await this.propertiesService.findById(id);
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+    return property;
   }
 
   @Put(':id')
@@ -132,7 +170,7 @@ export class PropertiesController {
   @ApiResponse({ status: 403, description: 'Active subscription required' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
-    await this.propertiesService.delete(id, user.id, user.teamId);
+    await this.propertiesService.delete(id, user.id, user.teamId, user.role);
     return { message: 'Property deleted successfully' };
   }
 

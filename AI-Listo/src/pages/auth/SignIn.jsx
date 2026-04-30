@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Auth.css';
 
-export default function SignIn() {
+export default function SignIn({ variant = 'crm' }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -11,6 +12,22 @@ export default function SignIn() {
 
   // NOTE: Sign-in page ALWAYS shows the form, even if user is already authenticated
   // This is correct SaaS behavior - clicking "Sign In" should always show the form
+
+  // Branding configuration based on variant
+  const branding = {
+    crm: {
+      badge: 'Listo Qasa AI CRM',
+      title: 'Sign In to Your CRM',
+      subtitle: 'Access your dashboard and manage leads in real time.',
+    },
+    internal: {
+      badge: 'Internal Access',
+      title: 'Team Login',
+      subtitle: 'Sign in to access your workspace.',
+    },
+  };
+
+  const currentBranding = branding[variant] || branding.crm;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,9 +46,9 @@ export default function SignIn() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-badge">Listo Qasa AI CRM</div>
-        <h1 className="auth-title">Sign In to Your CRM</h1>
-        <p className="auth-subtitle">Access your dashboard and manage leads in real time.</p>
+        <div className="auth-badge">{currentBranding.badge}</div>
+        <h1 className="auth-title">{currentBranding.title}</h1>
+        <p className="auth-subtitle">{currentBranding.subtitle}</p>
 
         {error && <div className="auth-error">{error}</div>}
 
@@ -67,6 +84,9 @@ export default function SignIn() {
           </button>
         </form>
 
+        <p className="auth-footer" style={{ marginTop: '20px' }}>
+          New user? <Link to="/sign-up">Sign Up</Link>
+        </p>
       </div>
     </div>
   );

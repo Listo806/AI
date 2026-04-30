@@ -1,22 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useSearchParams } from 'react-router-dom';
+import { useParams, Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
+import { getPropertyMedia } from '../../api/propertiesApi';
 import PropertyMap from '../../components/PropertyMap';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
 import ContactModal from '../../components/ContactModal';
+import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
 export default function ListingDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type') || '';
   const [property, setProperty] = useState(null);
+  const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
-
-  // WhatsApp phone number from env
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '+1234567890';
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     loadProperty();
@@ -26,14 +30,22 @@ export default function ListingDetail() {
     setLoading(true);
     setError(null);
     try {
-      // Use public endpoint - no auth required
-      const data = await apiClient.request(`/properties/${id}`);
-      // Only show published properties to public
+      const [data, mediaList] = await Promise.all([
+        apiClient.request(`/properties/${id}`),
+        getPropertyMedia(id).catch(() => []),
+      ]);
       if (data.status !== 'published') {
         setError('Property not available');
         return;
       }
+      const lt = (data.listingType || data.listing_type || '').toLowerCase();
+      if (lt === 'vacation') {
+        navigate(`/vacation-rentals/search/${id}`, { replace: true });
+        return;
+      }
       setProperty(data);
+      setMedia(Array.isArray(mediaList) ? mediaList.filter((m) => m.type === 'image') : []);
+      setSlideIndex(0);
     } catch (err) {
       setError('Failed to load property: ' + err.message);
     } finally {
@@ -117,6 +129,58 @@ export default function ListingDetail() {
       <main className="listings-main">
         <div className="listings-container">
           <div className="listings-detail-card">
+            {/* Photo slider */}
+            {(() => {
+              const slides = media.length > 0
+                ? media
+                : (property.thumbnailUrl ? [{ url: property.thumbnailUrl }] : []);
+              if (slides.length === 0) return null;
+              const current = slides[slideIndex];
+              return (
+                <div className="listings-detail-slider">
+                  <div className="listings-detail-slider-track">
+                    <a href={current?.url} target="_blank" rel="noopener noreferrer" className="listings-detail-slider-image-wrap">
+                      <img src={current?.url} alt="" className="listings-detail-slider-image" loading="lazy" />
+                    </a>
+                  </div>
+                  {slides.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="listings-detail-slider-btn listings-detail-slider-btn-prev"
+                        onClick={() => setSlideIndex((i) => (i <= 0 ? slides.length - 1 : i - 1))}
+                        aria-label="Previous"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        className="listings-detail-slider-btn listings-detail-slider-btn-next"
+                        onClick={() => setSlideIndex((i) => (i >= slides.length - 1 ? 0 : i + 1))}
+                        aria-label="Next"
+                      >
+                        ›
+                      </button>
+                      <div className="listings-detail-slider-dots">
+                        {slides.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            className={`listings-detail-slider-dot ${i === slideIndex ? 'active' : ''}`}
+                            onClick={() => setSlideIndex(i)}
+                            aria-label={`Go to slide ${i + 1}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="listings-detail-slider-counter">
+                        {slideIndex + 1} / {slides.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="listings-detail-header">
               <h2 className="listings-detail-title">{property.title}</h2>
               {property.price && (
@@ -134,14 +198,13 @@ export default function ListingDetail() {
             {/* Action Buttons */}
             <div className="listings-detail-actions">
               <div className="listings-action-buttons">
-                <a
-                  href={buildWhatsAppLink(whatsappPhone, property)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setShowWhatsAppModal(true)}
                   className="listings-btn listings-btn-whatsapp"
                 >
                   💬 WhatsApp
-                </a>
+                </button>
                 <button
                   onClick={() => setShowContactModal(true)}
                   className="listings-btn listings-btn-contact"
@@ -157,6 +220,9 @@ export default function ListingDetail() {
               <div className="listings-detail-grid">
                 {property.type && (
                   <div><strong>Type:</strong> {property.type === 'sale' ? 'For Sale' : 'For Rent'}</div>
+                )}
+                {property.propertyType && (
+                  <div><strong>{t('properties.propertyType')}:</strong> {t(`properties.propertyType_${property.propertyType}`)}</div>
                 )}
                 {property.bedrooms && (
                   <div><strong>Bedrooms:</strong> {property.bedrooms}</div>
@@ -197,8 +263,14 @@ export default function ListingDetail() {
             )}
 
             <div style={{ marginTop: '32px', textAlign: 'center' }}>
-              <Link 
-                to={typeParam ? `/listings?type=${typeParam}` : '/listings'} 
+              <Link
+                to={
+                  typeParam === 'sale'
+                    ? '/buy'
+                    : typeParam === 'rent'
+                      ? '/rent'
+                      : '/listings'
+                }
                 className="listings-btn listings-btn-secondary"
               >
                 ← Back to Listings
@@ -214,6 +286,15 @@ export default function ListingDetail() {
           property={property}
           onClose={() => setShowContactModal(false)}
           onSubmit={handleContactSubmit}
+        />
+      )}
+
+      {/* Property WhatsApp Modal: creates lead via POST /leads/whatsapp then opens WhatsApp */}
+      {showWhatsAppModal && property && (
+        <PropertyWhatsAppModal
+          property={property}
+          source="property_whatsapp_detail"
+          onClose={() => setShowWhatsAppModal(false)}
         />
       )}
     </div>

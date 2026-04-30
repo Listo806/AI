@@ -50,12 +50,16 @@ export function AuthProvider({ children }) {
 
   const getDashboardPath = (role) => {
     const paths = {
-      owner: '/dashboard/owners',
-      agent: '/dashboard/agent',
-      developer: '/dashboard/developer',
-      admin: '/dashboard/admin',
+      owner: '/dashboard/whatsapp',
+      agent: '/dashboard/whatsapp',
+      developer: '/dashboard/whatsapp',
+      admin: '/dashboard/admin/listings',
+      super_admin: '/dashboard/admin/listings',
       wholesaler: '/dashboard/wholesalers',
       investor: '/dashboard/investors',
+      va: '/dashboard/properties',
+      va_uploader: '/dashboard/va-upload',
+      user: '/dashboard/platform-listings',
     };
     return paths[role] || '/dashboard';
   };
@@ -71,9 +75,21 @@ export function AuthProvider({ children }) {
         apiClient.setTokens(response.accessToken, response.refreshToken);
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
-        console.log('API TOKEN:', apiClient.accessToken);
-        // Redirect to dashboard (all users go to /dashboard now)
-        navigate('/dashboard');
+
+        // Redirect based on user role
+        const role = response.user?.role;
+        if (role === 'va') {
+          navigate('/dashboard/properties');
+        } else if (role === 'va_uploader') {
+          navigate('/dashboard/va-upload');
+        } else if (role === 'super_admin' || role === 'admin') {
+          navigate('/dashboard/admin/listings');
+        } else if (role === 'user') {
+          navigate('/dashboard/platform-listings');
+        } else {
+          navigate('/dashboard');
+        }
+
       }
 
       return response;
@@ -93,6 +109,17 @@ export function AuthProvider({ children }) {
     return !!user;
   };
 
+  const refreshUser = async () => {
+    if (!apiClient.accessToken) return;
+    try {
+      const currentUser = await apiClient.request('/users/me');
+      setUser(currentUser);
+      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser));
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -100,6 +127,7 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated,
     getDashboardPath,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

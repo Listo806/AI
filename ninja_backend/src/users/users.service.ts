@@ -23,7 +23,7 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     const { rows } = await this.db.query(
-      `SELECT id, email, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
        FROM users WHERE email = $1`,
       [email],
     );
@@ -32,7 +32,7 @@ export class UsersService {
 
   async findById(id: string): Promise<User | null> {
     const { rows } = await this.db.query(
-      `SELECT id, email, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
        FROM users WHERE id = $1`,
       [id],
     );
@@ -84,6 +84,41 @@ export class UsersService {
     const { rows } = await this.db.query(
       `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount}
        RETURNING id, email, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
+      values,
+    );
+    return rows[0];
+  }
+
+  /**
+   * Update current user's profile (name, phone only). Used by PATCH /users/me.
+   */
+  async updateProfile(
+    userId: string,
+    dto: { name?: string | null; phone?: string | null },
+  ): Promise<User> {
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (dto.name !== undefined) {
+      updates.push(`name = $${paramCount++}`);
+      values.push(dto.name || null);
+    }
+    if (dto.phone !== undefined) {
+      updates.push(`phone = $${paramCount++}`);
+      values.push(dto.phone || null);
+    }
+
+    if (updates.length === 0) {
+      return this.findById(userId) as Promise<User>;
+    }
+
+    updates.push(`updated_at = NOW()`);
+    values.push(userId);
+
+    const { rows } = await this.db.query(
+      `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount}
+       RETURNING id, email, name, phone, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
       values,
     );
     return rows[0];

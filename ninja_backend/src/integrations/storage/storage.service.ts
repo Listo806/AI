@@ -12,6 +12,9 @@ export interface UploadFileDto {
   teamId?: string;
 }
 
+const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
 export interface StoredFile {
   id: string;
   originalName: string;
@@ -88,6 +91,21 @@ export class StorageService {
 
     if (!file) {
       throw new BadRequestException('No file provided');
+    }
+
+    // Validate MIME type (jpg, png, webp only)
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!ALLOWED_IMAGE_MIME_TYPES.includes(mimeType)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: JPEG, PNG, WebP. Got: ${file.mimetype || 'unknown'}`,
+      );
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File too large. Maximum size: 5MB. Got: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      );
     }
 
     // Generate unique file name
@@ -175,6 +193,76 @@ export class StorageService {
       this.logger.error('Failed to generate signed URL', error.message);
       throw new BadRequestException('Failed to generate file URL');
     }
+  }
+
+  /**
+   * Delete S3 objects by URLs. Does NOT touch stored_files.
+   * Throws on first S3 failure (for transaction safety in property delete).
+   * 404/NoSuchKey is ignored (idempotent).
+   */
+  async deleteS3ObjectsByUrls(urls: string[]): Promise<void> {
+    if (!this.isConfigured || !this.s3Client || urls.length === 0) {
+      return;
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, s3_key FROM stored_files WHERE url = ANY($1::text[])`,
+      [urls],
+    );
+    for (const row of rows) {
+      try {
+        await this.s3Client.send(
+          new DeleteObjectCommand({ Bucket: this.bucketName, Key: row.s3_key }),
+        );
+        this.logger.log(`S3 object deleted: ${row.s3_key}`);
+      } catch (err: any) {
+        // AWS returns NoSuchKey for missing objects - treat as success (idempotent)
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+          this.logger.debug(`S3 object already gone: ${row.s3_key}`);
+          continue;
+        }
+        this.logger.error(`S3 delete failed for ${row.s3_key}: ${err.message}`);
+        throw err;
+      }
+    }
+  }
+
+  /**
+   * Delete file(s) by URL(s). Used when property/media is deleted to clean up S3 and stored_files.
+   * No user check - caller (properties service) already validated permissions.
+   * For single media delete: S3 failures are tolerated (log + remove stored_files).
+   * For property delete: use deleteS3ObjectsByUrls first (throws), then transactional DB delete.
+   */
+  async deleteFilesByUrls(urls: string[]): Promise<void> {
+    if (!this.isConfigured || !this.s3Client || urls.length === 0) {
+      return;
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, s3_key FROM stored_files WHERE url = ANY($1::text[])`,
+      [urls],
+    );
+    for (const row of rows) {
+      try {
+        await this.s3Client.send(
+          new DeleteObjectCommand({ Bucket: this.bucketName, Key: row.s3_key }),
+        );
+        this.logger.log(`File deleted (orphan cleanup): ${row.s3_key}`);
+      } catch (err: any) {
+        if (err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+          this.logger.debug(`S3 object already gone: ${row.s3_key}`);
+        } else {
+          this.logger.warn(`Failed to delete S3 object ${row.s3_key}: ${err.message}`);
+        }
+        // Still remove stored_files to avoid orphan records (resilient for single media delete)
+      }
+      await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [row.id]);
+    }
+  }
+
+  /**
+   * Delete a single file by URL.
+   */
+  async deleteFileByUrl(url: string): Promise<void> {
+    await this.deleteFilesByUrls([url]);
   }
 
   /**

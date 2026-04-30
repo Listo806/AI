@@ -17,8 +17,10 @@ export interface Lead {
   createdBy: string;
   teamId: string | null;
   propertyId: string | null;
+  buyerId: string | null; // Linked buyer (when buyer contacts via property)
   notes: string | null;
   source: string | null;
+  instagramId: string | null; // Instagram-scoped ID for DM
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,5 +45,6 @@ export interface UpdateLeadDto {
   propertyId?: string;
   notes?: string;
   source?: string;
+  instagramId?: string;
 }
 

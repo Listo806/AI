@@ -10,8 +10,12 @@ export class SubscriptionPlansService {
 
   async create(createPlanDto: CreatePlanDto): Promise<SubscriptionPlan> {
     const { rows } = await this.db.query(
-      `INSERT INTO subscription_plans (name, description, price, seat_limit, paddle_price_id, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      `INSERT INTO subscription_plans (
+         name, description, price, seat_limit, paddle_price_id,
+         listing_limit, crm_access, ai_features, analytics_level,
+         priority_exposure, ai_automation, plan_category, is_active,
+         created_at, updated_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
        RETURNING id, name, description, price, seat_limit as "seatLimit", paddle_price_id as "paddlePriceId", 
                  is_active as "isActive", listing_limit as "listingLimit", crm_access as "crmAccess",
                  ai_features as "aiFeatures", analytics_level as "analyticsLevel",
@@ -20,10 +24,18 @@ export class SubscriptionPlansService {
                  created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createPlanDto.name,
-        createPlanDto.description || null,
+        createPlanDto.description ?? null,
         createPlanDto.price,
         createPlanDto.seatLimit,
-        createPlanDto.paddlePriceId || null,
+        createPlanDto.paddlePriceId ?? null,
+        createPlanDto.listingLimit ?? null,
+        createPlanDto.crmAccess ?? false,
+        createPlanDto.aiFeatures ?? false,
+        createPlanDto.analyticsLevel ?? 'none',
+        createPlanDto.priorityExposure ?? false,
+        createPlanDto.aiAutomation ?? false,
+        createPlanDto.planCategory ?? 'marketplace',
+        createPlanDto.isActive !== false,
       ],
     );
 
@@ -114,6 +126,34 @@ export class SubscriptionPlansService {
     if (updatePlanDto.isActive !== undefined) {
       updates.push(`is_active = $${paramCount++}`);
       values.push(updatePlanDto.isActive);
+    }
+    if (updatePlanDto.listingLimit !== undefined) {
+      updates.push(`listing_limit = $${paramCount++}`);
+      values.push(updatePlanDto.listingLimit);
+    }
+    if (updatePlanDto.crmAccess !== undefined) {
+      updates.push(`crm_access = $${paramCount++}`);
+      values.push(updatePlanDto.crmAccess);
+    }
+    if (updatePlanDto.aiFeatures !== undefined) {
+      updates.push(`ai_features = $${paramCount++}`);
+      values.push(updatePlanDto.aiFeatures);
+    }
+    if (updatePlanDto.analyticsLevel !== undefined) {
+      updates.push(`analytics_level = $${paramCount++}`);
+      values.push(updatePlanDto.analyticsLevel);
+    }
+    if (updatePlanDto.priorityExposure !== undefined) {
+      updates.push(`priority_exposure = $${paramCount++}`);
+      values.push(updatePlanDto.priorityExposure);
+    }
+    if (updatePlanDto.aiAutomation !== undefined) {
+      updates.push(`ai_automation = $${paramCount++}`);
+      values.push(updatePlanDto.aiAutomation);
+    }
+    if (updatePlanDto.planCategory !== undefined) {
+      updates.push(`plan_category = $${paramCount++}`);
+      values.push(updatePlanDto.planCategory);
     }
 
     if (updates.length === 0) {

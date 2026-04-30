@@ -21,9 +21,20 @@ const getPageTitle = (pathname) => {
     "/dashboard/leads": "Leads",
     "/dashboard/pipeline": "Pipeline",
     "/dashboard/properties": "Properties",
+    "/dashboard/vacation-rentals/upload": "Vacation listing",
+    "/dashboard/platform-listings": "Marketplace Listings",
+    "/dashboard/va-upload": "VA Upload",
+    "/dashboard/admin/listings": "Admin: Listings",
+    "/dashboard/admin/users": "Admin: Users",
+    "/dashboard/admin/teams": "Admin: Teams",
     "/dashboard/contacts": "Contacts",
+    "/dashboard/ai-center": "AI Center",
     "/dashboard/ai-assistant": "AI Assistant",
-    "/dashboard/ai-automations": "AI Automations",
+    "/dashboard/ai-auto-reply": "AI Auto-Reply",
+    "/dashboard/ai-appointment-setter": "AI Setter",
+    "/dashboard/ai-qualification-rules": "AI Qualification Rules",
+    "/dashboard/ai-messaging": "AI Messaging & Follow-Ups",
+    "/dashboard/ai-logs": "AI Activity & Logs",
     "/dashboard/analytics": "Analytics",
     "/dashboard/team": "Team",
     "/dashboard/integrations": "Integrations",
@@ -174,11 +185,11 @@ export default function DashboardLayout() {
             >
               <i data-lucide="menu"></i>
             </button>
-            <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
+            {/* <Link to="/dashboard" className="brand" style={{ textDecoration: 'none' }}>
               <span className="powered">powered by</span>
               <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
               <span className="text"><strong>CORTEXA</strong> <span className="desktop-text">Dealflow</span></span>
-            </Link>
+            </Link> */}
           </div>
           <div className="crm-header-right">
             <LanguageSelector />
@@ -189,17 +200,17 @@ export default function DashboardLayout() {
                 aria-label="Account menu"
               >
                 <div className="crm-header-avatar">
-                  {user?.email ? user.email[0].toUpperCase() : 'U'}
+                  {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                 </div>
               </button>
               {accountDropdownOpen && (
                 <div className="crm-account-menu">
                   <div className="crm-account-menu-header">
                     <div className="crm-account-menu-avatar">
-                      {user?.email ? user.email[0].toUpperCase() : 'U'}
+                      {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="crm-account-menu-info">
-                      <div className="crm-account-menu-name">{user?.email || 'User'}</div>
+                      <div className="crm-account-menu-name">{user?.name || user?.email || 'User'}</div>
                       <div className="crm-account-menu-role">{user?.role || 'user'}</div>
                     </div>
                   </div>

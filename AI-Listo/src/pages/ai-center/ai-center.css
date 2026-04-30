@@ -1,0 +1,293 @@
+/* AI Center pages – match Dashboard/Integrations card and section styles */
+
+.ai-center-page {
+  padding: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.ai-center-page-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ai-center-page-title i[data-lucide] {
+  width: 32px;
+  height: 32px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.ai-center-page-subtitle {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* Section cards – same as crm-section */
+.ai-center-section {
+  background: var(--card);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ai-center-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.ai-center-section p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* KPI / stat cards row */
+.ai-center-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ai-center-stat-card {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s;
+}
+
+.ai-center-stat-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.ai-center-stat-card .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.ai-center-stat-card .stat-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.ai-center-metrics-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+  padding: 16px 0;
+}
+
+/* Status badges */
+.ai-center-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ai-center-badge-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+
+.ai-center-badge-warning {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+}
+
+.ai-center-badge-neutral {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Toggle row */
+.ai-center-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.ai-center-toggle-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.ai-center-toggle-row label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Select */
+.ai-center-select {
+  padding: 10px 14px;
+  min-width: 180px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.ai-center-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Actions */
+.ai-center-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Activity table */
+.ai-center-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.ai-center-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ai-center-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: var(--card);
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+}
+
+.ai-center-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.ai-center-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.ai-center-table .muted {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Channel list */
+.ai-center-channel-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ai-center-channel-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.ai-center-channel-list li:last-child {
+  border-bottom: none;
+}
+
+/* Guardrails list */
+.ai-center-guardrails {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ai-center-guardrails li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.ai-center-guardrails li::before {
+  content: "✓";
+  color: #16a34a;
+  font-weight: 700;
+}
+
+/* Empty state */
+.ai-center-empty {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--text-muted);
+  font-size: 14px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px dashed var(--border);
+}
+
+@media (max-width: 768px) {
+  .ai-center-page {
+    padding: 16px;
+  }
+
+  .ai-center-page-title {
+    font-size: 22px;
+  }
+
+  .ai-center-kpi-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .ai-center-stat-card {
+    padding: 16px;
+  }
+
+  .ai-center-stat-card .stat-value {
+    font-size: 20px;
+  }
+
+  .ai-center-section {
+    padding: 16px;
+  }
+}

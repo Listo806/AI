@@ -13,6 +13,17 @@ import { IntegrationsModule } from './integrations/integrations.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { HelpCenterModule } from './help-center/help-center.module';
 import { CrmModule } from './crm/crm.module';
+import { IntelligenceModule } from './intelligence/intelligence.module';
+import { ListingsModule } from './listings/listings.module';
+import { ZapierModule } from './zapier/zapier.module';
+import { MessagingModule } from './messaging/messaging.module';
+import { AiCenterModule } from './ai-center/ai-center.module';
+import { PlatformModule } from './platform/platform.module';
+import { VaModule } from './va/va.module';
+import { AdminModule } from './admin/admin.module';
+import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
+import { SiteAssistModule } from './site-assist/site-assist.module';
+import { VacationRentalsModule } from './vacation-rentals/vacation-rentals.module';
 
 @Module({
   imports: [
@@ -29,6 +40,17 @@ import { CrmModule } from './crm/crm.module';
     AnalyticsModule,
     HelpCenterModule,
     CrmModule,
+    IntelligenceModule,
+    ListingsModule,
+    ZapierModule,
+    MessagingModule,
+    AiCenterModule,
+    PlatformModule,
+    VaModule,
+    AdminModule,
+    WhatsAppQrModule,
+    SiteAssistModule,
+    VacationRentalsModule,
   ],
   controllers: [AppController],
 })

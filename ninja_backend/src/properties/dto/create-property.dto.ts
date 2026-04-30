@@ -1,6 +1,6 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, IsIn, ValidateIf, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PropertyType, PropertyStatus } from '../entities/property.entity';
+import { PropertyType, PropertyStatus, ListingCategory } from '../entities/property.entity';
 
 export class CreatePropertyDto {
   @IsString()
@@ -33,8 +33,20 @@ export class CreatePropertyDto {
   @Min(0)
   price?: number;
 
+  /** Required for marketplace; omit for vacation (enforced in service + DB). */
+  @ValidateIf((o) => (o.listingType ?? ListingCategory.MARKETPLACE) === ListingCategory.MARKETPLACE)
+  @IsNotEmpty()
   @IsEnum(PropertyType)
-  type: PropertyType;
+  type?: PropertyType;
+
+  @IsOptional()
+  @IsEnum(ListingCategory)
+  listingType?: ListingCategory;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['house', 'apartment', 'land', 'commercial', 'villa', 'office'])
+  propertyType?: string | null;
 
   @IsOptional()
   @IsEnum(PropertyStatus)
@@ -61,12 +73,24 @@ export class CreatePropertyDto {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(1)
+  maxGuests?: number;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  amenities?: string[];
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   @Min(0)
   lotSize?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   yearBuilt?: number;
 
   @IsOptional()
@@ -78,5 +102,8 @@ export class CreatePropertyDto {
   @Type(() => Number)
   @IsNumber()
   longitude?: number;
-}
 
+  @IsOptional()
+  @IsString()
+  teamId?: string | null;
+}

@@ -1,16 +1,20 @@
 .property-map-container {
   width: 100%;
   height: 100%;
-  min-height: 400px;
+  min-height: 0;
+  flex: 1;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .property-map {
   width: 100%;
   height: 100%;
-  min-height: 400px;
+  min-height: 280px;
+  flex: 1;
 }
 
 .property-map-error {
@@ -43,6 +47,25 @@
   width: 24px;
   height: 24px;
   border-width: 4px;
+}
+
+.property-marker-price-pill {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.property-marker-price-pill.property-marker-selected {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
 }
 
 .map-popup {

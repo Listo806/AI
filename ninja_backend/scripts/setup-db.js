@@ -27,13 +27,16 @@ function parseDatabaseUrl(databaseUrl) {
  * Create a connection to the default 'postgres' database
  */
 function createAdminPool(dbConfig) {
+  console.log('Creating admin pool with config:', dbConfig);
+
   return new Pool({
     host: dbConfig.host,
     port: dbConfig.port,
     user: dbConfig.user,
     password: dbConfig.password,
     database: 'postgres', // Connect to default database
-    ssl: dbConfig.ssl,
+    // ssl: { rejectUnauthorized: false }, //dbConfig.ssl,
+    ssl: false,
   });
 }
 
@@ -97,7 +100,8 @@ async function setupDatabase() {
     console.log(`Connecting to database '${databaseName}'...`);
     const pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: dbConfig.ssl,
+      // ssl: { rejectUnauthorized: false },
+      ssl: false,
     });
 
     await pool.query('SELECT 1');
@@ -217,6 +221,305 @@ async function setupDatabase() {
       const migration15SQL = fs.readFileSync(migration15Path, 'utf8');
       await pool.query(migration15SQL);
       console.log('✓ Subscription plans seeded');
+    }
+
+
+    // Intelligence foundation migration
+    const migration16Path = path.join(__dirname, '../src/database/migrations/016_milestone1_intelligence_foundation.sql');
+    if (fs.existsSync(migration16Path)) {
+      const migration16SQL = fs.readFileSync(migration16Path, 'utf8');
+      await pool.query(migration16SQL);
+      console.log('✓ Intelligence foundation migration completed');
+    }
+
+    // VA role migration
+    const migration17Path = path.join(__dirname, '../src/database/migrations/017_add_va_role_and_edited_by.sql');
+    if (fs.existsSync(migration17Path)) {
+      const migration17SQL = fs.readFileSync(migration17Path, 'utf8');
+      await pool.query(migration17SQL);
+      console.log('✓ VA role migration completed');
+    }
+
+    // Agent priority engine
+    const migration18Path = path.join(__dirname, '../src/database/migrations/018_milestone2_agent_priority_engine.sql');
+    if (fs.existsSync(migration18Path)) {
+      const migration18SQL = fs.readFileSync(migration18Path, 'utf8');
+      await pool.query(migration18SQL);
+      console.log('✓ Agent priority engine migration completed');
+    }
+
+    // Buyer confidence + match intelligence
+    const migration19Path = path.join(__dirname, '../src/database/migrations/019_milestone3_buyer_confidence.sql');
+    if (fs.existsSync(migration19Path)) {
+      const migration19SQL = fs.readFileSync(migration19Path, 'utf8');
+      await pool.query(migration19SQL);
+      console.log('✓ Buyer confidence + match intelligence migration completed');
+    }
+
+    // Milestone 4: Lead creation + channel attribution
+    const migration20Path = path.join(__dirname, '../src/database/migrations/020_milestone4_lead_attribution.sql');
+    if (fs.existsSync(migration20Path)) {
+      const migration20SQL = fs.readFileSync(migration20Path, 'utf8');
+      await pool.query(migration20SQL);
+      console.log('✓ Milestone 4 lead attribution migration completed');
+    }
+
+    // Milestone 6: AI Copilot + Zapier
+    const migration21Path = path.join(__dirname, '../src/database/migrations/021_milestone6_ai_copilot.sql');
+    if (fs.existsSync(migration21Path)) {
+      const migration21SQL = fs.readFileSync(migration21Path, 'utf8');
+      await pool.query(migration21SQL);
+      console.log('✓ Milestone 6 AI Copilot + Zapier migration completed');
+    }
+
+    const migration22Path = path.join(__dirname, '../src/database/migrations/022_leads_priority.sql');
+    if (fs.existsSync(migration22Path)) {
+      const migration22SQL = fs.readFileSync(migration22Path, 'utf8');
+      await pool.query(migration22SQL);
+      console.log('✓ Leads priority migration completed');
+    }
+
+    // Milestone 5: Messaging (WhatsApp + Email)
+    const migration23Path = path.join(__dirname, '../src/database/migrations/023_milestone5_messaging.sql');
+    if (fs.existsSync(migration23Path)) {
+      const migration23SQL = fs.readFileSync(migration23Path, 'utf8');
+      await pool.query(migration23SQL);
+      console.log('✓ Milestone 5 messaging migration completed');
+    }
+
+    // Agent-Owned WhatsApp (Phase 2 Final Milestone)
+    const migration24Path = path.join(__dirname, '../src/database/migrations/024_agent_owned_whatsapp.sql');
+    if (fs.existsSync(migration24Path)) {
+      const migration24SQL = fs.readFileSync(migration24Path, 'utf8');
+      await pool.query(migration24SQL);
+      console.log('✓ Agent-owned WhatsApp migration completed');
+    }
+
+    // Instagram DM (Phase 2 Milestone 2)
+    const migration25Path = path.join(__dirname, '../src/database/migrations/025_instagram_dm.sql');
+    if (fs.existsSync(migration25Path)) {
+      const migration25SQL = fs.readFileSync(migration25Path, 'utf8');
+      await pool.query(migration25SQL);
+      console.log('✓ Instagram DM migration completed');
+    }
+
+    // CORTEXA WhatsApp Core (conversations, routing, lead_messages extensions)
+    const migration26Path = path.join(__dirname, '../src/database/migrations/026_whatsapp_cortexa_core.sql');
+    if (fs.existsSync(migration26Path)) {
+      const migration26SQL = fs.readFileSync(migration26Path, 'utf8');
+      await pool.query(migration26SQL);
+      console.log('✓ CORTEXA WhatsApp Core migration completed');
+    }
+
+    // CORTEXA WhatsApp Core Add-ons (stage + intent_events)
+    const migration27Path = path.join(__dirname, '../src/database/migrations/027_whatsapp_intent_stage_nextq.sql');
+    if (fs.existsSync(migration27Path)) {
+      const migration27SQL = fs.readFileSync(migration27Path, 'utf8');
+      await pool.query(migration27SQL);
+      console.log('✓ CORTEXA WhatsApp Add-ons (stage + intent_events) migration completed');
+    }
+
+    // CORTEXA WhatsApp Broadcast Add-on (broadcast_events audit log)
+    const migration28Path = path.join(__dirname, '../src/database/migrations/028_broadcast_events.sql');
+    if (fs.existsSync(migration28Path)) {
+      const migration28SQL = fs.readFileSync(migration28Path, 'utf8');
+      await pool.query(migration28SQL);
+      console.log('✓ CORTEXA WhatsApp Broadcast (broadcast_events) migration completed');
+    }
+
+    // CRM EXTENSION MIGRATION
+    const migration29Path = path.join(__dirname, '../src/database/migrations/029_crm_extension.sql');
+    if (fs.existsSync(migration29Path)) {
+      const migration29SQL = fs.readFileSync(migration29Path, 'utf8');
+      await pool.query(migration29SQL);
+      console.log('✓ CRM EXTENSION migration completed');
+    }
+    
+    // AI CENTER MIGRATION
+    const migration30Path = path.join(__dirname, '../src/database/migrations/030_ai_center.sql');
+    if (fs.existsSync(migration30Path)) {
+      const migration30SQL = fs.readFileSync(migration30Path, 'utf8');
+      await pool.query(migration30SQL);
+      console.log('✓ AI CENTER migration completed');
+    }
+
+    // WhatsApp Flow Intent Types (buyer_search, seller_listing, agent_crm, general_support)
+    const migration31Path = path.join(__dirname, '../src/database/migrations/031_whatsapp_flow_intent_types.sql');
+    if (fs.existsSync(migration31Path)) {
+      const migration31SQL = fs.readFileSync(migration31Path, 'utf8');
+      await pool.query(migration31SQL);
+      console.log('✓ WhatsApp Flow Intent Types migration completed');
+    }
+
+    // Leads metadata for property flow (property_title, seller_type)
+    const migration32Path = path.join(__dirname, '../src/database/migrations/032_leads_metadata.sql');
+    if (fs.existsSync(migration32Path)) {
+      const migration32SQL = fs.readFileSync(migration32Path, 'utf8');
+      await pool.query(migration32SQL);
+      console.log('✓ Leads metadata migration completed');
+    }
+
+    // Platform Auth and Admin (roles, property status, origin)
+    const migration33Path = path.join(__dirname, '../src/database/migrations/033_platform_auth_admin.sql');
+    if (fs.existsSync(migration33Path)) {
+      const migration33SQL = fs.readFileSync(migration33Path, 'utf8');
+      await pool.query(migration33SQL);
+      console.log('✓ Platform Auth and Admin migration completed');
+    }
+
+    // AI Setter - Lead state, parsed entities, property visibility
+    const migration34Path = path.join(__dirname, '../src/database/migrations/034_ai_setter_lead_state.sql');
+    if (fs.existsSync(migration34Path)) {
+      const migration34SQL = fs.readFileSync(migration34Path, 'utf8');
+      await pool.query(migration34SQL);
+      console.log('✓ AI Setter lead state migration completed');
+    }
+    
+    // Property Thumbnail url
+    const migration35Path = path.join(__dirname, '../src/database/migrations/035_property_thumbnail_url.sql');
+    if (fs.existsSync(migration35Path)) {
+      const migration35SQL = fs.readFileSync(migration35Path, 'utf8');
+      await pool.query(migration35SQL);
+      console.log('✓ Property thumbnail url migration completed');
+    }
+
+    // Property media unique primary constraint
+    const migration36Path = path.join(__dirname, '../src/database/migrations/036_property_media_unique_primary.sql');
+    if (fs.existsSync(migration36Path)) {
+      const migration36SQL = fs.readFileSync(migration36Path, 'utf8');
+      await pool.query(migration36SQL);
+      console.log('✓ Property media unique primary migration completed');
+    }
+    
+    //Property Type Marketplace
+    const migration37Path = path.join(__dirname, '../src/database/migrations/037_property_type_marketplace.sql');
+    if (fs.existsSync(migration37Path)) {
+      const migration37SQL = fs.readFileSync(migration37Path, 'utf8');
+      await pool.query(migration37SQL);
+      console.log('✓ Property type marketplace migration completed');
+    }
+    
+    // Property Type Enum
+    const migration38Path = path.join(__dirname, '../src/database/migrations/038_property_type_enum.sql');
+    if (fs.existsSync(migration38Path)) {
+      const migration38SQL = fs.readFileSync(migration38Path, 'utf8');
+      await pool.query(migration38SQL);
+      console.log('✓ Property type enum migration completed');
+    }
+
+    // Add name to users
+    const migration39Path = path.join(__dirname, '../src/database/migrations/039_add_name_to_users.sql');
+    if (fs.existsSync(migration39Path)) {
+      const migration39SQL = fs.readFileSync(migration39Path, 'utf8');
+      await pool.query(migration39SQL);
+      console.log('✓ Add name to users migration completed');
+    }
+
+    // Deals table for CRM pipeline
+    const migration40Path = path.join(__dirname, '../src/database/migrations/040_deals.sql');
+    if (fs.existsSync(migration40Path)) {
+      const migration40SQL = fs.readFileSync(migration40Path, 'utf8');
+      await pool.query(migration40SQL);
+      console.log('✓ Deals pipeline migration completed');
+    }
+
+    // Deals: created_by, assigned_to
+    const migration41Path = path.join(__dirname, '../src/database/migrations/041_deals_created_by_assigned_to.sql');
+    if (fs.existsSync(migration41Path)) {
+      const migration41SQL = fs.readFileSync(migration41Path, 'utf8');
+      await pool.query(migration41SQL);
+      console.log('✓ Deals created_by/assigned_to migration completed');
+    }
+
+    // Contacts table for CRM
+    const migration42Path = path.join(__dirname, '../src/database/migrations/042_contacts.sql');
+    if (fs.existsSync(migration42Path)) {
+      const migration42SQL = fs.readFileSync(migration42Path, 'utf8');
+      await pool.query(migration42SQL);
+      console.log('✓ Contacts migration completed');
+    }
+
+    // Per-agent Meta app settings for Instagram OAuth
+    const migration43Path = path.join(__dirname, '../src/database/migrations/043_agent_meta_app_settings.sql');
+    if (fs.existsSync(migration43Path)) {
+      const migration43SQL = fs.readFileSync(migration43Path, 'utf8');
+      await pool.query(migration43SQL);
+      console.log('✓ Agent Meta app settings migration completed');
+    }
+
+    const migration44Path = path.join(__dirname, '../src/database/migrations/044_subscription_provider_manual.sql');
+    if (fs.existsSync(migration44Path)) {
+      const migration44SQL = fs.readFileSync(migration44Path, 'utf8');
+      await pool.query(migration44SQL);
+      console.log('✓ Subscription provider manual migration completed');
+    }
+
+    const migration45Path = path.join(__dirname, '../src/database/migrations/045_whatsapp_qr_enterprise.sql');
+    if (fs.existsSync(migration45Path)) {
+      const migration45SQL = fs.readFileSync(migration45Path, 'utf8');
+      await pool.query(migration45SQL);
+      console.log('✓ WhatsApp QR enterprise migration completed');
+    }
+
+    const migration46Path = path.join(__dirname, '../src/database/migrations/046_whatsapp_qr_production_hardening.sql');
+    if (fs.existsSync(migration46Path)) {
+      const migration46SQL = fs.readFileSync(migration46Path, 'utf8');
+      await pool.query(migration46SQL);
+      console.log('✓ WhatsApp QR production hardening migration completed');
+    }
+
+    const migration47Path = path.join(__dirname, '../src/database/migrations/047_site_assist.sql');
+    if (fs.existsSync(migration47Path)) {
+      const migration47SQL = fs.readFileSync(migration47Path, 'utf8');
+      await pool.query(migration47SQL);
+      console.log('✓ Site assist (Webflow) migration completed');
+    }
+
+    // Webhooks & Email Provider
+    const migration48Path = path.join(__dirname, '../src/database/migrations/048_webhooks_email.sql');
+    if (fs.existsSync(migration48Path)) {
+      const migration48SQL = fs.readFileSync(migration48Path, 'utf8');
+      await pool.query(migration48SQL);
+      console.log('✓ Webhooks & email provider migration completed');
+    }
+
+    // Vacation Rentals - Hard Data Separation
+    const migration49Path = path.join(__dirname, '../src/database/migrations/049_vacation_rentals.sql');
+    if (fs.existsSync(migration49Path)) {
+      const migration49SQL = fs.readFileSync(migration49Path, 'utf8');
+      await pool.query(migration49SQL);
+      console.log('✓ Vacation rentals migration completed');
+    }
+
+    // Marketplace: country column + Ecuador defaults (public listings filter)
+    const migration50Path = path.join(__dirname, '../src/database/migrations/050_properties_country_ecuador.sql');
+    if (fs.existsSync(migration50Path)) {
+      const migration50SQL = fs.readFileSync(migration50Path, 'utf8');
+      await pool.query(migration50SQL);
+      console.log('✓ Properties country (Ecuador marketplace) migration completed');
+    }
+
+    const migration51Path = path.join(__dirname, '../src/database/migrations/051_listing_type_marketplace_vertical.sql');
+    if (fs.existsSync(migration51Path)) {
+      const migration51SQL = fs.readFileSync(migration51Path, 'utf8');
+      await pool.query(migration51SQL);
+      console.log('✓ Listing type marketplace/vacation vertical migration completed');
+    }
+
+    // Max guests for vacation rentals
+    const migration52Path = path.join(__dirname, '../src/database/migrations/052_max_guests.sql');
+    if (fs.existsSync(migration52Path)) {
+      const migration52SQL = fs.readFileSync(migration52Path, 'utf8');
+      await pool.query(migration52SQL);
+      console.log('✓ Max guests for vacation rentals migration completed');
+    }
+
+    // Amenities + reviews for vacation rentals
+    const migration53Path = path.join(__dirname, '../src/database/migrations/053_amenities_reviews.sql');
+    if (fs.existsSync(migration53Path)) {
+      const migration53SQL = fs.readFileSync(migration53Path, 'utf8');
+      await pool.query(migration53SQL);
+      console.log('✓ Amenities + reviews migration completed');
     }
 
     console.log('Database schema created successfully!');

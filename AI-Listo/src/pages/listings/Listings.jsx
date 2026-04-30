@@ -1,25 +1,56 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import PropertyMap from '../../components/PropertyMap';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
 import ContactModal from '../../components/ContactModal';
+import PropertyWhatsAppModal from '../../components/PropertyWhatsAppModal';
 import './Listings.css';
 
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
+
+function marketExploreSubtitle(property, t) {
+  const desc = (property.description || '').replace(/\s+/g, ' ').trim();
+  if (desc.length > 32) return desc.length > 88 ? `${desc.slice(0, 88)}…` : desc;
+  const parts = [];
+  if (property.city) parts.push(property.city);
+  if (property.state) parts.push(property.state);
+  if (property.propertyType) parts.push(t(`properties.propertyType_${property.propertyType}`));
+  if (property.bedrooms != null && property.bedrooms !== '') parts.push(`${property.bedrooms} bd`);
+  if (property.bathrooms != null && property.bathrooms !== '') parts.push(`${property.bathrooms} ba`);
+  return parts.join(' · ') || property.address || '';
+}
+
 export default function Listings() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Get type from URL parameter
-  const urlType = searchParams.get('type') || '';
+
+  /** BUY (/buy) → sale; RENT (/rent) → rent; /listings → browse both unless ?type= */
+  const pathDefaultType =
+    location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+  const urlTypeFromQuery = searchParams.get('type') || '';
+  const effectiveMode = urlTypeFromQuery || pathDefaultType;
+  const urlPropertyType = searchParams.get('propertyType') || '';
   const urlSearch = searchParams.get('search') || '';
+  const urlCity = searchParams.get('city') || '';
+  const urlPage = parseInt(searchParams.get('page') || '1', 10) || 1;
+
+  const PAGE_SIZE = 20;
+
+  // Pagination
+  const [pagination, setPagination] = useState({ total: 0, limit: PAGE_SIZE, offset: 0 });
   
   // Filters
   const [filters, setFilters] = useState({
-    type: urlType,
+    type: effectiveMode,
+    propertyType: urlPropertyType,
+    city: urlCity,
     search: urlSearch,
     minPrice: '',
     maxPrice: '',
@@ -35,8 +66,10 @@ export default function Listings() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
 
-  // WhatsApp phone number from env
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || '+1234567890';
+  // Property WhatsApp Modal (POST /leads/whatsapp then open WhatsApp)
+  const [whatsappProperty, setWhatsappProperty] = useState(null);
+
+  const [mobilePanel, setMobilePanel] = useState('list');
 
   // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -55,14 +88,34 @@ export default function Listings() {
 
   // Update filters when URL changes
   useEffect(() => {
-    const urlType = searchParams.get('type') || '';
+    const qpType = searchParams.get('type') || '';
+    const pathDef =
+      location.pathname === '/buy' ? 'sale' : location.pathname === '/rent' ? 'rent' : '';
+    const mode = qpType || pathDef;
+    const urlPropertyType = searchParams.get('propertyType') || '';
     const urlSearch = searchParams.get('search') || '';
-    setFilters(prev => ({ ...prev, type: urlType, search: urlSearch }));
-  }, [searchParams]);
+    const urlCity = searchParams.get('city') || '';
+    setFilters((prev) => ({
+      ...prev,
+      type: mode,
+      propertyType: urlPropertyType,
+      city: urlCity,
+      search: urlSearch,
+    }));
+  }, [searchParams, location.pathname]);
 
   useEffect(() => {
     loadProperties();
-  }, [urlType, urlSearch]);
+  }, [effectiveMode, urlPropertyType, urlCity, urlSearch, urlPage]);
+
+  // Sync URL when page exceeds total (e.g. bookmark ?page=99 with only 3 pages)
+  useEffect(() => {
+    if (pagination.total > 0 && urlPage > Math.ceil(pagination.total / PAGE_SIZE)) {
+      const params = new URLSearchParams(searchParams);
+      params.delete('page');
+      setSearchParams(params);
+    }
+  }, [pagination.total, urlPage, searchParams]);
 
   // Request user location for distance sorting
   useEffect(() => {
@@ -84,26 +137,49 @@ export default function Listings() {
     }
   }, [sortBy]);
 
+  const totalPages = Math.max(1, Math.ceil(pagination.total / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(1, urlPage), totalPages);
+  const effectivePage = pagination.total > 0 ? currentPage : Math.max(1, urlPage);
+
   const loadProperties = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Public endpoint - get all published properties (no auth required)
       const queryParams = new URLSearchParams();
-      if (urlType) queryParams.append('type', urlType);
+      if (effectiveMode) queryParams.append('mode', effectiveMode);
+      if (urlPropertyType) queryParams.append('propertyType', urlPropertyType);
+      if (urlCity) queryParams.append('city', urlCity);
       if (urlSearch) queryParams.append('search', urlSearch);
-      
-      const url = `/properties/public${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      queryParams.append('limit', String(PAGE_SIZE));
+      queryParams.append('offset', String((effectivePage - 1) * PAGE_SIZE));
+
+      const url = `/listings?${queryParams.toString()}`;
       const response = await apiClient.request(url);
-      const propertiesData = Array.isArray(response) ? response : (response.data || []);
+      const propertiesData = Array.isArray(response) ? response : (response.items ?? response.data ?? []);
       setAllProperties(propertiesData);
+
+      if (response && typeof response === 'object' && !Array.isArray(response)) {
+        setPagination({
+          total: response.total ?? propertiesData.length,
+          limit: response.limit ?? PAGE_SIZE,
+          offset: response.offset ?? 0,
+        });
+      }
     } catch (err) {
       console.error('Failed to load properties:', err);
       setError(err.message || 'Failed to load properties');
     } finally {
       setLoading(false);
     }
+  };
+
+  const goToPage = (page) => {
+    const p = Math.max(1, Math.min(page, totalPages));
+    const params = new URLSearchParams(searchParams);
+    if (p === 1) params.delete('page');
+    else params.set('page', String(p));
+    setSearchParams(params);
   };
 
   // Apply client-side filtering and sorting
@@ -121,6 +197,14 @@ export default function Listings() {
     // Apply filters
     if (filters.type) {
       filtered = filtered.filter(p => p.type === filters.type);
+    }
+
+    if (filters.propertyType) {
+      filtered = filtered.filter(p => p.propertyType === filters.propertyType);
+    }
+
+    if (filters.city) {
+      filtered = filtered.filter(p => p.city && p.city.toLowerCase() === filters.city.toLowerCase());
     }
 
     if (filters.search) {
@@ -228,12 +312,20 @@ export default function Listings() {
     <div className="listings-page">
       <header className="listings-header">
         <div className="listings-header-content">
-          <h1 className="listings-title">Property Listings</h1>
+          <h1 className="listings-title">Marketplace Listings</h1>
+          <div className="listings-header-actions">
+            <Link to="/vacation-rentals/search" className="listings-btn listings-btn-secondary">
+              Vacation rentals
+            </Link>
+            <Link to="/sign-in" className="listings-btn listings-btn-secondary">
+              Sign In
+            </Link>
+          </div>
         </div>
       </header>
 
       <main className="listings-main">
-        <div className="listings-container">
+        <div className="listings-container listings-container--wide">
           {error && (
             <div className="listings-error">
               {error}
@@ -250,13 +342,11 @@ export default function Listings() {
                 onChange={(e) => {
                   const newSearch = e.target.value;
                   setFilters({ ...filters, search: newSearch });
-                  if (newSearch) {
-                    setSearchParams({ ...Object.fromEntries(searchParams), search: newSearch });
-                  } else {
-                    const params = new URLSearchParams(searchParams);
-                    params.delete('search');
-                    setSearchParams(params);
-                  }
+                  const params = new URLSearchParams(searchParams);
+                  params.delete('page'); // reset to page 1 when search changes
+                  if (newSearch) params.set('search', newSearch);
+                  else params.delete('search');
+                  setSearchParams(params);
                 }}
                 className="listings-search-input"
                 onKeyDown={(e) => {
@@ -268,19 +358,6 @@ export default function Listings() {
             </div>
           </div>
 
-          {/* Map Section */}
-          {mapProperties.length > 0 && (
-            <div className="listings-map-section">
-              <PropertyMap 
-                properties={mapProperties} 
-                onPropertyClick={(property) => {
-                  const url = urlType ? `/listings/${property.id}?type=${urlType}` : `/listings/${property.id}`;
-                  window.location.href = url;
-                }}
-              />
-            </div>
-          )}
-
           {/* Filters and Sort */}
           <div className="listings-filters-section">
             <div className="listings-filters">
@@ -289,17 +366,38 @@ export default function Listings() {
                 onChange={(e) => {
                   const newType = e.target.value;
                   setFilters({ ...filters, type: newType });
-                  if (newType) {
-                    setSearchParams({ type: newType });
-                  } else {
-                    setSearchParams({});
-                  }
+                  const params = new URLSearchParams(searchParams);
+                  if (newType) params.set('type', newType);
+                  else params.delete('type');
+                  params.delete('page');
+                  let nextPath = location.pathname;
+                  if (newType === 'sale') nextPath = '/buy';
+                  else if (newType === 'rent') nextPath = '/rent';
+                  else nextPath = '/listings';
+                  navigate({ pathname: nextPath, search: params.toString() ? `?${params.toString()}` : '' });
                 }}
                 className="listings-select"
               >
-                <option value="">All Types</option>
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
+                <option value="">All (Buy / Rent)</option>
+                <option value="sale">Buy</option>
+                <option value="rent">Rent</option>
+              </select>
+              <select
+                value={filters.propertyType}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setFilters({ ...filters, propertyType: newVal });
+                  const params = new URLSearchParams(searchParams);
+                  if (newVal) params.set('propertyType', newVal); else params.delete('propertyType');
+                  params.delete('page');
+                  setSearchParams(params);
+                }}
+                className="listings-select"
+              >
+                <option value="">Property type: Any</option>
+                {PROPERTY_TYPE_OPTIONS.map((value) => (
+                  <option key={value} value={value}>{t(`properties.propertyType_${value}`)}</option>
+                ))}
               </select>
               <select
                 value={sortBy}
@@ -315,6 +413,24 @@ export default function Listings() {
 
             {/* Advanced Filters */}
             <div className="listings-filters">
+              <div className="listings-filter-city">
+                <label htmlFor="listings-city">{t('properties.city')}</label>
+                <input
+                  id="listings-city"
+                  type="text"
+                  placeholder={t('properties.cityPlaceholder') || 'e.g. Quito'}
+                  value={filters.city}
+                  onChange={(e) => {
+                    const newCity = e.target.value.trim();
+                    setFilters({ ...filters, city: newCity });
+                    const params = new URLSearchParams(searchParams);
+                    if (newCity) params.set('city', newCity); else params.delete('city');
+                    params.delete('page');
+                    setSearchParams(params);
+                  }}
+                  className="listings-input"
+                />
+              </div>
               <div className="listings-price-range">
                 <label>Price Range:</label>
                 <input
@@ -358,9 +474,9 @@ export default function Listings() {
                 <option value="3">3+ Bathrooms</option>
                 <option value="4">4+ Bathrooms</option>
               </select>
-              {(filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms) && (
+              {(filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms || filters.propertyType || filters.city) && (
                 <button
-                  onClick={() => setFilters({ ...filters, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '' })}
+                  onClick={() => setFilters({ ...filters, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', propertyType: '', city: '' })}
                   className="listings-btn listings-btn-secondary"
                 >
                   Clear Filters
@@ -369,7 +485,7 @@ export default function Listings() {
             </div>
           </div>
 
-          {/* Properties List */}
+          {/* Properties + map split */}
           {loading ? (
             <div className="listings-loading">
               <div className="listings-skeleton"></div>
@@ -381,77 +497,158 @@ export default function Listings() {
               <div className="listings-empty-icon">🏠</div>
               <h3 className="listings-empty-title">No properties found</h3>
               <p className="listings-empty-text">
-                {filters.search || filters.type || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
+                {filters.search || filters.type || filters.propertyType || filters.city || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
                   ? 'Try adjusting your filters'
                   : 'No properties available at the moment'}
               </p>
             </div>
           ) : (
-            <div className="listings-grid">
-              {properties.map((property) => (
-                <div key={property.id} className="listings-card">
-                  <div className="listings-card-header">
-                    <h3 className="listings-card-title">{property.title || 'Untitled Property'}</h3>
-                    {property.price && (
-                      <div className="listings-card-price">{formatPrice(property.price)}</div>
-                    )}
-                  </div>
-                  
-                  <div className="listings-card-location">
-                    {property.address && `${property.address}, `}
-                    {property.city && `${property.city}, `}
-                    {property.state && property.state}
-                    {property.zipCode && ` ${property.zipCode}`}
+            <>
+              {mapProperties.length > 0 && (
+                <div className="listings-mobile-toggle" role="tablist" aria-label="List or map view">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mobilePanel === 'list'}
+                    className={mobilePanel === 'list' ? 'listings-mobile-toggle-active' : ''}
+                    onClick={() => setMobilePanel('list')}
+                  >
+                    List view
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mobilePanel === 'map'}
+                    className={mobilePanel === 'map' ? 'listings-mobile-toggle-active' : ''}
+                    onClick={() => setMobilePanel('map')}
+                  >
+                    Map view
+                  </button>
+                </div>
+              )}
+              <div
+                className={`listings-split ${mapProperties.length === 0 ? 'listings-split--no-map' : ''}`}
+              >
+                <div
+                  className={`listings-results-panel ${mapProperties.length > 0 && mobilePanel === 'map' ? 'listings-results-panel--hidden-mobile' : ''}`}
+                >
+                  <div className="listings-grid listings-grid--split">
+                    {properties.map((property) => {
+                      const detailPath = effectiveMode
+                        ? `/listings/${property.id}?type=${effectiveMode}`
+                        : `/listings/${property.id}`;
+                      const typeLabel =
+                        property.type === 'sale' ? 'Buy' : property.type === 'rent' ? 'Rent' : '';
+                      return (
+                        <article key={property.id} className="listings-card listings-card--explore">
+                          <div className="listings-card-media">
+                            <Link to={detailPath} className="listings-card-image-wrap">
+                              {property.thumbnailUrl ? (
+                                <img
+                                  src={property.thumbnailUrl}
+                                  alt=""
+                                  className="listings-card-image"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="listings-card-image listings-card-image--placeholder" aria-hidden />
+                              )}
+                            </Link>
+                          </div>
+                          <div className="listings-card-body">
+                            <div className="listings-card-topline">
+                              <h3 className="listings-card-title">
+                                <Link to={detailPath}>{property.title || 'Untitled Property'}</Link>
+                              </h3>
+                            </div>
+                            <p className="listings-card-subtitle">{marketExploreSubtitle(property, t)}</p>
+                            {typeLabel && (
+                              <p className="listings-card-meta-line">{typeLabel}</p>
+                            )}
+                            <div className="listings-card-price-row">
+                              {property.price != null ? (
+                                <>
+                                  <span className="listings-card-price">{formatPrice(property.price)}</span>
+                                  {property.type === 'rent' && (
+                                    <span className="listings-card-price-note"> / month</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="listings-card-price listings-card-price--muted">Price on request</span>
+                              )}
+                            </div>
+                            <div className="listings-card-actions listings-card-actions--compact">
+                              <div className="listings-action-buttons">
+                                <button
+                                  type="button"
+                                  onClick={() => setWhatsappProperty(property)}
+                                  className="listings-btn listings-btn-whatsapp listings-btn--sm"
+                                >
+                                  WhatsApp
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleContactAgent(property)}
+                                  className="listings-btn listings-btn-contact listings-btn--sm"
+                                >
+                                  Contact
+                                </button>
+                              </div>
+                              <Link to={detailPath} className="listings-card-detail-link">
+                                View details
+                              </Link>
+                            </div>
+                            <p className="listings-card-footnote">Listed {formatDate(property.createdAt)}</p>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
 
-                  <div className="listings-card-details">
-                    {property.type && (
-                      <div><strong>Type:</strong> {property.type === 'sale' ? 'For Sale' : 'For Rent'}</div>
-                    )}
-                    {property.bedrooms && (
-                      <div><strong>Bedrooms:</strong> {property.bedrooms}</div>
-                    )}
-                    {property.bathrooms && (
-                      <div><strong>Bathrooms:</strong> {property.bathrooms}</div>
-                    )}
-                    {property.squareFeet && (
-                      <div><strong>Square Feet:</strong> {property.squareFeet.toLocaleString()}</div>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="listings-card-actions">
-                    <div className="listings-action-buttons">
-                      <a
-                        href={buildWhatsAppLink(whatsappPhone, property)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="listings-btn listings-btn-whatsapp"
-                      >
-                        💬 WhatsApp
-                      </a>
+                  {!loading && properties.length > 0 && pagination.total > PAGE_SIZE && (
+                    <div className="listings-pagination listings-pagination--in-panel">
                       <button
-                        onClick={() => handleContactAgent(property)}
-                        className="listings-btn listings-btn-contact"
+                        type="button"
+                        className="listings-pagination-btn"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        aria-label="Previous page"
                       >
-                        Contact Agent
+                        ‹ Previous
+                      </button>
+                      <span className="listings-pagination-info">
+                        Page {currentPage} of {totalPages} ({pagination.total} properties)
+                      </span>
+                      <button
+                        type="button"
+                        className="listings-pagination-btn"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                        aria-label="Next page"
+                      >
+                        Next ›
                       </button>
                     </div>
-                    <Link 
-                      to={urlType ? `/listings/${property.id}?type=${urlType}` : `/listings/${property.id}`} 
-                      className="listings-btn listings-btn-secondary" 
-                      style={{ width: '100%', justifyContent: 'center', marginTop: '12px' }}
-                    >
-                      View Details
-                    </Link>
-                  </div>
-
-                  <div className="listings-card-meta">
-                    Listed: {formatDate(property.createdAt)}
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
+
+                <div
+                  className={`listings-map-panel ${mobilePanel === 'list' ? '' : 'listings-map-panel--visible-mobile'}`}
+                >
+                  <PropertyMap
+                    mapRegion="ecuador"
+                    properties={mapProperties}
+                    markerStyle="pricePill"
+                    onPropertyClick={(property) => {
+                      const path = effectiveMode
+                        ? `/listings/${property.id}?type=${effectiveMode}`
+                        : `/listings/${property.id}`;
+                      navigate(path);
+                    }}
+                  />
+                </div>
+              </div>
+            </>
           )}
         </div>
       </main>
@@ -465,6 +662,15 @@ export default function Listings() {
             setSelectedProperty(null);
           }}
           onSubmit={handleContactSubmit}
+        />
+      )}
+
+      {/* Property WhatsApp Modal: creates lead via POST /leads/whatsapp then opens WhatsApp */}
+      {whatsappProperty && (
+        <PropertyWhatsAppModal
+          property={whatsappProperty}
+          source="property_whatsapp_search"
+          onClose={() => setWhatsappProperty(null)}
         />
       )}
     </div>

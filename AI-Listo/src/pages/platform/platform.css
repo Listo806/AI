@@ -1,0 +1,32 @@
+.platform-page {
+  max-width: 900px;
+}
+
+.platform-header {
+  margin-bottom: 24px;
+}
+
+.platform-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.platform-subtitle {
+  margin: 0 0 16px 0;
+  color: var(--property-text-muted, rgba(255, 255, 255, 0.7));
+  font-size: 14px;
+}
+
+.platform-form {
+  background: var(--property-card-bg, #1e293b);
+  border: 1px solid var(--property-card-border, #334155);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.platform-form h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+}

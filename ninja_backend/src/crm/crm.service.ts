@@ -12,57 +12,141 @@ export class CrmService {
   ) {}
 
   /**
+   * Dashboard / QR scope: admin & super_admin see entire site; owner sees all their teams; others see one team (or personal leads only).
+   */
+  async resolveDashboardDataScope(
+    userId: string,
+    teamId: string | null,
+    role: string,
+  ): Promise<{ isGlobal: boolean; teamIds: string[] }> {
+    const r = (role || '').toLowerCase();
+    if (r === 'admin' || r === 'super_admin') {
+      return { isGlobal: true, teamIds: [] };
+    }
+    const teamIds = await this.getSummaryTeamIds(userId, teamId, r);
+    return { isGlobal: false, teamIds };
+  }
+
+  /**
+   * Resolve team IDs the user can see in summary: owner = all teams they own or belong to; others = their team_id only.
+   */
+  private async getSummaryTeamIds(userId: string, teamId: string | null, role: string): Promise<string[]> {
+    if (role === 'owner') {
+      const { rows } = await this.db.query(
+        `SELECT t.id FROM teams t
+         WHERE t.owner_id = $1
+            OR t.id = (SELECT team_id FROM users WHERE id = $1 AND team_id IS NOT NULL LIMIT 1)`,
+        [userId],
+      );
+      return rows.map((r: { id: string }) => r.id);
+    }
+    if (teamId) return [teamId];
+    return [];
+  }
+
+  /**
    * Get dashboard summary (single lightweight endpoint)
-   * Returns aggregated stats for leads, properties, and system status
+   * Returns aggregated stats for leads, properties, and system status.
+   * Owner: aggregates across all teams they own or belong to. Others: single team_id.
    */
   async getDashboardSummary(
     userId: string,
     teamId: string | null,
     role: string,
   ) {
-    // Build team/user filter
-    const teamFilter = teamId ? 'AND l.team_id = $1' : 'AND l.created_by = $1';
-    const params = teamId ? [teamId] : [userId];
+    const teamIds = await this.getSummaryTeamIds(userId, teamId, role);
 
-    // Single query for all lead aggregations
-    // New leads: last 7 days (configurable - can be changed to 24 hours if needed)
+    // Leads: team_id IN (…) or created_by = user (for leads without team)
+    const leadsParams: any[] = [];
+    const leadTeamFilter =
+      teamIds.length > 0
+        ? `AND (l.team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')}) OR l.created_by = $${teamIds.length + 1})`
+        : 'AND l.created_by = $1';
+    if (teamIds.length > 0) {
+      leadsParams.push(...teamIds, userId);
+    } else {
+      leadsParams.push(userId);
+    }
+
     const leadsQuery = `
       SELECT 
         COUNT(*)::int as total,
         COUNT(*) FILTER (WHERE l.created_at >= NOW() - INTERVAL '7 days')::int as new,
-        COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified
+        COUNT(*) FILTER (WHERE l.status = 'qualified')::int as qualified,
+        COUNT(*) FILTER (WHERE l.last_contacted_at IS NOT NULL)::int as contacted
       FROM leads l
-      WHERE 1=1 ${teamFilter}
+      WHERE 1=1 ${leadTeamFilter}
     `;
 
-    // Single query for all property aggregations
+    // Properties: team_id IN (…) or created_by for non-team
+    const propTeamFilter =
+      teamIds.length > 0
+        ? `AND p.team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')})`
+        : 'AND p.created_by = $1';
+    const propertiesParams = teamIds.length > 0 ? teamIds : [userId];
+
     const propertiesQuery = `
       SELECT 
         COUNT(*)::int as total,
         COUNT(*) FILTER (WHERE p.status = 'published')::int as published
       FROM properties p
-      WHERE 1=1 ${teamId ? 'AND p.team_id = $1' : 'AND p.created_by = $1'}
+      WHERE 1=1 ${propTeamFilter}
     `;
 
-    // Execute both queries in parallel
-    const [leadsResult, propertiesResult] = await Promise.all([
-      this.db.query(leadsQuery, params),
-      this.db.query(propertiesQuery, params),
+    // Deals: team_id IN (…) when user has teams
+    const dealsPromise =
+      teamIds.length > 0
+        ? this.db.query(
+            `SELECT
+              COUNT(*)::int AS total,
+              COALESCE(SUM(value) FILTER (WHERE stage NOT IN ('won', 'lost')), 0)::numeric AS pipeline_value,
+              COALESCE(SUM(value) FILTER (WHERE stage = 'won'), 0)::numeric AS won_value,
+              COUNT(*) FILTER (WHERE stage = 'new')::int AS "new",
+              COUNT(*) FILTER (WHERE stage = 'qualified')::int AS qualified,
+              COUNT(*) FILTER (WHERE stage = 'proposal')::int AS proposal,
+              COUNT(*) FILTER (WHERE stage = 'negotiation')::int AS negotiation,
+              COUNT(*) FILTER (WHERE stage = 'won')::int AS won,
+              COUNT(*) FILTER (WHERE stage = 'lost')::int AS lost
+             FROM deals WHERE team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')})`,
+            teamIds,
+          )
+        : Promise.resolve({ rows: [{}] });
+
+    const [leadsResult, propertiesResult, dealsResult] = await Promise.all([
+      this.db.query(leadsQuery, leadsParams),
+      this.db.query(propertiesQuery, propertiesParams),
+      dealsPromise,
     ]);
 
-    const leads = leadsResult.rows[0] || { total: 0, new: 0, qualified: 0 };
+    const leads = leadsResult.rows[0] || { total: 0, new: 0, qualified: 0, contacted: 0 };
     const properties = propertiesResult.rows[0] || { total: 0, published: 0 };
+    const d = dealsResult.rows[0] || {};
+    const deals = {
+      total: Number(d.total) || 0,
+      pipelineValue: Number(d.pipeline_value) || 0,
+      wonValue: Number(d.won_value) || 0,
+      byStage: {
+        new: Number(d.new) || 0,
+        qualified: Number(d.qualified) || 0,
+        proposal: Number(d.proposal) || 0,
+        negotiation: Number(d.negotiation) || 0,
+        won: Number(d.won) || 0,
+        lost: Number(d.lost) || 0,
+      },
+    };
 
     return {
       leads: {
         total: leads.total || 0,
         new: leads.new || 0,
         qualified: leads.qualified || 0,
+        contacted: leads.contacted || 0,
       },
       properties: {
         total: properties.total || 0,
         published: properties.published || 0,
       },
+      deals,
       system: {
         ai_status: 'active',
         last_sync: new Date().toISOString(),
@@ -296,7 +380,6 @@ export class CrmService {
       FROM leads l
       LEFT JOIN properties p ON l.property_id = p.id
       WHERE l.created_by = $1
-        AND l.property_id IS NOT NULL
       ORDER BY l.created_at DESC
     `;
 

@@ -4,7 +4,10 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
+import { useNotification } from '../../context/NotificationContext';
+import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
+import WhatsAppChat from '../../components/WhatsAppChat';
+import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
 import './Leads.css';
 import './leads-master-detail.css';
 
@@ -12,6 +15,8 @@ export default function LeadsList() {
   const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
+  const { showSuccess, showError } = useNotification();
+  const [deletingLeadId, setDeletingLeadId] = useState(null);
   const [allHotLeads, setAllHotLeads] = useState([]);
   const [allOtherLeads, setAllOtherLeads] = useState([]);
   const [filteredHotLeads, setFilteredHotLeads] = useState([]);
@@ -404,6 +409,21 @@ export default function LeadsList() {
     if (lead.email) {
       window.location.href = `mailto:${lead.email}`;
       logContactAction(lead.id, 'email');
+    }
+  };
+
+  const handleDeleteLead = async (lead) => {
+    if (!window.confirm(t('leads.deleteConfirm'))) return;
+    setDeletingLeadId(lead.id);
+    try {
+      await apiClient.request(`/leads/${lead.id}`, { method: 'DELETE' });
+      showSuccess(t('leads.leadDeleted'));
+      setSelectedLead((prev) => (prev?.id === lead.id ? null : prev));
+      loadLeads();
+    } catch (err) {
+      showError(err?.message || t('leads.deleteError'));
+    } finally {
+      setDeletingLeadId(null);
     }
   };
 
@@ -803,6 +823,15 @@ export default function LeadsList() {
         <div className="lead-detail-column">
           {selectedLead ? (
             <div className="lead-detail-scrollable">
+              <div style={{ marginBottom: '12px' }}>
+                <Link
+                  to={`/dashboard/leads/${selectedLead.id}`}
+                  className="crm-btn crm-btn-primary"
+                  style={{ fontSize: '13px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  View full lead details →
+                </Link>
+              </div>
               {/* Section 1: Lead Header Card */}
               <div className="lead-header-card">
                 <div className="lead-header-top">
@@ -921,22 +950,26 @@ export default function LeadsList() {
                 />
               </div>
 
-              {/* Section 5: WhatsApp Panel */}
-              <div className="lead-whatsapp-panel">
-                <div className="lead-whatsapp-title">WhatsApp</div>
-                <div className="lead-whatsapp-messages">
-                  <div className="lead-whatsapp-message incoming">
-                    Chat messages will appear here
+              {/* Section 5: WhatsApp — real chat with channel label in header */}
+              <div className="lead-whatsapp-panel" style={{ minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
+                {showQrRoute && selectedLead.phone && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <Link
+                      to={`${primaryRouteIsQr ? '/dashboard/whatsapp' : '/dashboard/whatsapp-qr'}?contactPhone=${encodeURIComponent(normalizePhoneToE164(selectedLead.phone) || selectedLead.phone)}`}
+                      className="crm-btn crm-btn-secondary"
+                      style={{ fontSize: '13px', padding: '8px 14px' }}
+                    >
+                      Open in WhatsApp Inbox (QR)
+                    </Link>
                   </div>
-                </div>
-                <div className="lead-whatsapp-input-container">
-                  <input
-                    type="text"
-                    className="lead-whatsapp-input"
-                    placeholder="Type a message..."
-                    disabled
+                )}
+                <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                  <WhatsAppChat
+                    leadId={selectedLead.id}
+                    leadPhone={selectedLead.phone}
+                    leadName={selectedLead.name}
+                    onSendSuccess={loadLeads}
                   />
-                  <button className="lead-whatsapp-send" disabled>➤</button>
                 </div>
               </div>
             </div>
@@ -1003,7 +1036,6 @@ export default function LeadsList() {
                   <div className="lead-agent-info">
                     <div className="lead-agent-name">{user?.name || 'Unassigned'}</div>
                     <div className="lead-agent-role">{user?.role || 'Agent'}</div>
-                    <span className="lead-agent-status">Active</span>
                   </div>
                 </div>
                 <button className="lead-reassign-btn">
@@ -1026,6 +1058,19 @@ export default function LeadsList() {
                     {Math.round(allLeads.length / 1)}
                   </span>
                 </div>
+              </div>
+
+              {/* Last row: Delete lead */}
+              <div className="lead-attribution-section lead-attribution-delete-row">
+                <button
+                  type="button"
+                  className="lead-cta-delete"
+                  onClick={() => handleDeleteLead(selectedLead)}
+                  disabled={deletingLeadId === selectedLead.id}
+                  title={t('leads.deleteLead')}
+                >
+                  {deletingLeadId === selectedLead.id ? '…' : '🗑️'} {t('leads.deleteLead')}
+                </button>
               </div>
             </div>
           ) : (

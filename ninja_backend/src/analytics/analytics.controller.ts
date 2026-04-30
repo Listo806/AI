@@ -9,12 +9,13 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('analytics')
 @ApiBearerAuth('JWT-auth')
 @Controller('analytics')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
@@ -55,10 +56,9 @@ export class AnalyticsController {
     @Query('endDate') endDateStr?: string,
   ) {
     const timeRange = this.parseTimeRange(startDateStr, endDateStr);
-    return this.analyticsService.getLeadMetrics(
-      user.role === 'admin' ? null : user.teamId,
-      timeRange,
-    );
+    const teamId = user.role === 'admin' ? null : user.teamId;
+    const userId = teamId ? null : user.id;
+    return this.analyticsService.getLeadMetrics(teamId, userId, timeRange);
   }
 
   /**

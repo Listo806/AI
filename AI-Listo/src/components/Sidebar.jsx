@@ -1,34 +1,118 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
+
+const AI_CENTER_PATHS = [
+  "/dashboard/ai-center",
+  "/dashboard/ai-assistant",
+  "/dashboard/ai-auto-reply",
+  "/dashboard/ai-appointment-setter",
+  "/dashboard/ai-qualification-rules",
+  "/dashboard/ai-messaging",
+  "/dashboard/ai-logs",
+];
+
+const AI_CENTER_ITEMS = [
+  { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
+  { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
+  { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
+  { path: "/dashboard/ai-appointment-setter", labelKey: "nav.aiCenter.appointmentSetter" },
+  { path: "/dashboard/ai-qualification-rules", labelKey: "nav.aiCenter.qualificationRules" },
+  { path: "/dashboard/ai-messaging", labelKey: "nav.aiCenter.messaging" },
+  { path: "/dashboard/ai-logs", labelKey: "nav.aiCenter.activityLogs" },
+];
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const [aiCenterOpen, setAiCenterOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("aiCenterSidebarOpen");
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    const open = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+    if (open && !aiCenterOpen) setAiCenterOpen(true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("aiCenterSidebarOpen", JSON.stringify(aiCenterOpen));
+    } catch (_) {}
+  }, [aiCenterOpen]);
 
   // Initialize Lucide icons when component mounts or updates
   useEffect(() => {
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [isCollapsed]); // Re-initialize when collapsed state changes
+  }, [isCollapsed, aiCenterOpen]);
 
-  // Navigation items with Lucide icon names and translation keys
-  const navItems = [
-    { path: "/dashboard", icon: "home", labelKey: "nav.dashboard" },
+  const isAiCenterActive = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
+
+  // VITE_WHATSAPP_UI: twilio = original only | qr = QR at /dashboard/whatsapp only | both = two entries
+  const whatsappNavEntries =
+    whatsappUiMode === "both"
+      ? [
+          { path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true },
+          { path: "/dashboard/whatsapp-qr", icon: "smartphone", label: "WhatsApp QR" },
+        ]
+      : primaryRouteIsQr
+        ? [{ path: "/dashboard/whatsapp-qr", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true }]
+        : [{ path: "/dashboard/whatsapp", icon: "whatsapp", labelKey: "nav.whatsapp", isWhatsApp: true }];
+
+  const topNavItems = [
+    ...whatsappNavEntries,
+    { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
-    { path: "/dashboard/whatsapp", icon: "message-circle", labelKey: "nav.whatsapp" },
     { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/ai-assistant", icon: "bot", labelKey: "nav.aiAssistant" },
-    { path: "/dashboard/ai-automations", icon: "zap", labelKey: "nav.aiAutomations" },
+  ];
+
+  const bottomNavItems = [
     { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
     { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
     { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
+
+  const role = user?.role?.toLowerCase?.() || user?.role;
+  const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
+  const canSeeAdmin = role === "super_admin" || role === "admin";
+  const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
+
+  let navItems = topNavItems;
+  if (role === "va") {
+    navItems = topNavItems.filter((item) => item.path === "/dashboard/properties");
+  } else if (role === "va_uploader") {
+    navItems = [{ path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" }];
+  } else if (canSeeAdmin) {
+    navItems = [
+      { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
+      { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
+      { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
+      { path: "/dashboard/admin/plans", icon: "credit-card", labelKey: "nav.adminPlans" },
+    ];
+  } else {
+    // if (canSeePlatformListings) {
+    //   navItems = [
+    //     ...topNavItems.slice(0, 6),
+    //     { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
+    //     ...topNavItems.slice(6),
+    //   ];
+    // }
+  }
+
+  const showAiCenterAndBottom = canSeeAiCenter && !canSeeAdmin;
 
   return (
     <>
@@ -50,41 +134,189 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
             <>
               <img 
                 src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
-                alt="Listo Qasa Logo"
+                alt="ListoQasa Logo"
                 className="crm-sidebar-logo"
               />
-              <span className="crm-sidebar-brand">Listo Qasa</span>
+              <span className="crm-sidebar-brand">ListoQasa</span>
             </>
           )}
         </div>
 
         <nav className="crm-nav">
           {navItems.map((item, index) => (
-            <NavLink
-              key={`${item.path}-${index}`}
-              to={item.path}
-              className={({ isActive }) => 
-                `crm-nav-link ${isActive ? 'active' : ''}`
-              }
-              onClick={onClose}
-              end={item.path === "/dashboard"}
-              title={isCollapsed ? t(item.labelKey) : undefined}
-            >
-              <i data-lucide={item.icon} className="crm-nav-icon"></i>
-              {!isCollapsed && <span className="crm-nav-label">{t(item.labelKey)}</span>}
-            </NavLink>
+            <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `crm-nav-link ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+                end={item.path === "/dashboard/home" || item.path === "/vacation-rentals/search"}
+                title={isCollapsed ? t(item.labelKey) : undefined}
+              >
+                {item.isWhatsApp ? (
+                  <img
+                    src="/assets/WhatsApp-Logo.svg"
+                    alt="WhatsApp"
+                    className="crm-nav-icon"
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      objectFit: "contain",
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : item.path === "/dashboard/whatsapp-qr" || (primaryRouteIsQr && item.path === "/dashboard/whatsapp" && item.icon === "smartphone") ? (
+                  <i data-lucide="smartphone" className="crm-nav-icon"></i>
+                ) : (
+                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                )}
+                {!isCollapsed && (
+                  <span className="crm-nav-label">
+                    {item.label || t(item.labelKey)}
+                    {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
+                  </span>
+                )}
+              </NavLink>
+            </span>
           ))}
+
+          {showAiCenterAndBottom && (
+            <>
+              <div className="crm-nav-spacer" aria-hidden="true" />
+              <div className="crm-nav-group crm-nav-group-ai">
+              {isCollapsed ? (
+                <NavLink
+                  to="/dashboard/ai-center"
+                  className={({ isActive }) => `crm-nav-link ${isActive ? "active" : ""}`}
+                  onClick={onClose}
+                  title={t("nav.aiCenter.label")}
+                >
+                  <i data-lucide="bot" className="crm-nav-icon"></i>
+                </NavLink>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={`crm-nav-link ${isAiCenterActive ? "active" : ""}`}
+                    onClick={() => setAiCenterOpen((o) => !o)}
+                    style={{
+                      width: "100%",
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "var(--sidebar-link-padding, 10px 12px)",
+                      color: "inherit",
+                      textAlign: "left",
+                      font: "inherit",
+                    }}
+                  >
+                    <i data-lucide="bot" className="crm-nav-icon"></i>
+                    <span className="crm-nav-label">{t("nav.aiCenter.label")}</span>
+                    <i
+                      data-lucide={aiCenterOpen ? "chevron-down" : "chevron-right"}
+                      style={{ marginLeft: "auto", width: "16px", height: "16px" }}
+                    />
+                  </button>
+                  {aiCenterOpen && (
+                    <div className="crm-nav-sub" style={{ paddingLeft: "12px" }}>
+                      {AI_CENTER_ITEMS.map((item) => (
+                        <NavLink
+                          key={item.path}
+                          to={item.path}
+                          className={({ isActive }) =>
+                            `crm-nav-link crm-nav-link-sub ${isActive ? "active" : ""}`
+                          }
+                          onClick={onClose}
+                          style={{ paddingLeft: "24px", fontSize: "13px" }}
+                        >
+                          <span className="crm-nav-label">{t(item.labelKey)}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            </>
+          )}
+
+          {showAiCenterAndBottom && (
+            <>
+              {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
+              <div className="crm-nav-group-bottom">
+            {bottomNavItems.map((item, index) => (
+              <NavLink
+                key={`${item.path}-${index}`}
+                to={item.path}
+                className={({ isActive }) =>
+                  `crm-nav-link ${isActive ? "active" : ""}`
+                }
+                onClick={onClose}
+                title={isCollapsed ? t(item.labelKey) : undefined}
+              >
+                <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                {!isCollapsed && (
+                  <span className="crm-nav-label">{t(item.labelKey)}</span>
+                )}
+              </NavLink>
+            ))}
+            </div>
+            </>
+          )}
         </nav>
+        {!isCollapsed && (
+        <div style={{marginTop: "auto", padding: "20px 16px", borderTop: "1px solid #eef2f7"}}>
+  
+          <div style={{fontSize: "11px", color: "#9ca3af", marginBottom: "6px"}}>
+            Powered by
+          </div>
+
+          <div style={{display: "flex", alignItems: "center", gap: "6px"}}>
+            <img src="/assets/header-logo.png" style={{width: "15px", height: "15px"}} />
+            <span style={{fontSize: "13px", fontWeight: "600", color: "#1f2937"}}>
+              CORTEXA
+            </span>
+          </div>
+
+          <div style={{fontSize: "11px", color: "#6b7280", marginTop: "2px"}}>
+            Intelligence Core
+          </div>
+        </div>
+        )}
+
+        {/* <div
+          className={`crm-sidebar-powered ${isCollapsed ? "crm-sidebar-powered--collapsed" : ""}`}
+          aria-label="Powered by CORTEXA Intelligence Core"
+        >
+          <div className="crm-nav-spacer" aria-hidden="true" />
+          <div className="crm-sidebar-powered-sep" role="separator" />
+          {!isCollapsed && (
+            <>
+              <p className="crm-sidebar-powered-by">Powered by</p>
+              <p className="crm-sidebar-powered-brand"><img src="/assets/header-logo.png" className="icon" alt="CORTEXA" /> CORTEXA</p>
+              <p className="crm-sidebar-powered-text">Intelligence Core</p>
+            </>
+          )}
+          {isCollapsed && (
+            <span className="crm-sidebar-powered-abbr" title="CORTEXA Intelligence Core">
+              <img src="/assets/header-logo.png" className="icon" alt="CORTEXA" />
+            </span>
+          )}
+        </div> */}
 
         {/* Sidebar Footer - Account Info */}
         {/* <div className="crm-sidebar-footer">
           <div className="crm-user-info">
             <div className="crm-user-avatar">
-              {user?.email ? user.email[0].toUpperCase() : 'U'}
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
             </div>
             {!isCollapsed && (
               <div className="crm-user-details">
-                <div className="crm-user-name">{user?.email || 'User'}</div>
+                <div className="crm-user-name">{user?.name || user?.email || 'User'}</div>
                 <div className="crm-user-role">{user?.role || 'user'}</div>
               </div>
             )}

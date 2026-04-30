@@ -1,20 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
+import { getMyTeams } from '../../api/platformApi';
+import { getPropertyMedia, uploadPropertyImage, setPropertyThumbnail, MAX_IMAGES_PER_PROPERTY } from '../../api/propertiesApi';
+import PropertyImageUpload from '../../components/PropertyImageUpload';
 import { useAuth } from '../../context/AuthContext';
+
+/** Allowed property type values (must match backend enum) */
+const PROPERTY_TYPE_OPTIONS = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'];
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import { useNotification } from '../../context/NotificationContext';
 
 export default function PropertyForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
-  const { showSuccess } = useNotification();
+  const { showSuccess, showError } = useNotification();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [media, setMedia] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -24,6 +35,8 @@ export default function PropertyForm() {
     zipCode: '',
     price: '',
     type: 'sale',
+    listingType: 'marketplace',
+    propertyType: '',
     status: 'draft',
     bedrooms: '',
     bathrooms: '',
@@ -32,7 +45,14 @@ export default function PropertyForm() {
     yearBuilt: '',
     latitude: '',
     longitude: '',
+    teamId: '',
   });
+
+  useEffect(() => {
+    if (isAuthenticated() && user) {
+      getMyTeams().then((list) => setTeams(Array.isArray(list) ? list : []));
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (isEdit && isAuthenticated() && user) {
@@ -40,10 +60,25 @@ export default function PropertyForm() {
     }
   }, [id, isAuthenticated, user]);
 
+  const loadMedia = async () => {
+    if (!id) return;
+    try {
+      const list = await getPropertyMedia(id);
+      setMedia(Array.isArray(list) ? list : []);
+    } catch {
+      setMedia([]);
+    }
+  };
+
   const loadProperty = async () => {
     setLoading(true);
     try {
       const property = await apiClient.request(`/properties/${id}`);
+      const lt = (property.listingType || property.listing_type || '').toLowerCase();
+      if (lt === 'vacation') {
+        navigate(`/dashboard/vacation-rentals/upload/${id}`, { replace: true });
+        return;
+      }
       setFormData({
         title: property.title || '',
         description: property.description || '',
@@ -53,6 +88,8 @@ export default function PropertyForm() {
         zipCode: property.zipCode || '',
         price: property.price || '',
         type: property.type || 'sale',
+        listingType: 'marketplace',
+        propertyType: property.propertyType || '',
         status: property.status || 'draft',
         bedrooms: property.bedrooms || '',
         bathrooms: property.bathrooms || '',
@@ -61,9 +98,11 @@ export default function PropertyForm() {
         yearBuilt: property.yearBuilt || '',
         latitude: property.latitude || '',
         longitude: property.longitude || '',
+        teamId: property.teamId ?? '',
       });
+      await loadMedia();
     } catch (err) {
-      setError('Failed to load property: ' + err.message);
+      setError(t('properties.loadFailed') + ': ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -93,6 +132,8 @@ export default function PropertyForm() {
         zipCode: formData.zipCode || null,
         price: formData.price ? parseFloat(formData.price) : null,
         type: formData.type,
+        listingType: 'marketplace',
+        propertyType: formData.propertyType || null,
         status: formData.status,
         bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
         bathrooms: formData.bathrooms ? parseInt(formData.bathrooms) : null,
@@ -101,6 +142,7 @@ export default function PropertyForm() {
         yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
         latitude: formData.latitude ? parseFloat(formData.latitude) : null,
         longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        teamId: formData.teamId || null,
       };
 
       if (isEdit) {
@@ -108,13 +150,13 @@ export default function PropertyForm() {
           method: 'PUT',
           body: JSON.stringify(submitData),
         });
-        showSuccess('Property updated successfully!');
+        showSuccess(t('properties.propertyUpdated'));
       } else {
         await apiClient.request('/properties', {
           method: 'POST',
           body: JSON.stringify(submitData),
         });
-        showSuccess('Property created successfully!');
+        showSuccess(t('properties.propertyCreated'));
       }
 
       // Small delay to show success message before navigation
@@ -123,16 +165,14 @@ export default function PropertyForm() {
       }, 500);
     } catch (err) {
       const isSubscriptionError = handleError(err, 'Failed to save property');
-      setError(err.message || 'Failed to save property');
+      setError(err.message || t('properties.saveFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to permanently delete this listing? This action cannot be undone.'
-    );
+    const confirmed = window.confirm(t('properties.deleteConfirm'));
 
     if (!confirmed) {
       return;
@@ -147,7 +187,7 @@ export default function PropertyForm() {
       });
       navigate('/dashboard/properties');
     } catch (err) {
-      setError(err.message || 'Failed to delete property');
+      setError(err.message || t('properties.deleteFailed'));
       setLoading(false);
     }
   };
@@ -155,7 +195,7 @@ export default function PropertyForm() {
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
+        <div>{t('common.loading')}</div>
       </div>
     );
   }
@@ -167,7 +207,7 @@ export default function PropertyForm() {
   return (
     <div style={{ maxWidth: '800px' }}>
       <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>
-        {isEdit ? 'Edit Property' : 'New Property'}
+        {isEdit ? t('properties.editProperty') : t('properties.newProperty')}
       </h1>
       {error && (
         <div className="crm-error" style={{ marginBottom: '24px' }}>
@@ -177,10 +217,10 @@ export default function PropertyForm() {
 
       <form onSubmit={handleSubmit} className="crm-form">
           <div className="crm-form-section">
-            <h3 className="crm-form-section-title">Basic Information</h3>
+            <h3 className="crm-form-section-title">{t('properties.basicInfo')}</h3>
             
             <div className="crm-form-field">
-              <label htmlFor="title">Title *</label>
+              <label htmlFor="title">{t('properties.titleRequired')}</label>
               <input
                 id="title"
                 name="title"
@@ -193,7 +233,7 @@ export default function PropertyForm() {
             </div>
 
             <div className="crm-form-field">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="description">{t('properties.description')}</label>
               <textarea
                 id="description"
                 name="description"
@@ -206,7 +246,7 @@ export default function PropertyForm() {
 
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="type">Type *</label>
+                <label htmlFor="type">{t('properties.marketplaceListingType')}</label>
                 <select
                   id="type"
                   name="type"
@@ -215,13 +255,15 @@ export default function PropertyForm() {
                   required
                   disabled={loading}
                 >
-                  <option value="sale">For Sale</option>
-                  <option value="rent">For Rent</option>
+                  <option value="sale">{t('properties.buy')}</option>
+                  <option value="rent">{t('properties.rent')}</option>
                 </select>
               </div>
+            </div>
 
+            <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="price">Price</label>
+                <label htmlFor="price">{t('properties.price')}</label>
                 <input
                   id="price"
                   name="price"
@@ -236,7 +278,7 @@ export default function PropertyForm() {
             </div>
 
             <div className="crm-form-field">
-              <label htmlFor="status">Status</label>
+              <label htmlFor="status">{t('properties.status')}</label>
               <select
                 id="status"
                 name="status"
@@ -244,19 +286,36 @@ export default function PropertyForm() {
                 onChange={handleChange}
                 disabled={loading}
               >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="sold">Sold</option>
-                <option value="rented">Rented</option>
+                <option value="draft">{t('properties.draft')}</option>
+                <option value="published">{t('properties.published')}</option>
+                <option value="sold">{t('properties.sold')}</option>
+                <option value="rented">{t('properties.rented')}</option>
               </select>
+            </div>
+
+            <div className="crm-form-field">
+              <label htmlFor="teamId">{t('properties.team')}</label>
+              <select
+                id="teamId"
+                name="teamId"
+                value={formData.teamId}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="">{t('properties.useCurrentTeam')}</option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>{team.name}</option>
+                ))}
+              </select>
+              <span className="crm-form-hint">{t('properties.teamHint')}</span>
             </div>
           </div>
 
           <div className="crm-form-section">
-            <h3 className="crm-form-section-title">Location</h3>
+            <h3 className="crm-form-section-title">{t('properties.location')}</h3>
             
             <div className="crm-form-field">
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">{t('properties.address')}</label>
               <input
                 id="address"
                 name="address"
@@ -269,7 +328,7 @@ export default function PropertyForm() {
 
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="city">City</label>
+                <label htmlFor="city">{t('properties.city')}</label>
                 <input
                   id="city"
                   name="city"
@@ -281,7 +340,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="state">State</label>
+                <label htmlFor="state">{t('properties.state')}</label>
                 <input
                   id="state"
                   name="state"
@@ -293,7 +352,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="zipCode">ZIP Code</label>
+                <label htmlFor="zipCode">{t('properties.zipCode')}</label>
                 <input
                   id="zipCode"
                   name="zipCode"
@@ -307,7 +366,7 @@ export default function PropertyForm() {
 
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="latitude">Latitude</label>
+                <label htmlFor="latitude">{t('properties.latitude')}</label>
                 <input
                   id="latitude"
                   name="latitude"
@@ -320,7 +379,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="longitude">Longitude</label>
+                <label htmlFor="longitude">{t('properties.longitude')}</label>
                 <input
                   id="longitude"
                   name="longitude"
@@ -335,11 +394,29 @@ export default function PropertyForm() {
           </div>
 
           <div className="crm-form-section">
-            <h3 className="crm-form-section-title">Property Details</h3>
+            <h3 className="crm-form-section-title">{t('properties.propertyDetails')}</h3>
             
+            <div className="crm-form-field">
+              <label htmlFor="propertyType">{t('properties.propertyType')}</label>
+              <select
+                id="propertyType"
+                name="propertyType"
+                value={formData.propertyType}
+                onChange={handleChange}
+                disabled={loading}
+              >
+                <option value="">{t('properties.propertyTypePlaceholder')}</option>
+                {PROPERTY_TYPE_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {t(`properties.propertyType_${value}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="bedrooms">Bedrooms</label>
+                <label htmlFor="bedrooms">{t('properties.bedrooms')}</label>
                 <input
                   id="bedrooms"
                   name="bedrooms"
@@ -352,7 +429,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="bathrooms">Bathrooms</label>
+                <label htmlFor="bathrooms">{t('properties.bathrooms')}</label>
                 <input
                   id="bathrooms"
                   name="bathrooms"
@@ -368,7 +445,7 @@ export default function PropertyForm() {
 
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="squareFeet">Square Feet</label>
+                <label htmlFor="squareFeet">{t('properties.squareFeet')}</label>
                 <input
                   id="squareFeet"
                   name="squareFeet"
@@ -381,7 +458,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="lotSize">Lot Size</label>
+                <label htmlFor="lotSize">{t('properties.lotSize')}</label>
                 <input
                   id="lotSize"
                   name="lotSize"
@@ -395,7 +472,7 @@ export default function PropertyForm() {
               </div>
 
               <div className="crm-form-field">
-                <label htmlFor="yearBuilt">Year Built</label>
+                <label htmlFor="yearBuilt">{t('properties.yearBuilt')}</label>
                 <input
                   id="yearBuilt"
                   name="yearBuilt"
@@ -410,6 +487,69 @@ export default function PropertyForm() {
             </div>
           </div>
 
+          {isEdit && (
+            <div className="crm-form-section">
+              <h3 className="crm-form-section-title">{t('properties.images')}</h3>
+              <p className="crm-form-hint" style={{ marginBottom: 12 }}>
+                {t('properties.imagesHint', { max: MAX_IMAGES_PER_PROPERTY })}
+              </p>
+              <div style={{ marginBottom: 16 }}>
+                <PropertyImageUpload
+                  onUpload={async (files) => {
+                    if (!id) return;
+                    setUploading(true);
+                    try {
+                      for (const file of files) {
+                        await uploadPropertyImage(id, file);
+                      }
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                  onSuccess={(count) => {
+                    showSuccess(count > 1 ? t('properties.imagesAdded', { count }) : t('properties.imageAdded'));
+                    loadMedia();
+                  }}
+                  onError={(msg) => showError(msg)}
+                  uploading={uploading}
+                  disabled={loading}
+                  maxFiles={MAX_IMAGES_PER_PROPERTY}
+                  currentCount={media.filter((m) => m.type === 'image').length}
+                />
+              </div>
+              {media.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                  {media.filter((m) => m.type === 'image').map((m) => (
+                    <div key={m.id} style={{ width: 120, textAlign: 'center' }}>
+                      <img
+                        src={m.url}
+                        alt=""
+                        style={{ width: 100, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                      />
+                      <button
+                        type="button"
+                        className="crm-btn crm-btn-secondary"
+                        style={{ marginTop: 4, fontSize: 11 }}
+                        onClick={async () => {
+                          try {
+                            await setPropertyThumbnail(id, m.url);
+                            showSuccess(t('properties.thumbnailSet'));
+                            loadProperty();
+                          } catch (err) {
+                            showError(err.message || t('properties.failedSetThumbnail'));
+                          }
+                        }}
+                        disabled={loading}
+                      >
+                        {t('properties.setAsThumbnail')}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="crm-form-actions">
             <button
               type="button"
@@ -417,14 +557,14 @@ export default function PropertyForm() {
               className="crm-btn crm-btn-secondary"
               disabled={loading}
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="crm-btn crm-btn-primary"
               disabled={loading}
             >
-              {loading ? 'Saving...' : isEdit ? 'Update Property' : 'Create Property'}
+              {loading ? t('properties.saving') : isEdit ? t('properties.updateProperty') : t('properties.createProperty')}
             </button>
           </div>
         </form>
@@ -433,9 +573,9 @@ export default function PropertyForm() {
         {isEdit && (
           <div className="crm-danger-zone">
             <div className="crm-danger-zone-header">
-              <h3 className="crm-danger-zone-title">Danger Zone</h3>
+              <h3 className="crm-danger-zone-title">{t('properties.dangerZone')}</h3>
               <p className="crm-danger-zone-description">
-                Irreversible and destructive actions
+                {t('properties.dangerZoneDesc')}
               </p>
             </div>
             <div className="crm-danger-zone-actions">
@@ -445,7 +585,7 @@ export default function PropertyForm() {
                 className="crm-btn crm-btn-danger"
                 disabled={loading}
               >
-                Delete Property
+                {t('properties.deleteProperty')}
               </button>
             </div>
           </div>

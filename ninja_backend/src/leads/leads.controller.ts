@@ -8,12 +8,18 @@ import {
   Param,
   Query,
   UseGuards,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { LeadsService } from './leads.service';
+import { WhatsAppLeadService } from './services/whatsapp-lead.service';
+import { LeadMessagesService } from '../messaging/lead-messages.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateLeadDto } from './dto/create-lead.dto';
+import { CreateWhatsAppLeadDto } from './dto/create-whatsapp-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadStatus } from './entities/lead.entity';
 import { SubscriptionRequiredGuard } from '../subscriptions/guards/subscription-required.guard';
@@ -22,7 +28,63 @@ import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 @ApiTags('leads')
 @Controller('leads')
 export class LeadsController {
-  constructor(private readonly leadsService: LeadsService) {}
+  constructor(
+    private readonly leadsService: LeadsService,
+    private readonly whatsappLeadService: WhatsAppLeadService,
+    private readonly leadMessages: LeadMessagesService,
+  ) {}
+
+  @Post('whatsapp')
+  @ApiOperation({
+    summary: 'Create lead from WhatsApp gate and get WhatsApp redirect URL (public, no auth required)',
+    description: 'Creates a CRM lead before redirecting to WhatsApp. Required: phone (E.164), propertyId, source. Returns WhatsApp URL only after successful lead creation.',
+  })
+  @ApiBody({ type: CreateWhatsAppLeadDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Lead created successfully, WhatsApp URL returned',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        data: {
+          type: 'object',
+          properties: {
+            leadId: { type: 'string', format: 'uuid' },
+            whatsappUrl: { type: 'string', example: 'https://wa.me/593987654321?text=...' },
+            assignedTo: { type: 'string', enum: ['agent', 'owner', 'team', 'system'] },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid phone number or missing WhatsApp number',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        error: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Property not found',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        error: { type: 'string' },
+      },
+    },
+  })
+  async createWhatsAppLead(@Body() createWhatsAppLeadDto: CreateWhatsAppLeadDto) {
+    // Service will throw BadRequestException or NotFoundException on errors
+    // NestJS will handle these and return appropriate HTTP responses
+    return await this.whatsappLeadService.createWhatsAppLead(createWhatsAppLeadDto);
+  }
 
   @Post('public')
   @ApiOperation({ summary: 'Create a new lead from public contact form (no auth required)' })
@@ -58,6 +120,32 @@ export class LeadsController {
       return this.leadsService.findByStatus(status, user.id, user.teamId);
     }
     return this.leadsService.findAll(user.id, user.teamId);
+  }
+
+  @Get(':id/email-thread')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get email thread for a lead' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiResponse({ status: 200, description: 'Email thread' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async getEmailThread(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.assertLeadAccess(id, user);
+    return { data: await this.leadMessages.getEmailThread(id) };
+  }
+
+  @Get(':id/messages')
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get all messages (WhatsApp + email) for a lead timeline' })
+  @ApiParam({ name: 'id', description: 'Lead ID' })
+  @ApiResponse({ status: 200, description: 'Lead messages timeline' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  async getMessages(@Param('id') id: string, @CurrentUser() user: any) {
+    await this.assertLeadAccess(id, user);
+    return { data: await this.leadMessages.findByLead(id) };
   }
 
   @Get(':id')
@@ -124,6 +212,14 @@ export class LeadsController {
   async remove(@Param('id') id: string, @CurrentUser() user: any) {
     await this.leadsService.delete(id, user.id, user.teamId);
     return { message: 'Lead deleted successfully' };
+  }
+
+  private async assertLeadAccess(leadId: string, user: any): Promise<void> {
+    const lead = await this.leadsService.findById(leadId);
+    if (!lead) throw new NotFoundException('Lead not found');
+    if (lead.teamId !== user.teamId && lead.createdBy !== user.id) {
+      throw new ForbiddenException('You do not have access to this lead');
+    }
   }
 }
 

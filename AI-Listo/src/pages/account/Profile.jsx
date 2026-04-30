@@ -1,22 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { updateProfile } from '../../api/userApi';
 import './account.css';
 
 export default function Profile() {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const [name, setName] = useState(user?.name || '');
+  const { user, refreshUser } = useAuth();
+  const [name, setName] = useState(user?.name ?? '');
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    setName(user?.name ?? '');
+  }, [user?.name]);
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
     setIsSaving(true);
-    // Placeholder - will be connected to backend in future phase
-    setTimeout(() => {
+    try {
+      await updateProfile({ name: name.trim() || null });
+      await refreshUser();
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || t('common.error'));
+    } finally {
       setIsSaving(false);
-      alert(t('common.success'));
-    }, 500);
+    }
   };
 
   return (
@@ -28,6 +41,16 @@ export default function Profile() {
         </p>
       </div>
 
+      {error && (
+        <div className="account-message account-message-error" role="alert">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="account-message account-message-success" role="status">
+          {t('common.success')}
+        </div>
+      )}
       <form onSubmit={handleSave} className="account-form">
         <div className="account-form-section">
           <label className="account-label">

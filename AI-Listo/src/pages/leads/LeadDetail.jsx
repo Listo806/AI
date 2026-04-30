@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
-import { buildWhatsAppLink } from '../../utils/whatsapp';
+import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
+import WhatsAppChat from '../../components/WhatsAppChat';
+import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
 import './Leads.css';
+import './lead-detail-page.css';
 
 export default function LeadDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -24,7 +29,10 @@ export default function LeadDetail() {
     status: 'new',
     propertyId: '',
     notes: '',
+    assignedTo: '',
   });
+
+  const [conversationId, setConversationId] = useState(null);
 
   // WhatsApp phone number
   const whatsappPhone = user?.phone || 
@@ -37,6 +45,22 @@ export default function LeadDetail() {
       loadProperties();
     }
   }, [id, isAuthenticated, user, authLoading]);
+
+  useEffect(() => {
+    if (!id || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await apiClient.request('/whatsapp/conversations');
+        const arr = Array.isArray(list) ? list : list?.data ?? [];
+        const conv = arr.find((c) => c.lead_id === id);
+        if (!cancelled) setConversationId(conv?.id ?? null);
+      } catch {
+        if (!cancelled) setConversationId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user]);
 
   const loadLead = async () => {
     setLoading(true);
@@ -73,6 +97,7 @@ export default function LeadDetail() {
         status: normalizedLead.status || 'new',
         propertyId: normalizedLead.propertyId || '',
         notes: normalizedLead.notes || '',
+        assignedTo: normalizedLead.assignedTo || '',
       });
     } catch (err) {
       setError('Failed to load lead: ' + err.message);
@@ -112,6 +137,7 @@ export default function LeadDetail() {
         status: formData.status,
         propertyId: formData.propertyId || null,
         notes: formData.notes || null,
+        assignedTo: formData.assignedTo || null,
       };
 
       await apiClient.request(`/leads/${id}`, {
@@ -129,9 +155,7 @@ export default function LeadDetail() {
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this lead? This action cannot be undone.'
-    );
+    const confirmed = window.confirm(t('leads.deleteConfirm'));
 
     if (!confirmed) {
       return;
@@ -460,93 +484,55 @@ export default function LeadDetail() {
   const associatedProperty = properties.find(p => p.id === lead.propertyId);
 
   return (
-    <div style={{ maxWidth: '1000px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 600 }}>{lead.name || 'Unnamed Lead'}</h1>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {(() => {
-              const urgencyInfo = getUrgencyInfo(lead);
-              return urgencyInfo.badge && (
-                <span 
-                  style={{ 
-                    padding: '6px 12px', 
-                    borderRadius: '12px', 
-                    fontSize: '11px', 
-                    fontWeight: '600',
-                    backgroundColor: urgencyInfo.badge.bgColor,
-                    color: urgencyInfo.badge.color,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}
-                >
-                  {urgencyInfo.badge.text}
-                </span>
-              );
-          })()}
-          {/* Urgency State Badge (separate from AI tier - distinct labels) */}
-          {lead.urgencyState && (
-            <span 
-                style={{ 
-                  padding: '6px 12px', 
-                  borderRadius: '12px', 
-                  fontSize: '11px', 
-                  fontWeight: '600',
-                  ...getUrgencyStateStyle(lead.urgencyState),
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {getUrgencyStateStyle(lead.urgencyState).label}
-              </span>
-          )}
-          {/* AI Tier Badge */}
-          {lead.aiTier && (
-            <span 
-                style={{ 
-                  padding: '6px 12px', 
-                  borderRadius: '12px', 
-                  fontSize: '12px', 
-                  fontWeight: '600',
-                  backgroundColor: `${getAiTierColor(lead.aiTier)}20`,
-                  color: getAiTierColor(lead.aiTier),
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {lead.aiTier}
-              </span>
-          )}
-          {/* Status Badge (mapped) */}
-          <span className={getStatusBadgeClass(lead.status)}>
+    <div style={{ maxWidth: '1000px' }} className="lead-detail-page">
+      <h1 className="lead-detail-name">{lead.name || 'Unnamed Lead'}</h1>
+
+      {/* Compact summary block: AI Score, AI Temperature, Lead Status — clearly labeled and visually separated */}
+      <div className="lead-detail-summary">
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">AI Score</span>
+          <span className="lead-detail-summary-value lead-detail-ai-score" style={{ color: getAiScoreColor(lead.aiScore ?? null) }}>
+            {lead.aiScore !== undefined && lead.aiScore !== null ? formatAiScore(lead.aiScore) : '—'}
+          </span>
+        </div>
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">AI Temperature</span>
+          <span className={`lead-detail-temperature lead-detail-temperature-${(lead.aiTier || 'COLD').toLowerCase()}`}>
+            {lead.aiTier || 'COLD'}
+          </span>
+        </div>
+        <div className="lead-detail-summary-item">
+          <span className="lead-detail-summary-label">Lead Status</span>
+          <span className="lead-detail-status-badge">
             {getStatusDisplayLabel(lead.status, lead.hasResponded)}
           </span>
-          {lead.aiScore !== undefined && lead.aiScore !== null && (
-            <div 
-                style={{ 
-                  padding: '6px 16px', 
-                  borderRadius: '12px', 
-                  fontSize: '14px', 
-                  fontWeight: '600',
-                  backgroundColor: `${getAiScoreColor(lead.aiScore)}20`,
-                  color: getAiScoreColor(lead.aiScore),
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '2px'
-                }}
-              >
-                <span>AI Score: {formatAiScore(lead.aiScore)}</span>
-                {lead.aiScoreLabel && (
-                  <span style={{ fontSize: '10px', fontWeight: '400', opacity: 0.8 }}>
-                    {lead.aiScoreLabel}
-                  </span>
-                )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* AI-Recommended Action - Moved higher (right after header) */}
+      {/* AI Panel — structured labeled rows */}
+      <div className="crm-section lead-detail-ai-panel">
+        <h3 className="crm-section-title">AI Panel</h3>
+        <dl className="lead-detail-ai-rows">
+          <div className="lead-detail-ai-row">
+            <dt>Created</dt>
+            <dd>{formatDate(lead.createdAt)}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Contact Status</dt>
+            <dd>{getStatusDisplayLabel(lead.status, lead.hasResponded)}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Phone Available</dt>
+            <dd>{lead.phone ? 'Yes' : 'No'}</dd>
+          </div>
+          <div className="lead-detail-ai-row">
+            <dt>Recommendation</dt>
+            <dd>{lead.recommendedAction ? getActionLabel(lead.recommendedAction) : '—'}{lead.recommendedActionReason ? ` — ${lead.recommendedActionReason}` : ''}</dd>
+          </div>
+        </dl>
+      </div>
+
+      {/* AI-Recommended Action */}
       {lead.recommendedAction && (
         <div className="crm-section" style={{ marginBottom: '24px', background: '#eff6ff', padding: '20px', borderRadius: '8px' }}>
           <h3 className="crm-section-title" style={{ marginBottom: '12px' }}>AI-Recommended Action</h3>
@@ -781,6 +767,64 @@ export default function LeadDetail() {
               </div>
             </div>
 
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <h3 className="crm-section-title">Assign to Agent</h3>
+            <select
+              value={formData.assignedTo || ''}
+              onChange={async (e) => {
+                const v = e.target.value || null;
+                setFormData((prev) => ({ ...prev, assignedTo: v || '' }));
+                try {
+                  await apiClient.request(`/leads/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ assignedTo: v }),
+                  });
+                  loadLead();
+                } catch (err) {
+                  setError('Failed to update assignment: ' + err.message);
+                }
+              }}
+              style={{
+                minWidth: '220px',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: '1px solid var(--border, #e5e7eb)',
+                background: 'var(--card, #fff)',
+                color: 'var(--text, #111)',
+              }}
+            >
+              <option value="">Unassigned</option>
+              {user?.id && (
+                <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
+              )}
+            </select>
+          </div>
+
+          {/* WhatsApp — compact panel, aligned input + send, clean empty state */}
+          <div className="crm-section lead-detail-whatsapp-panel">
+            <h3 className="crm-section-title">WhatsApp Messages</h3>
+            {showQrRoute && (formData.phone || lead.phone) && (
+              <div style={{ marginBottom: '12px' }}>
+                <Link
+                  to={`${primaryRouteIsQr ? '/dashboard/whatsapp' : '/dashboard/whatsapp-qr'}?contactPhone=${encodeURIComponent(normalizePhoneToE164(formData.phone || lead.phone) || formData.phone || lead.phone)}`}
+                  className="crm-btn crm-btn-secondary"
+                  style={{ fontSize: '13px', padding: '8px 14px' }}
+                >
+                  Open in WhatsApp Inbox (QR)
+                </Link>
+              </div>
+            )}
+            <div className="lead-detail-whatsapp-inner">
+              <WhatsAppChat
+                leadId={id}
+                leadPhone={formData.phone}
+                leadName={lead.name}
+                conversationId={conversationId}
+                onSendSuccess={loadLead}
+              />
+            </div>
+          </div>
+
           {associatedProperty && (
             <div className="crm-section" style={{ marginBottom: '24px' }}>
               <h3 className="crm-section-title">Associated Property</h3>
@@ -814,7 +858,6 @@ export default function LeadDetail() {
             <div className="crm-item-details">
               <div><strong>Created:</strong> {formatDate(lead.createdAt)}</div>
               <div><strong>Updated:</strong> {formatDate(lead.updatedAt)}</div>
-              {lead.assignedTo && <div><strong>Assigned To:</strong> {lead.assignedTo}</div>}
             </div>
           </div>
 
@@ -831,7 +874,7 @@ export default function LeadDetail() {
               className="crm-btn crm-btn-danger"
               disabled={saving}
             >
-              Delete
+              {t('leads.deleteLead')}
             </button>
             <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary">
               Back to List
@@ -926,6 +969,22 @@ export default function LeadDetail() {
                       {prop.title || 'Untitled Property'}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div className="crm-form-field">
+                <label htmlFor="assignedTo">Assign to Agent</label>
+                <select
+                  id="assignedTo"
+                  name="assignedTo"
+                  value={formData.assignedTo || ''}
+                  onChange={handleChange}
+                  disabled={saving}
+                >
+                  <option value="">Unassigned</option>
+                  {user?.id && (
+                    <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
+                  )}
                 </select>
               </div>
 

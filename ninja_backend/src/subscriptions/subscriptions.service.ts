@@ -152,6 +152,57 @@ export class SubscriptionsService {
     };
   }
 
+  /**
+   * Select a plan for the team without payment (manual assignment).
+   * Only team owner can do this. Creates or updates subscription with status active, provider 'manual'.
+   */
+  async selectPlanForTeam(teamId: string, planId: string, userId: string): Promise<Subscription> {
+    const team = await this.teamsService.findById(teamId);
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+    if (team.ownerId !== userId) {
+      throw new ForbiddenException('Only team owner can select a plan');
+    }
+    const plan = await this.plansService.findById(planId);
+    if (!plan || !plan.isActive) {
+      throw new NotFoundException('Plan not found or inactive');
+    }
+
+    const existing = await this.findByTeamId(teamId);
+    if (existing) {
+      await this.db.query(
+        `UPDATE subscriptions SET plan_id = $1, status = $2, seat_limit = $3, provider = $4, updated_at = NOW()
+         WHERE id = $5`,
+        [planId, SubscriptionStatus.ACTIVE, plan.seatLimit, 'manual', existing.id],
+      );
+      const updated = await this.findByTeamId(teamId);
+      if (updated) {
+        await this.db.query(
+          `UPDATE teams SET seat_limit = $1, token_version = token_version + 1, updated_at = NOW() WHERE id = $2`,
+          [plan.seatLimit, teamId],
+        );
+        return updated;
+      }
+    }
+
+    const { rows } = await this.db.query(
+      `INSERT INTO subscriptions (team_id, plan_id, status, seat_limit, provider, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+       RETURNING id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",
+                 paddle_customer_id as "paddleCustomerId", status, current_period_start as "currentPeriodStart",
+                 current_period_end as "currentPeriodEnd", cancel_at_period_end as "cancelAtPeriodEnd",
+                 canceled_at as "canceledAt", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"`,
+      [teamId, planId, SubscriptionStatus.ACTIVE, plan.seatLimit, 'manual'],
+    );
+    const subscription = rows[0];
+    await this.db.query(
+      `UPDATE teams SET subscription_id = $1, seat_limit = $2, updated_at = NOW() WHERE id = $3`,
+      [subscription.id, plan.seatLimit, teamId],
+    );
+    return subscription;
+  }
+
   async findByTeamId(teamId: string): Promise<Subscription | null> {
     const { rows } = await this.db.query(
       `SELECT id, team_id as "teamId", plan_id as "planId", paddle_subscription_id as "paddleSubscriptionId",

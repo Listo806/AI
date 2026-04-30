@@ -9,16 +9,21 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CrmService } from './crm.service';
+import { DashboardAggregationService } from './dashboard-aggregation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class CrmController {
-  constructor(private readonly crmService: CrmService) {}
+  constructor(
+    private readonly crmService: CrmService,
+    private readonly dashboardAggregation: DashboardAggregationService,
+  ) {}
 
   /**
    * GET /api/crm/dashboard/summary
@@ -35,6 +40,30 @@ export class CrmController {
       user.teamId,
       user.role,
     );
+  }
+
+  /**
+   * GET /api/crm/dashboard/aggregate
+   * Metrics + merged activity (events + ai_activity). WhatsApp = QR conversations only.
+   */
+  @Get('dashboard/aggregate')
+  @UseGuards(CrmAccessGuard)
+  @ApiOperation({ summary: 'Dashboard metrics and recent activity (role-scoped)' })
+  @ApiQuery({ name: 'activityLimit', required: false, type: Number, description: 'Recent activity rows (max 80)', example: 30 })
+  @ApiResponse({ status: 200, description: 'Aggregate dashboard data' })
+  @ApiResponse({ status: 403, description: 'CRM access required' })
+  async getDashboardAggregate(
+    @CurrentUser() user: any,
+    @Query('activityLimit', new DefaultValuePipe(30), ParseIntPipe) activityLimit: number,
+  ) {
+    const safeLimit = Math.min(Math.max(activityLimit, 1), 80);
+    const data = await this.dashboardAggregation.getAggregate(
+      user.id,
+      user.teamId,
+      user.role,
+      safeLimit,
+    );
+    return { data };
   }
 
   /**

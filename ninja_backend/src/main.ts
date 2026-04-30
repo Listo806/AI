@@ -14,10 +14,27 @@ async function bootstrap() {
     rawBody: true, // Enable raw body for webhook signature verification
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
+
+  // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
+  app.set('trust proxy', 1);
   
   // Serve static files from public folder (for Webflow JS files)
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/static/',
+  });
+  // Allow cross-origin reads for static i18n JSON used by Webflow embeds.
+  app.use('/language', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    return next();
+  });
+  // Serve language JSON directly at /language/{lang}.json
+  app.useStaticAssets(join(__dirname, '..', 'public', 'language'), {
+    prefix: '/language/',
   });
   
   // Global prefix for all routes
@@ -76,7 +93,7 @@ async function bootstrap() {
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     exposedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -117,6 +134,18 @@ async function bootstrap() {
     .addTag('subscriptions', 'Subscription management endpoints')
     .addTag('payments', 'Payment processing endpoints')
     .addTag('integrations', 'Third-party integration endpoints')
+    .addTag('intelligence', 'Buyer intelligence and market signals endpoints')
+    .addTag('agents', 'Agent priority feed endpoints')
+    .addTag('listings', 'Listing comps and match explanation endpoints')
+    .addTag('whatsapp', 'WhatsApp messaging (Twilio)')
+    .addTag('email', 'Email messaging')
+    .addTag('agent-whatsapp', 'Agent-owned WhatsApp connect/disconnect')
+    .addTag('instagram', 'Instagram DM send, OAuth callback, webhook')
+    .addTag('agent-instagram', 'Agent Instagram connect, disconnect, status')
+    .addTag('ai-center', 'AI Center overview, auto-reply, AI Setter, activity')
+    .addTag('platform', 'Platform marketplace listings (Agent/Owner submit)')
+    .addTag('va', 'VA uploader listings')
+    .addTag('admin', 'Admin listings and user management')
     .build();
   
   const document = SwaggerModule.createDocument(app, config);

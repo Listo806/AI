@@ -1,37 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { useAuth } from '../../context/AuthContext';
 import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
 import './properties.css';
 
+const PAGE_SIZE = 20;
+
 export default function PropertiesList() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { handleError } = useApiErrorHandler();
   const [properties, setProperties] = useState([]);
+  const [pagination, setPagination] = useState({ total: 0, limit: PAGE_SIZE, offset: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated() && user && !authLoading) {
-      loadProperties();
+      loadProperties((currentPage - 1) * PAGE_SIZE);
     }
-  }, [isAuthenticated, user, authLoading]);
+  }, [isAuthenticated, user, authLoading, currentPage]);
 
-  const loadProperties = async () => {
+  const loadProperties = async (offset = 0) => {
     setDashboardLoading(true);
     setError(null);
 
     try {
-      const response = await apiClient.request('/properties');
-      const propertiesData = Array.isArray(response) ? response : (response.data || response);
-      // Sort by newest first
-      const sorted = propertiesData.sort((a, b) => {
-        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      });
+      const response = await apiClient.request(`/properties?limit=${PAGE_SIZE}&offset=${offset}`);
+      const items = response?.items ?? (Array.isArray(response) ? response : response?.data ?? []);
+      const total = response?.total ?? items.length;
+      const sorted = Array.isArray(items)
+        ? [...items].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        : [];
       setProperties(sorted);
+      setPagination({ total, limit: PAGE_SIZE, offset });
     } catch (err) {
       console.error('Failed to load properties:', err);
       handleError(err, 'Failed to load properties');
@@ -90,10 +98,88 @@ export default function PropertiesList() {
 
       {/* Add Property Button */}
       <div style={{ marginBottom: '24px' }}>
-        <Link to="/dashboard/properties/new" className="crm-btn crm-btn-primary">
+        <button
+          type="button"
+          className="crm-btn crm-btn-primary"
+          onClick={() => setShowAddPropertyModal(true)}
+        >
           + {t('properties.addProperty')}
-        </Link>
+        </button>
       </div>
+
+      {showAddPropertyModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '16px',
+          }}
+          onClick={() => setShowAddPropertyModal(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Choose listing type"
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              background: '#fff',
+              borderRadius: '14px',
+              padding: '22px',
+              boxShadow: '0 24px 48px rgba(15, 23, 42, 0.24)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 600, color: '#0f172a' }}>
+              Add Property
+            </h3>
+            <p style={{ marginTop: '10px', marginBottom: '18px', color: '#64748b' }}>
+              Select which listing flow you want to use.
+            </p>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <button
+                type="button"
+                className="crm-btn crm-btn-primary"
+                onClick={() => {
+                  setShowAddPropertyModal(false);
+                  navigate('/dashboard/properties/new');
+                }}
+              >
+                Marketplace
+              </button>
+              <button
+                type="button"
+                className="crm-btn crm-btn-secondary"
+                onClick={() => {
+                  setShowAddPropertyModal(false);
+                  navigate('/dashboard/vacation-rentals/upload');
+                }}
+              >
+                Vacation Rental
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddPropertyModal(false)}
+              style={{
+                marginTop: '14px',
+                border: 'none',
+                background: 'transparent',
+                color: '#64748b',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="crm-error">
@@ -114,94 +200,96 @@ export default function PropertiesList() {
           {t('properties.noProperties')}
         </div>
       ) : (
-        <div className="properties-grid">
+        <div className="properties-grid properties-grid-rows">
           {properties.map((property) => {
             const statusClass = getStatusClassName(property.status);
             return (
-              <div key={property.id} className={`property-card ${statusClass}`}>
-                {/* Header Row: Title + Status */}
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'flex-start', 
-                  marginBottom: '8px',
-                  gap: '12px'
-                }}>
-                  <h3 style={{ 
-                    margin: 0, 
-                    fontSize: '15px', 
-                    fontWeight: '600',
-                    color: 'var(--property-text-primary, #E5E7EB)',
-                    lineHeight: '1.3',
-                    flex: 1
-                  }}>
-                    {property.title || 'Untitled Property'}
-                  </h3>
-                  <span className={`property-status ${statusClass}`}>
-                    {property.status === 'published' ? t('properties.published') :
-                     property.status === 'draft' ? t('properties.draft') :
-                     property.status === 'archived' || property.status === 'sold' || property.status === 'rented' ? t('properties.archived') :
-                     t('properties.draft')}
-                  </span>
-                </div>
-                
-                {/* Address - Compact */}
-                <div className="property-meta" style={{ marginBottom: '8px' }}>
-                  {property.address && `${property.address}, `}
-                  {property.city && `${property.city}, `}
-                  {property.state && property.state}
-                  {property.zipCode && ` ${property.zipCode}`}
-                </div>
-                
-                {/* Metadata - Inline, Compact */}
-                <div style={{ 
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '12px 16px',
-                  marginBottom: '10px',
-                  fontSize: '12px',
-                  color: 'var(--property-text-muted, rgba(255, 255, 255, 0.7))'
-                }}>
-                  {property.price && (
-                    <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
-                  )}
-                  {property.type && (
-                    <span><strong>{t('common.status')}:</strong> {property.type === 'sale' ? t('properties.published') : t('properties.draft')}</span>
-                  )}
-                  {property.bedrooms && (
-                    <span><strong>{t('properties.bedrooms')}:</strong> {property.bedrooms}</span>
-                  )}
-                  {property.bathrooms && (
-                    <span><strong>{t('properties.bathrooms')}:</strong> {property.bathrooms}</span>
-                  )}
-                  {property.squareFeet && (
-                    <span><strong>{t('properties.sqft')}:</strong> {property.squareFeet.toLocaleString()}</span>
+              <div key={property.id} className={`property-card property-card-row ${statusClass}`}>
+                {/* Thumbnail - Same aspect ratio as Marketplace (16/10), compact size */}
+                <div className="property-card-thumb">
+                  {property.thumbnailUrl ? (
+                    <img src={property.thumbnailUrl} alt="" className="property-card-thumb-img" loading="lazy" />
+                  ) : (
+                    <div className="property-card-thumb-placeholder" />
                   )}
                 </div>
-
-                {/* Action Button - Prominent */}
-                <div className="property-action">
-                  <Link 
-                    to={`/dashboard/properties/${property.id}`} 
-                    className="crm-btn crm-btn-secondary" 
-                    style={{ 
-                      width: '100%', 
-                      justifyContent: 'center',
-                      padding: '8px 16px',
-                      fontSize: '13px'
-                    }}
-                  >
-                    {t('common.view')} / {t('common.edit')}
-                  </Link>
-                </div>
-
-                {/* Footer - Minimal */}
-                <div className="property-meta" style={{ marginTop: '8px', fontSize: '11px' }}>
-                  {t('properties.lastUpdated')} {formatDate(property.createdAt)}
+                {/* Details - Aligned right of thumbnail */}
+                <div className="property-card-body">
+                  <div className="property-card-header-row">
+                    <h3 className="property-card-title">
+                      {property.title || 'Untitled Property'}
+                    </h3>
+                    <span className={`property-status ${statusClass}`}>
+                      {property.status === 'published' ? t('properties.published') :
+                       property.status === 'draft' ? t('properties.draft') :
+                       property.status === 'archived' || property.status === 'sold' || property.status === 'rented' ? t('properties.archived') :
+                       t('properties.draft')}
+                    </span>
+                  </div>
+                  <div className="property-meta property-card-address">
+                    {property.address && `${property.address}, `}
+                    {property.city && `${property.city}, `}
+                    {property.state && property.state}
+                    {property.zipCode && ` ${property.zipCode}`}
+                  </div>
+                  <div className="property-card-meta-inline">
+                    {property.price && (
+                      <span><strong>{t('properties.price')}:</strong> {formatPrice(property.price)}</span>
+                    )}
+                    {property.propertyType && (
+                      <span><strong>{t('properties.propertyType')}:</strong> {property.propertyType}</span>
+                    )}
+                    {property.bedrooms && (
+                      <span><strong>{t('properties.bedrooms')}:</strong> {property.bedrooms}</span>
+                    )}
+                    {property.bathrooms && (
+                      <span><strong>{t('properties.bathrooms')}:</strong> {property.bathrooms}</span>
+                    )}
+                    {property.squareFeet && (
+                      <span><strong>{t('properties.sqft')}:</strong> {property.squareFeet.toLocaleString()}</span>
+                    )}
+                  </div>
+                  <div className="property-card-footer">
+                    <span className="property-meta" style={{ fontSize: '11px' }}>
+                      {t('properties.lastUpdated')} {formatDate(property.createdAt)}
+                    </span>
+                    <Link
+                      to={`/dashboard/properties/${property.id}`}
+                      className="crm-btn crm-btn-secondary property-card-action-btn"
+                    >
+                      {t('common.view')} / {t('common.edit')}
+                    </Link>
+                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {!dashboardLoading && properties.length > 0 && pagination.total > PAGE_SIZE && (
+        <div className="properties-pagination">
+          <button
+            type="button"
+            className="properties-pagination-btn"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            aria-label={t('common.previous')}
+          >
+            ‹ {t('common.previous')}
+          </button>
+          <span className="properties-pagination-info">
+            {t('common.page') || 'Page'} {currentPage} {t('common.of') || 'of'} {Math.ceil(pagination.total / PAGE_SIZE)} ({pagination.total} {t('properties.title')?.toLowerCase() || 'properties'})
+          </span>
+          <button
+            type="button"
+            className="properties-pagination-btn"
+            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={currentPage >= Math.ceil(pagination.total / PAGE_SIZE)}
+            aria-label={t('common.next')}
+          >
+            {t('common.next')} ›
+          </button>
         </div>
       )}
     </div>
