@@ -1,9 +1,6 @@
 
 import React from "react";
-import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/landing/Landing";
-
-import DashboardLayout from "./layouts/DashboardLayout";
 
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import ThemeProvider from "./theme/ThemeProvider";

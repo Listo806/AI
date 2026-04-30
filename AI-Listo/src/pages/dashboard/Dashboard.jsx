@@ -436,7 +436,7 @@ export default function Dashboard() {
   }, [analyticsData]);
 
   // Lead source: no backend breakdown; show empty or minimal
-  const leadSourceData = useMemo(() => [], []);
+  //const leadSourceData = useMemo(() => [], []);
 
   // Chart colors - theme-aware
   const chartColors = {
@@ -507,12 +507,12 @@ export default function Dashboard() {
   ];
 
   // Demo data for funnel visualization
-  const funnelData = {
+  /*const funnelData = {
     newLeads: 120,
     contacted: 85,
     showings: 42,
     offers: 18
-  };
+  };*/
 
   const leadSourceData = [
     { name: 'Website', value: 45, color: '#3b82f6' },
@@ -522,7 +522,7 @@ export default function Dashboard() {
     { name: 'Social Media', value: 8, color: '#ec4899' },
   ];
 
-  const conversionFunnelData = [
+  /*const conversionFunnelData = [
     { stage: 'New Leads', count: 150 },
     { stage: 'Contacted', count: 120 },
     { stage: 'Qualified', count: 85 },
@@ -537,7 +537,7 @@ export default function Dashboard() {
     { activity: 'Emails', count: 67 },
     { activity: 'Meetings', count: 34 },
     { activity: 'Follow-ups', count: 52 },
-  ];
+  ];*/
 
   useEffect(() => {
     if (isAuthenticated() && user) {
