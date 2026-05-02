@@ -89,7 +89,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
   const canSeeAdmin = role === "super_admin" || role === "admin";
   const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
-
+console.log('role:'+role);
   let navItems = topNavItems;
   if (role === "va") {
     navItems = topNavItems.filter((item) => item.path === "/dashboard/properties");
@@ -103,14 +103,15 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
       { path: "/dashboard/admin/plans", icon: "credit-card", labelKey: "nav.adminPlans" },
     ];
   } else {
-    // if (canSeePlatformListings) {
-    //   navItems = [
-    //     ...topNavItems.slice(0, 6),
-    //     { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
-    //     ...topNavItems.slice(6),
-    //   ];
-    // }
+    if (canSeePlatformListings) {
+      navItems = [
+        ...topNavItems.slice(0, 6),
+        { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
+        ...topNavItems.slice(6),
+      ];
+    }
   }
+  
 
   const showAiCenterAndBottom = canSeeAiCenter && !canSeeAdmin;
 

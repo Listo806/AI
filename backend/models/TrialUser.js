@@ -5,6 +5,11 @@ name: { type: String, required: true },
 email: { type: String, required: true },
 phone: { type: String, required: true },
 password: { type: String, required: true },
+role: { 
+    type: String, 
+    enum: ["user", "admin", "agent", "owner", "va", "va_uploader"],
+    default: "user" 
+  },
 createdAt: { type: Date, default: Date.now },
 });
 

@@ -26,6 +26,7 @@ router.post("/start-trial", async (req, res) => {
         return res.json({
             success: true,
             userId: user._id,
+            user: user,
         });
 
     } catch (err) {
