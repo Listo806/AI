@@ -26,7 +26,8 @@ const AI_CENTER_ITEMS = [
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, loading  } = useAuth();
+  if (loading) return null;
   const location = useLocation();
 
   const [aiCenterOpen, setAiCenterOpen] = useState(() => {
@@ -37,7 +38,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
       return true;
     }
   });
-
+  
   useEffect(() => {
     const open = AI_CENTER_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + "/"));
     if (open && !aiCenterOpen) setAiCenterOpen(true);
@@ -85,7 +86,9 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
     { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
 
-  const role = user?.role?.toLowerCase?.() || user?.role;
+  const role = typeof user?.role === "string"
+  ? user.role.toLowerCase()
+  : user?.role;
   const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
   const canSeeAdmin = role === "super_admin" || role === "admin";
   const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
@@ -97,6 +100,7 @@ console.log("USER IN SIDEBAR:", user);
     navItems = [{ path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" }];
   } else if (canSeeAdmin) {
     navItems = [
+      ...topNavItems,
       { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
       { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
       { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },

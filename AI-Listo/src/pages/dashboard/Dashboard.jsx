@@ -540,10 +540,10 @@ export default function Dashboard() {
   ];*/
 
   useEffect(() => {
-    if (isAuthenticated() && user) {
+    if (initialized && isAuthenticated() && user) {
       loadDashboard();
     }
-  }, [isAuthenticated, user, dateFilter]);
+  }, [initialized, isAuthenticated, user, dateFilter]);
 
 
   const loadDashboard = async () => {
@@ -608,12 +608,7 @@ export default function Dashboard() {
     }
   };
     
-    useEffect(() => {
-      if (isAuthenticated() && user) {
-        loadDashboard();
-      }
-    }, [isAuthenticated, user, loadDashboard]);
-
+ 
   // Show loading while checking auth
   if (loading) {
     return (
@@ -801,7 +796,8 @@ export default function Dashboard() {
                           No data for this period
                         </div>
                       ) : (
-                      <ResponsiveContainer width="100%" height="100%">
+                      <div style={{ width: "100%", height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                           data={dashboardPerformanceData}
                           margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
@@ -891,6 +887,7 @@ export default function Dashboard() {
 
                         </LineChart>
                       </ResponsiveContainer>
+                      </div>
                       )}
                     </div>
                   </div>

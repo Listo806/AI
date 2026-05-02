@@ -20,32 +20,36 @@ export function AuthProvider({ children }) {
           apiClient.setTokens(token, null);
         }
 
-      if (token) {
-        try {
-          //const userData = JSON.parse(userStr);
-          // Verify token is still valid
+        if (userStr && !user) {
           try {
-            const currentUser = await apiClient.request('/auth/me'); console.log("ME RAW:", currentUser);
-            // Token is valid - update user data
+            const parsedUser = JSON.parse(userStr);
+            setUser(parsedUser);
+          } catch (e) {
+            console.error('Failed to parse stored user:', e);
+            localStorage.removeItem(STORAGE_PREFIX + 'user');
+          }
+        }
+
+        if (token) {
+          try {
+            const currentUser = await apiClient.request('/auth/me');
             setUser(currentUser.user);
             localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
           } catch (error) {
-            // Token invalid - clear everything
             console.error('❌ /auth/me FAILED:', error);
-              console.error('❌ RESPONSE:', error?.response);
-              console.error('❌ MESSAGE:', error?.message);
 
-              apiClient.clearTokens();
-              localStorage.removeItem(STORAGE_PREFIX + 'user');
-              setUser(null);
+            // apiClient.clearTokens();
+            // localStorage.removeItem(STORAGE_PREFIX + 'user');
+            // setUser(null);
+            const storedUser = localStorage.getItem(STORAGE_PREFIX + 'user');
+              if (storedUser) {
+                try {
+                  setUser(JSON.parse(storedUser));
+                } catch {}
+              }
           }
-        } catch (e) {
-          console.error('Failed to parse user data:', e);
-          localStorage.removeItem(STORAGE_PREFIX + 'user');
-          apiClient.clearTokens();
         }
-      }
-      setLoading(false);
+        setLoading(false);
     };
 
     checkAuth();
@@ -88,7 +92,7 @@ export function AuthProvider({ children }) {
         } else if (role === 'super_admin' || role === 'admin') {
           navigate('/dashboard/admin/listings');
         } else if (role === 'user') {
-          navigate('/dashboard/platform-listings');
+          navigate(getDashboardPath(role));
         } else {
           navigate('/dashboard');
         }
@@ -125,6 +129,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    setUser,
     loading,
     login,
     logout,
@@ -132,7 +137,9 @@ export function AuthProvider({ children }) {
     getDashboardPath,
     refreshUser,
   };
-
+    if (loading) {
+       return <div>Loading...</div>;
+    }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

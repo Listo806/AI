@@ -27,6 +27,7 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseUrl}${endpoint}`;
+    console.log("apiClient REQUEST:", url);
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -50,8 +51,9 @@ class ApiClient {
 
     // Only add auth header if we have a token and it's not a public endpoint
     const token = this.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
+    console.log("TOKEN SEND:", token);
     if (token && !isPublicEndpoint) { 
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
+      headers['Authorization'] = `Bearer ${token}`;
     }
     if (options.body instanceof FormData) {
       delete headers['Content-Type'];
@@ -61,19 +63,23 @@ class ApiClient {
       const response = await fetch(url, { ...options, headers });
 
       // Only try to refresh token if it's not a public endpoint
-      if (response.status === 401 && this.refreshToken && !isPublicEndpoint) {
-        try {
-          await this.refreshAccessToken();
-          headers['Authorization'] = `Bearer ${this.accessToken}`;
-          const retryResponse = await fetch(url, { ...options, headers });
-          return this.handleResponse(retryResponse);
-        } catch (refreshError) {
+      // if (response.status === 401 && this.refreshToken && !isPublicEndpoint) {
+        // try {
+          // await this.refreshAccessToken();
+          // headers['Authorization'] = `Bearer ${this.accessToken}`;
+          // const retryResponse = await fetch(url, { ...options, headers });
+          // return this.handleResponse(retryResponse);
+        // } catch (refreshError) {
+          // this.clearTokens();
+          // localStorage.removeItem(STORAGE_PREFIX + 'user');
+          // throw new Error('Session expired');
+        // }
+      // }
+        if (response.status === 401 && !isPublicEndpoint) {
           this.clearTokens();
           localStorage.removeItem(STORAGE_PREFIX + 'user');
           throw new Error('Session expired');
         }
-      }
-
       // For public endpoints, don't clear tokens on 401
       if (response.status === 401 && !this.refreshToken && !isPublicEndpoint) {
         this.clearTokens();

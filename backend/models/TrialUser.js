@@ -8,7 +8,7 @@ password: { type: String, required: true },
 role: { 
     type: String, 
     enum: ["user", "admin", "agent", "owner", "va", "va_uploader"],
-    default: "user" 
+    default: "agent" 
   },
 createdAt: { type: Date, default: Date.now },
 });

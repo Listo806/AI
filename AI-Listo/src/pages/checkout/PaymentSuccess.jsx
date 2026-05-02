@@ -1,4 +1,8 @@
 import { useEffect } from "react";
+import apiClient from "../../api/apiClient";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 export default function PaymentSuccess() {
   // useEffect(() => {
@@ -14,23 +18,19 @@ export default function PaymentSuccess() {
       // window.location.href = "/trial";
     // }
   // }, []);
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
   useEffect(() => {
       const params = new URLSearchParams(window.location.search);
       const userId = params.get("userId");
-
+        
       const autoLogin = async () => {
-        if (!userId) {
+        if (!userId) { console.log("if user:", userId);
           window.location.href = "/trial";
           return;
         }
 
         try {
-          
-          const res = await fetch(`https://ai-2-7ikc.onrender.com/api/auth/user/${userId}`);
-          const data = await res.json();
-
-          const user = data.user;
-
           const loginRes = await fetch(`https://ai-2-7ikc.onrender.com/api/auth/login-by-id`, {
             method: "POST",
             headers: {
@@ -40,13 +40,19 @@ export default function PaymentSuccess() {
           });
 
           const loginData = await loginRes.json();
+          console.log("LOGIN DATA:", loginData);
 
           if (loginData.accessToken) {
+              apiClient.setTokens(loginData.accessToken, null);
             localStorage.setItem("listo_access_token", loginData.accessToken);
             localStorage.setItem("listo_user", JSON.stringify(loginData.user));
+            setUser(loginData.user);
 
-            window.location.href = "/dashboard";
+             setTimeout(() => {
+                navigate("/dashboard");
+              }, 0);
           } else {
+              console.log("LOGIN try else:", userId);
             window.location.href = "/trial";
           }
 
