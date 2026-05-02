@@ -20,21 +20,24 @@ export function AuthProvider({ children }) {
           apiClient.setTokens(token, null);
         }
 
-      if (userStr && token) {
+      if (token) {
         try {
-          const userData = JSON.parse(userStr);
+          //const userData = JSON.parse(userStr);
           // Verify token is still valid
           try {
-            const currentUser = await apiClient.request('/auth/me');
+            const currentUser = await apiClient.request('/auth/me'); console.log("ME RAW:", currentUser);
             // Token is valid - update user data
-            setUser(currentUser);
-            localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser));
+            setUser(currentUser.user);
+            localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
           } catch (error) {
             // Token invalid - clear everything
-            console.error('Token validation failed:', error);
-            apiClient.clearTokens();
-            localStorage.removeItem(STORAGE_PREFIX + 'user');
-            setUser(null);
+            console.error('❌ /auth/me FAILED:', error);
+              console.error('❌ RESPONSE:', error?.response);
+              console.error('❌ MESSAGE:', error?.message);
+
+              apiClient.clearTokens();
+              localStorage.removeItem(STORAGE_PREFIX + 'user');
+              setUser(null);
           }
         } catch (e) {
           console.error('Failed to parse user data:', e);
@@ -112,9 +115,9 @@ export function AuthProvider({ children }) {
   const refreshUser = async () => {
     if (!apiClient.accessToken) return;
     try {
-      const currentUser = await apiClient.request('/users/me');
-      setUser(currentUser);
-      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser));
+      const currentUser = await apiClient.request('/auth/me');
+      setUser(currentUser.user);
+      localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
     } catch (err) {
       console.error('Failed to refresh user:', err);
     }

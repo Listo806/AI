@@ -49,7 +49,8 @@ class ApiClient {
       endpoint.includes('/whatsapp/webview-resolve');
 
     // Only add auth header if we have a token and it's not a public endpoint
-    if (this.accessToken && !isPublicEndpoint) {
+    const token = this.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
+    if (token && !isPublicEndpoint) { 
       headers['Authorization'] = `Bearer ${this.accessToken}`;
     }
     if (options.body instanceof FormData) {

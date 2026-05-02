@@ -115,7 +115,7 @@ export default function StartTrial() {
               name="password"
               placeholder="Password"
               required   
-              minlength="6"
+              minLength="6"
               value={form.password}
               onChange={handleChange}
             />

@@ -89,7 +89,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
   const canSeeAdmin = role === "super_admin" || role === "admin";
   const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
-console.log('role:'+role);
+console.log("USER IN SIDEBAR:", user);
   let navItems = topNavItems;
   if (role === "va") {
     navItems = topNavItems.filter((item) => item.path === "/dashboard/properties");
