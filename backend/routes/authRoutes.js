@@ -99,7 +99,7 @@ router.post("/save-onboarding", async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_ACCESS_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -159,7 +159,7 @@ router.post("/login-by-id", async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id },
-      process.env.JWT_ACCESS_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
