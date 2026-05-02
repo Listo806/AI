@@ -17,6 +17,11 @@ import SignUp from "./pages/auth/SignUp";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/leads/LeadsList";
+import PropertiesList from "./pages/properties/PropertiesList";
+import PropertyForm from "./pages/properties/PropertyForm";
+import PropertyDetail from "./pages/properties/PropertyDetail";
+import LeadsList from "./pages/leads/LeadsList";
+import LeadDetail from "./pages/leads/LeadDetail";
 import Pipeline from "./pages/pipeline/Pipeline";
 import Properties from "./pages/properties/PropertiesList";
 import Contacts from "./pages/contacts/Contacts";
@@ -101,7 +106,7 @@ function RootRoute() {
     if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
     return <Navigate to="/dashboard/whatsapp" replace />;
   }
-
+  return <Landing />;
   // Not authenticated - show sign-in
   return <Navigate to="/sign-in" replace />;
 }
@@ -113,6 +118,21 @@ function AppRoutes() {
       <Route path="/" element={<RootRoute />} />
       <Route path="/sign-in" element={<SignIn variant="crm" />} />
       <Route path="/sign-up" element={<SignUp />} />
+      <Route path="/privacy-policy" element={<Privacy />} />
+      <Route path="/refund-policy" element={<Refund />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/cancellation" element={<Cancellation />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/help" element={<HelpCenter />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/support" element={<Support />} />
+
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/trial" element={<Trial />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />
       
@@ -231,47 +251,23 @@ function AppRoutes() {
       <Route path="/properties/:id" element={<LegacyPropertyRedirect />} />
       <Route path="/leads" element={<Navigate to="/dashboard/leads" replace />} />
       <Route path="/leads/:id" element={<LegacyLeadRedirect />} />
+
+      <Route path="/:country/:city" element={<CityPage />} />
+      <Route path="/:country" element={<CountryPage />} />
     </Routes>
   );
 }
 
 export default function App() {
     return (
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          
-          <Route path="/sign-in" element={<SignIn />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="leads" element={<Leads />} />
-            <Route path="pipeline" element={<Pipeline />} />
-            <Route path="properties" element={<Properties />} />
-            <Route path="contacts" element={<Contacts />} />
-          </Route>
-
-
-          <Route path="/account/profile" element={<Profile />} />
-          <Route path="/account/billing" element={<Billing />} />
-          <Route path="/account/settings" element={<Settings />} />
-          
-          <Route path="/privacy-policy" element={<Privacy />} />
-          <Route path="/refund-policy" element={<Refund />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/cancellation" element={<Cancellation />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/help" element={<HelpCenter />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/:country/:city" element={<CityPage />} />
-          <Route path="/:country" element={<CountryPage />} />
-          
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/trial" element={<Trial />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          
-        </Routes>
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <AppRoutes />
+              <NotificationToast />
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
       );
   
 }
