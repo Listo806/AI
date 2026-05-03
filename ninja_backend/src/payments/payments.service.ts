@@ -1,24 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class PaymentsService {
-  constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async createCheckout(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const { rows } = await this.db.query(
+      `SELECT id FROM users WHERE id = $1`,
+      [userId],
+    );
+
+    const user = rows[0];
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    user.paymentStatus = 'pending';
-    await this.userRepo.save(user);
+    await this.db.query(
+      `UPDATE users 
+       SET payment_status = 'pending', updated_at = NOW()
+       WHERE id = $1`,
+      [userId],
+    );
 
     return {
       success: true,
@@ -27,17 +31,26 @@ export class PaymentsService {
   }
 
   async paymentSuccess(userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const { rows } = await this.db.query(
+      `SELECT id FROM users WHERE id = $1`,
+      [userId],
+    );
+
+    const user = rows[0];
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    user.paymentStatus = 'paid';
-    user.isActive = true;
-    user.plan = 'pro';
-
-    await this.userRepo.save(user);
+    await this.db.query(
+      `UPDATE users 
+       SET payment_status = 'paid',
+           is_active = true,
+           plan = 'pro',
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId],
+    );
 
     return { success: true };
   }
