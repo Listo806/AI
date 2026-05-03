@@ -183,5 +183,23 @@ export class AuthService {
     }
     return user;
   }
+
+  async loginById(userId: string) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException();
+    }
+
+    const token = this.jwtService.sign({
+      sub: user.id,
+      role: user.role,
+    });
+
+    return {
+      accessToken: token,
+      user,
+    };
+  }
 }
 

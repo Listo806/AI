@@ -183,11 +183,11 @@
       this.apiClient = apiClient;
     }
 
-    async signup(email, password, role = 'owner') {
+    async signup(email, password, role = 'owner', name = '', phone = '') {
       try {
         const response = await this.apiClient.request('/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password, role }),
+          body: JSON.stringify({ email, password, role, name, phone }),
         });
 
         if (response.accessToken) {

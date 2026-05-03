@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiClient from '../../api/apiClient';
 import "./Common.css";
 
 export default function StartTrial() {
@@ -10,6 +11,7 @@ export default function StartTrial() {
     email: "",
     phone: "",
     password: "",
+    role: "agent",
   });
 
   const [loading, setLoading] = useState(false);
@@ -25,35 +27,51 @@ export default function StartTrial() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
         try {
-            const res = await fetch("https://ai-2-7ikc.onrender.com/api/auth/start-trial", {
-                method: "POST",
-                headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(form),
-            });
+          const res = await apiClient.request('/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, role, name, phone }),
+          });
 
-            const data = await res.json();
-            console.log("RESPONSE:", data);
-            if (data.success) {
-                // SAVE userId for next step (checkout)
-                localStorage.setItem("trialUserId", data.userId);
-                localStorage.setItem("email", form.email);
-                localStorage.setItem("name", form.name);
-                localStorage.setItem("password", form.password);
-                // REDIRECT TO CHECKOUT
-                navigate("/checkout");
-            } else {
-                console.log("API ERROR:", data);
-                alert(data.message);
-            }
-
-        } catch (error) {
-            console.error("SUBMIT ERROR:", error.message);
-            alert("Server error");
+          if (res.accessToken) {
+            apiClient.setTokens(res.accessToken, res.refreshToken);
+            localStorage.setItem('listo_user', JSON.stringify(res.user));
+            window.location.href = '/dashboard';
+            return;
+          } else {
+            setError('Signup completed but no token received. Please sign in.');
+          }
+        } catch (err) {
+          setError(err.message || 'Sign up failed');
         }
+        // try {
+            // const res = await fetch("https://ai-2-7ikc.onrender.com/api/auth/start-trial", {
+                // method: "POST",
+                // headers: {
+                // "Content-Type": "application/json",
+            // },
+            // body: JSON.stringify(form),
+            // });
+
+            // const data = await res.json();
+            // console.log("RESPONSE:", data);
+            // if (data.success) {
+                // // SAVE userId for next step (checkout)
+                // localStorage.setItem("trialUserId", data.userId);
+                // localStorage.setItem("email", form.email);
+                // localStorage.setItem("name", form.name);
+                // localStorage.setItem("password", form.password);
+                // // REDIRECT TO CHECKOUT
+                // navigate("/checkout");
+            // } else {
+                // console.log("API ERROR:", data);
+                // alert(data.message);
+            // }
+
+        // } catch (error) {
+            // console.error("SUBMIT ERROR:", error.message);
+            // alert("Server error");
+        // }
     };
 
   return (
