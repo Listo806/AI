@@ -48,5 +48,22 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getClient(): Promise<PoolClient> {
     return this.pool.connect();
   }
+  async runMigrations() {
+  try {
+    await this.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS plan TEXT;
+    `);
+
+    await this.query(`
+      ALTER TABLE users 
+      ADD COLUMN IF NOT EXISTS payment_status TEXT;
+    `);
+
+    console.log('✅ Migration done: plan + payment_status');
+  } catch (err) {
+    console.error('❌ Migration error:', err);
+  }
+}
 }
 
