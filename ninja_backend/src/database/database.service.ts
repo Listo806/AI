@@ -35,7 +35,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.error('Database connection failed:', err);
       process.exit(1);
     }
-    await this.runMigrations();
+    //await this.runMigrations();
   }
 
   async onModuleDestroy() {
@@ -49,25 +49,26 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getClient(): Promise<PoolClient> {
     return this.pool.connect();
   }
+  /*
   async runMigrations() {
-  console.log('👉 Running migrations...');
+    console.log('👉 Running migrations...');
 
-  try {
-    await this.query(`
-      ALTER TABLE users 
-      ADD COLUMN IF NOT EXISTS plan TEXT;
-    `);
-    console.log('✅ Added plan');
+    try {
+      await this.query(`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS plan TEXT;
+      `);
+      console.log('✅ Added plan');
 
-    await this.query(`
-      ALTER TABLE users 
-      ADD COLUMN IF NOT EXISTS payment_status TEXT;
-    `);
-    console.log('✅ Added payment_status');
+      await this.query(`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS payment_status TEXT;
+      `);
+      console.log('✅ Added payment_status');
 
-  } catch (err) {
-    console.error('❌ Migration error FULL:', err);
-  }
-}
+    } catch (err) {
+      console.error('❌ Migration error FULL:', err);
+    }
+  }*/
 }
 

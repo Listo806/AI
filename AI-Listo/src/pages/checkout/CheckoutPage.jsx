@@ -49,7 +49,7 @@ export default function CheckoutPage() {
           name: user.name,
         }),
       });
-
+      console.log("USER:", user);  
       const data = await res.json();
 
       if (data.success && data.checkoutUrl) {
