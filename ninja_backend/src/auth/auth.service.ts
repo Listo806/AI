@@ -65,42 +65,42 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    try {
+      const { email, password } = loginDto;
 
-    // Find user
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      const user = await this.usersService.findByEmail(email);
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      if (!user.isActive) {
+        throw new UnauthorizedException('Account is inactive');
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const tokens = await this.generateTokens(user);
+
+      await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          phone: user.phone ?? null,
+          role: user.role,
+          teamId: user.teamId,
+        },
+        ...tokens,
+      };
+    } catch (err) {
+      console.error('LOGIN ERROR:', err);
+      throw err;
     }
-
-    // Check if user is active
-    if (!user.isActive) {
-      throw new UnauthorizedException('Account is inactive');
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Generate tokens
-    const tokens = await this.generateTokens(user);
-
-    // Log login event
-    await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name ?? null,
-        phone: user.phone ?? null,
-        role: user.role,
-        teamId: user.teamId,
-      },
-      ...tokens,
-    };
   }
 
   async refreshToken(refreshToken: string) {
