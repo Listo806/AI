@@ -1,7 +1,7 @@
 /**
  * API Client for backend communication
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ai-2-7ikc.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ai-zdeu.onrender.com/api';
 const STORAGE_PREFIX = 'listo_';
 
 class ApiClient {

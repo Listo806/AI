@@ -17,7 +17,7 @@ const EMOJI_LIST = ['😀','😊','😂','🥲','😍','🥰','😘','👍','�
 
 const STORAGE_PREFIX = 'listo_';
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://ai-2-7ikc.onrender.com/api';
+  import.meta.env.VITE_API_BASE_URL || 'https://ai-zdeu.onrender.com/api';
 
 function apiOrigin() {
   const u = API_BASE_URL.replace(/\/api\/?$/, '');

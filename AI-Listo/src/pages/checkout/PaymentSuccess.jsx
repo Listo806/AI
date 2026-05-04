@@ -31,7 +31,7 @@ export default function PaymentSuccess() {
         }
 
         try {
-          const loginRes = await fetch(`https://ai-2-7ikc.onrender.com/api/auth/login-by-id`, {
+          const loginRes = await fetch(`https://ai-zdeu.onrender.com/api/auth/login-by-id`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

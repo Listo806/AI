@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Common.css";
 import apiClient from '../../api/apiClient';
 
-const API_BASE = "https://ai-2-7ikc.onrender.com";
+const API_BASE = "https://ai-zdeu.onrender.com";
 const STORAGE_PREFIX = 'listo_';
 export default function Onboarding() {
   const [step, setStep] = useState(1);
