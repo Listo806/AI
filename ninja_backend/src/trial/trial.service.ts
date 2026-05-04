@@ -7,38 +7,47 @@ export class TrialService {
   constructor(private readonly db: DatabaseService) {}
 
   async startTrial(dto: any) {
-    const { email, password, name, phone, role } = dto;
+    try {
+      console.log('DTO:', dto);
 
-    const { rows: existing } = await this.db.query(
-      `SELECT id FROM users WHERE email = $1`,
-      [email],
-    );
+      const { email, password, name, phone, role } = dto;
 
-    if (existing.length > 0) {
-      throw new ConflictException('Email already exists');
+      const { rows: existing } = await this.db.query(
+        `SELECT id FROM users WHERE email = $1`,
+        [email],
+      );
+
+      console.log('EXISTING:', existing);
+
+      if (existing.length > 0) {
+        throw new ConflictException('Email already exists');
+      }
+
+      const hashed = await bcrypt.hash(password, 10);
+
+      const { rows } = await this.db.query(
+        `INSERT INTO users 
+          (email, password, name, phone, role, is_active, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
+        RETURNING id`,
+        [
+          email,
+          hashed,
+          name || null,
+          phone || null,
+          role || 'agent',
+        ],
+      );
+
+      console.log('INSERTED:', rows);
+
+      return {
+        success: true,
+        userId: rows[0].id,
+      };
+    } catch (err) {
+      console.error('🔥 TRIAL ERROR:', err);
+      throw err;
     }
-
-    // Hash password
-    const hashed = await bcrypt.hash(password, 10);
-
-    // Insert user trial
-    const { rows } = await this.db.query(
-      `INSERT INTO users 
-        (email, password, name, phone, role, plan, is_active, payment_status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, 'trial', true, 'trial', NOW(), NOW())
-       RETURNING id`,
-      [
-        email,
-        hashed,
-        name || null,
-        phone || null,
-        role || 'agent',
-      ],
-    );
-
-    return {
-      success: true,
-      userId: rows[0].id,
-    };
   }
 }
