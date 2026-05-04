@@ -15,7 +15,7 @@ async function bootstrap() {
     rawBody: true, // Enable raw body for webhook signature verification
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
-  const db = app.get(DatabaseService);console.log('🚀 RUN MIGRATION...');
+  const db = app.get(DatabaseService);await db.connect();console.log('🚀 RUN MIGRATION...');
 await db.runMigrations();
 
   // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
