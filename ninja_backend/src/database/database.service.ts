@@ -6,7 +6,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
 
   async onModuleInit() {
-    const databaseUrl = process.env.DATABASE_URL || '';
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+      console.error('❌ DATABASE_URL is missing');
+      process.exit(1);
+    }
     
     // Determine if SSL is required
     // Render, Heroku, AWS RDS, and other cloud providers require SSL
