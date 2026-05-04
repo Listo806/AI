@@ -35,6 +35,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.error('Database connection failed:', err);
       process.exit(1);
     }
+    await this.runMigrations();
   }
 
   async onModuleDestroy() {

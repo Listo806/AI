@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { DatabaseService } from './database/database.service';
 
 // Load environment variables
 dotenv.config();
@@ -15,8 +14,6 @@ async function bootstrap() {
     rawBody: true, // Enable raw body for webhook signature verification
     bodyParser: true, // Enable body parser for JSON and URL-encoded
   });
-  const db = app.get(DatabaseService);await db.connect();console.log('🚀 RUN MIGRATION...');
-await db.runMigrations();
 
   // Correct client IP behind proxies (e.g. Render) for Site Assist abuse logging / rate limits
   app.set('trust proxy', 1);
