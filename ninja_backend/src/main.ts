@@ -89,8 +89,8 @@ async function bootstrap() {
       if (process.env.NODE_ENV !== 'production') {
         console.log(`[CORS] Rejected origin: ${origin}`);
       }
-      
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
+      //callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
