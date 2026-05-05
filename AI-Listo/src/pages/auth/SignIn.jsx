@@ -17,7 +17,7 @@ export default function SignIn({ variant = 'crm' }) {
   const branding = {
     crm: {
       badge: 'Cortexa AI CRM',
-      title: 'Sign In to Your CRM',
+      title: 'Sign In',
       subtitle: 'Access your dashboard and manage leads in real time.',
     },
     internal: {
