@@ -147,3 +147,28 @@
 .auth-footer a:hover {
   text-decoration: underline;
 }
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px; /* chừa chỗ cho icon */
+}
+.toggle-password {
+    background: none;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    margin-top: -38px;
+    margin-left: 315px;
+}
+.toggle-password svg {
+  stroke: #888;
+}
+
+.toggle-password:hover svg {
+  stroke: #000;
+}
