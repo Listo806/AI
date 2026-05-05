@@ -32,7 +32,7 @@ export default function PaymentSuccess() {
 
         try {
             // 🔥 STEP 1: update DB
-          await fetch(`https://ai-zdeu.onrender.com/api/payment/payment-success`, {
+          await fetch(`https://ai-2-7ikc.onrender.com/api/payment/payment-success`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -41,7 +41,7 @@ export default function PaymentSuccess() {
           });
 
           // 🔥 STEP 2: login lại
-          const loginRes = await fetch(`https://ai-zdeu.onrender.com/api/auth/login-by-id`, {
+          const loginRes = await fetch(`https://ai-2-7ikc.onrender.com/api/auth/login-by-id`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -17,7 +17,7 @@
 
   // Configuration - Update these values
   const CONFIG = {
-    API_BASE_URL: 'https://ai-zdeu.onrender.com/api', // Update with your backend URL
+    API_BASE_URL: 'https://ai-2-7ikc.onrender.com/api', // Update with your backend URL
     DASHBOARD_URL: '/dashboard',
     SIGN_IN_URL: '/sign-in',
     STORAGE_PREFIX: 'listo_',

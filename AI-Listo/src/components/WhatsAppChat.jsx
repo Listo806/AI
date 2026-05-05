@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://ai-zdeu.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://ai-2-7ikc.onrender.com/api';
 const AUTH_TOKEN_KEY = 'listo_access_token';
 
 /**
