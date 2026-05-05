@@ -28,7 +28,7 @@ export class TrialService {
       const { rows } = await this.db.query(
         `INSERT INTO users 
           (email, password, name, phone, role, plan, is_active, payment_status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, 'trial', true, 'trial', NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, 'TRIAL', true, 'trial', NOW(), NOW())
         RETURNING id`,
         [
           email,
