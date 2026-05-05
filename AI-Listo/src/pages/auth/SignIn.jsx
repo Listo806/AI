@@ -16,7 +16,7 @@ export default function SignIn({ variant = 'crm' }) {
   // Branding configuration based on variant
   const branding = {
     crm: {
-      badge: 'Listo Qasa AI CRM',
+      badge: 'Cortexa AI CRM',
       title: 'Sign In to Your CRM',
       subtitle: 'Access your dashboard and manage leads in real time.',
     },
