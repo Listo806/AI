@@ -43,7 +43,7 @@ async function bootstrap() {
   // Enable CORS
   const allowedOrigins = process.env.FRONTEND_URL 
     ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
-    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174', 'https://www.cortexaaicrm.com', 'https://cortexaaicrm.com'];
+    : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174', 'https://www.cortexaaicrm.com', 'https://cortexaaicrm.com', 'https://ai-2-7ikc.onrender.com'];
   
   // Get the server's own origin (for Swagger UI)
   // Render provides RENDER_EXTERNAL_URL, or we can use BACKEND_URL
