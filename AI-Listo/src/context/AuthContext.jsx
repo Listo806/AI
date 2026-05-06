@@ -13,44 +13,46 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Check if user is already logged in and verify token
     const checkAuth = async () => {
-      const userStr = localStorage.getItem(STORAGE_PREFIX + 'user');
-        const token = apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
+          const userStr = localStorage.getItem(STORAGE_PREFIX + 'user');
+          const token = apiClient.accessToken || localStorage.getItem(STORAGE_PREFIX + 'access_token');
 
-        if (token && !apiClient.accessToken) {
-          apiClient.setTokens(token, null);
-        }
+          let cachedUser = null;
 
-        if (userStr && !user) {
-          try {
-            const parsedUser = JSON.parse(userStr);
-            setUser(parsedUser);
-          } catch (e) {
-            console.error('Failed to parse stored user:', e);
-            localStorage.removeItem(STORAGE_PREFIX + 'user');
+          if (token && !apiClient.accessToken) {
+            apiClient.setTokens(token, null);
           }
-        }
 
-        if (token) {
-          try {
-            const currentUser = await apiClient.request('/auth/me');
-            setUser(currentUser.user);
-            localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
-          } catch (error) {
-            console.error('❌ /auth/me FAILED:', error);
+          if (userStr && userStr !== 'undefined') {
+            try {
+              cachedUser = JSON.parse(userStr);
+              setUser(cachedUser);
+            } catch {
+              localStorage.removeItem(STORAGE_PREFIX + 'user');
+            }
+          }
 
-            // apiClient.clearTokens();
-            // localStorage.removeItem(STORAGE_PREFIX + 'user');
-            // setUser(null);
-            const storedUser = localStorage.getItem(STORAGE_PREFIX + 'user');
-              if (storedUser) {
-                try {
-                  setUser(JSON.parse(storedUser));
-                } catch {}
+          if (token) {
+            try {
+              const currentUser = await apiClient.request('/users/me');
+
+              if (currentUser?.user) {
+                setUser(currentUser.user);
+                localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
               }
+            } catch (error) {
+              console.error('❌ /users/me FAILED:', error);
+
+              // chỉ logout nếu KHÔNG có cache
+              if (!cachedUser) {
+                setUser(null);
+              }
+            }
+          } else {
+            if (!cachedUser) setUser(null);
           }
-        }
-        setLoading(false);
-    };
+
+          setLoading(false);
+        };
 
     checkAuth();
   }, []);
@@ -119,7 +121,7 @@ export function AuthProvider({ children }) {
   const refreshUser = async () => {
     if (!apiClient.accessToken) return;
     try {
-      const currentUser = await apiClient.request('/auth/me');
+      const currentUser = await apiClient.request('/users/me');
       setUser(currentUser.user);
       localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(currentUser.user));
     } catch (err) {
