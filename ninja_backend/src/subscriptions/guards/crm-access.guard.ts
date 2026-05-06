@@ -24,6 +24,7 @@ export class CrmAccessGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('User must be part of a team');
     }
+    console.log('CRM GUARD ROLE:', user.role);
     if (user.role === UserRole.AGENT || user.role === UserRole.DEVELOPER) {
       return true;
     }
@@ -50,7 +51,8 @@ export class CrmAccessGuard implements CanActivate {
       throw new ForbiddenException('User must be part of a team');
     }
 
-    await this.enforcementService.checkCrmAccess(teamId);
+    //await this.enforcementService.checkCrmAccess(teamId);
+    await this.enforcementService.checkCrmAccess(teamId, user.role);
 
     return true;
   }
