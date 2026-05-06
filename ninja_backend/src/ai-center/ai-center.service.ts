@@ -145,16 +145,23 @@ export class AiCenterService {
       escalation_thresholds: string[];
     };
   }> {
-    await this.db.query(
-      `INSERT INTO team_ai_config (team_id, name, updated_at)
-       VALUES ($1, 'Default', NOW())
-       ON CONFLICT (team_id) DO NOTHING`,
-      [teamId],
-    );
-    const { rows } = await this.db.query(
-      `SELECT name, updated_at FROM team_ai_config WHERE team_id = $1`,
-      [teamId],
-    );
+    if (teamId) {
+      await this.db.query(
+        `INSERT INTO team_ai_config (team_id, name, updated_at)
+        VALUES ($1, 'Default', NOW())
+        ON CONFLICT (team_id) DO NOTHING`,
+        [teamId],
+      );
+    }
+    let rows: any[] = [];
+
+    if (teamId) {
+      const result = await this.db.query(
+        `SELECT name, updated_at FROM team_ai_config WHERE team_id = $1`,
+        [teamId],
+      );
+      rows = result.rows;
+    }
     const r = rows[0];
     const connectedCalendars: string[] = [];
     return {
