@@ -11,7 +11,7 @@ export default function StartTrial() {
     email: "",
     phone: "",
     password: "",
-    role: "agent",
+    role: "owner",
   });
 
   const [loading, setLoading] = useState(false);

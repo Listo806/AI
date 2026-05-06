@@ -21,8 +21,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm/contacts')
-//@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 

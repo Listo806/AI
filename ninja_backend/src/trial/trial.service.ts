@@ -35,7 +35,7 @@ export class TrialService {
           hashed,
           name || null,
           phone || null,
-          role || 'agent',
+          role || 'owner',
         ],
       );
 
