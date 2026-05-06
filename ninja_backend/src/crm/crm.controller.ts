@@ -121,7 +121,7 @@ export class CrmController {
   @ApiResponse({ status: 403, description: 'CRM access required or not an owner' })
   async getOwnerProperties(@CurrentUser() user: any) {
     // Ensure user is an owner
-    if (user.role !== 'owner') {
+    if (!['owner', 'agent'].includes(user.role)) {
       throw new ForbiddenException('This endpoint is only available for owners');
     }
     return this.crmService.getOwnerProperties(user.id, user.teamId);

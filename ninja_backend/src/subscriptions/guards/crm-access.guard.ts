@@ -24,7 +24,9 @@ export class CrmAccessGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('User must be part of a team');
     }
-
+    if (user.role === UserRole.AGENT || user.role === UserRole.DEVELOPER) {
+      return true;
+    }
     // Owners may own teams via owner_id but have user.team_id=null; resolve first owned team
     let teamId = user.teamId;
     if (!teamId && user.role === UserRole.OWNER) {
