@@ -47,9 +47,9 @@ export class CrmAccessGuard implements CanActivate {
       return true;
     }
 
-    if (!teamId) {
-      throw new ForbiddenException('User must be part of a team');
-    }
+    //if (!teamId) {
+      //throw new ForbiddenException('User must be part of a team');
+    //}
 
     //await this.enforcementService.checkCrmAccess(teamId);
     await this.enforcementService.checkCrmAccess(teamId, user.role);
