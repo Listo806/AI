@@ -24,10 +24,7 @@ export class CrmAccessGuard implements CanActivate {
     if (!user) {
       throw new ForbiddenException('User must be part of a team');
     }
-    console.log('CRM GUARD ROLE:', user.role);
-    if (user.role === UserRole.AGENT || user.role === UserRole.DEVELOPER) {
-      return true;
-    }
+
     // Owners may own teams via owner_id but have user.team_id=null; resolve first owned team
     let teamId = user.teamId;
     if (!teamId && user.role === UserRole.OWNER) {
@@ -47,12 +44,11 @@ export class CrmAccessGuard implements CanActivate {
       return true;
     }
 
-    //if (!teamId) {
-      //throw new ForbiddenException('User must be part of a team');
-    //}
+    if (!teamId) {
+      throw new ForbiddenException('User must be part of a team');
+    }
 
-    //await this.enforcementService.checkCrmAccess(teamId);
-    await this.enforcementService.checkCrmAccess(teamId, user.role);
+    await this.enforcementService.checkCrmAccess(teamId);
 
     return true;
   }

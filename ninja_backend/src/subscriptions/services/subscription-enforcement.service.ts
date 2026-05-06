@@ -2,7 +2,6 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { DatabaseService } from '../../database/database.service';
 import { SubscriptionsService } from '../subscriptions.service';
 import { SubscriptionStatus } from '../entities/subscription.entity';
-import { UserRole } from '../../users/entities/user.entity';
 
 export interface SubscriptionFeatures {
   hasActiveSubscription: boolean;
@@ -90,10 +89,7 @@ export class SubscriptionEnforcementService {
   /**
    * Check if team has CRM access
    */
-  async checkCrmAccess(teamId: string, role?: string): Promise<void> {
-    if (role === UserRole.AGENT || role === UserRole.DEVELOPER) {
-      return;
-    }
+  async checkCrmAccess(teamId: string): Promise<void> {
     const features = await this.getTeamFeatures(teamId);
 
     if (!features.crmAccess) {
