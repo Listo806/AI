@@ -20,7 +20,7 @@ const AI_CENTER_PATHS = [
 ];
 
 const AI_CENTER_ITEMS = [
-  { path: "/dashboard/ai-cortexa", labelKey: "nav.aiCenter.cortexa" },
+  { path: "/dashboard/ai-cortexa", icon: "bot", labelKey: "nav.aiCenter.cortexa" },
   // { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
   // { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
   // { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
@@ -231,8 +231,8 @@ console.log("USER IN SIDEBAR:", user);
           {showAiCenterAndBottom && (
             <>
               {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
-              {!isCollapsed && <div className="crm-nav-fix-label">AI</div>}
-              <div className="crm-nav-group crm-nav-group-ai">
+              {!isCollapsed && <div className="crm-nav-fix-label">AI AGENT</div>}
+              {/*<div className="crm-nav-group crm-nav-group-ai">*/}
               {isCollapsed ? (
                 <NavLink
                   to="/dashboard/ai-center"
@@ -244,7 +244,7 @@ console.log("USER IN SIDEBAR:", user);
                 </NavLink>
               ) : (
                 <>
-                  <button
+                  {/*<button
                     type="button"
                     className={`crm-nav-link ${isAiCenterActive ? "active" : ""}`}
                     onClick={() => setAiCenterOpen((o) => !o)}
@@ -268,27 +268,27 @@ console.log("USER IN SIDEBAR:", user);
                       data-lucide={aiCenterOpen ? "chevron-down" : "chevron-right"}
                       style={{ marginLeft: "auto", width: "16px", height: "16px" }}
                     />
-                  </button>
-                  {aiCenterOpen && (
-                    <div className="crm-nav-sub" style={{ paddingLeft: "12px" }}>
-                      {AI_CENTER_ITEMS.map((item) => (
-                        <NavLink
-                          key={item.path}
-                          to={item.path}
-                          className={({ isActive }) =>
-                            `crm-nav-link crm-nav-link-sub ${isActive ? "active" : ""}`
-                          }
-                          onClick={onClose}
-                          style={{ paddingLeft: "24px", fontSize: "13px" }}
-                        >
-                          <span className="crm-nav-label">{t(item.labelKey)}</span>
-                        </NavLink>
-                      ))}
-                    </div>
-                  )}
+                  </button>*/}
+                  {AI_CENTER_ITEMS.map((item, index) => (
+                  <NavLink
+                    key={`${item.path}-${index}`}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `crm-nav-link ${isActive ? "active" : ""}`
+                    }
+                    onClick={onClose}
+                    title={isCollapsed ? t(item.labelKey) : undefined}
+                  >
+                    <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                    {!isCollapsed && (
+                      <span className="crm-nav-label">{t(item.labelKey)}</span>
+                    )}
+                  </NavLink>
+                ))}
+                
                 </>
               )}
-            </div>
+            {/*</div>*/}
             </>
           )}
           {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
@@ -316,22 +316,22 @@ console.log("USER IN SIDEBAR:", user);
             {!isCollapsed && <div className="crm-nav-fix-label">MANAGEMENT</div>}
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
               <div className="crm-nav-group-bottom">
-            {bottomNavItems.map((item, index) => (
-              <NavLink
-                key={`${item.path}-${index}`}
-                to={item.path}
-                className={({ isActive }) =>
-                  `crm-nav-link ${isActive ? "active" : ""}`
-                }
-                onClick={onClose}
-                title={isCollapsed ? t(item.labelKey) : undefined}
-              >
-                <i data-lucide={item.icon} className="crm-nav-icon"></i>
-                {!isCollapsed && (
-                  <span className="crm-nav-label">{t(item.labelKey)}</span>
-                )}
-              </NavLink>
-            ))}
+              {bottomNavItems.map((item, index) => (
+                <NavLink
+                  key={`${item.path}-${index}`}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `crm-nav-link ${isActive ? "active" : ""}`
+                  }
+                  onClick={onClose}
+                  title={isCollapsed ? t(item.labelKey) : undefined}
+                >
+                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                  {!isCollapsed && (
+                    <span className="crm-nav-label">{t(item.labelKey)}</span>
+                  )}
+                </NavLink>
+              ))}
             </div>
             </>
           )}
