@@ -41,7 +41,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 200px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
+  width: 213px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
   background: var(--bg);
   color: var(--text);
   padding: 0;
@@ -67,7 +67,7 @@ body {
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 200px;
+    width: 213px;
   }
 
   /* Collapsed state - icon-only */
@@ -591,7 +591,7 @@ body.crm-dark .crm-nav-link.active {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
+  margin-left: 213px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
