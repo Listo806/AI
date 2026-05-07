@@ -309,10 +309,11 @@ console.log("USER IN SIDEBAR:", user);
                 )}
               </NavLink>
             ))} 
-          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
-          {!isCollapsed && <div className="crm-nav-fix-label">MANAGEMENT</div>}
+          
           {showAiCenterAndBottom && (
             <>
+            {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+            {!isCollapsed && <div className="crm-nav-fix-label">MANAGEMENT</div>}
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
               <div className="crm-nav-group-bottom">
             {bottomNavItems.map((item, index) => (

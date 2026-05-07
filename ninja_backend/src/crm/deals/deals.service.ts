@@ -71,7 +71,8 @@ export class DealsService {
   ): Promise<any[]> {
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
     if (accessible.length === 0) {
-      throw new ForbiddenException('User must be part of a team to manage deals');
+      return [];
+      //throw new ForbiddenException('User must be part of a team to manage deals');
     }
 
     let teamIds: string[];
@@ -97,7 +98,7 @@ export class DealsService {
 
   async findOne(id: string, userId: string, userTeamId: string | null, role: string): Promise<any> {
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
-    if (accessible.length === 0) throw new ForbiddenException('User must be part of a team to manage deals');
+    if (accessible.length === 0) return null; //throw new ForbiddenException('User must be part of a team to manage deals');
 
     const placeholders = accessible.map((_, i) => `$${i + 2}`).join(', ');
     const { rows } = await this.db.query(
