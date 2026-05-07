@@ -47,6 +47,7 @@ import CheckoutPage from "./pages/checkout/CheckoutPage";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
 
+import CortexaAI from "./pages/ai-center/CortexaAI";
 import AICenterOverview from "./pages/ai-center/AICenterOverview";
 import AIAutoReply from "./pages/ai-center/AIAutoReply";
 import AIAppointmentSetter from "./pages/ai-center/AIAppointmentSetter";
@@ -196,6 +197,7 @@ function AppRoutes() {
         <Route path="contacts" element={<Contacts />} />
         
         {/* AI Center Routes */}
+        <Route path="ai-cortexa" element={<CortexaAI />} />
         <Route path="ai-center" element={<AICenterOverview />} />
         <Route path="ai-assistant" element={<AIAssistant />} />
         <Route path="ai-auto-reply" element={<AIAutoReply />} />

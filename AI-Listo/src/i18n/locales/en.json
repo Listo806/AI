@@ -58,7 +58,8 @@
     "adminPlans": "Plans",
     "contacts": "Contacts",
     "aiCenter": {
-      "label": "AI Setter",
+      "label": "AI Agent",
+      "cortexa": "CORTEXA AI",
       "overview": "Overview",
       "aiAssistant": "AI Assistant",
       "autoReply": "AI Auto-Reply",

@@ -5,7 +5,7 @@
   --text: #0f172a;
   --card: #f8fafc;
   --border: #e5e7eb;
-  --text-muted: #64748b;
+  --text-muted: #273247;
 }
 
 body.crm-dark {
@@ -41,7 +41,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 165px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
+  width: 200px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
   background: var(--bg);
   color: var(--text);
   padding: 0;
@@ -67,7 +67,7 @@ body {
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 165px;
+    width: 200px;
   }
 
   /* Collapsed state - icon-only */
@@ -131,7 +131,11 @@ body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
-
+.crm-nav-fix-label{
+    color:#7d839c;
+    font-size: 14px;
+    font-weight: 500;
+}
 /* Blank spacer items between sidebar groups */
 .crm-nav-spacer {
   height: 14px;
@@ -239,8 +243,8 @@ body {
 
 .crm-nav-icon {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
   flex-shrink: 0;
   text-align: center;
   color: inherit;
@@ -287,6 +291,8 @@ i[data-lucide] {
   white-space: nowrap;
   overflow: hidden;
   transition: opacity 0.2s ease-in-out;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 /* Hide labels when collapsed */
@@ -585,7 +591,7 @@ body.crm-dark .crm-nav-link.active {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 165px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
+  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
