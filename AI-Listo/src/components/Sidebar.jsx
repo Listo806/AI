@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
   const topNavItems = [
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
-    //...whatsappNavEntries,
+    ...whatsappNavEntries,
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     //{ path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
@@ -212,7 +212,7 @@ console.log("USER IN SIDEBAR:", user);
                 {!isCollapsed && (
                   <span className="crm-nav-label">
                     {item.label || t(item.labelKey)}
-                    {item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}
+                    {/*{item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}*/}
                   </span>
                 )}
               </NavLink>
