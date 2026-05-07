@@ -132,7 +132,7 @@ console.log("USER IN SIDEBAR:", user);
   } else if (canSeeAdmin) {
     navItems = [
       ...topNavItems,
-      { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
+      //{ path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
       { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
       { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
       { path: "/dashboard/admin/plans", icon: "credit-card", labelKey: "nav.adminPlans" },
@@ -141,7 +141,7 @@ console.log("USER IN SIDEBAR:", user);
     if (canSeePlatformListings) {
       navItems = [
         ...topNavItems.slice(0, 6),
-        { path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
+        //{ path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
         ...topNavItems.slice(6),
       ];
     }
