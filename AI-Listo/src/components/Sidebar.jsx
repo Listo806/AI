@@ -3,7 +3,11 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
-
+import headlogoImg from "../assets/cortexa/headlogo.png";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 const AI_CENTER_PATHS = [
   "/dashboard/ai-cortexa",
   // "/dashboard/ai-center",
@@ -132,7 +136,7 @@ console.log("USER IN SIDEBAR:", user);
   } else if (canSeeAdmin) {
     navItems = [
       ...topNavItems,
-      //{ path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
+      { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
       { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
       { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
       { path: "/dashboard/admin/plans", icon: "credit-card", labelKey: "nav.adminPlans" },
@@ -156,6 +160,7 @@ console.log("USER IN SIDEBAR:", user);
       {isOpen && <div className="crm-sidebar-overlay" onClick={onClose} />}
       <aside className={`crm-sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* Logo and Site Name */}
+        <img src={headlogoImg} className="cx-logo-img" />
         <div className="crm-sidebar-header">
           {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded, centered when collapsed) */}
           <button
@@ -164,7 +169,11 @@ console.log("USER IN SIDEBAR:", user);
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <i data-lucide="menu"></i>
+            {isCollapsed ? (
+              <ChevronsRight size={18} />
+            ) : (
+              <ChevronsLeft size={18} />
+            )}
           </button>
           {/*{!isCollapsed && (
             <>
@@ -179,7 +188,6 @@ console.log("USER IN SIDEBAR:", user);
         </div>
 
         <nav className="crm-nav">
-          <div className="crm-nav-fix-label">CORE</div>
           {navItems.map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
@@ -221,8 +229,7 @@ console.log("USER IN SIDEBAR:", user);
 
           {showAiCenterAndBottom && (
             <>
-              <div className="crm-nav-spacer" aria-hidden="true" />
-              <div className="crm-nav-fix-label">AI</div>
+              
               <div className="crm-nav-group crm-nav-group-ai">
               {isCollapsed ? (
                 <NavLink
@@ -282,8 +289,7 @@ console.log("USER IN SIDEBAR:", user);
             </div>
             </>
           )}
-          <div className="crm-nav-spacer" aria-hidden="true" />
-          <div className="crm-nav-fix-label">INTELLIGENCE</div>
+          
           {analyticsNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
@@ -300,8 +306,7 @@ console.log("USER IN SIDEBAR:", user);
                 )}
               </NavLink>
             ))} 
-          <div className="crm-nav-spacer" aria-hidden="true" />
-          <div className="crm-nav-fix-label">MANAGEMENT</div>
+          
           {showAiCenterAndBottom && (
             <>
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
@@ -325,8 +330,7 @@ console.log("USER IN SIDEBAR:", user);
             </div>
             </>
           )}
-          <div className="crm-nav-spacer" aria-hidden="true" />
-          <div className="crm-nav-fix-label">SYSTEM</div>
+          
           {systemNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
