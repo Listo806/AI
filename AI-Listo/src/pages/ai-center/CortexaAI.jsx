@@ -15,6 +15,7 @@ import {
   PenLine,
 } from "lucide-react";
 import "./CortexaAI.css";
+import centerlogoImg from "../../assets/cortexa/cortexaAI.png";
 
 const aiActions = [
   {
@@ -71,6 +72,12 @@ const aiActions = [
     icon: PenLine,
     prompt: "Write a professional WhatsApp follow-up message for a real estate lead.",
   },
+  {
+    title: "Summarize Leads",
+    subtitle: "Get a summary of new leads",
+    icon: Sparkles,
+    prompt: "Give me a detailed summary of my new leads from the last 24 hours.",
+  },
 ];
 
 export default function CortexaAI() {
@@ -91,23 +98,16 @@ export default function CortexaAI() {
         <div className="ai-bg-blur" />
 
         <div className="ai-header">
-          {/*<div className="ai-icon-box">
-            <Sparkles size={28} color="#fff" />
-          </div>*/}
+        
+          <h1><img src={centerlogoImg} className="cx-logo-img" /></h1>
 
-          <h1>CORTEXA AI</h1>
-
-          <p>
-            Your AI command center for leads, follow-ups, WhatsApp replies,
-            property listings, campaigns, and pipeline decisions.
-          </p>
         </div>
-
-        <div className="ai-box">
-          <div className="ai-tabs">
-            <button className="active">Ask</button>
+        <div className="ai-tabs">
+            <button className="active ask"><Sparkles/>Ask</button>
             <button>Workflows</button>
           </div>
+        <div className="ai-box">
+          
 
           <textarea
             value={prompt}

@@ -160,7 +160,7 @@ console.log("USER IN SIDEBAR:", user);
       {isOpen && <div className="crm-sidebar-overlay" onClick={onClose} />}
       <aside className={`crm-sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* Logo and Site Name */}
-        <img src={headlogoImg} className="cx-logo-img" />
+        <img src={headlogoImg} className="cx-logo-img-" />
         <div className="crm-sidebar-header">
           {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded, centered when collapsed) */}
           <button
@@ -188,6 +188,7 @@ console.log("USER IN SIDEBAR:", user);
         </div>
 
         <nav className="crm-nav">
+          {!isCollapsed && <div className="crm-nav-fix-label">CORE</div>}
           {navItems.map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
@@ -229,7 +230,8 @@ console.log("USER IN SIDEBAR:", user);
 
           {showAiCenterAndBottom && (
             <>
-              
+              {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+              {!isCollapsed && <div className="crm-nav-fix-label">AI</div>}
               <div className="crm-nav-group crm-nav-group-ai">
               {isCollapsed ? (
                 <NavLink
@@ -289,7 +291,8 @@ console.log("USER IN SIDEBAR:", user);
             </div>
             </>
           )}
-          
+          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+          {!isCollapsed && <div className="crm-nav-fix-label">INTELLIGENCE</div>}
           {analyticsNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
@@ -306,7 +309,8 @@ console.log("USER IN SIDEBAR:", user);
                 )}
               </NavLink>
             ))} 
-          
+          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+          {!isCollapsed && <div className="crm-nav-fix-label">MANAGEMENT</div>}
           {showAiCenterAndBottom && (
             <>
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
@@ -330,7 +334,8 @@ console.log("USER IN SIDEBAR:", user);
             </div>
             </>
           )}
-          
+          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+          {!isCollapsed && <div className="crm-nav-fix-label">SYSTEM</div>}
           {systemNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
@@ -348,6 +353,33 @@ console.log("USER IN SIDEBAR:", user);
               </NavLink>
             ))}
         </nav>
+        <div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
+          <div className="ai-usage-header">
+            <span className="ai-usage-title">AI Usage</span>
+          </div>
+          
+          <div className="ai-usage-chart-container">
+            <svg viewBox="0 0 200 60" className="ai-usage-svg">
+              <path
+                d="M0,50 Q20,45 40,48 T80,35 T120,40 T160,20 T200,10"
+                fill="none"
+                stroke="#6D7CFF"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+
+          <div className="ai-usage-stats">
+            <p className="ai-usage-text">
+              <strong>7,250</strong> / 10,000 credits used
+            </p>
+            <div className="ai-usage-progress-bg">
+              <div className="ai-usage-progress-bar" style={{ width: '72.5%' }}></div>
+            </div>
+            <span className="ai-usage-reset">Resets in 18 days</span>
+          </div>
+        </div>
         {/* {!isCollapsed && (
         <div style={{marginTop: "auto", padding: "20px 16px", borderTop: "1px solid #eef2f7"}}>
   
