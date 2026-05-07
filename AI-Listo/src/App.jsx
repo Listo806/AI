@@ -99,14 +99,14 @@ function RootRoute() {
     );
   }
 
-  if (isAuthenticated()) {
-    const role = user?.role?.toLowerCase?.() || user?.role;
-    if (role === 'va') return <Navigate to="/dashboard/properties" replace />;
-    if (role === 'va_uploader') return <Navigate to="/dashboard/va-upload" replace />;
-    if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/admin/listings" replace />;
-    if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
-    return <Navigate to="/dashboard/whatsapp" replace />;
-  }
+  // if (isAuthenticated()) {
+    // const role = user?.role?.toLowerCase?.() || user?.role;
+    // if (role === 'va') return <Navigate to="/dashboard/properties" replace />;
+    // if (role === 'va_uploader') return <Navigate to="/dashboard/va-upload" replace />;
+    // if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/admin/listings" replace />;
+    // if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
+    // return <Navigate to="/dashboard/whatsapp" replace />;
+  // }
   return <Landing />;
   // Not authenticated - show sign-in
   return <Navigate to="/sign-in" replace />;

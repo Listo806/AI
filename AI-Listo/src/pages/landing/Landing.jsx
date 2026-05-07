@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
     UserPlus,
     RefreshCcw,
@@ -52,6 +53,7 @@ export default function Landing() {
   const [lang, setLang] = useState("en");
   const [langOpen, setLangOpen] = useState(false);
   const [activeFAQ, setActiveFAQ] = useState(0);
+  const { isAuthenticated } = useAuth();
 
   const switchLang = (l) => {
     setLang(l);
@@ -1074,9 +1076,15 @@ export default function Landing() {
               )}
             </div>
 
-            <a href="/sign-in" className="cx-login">
-              {tr.login}
-            </a>
+            {isAuthenticated() ? (
+              <Link to="/dashboard/home" className="cx-login">
+                Dashboard
+              </Link>
+            ) : (
+              <Link to="/sign-in" className="cx-login">
+                {tr.login}
+              </Link>
+            )}
           </div>
         </div>
       </header>

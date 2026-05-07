@@ -6,24 +6,24 @@ import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 
 const AI_CENTER_PATHS = [
   "/dashboard/ai-cortexa",
-  "/dashboard/ai-center",
-  "/dashboard/ai-assistant",
-  "/dashboard/ai-auto-reply",
-  "/dashboard/ai-appointment-setter",
-  "/dashboard/ai-qualification-rules",
-  "/dashboard/ai-messaging",
-  "/dashboard/ai-logs",
+  // "/dashboard/ai-center",
+  // "/dashboard/ai-assistant",
+  // "/dashboard/ai-auto-reply",
+  // "/dashboard/ai-appointment-setter",
+  // "/dashboard/ai-qualification-rules",
+  // "/dashboard/ai-messaging",
+  // "/dashboard/ai-logs",
 ];
 
 const AI_CENTER_ITEMS = [
   { path: "/dashboard/ai-cortexa", labelKey: "nav.aiCenter.cortexa" },
-  { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
-  { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
-  { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
-  { path: "/dashboard/ai-appointment-setter", labelKey: "nav.aiCenter.appointmentSetter" },
-  { path: "/dashboard/ai-qualification-rules", labelKey: "nav.aiCenter.qualificationRules" },
-  { path: "/dashboard/ai-messaging", labelKey: "nav.aiCenter.messaging" },
-  { path: "/dashboard/ai-logs", labelKey: "nav.aiCenter.activityLogs" },
+  // { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
+  // { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
+  // { path: "/dashboard/ai-auto-reply", labelKey: "nav.aiCenter.autoReply" },
+  // { path: "/dashboard/ai-appointment-setter", labelKey: "nav.aiCenter.appointmentSetter" },
+  // { path: "/dashboard/ai-qualification-rules", labelKey: "nav.aiCenter.qualificationRules" },
+  // { path: "/dashboard/ai-messaging", labelKey: "nav.aiCenter.messaging" },
+  // { path: "/dashboard/ai-logs", labelKey: "nav.aiCenter.activityLogs" },
 ];
 
 export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggleCollapse }) {
@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
 
   const topNavItems = [
     { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
-    ...whatsappNavEntries,
+    //...whatsappNavEntries,
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     //{ path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
@@ -101,17 +101,20 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   const instagramNavItems = [
     { path: "/dashboard/instagram", icon: "camera", labelKey: "nav.instagram" },
   ];
+  const analyticsNavItems = [
+    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
+  ];
 
   const bottomNavItems = [
     //{ path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
+    //{ path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
     //{ path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
   ];
 
   const systemNavItems = [
-    { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" },
-    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },   
+    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
+    { path: "/dashboard/integrations", icon: "plug", labelKey: "nav.integrations" }, 
   ];
 
   const role = typeof user?.role === "string"
@@ -163,7 +166,7 @@ console.log("USER IN SIDEBAR:", user);
           >
             <i data-lucide="menu"></i>
           </button>
-          {!isCollapsed && (
+          {/*{!isCollapsed && (
             <>
               <img 
                 src="https://cdn.prod.website-files.com/69167a6a46fd073f4a958199/6921521d6cd18daedff74085_fb6918ba4a8709dd126682d90c8e31f1_ai_house_logo.avif"
@@ -172,11 +175,11 @@ console.log("USER IN SIDEBAR:", user);
               />
               <span className="crm-sidebar-brand">ListoQasa</span>
             </>
-          )}
+          )}*/}
         </div>
 
         <nav className="crm-nav">
-          <div className="crm-nav-fix-label">MAIN</div>
+          <div className="crm-nav-fix-label">CORE</div>
           {navItems.map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
@@ -280,8 +283,8 @@ console.log("USER IN SIDEBAR:", user);
             </>
           )}
           <div className="crm-nav-spacer" aria-hidden="true" />
-          <div className="crm-nav-fix-label">GROWTH</div>
-          {instagramNavItems.map((item, index) => (
+          <div className="crm-nav-fix-label">INTELLIGENCE</div>
+          {analyticsNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
                 to={item.path}
@@ -296,7 +299,7 @@ console.log("USER IN SIDEBAR:", user);
                   <span className="crm-nav-label">{t(item.labelKey)}</span>
                 )}
               </NavLink>
-            ))}
+            ))} 
           <div className="crm-nav-spacer" aria-hidden="true" />
           <div className="crm-nav-fix-label">MANAGEMENT</div>
           {showAiCenterAndBottom && (
@@ -341,7 +344,7 @@ console.log("USER IN SIDEBAR:", user);
               </NavLink>
             ))}
         </nav>
-        {!isCollapsed && (
+        {/* {!isCollapsed && (
         <div style={{marginTop: "auto", padding: "20px 16px", borderTop: "1px solid #eef2f7"}}>
   
           <div style={{fontSize: "11px", color: "#9ca3af", marginBottom: "6px"}}>
@@ -361,7 +364,7 @@ console.log("USER IN SIDEBAR:", user);
         </div>
         )}
 
-        {/* <div
+        <div
           className={`crm-sidebar-powered ${isCollapsed ? "crm-sidebar-powered--collapsed" : ""}`}
           aria-label="Powered by CORTEXA Intelligence Core"
         >

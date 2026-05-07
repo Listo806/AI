@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Navigate } from "react-router-dom";
 import './Auth.css';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -10,8 +11,13 @@ export default function SignIn({ variant = 'crm' }) {
   const [showPassword, setShowPassword] = useState(false); 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
 
+  if (loading) return null;
+
+  if (isAuthenticated()) {
+    return <Navigate to="/dashboard/home" replace />;
+  }
   // NOTE: Sign-in page ALWAYS shows the form, even if user is already authenticated
   // This is correct SaaS behavior - clicking "Sign In" should always show the form
 

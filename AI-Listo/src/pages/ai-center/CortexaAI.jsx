@@ -91,9 +91,9 @@ export default function CortexaAI() {
         <div className="ai-bg-blur" />
 
         <div className="ai-header">
-          <div className="ai-icon-box">
+          {/*<div className="ai-icon-box">
             <Sparkles size={28} color="#fff" />
-          </div>
+          </div>*/}
 
           <h1>CORTEXA AI</h1>
 
