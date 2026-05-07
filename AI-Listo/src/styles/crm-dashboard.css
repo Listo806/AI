@@ -1121,8 +1121,11 @@ body.crm-dark .crm-main::after {
   position: relative;
   z-index: 1;
   flex-shrink: 0; /* Prevent shrinking - always show fully */
+  margin-right: 7%;
 }
-
+.language-selector-trigger{
+    border:0;
+}
 .crm-account-dropdown {
   position: relative;
 }
@@ -1138,8 +1141,8 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-header-avatar {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #3b82f6;
   display: flex;

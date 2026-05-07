@@ -10,6 +10,7 @@
   margin: 0 auto;
   padding: 60px 20px;
   position: relative;
+  padding-top: 20px;
 }
 
 .ai-bg-blur {
@@ -173,43 +174,32 @@
   text-align: center;
   cursor: pointer;
   position: relative;
-  /* Viền mặc định mờ để giữ khung */
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: all 0.3s ease;
-  background-clip: padding-box; /* Giúp border không bị đè */
+  background-clip: padding-box; 
+  margin-top: 25px;
 }
 
-/* Tạo góc line chữ L ngược (Top full - Right half) */
 .ai-card::before {
   content: "";
   position: absolute;
-  top: -1px;    /* Khớp chính xác với border của card */
+  top: -1px;    
   right: -1px;
-  
-  /* ĐỘ DÀI CỦA LINE */
-  width: calc(100% + 0px); /* Chạy hết chiều ngang */
-  height: 50%;             /* CHỈ DÀI MỘT NỬA cạnh phải */
-  
-  /* ĐỘ DÀY VÀ BO GÓC */
-  border-top: 2px solid #6D7CFF;   /* Màu Blue Accent */
-  border-right: 2px solid #C77DFF; /* Màu Purple Accent */
-  border-top-right-radius: 12px;   /* Bo tròn góc đúng bằng card */
+  width: calc(100% + 0px); 
+  height: 50%;     
+  border-top: 2px solid #6D7CFF;  
+  border-right: 2px solid #C77DFF;
+  border-top-right-radius: 12px;  
   border-top-left-radius: 12px;
-  /* TẠO ĐỘ MỜ DẦN (GRADIENT) CHO ĐƯỜNG VIỀN */
-  /* Line trên chuyển từ Blue sang Purple, Line phải mờ dần xuống dưới */
   mask-image: linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 100%), 
               linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
   -webkit-mask: linear-gradient(to right, white 40%, white 100%), 
                 linear-gradient(to bottom, white 30%, transparent 100%);
-  
-  /* Nếu không muốn dùng mask phức tạp, có thể dùng linear-gradient đơn giản cho border-image */
-  /* Nhưng để có border-radius, cách tốt nhất là dùng mask hoặc border đơn sắc như trên */
-  
-  pointer-events: none; /* Tránh cản trở click */
+
+  pointer-events: none; 
 }
 
-/* Hiệu ứng Hover làm nổi bật line */
 .ai-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 20px rgba(109, 124, 255, 0.1);
