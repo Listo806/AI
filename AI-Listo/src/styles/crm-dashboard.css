@@ -728,7 +728,7 @@ body.crm-dark .crm-main::after {
 
 .crm-header {
   background: var(--bg);
-  padding: 12px 24px;
+  padding: 6px 24px;
   /* border-bottom: 1px solid var(--border); */
   position: sticky;
   top: 0;
@@ -736,7 +736,7 @@ body.crm-dark .crm-main::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 56px; /* Reduced height */
+  min-height: 42px; /* Reduced height */
   box-shadow: none; /* No heavy shadows */
   margin-left: 0; /* Header starts after sidebar - sidebar is fixed */
 }
@@ -1121,7 +1121,6 @@ body.crm-dark .crm-main::after {
   position: relative;
   z-index: 1;
   flex-shrink: 0; /* Prevent shrinking - always show fully */
-  margin-right: 7%;
 }
 .language-selector-trigger{
     border:0;
