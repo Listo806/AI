@@ -876,8 +876,8 @@ body.crm-dark .crm-main::after {
 /* Desktop Sidebar Toggle - Inside Sidebar (left of logo when expanded, centered when collapsed) */
 .crm-sidebar-toggle-inside {
   display: none; /* Hidden on mobile */
-  width: 32px;
-  height: 32px;
+  width: 27px;
+  height: 27x;
   background: var(--border);
   border: 1px solid var(--border);
   border-radius: 8px;
