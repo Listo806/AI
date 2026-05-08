@@ -726,7 +726,7 @@ body.crm-dark .crm-main::after {
 
 .crm-header {
   background: var(--bg);
-  padding: 6px 24px;
+  padding: 6px 12px;
   /* border-bottom: 1px solid var(--border); */
   position: sticky;
   top: 0;
@@ -1120,8 +1120,13 @@ body.crm-dark .crm-main::after {
   z-index: 1;
   flex-shrink: 0; /* Prevent shrinking - always show fully */
 }
+.language-selector{
+    margin:0;
+}
 .language-selector-trigger{
     border:0;
+    padding: 6px;
+    gap: 2px;
 }
 .crm-account-dropdown {
   position: relative;
