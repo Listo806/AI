@@ -1143,15 +1143,15 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-header-avatar {
-  width: 30px;
-  height: 30px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
   transition: all 0.2s;
 }
@@ -2217,9 +2217,9 @@ body.crm-dark .crm-error {
   }
 
   .crm-header-avatar {
-    width: 32px; /* Slightly smaller on mobile */
-    height: 32px;
-    font-size: 13px; /* Smaller font */
+    width: 22px; /* Slightly smaller on mobile */
+    height: 22px;
+    font-size: 12px; /* Smaller font */
   }
 
   .crm-account-dropdown {
