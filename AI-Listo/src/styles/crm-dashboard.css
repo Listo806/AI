@@ -64,11 +64,10 @@ body {
 }
 .ai-usage-card {
   border-radius: 16px;
-  padding: 10px;
+  padding: 5px;
   border: 1px solid rgba(109, 124, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 3px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -98,7 +97,6 @@ body {
 .ai-usage-stats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .ai-usage-text {
@@ -129,7 +127,6 @@ body {
 .ai-usage-reset {
   font-size: 11px;
   color: #6b7280;
-  margin-top: 4px;
 }
 
 .ai-usage-card:hover {
@@ -726,7 +723,7 @@ body.crm-dark .crm-main::after {
 
 .crm-header {
   background: var(--bg);
-  padding: 6px 12px;
+  padding: 0px 12px;
   /* border-bottom: 1px solid var(--border); */
   position: sticky;
   top: 0;
@@ -734,7 +731,7 @@ body.crm-dark .crm-main::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 42px; /* Reduced height */
+  min-height: 30px; /* Reduced height */
   box-shadow: none; /* No heavy shadows */
   margin-left: 0; /* Header starts after sidebar - sidebar is fixed */
 }
