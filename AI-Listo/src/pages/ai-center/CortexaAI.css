@@ -220,7 +220,7 @@
 }
 
 .ai-card h3 {
-  font-size: 14px;
+  font-size: 13px;
   margin: 0;
   color:#273247;
   padding: 0 3px;
@@ -236,6 +236,6 @@
         max-width: 81%;
     }
     .ai-tabs, .ai-box{
-        max-width: 75%;
+        max-width: 67%;
     }
 }
