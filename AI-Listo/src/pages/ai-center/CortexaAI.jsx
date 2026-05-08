@@ -129,11 +129,6 @@ export default function CortexaAI() {
               <button className="circle-btn">
                 <Plus size={18} />
               </button>
-
-              <button className="pill-btn">
-                <Sparkles size={16} />
-                CORTEXA AI
-              </button>
             </div>
 
             <div className="right">
