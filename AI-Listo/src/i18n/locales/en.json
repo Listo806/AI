@@ -70,7 +70,15 @@
     },
     "analytics": "Analytics",
     "team": "Team",
-    "integrations": "Apps & Integrations"
+    "integrations": "Apps & Integrations",
+    "core": "CORE",
+    "ai_agent": "AI AGENT",
+    "intelligence": "INTELLIGENCE",
+    "management": "MANAGEMENT",
+    "system": "SYSTEM",
+    "ai_usage": "AI Usage",
+    "ai_usage_reset": "Resets in 18 days",
+    "ai_usage_credits": "credits used"
   },
   "header": {
     "profile": "Profile",
@@ -621,5 +629,50 @@
       "disabled": "Plan disabled.",
       "deleteConfirm": "Delete plan \"{{name}}\"? This cannot be undone."
     }
+  },
+  "cortexa": {
+    "ask": "Ask",
+    "workflows": "Workflows",
+    "ai_placeholder": "What would you like CORTEXA AI to do today?",
+
+    "auto_reply": "Auto Reply",
+    "auto_reply_subtitle": "Create instant lead replies",
+    "auto_reply_prompt": "Create an automated WhatsApp reply flow for new buyer leads.",
+
+    "qualify_leads": "Qualify Leads",
+    "qualify_leads_subtitle": "Score and classify leads",
+    "qualify_leads_prompt": "Analyze and qualify my newest leads as hot, warm, or cold.",
+
+    "create_follow_up": "Create Follow-Up",
+    "create_follow_up_subtitle": "Build a nurture sequence",
+    "create_follow_up_prompt": "Create a follow-up sequence for leads that have not responded.",
+
+    "write_property_listing": "Write Property Listing",
+    "write_property_listing_subtitle": "Generate listing copy",
+    "write_property_listing_prompt": "Write a premium real estate property description for this listing.",
+
+    "generate_ad_copy": "Generate Ad Copy",
+    "generate_ad_copy_subtitle": "Create marketing campaigns",
+    "generate_ad_copy_prompt": "Create high-converting real estate ad copy for Facebook and Google.",
+
+    "analyze_pipeline": "Analyze Pipeline",
+    "analyze_pipeline_subtitle": "Find deal opportunities",
+    "analyze_pipeline_prompt": "Analyze my pipeline and tell me which deals need attention today.",
+
+    "find_cold_leads": "Find Cold Leads",
+    "find_cold_leads_subtitle": "Recover lost opportunities",
+    "find_cold_leads_prompt": "Find cold leads that stopped responding and suggest recovery messages.",
+
+    "book_appointment": "Book Appointment",
+    "book_appointment_subtitle": "Create appointment messages",
+    "book_appointment_prompt": "Write a message to book an appointment with a qualified buyer lead.",
+
+    "write_whatsapp_message": "Write WhatsApp Message",
+    "write_whatsapp_message_subtitle": "Send better replies",
+    "write_whatsapp_message_prompt": "Write a professional WhatsApp follow-up message for a real estate lead.",
+
+    "summarize_leads": "Summarize Leads",
+    "summarize_leads_subtitle": "Get a summary of new leads",
+    "summarize_leads_prompt": "Give me a detailed summary of my new leads from the last 24 hours."
   }
 }

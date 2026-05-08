@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Sparkles,
   Mic,
@@ -14,74 +15,76 @@ import {
   CalendarCheck,
   PenLine,
 } from "lucide-react";
+
 import "./CortexaAI.css";
 import centerlogoImg from "../../assets/cortexa/cortexaAI.png";
 
-const aiActions = [
-  {
-    title: "Auto Reply",
-    subtitle: "Create instant lead replies",
-    icon: MessageCircle,
-    prompt: "Create an automated WhatsApp reply flow for new buyer leads.",
-  },
-  {
-    title: "Qualify Leads",
-    subtitle: "Score and classify leads",
-    icon: UserCheck,
-    prompt: "Analyze and qualify my newest leads as hot, warm, or cold.",
-  },
-  {
-    title: "Create Follow-Up",
-    subtitle: "Build a nurture sequence",
-    icon: Repeat,
-    prompt: "Create a follow-up sequence for leads that have not responded.",
-  },
-  {
-    title: "Write Property Listing",
-    subtitle: "Generate listing copy",
-    icon: Home,
-    prompt: "Write a premium real estate property description for this listing.",
-  },
-  {
-    title: "Generate Ad Copy",
-    subtitle: "Create marketing campaigns",
-    icon: Megaphone,
-    prompt: "Create high-converting real estate ad copy for Facebook and Google.",
-  },
-  {
-    title: "Analyze Pipeline",
-    subtitle: "Find deal opportunities",
-    icon: BarChart3,
-    prompt: "Analyze my pipeline and tell me which deals need attention today.",
-  },
-  {
-    title: "Find Cold Leads",
-    subtitle: "Recover lost opportunities",
-    icon: Search,
-    prompt: "Find cold leads that stopped responding and suggest recovery messages.",
-  },
-  {
-    title: "Book Appointment",
-    subtitle: "Create appointment messages",
-    icon: CalendarCheck,
-    prompt: "Write a message to book an appointment with a qualified buyer lead.",
-  },
-  {
-    title: "Write WhatsApp Message",
-    subtitle: "Send better replies",
-    icon: PenLine,
-    prompt: "Write a professional WhatsApp follow-up message for a real estate lead.",
-  },
-  {
-    title: "Summarize Leads",
-    subtitle: "Get a summary of new leads",
-    icon: Sparkles,
-    prompt: "Give me a detailed summary of my new leads from the last 24 hours.",
-  },
-];
-
 export default function CortexaAI() {
+  const { t } = useTranslation();
   const [prompt, setPrompt] = useState("");
+
+  const aiActions = [
+    {
+      title: t("cortexa.auto_reply"),
+      subtitle: t("cortexa.auto_reply_subtitle"),
+      icon: MessageCircle,
+      prompt: t("cortexa.auto_reply_prompt"),
+    },
+    {
+      title: t("cortexa.qualify_leads"),
+      subtitle: t("cortexa.qualify_leads_subtitle"),
+      icon: UserCheck,
+      prompt: t("cortexa.qualify_leads_prompt"),
+    },
+    {
+      title: t("cortexa.create_follow_up"),
+      subtitle: t("cortexa.create_follow_up_subtitle"),
+      icon: Repeat,
+      prompt: t("cortexa.create_follow_up_prompt"),
+    },
+    {
+      title: t("cortexa.write_property_listing"),
+      subtitle: t("cortexa.write_property_listing_subtitle"),
+      icon: Home,
+      prompt: t("cortexa.write_property_listing_prompt"),
+    },
+    {
+      title: t("cortexa.generate_ad_copy"),
+      subtitle: t("cortexa.generate_ad_copy_subtitle"),
+      icon: Megaphone,
+      prompt: t("cortexa.generate_ad_copy_prompt"),
+    },
+    {
+      title: t("cortexa.analyze_pipeline"),
+      subtitle: t("cortexa.analyze_pipeline_subtitle"),
+      icon: BarChart3,
+      prompt: t("cortexa.analyze_pipeline_prompt"),
+    },
+    {
+      title: t("cortexa.find_cold_leads"),
+      subtitle: t("cortexa.find_cold_leads_subtitle"),
+      icon: Search,
+      prompt: t("cortexa.find_cold_leads_prompt"),
+    },
+    {
+      title: t("cortexa.book_appointment"),
+      subtitle: t("cortexa.book_appointment_subtitle"),
+      icon: CalendarCheck,
+      prompt: t("cortexa.book_appointment_prompt"),
+    },
+    {
+      title: t("cortexa.write_whatsapp_message"),
+      subtitle: t("cortexa.write_whatsapp_message_subtitle"),
+      icon: PenLine,
+      prompt: t("cortexa.write_whatsapp_message_prompt"),
+    },
+    {
+      title: t("cortexa.summarize_leads"),
+      subtitle: t("cortexa.summarize_leads_subtitle"),
+      icon: Sparkles,
+      prompt: t("cortexa.summarize_leads_prompt"),
+    },
+  ];
 
   const handleActionClick = (actionPrompt) => {
     setPrompt(actionPrompt);
@@ -98,33 +101,46 @@ export default function CortexaAI() {
         <div className="ai-bg-blur" />
 
         <div className="ai-header">
-        
-          <h1><img src={centerlogoImg} className="cx-logo-img" /></h1>
-
+          <h1>
+            <img src={centerlogoImg} className="cx-logo-img" alt="CORTEXA AI" />
+          </h1>
         </div>
-        <div className="ai-tabs">
-            <button className="active ask"><Sparkles/>Ask</button>
-            <button>Workflows</button>
-          </div>
-        <div className="ai-box">
-          
 
+        <div className="ai-tabs">
+          <button className="active ask">
+            <Sparkles />
+            {t("cortexa.ask")}
+          </button>
+
+          <button>
+            {t("cortexa.workflows")}
+          </button>
+        </div>
+
+        <div className="ai-box">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="What would you like CORTEXA AI to do today?"
+            placeholder={t("cortexa.ai_placeholder")}
           />
 
           <div className="ai-actions-bar">
             <div className="left">
-              <button className="circle-btn"><Plus size={18} /></button>
+              <button className="circle-btn">
+                <Plus size={18} />
+              </button>
+
               <button className="pill-btn">
-                <Sparkles size={16} /> CORTEXA AI
+                <Sparkles size={16} />
+                CORTEXA AI
               </button>
             </div>
 
             <div className="right">
-              <button className="circle-btn"><Mic size={18} /></button>
+              <button className="circle-btn">
+                <Mic size={18} />
+              </button>
+
               <button className="send-btn" onClick={handleSubmit}>
                 <Send size={16} />
               </button>
@@ -135,6 +151,7 @@ export default function CortexaAI() {
         <div className="ai-grid">
           {aiActions.map((action) => {
             const Icon = action.icon;
+
             return (
               <button
                 key={action.title}

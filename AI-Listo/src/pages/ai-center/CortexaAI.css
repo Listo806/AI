@@ -17,7 +17,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 700px;
-  height: 250px;
+  height: 135px;
   background: linear-gradient(90deg, #dbeafe, #e9d5ff, #fce7f3);
   filter: blur(80px);
   opacity: 0.6;
@@ -64,7 +64,6 @@
   background: #fff;
   border-radius: 24px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 18px 60px rgba(0,0,0,0.08);
   position: relative;
   z-index: 1;
   padding: 5px 10px;

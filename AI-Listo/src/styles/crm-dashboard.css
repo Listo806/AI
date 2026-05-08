@@ -69,7 +69,7 @@ body {
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  margin-top: 30px;
+  margin-top: 45px;
 }
 
 .ai-usage-title {

@@ -68,7 +68,15 @@
     "adminListings": "Admin Listados",
     "adminUsers": "Admin Usuarios",
     "adminTeams": "Admin Equipos",
-    "adminPlans": "Planes"
+    "adminPlans": "Planes",
+    "core": "NÚCLEO",
+    "ai_agent": "AGENTE IA",
+    "intelligence": "INTELIGENCIA",
+    "management": "GESTIÓN",
+    "system": "SISTEMA",
+    "ai_usage": "Uso de IA",
+    "ai_usage_reset": "Se reinicia en 18 días",
+    "ai_usage_credits": "créditos utilizados"
   },
   "header": {
     "profile": "Perfil",
@@ -605,5 +613,50 @@
       "disabled": "Plan desactivado.",
       "deleteConfirm": "¿Eliminar el plan \"{{name}}\"? No se puede deshacer."
     }
+  },
+  "cortexa": {
+    "ask": "Preguntar",
+    "workflows": "Flujos de trabajo",
+    "ai_placeholder": "¿Qué te gustaría que CORTEXA AI hiciera hoy?",
+
+    "auto_reply": "Respuesta Automática",
+    "auto_reply_subtitle": "Crear respuestas instantáneas para leads",
+    "auto_reply_prompt": "Crea un flujo automatizado de respuestas de WhatsApp para nuevos leads compradores.",
+
+    "qualify_leads": "Calificar Leads",
+    "qualify_leads_subtitle": "Puntuar y clasificar leads",
+    "qualify_leads_prompt": "Analiza y califica mis leads más recientes como calientes, tibios o fríos.",
+
+    "create_follow_up": "Crear Seguimiento",
+    "create_follow_up_subtitle": "Construir una secuencia de nutrición",
+    "create_follow_up_prompt": "Crea una secuencia de seguimiento para leads que no han respondido.",
+
+    "write_property_listing": "Escribir Anuncio de Propiedad",
+    "write_property_listing_subtitle": "Generar texto para anuncios",
+    "write_property_listing_prompt": "Escribe una descripción premium de bienes raíces para esta propiedad.",
+
+    "generate_ad_copy": "Generar Texto Publicitario",
+    "generate_ad_copy_subtitle": "Crear campañas de marketing",
+    "generate_ad_copy_prompt": "Crea textos publicitarios inmobiliarios de alta conversión para Facebook y Google.",
+
+    "analyze_pipeline": "Analizar Pipeline",
+    "analyze_pipeline_subtitle": "Encontrar oportunidades de negocio",
+    "analyze_pipeline_prompt": "Analiza mi pipeline y dime qué negocios necesitan atención hoy.",
+
+    "find_cold_leads": "Encontrar Leads Fríos",
+    "find_cold_leads_subtitle": "Recuperar oportunidades perdidas",
+    "find_cold_leads_prompt": "Encuentra leads fríos que dejaron de responder y sugiere mensajes de recuperación.",
+
+    "book_appointment": "Reservar Cita",
+    "book_appointment_subtitle": "Crear mensajes de cita",
+    "book_appointment_prompt": "Escribe un mensaje para reservar una cita con un lead comprador calificado.",
+
+    "write_whatsapp_message": "Escribir Mensaje de WhatsApp",
+    "write_whatsapp_message_subtitle": "Enviar mejores respuestas",
+    "write_whatsapp_message_prompt": "Escribe un mensaje profesional de seguimiento de WhatsApp para un lead inmobiliario.",
+
+    "summarize_leads": "Resumir Leads",
+    "summarize_leads_subtitle": "Obtener un resumen de nuevos leads",
+    "summarize_leads_prompt": "Dame un resumen detallado de mis nuevos leads de las últimas 24 horas."
   }
 }
