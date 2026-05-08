@@ -166,7 +166,7 @@
 .ai-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 16px 5px;
+  padding: 12px 5px;
   display: flex;
   flex-direction: column;
   text-align: center;
@@ -233,9 +233,9 @@
 }
 @media (min-width: 1025px) {
     .ai-container{
-        max-width: 71%;
+        max-width: 68%;
     }
     .ai-tabs, .ai-box{
-        max-width: 67%;
+        max-width: 78%;
     }
 }
