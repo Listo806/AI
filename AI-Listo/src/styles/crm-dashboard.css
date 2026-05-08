@@ -5,7 +5,7 @@
   --text: #0f172a;
   --card: #f8fafc;
   --border: #e5e7eb;
-  --text-muted: #273247;
+  --text-muted: #4f5662;
 }
 
 body.crm-dark {
@@ -41,7 +41,7 @@ body {
 
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 213px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
+  width: 195px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
   background: #f9f8fc;
   color: var(--text);
   padding: 0;
@@ -140,7 +140,7 @@ body {
 @media (min-width: 769px) {
   .crm-sidebar {
     transform: translateX(0);
-    width: 213px;
+    width: 195px;
   }
 
   /* Collapsed state - icon-only */
@@ -205,7 +205,7 @@ body {
 }
 .crm-nav-fix-label{
     color:#7d839c;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
 }
 /* Blank spacer items between sidebar groups */
@@ -363,7 +363,7 @@ i[data-lucide] {
   white-space: nowrap;
   overflow: hidden;
   transition: opacity 0.2s ease-in-out;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -663,7 +663,7 @@ body.crm-dark .crm-nav-link.active {
 /* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 213px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
+  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;

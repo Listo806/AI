@@ -235,7 +235,7 @@ console.log("USER IN SIDEBAR:", user);
               {/*<div className="crm-nav-group crm-nav-group-ai">*/}
               {isCollapsed ? (
                 <NavLink
-                  to="/dashboard/ai-center"
+                  to="/dashboard/ai-cortexa"
                   className={({ isActive }) => `crm-nav-link ${isActive ? "active" : ""}`}
                   onClick={onClose}
                   title={t("nav.aiCenter.label")}

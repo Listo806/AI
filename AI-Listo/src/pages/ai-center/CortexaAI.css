@@ -166,10 +166,9 @@
 .ai-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 24px 16px;
+  padding: 24px 5px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   text-align: center;
   cursor: pointer;
   position: relative;
@@ -224,6 +223,7 @@
   font-size: 14px;
   margin: 0;
   color:#273247;
+  padding: 0 3px;
 }
 
 .ai-card p {
@@ -233,6 +233,9 @@
 }
 @media (min-width: 1025px) {
     .ai-container{
-        max-width: 70%;
+        max-width: 81%;
+    }
+    .ai-tabs, .ai-box{
+        max-width: 75%;
     }
 }
