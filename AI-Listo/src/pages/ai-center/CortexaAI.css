@@ -1,5 +1,4 @@
 .ai-page {
-  min-height: 100vh;
   background: #ffffff;
   color: #111827;
   margin: -24px;
@@ -173,7 +172,6 @@
   cursor: pointer;
   position: relative;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   transition: all 0.3s ease;
   background-clip: padding-box; 
 }
@@ -220,11 +218,11 @@
 }
 
 .ai-card h3 {
-  font-size: 12px;
+  font-size: 11px;
   margin: 0;
   color:#273247;
   padding: 0 3px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .ai-card p {
