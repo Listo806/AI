@@ -230,7 +230,7 @@ console.log("USER IN SIDEBAR:", user);
 
           {showAiCenterAndBottom && (
             <>
-              {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+              
               {!isCollapsed && <div className="crm-nav-fix-label">AI AGENT</div>}
               {/*<div className="crm-nav-group crm-nav-group-ai">*/}
               {isCollapsed ? (
@@ -291,7 +291,7 @@ console.log("USER IN SIDEBAR:", user);
             {/*</div>*/}
             </>
           )}
-          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+          
           {!isCollapsed && <div className="crm-nav-fix-label">INTELLIGENCE</div>}
           {analyticsNavItems.map((item, index) => (
               <NavLink
@@ -312,7 +312,7 @@ console.log("USER IN SIDEBAR:", user);
           
           {showAiCenterAndBottom && (
             <>
-            {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+            
             {!isCollapsed && <div className="crm-nav-fix-label">MANAGEMENT</div>}
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
               <div className="crm-nav-group-bottom">
@@ -335,7 +335,7 @@ console.log("USER IN SIDEBAR:", user);
             </div>
             </>
           )}
-          {!isCollapsed && <div className="crm-nav-spacer" aria-hidden="true" />}
+          
           {!isCollapsed && <div className="crm-nav-fix-label">SYSTEM</div>}
           {systemNavItems.map((item, index) => (
               <NavLink
@@ -353,34 +353,33 @@ console.log("USER IN SIDEBAR:", user);
                 )}
               </NavLink>
             ))}
-        </nav>
-        <div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
-          <div className="ai-usage-header">
-            <span className="ai-usage-title">AI Usage</span>
-          </div>
-          
-          <div className="ai-usage-chart-container">
-            <svg viewBox="0 0 200 60" className="ai-usage-svg">
-              <path
-                d="M0,50 Q20,45 40,48 T80,35 T120,40 T160,20 T200,10"
-                fill="none"
-                stroke="#6D7CFF"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-
-          <div className="ai-usage-stats">
-            <p className="ai-usage-text">
-              <strong>7,250</strong> / 10,000 credits used
-            </p>
-            <div className="ai-usage-progress-bg">
-              <div className="ai-usage-progress-bar" style={{ width: '72.5%' }}></div>
+            <div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
+              <div className="ai-usage-header">
+                <span className="ai-usage-title">AI Usage</span>
+              </div>     
+              <div className="ai-usage-chart-container">
+                <svg viewBox="0 0 200 60" className="ai-usage-svg">
+                  <path
+                    d="M0,50 Q20,45 40,48 T80,35 T120,40 T160,20 T200,10"
+                    fill="none"
+                    stroke="#6D7CFF"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </div>
+              <div className="ai-usage-stats">
+                <p className="ai-usage-text">
+                  <strong>7,250</strong> / 10,000 credits used
+                </p>
+                <div className="ai-usage-progress-bg">
+                  <div className="ai-usage-progress-bar" style={{ width: '72.5%' }}></div>
+                </div>
+                <span className="ai-usage-reset">Resets in 18 days</span>
+              </div>
             </div>
-            <span className="ai-usage-reset">Resets in 18 days</span>
-          </div>
-        </div>
+        </nav>
+        
         {/* {!isCollapsed && (
         <div style={{marginTop: "auto", padding: "20px 16px", borderTop: "1px solid #eef2f7"}}>
   
