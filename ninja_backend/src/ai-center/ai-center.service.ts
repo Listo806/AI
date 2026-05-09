@@ -297,7 +297,7 @@ export class AiCenterService {
 
       const pipelineResult = await this.db.query(
         `
-        SELECT id, stage, value, status
+        SELECT id, stage, value, name, notes
         FROM deals
         WHERE team_id = $1
         LIMIT 30
