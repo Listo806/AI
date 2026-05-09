@@ -40,5 +40,10 @@ export class AuthController {
   async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
+
+  @Post('login-by-id')
+  async loginById(@Body() body: { userId: string }) {
+    return this.authService.loginById(body.userId);
+  }
 }
 
