@@ -8,6 +8,7 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -112,4 +113,24 @@ export class AiCenterController {
   async getQualificationRules(@CurrentUser() user: any) {
     return this.service.getQualificationRules(user.teamId);
   }
+
+  @Post('agent')
+  @ApiOperation({ summary: 'CORTEXA AI Agent Chat' })
+  @ApiResponse({ status: 200, description: 'AI response' })
+  async cortexaAgent(
+    @CurrentUser() user: any,
+    @Body()
+    body: {
+      message: string;
+      conversationId?: string;
+      workspaceId?: string;
+    },
+  ) {
+    return this.service.cortexaAgent({
+      user,
+      body,
+    });
+  }
+
+
 }

@@ -1,6 +1,6 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-
+import OpenAI from 'openai';
 const ALLOWED_TONES = ['professional', 'friendly', 'sales'] as const;
 export type AutoReplyTone = (typeof ALLOWED_TONES)[number];
 
@@ -39,6 +39,9 @@ export interface AppointmentSetterStatusResponse {
 
 @Injectable()
 export class AiCenterService {
+  private openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
   constructor(private readonly db: DatabaseService) {}
 
   async getOverview(teamId: string): Promise<OverviewResponse> {
@@ -239,4 +242,162 @@ export class AiCenterService {
       metadata: r.metadata ?? undefined,
     }));
   }
+
+  async cortexaAgent({
+      user,
+      body,
+    }: {
+      user: any;
+      body: {
+        message: string;
+        conversationId?: string;
+        workspaceId?: string;
+      };
+    }) {
+      const {
+        message,
+        conversationId,
+        workspaceId,
+      } = body;
+
+      if (!message?.trim()) {
+        throw new ForbiddenException('Message is required');
+      }
+
+      const teamId =
+        workspaceId ||
+        user?.teamId ||
+        user?.team_id;
+
+      /*
+      * LOAD REAL CRM DATA
+      */
+
+      const leadsResult = await this.db.query(
+        `
+        SELECT id, full_name, email, phone, status, created_at
+        FROM leads
+        WHERE team_id = $1
+        ORDER BY created_at DESC
+        LIMIT 30
+        `,
+        [teamId],
+      );
+
+      const propertiesResult = await this.db.query(
+        `
+        SELECT id, title, city, price, created_at
+        FROM properties
+        WHERE team_id = $1
+        ORDER BY created_at DESC
+        LIMIT 20
+        `,
+        [teamId],
+      );
+
+      const pipelineResult = await this.db.query(
+        `
+        SELECT id, stage, value, status
+        FROM deals
+        WHERE team_id = $1
+        LIMIT 30
+        `,
+        [teamId],
+      );
+
+      const crmContext = {
+        teamId,
+        userId: user?.id,
+
+        leads: leadsResult.rows,
+        properties: propertiesResult.rows,
+        pipeline: pipelineResult.rows,
+      };
+
+      /*
+      * SYSTEM PROMPT
+      */
+
+      const systemPrompt = `
+    You are CORTEXA AI, an AI agent built for real estate agents and teams.
+
+    You help users:
+    - manage leads
+    - follow-ups
+    - WhatsApp replies
+    - appointments
+    - pipelines
+    - listings
+    - ad copy
+    - CRM analytics
+
+    Only answer using available CRM data when data is required.
+
+    If data is missing:
+    - explain exactly what is missing
+    - explain what the user should connect or create
+
+    Be direct, professional, and action-oriented.
+    Always give next steps.
+    `;
+
+      /*
+      * OPENAI CALL
+      */
+
+      const response = await this.openai.responses.create({
+        model: 'gpt-5.5',
+        input: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+
+          {
+            role: 'system',
+            content: `CRM DATA:\n${JSON.stringify(crmContext)}`,
+          },
+
+          {
+            role: 'user',
+            content: message,
+          },
+        ],
+      });
+
+      /*
+      * SAVE AI ACTIVITY
+      */
+
+      await this.db.query(
+        `
+        INSERT INTO ai_activity (
+          team_id,
+          action,
+          outcome,
+          metadata,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, NOW())
+        `,
+        [
+          teamId,
+          'cortexa_chat',
+          'success',
+          JSON.stringify({
+            message,
+            conversationId,
+          }),
+        ],
+      );
+
+      return {
+        success: true,
+        answer: response.output_text,
+        conversationId:
+          conversationId || crypto.randomUUID(),
+
+        usage: response.usage || null,
+      };
+    }
 }

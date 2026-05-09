@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import apiClient from '../../api/apiClient';
+import { useAuth } from "../../context/AuthContext";
 import {
   Sparkles,
   Mic,
@@ -22,7 +24,50 @@ import centerlogoImg from "../../assets/cortexa/cortexaAI.png";
 export default function CortexaAI() {
   const { t } = useTranslation();
   const [prompt, setPrompt] = useState("");
+  const { user } = useAuth();
 
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  const sendToCortexaAI = async (message) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("listo_access_token");
+      const workspaceId = user?.teamId || user?.workspaceId || null;
+      const res = await apiClient.request("/ai-center/agent", {
+        method: "POST",
+        body: JSON.stringify({
+          message,
+          conversationId,
+          workspaceId,
+        }),
+      });
+      setConversationId(res.data.conversationId);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "user",
+          content: message,
+        },
+        {
+          role: "assistant",
+          content: res.data.answer,
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: err?.response?.data?.message || "AI request failed",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const aiActions = [
     {
       title: t("cortexa.auto_reply"),
@@ -86,13 +131,16 @@ export default function CortexaAI() {
     },
   ];
 
-  const handleActionClick = (actionPrompt) => {
+  const handleActionClick = async (actionPrompt) => {
     setPrompt(actionPrompt);
+
+    await sendToCortexaAI(actionPrompt);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!prompt.trim()) return;
-    console.log("Send prompt:", prompt);
+    await sendToCortexaAI(prompt);
+    setPrompt("");
   };
 
   return (
@@ -112,12 +160,26 @@ export default function CortexaAI() {
             {t("cortexa.ask")}
           </button>
 
-          <button>
-            {t("cortexa.workflows")}
-          </button>
+          <button>{t("cortexa.workflows")}</button>
         </div>
 
         <div className="ai-box">
+          <div className="ai-chat-results">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`ai-message ${msg.role}`}
+              >
+                {msg.content}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="ai-message assistant">
+                CORTEXA is thinking...
+              </div>
+            )}
+          </div>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
