@@ -152,7 +152,7 @@ console.log("USER IN SIDEBAR:", user);
   }
   
 
-  const showAiCenterAndBottom = canSeeAiCenter && !canSeeAdmin;
+  const showAiCenterAndBottom = canSeeAiCenter;
 
   return (
     <>
