@@ -124,7 +124,7 @@ export default function Sidebar({ isOpen, onClose, isCollapsed = false, onToggle
   const role = typeof user?.role === "string"
   ? user.role.toLowerCase()
   : user?.role;
-  const canSeeAiCenter = role && ["admin", "owner", "agent"].includes(role);
+  const canSeeAiCenter = role && ["super_admin", "admin", "owner", "agent"].includes(role);
   const canSeeAdmin = role === "super_admin" || role === "admin";
   const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
 console.log("USER IN SIDEBAR:", user);
@@ -135,7 +135,9 @@ console.log("USER IN SIDEBAR:", user);
     navItems = [{ path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" }];
   } else if (canSeeAdmin) {
     navItems = [
-      ...topNavItems,
+      { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
+      ...whatsappNavEntries,
+      { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
       { path: "/dashboard/admin/listings", icon: "file-check", labelKey: "nav.adminListings" },
       { path: "/dashboard/admin/users", icon: "shield", labelKey: "nav.adminUsers" },
       { path: "/dashboard/admin/teams", icon: "users", labelKey: "nav.adminTeams" },
@@ -291,26 +293,28 @@ console.log("USER IN SIDEBAR:", user);
             {/*</div>*/}
             </>
           )}
-          
-          {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.intelligence")}</div>}
-          {analyticsNavItems.map((item, index) => (
-              <NavLink
-                key={`${item.path}-${index}`}
-                to={item.path}
-                className={({ isActive }) =>
-                  `crm-nav-link ${isActive ? "active" : ""}`
-                }
-                onClick={onClose}
-                title={isCollapsed ? t(item.labelKey) : undefined}
-              >
-                <i data-lucide={item.icon} className="crm-nav-icon"></i>
-                {!isCollapsed && (
-                  <span className="crm-nav-label">{t(item.labelKey)}</span>
-                )}
-              </NavLink>
-            ))} 
-          
-          {showAiCenterAndBottom && (
+          {!canSeeAdmin && (
+            <>
+            {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.intelligence")}</div>}
+            {analyticsNavItems.map((item, index) => (
+                <NavLink
+                  key={`${item.path}-${index}`}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `crm-nav-link ${isActive ? "active" : ""}`
+                  }
+                  onClick={onClose}
+                  title={isCollapsed ? t(item.labelKey) : undefined}
+                >
+                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                  {!isCollapsed && (
+                    <span className="crm-nav-label">{t(item.labelKey)}</span>
+                  )}
+                </NavLink>
+              ))} 
+            </>
+          )}
+          {showAiCenterAndBottom && !canSeeAdmin && (
             <>
             
             {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.management")}</div>}

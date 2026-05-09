@@ -30,10 +30,10 @@ export default function VaRouteGuard({ children }) {
   }
 
   // Super Admin / Admin: only admin and account routes
-  if (role === 'super_admin' || role === 'admin') {
-    if (path.startsWith('/dashboard/admin') || path.startsWith('/account')) return children;
-    return <Navigate to="/dashboard/admin/listings" replace />;
-  }
+  // if (role === 'super_admin' || role === 'admin') {
+    // if (path.startsWith('/dashboard/admin') || path.startsWith('/account')) return children;
+    // return <Navigate to="/dashboard/admin/listings" replace />;
+  // }
 
   return children;
 }
