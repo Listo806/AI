@@ -30,7 +30,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @ApiTags('ai-center')
 @ApiBearerAuth('JWT-auth')
 @Controller('ai-center')
-@UseGuards(JwtAuthGuard, CrmAccessGuard, AiCenterAccessGuard)
+//@UseGuards(JwtAuthGuard, CrmAccessGuard, AiCenterAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard)
 export class AiCenterController {
   constructor(private readonly service: AiCenterService) {}
 
