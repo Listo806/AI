@@ -42,7 +42,8 @@ export default function CortexaAI() {
           workspaceId,
         }),
       });
-      setConversationId(res.data.conversationId);
+      setConversationId(res.conversationId);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -51,9 +52,10 @@ export default function CortexaAI() {
         },
         {
           role: "assistant",
-          content: res.data.answer,
+          content: res.answer,
         },
       ]);
+      
     } catch (err) {
       console.error(err);
 
