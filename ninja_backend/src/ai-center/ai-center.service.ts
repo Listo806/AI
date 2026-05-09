@@ -275,7 +275,7 @@ export class AiCenterService {
 
       const leadsResult = await this.db.query(
         `
-        SELECT id, full_name, email, phone, status, created_at
+        SELECT id, name, email, phone, status, notes, source, created_at
         FROM leads
         WHERE team_id = $1
         ORDER BY created_at DESC
