@@ -269,6 +269,12 @@ export class AiCenterService {
         user?.teamId ||
         user?.team_id;
 
+      if (!teamId) {
+        return {
+          success: false,
+          answer: 'You need to create or join a team before using CORTEXA AI.',
+        };
+      }  
       /*
       * LOAD REAL CRM DATA
       */
