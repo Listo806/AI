@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import apiClient from '../../api/apiClient';
+import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import {
   Sparkles,
@@ -24,6 +24,7 @@ import centerlogoImg from "../../assets/cortexa/cortexaAI.png";
 export default function CortexaAI() {
   const { t } = useTranslation();
   const [prompt, setPrompt] = useState("");
+  const [mode, setMode] = useState("ask");
   const { user } = useAuth();
 
   const [messages, setMessages] = useState([]);
@@ -55,7 +56,6 @@ export default function CortexaAI() {
           content: res.answer,
         },
       ]);
-      
     } catch (err) {
       console.error(err);
 
@@ -157,29 +157,32 @@ export default function CortexaAI() {
         </div>
 
         <div className="ai-tabs">
-          <button className="active ask">
+          <button
+            className={mode === "ask" ? "active ask" : ""}
+            onClick={() => setMode("ask")}
+          >
             <Sparkles />
             {t("cortexa.ask")}
           </button>
 
-          <button>{t("cortexa.workflows")}</button>
+          <button
+            className={mode === "workflows" ? "active" : ""}
+            onClick={() => setMode("workflows")}
+          >
+            {t("cortexa.workflows")}
+          </button>
         </div>
 
         <div className="ai-box">
           <div className="ai-chat-results">
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`ai-message ${msg.role}`}
-              >
+              <div key={index} className={`ai-message ${msg.role}`}>
                 {msg.content}
               </div>
             ))}
 
             {loading && (
-              <div className="ai-message assistant">
-                CORTEXA is thinking...
-              </div>
+              <div className="ai-message assistant">CORTEXA is thinking...</div>
             )}
           </div>
           <textarea
