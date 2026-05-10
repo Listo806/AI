@@ -14,5 +14,13 @@ export class AppController {
       service: 'ninja_backend',
     };
   }
+
+  @Get()
+  getRoot() {
+    return {
+      status: 'ok',
+      message: 'API is running',
+    };
+  }
 }
 
