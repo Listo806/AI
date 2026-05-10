@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
@@ -26,6 +26,63 @@ export default function CortexaAI() {
   const [prompt, setPrompt] = useState("");
   const [mode, setMode] = useState("ask");
   const { user } = useAuth();
+
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+
+  React.useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn("Speech recognition not supported");
+      return;
+    }
+
+    const recognitionInstance = new SpeechRecognition();
+
+    recognitionInstance.continuous = false;
+    recognitionInstance.interimResults = true;
+    recognitionInstance.lang = "en-US";
+
+    recognitionInstance.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognitionInstance.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionInstance.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
+
+    recognitionInstance.onresult = (event) => {
+      let transcript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+
+      setPrompt(transcript);
+    };
+
+    setRecognition(recognitionInstance);
+  }, []);
+
+  const handleMicClick = () => {
+    if (!recognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  };
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +126,49 @@ export default function CortexaAI() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fileInputRef = useRef(null);
+  const [showUploadMenu, setShowUploadMenu] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileSelect = async (event) => {
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length) return;
+
+    try {
+      setUploading(true);
+
+      const mappedFiles = files.map((file) => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file,
+        uploading: false,
+      }));
+
+      setAttachedFiles((prev) => [...prev, ...mappedFiles]);
+
+      // FUTURE:
+      // upload API here
+      // const formData = new FormData()
+
+      console.log("FILES:", mappedFiles);
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
+      setUploading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+  const removeAttachment = (id) => {
+    setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
   };
   const aiActions = [
     {
@@ -190,21 +290,111 @@ export default function CortexaAI() {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder={t("cortexa.ai_placeholder")}
           />
+          {attachedFiles.length > 0 && (
+            <div className="ai-attachments">
+              {attachedFiles.map((file) => (
+                <div key={file.id} className="ai-attachment-item">
+                  <div className="ai-attachment-left">
+                    <span className="ai-attachment-name">{file.name}</span>
 
+                    <span className="ai-attachment-size">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+
+                  <button
+                    className="ai-attachment-remove"
+                    onClick={() => removeAttachment(file.id)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            multiple
+            accept="
+              image/*,
+              .pdf,
+              .doc,
+              .docx,
+              .xls,
+              .xlsx,
+              .csv,
+              .txt
+            "
+            onChange={handleFileSelect}
+          />
           <div className="ai-actions-bar">
             <div className="left">
-              <button className="circle-btn">
-                <Plus size={18} />
-              </button>
+              <div className="upload-menu-wrapper">
+                <button
+                  className="circle-btn"
+                  onClick={() => setShowUploadMenu((v) => !v)}
+                >
+                  <Plus size={18} />
+                </button>
+
+                {showUploadMenu && (
+                  <div className="upload-menu">
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                    >
+                      Upload File
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                    >
+                      Upload Image
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                    >
+                      Attach Document
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        fileInputRef.current?.click();
+                        setShowUploadMenu(false);
+                      }}
+                    >
+                      Import CSV / Leads
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="right">
-              <button className="circle-btn">
+              <button
+                className={`circle-btn ${isListening ? "listening" : ""}`}
+                onClick={handleMicClick}
+              >
                 <Mic size={18} />
               </button>
 
-              <button className="send-btn" onClick={handleSubmit}>
-                <Send size={16} />
+              <button
+                className="send-btn"
+                onClick={handleSubmit}
+                disabled={loading || uploading}
+              >
+                {loading || uploading ? "..." : <Send size={16} />}
               </button>
             </div>
           </div>
