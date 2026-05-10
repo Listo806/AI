@@ -2,26 +2,33 @@
   command = "npm run build"
   publish = "dist"
 
-# ─────────────────────────────────────────────────────────────
-# listostays.com → always serves vacation rentals
-# Root of listostays.com redirects to /vacation-rentals/search
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# Redirect root domain → vacation rentals page
+# ─────────────────────────────────────────────
 
 [[redirects]]
-  from = "https://listostays.com/"
-  to = "https://listostays.com/vacation-rentals/search"
+  from = "/"
+  to = "/vacation-rentals/search"
   status = 302
-  force = true
 
 [[redirects]]
-  from = "https://www.listostays.com/"
-  to = "https://listostays.com/vacation-rentals/search"
+  from = "/vacation-rentals"
+  to = "/vacation-rentals/search"
   status = 302
+
+# ─────────────────────────────────────────────
+# WWW → non-WWW redirect (recommended SEO standard)
+# ─────────────────────────────────────────────
+
+[[redirects]]
+  from = "https://www.listostays.com/*"
+  to = "https://listostays.com/:splat"
+  status = 301
   force = true
 
-# ─────────────────────────────────────────────────────────────
-# SPA fallback — all other routes serve index.html (must be last)
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# SPA fallback (IMPORTANT: must be last)
+# ─────────────────────────────────────────────
 
 [[redirects]]
   from = "/*"
