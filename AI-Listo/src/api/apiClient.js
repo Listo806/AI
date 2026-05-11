@@ -142,9 +142,18 @@ class ApiClient {
       }
 
       const error = new Error(errorMessage);
-      error.isSubscriptionError = isSubscriptionError;
-      error.status = response.status;
-      throw error;
+
+        error.isSubscriptionError = isSubscriptionError;
+        error.status = response.status;
+
+        error.response = {
+          status: response.status,
+          data: {
+            message: errorMessage,
+          },
+        };
+
+        throw error;
     }
 
     try {

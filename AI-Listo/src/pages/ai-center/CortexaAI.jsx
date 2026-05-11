@@ -98,6 +98,14 @@ export default function CortexaAI() {
           message,
           conversationId,
           workspaceId,
+          attachments: attachedFiles.map((file) => ({
+              name: file.name,
+              url: file.url,
+              key: file.key,
+              type: file.type,
+              mimeType: file.mimeType,
+              size: file.size,
+            })),
         }),
       });
       setConversationId(res.conversationId);
@@ -141,22 +149,30 @@ export default function CortexaAI() {
     try {
       setUploading(true);
 
-      const mappedFiles = files.map((file) => ({
+      const formData = new FormData();
+
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await apiClient.request(
+        "/ai-center/upload",
+        {
+          method: "POST",
+          body: formData,
+          headers: {}, // IMPORTANT
+        }
+      );
+
+      const mappedFiles = res.files.map((file) => ({
         id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        file,
-        uploading: false,
+        ...file,
       }));
 
-      setAttachedFiles((prev) => [...prev, ...mappedFiles]);
-
-      // FUTURE:
-      // upload API here
-      // const formData = new FormData()
-
-      console.log("FILES:", mappedFiles);
+      setAttachedFiles((prev) => [
+        ...prev,
+        ...mappedFiles,
+      ]);
     } catch (err) {
       console.error("Upload failed", err);
     } finally {
@@ -167,6 +183,7 @@ export default function CortexaAI() {
       }
     }
   };
+
   const removeAttachment = (id) => {
     setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
   };
@@ -243,6 +260,7 @@ export default function CortexaAI() {
     if (!prompt.trim()) return;
     await sendToCortexaAI(prompt);
     setPrompt("");
+    setAttachedFiles([]);
   };
 
   return (
@@ -300,6 +318,11 @@ export default function CortexaAI() {
                     <span className="ai-attachment-size">
                       {(file.size / 1024).toFixed(1)} KB
                     </span>
+                    {file.uploading && (
+                      <span className="ai-attachment-uploading">
+                        Uploading...
+                      </span>
+                    )}
                   </div>
 
                   <button
