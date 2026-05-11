@@ -1,11 +1,9 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import OpenAI from 'openai';
-import { S3Service } from '../common/aws/s3.service';
+import { Injectable, ForbiddenException } from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import OpenAI from "openai";
+import { S3Service } from "../common/aws/s3.service";
 
-
-
-const ALLOWED_TONES = ['professional', 'friendly', 'sales'] as const;
+const ALLOWED_TONES = ["professional", "friendly", "sales"] as const;
 export type AutoReplyTone = (typeof ALLOWED_TONES)[number];
 
 export interface OverviewResponse {
@@ -61,7 +59,7 @@ export class AiCenterService {
     return {
       ai_auto_reply: {
         enabled: team.ai_auto_reply_enabled ?? true,
-        tone: team.ai_auto_reply_tone ?? 'professional',
+        tone: team.ai_auto_reply_tone ?? "professional",
       },
       ai_appointment_setter: {
         enabled: team.ai_appointment_setter_enabled ?? false,
@@ -76,7 +74,7 @@ export class AiCenterService {
     const team = await this.getTeamAiSettings(teamId);
     return {
       enabled: team.ai_auto_reply_enabled ?? true,
-      tone: team.ai_auto_reply_tone ?? 'professional',
+      tone: team.ai_auto_reply_tone ?? "professional",
     };
   }
 
@@ -94,7 +92,7 @@ export class AiCenterService {
     }
     if (body.tone !== undefined) {
       if (!ALLOWED_TONES.includes(body.tone as AutoReplyTone)) {
-        throw new ForbiddenException('Invalid tone');
+        throw new ForbiddenException("Invalid tone");
       }
       updates.push(`ai_auto_reply_tone = $${n++}`);
       params.push(body.tone);
@@ -104,7 +102,7 @@ export class AiCenterService {
 
     params.push(teamId);
     await this.db.query(
-      `UPDATE teams SET ${updates.join(', ')}, updated_at = NOW() WHERE id = $${n}`,
+      `UPDATE teams SET ${updates.join(", ")}, updated_at = NOW() WHERE id = $${n}`,
       params,
     );
     return this.getAutoReply(teamId);
@@ -126,7 +124,9 @@ export class AiCenterService {
     return { ok: true };
   }
 
-  async getAppointmentSetterStatus(teamId: string): Promise<AppointmentSetterStatusResponse> {
+  async getAppointmentSetterStatus(
+    teamId: string,
+  ): Promise<AppointmentSetterStatusResponse> {
     const team = await this.getTeamAiSettings(teamId);
     const connectedChannels = await this.getActiveChannels(teamId);
 
@@ -141,7 +141,10 @@ export class AiCenterService {
     };
   }
 
-  async getActivity(teamId: string, limit: number = 10): Promise<RecentAiAction[]> {
+  async getActivity(
+    teamId: string,
+    limit: number = 10,
+  ): Promise<RecentAiAction[]> {
     return this.getRecentAiActions(teamId, limit);
   }
 
@@ -175,15 +178,16 @@ export class AiCenterService {
     const r = rows[0];
     const connectedCalendars: string[] = [];
     return {
-      name: r?.name ?? 'Default',
+      name: r?.name ?? "Default",
       updated_at: r?.updated_at ?? null,
       rule_summary: {
-        budget_constraint: 'Property price <= lead parsed_budget_max',
-        location_constraint: 'Property city must match lead parsed_city (case-insensitive)',
+        budget_constraint: "Property price <= lead parsed_budget_max",
+        location_constraint:
+          "Property city must match lead parsed_city (case-insensitive)",
         booking_enabled: connectedCalendars.length > 0,
         escalation_thresholds: [
-          'Lead requests human (agent_request intent)',
-          'Qualification complete but booking blocked (no calendar)',
+          "Lead requests human (agent_request intent)",
+          "Qualification complete but booking blocked (no calendar)",
         ],
       },
     };
@@ -207,16 +211,16 @@ export class AiCenterService {
 
     const platformWhatsApp = process.env.TWILIO_WHATSAPP_FROM?.trim();
     if (platformWhatsApp) {
-      channels.push('whatsapp');
+      channels.push("whatsapp");
     }
-    if (!channels.includes('whatsapp')) {
+    if (!channels.includes("whatsapp")) {
       const { rows: agentWa } = await this.db.query(
         `SELECT 1 FROM agent_whatsapp_connections aw
          INNER JOIN users u ON u.id = aw.agent_id AND u.team_id = $1
          WHERE aw.status = 'connected' LIMIT 1`,
         [teamId],
       );
-      if (agentWa.length > 0) channels.push('whatsapp');
+      if (agentWa.length > 0) channels.push("whatsapp");
     }
 
     const { rows: agentIg } = await this.db.query(
@@ -225,12 +229,15 @@ export class AiCenterService {
        WHERE ai.status = 'connected' LIMIT 1`,
       [teamId],
     );
-    if (agentIg.length > 0) channels.push('instagram');
+    if (agentIg.length > 0) channels.push("instagram");
 
     return channels;
   }
 
-  private async getRecentAiActions(teamId: string, limit: number): Promise<RecentAiAction[]> {
+  private async getRecentAiActions(
+    teamId: string,
+    limit: number,
+  ): Promise<RecentAiAction[]> {
     const { rows } = await this.db.query(
       `SELECT id, action, lead_id, channel, outcome, metadata, created_at
        FROM ai_activity
@@ -251,87 +258,80 @@ export class AiCenterService {
   }
 
   async cortexaAgent({
-      user,
-      body,
-    }: {
-      user: any;
-      body: {
-        message: string;
-        conversationId?: string;
-        workspaceId?: string;
+    user,
+    body,
+  }: {
+    user: any;
+    body: {
+      message: string;
+      conversationId?: string;
+      workspaceId?: string;
+    };
+  }) {
+    const { message, conversationId, workspaceId } = body;
+
+    if (!message?.trim()) {
+      throw new ForbiddenException("Message is required");
+    }
+
+    const teamId = workspaceId || user?.teamId || user?.team_id;
+
+    if (!teamId) {
+      return {
+        success: false,
+        answer: "You need to create or join a team before using CORTEXA AI.",
       };
-    }) {
-      const {
-        message,
-        conversationId,
-        workspaceId,
-      } = body;
+    }
+    /*
+     * LOAD REAL CRM DATA
+     */
 
-      if (!message?.trim()) {
-        throw new ForbiddenException('Message is required');
-      }
-
-      const teamId =
-        workspaceId ||
-        user?.teamId ||
-        user?.team_id;
-
-      if (!teamId) {
-        return {
-          success: false,
-          answer: 'You need to create or join a team before using CORTEXA AI.',
-        };
-      }  
-      /*
-      * LOAD REAL CRM DATA
-      */
-
-      const leadsResult = await this.db.query(
-        `
+    const leadsResult = await this.db.query(
+      `
         SELECT id, name, email, phone, status, notes, source, created_at
         FROM leads
         WHERE team_id = $1
         ORDER BY created_at DESC
         LIMIT 30
         `,
-        [teamId],
-      );
+      [teamId],
+    );
 
-      const propertiesResult = await this.db.query(
-        `
+    const propertiesResult = await this.db.query(
+      `
         SELECT id, title, city, price, created_at
         FROM properties
         WHERE team_id = $1
         ORDER BY created_at DESC
         LIMIT 20
         `,
-        [teamId],
-      );
+      [teamId],
+    );
 
-      const pipelineResult = await this.db.query(
-        `
+    const pipelineResult = await this.db.query(
+      `
         SELECT id, stage, value, name, notes
         FROM deals
         WHERE team_id = $1
         LIMIT 30
         `,
-        [teamId],
-      );
+      [teamId],
+    );
 
-      const crmContext = {
-        teamId,
-        userId: user?.id,
+    const crmContext = {
+      teamId,
+      userId: user?.id,
 
-        leads: leadsResult.rows,
-        properties: propertiesResult.rows,
-        pipeline: pipelineResult.rows,
-      };
+      leads: leadsResult.rows,
+      properties: propertiesResult.rows,
+      pipeline: pipelineResult.rows,
+    };
 
-      /*
-      * SYSTEM PROMPT
-      */
+    /*
+     * SYSTEM PROMPT
+     */
 
-      const systemPrompt = `
+    const systemPrompt = `
     You are CORTEXA AI, an AI agent built for real estate agents and teams.
 
     You help users:
@@ -354,36 +354,36 @@ export class AiCenterService {
     Always give next steps.
     `;
 
-      /*
-      * OPENAI CALL
-      */
+    /*
+     * OPENAI CALL
+     */
 
-      const response = await this.openai.responses.create({
-        model: 'gpt-5.5',
-        input: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
+    const response = await this.openai.responses.create({
+      model: "gpt-5.5",
+      input: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
 
-          {
-            role: 'system',
-            content: `CRM DATA:\n${JSON.stringify(crmContext)}`,
-          },
+        {
+          role: "system",
+          content: `CRM DATA:\n${JSON.stringify(crmContext)}`,
+        },
 
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-      });
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+    });
 
-      /*
-      * SAVE AI ACTIVITY
-      */
+    /*
+     * SAVE AI ACTIVITY
+     */
 
-      await this.db.query(
-        `
+    await this.db.query(
+      `
         INSERT INTO ai_activity (
           team_id,
           action,
@@ -393,43 +393,43 @@ export class AiCenterService {
         )
         VALUES ($1, $2, $3, $4, NOW())
         `,
-        [
-          teamId,
-          'cortexa_chat',
-          'success',
-          JSON.stringify({
-            message,
-            conversationId,
-          }),
-        ],
-      );
+      [
+        teamId,
+        "cortexa_chat",
+        "success",
+        JSON.stringify({
+          message,
+          conversationId,
+        }),
+      ],
+    );
 
-      return {
-        success: true,
-        answer: response.output_text,
-        conversationId:
-          conversationId || crypto.randomUUID(),
+    return {
+      success: true,
+      answer: response.output_text,
+      conversationId: conversationId || crypto.randomUUID(),
 
-        usage: response.usage || null,
-      };
+      usage: response.usage || null,
+    };
+  }
+
+  async uploadFiles({
+    files,
+    user,
+  }: {
+    files: Express.Multer.File[];
+    user: any;
+  }) {
+    if (!files?.length) {
+      throw new ForbiddenException("No files uploaded");
     }
-
-    async uploadFiles({
-      files,
-      user,
-    }: {
-      files: Express.Multer.File[];
-      user: any;
-    }) {
-      if (!files?.length) {
-        throw new ForbiddenException('No files uploaded');
-      }
-
+    console.log("FILE:", file);
+    console.log("USER:", user);
+    try {
       const uploaded = [];
 
       for (const file of files) {
-        const result =
-          await this.s3Service.uploadFile(file);
+        const result = await this.s3Service.uploadFile(file);
 
         uploaded.push({
           name: file.originalname,
@@ -444,8 +444,10 @@ export class AiCenterService {
         success: true,
         files: uploaded,
       };
+    } catch (err) {
+      console.error("S3 ERROR:", err);
+
+      throw err;
     }
-
-
-
+  }
 }

@@ -139,6 +139,7 @@ export class AiCenterController {
     });
   }
 
+  
   @Post('upload')
   @UseInterceptors(
     FilesInterceptor('files', 10),
@@ -147,10 +148,13 @@ export class AiCenterController {
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: any,
   ) {
-    return this.service.uploadFiles({
-      files,
-      user,
-    });
+    try {
+      return await this.service.uploadFile(file, user);
+    } catch (error) {
+      console.error('UPLOAD ERROR:', error);
+
+      throw error;
+    }
   }
 
 }

@@ -163,7 +163,7 @@ export default function CortexaAI() {
           headers: {}, // IMPORTANT
         }
       );
-
+      console.log("UPLOAD RESPONSE:", res);  
       const mappedFiles = res.files.map((file) => ({
         id: crypto.randomUUID(),
         ...file,
@@ -175,6 +175,8 @@ export default function CortexaAI() {
       ]);
     } catch (err) {
       console.error("Upload failed", err);
+      console.log(err.message);
+      console.log(err.response);
     } finally {
       setUploading(false);
 
@@ -258,9 +260,18 @@ export default function CortexaAI() {
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
-    await sendToCortexaAI(prompt);
-    setPrompt("");
-    setAttachedFiles([]);
+
+    try {
+      setLoading(true);
+      await sendToCortexaAI(prompt);
+      setPrompt("");
+      setAttachedFiles([]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setUploading(false);
+    }
   };
 
   return (
