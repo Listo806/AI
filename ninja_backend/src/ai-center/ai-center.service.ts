@@ -423,7 +423,7 @@ export class AiCenterService {
     if (!files?.length) {
       throw new ForbiddenException("No files uploaded");
     }
-    console.log("FILE:", file);
+    console.log("FILE:", files);
     console.log("USER:", user);
     try {
       const uploaded = [];
