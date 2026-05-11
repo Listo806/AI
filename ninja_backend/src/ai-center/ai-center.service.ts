@@ -276,8 +276,13 @@ export class AiCenterService {
       workspaceId,
     } = body;
 
-    if (!message?.trim()) {
-      throw new ForbiddenException("Message is required");
+    if (
+      !message?.trim() &&
+      (!attachments || attachments.length === 0)
+    ) {
+      throw new ForbiddenException(
+        "Message or attachment is required",
+      );
     }
 
     const teamId = workspaceId || user?.teamId || user?.team_id;
@@ -379,7 +384,9 @@ export class AiCenterService {
 
         {
           role: "user",
-          content: message,
+          content:
+            message ||
+            `User uploaded ${attachments.length} attachment(s). Analyze them.`,
         },
       ],
     });

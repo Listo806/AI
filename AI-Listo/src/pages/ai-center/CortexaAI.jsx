@@ -87,10 +87,12 @@ export default function CortexaAI() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const sendToCortexaAI = async (payload) => {
+  const sendToCortexaAI = async (payload = {}) => {
     try {
-      setLoading(true);
-      const token = localStorage.getItem("listo_access_token");
+      if (!payload.message && (!payload.attachments || !payload.attachments.length)) {
+        return;
+      }
+      
       const workspaceId = user?.teamId || user?.workspaceId || null;
       const res = await apiClient.request("/ai-center/agent", {
         method: "POST",
@@ -277,25 +279,27 @@ export default function CortexaAI() {
   const handleActionClick = async (actionPrompt) => {
     setPrompt(actionPrompt);
 
-    await sendToCortexaAI(actionPrompt);
+    await sendToCortexaAI({
+      message: actionPrompt,
+      attachments: [],
+    });
   };
 
   const handleSubmit = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() && attachedFiles.length === 0) {
+      return;
+    }
 
     try {
-      setLoading(true);
       await sendToCortexaAI({
         message: prompt,
         attachments: attachedFiles,
       });
 
       setPrompt("");
+      setAttachedFiles([]);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
-      setUploading(false);
     }
   };
 
