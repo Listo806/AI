@@ -1,186 +1,280 @@
-import { useTranslation } from 'react-i18next';
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import "./AppsIntegrationsHub.css";
 
-export default function Integrations() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+import {
+  Search,
+  Zap,
+  Mail,
+  Webhook,
+  CalendarDays,
+  Camera,
+  MessageCircle,
+  Database,
+  Cloud,
+  FileSpreadsheet,
+  FolderSync,
+  Workflow,
+  BarChart3,
+  Globe,
+  Link2,
+  Building2,
+  ChevronRight,
+} from "lucide-react";
 
-  // Initialize Lucide icons
-  useEffect(() => {
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-  });
+const categories = [
+  "All Apps",
+  "Communication",
+  "Automation",
+  "Calendars",
+  "Marketing",
+  "Storage",
+  "CRM Imports",
+  "API & Webhooks",
+];
 
-  const integrations = [
-    {
-      name: t('integrations.emailProvider'),
-      status: 'available',
-      description: t('integrations.emailProviderDesc'),
-      icon: 'mail',
-      path: '/dashboard/integrations/email',
-    },
-    {
-      name: t('integrations.zapier'),
-      status: 'available',
-      description: t('integrations.zapierDescUpdated'),
-      icon: 'zap',
-      path: '/dashboard/integrations/zapier',
-    },
-    {
-      name: t('integrations.webhooks'),
-      status: 'available',
-      description: t('integrations.webhooksDescUpdated'),
-      icon: 'plug',
-      path: '/dashboard/integrations/webhooks',
-    }
-  ];
+const integrations = [
+  {
+    title: "Zapier",
+    description: "Connect thousands of apps and automate workflows instantly.",
+    icon: Zap,
+    iconColor: "#ff5a1f",
+    iconBg: "#fff1eb",
+    category: "Automation",
+    status: "Connected",
+  },
+  {
+    title: "Email Provider",
+    description: "Connect Gmail, Outlook, SMTP, and outbound email services.",
+    icon: Mail,
+    iconColor: "#2563eb",
+    iconBg: "#eff6ff",
+    category: "Communication",
+    status: "Configure",
+  },
+  {
+    title: "Webhooks",
+    description:
+      "Send and receive real-time API events and automation triggers.",
+    icon: Webhook,
+    iconColor: "#7c3aed",
+    iconBg: "#f5f3ff",
+    category: "API & Webhooks",
+    status: "Active",
+  },
+  {
+    title: "Google Calendar",
+    description: "Sync appointments, meetings, and scheduling automatically.",
+    icon: CalendarDays,
+    iconColor: "#16a34a",
+    iconBg: "#f0fdf4",
+    category: "Calendars",
+    status: "Connect",
+  },
+  {
+    title: "Instagram",
+    description: "Connect Instagram messaging, lead capture, and automation.",
+    icon: Camera,
+    iconColor: "#e1306c",
+    iconBg: "#fff0f6",
+    category: "Marketing",
+    status: "Connected",
+  },
+  {
+    title: "WhatsApp",
+    description: "Sync WhatsApp conversations and automate lead engagement.",
+    icon: MessageCircle,
+    iconColor: "#22c55e",
+    iconBg: "#f0fdf4",
+    category: "Communication",
+    status: "Connected",
+  },
+  {
+    title: "CRM Migration Tool",
+    description:
+      "Import leads, pipelines, contacts, and properties from another CRM.",
+    icon: Database,
+    iconColor: "#0f766e",
+    iconBg: "#ecfeff",
+    category: "CRM Imports",
+    status: "Import",
+  },
+  {
+    title: "Google Drive",
+    description: "Store contracts, property documents, and media in the cloud.",
+    icon: Cloud,
+    iconColor: "#0284c7",
+    iconBg: "#f0f9ff",
+    category: "Storage",
+    status: "Connect",
+  },
+  {
+    title: "CSV Lead Import",
+    description:
+      "Upload lead lists and import contacts into your CRM instantly.",
+    icon: FileSpreadsheet,
+    iconColor: "#15803d",
+    iconBg: "#f0fdf4",
+    category: "CRM Imports",
+    status: "Import",
+  },
+  {
+    title: "Property Feed Sync",
+    description: "Sync listings and property feeds from external platforms.",
+    icon: FolderSync,
+    iconColor: "#d97706",
+    iconBg: "#fffbeb",
+    category: "CRM Imports",
+    status: "Sync",
+  },
+  {
+    title: "Make.com",
+    description: "Create advanced automations and visual workflow systems.",
+    icon: Workflow,
+    iconColor: "#7c3aed",
+    iconBg: "#f5f3ff",
+    category: "Automation",
+    status: "Connect",
+  },
+  {
+    title: "Google Ads",
+    description:
+      "Track campaigns, leads, and ad performance directly inside CORTEXA.",
+    icon: BarChart3,
+    iconColor: "#ea4335",
+    iconBg: "#fef2f2",
+    category: "Marketing",
+    status: "Connect",
+  },
+  {
+    title: "Meta Ads",
+    description: "Sync Facebook and Instagram leads directly into your CRM.",
+    icon: Globe,
+    iconColor: "#1877f2",
+    iconBg: "#eff6ff",
+    category: "Marketing",
+    status: "Connect",
+  },
+  {
+    title: "API Access",
+    description:
+      "Connect external CRMs, websites, and custom systems using APIs.",
+    icon: Link2,
+    iconColor: "#475569",
+    iconBg: "#f8fafc",
+    category: "API & Webhooks",
+    status: "Configure",
+  },
+  {
+    title: "MLS / IDX Feed",
+    description:
+      "Import and synchronize property listings from MLS/IDX systems.",
+    icon: Building2,
+    iconColor: "#b45309",
+    iconBg: "#fefce8",
+    category: "CRM Imports",
+    status: "Connect",
+  },
+];
 
-  const getStatusBadge = (status) => {
-    if (status === 'available') {
-      return (
-        <span style={{
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '12px',
-          fontWeight: '600',
-          background: '#eff6ff',
-          color: '#2563eb',
-          border: '1px solid #bfdbfe'
-        }}>
-          {t('integrations.available')}
-        </span>
-      );
-    }
-    if (status === 'connected') {
-      return (
-        <span style={{
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '12px',
-          fontWeight: '600',
-          background: '#f0fdf4',
-          color: '#16a34a',
-          border: '1px solid #86efac'
-        }}>
-          {t('common.connected')}
-        </span>
-      );
-    }
-    if (status === 'coming_soon') {
-      return (
-        <span style={{
-          padding: '6px 12px',
-          borderRadius: '12px',
-          fontSize: '12px',
-          fontWeight: '600',
-          background: '#f1f5f9',
-          color: '#64748b',
-          border: '1px solid #cbd5e1'
-        }}>
-          {t('integrations.comingSoon')}
-        </span>
-      );
-    }
-    return (
-      <span style={{
-        padding: '6px 12px',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: '600',
-        background: '#f1f5f9',
-        color: '#64748b',
-        border: '1px solid #cbd5e1'
-      }}>
-        {t('common.notConnected')}
-      </span>
-    );
-  };
+export default function AppsIntegrationsHub() {
+  const [activeCategory, setActiveCategory] = useState("All Apps");
+
+  const filteredIntegrations =
+    activeCategory === "All Apps"
+      ? integrations
+      : integrations.filter(
+          (integration) => integration.category === activeCategory,
+        );
 
   return (
-    <div>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>{t('integrations.title')}</h1>
+    <div className="apps-page">
+      <div className="apps-layout">
+        {/* SIDEBAR */}
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <h1 className="sidebar-title">Apps & Integrations</h1>
 
-      <p style={{
-        marginBottom: '24px',
-        fontSize: '16px',
-        color: '#64748b',
-        lineHeight: '1.6'
-      }}>
-        {t('integrations.description')}
-      </p>
+            <p className="sidebar-description">
+              Connect your CRM, apps, automations, calendars, APIs, and external
+              services.
+            </p>
+          </div>
 
-      <div
-        className="integrations-grid"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-          marginBottom: '24px'
-        }}
-      >
-        {integrations.map((integration, index) => (
-          <div key={index} className="crm-section"
-            style={{ cursor: integration.path ? 'pointer' : 'default' }}
-            onClick={() => { if (integration.path) navigate(integration.path); }}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  fontSize: '24px',
-                  width: '40px',
-                  height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: '#f1f5f9',
-                  borderRadius: '8px'
-                }}>
-                  <i data-lucide={integration.icon} style={{ width: '24px', height: '24px', stroke: '#64748b', strokeWidth: 2 }}></i>
-                </div>
-                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
-                  {integration.name}
-                </h2>
-              </div>
-              {getStatusBadge(integration.status)}
+          <div className="category-list">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`category-btn ${
+                  activeCategory === category ? "active" : ""
+                }`}
+              >
+                <span>{category}</span>
+
+                <span className="arrow">›</span>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <main className="main-content">
+          {/* TOPBAR */}
+          <div className="topbar">
+            <div>
+              <h2 className="page-title">{activeCategory}</h2>
+
+              <p className="page-description">
+                Connect and manage integrations for your real estate business.
+              </p>
             </div>
 
-            <p style={{
-              color: '#64748b',
-              marginBottom: '20px',
-              fontSize: '14px',
-              lineHeight: '1.5'
-            }}>
-              {integration.description}
-            </p>
-
-            {integration.path && (
-              <button
-                className="crm-btn crm-btn-primary integration-connect-btn"
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  fontSize: '16px',
-                  minHeight: '48px'
-                }}
-                onClick={(e) => { e.stopPropagation(); navigate(integration.path); }}
-              >
-                {t('integrations.configure')} {integration.name}
-              </button>
-            )}
+            <div className="search-wrapper">
+              <input
+                type="text"
+                placeholder="Search integrations..."
+                className="search-input"
+              />
+            </div>
           </div>
-        ))}
-      </div>
 
-      <p style={{ fontSize: '14px', color: '#64748b', marginTop: '8px' }}>
-        {t('integrations.messagingHint')}
-      </p>
+          {/* GRID */}
+          <div className="integrations-grid">
+            {filteredIntegrations.map((integration) => {
+              const Icon = integration.icon;
+
+              return (
+                <div key={integration.title} className="integration-card">
+                  <div
+                    className="integration-icon"
+                    style={{
+                      backgroundColor: integration.iconBg,
+                    }}
+                  >
+                    <Icon
+                      size={24}
+                      color={integration.iconColor}
+                      strokeWidth={2.2}
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="integration-title">{integration.title}</h3>
+
+                    <p className="integration-description">
+                      {integration.description}
+                    </p>
+
+                    <button className="integration-btn">
+                      {integration.status}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

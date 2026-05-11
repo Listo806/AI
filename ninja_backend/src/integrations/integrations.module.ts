@@ -6,6 +6,7 @@ import { AiAssistantModule } from './ai/ai-assistant.module';
 import { PushNotificationModule } from './notifications/push-notification.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { SendgridModule } from './email/sendgrid.module';
+import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SendgridModule } from './email/sendgrid.module';
     PushNotificationModule,
     WebhooksModule,
     SendgridModule,
+    AppsIntegrationsModule,
   ],
   controllers: [],
   providers: [],
@@ -27,6 +29,7 @@ import { SendgridModule } from './email/sendgrid.module';
     PushNotificationModule,
     WebhooksModule,
     SendgridModule,
+    AppsIntegrationsModule,
   ],
 })
 export class IntegrationsModule {}
