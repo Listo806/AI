@@ -149,7 +149,10 @@ export class AiCenterController {
     @CurrentUser() user: any,
   ) {
     try {
-      return await this.service.uploadFiles(files, user);
+      return await this.service.uploadFiles({
+        files,
+        user,
+      });
     } catch (error) {
       console.error('UPLOAD ERROR:', error);
 
