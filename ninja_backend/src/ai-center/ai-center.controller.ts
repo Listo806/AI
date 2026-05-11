@@ -26,6 +26,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import {
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('ai-center')
 @ApiBearerAuth('JWT-auth')
@@ -133,5 +139,18 @@ export class AiCenterController {
     });
   }
 
+  @Post('upload')
+  @UseInterceptors(
+    FilesInterceptor('files', 10),
+  )
+  async uploadFiles(
+    @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: any,
+  ) {
+    return this.service.uploadFiles({
+      files,
+      user,
+    });
+  }
 
 }

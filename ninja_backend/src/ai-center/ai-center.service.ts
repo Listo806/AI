@@ -1,6 +1,10 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import OpenAI from 'openai';
+import { S3Service } from '../common/aws/s3.service';
+
+
+
 const ALLOWED_TONES = ['professional', 'friendly', 'sales'] as const;
 export type AutoReplyTone = (typeof ALLOWED_TONES)[number];
 
@@ -42,7 +46,10 @@ export class AiCenterService {
   private openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   async getOverview(teamId: string): Promise<OverviewResponse> {
     const [team, recent] = await Promise.all([
@@ -406,4 +413,39 @@ export class AiCenterService {
         usage: response.usage || null,
       };
     }
+
+    async uploadFiles({
+      files,
+      user,
+    }: {
+      files: Express.Multer.File[];
+      user: any;
+    }) {
+      if (!files?.length) {
+        throw new ForbiddenException('No files uploaded');
+      }
+
+      const uploaded = [];
+
+      for (const file of files) {
+        const result =
+          await this.s3Service.uploadFile(file);
+
+        uploaded.push({
+          name: file.originalname,
+          type: file.mimetype,
+          size: file.size,
+          url: result.url,
+          key: result.key,
+        });
+      }
+
+      return {
+        success: true,
+        files: uploaded,
+      };
+    }
+
+
+
 }
