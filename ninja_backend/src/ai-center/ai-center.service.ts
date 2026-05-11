@@ -269,20 +269,10 @@ export class AiCenterService {
       workspaceId?: string;
     };
   }) {
-    const {
-      message,
-      attachments = [],
-      conversationId,
-      workspaceId,
-    } = body;
+    const { message, attachments = [], conversationId, workspaceId } = body;
 
-    if (
-      !message?.trim() &&
-      (!attachments || attachments.length === 0)
-    ) {
-      throw new ForbiddenException(
-        "Message or attachment is required",
-      );
+    if (!message?.trim() && (!attachments || attachments.length === 0)) {
+      throw new ForbiddenException("Message or attachment is required");
     }
 
     const teamId = workspaceId || user?.teamId || user?.team_id;
@@ -332,7 +322,7 @@ export class AiCenterService {
     const crmContext = {
       teamId,
       userId: user?.id,
-      attachments,  
+      attachments,
       leads: leadsResult.rows,
       properties: propertiesResult.rows,
       pipeline: pipelineResult.rows,
@@ -370,23 +360,48 @@ export class AiCenterService {
      */
 
     const response = await this.openai.responses.create({
-      model: "gpt-5.5",
+      model: "gpt-4.1-mini",
+
       input: [
         {
           role: "system",
-          content: systemPrompt,
+          content: [
+            {
+              type: "input_text",
+              text: systemPrompt,
+            },
+          ],
         },
 
         {
           role: "system",
-          content: `CRM DATA:\n${JSON.stringify(crmContext)}`,
+          content: [
+            {
+              type: "input_text",
+              text: `CRM DATA:\n${JSON.stringify(crmContext)}`,
+            },
+          ],
         },
 
         {
           role: "user",
-          content:
-            message ||
-            `User uploaded ${attachments.length} attachment(s). Analyze them.`,
+          content: [
+            {
+              type: "input_text",
+              text:
+                message ||
+                "Analyze the uploaded attachment.",
+            },
+
+            ...attachments
+              .filter((a) =>
+                a.type?.startsWith("image/"),
+              )
+              .map((a) => ({
+                type: "input_image",
+                image_url: a.url,
+              })),
+          ] as any,
         },
       ],
     });

@@ -89,10 +89,13 @@ export default function CortexaAI() {
   const [conversationId, setConversationId] = useState(null);
   const sendToCortexaAI = async (payload = {}) => {
     try {
-      if (!payload.message && (!payload.attachments || !payload.attachments.length)) {
+      if (
+        !payload.message &&
+        (!payload.attachments || !payload.attachments.length)
+      ) {
         return;
       }
-      
+
       const workspaceId = user?.teamId || user?.workspaceId || null;
       const res = await apiClient.request("/ai-center/agent", {
         method: "POST",
@@ -146,8 +149,8 @@ export default function CortexaAI() {
       setUploading(true);
 
       /*
-      * LOCAL TEMP FILES
-      */
+       * LOCAL TEMP FILES
+       */
       const tempFiles = files.map((file) => ({
         id: crypto.randomUUID(),
         name: file.name,
@@ -159,8 +162,8 @@ export default function CortexaAI() {
       setAttachedFiles((prev) => [...prev, ...tempFiles]);
 
       /*
-      * FORM DATA
-      */
+       * FORM DATA
+       */
       const formData = new FormData();
 
       files.forEach((file) => {
@@ -168,8 +171,8 @@ export default function CortexaAI() {
       });
 
       /*
-      * API CALL
-      */
+       * API CALL
+       */
       const res = await apiClient.request("/ai-center/upload", {
         method: "POST",
         body: formData,
@@ -178,11 +181,11 @@ export default function CortexaAI() {
       console.log("UPLOAD RESPONSE:", res);
 
       /*
-      * REPLACE TEMP FILES
-      */
+       * REPLACE TEMP FILES
+       */
       setAttachedFiles((prev) => {
         const filtered = prev.filter(
-          (f) => !tempFiles.find((t) => t.id === f.id)
+          (f) => !tempFiles.find((t) => t.id === f.id),
         );
 
         const uploadedFiles = (res.files || []).map((file) => ({
@@ -292,7 +295,7 @@ export default function CortexaAI() {
 
     try {
       await sendToCortexaAI({
-        message: prompt,
+        message: prompt || "Analyze attached files",
         attachments: attachedFiles,
       });
 
@@ -335,7 +338,29 @@ export default function CortexaAI() {
           <div className="ai-chat-results">
             {messages.map((msg, index) => (
               <div key={index} className={`ai-message ${msg.role}`}>
-                {msg.content}
+                {msg.content && (
+                  <div className="ai-message-text">{msg.content}</div>
+                )}
+
+                {msg.attachments?.length > 0 && (
+                  <div className="ai-message-files">
+                    {msg.attachments.map((file) => (
+                      <div key={file.id} className="ai-message-file">
+                        {file.type?.startsWith("image/") ? (
+                          <img
+                            src={file.url}
+                            alt={file.name}
+                            className="ai-upload-preview"
+                          />
+                        ) : (
+                          <a href={file.url} target="_blank" rel="noreferrer">
+                            {file.name}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -457,11 +482,13 @@ export default function CortexaAI() {
                 onClick={handleSubmit}
                 disabled={loading}
               >
-                {uploading
-                  ? "Uploading..."
-                  : loading
-                  ? "Thinking..."
-                  : <Send size={16} />}
+                {uploading ? (
+                  "Uploading..."
+                ) : loading ? (
+                  "Thinking..."
+                ) : (
+                  <Send size={16} />
+                )}
               </button>
             </div>
           </div>

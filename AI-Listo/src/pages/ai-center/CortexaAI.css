@@ -303,7 +303,20 @@
   font-size: 20px;
   cursor: pointer;
 }
+.ai-message-files {
+  margin-top: 10px;
+}
 
+.ai-upload-preview {
+  max-width: 220px;
+  border-radius: 12px;
+  display: block;
+}
+
+.ai-message-file a {
+  color: #7c5cff;
+  text-decoration: none;
+}
 
 
 
