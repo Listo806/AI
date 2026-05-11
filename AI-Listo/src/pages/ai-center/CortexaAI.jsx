@@ -89,6 +89,8 @@ export default function CortexaAI() {
   const [conversationId, setConversationId] = useState(null);
   const sendToCortexaAI = async (payload = {}) => {
     try {
+      setLoading(true);
+
       if (
         !payload.message &&
         (!payload.attachments || !payload.attachments.length)
@@ -96,16 +98,22 @@ export default function CortexaAI() {
         return;
       }
 
-      const workspaceId = user?.teamId || user?.workspaceId || null;
-      const res = await apiClient.request("/ai-center/agent", {
-        method: "POST",
-        body: JSON.stringify({
-          message: payload.message,
-          attachments: payload.attachments || [],
-          conversationId,
-          workspaceId,
-        }),
-      });
+      const workspaceId =
+        user?.teamId || user?.workspaceId || null;
+
+      const res = await apiClient.request(
+        "/ai-center/agent",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            message: payload.message,
+            attachments: payload.attachments || [],
+            conversationId,
+            workspaceId,
+          }),
+        },
+      );
+
       setConversationId(res.conversationId);
 
       setMessages((prev) => [
@@ -127,7 +135,9 @@ export default function CortexaAI() {
         ...prev,
         {
           role: "assistant",
-          content: err?.response?.data?.message || "AI request failed",
+          content:
+            err?.response?.data?.message ||
+            "AI request failed",
         },
       ]);
     } finally {
@@ -365,7 +375,13 @@ export default function CortexaAI() {
             ))}
 
             {loading && (
-              <div className="ai-message assistant">CORTEXA is thinking...</div>
+              <div className="ai-message assistant typing">
+                <div className="typing-dots">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
             )}
           </div>
           <textarea

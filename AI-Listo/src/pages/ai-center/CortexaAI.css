@@ -282,6 +282,7 @@
 .ai-attachment-left {
   display: flex;
   flex-direction: column;
+  color: black;
 }
 
 .ai-attachment-name {
@@ -317,6 +318,51 @@
   color: #7c5cff;
   text-decoration: none;
 }
+.ai-message.typing {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.typing-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #999;
+  animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+
+
+
 
 
 
