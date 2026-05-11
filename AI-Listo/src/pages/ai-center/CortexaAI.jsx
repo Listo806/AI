@@ -87,7 +87,7 @@ export default function CortexaAI() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const sendToCortexaAI = async (message) => {
+  const sendToCortexaAI = async (payload) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("listo_access_token");
@@ -95,17 +95,10 @@ export default function CortexaAI() {
       const res = await apiClient.request("/ai-center/agent", {
         method: "POST",
         body: JSON.stringify({
-          message,
+          message: payload.message,
+          attachments: payload.attachments || [],
           conversationId,
           workspaceId,
-          attachments: attachedFiles.map((file) => ({
-              name: file.name,
-              url: file.url,
-              key: file.key,
-              type: file.type,
-              mimeType: file.mimeType,
-              size: file.size,
-            })),
         }),
       });
       setConversationId(res.conversationId);
@@ -114,7 +107,8 @@ export default function CortexaAI() {
         ...prev,
         {
           role: "user",
-          content: message,
+          content: payload.message,
+          attachments: payload.attachments || [],
         },
         {
           role: "assistant",
@@ -149,12 +143,31 @@ export default function CortexaAI() {
     try {
       setUploading(true);
 
+      /*
+      * LOCAL TEMP FILES
+      */
+      const tempFiles = files.map((file) => ({
+        id: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploading: true,
+      }));
+
+      setAttachedFiles((prev) => [...prev, ...tempFiles]);
+
+      /*
+      * FORM DATA
+      */
       const formData = new FormData();
 
       files.forEach((file) => {
         formData.append("files", file);
       });
 
+      /*
+      * API CALL
+      */
       const res = await apiClient.request("/ai-center/upload", {
         method: "POST",
         body: formData,
@@ -162,16 +175,26 @@ export default function CortexaAI() {
 
       console.log("UPLOAD RESPONSE:", res);
 
-      const uploadedFiles = (res.files || []).map((file) => ({
-        id: crypto.randomUUID(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: file.url,
-        key: file.key,
-      }));
+      /*
+      * REPLACE TEMP FILES
+      */
+      setAttachedFiles((prev) => {
+        const filtered = prev.filter(
+          (f) => !tempFiles.find((t) => t.id === f.id)
+        );
 
-      setAttachedFiles((prev) => [...prev, ...uploadedFiles]);
+        const uploadedFiles = (res.files || []).map((file) => ({
+          id: crypto.randomUUID(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: file.url,
+          key: file.key,
+          uploading: false,
+        }));
+
+        return [...filtered, ...uploadedFiles];
+      });
     } catch (err) {
       console.error("UPLOAD FAILED:", err);
 
@@ -262,9 +285,12 @@ export default function CortexaAI() {
 
     try {
       setLoading(true);
-      await sendToCortexaAI(prompt);
+      await sendToCortexaAI({
+        message: prompt,
+        attachments: attachedFiles,
+      });
+
       setPrompt("");
-      setAttachedFiles([]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -425,7 +451,7 @@ export default function CortexaAI() {
               <button
                 className="send-btn"
                 onClick={handleSubmit}
-                disabled={loading || uploading}
+                disabled={loading}
               >
                 {uploading
                   ? "Uploading..."

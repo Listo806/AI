@@ -268,7 +268,12 @@ export class AiCenterService {
       workspaceId?: string;
     };
   }) {
-    const { message, conversationId, workspaceId } = body;
+    const {
+      message,
+      attachments = [],
+      conversationId,
+      workspaceId,
+    } = body;
 
     if (!message?.trim()) {
       throw new ForbiddenException("Message is required");
@@ -321,7 +326,7 @@ export class AiCenterService {
     const crmContext = {
       teamId,
       userId: user?.id,
-
+      attachments,  
       leads: leadsResult.rows,
       properties: propertiesResult.rows,
       pipeline: pipelineResult.rows,

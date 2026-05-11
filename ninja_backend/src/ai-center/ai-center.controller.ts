@@ -129,6 +129,7 @@ export class AiCenterController {
     @Body()
     body: {
       message: string;
+      attachments?: any[];
       conversationId?: string;
       workspaceId?: string;
     },
