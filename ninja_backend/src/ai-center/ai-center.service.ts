@@ -446,6 +446,8 @@ export class AiCenterService {
       };
     } catch (err) {
       console.error("S3 ERROR:", err);
+      console.error("S3 ERROR STACK:", err?.stack);
+      console.error("S3 ERROR JSON:", JSON.stringify(err, null, 2));
 
       throw err;
     }

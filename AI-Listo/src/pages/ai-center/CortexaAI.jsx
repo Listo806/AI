@@ -155,28 +155,27 @@ export default function CortexaAI() {
         formData.append("files", file);
       });
 
-      const res = await apiClient.request(
-        "/ai-center/upload",
-        {
-          method: "POST",
-          body: formData,
-          headers: {}, // IMPORTANT
-        }
-      );
-      console.log("UPLOAD RESPONSE:", res);  
-      const mappedFiles = res.files.map((file) => ({
+      const res = await apiClient.request("/ai-center/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log("UPLOAD RESPONSE:", res);
+
+      const uploadedFiles = (res.files || []).map((file) => ({
         id: crypto.randomUUID(),
-        ...file,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: file.url,
+        key: file.key,
       }));
 
-      setAttachedFiles((prev) => [
-        ...prev,
-        ...mappedFiles,
-      ]);
+      setAttachedFiles((prev) => [...prev, ...uploadedFiles]);
     } catch (err) {
-      console.error("Upload failed", err);
-      console.log(err.message);
-      console.log(err.response);
+      console.error("UPLOAD FAILED:", err);
+
+      alert(err.message || "Upload failed");
     } finally {
       setUploading(false);
 
@@ -428,7 +427,11 @@ export default function CortexaAI() {
                 onClick={handleSubmit}
                 disabled={loading || uploading}
               >
-                {loading || uploading ? "..." : <Send size={16} />}
+                {uploading
+                  ? "Uploading..."
+                  : loading
+                  ? "Thinking..."
+                  : <Send size={16} />}
               </button>
             </div>
           </div>
