@@ -264,6 +264,7 @@ export class AiCenterService {
     user: any;
     body: {
       message: string;
+      attachments?: any[];
       conversationId?: string;
       workspaceId?: string;
     };
