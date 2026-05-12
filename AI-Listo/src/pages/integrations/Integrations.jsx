@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./AppsIntegrationsHub.css";
 import {
   Search,
@@ -19,7 +19,6 @@ import {
   Building2,
   ChevronRight,
 } from "lucide-react";
-import { useEffect } from "react";
 import apiClient from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
 const categories = [
@@ -196,12 +195,12 @@ export default function AppsIntegrationsHub() {
   const [activeCategory, setActiveCategory] = useState("All Apps");
   const navigate = useNavigate();
 
-  const [integrations, setIntegrations] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     loadIntegrations();
   }, []);
   const [integrationStates, setIntegrationStates] = useState([]);
+  const [search, setSearch] = useState("");
   const loadIntegrations = async () => {
     try {
       setLoading(true);
@@ -221,16 +220,22 @@ export default function AppsIntegrationsHub() {
     );
 
     return {
-      ...config,
       ...dbIntegration,
+      ...config,
     };
   });
   const getButtonLabel = (integration) => {
-    if (integration.key === "csv_lead_import") {
+    if (
+      integration.key === "csv_lead_import" ||
+      integration.key === "crm_migration"
+    ) {
       return "Import";
     }
 
-    if (integration.key === "email_provider") {
+    if (
+      integration.key === "email_provider" ||
+      integration.key === "api_access"
+    ) {
       return "Configure";
     }
 
@@ -282,12 +287,16 @@ export default function AppsIntegrationsHub() {
       console.error(err);
     }
   };
-  const filteredIntegrations =
-  activeCategory === "All Apps"
-    ? mergedIntegrations
-      : mergedIntegrations.filter(
-          (integration) => integration.category === activeCategory,
-        );
+  const filteredIntegrations = mergedIntegrations.filter((integration) => {
+    const matchesCategory =
+      activeCategory === "All Apps" || integration.category === activeCategory;
+
+    const matchesSearch =
+      integration.title?.toLowerCase().includes(search.toLowerCase()) ||
+      integration.description?.toLowerCase().includes(search.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="apps-page">
@@ -337,48 +346,54 @@ export default function AppsIntegrationsHub() {
                 type="text"
                 placeholder="Search integrations..."
                 className="search-input"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
           </div>
 
           {/* GRID */}
-          <div className="integrations-grid">
-            {filteredIntegrations.map((integration) => {
-              const Icon = integration.icon;
+          {loading ? (
+            <div className="apps-loading">Loading integrations...</div>
+          ) : (
+            <div className="integrations-grid">
+              {filteredIntegrations.map((integration) => {
+                const Icon = integration.icon;
 
-              return (
-                <div key={integration.title} className="integration-card">
-                  <div
-                    className="integration-icon"
-                    style={{
-                      backgroundColor: integration.iconBg,
-                    }}
-                  >
-                    <Icon
-                      size={24}
-                      color={integration.iconColor}
-                      strokeWidth={2.2}
-                    />
-                  </div>
-
-                  <div>
-                    <h3 className="integration-title">{integration.title}</h3>
-
-                    <p className="integration-description">
-                      {integration.description}
-                    </p>
-
-                    <button
-                      className={`integration-btn status-${integration.status}`}
-                      onClick={() => handleIntegrationClick(integration)}
+                return (
+                  <div key={integration.key} className="integration-card">
+                    <div
+                      className="integration-icon"
+                      style={{
+                        backgroundColor: integration.iconBg,
+                      }}
                     >
-                      {getButtonLabel(integration)}
-                    </button>
+                      <Icon
+                        size={24}
+                        color={integration.iconColor}
+                        strokeWidth={2.2}
+                      />
+                    </div>
+
+                    <div>
+                      <h3 className="integration-title">{integration.title}</h3>
+
+                      <p className="integration-description">
+                        {integration.description}
+                      </p>
+
+                      <button
+                        className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
+                        onClick={() => handleIntegrationClick(integration)}
+                      >
+                        {getButtonLabel(integration)}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </main>
       </div>
     </div>
