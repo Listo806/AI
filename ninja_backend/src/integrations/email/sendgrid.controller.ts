@@ -1,8 +1,15 @@
-import { Controller, Get, Post, Body, UseGuards, ForbiddenException } from '@nestjs/common';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import { SendgridService } from './sendgrid.service';
-import { IsEmail, IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  ForbiddenException,
+} from "@nestjs/common";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
+import { SendgridService } from "./sendgrid.service";
+import { IsEmail, IsString, IsNotEmpty, IsOptional } from "class-validator";
 
 class SaveEmailConfigDto {
   @IsString()
@@ -26,41 +33,51 @@ class SendEmailDto {
   html: string;
 }
 
-@Controller('integrations/email')
+@Controller("integrations/email")
 @UseGuards(JwtAuthGuard)
 export class SendgridController {
   constructor(private readonly sendgridService: SendgridService) {}
 
   private requireTeam(user: any): string {
     if (!user.teamId) {
-      throw new ForbiddenException('User must be part of a team to configure email');
+      throw new ForbiddenException(
+        "User must be part of a team to configure email",
+      );
     }
     return user.teamId;
   }
 
-  @Post('config')
-  async saveConfig(
-    @CurrentUser() user: any,
-    @Body() dto: SaveEmailConfigDto,
-  ) {
-    return this.sendgridService.saveConfig(this.requireTeam(user), dto.sendgrid_api_key, dto.from_email);
+  @Post("config")
+  async saveConfig(@CurrentUser() user: any, @Body() dto: SaveEmailConfigDto) {
+    return this.sendgridService.saveConfig(
+      this.requireTeam(user),
+      dto.sendgrid_api_key,
+      dto.from_email,
+    );
   }
 
-  @Get('config')
+  @Get("config")
   async getConfig(@CurrentUser() user: any) {
     return this.sendgridService.getConfig(this.requireTeam(user));
   }
 
-  @Post('test')
+  @Post("test")
   async sendTestEmail(@CurrentUser() user: any) {
     return this.sendgridService.sendTestEmail(this.requireTeam(user));
   }
 
-  @Post('send')
-  async sendEmail(
-    @CurrentUser() user: any,
-    @Body() dto: SendEmailDto,
-  ) {
-    return this.sendgridService.sendEmail(this.requireTeam(user), dto.to, dto.subject, dto.html);
+  @Post("send")
+  async sendEmail(@CurrentUser() user: any, @Body() dto: SendEmailDto) {
+    return this.sendgridService.sendEmail(
+      this.requireTeam(user),
+      dto.to,
+      dto.subject,
+      dto.html,
+    );
+  }
+
+  @Get("config/status")
+  async getConfigStatus(@CurrentUser() user: any) {
+    return this.sendgridService.getConfigStatus(this.requireTeam(user));
   }
 }

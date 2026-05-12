@@ -1,5 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/database.service';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from "@nestjs/common";
+import { DatabaseService } from "../../database/database.service";
 
 @Injectable()
 export class SendgridService {
@@ -10,7 +14,7 @@ export class SendgridService {
   async saveConfig(teamId: string, apiKey: string, fromEmail: string) {
     // Basic email validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fromEmail)) {
-      throw new BadRequestException('Invalid from_email address');
+      throw new BadRequestException("Invalid from_email address");
     }
 
     const { rows } = await this.db.query(
@@ -55,33 +59,37 @@ export class SendgridService {
   async sendEmail(teamId: string, to: string, subject: string, html: string) {
     // Validate recipient
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
-      throw new BadRequestException('Invalid recipient email address');
+      throw new BadRequestException("Invalid recipient email address");
     }
 
     const config = await this.getFullConfig(teamId);
     if (!config) {
-      throw new NotFoundException('SendGrid is not configured for this team. Please add your API key first.');
+      throw new NotFoundException(
+        "SendGrid is not configured for this team. Please add your API key first.",
+      );
     }
 
     const body = {
       personalizations: [{ to: [{ email: to }] }],
       from: { email: config.fromEmail },
       subject,
-      content: [{ type: 'text/html', value: html }],
+      content: [{ type: "text/html", value: html }],
     };
 
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-      const errorBody = await response.text().catch(() => '');
-      throw new BadRequestException(`SendGrid API error (${response.status}): ${errorBody.slice(0, 500)}`);
+      const errorBody = await response.text().catch(() => "");
+      throw new BadRequestException(
+        `SendGrid API error (${response.status}): ${errorBody.slice(0, 500)}`,
+      );
     }
 
     return { success: true, statusCode: response.status };
@@ -92,14 +100,14 @@ export class SendgridService {
   async sendTestEmail(teamId: string) {
     const config = await this.getFullConfig(teamId);
     if (!config) {
-      throw new NotFoundException('SendGrid is not configured for this team.');
+      throw new NotFoundException("SendGrid is not configured for this team.");
     }
 
     return this.sendEmail(
       teamId,
       config.fromEmail,
-      'CORTEXA CRM - Test Email',
-      '<h2>Test Email from CORTEXA CRM</h2><p>Your SendGrid integration is working correctly.</p>',
+      "CORTEXA CRM - Test Email",
+      "<h2>Test Email from CORTEXA CRM</h2><p>Your SendGrid integration is working correctly.</p>",
     );
   }
 
@@ -116,7 +124,16 @@ export class SendgridService {
   }
 
   private maskKey(key: string): string {
-    if (!key || key.length < 8) return '****';
-    return key.slice(0, 4) + '****' + key.slice(-4);
+    if (!key || key.length < 8) return "****";
+    return key.slice(0, 4) + "****" + key.slice(-4);
+  }
+
+  async getConfigStatus(teamId: string) {
+    const config = await this.getFullConfig(teamId);
+
+    return {
+      isConfigured: !!config,
+      fromEmail: config?.fromEmail || null,
+    };
   }
 }

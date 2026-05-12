@@ -225,8 +225,8 @@ body {
 }
 
 .integration-btn.status-active {
-  background: #ede9fe;
-  color: #6d28d9;
+    background: #2c6531;
+    color: #fff;
 }
 
 .integration-btn.status-not-connected {

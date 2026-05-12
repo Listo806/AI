@@ -41,7 +41,7 @@ const integrationsConfig = [
     iconColor: "#ff5a1f",
     iconBg: "#fff1eb",
     category: "Automation",
-    status: "Connected",
+    //status: "Connected",
   },
   {
     key: "email_provider",
@@ -51,7 +51,7 @@ const integrationsConfig = [
     iconColor: "#2563eb",
     iconBg: "#eff6ff",
     category: "Communication",
-    status: "Configure",
+    //status: "Configure",
   },
   {
     key: "webhooks",
@@ -62,7 +62,7 @@ const integrationsConfig = [
     iconColor: "#7c3aed",
     iconBg: "#f5f3ff",
     category: "API & Webhooks",
-    status: "Active",
+    //status: "Active",
   },
   {
     key: "google_calendar",
@@ -72,7 +72,7 @@ const integrationsConfig = [
     iconColor: "#16a34a",
     iconBg: "#f0fdf4",
     category: "Calendars",
-    status: "Connect",
+    //status: "Connect",
   },
   {
     key: "instagram",
@@ -82,7 +82,7 @@ const integrationsConfig = [
     iconColor: "#e1306c",
     iconBg: "#fff0f6",
     category: "Marketing",
-    status: "Connected",
+    //status: "Connected",
   },
   {
     key: "whatsapp",
@@ -92,7 +92,7 @@ const integrationsConfig = [
     iconColor: "#22c55e",
     iconBg: "#f0fdf4",
     category: "Communication",
-    status: "Connected",
+    //status: "Connected",
   },
   {
     key: "crm_migration",
@@ -103,7 +103,7 @@ const integrationsConfig = [
     iconColor: "#0f766e",
     iconBg: "#ecfeff",
     category: "CRM Imports",
-    status: "Import",
+    //status: "Import",
   },
   {
     key: "google_drive",
@@ -113,7 +113,7 @@ const integrationsConfig = [
     iconColor: "#0284c7",
     iconBg: "#f0f9ff",
     category: "Storage",
-    status: "Connect",
+    //status: "Connect",
   },
   {
     key: "csv_lead_import",
@@ -124,7 +124,7 @@ const integrationsConfig = [
     iconColor: "#15803d",
     iconBg: "#f0fdf4",
     category: "CRM Imports",
-    status: "Import",
+    //status: "Import",
   },
   {
     key: "property_feed_sync",
@@ -134,7 +134,7 @@ const integrationsConfig = [
     iconColor: "#d97706",
     iconBg: "#fffbeb",
     category: "CRM Imports",
-    status: "Sync",
+    //status: "Sync",
   },
   {
     key: "make",
@@ -144,7 +144,7 @@ const integrationsConfig = [
     iconColor: "#7c3aed",
     iconBg: "#f5f3ff",
     category: "Automation",
-    status: "Connect",
+    //status: "Connect",
   },
   {
     key: "google_ads",
@@ -155,7 +155,7 @@ const integrationsConfig = [
     iconColor: "#ea4335",
     iconBg: "#fef2f2",
     category: "Marketing",
-    status: "Connect",
+    //status: "Connect",
   },
   {
     key: "meta_ads",
@@ -165,7 +165,7 @@ const integrationsConfig = [
     iconColor: "#1877f2",
     iconBg: "#eff6ff",
     category: "Marketing",
-    status: "Connect",
+    //status: "Connect",
   },
   {
     key: "api_access",
@@ -176,7 +176,7 @@ const integrationsConfig = [
     iconColor: "#475569",
     iconBg: "#f8fafc",
     category: "API & Webhooks",
-    status: "Configure",
+    //status: "Configure",
   },
   {
     key: "mls_idx_feed",
@@ -187,14 +187,14 @@ const integrationsConfig = [
     iconColor: "#b45309",
     iconBg: "#fefce8",
     category: "CRM Imports",
-    status: "Connect",
+    //status: "Connect",
   },
 ];
 
 export default function AppsIntegrationsHub() {
   const [activeCategory, setActiveCategory] = useState("All Apps");
   const navigate = useNavigate();
-
+  const [syncingKey, setSyncingKey] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     loadIntegrations();
@@ -205,9 +205,29 @@ export default function AppsIntegrationsHub() {
     try {
       setLoading(true);
 
-      const res = await apiClient.request("/integrations");
+      const [integrationsRes, emailStatus] = await Promise.all([
+        apiClient.request("/integrations"),
+        loadEmailStatus(),
+      ]);
 
-      setIntegrationStates(res.integrations || []);
+      const integrations = integrationsRes.integrations || [];
+
+      const updated = integrations.map((item) => {
+        /*
+         * EMAIL PROVIDER
+         */
+        if (item.key === "email_provider" && emailStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
+
+        return item;
+      });
+
+      setIntegrationStates(updated);
+      
     } catch (err) {
       console.error(err);
     } finally {
@@ -278,6 +298,7 @@ export default function AppsIntegrationsHub() {
       /*
        * PLACEHOLDER SYNC
        */
+      setSyncingKey(integration.key);
       await apiClient.request(`/integrations/${integration.key}/sync`, {
         method: "POST",
       });
@@ -285,6 +306,8 @@ export default function AppsIntegrationsHub() {
       await loadIntegrations();
     } catch (err) {
       console.error(err);
+    } finally {
+      setSyncingKey(null);
     }
   };
   const filteredIntegrations = mergedIntegrations.filter((integration) => {
@@ -297,6 +320,17 @@ export default function AppsIntegrationsHub() {
 
     return matchesCategory && matchesSearch;
   });
+
+  const loadEmailStatus = async () => {
+    try {
+      const res = await apiClient.request("/integrations/email/config/status");
+
+      return res;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
 
   return (
     <div className="apps-page">
@@ -342,6 +376,7 @@ export default function AppsIntegrationsHub() {
             </div>
 
             <div className="search-wrapper">
+              <Search size={16} className="search-icon" />
               <input
                 type="text"
                 placeholder="Search integrations..."
@@ -385,8 +420,11 @@ export default function AppsIntegrationsHub() {
                       <button
                         className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
                         onClick={() => handleIntegrationClick(integration)}
+                        disabled={syncingKey === integration.key}
                       >
-                        {getButtonLabel(integration)}
+                        {syncingKey === integration.key
+                          ? "Syncing..."
+                          : getButtonLabel(integration)}
                       </button>
                     </div>
                   </div>
