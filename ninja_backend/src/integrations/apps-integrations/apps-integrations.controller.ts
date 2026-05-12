@@ -10,7 +10,7 @@ import {
 
 import { AppsIntegrationsService } from "./apps-integrations.service";
 
-@Controller("crm/integrations")
+@Controller("integrations")
 export class AppsIntegrationsController {
   constructor(
     private readonly service: AppsIntegrationsService,

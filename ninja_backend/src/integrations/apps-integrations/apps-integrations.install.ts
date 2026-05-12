@@ -13,7 +13,7 @@ export async function installAppsIntegrationsTable(
       key VARCHAR(100) NOT NULL,
       name VARCHAR(255) NOT NULL,
       category VARCHAR(255) NOT NULL,
-
+      description TEXT,
       status VARCHAR(50) NOT NULL DEFAULT 'not_connected',
 
       config JSONB DEFAULT '{}'::jsonb,

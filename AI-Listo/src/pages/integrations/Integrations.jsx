@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "./AppsIntegrationsHub.css";
-
 import {
   Search,
   Zap,
@@ -20,7 +19,9 @@ import {
   Building2,
   ChevronRight,
 } from "lucide-react";
-
+import { useEffect } from "react";
+import apiClient from "../../api/apiClient";
+import { useNavigate } from "react-router-dom";
 const categories = [
   "All Apps",
   "Communication",
@@ -32,8 +33,9 @@ const categories = [
   "API & Webhooks",
 ];
 
-const integrations = [
+const integrationsConfig = [
   {
+    key: "zapier",
     title: "Zapier",
     description: "Connect thousands of apps and automate workflows instantly.",
     icon: Zap,
@@ -43,6 +45,7 @@ const integrations = [
     status: "Connected",
   },
   {
+    key: "email_provider",
     title: "Email Provider",
     description: "Connect Gmail, Outlook, SMTP, and outbound email services.",
     icon: Mail,
@@ -52,6 +55,7 @@ const integrations = [
     status: "Configure",
   },
   {
+    key: "webhooks",
     title: "Webhooks",
     description:
       "Send and receive real-time API events and automation triggers.",
@@ -62,6 +66,7 @@ const integrations = [
     status: "Active",
   },
   {
+    key: "google_calendar",
     title: "Google Calendar",
     description: "Sync appointments, meetings, and scheduling automatically.",
     icon: CalendarDays,
@@ -71,6 +76,7 @@ const integrations = [
     status: "Connect",
   },
   {
+    key: "instagram",
     title: "Instagram",
     description: "Connect Instagram messaging, lead capture, and automation.",
     icon: Camera,
@@ -80,6 +86,7 @@ const integrations = [
     status: "Connected",
   },
   {
+    key: "whatsapp",
     title: "WhatsApp",
     description: "Sync WhatsApp conversations and automate lead engagement.",
     icon: MessageCircle,
@@ -89,6 +96,7 @@ const integrations = [
     status: "Connected",
   },
   {
+    key: "crm_migration",
     title: "CRM Migration Tool",
     description:
       "Import leads, pipelines, contacts, and properties from another CRM.",
@@ -99,6 +107,7 @@ const integrations = [
     status: "Import",
   },
   {
+    key: "google_drive",
     title: "Google Drive",
     description: "Store contracts, property documents, and media in the cloud.",
     icon: Cloud,
@@ -108,6 +117,7 @@ const integrations = [
     status: "Connect",
   },
   {
+    key: "csv_lead_import",
     title: "CSV Lead Import",
     description:
       "Upload lead lists and import contacts into your CRM instantly.",
@@ -118,6 +128,7 @@ const integrations = [
     status: "Import",
   },
   {
+    key: "property_feed_sync",
     title: "Property Feed Sync",
     description: "Sync listings and property feeds from external platforms.",
     icon: FolderSync,
@@ -127,6 +138,7 @@ const integrations = [
     status: "Sync",
   },
   {
+    key: "make",
     title: "Make.com",
     description: "Create advanced automations and visual workflow systems.",
     icon: Workflow,
@@ -136,6 +148,7 @@ const integrations = [
     status: "Connect",
   },
   {
+    key: "google_ads",
     title: "Google Ads",
     description:
       "Track campaigns, leads, and ad performance directly inside CORTEXA.",
@@ -146,6 +159,7 @@ const integrations = [
     status: "Connect",
   },
   {
+    key: "meta_ads",
     title: "Meta Ads",
     description: "Sync Facebook and Instagram leads directly into your CRM.",
     icon: Globe,
@@ -155,6 +169,7 @@ const integrations = [
     status: "Connect",
   },
   {
+    key: "api_access",
     title: "API Access",
     description:
       "Connect external CRMs, websites, and custom systems using APIs.",
@@ -165,6 +180,7 @@ const integrations = [
     status: "Configure",
   },
   {
+    key: "mls_idx_feed",
     title: "MLS / IDX Feed",
     description:
       "Import and synchronize property listings from MLS/IDX systems.",
@@ -178,11 +194,98 @@ const integrations = [
 
 export default function AppsIntegrationsHub() {
   const [activeCategory, setActiveCategory] = useState("All Apps");
+  const navigate = useNavigate();
 
+  const [integrations, setIntegrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    loadIntegrations();
+  }, []);
+  const [integrationStates, setIntegrationStates] = useState([]);
+  const loadIntegrations = async () => {
+    try {
+      setLoading(true);
+
+      const res = await apiClient.request("/integrations");
+
+      setIntegrationStates(res.integrations || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const mergedIntegrations = integrationsConfig.map((config) => {
+    const dbIntegration = integrationStates.find(
+      (item) => item.key === config.key,
+    );
+
+    return {
+      ...config,
+      ...dbIntegration,
+    };
+  });
+  const getButtonLabel = (integration) => {
+    if (integration.key === "csv_lead_import") {
+      return "Import";
+    }
+
+    if (integration.key === "email_provider") {
+      return "Configure";
+    }
+
+    if (integration.status === "active") {
+      return "Active";
+    }
+
+    if (integration.status === "connected") {
+      return "Connected";
+    }
+
+    return "Sync Now";
+  };
+  const handleIntegrationClick = async (integration) => {
+    try {
+      /*
+       * WHATSAPP
+       */
+      if (integration.key === "whatsapp") {
+        navigate("/dashboard/whatsapp");
+        return;
+      }
+
+      /*
+       * WEBHOOKS
+       */
+      if (integration.key === "webhooks") {
+        navigate("/dashboard/settings/webhooks");
+        return;
+      }
+
+      /*
+       * EMAIL PROVIDER
+       */
+      if (integration.key === "email_provider") {
+        navigate("/dashboard/settings/email");
+        return;
+      }
+
+      /*
+       * PLACEHOLDER SYNC
+       */
+      await apiClient.request(`/integrations/${integration.key}/sync`, {
+        method: "POST",
+      });
+
+      await loadIntegrations();
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const filteredIntegrations =
-    activeCategory === "All Apps"
-      ? integrations
-      : integrations.filter(
+  activeCategory === "All Apps"
+    ? mergedIntegrations
+      : mergedIntegrations.filter(
           (integration) => integration.category === activeCategory,
         );
 
@@ -265,8 +368,11 @@ export default function AppsIntegrationsHub() {
                       {integration.description}
                     </p>
 
-                    <button className="integration-btn">
-                      {integration.status}
+                    <button
+                      className={`integration-btn status-${integration.status}`}
+                      onClick={() => handleIntegrationClick(integration)}
+                    >
+                      {getButtonLabel(integration)}
                     </button>
                   </div>
                 </div>
