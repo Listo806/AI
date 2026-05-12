@@ -205,9 +205,10 @@ export default function AppsIntegrationsHub() {
     try {
       setLoading(true);
 
-      const [integrationsRes, emailStatus] = await Promise.all([
+      const [integrationsRes, emailStatus, webhookStatus] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
+        loadWebhookStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -222,12 +223,17 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "webhooks" && webhookStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "active",
+          };
+        }
 
         return item;
       });
 
       setIntegrationStates(updated);
-
     } catch (err) {
       console.error(err);
     } finally {
@@ -326,6 +332,18 @@ export default function AppsIntegrationsHub() {
       const res = await apiClient.request("/integrations/email/config/status");
 
       return res;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  };
+  const loadWebhookStatus = async () => {
+    try {
+      const webhooks = await apiClient.request("/webhooks");
+
+      return {
+        isConfigured: webhooks?.length > 0,
+      };
     } catch (err) {
       console.error(err);
       return null;
