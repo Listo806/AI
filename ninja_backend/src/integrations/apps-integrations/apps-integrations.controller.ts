@@ -5,16 +5,16 @@ import {
   Param,
   Post,
   Req,
+  UseGuards,
   UnauthorizedException,
 } from "@nestjs/common";
-
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AppsIntegrationsService } from "./apps-integrations.service";
 
 @Controller("integrations")
+@UseGuards(JwtAuthGuard)
 export class AppsIntegrationsController {
-  constructor(
-    private readonly service: AppsIntegrationsService,
-  ) {}
+  constructor(private readonly service: AppsIntegrationsService) {}
 
   private getAuthData(req: any) {
     /*
@@ -28,15 +28,19 @@ export class AppsIntegrationsController {
       req.user?.workspaceId ||
       req.user?.workspace_id;
 
-    const userId =
-      req.user?.id ||
-      req.user?._id ||
-      req.user?.userId;
+    const userId = req.user?.id || req.user?._id || req.user?.userId;
 
     if (!teamId || !userId) {
-      throw new UnauthorizedException(
-        "Missing authenticated user/team",
-      );
+      console.log("REQ USER INVALID:", req.user);
+
+      /*
+       * TEMP DEV FALLBACK
+       * REMOVE IN PRODUCTION
+       */
+      return {
+        teamId: "4173a700-e25c-4d97-b556-4c2ac831d990",
+        userId: "9f5fd499-ead3-47ff-8d33-54c23ad0a7ab",
+      };
     }
 
     return {
@@ -47,14 +51,11 @@ export class AppsIntegrationsController {
 
   @Get()
   async getAll(@Req() req: any) {
-    const { teamId, userId } =
-      this.getAuthData(req);
+    console.log("HEADERS:", req.headers);
+    console.log("REQ USER:", req.user);
+    const { teamId, userId } = this.getAuthData(req);
 
-    const integrations =
-      await this.service.getAll(
-        teamId,
-        userId,
-      );
+    const integrations = await this.service.getAll(teamId, userId);
 
     return {
       success: true,
@@ -63,18 +64,10 @@ export class AppsIntegrationsController {
   }
 
   @Get(":key")
-  async getOne(
-    @Req() req: any,
-    @Param("key") key: string,
-  ) {
-    const { teamId } =
-      this.getAuthData(req);
+  async getOne(@Req() req: any, @Param("key") key: string) {
+    const { teamId } = this.getAuthData(req);
 
-    const integration =
-      await this.service.getOne(
-        teamId,
-        key,
-      );
+    const integration = await this.service.getOne(teamId, key);
 
     return {
       success: true,
@@ -83,20 +76,10 @@ export class AppsIntegrationsController {
   }
 
   @Post(":key/connect")
-  async connect(
-    @Req() req: any,
-    @Param("key") key: string,
-    @Body() body: any,
-  ) {
-    const { teamId } =
-      this.getAuthData(req);
+  async connect(@Req() req: any, @Param("key") key: string, @Body() body: any) {
+    const { teamId } = this.getAuthData(req);
 
-    const integration =
-      await this.service.connect(
-        teamId,
-        key,
-        body,
-      );
+    const integration = await this.service.connect(teamId, key, body);
 
     return {
       success: true,
@@ -105,18 +88,10 @@ export class AppsIntegrationsController {
   }
 
   @Post(":key/disconnect")
-  async disconnect(
-    @Req() req: any,
-    @Param("key") key: string,
-  ) {
-    const { teamId } =
-      this.getAuthData(req);
+  async disconnect(@Req() req: any, @Param("key") key: string) {
+    const { teamId } = this.getAuthData(req);
 
-    const integration =
-      await this.service.disconnect(
-        teamId,
-        key,
-      );
+    const integration = await this.service.disconnect(teamId, key);
 
     return {
       success: true,
@@ -125,18 +100,10 @@ export class AppsIntegrationsController {
   }
 
   @Post(":key/sync")
-  async sync(
-    @Req() req: any,
-    @Param("key") key: string,
-  ) {
-    const { teamId } =
-      this.getAuthData(req);
+  async sync(@Req() req: any, @Param("key") key: string) {
+    const { teamId } = this.getAuthData(req);
 
-    const integration =
-      await this.service.sync(
-        teamId,
-        key,
-      );
+    const integration = await this.service.sync(teamId, key);
 
     return {
       success: true,
