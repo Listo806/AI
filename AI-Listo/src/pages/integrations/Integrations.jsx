@@ -227,7 +227,7 @@ export default function AppsIntegrationsHub() {
       });
 
       setIntegrationStates(updated);
-      
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -283,7 +283,7 @@ export default function AppsIntegrationsHub() {
        * WEBHOOKS
        */
       if (integration.key === "webhooks") {
-        navigate("/dashboard/settings/webhooks");
+        navigate("/dashboard/integrations/webhooks");
         return;
       }
 
@@ -291,7 +291,7 @@ export default function AppsIntegrationsHub() {
        * EMAIL PROVIDER
        */
       if (integration.key === "email_provider") {
-        navigate("/dashboard/settings/email");
+        navigate("/dashboard/integrations/email");
         return;
       }
 
