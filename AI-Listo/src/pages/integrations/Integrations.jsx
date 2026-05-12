@@ -205,11 +205,13 @@ export default function AppsIntegrationsHub() {
     try {
       setLoading(true);
 
-      const [integrationsRes, emailStatus, webhookStatus] = await Promise.all([
-        apiClient.request("/integrations"),
-        loadEmailStatus(),
-        loadWebhookStatus(),
-      ]);
+      const [integrationsRes, emailStatus, webhookStatus, zapierStatus] =
+        await Promise.all([
+          apiClient.request("/integrations"),
+          loadEmailStatus(),
+          loadWebhookStatus(),
+          loadZapierStatus(),
+        ]);
 
       const integrations = integrationsRes.integrations || [];
 
@@ -227,6 +229,12 @@ export default function AppsIntegrationsHub() {
           return {
             ...item,
             status: "active",
+          };
+        }
+        if (item.key === "zapier" && zapierStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
           };
         }
 
@@ -260,9 +268,10 @@ export default function AppsIntegrationsHub() {
 
     if (
       integration.key === "email_provider" ||
-      integration.key === "api_access"
+      integration.key === "api_access" ||
+      integration.key === "zapier"
     ) {
-      return "Configure";
+      return integration.status === "connected" ? "Connected" : "Configure";
     }
 
     if (integration.status === "active") {
@@ -298,6 +307,11 @@ export default function AppsIntegrationsHub() {
        */
       if (integration.key === "email_provider") {
         navigate("/dashboard/integrations/email");
+        return;
+      }
+
+      if (integration.key === "zapier") {
+        navigate("/dashboard/integrations/zapier");
         return;
       }
 
@@ -347,6 +361,19 @@ export default function AppsIntegrationsHub() {
     } catch (err) {
       console.error(err);
       return null;
+    }
+  };
+  const loadZapierStatus = async () => {
+    try {
+      const res = await apiClient.request("/integrations/zapier/config/status");
+
+      return res;
+    } catch (err) {
+      console.error(err);
+
+      return {
+        isConfigured: false,
+      };
     }
   };
 
