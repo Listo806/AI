@@ -14,6 +14,7 @@ import { InstagramModule } from "./instagram/instagram.module";
 import { MetaWebhookController } from "./instagram/meta-webhook.controller";
 import { CrmImportModule } from "./crm-import/crm-import.module";
 import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
+import { PropertyFeedModule } from "./property-feed/property-feed.module";
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
     InstagramModule,
     CrmImportModule,
     CsvLeadsModule,
+    PropertyFeedModule,
   ],
   controllers: [MetaWebhookController],
   providers: [],
@@ -49,6 +51,7 @@ import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
     InstagramModule,
     CrmImportModule,
     CsvLeadsModule,
+    PropertyFeedModule,
   ],
 })
 export class IntegrationsModule {}

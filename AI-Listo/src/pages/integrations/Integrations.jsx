@@ -213,7 +213,6 @@ export default function AppsIntegrationsHub() {
         googleCalendarStatus,
         googleDriveStatus,
         instagramStatus,
-        
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -269,7 +268,6 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
-        
 
         return item;
       });
@@ -374,6 +372,10 @@ export default function AppsIntegrationsHub() {
         navigate("/dashboard/integrations/csv-leads");
         return;
       }
+      if (integration.key === "property_feed_sync") {
+        navigate("/dashboard/integrations/property-feed");
+        return;
+      }
       /*
        * PLACEHOLDER SYNC
        */
@@ -473,8 +475,6 @@ export default function AppsIntegrationsHub() {
       };
     }
   };
-
-  
 
   return (
     <div className="apps-page">

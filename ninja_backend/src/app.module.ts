@@ -25,6 +25,7 @@ import { WhatsAppQrModule } from './whatsapp-qr/whatsapp-qr.module';
 import { SiteAssistModule } from './site-assist/site-assist.module';
 import { VacationRentalsModule } from './vacation-rentals/vacation-rentals.module';
 import { TrialModule } from './trial/trial.module';
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { TrialModule } from './trial/trial.module';
     SiteAssistModule,
     VacationRentalsModule,
     TrialModule,
+    ScheduleModule,
   ],
   controllers: [AppController],
 })
