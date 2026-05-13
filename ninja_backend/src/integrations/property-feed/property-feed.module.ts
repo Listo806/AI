@@ -10,4 +10,10 @@ import { PropertyFeedService } from "./property-feed.service";
 
   exports: [PropertyFeedService],
 })
-export class PropertyFeedModule {}
+export class PropertyFeedModule {
+  constructor() {
+    console.log(
+      "PROPERTY FEED MODULE INIT",
+    );
+  }
+}
