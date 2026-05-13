@@ -82,6 +82,7 @@ import AdminTeams from "./pages/admin/AdminTeams";
 import AdminPlans from "./pages/admin/AdminPlans";
 import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
 import GoogleDrivePage from "./pages/integrations/GoogleDrivePage";
+import InstagramPage from "./pages/integrations/InstagramPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -219,6 +220,7 @@ function AppRoutes() {
         <Route path="integrations/email" element={<EmailProviderPage />} />
         <Route path="integrations/zapier" element={<ZapierPage />} />
         <Route path="integrations/google-drive" element={<GoogleDrivePage  />} />
+        <Route path="integrations/instagram" element={<InstagramPage  />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />

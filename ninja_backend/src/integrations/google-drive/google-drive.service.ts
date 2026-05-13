@@ -230,7 +230,7 @@ export class GoogleDriveService {
 
       media: {
         mimeType: file.mimetype,
-        body: fs.createReadStream(file.path),
+        body: Buffer.from(file.buffer),
       },
 
       fields: "id,name,webViewLink,webContentLink",

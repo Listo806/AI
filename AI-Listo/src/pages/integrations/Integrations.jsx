@@ -212,6 +212,7 @@ export default function AppsIntegrationsHub() {
         zapierStatus,
         googleCalendarStatus,
         googleDriveStatus,
+        instagramStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -219,6 +220,7 @@ export default function AppsIntegrationsHub() {
         loadZapierStatus(),
         loadGoogleCalendarStatus(),
         loadGoogleDriveStatus(),
+        loadInstagramStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -255,6 +257,12 @@ export default function AppsIntegrationsHub() {
           };
         }
         if (item.key === "google_drive" && googleDriveStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
+        if (item.key === "instagram" && instagramStatus?.isConfigured) {
           return {
             ...item,
             status: "connected",
@@ -352,6 +360,10 @@ export default function AppsIntegrationsHub() {
         navigate("/dashboard/integrations/google-drive");
         return;
       }
+      if (integration.key === "instagram") {
+        navigate("/dashboard/integrations/instagram");
+        return;
+      }
       /*
        * PLACEHOLDER SYNC
        */
@@ -436,6 +448,16 @@ export default function AppsIntegrationsHub() {
     } catch (err) {
       console.error(err);
 
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+
+  const loadInstagramStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/instagram/config/status");
+    } catch (err) {
       return {
         isConfigured: false,
       };

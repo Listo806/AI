@@ -94,7 +94,7 @@ export default function GoogleDrivePage() {
   const connectGoogleDrive = async () => {
     try {
       const res = await apiClient.request(
-        "/integrations/google-drive/auth-url",
+        "/integrations/google-drive/connect",
       );
 
       window.location.href = res.url;
