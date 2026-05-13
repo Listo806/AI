@@ -9,6 +9,7 @@ import { SendgridModule } from './email/sendgrid.module';
 import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.module';
 import { ZapierModule } from './zapier/zapier.module';
 import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
+import { GoogleDriveModule } from "./google-drive/google-drive.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
     AppsIntegrationsModule,
     ZapierModule,
     GoogleCalendarModule,
+    GoogleDriveModule,
   ],
   controllers: [],
   providers: [],
@@ -36,6 +38,7 @@ import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
     AppsIntegrationsModule,
     ZapierModule,
     GoogleCalendarModule,
+    GoogleDriveModule,
   ],
 })
 export class IntegrationsModule {}

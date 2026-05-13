@@ -211,12 +211,14 @@ export default function AppsIntegrationsHub() {
         webhookStatus,
         zapierStatus,
         googleCalendarStatus,
+        googleDriveStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
         loadWebhookStatus(),
         loadZapierStatus(),
         loadGoogleCalendarStatus(),
+        loadGoogleDriveStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -247,6 +249,12 @@ export default function AppsIntegrationsHub() {
           item.key === "google_calendar" &&
           googleCalendarStatus?.isConfigured
         ) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
+        if (item.key === "google_drive" && googleDriveStatus?.isConfigured) {
           return {
             ...item,
             status: "connected",
@@ -285,7 +293,8 @@ export default function AppsIntegrationsHub() {
       integration.key === "email_provider" ||
       integration.key === "api_access" ||
       integration.key === "zapier" ||
-      integration.key === "google_calendar"
+      integration.key === "google_calendar" ||
+      integration.key === "google_drive"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -339,6 +348,10 @@ export default function AppsIntegrationsHub() {
         return;
       }
 
+      if (integration.key === "google_drive") {
+        navigate("/dashboard/integrations/google-drive");
+        return;
+      }
       /*
        * PLACEHOLDER SYNC
        */
@@ -405,6 +418,21 @@ export default function AppsIntegrationsHub() {
       return await apiClient.request(
         "/integrations/google-calendar/config/status",
       );
+    } catch (err) {
+      console.error(err);
+
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+  const loadGoogleDriveStatus = async () => {
+    try {
+      const res = await apiClient.request(
+        "/integrations/google-drive/config/status",
+      );
+
+      return res;
     } catch (err) {
       console.error(err);
 
