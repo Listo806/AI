@@ -1662,79 +1662,6 @@ export default function Landing() {
           <footer className="footer-final">
             <div className="container">
 
-              <div className="footer-grid">
-                
-                <div className="footer-brand">
-                  <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
-                  <p>
-                    The AI-powered CRM that helps you capture leads, automate follow-ups, 
-                    and close more deals — faster.
-                  </p>
-                  <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
-
-                  <div className="footer-tags">
-                    <span>✨ AI-Powered</span>
-                    <span>🛡 Secure</span>
-                    <span>⚡ Automation</span>
-                    <span>📊 Insights</span>
-                  </div>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Product</h3>
-                  <ul>
-                    <li><a href="/features">Features</a></li>
-                    <li><a href="/ai-assistant">AI Assistant</a></li>
-                    <li><a href="/automations">Automations</a></li>
-                    <li><a href="/integrations">Integrations</a></li>
-                    <li><a href="/analytics">Analytics</a></li>
-                    <li><a href="/pricing">Pricing</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Get Started</h3>
-                  <ul>
-                    <li><a href="/signup">Create Account</a></li>
-                    <li><a href="/signin">Login</a></li>
-                    <li><a href="/crm">Dashboard</a></li>
-                    <li><a href="/setup">Setup Guide</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Connect</h3>
-                  <ul>
-                    <li><a href="/integrations">Connect Your Apps</a></li>
-                    <li><a href="/help/import-crm">Import Your CRM</a></li>
-                    <li><a href="/help/import-csv">Import CSV / Excel</a></li>
-                    <li><a href="/help/zapier">Zapier & Automations</a></li>
-                    <li><a href="/help/api">API & Webhooks</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Support</h3>
-                  <ul>
-                    <li><a href="/support">24-7 Support</a></li>
-                    <li><a href="/help">Help Center</a></li>
-                    <li><a href="/contact">Contact Us</a></li>
-                    <li><a href="/about">About Us</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Legal</h3>
-                  <ul>
-                    <li><a href="/terms">Terms & Conditions</a></li>
-                    <li><a href="/privacy-policy">Privacy Policy</a></li>
-                    <li><a href="/refund-policy">Refund Policy</a></li>
-                    <li><a href="/cancellation">Cancellation Policy</a></li>
-                  </ul>
-                </div>
-
-              </div>
-
               <div className="footer-location">
                 <div className="section">
                   <div className="cities-grid">
@@ -1839,19 +1766,77 @@ export default function Landing() {
                 </div>
 
               </div>
+              <div className="footer-grid">
+                
+                <div className="footer-brand">
+                  <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
+                  <p>
+                    The AI-powered CRM that helps you capture leads, automate follow-ups, 
+                    and close more deals — faster.
+                  </p>
+                  <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
 
-              <div className="footer-newsletter">
-                <h3>Stay updated</h3>
-                <p>Get CRM updates, AI automation tips, and product news.</p>
-
-                <div className="newsletter-form">
-                  <input type="email" placeholder="Your email" />
-                  <button>→</button>
+                  <div className="footer-tags">
+                    <span>✨ AI-Powered</span>
+                    <span>🛡 Secure</span>
+                    <span>⚡ Automation</span>
+                    <span>📊 Insights</span>
+                  </div>
                 </div>
 
-                <p className="small">
-                  We respect your privacy. Unsubscribe anytime.
-                </p>
+                <div className="footer-col">
+                  <h3>Product</h3>
+                  <ul>
+                    <li><a href="/features">Features</a></li>
+                    <li><a href="/ai-assistant">AI Assistant</a></li>
+                    <li><a href="/automations">Automations</a></li>
+                    <li><a href="/integrations">Integrations</a></li>
+                    <li><a href="/analytics">Analytics</a></li>
+                    <li><a href="/pricing">Pricing</a></li>
+                  </ul>
+                </div>
+
+                <div className="footer-col">
+                  <h3>Get Started</h3>
+                  <ul>
+                    <li><a href="/signup">Create Account</a></li>
+                    <li><a href="/signin">Login</a></li>
+                    <li><a href="/crm">Dashboard</a></li>
+                    <li><a href="/setup">Setup Guide</a></li>
+                  </ul>
+                </div>
+
+                <div className="footer-col">
+                  <h3>Connect</h3>
+                  <ul>
+                    <li><a href="/integrations">Connect Your Apps</a></li>
+                    <li><a href="/help/import-crm">Import Your CRM</a></li>
+                    <li><a href="/help/import-csv">Import CSV / Excel</a></li>
+                    <li><a href="/help/zapier">Zapier & Automations</a></li>
+                    <li><a href="/help/api">API & Webhooks</a></li>
+                  </ul>
+                </div>
+
+                <div className="footer-col">
+                  <h3>Support</h3>
+                  <ul>
+                    <li><a href="/support">24-7 Support</a></li>
+                    <li><a href="/help">Help Center</a></li>
+                    <li><a href="/contact">Contact Us</a></li>
+                    <li><a href="/about">About Us</a></li>
+                  </ul>
+                </div>
+
+                <div className="footer-col">
+                  <h3>Legal</h3>
+                  <ul>
+                    <li><a href="/terms">Terms & Conditions</a></li>
+                    <li><a href="/privacy-policy">Privacy Policy</a></li>
+                    <li><a href="/refund-policy">Refund Policy</a></li>
+                    <li><a href="/cancellation">Cancellation Policy</a></li>
+                  </ul>
+                </div>
+
               </div>
 
             </div>
