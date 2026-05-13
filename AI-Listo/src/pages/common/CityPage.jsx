@@ -160,16 +160,9 @@ export default function CityPage() {
           </ul>
 
           <div style={{ marginTop: "30px" }}>
-            <button style={btn}>Start Free Trial</button>
-          </div>
-        </section>
-
-        <section>
-          <div style={{ border: "1px solid #e5e7eb", padding: "20px", borderRadius: "12px" }}>
-            <h3>Lead Form</h3>
-            <p style={{ color: "#666" }}>
-              (Lead form component placeholder)
-            </p>
+            <Link to="/trial">
+              <button style={btn}>Start Free Trial</button>
+            </Link>
           </div>
         </section>
 
