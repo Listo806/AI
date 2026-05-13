@@ -12,6 +12,7 @@ import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
 import { GoogleDriveModule } from "./google-drive/google-drive.module";
 import { InstagramModule } from "./instagram/instagram.module";
 import { MetaWebhookController } from "./instagram/meta-webhook.controller";
+import { CrmImportModule } from "./crm-import/crm-import.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { MetaWebhookController } from "./instagram/meta-webhook.controller";
     GoogleCalendarModule,
     GoogleDriveModule,
     InstagramModule,
+    CrmImportModule,
   ],
   controllers: [MetaWebhookController],
   providers: [],
@@ -43,6 +45,7 @@ import { MetaWebhookController } from "./instagram/meta-webhook.controller";
     GoogleCalendarModule,
     GoogleDriveModule,
     InstagramModule,
+    CrmImportModule,
   ],
 })
 export class IntegrationsModule {}

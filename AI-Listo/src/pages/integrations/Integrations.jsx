@@ -95,7 +95,7 @@ const integrationsConfig = [
     //status: "Connected",
   },
   {
-    key: "crm_migration",
+    key: "crm_import",
     title: "CRM Migration Tool",
     description:
       "Import leads, pipelines, contacts, and properties from another CRM.",
@@ -213,6 +213,7 @@ export default function AppsIntegrationsHub() {
         googleCalendarStatus,
         googleDriveStatus,
         instagramStatus,
+        crmImportStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -221,6 +222,7 @@ export default function AppsIntegrationsHub() {
         loadGoogleCalendarStatus(),
         loadGoogleDriveStatus(),
         loadInstagramStatus(),
+        loadCrmImportStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -268,6 +270,12 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "crm-import" && crmImportStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
 
         return item;
       });
@@ -292,7 +300,7 @@ export default function AppsIntegrationsHub() {
   const getButtonLabel = (integration) => {
     if (
       integration.key === "csv_lead_import" ||
-      integration.key === "crm_migration"
+      integration.key === "crm_import"
     ) {
       return "Import";
     }
@@ -362,6 +370,10 @@ export default function AppsIntegrationsHub() {
       }
       if (integration.key === "instagram") {
         navigate("/dashboard/integrations/instagram");
+        return;
+      }
+      if (integration.key === "crm_import") {
+        navigate("/dashboard/integrations/crm-import");
         return;
       }
       /*
@@ -457,6 +469,16 @@ export default function AppsIntegrationsHub() {
   const loadInstagramStatus = async () => {
     try {
       return await apiClient.request("/integrations/instagram/config/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+
+  const loadCrmImportStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/crm-import/config/status");
     } catch (err) {
       return {
         isConfigured: false,

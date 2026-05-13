@@ -56,7 +56,7 @@ export class AppsIntegrationsService implements OnModuleInit {
   },
 
   {
-    key: "crm_migration",
+    key: "crm_import",
     name: "CRM Migration Tool",
     category: "CRM Imports",
   },
