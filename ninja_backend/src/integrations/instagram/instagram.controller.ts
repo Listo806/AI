@@ -5,25 +5,40 @@ import {
   Get,
   Post,
   Query,
-  Req,
   Res,
+  UseGuards,
+  ForbiddenException,
 } from "@nestjs/common";
 
+import { Response } from "express";
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { InstagramService } from "./instagram.service";
 
 @Controller("integrations/instagram")
+@UseGuards(JwtAuthGuard)
 export class InstagramController {
   constructor(
     private readonly instagramService: InstagramService,
   ) {}
 
-  @Get("connect")
-  async connect(@Req() req) {
-    const teamId = req.user.teamId;
+  private requireTeam(user: any): string {
+    if (!user?.teamId) {
+      throw new ForbiddenException(
+        "User must belong to a team",
+      );
+    }
 
+    return user.teamId;
+  }
+
+  @Get("connect")
+  async connect(
+    @CurrentUser() user: any,
+  ) {
     return {
       url: this.instagramService.getAuthUrl(
-        teamId,
+        this.requireTeam(user),
       ),
     };
   }
@@ -34,7 +49,7 @@ export class InstagramController {
 
     @Query("state") teamId: string,
 
-    @Res() res,
+    @Res() res: Response,
   ) {
     try {
       const tokenData =
@@ -83,11 +98,8 @@ export class InstagramController {
       await this.instagramService.saveIntegration(
         {
           teamId,
-
           page,
-
           instagram: profile,
-
           accessToken,
         },
       );
@@ -105,36 +117,45 @@ export class InstagramController {
   }
 
   @Get("config")
-  async config(@Req() req) {
+  async config(
+    @CurrentUser() user: any,
+  ) {
     return this.instagramService.getConfig(
-      req.user.teamId,
+      this.requireTeam(user),
     );
   }
 
   @Get("config/status")
-  async status(@Req() req) {
+  async status(
+    @CurrentUser() user: any,
+  ) {
     return this.instagramService.getStatus(
-      req.user.teamId,
+      this.requireTeam(user),
     );
   }
 
   @Post("toggle-sync")
   async toggleSync(
-    @Req() req,
+    @CurrentUser() user: any,
 
-    @Body() body,
+    @Body()
+    body: {
+      enabled: boolean;
+    },
   ) {
     return this.instagramService.toggleSync(
-      req.user.teamId,
+      this.requireTeam(user),
 
       body.enabled,
     );
   }
 
   @Delete("disconnect")
-  async disconnect(@Req() req) {
+  async disconnect(
+    @CurrentUser() user: any,
+  ) {
     return this.instagramService.disconnect(
-      req.user.teamId,
+      this.requireTeam(user),
     );
   }
 }
