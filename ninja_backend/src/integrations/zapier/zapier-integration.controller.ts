@@ -47,7 +47,7 @@ export class ZapierIntegrationController {
     );
   }
 
-  @Get("status")
+  @Get("config/status")
   async getStatus(@CurrentUser() user: any) {
     return this.zapierService.getStatus(
       this.requireTeam(user),
