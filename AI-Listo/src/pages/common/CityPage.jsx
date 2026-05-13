@@ -126,7 +126,7 @@ export default function CityPage() {
   return (
     <main style={{ padding: "60px 20px", maxWidth: "1000px", margin: "auto" }}>
       
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "50px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "50px" }}>
 
         <section>
           <p style={{
@@ -136,7 +136,7 @@ export default function CityPage() {
             borderRadius: "20px",
             fontSize: "14px",
             fontWeight: "600",
-            color: "#1d4ed8"
+            color: "#1d4ed8",
           }}>
             AI CRM in {cityName}
           </p>
@@ -151,7 +151,7 @@ export default function CityPage() {
             and close more business with AI.
           </p>
 
-          <ul style={{ marginTop: "25px", color: "#333", lineHeight: "1.8" }}>
+          <ul style={{ marginTop: "25px", color: "#333", lineHeight: "1.8", listStyle: "none" }}>
             <li>✔ AI lead capture for {cityName} real estate agents</li>
             <li>✔ WhatsApp automation for faster lead response</li>
             <li>✔ AI follow-up, lead scoring, and appointment setting</li>
