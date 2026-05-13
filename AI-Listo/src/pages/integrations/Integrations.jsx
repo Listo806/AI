@@ -213,7 +213,7 @@ export default function AppsIntegrationsHub() {
         googleCalendarStatus,
         googleDriveStatus,
         instagramStatus,
-        crmImportStatus,
+        
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -222,7 +222,6 @@ export default function AppsIntegrationsHub() {
         loadGoogleCalendarStatus(),
         loadGoogleDriveStatus(),
         loadInstagramStatus(),
-        loadCrmImportStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -270,12 +269,7 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
-        if (item.key === "crm-import" && crmImportStatus?.isConfigured) {
-          return {
-            ...item,
-            status: "connected",
-          };
-        }
+        
 
         return item;
       });
@@ -374,6 +368,10 @@ export default function AppsIntegrationsHub() {
       }
       if (integration.key === "crm_import") {
         navigate("/dashboard/integrations/crm-import");
+        return;
+      }
+      if (integration.key === "csv_lead_import") {
+        navigate("/dashboard/integrations/csv-leads");
         return;
       }
       /*
@@ -476,15 +474,7 @@ export default function AppsIntegrationsHub() {
     }
   };
 
-  const loadCrmImportStatus = async () => {
-    try {
-      return await apiClient.request("/integrations/crm-import/config/status");
-    } catch (err) {
-      return {
-        isConfigured: false,
-      };
-    }
-  };
+  
 
   return (
     <div className="apps-page">
