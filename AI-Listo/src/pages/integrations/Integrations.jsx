@@ -520,7 +520,7 @@ export default function AppsIntegrationsHub() {
                       />
                     </div>
 
-                    <div>
+                    <div className="integration-right">
                       <h3 className="integration-title">{integration.title}</h3>
 
                       <p className="integration-description">

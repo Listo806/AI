@@ -216,6 +216,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: 0.25s ease;
+  width: 127px;
 }
 
 .integration-btn:hover {
@@ -239,7 +240,11 @@ body {
   background: #eff6ff;
   color: #2563eb;
 }
-
+.integration-right{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
 
 
 
