@@ -7,6 +7,7 @@ import { PushNotificationModule } from './notifications/push-notification.module
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { SendgridModule } from './email/sendgrid.module';
 import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.module';
+import { ZapierModule } from './zapier/zapier.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.mo
     WebhooksModule,
     SendgridModule,
     AppsIntegrationsModule,
+    ZapierModule,
   ],
   controllers: [],
   providers: [],
@@ -30,6 +32,7 @@ import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.mo
     WebhooksModule,
     SendgridModule,
     AppsIntegrationsModule,
+    ZapierModule,
   ],
 })
 export class IntegrationsModule {}
