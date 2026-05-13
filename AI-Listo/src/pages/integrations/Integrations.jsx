@@ -205,13 +205,19 @@ export default function AppsIntegrationsHub() {
     try {
       setLoading(true);
 
-      const [integrationsRes, emailStatus, webhookStatus, zapierStatus] =
-        await Promise.all([
-          apiClient.request("/integrations"),
-          loadEmailStatus(),
-          loadWebhookStatus(),
-          loadZapierStatus(),
-        ]);
+      const [
+        integrationsRes,
+        emailStatus,
+        webhookStatus,
+        zapierStatus,
+        googleCalendarStatus,
+      ] = await Promise.all([
+        apiClient.request("/integrations"),
+        loadEmailStatus(),
+        loadWebhookStatus(),
+        loadZapierStatus(),
+        loadGoogleCalendarStatus(),
+      ]);
 
       const integrations = integrationsRes.integrations || [];
 
@@ -232,6 +238,15 @@ export default function AppsIntegrationsHub() {
           };
         }
         if (item.key === "zapier" && zapierStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
+        if (
+          item.key === "google_calendar" &&
+          googleCalendarStatus?.isConfigured
+        ) {
           return {
             ...item,
             status: "connected",
@@ -269,7 +284,8 @@ export default function AppsIntegrationsHub() {
     if (
       integration.key === "email_provider" ||
       integration.key === "api_access" ||
-      integration.key === "zapier"
+      integration.key === "zapier" ||
+      integration.key === "google_calendar"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -312,6 +328,14 @@ export default function AppsIntegrationsHub() {
 
       if (integration.key === "zapier") {
         navigate("/dashboard/integrations/zapier");
+        return;
+      }
+
+      if (integration.key === "google_calendar") {
+        const res = await apiClient.request(
+          "/integrations/google-calendar/auth-url",
+        );
+        window.location.href = res.url;
         return;
       }
 
@@ -368,6 +392,19 @@ export default function AppsIntegrationsHub() {
       const res = await apiClient.request("/integrations/zapier/config/status");
 
       return res;
+    } catch (err) {
+      console.error(err);
+
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+  const loadGoogleCalendarStatus = async () => {
+    try {
+      return await apiClient.request(
+        "/integrations/google-calendar/config/status",
+      );
     } catch (err) {
       console.error(err);
 

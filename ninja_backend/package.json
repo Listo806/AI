@@ -20,7 +20,8 @@
     "setup:db": "node scripts/setup-db.js",
     "migrate:country-ecuador": "node scripts/apply-migration-050-country.js",
     "create:test-users": "node scripts/create-test-users.js",
-    "seed:test-data": "node scripts/seed-test-data.js"
+    "seed:test-data": "node scripts/seed-test-data.js",
+    "migration:run": "ts-node src/database/run-migrations.ts"
   },
   "keywords": [
     "nestjs",
@@ -54,6 +55,7 @@
     "combined-stream": "^1.0.8",
     "dotenv": "^17.2.3",
     "form-data": "^4.0.4",
+    "googleapis": "^171.4.0",
     "ioredis": "^5.10.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
@@ -61,7 +63,7 @@
     "openai": "^6.37.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
-    "pg": "^8.16.3",
+    "pg": "^8.20.0",
     "raw-body": "^3.0.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",

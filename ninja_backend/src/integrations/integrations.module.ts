@@ -8,6 +8,7 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { SendgridModule } from './email/sendgrid.module';
 import { AppsIntegrationsModule } from './apps-integrations/apps-integrations.module';
 import { ZapierModule } from './zapier/zapier.module';
+import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ZapierModule } from './zapier/zapier.module';
     SendgridModule,
     AppsIntegrationsModule,
     ZapierModule,
+    GoogleCalendarModule,
   ],
   controllers: [],
   providers: [],
@@ -33,6 +35,7 @@ import { ZapierModule } from './zapier/zapier.module';
     SendgridModule,
     AppsIntegrationsModule,
     ZapierModule,
+    GoogleCalendarModule,
   ],
 })
 export class IntegrationsModule {}
