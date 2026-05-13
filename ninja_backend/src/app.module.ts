@@ -54,7 +54,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     SiteAssistModule,
     VacationRentalsModule,
     TrialModule,
-    ScheduleModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
 })
