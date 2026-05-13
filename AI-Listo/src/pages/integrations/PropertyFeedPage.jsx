@@ -140,251 +140,436 @@ export default function PropertyFeedPage() {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>
+    <div
+      className="page-container"
+      style={{
+        background: "#f5f7fb",
+        minHeight: "100vh",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        className="page-header"
+        style={{
+          marginBottom: 30,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: 36,
+            fontWeight: 700,
+            color: "#111827",
+            marginBottom: 10,
+          }}
+        >
           Property Feed Sync
         </h1>
 
-        <p>
+        <p
+          style={{
+            color: "#6b7280",
+            fontSize: 17,
+            maxWidth: 700,
+            lineHeight: 1.7,
+          }}
+        >
           Connect XML and JSON
           property feeds into
-          your CRM.
+          your CRM and
+          automatically sync
+          listings.
         </p>
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          padding: 24,
-          border: "1px solid #e5e7eb",
-          marginTop: 24,
-        }}
-      >
+      <div style={cardStyle}>
+        <h2
+          style={{
+            marginBottom: 20,
+            fontSize: 22,
+            fontWeight: 700,
+          }}
+        >
+          Add Property Feed
+        </h2>
+
         <div
           style={{
             display: "grid",
-            gap: 16,
+            gap: 18,
           }}
         >
-          <input
-            placeholder="Provider Name"
-            value={form.providerName}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                providerName:
-                  e.target.value,
-              })
-            }
-          />
+          <div>
+            <div style={labelStyle}>
+              Provider Name
+            </div>
 
-          <input
-            placeholder="Feed URL"
-            value={form.feedUrl}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                feedUrl:
-                  e.target.value,
-              })
-            }
-          />
+            <input
+              style={inputStyle}
+              placeholder="Example: Zillow Feed"
+              value={
+                form.providerName
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  providerName:
+                    e.target.value,
+                })
+              }
+            />
+          </div>
 
-          <select
-            value={form.feedType}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                feedType:
-                  e.target.value,
-              })
-            }
-          >
-            <option value="xml">
-              XML Feed
-            </option>
+          <div>
+            <div style={labelStyle}>
+              Feed URL
+            </div>
 
-            <option value="json">
-              JSON Feed
-            </option>
-          </select>
+            <input
+              style={inputStyle}
+              placeholder="https://example.com/feed.xml"
+              value={form.feedUrl}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  feedUrl:
+                    e.target.value,
+                })
+              }
+            />
+          </div>
 
-          <input
-            type="number"
-            placeholder="Sync Frequency Minutes"
-            value={
-              form.syncFrequencyMinutes
-            }
-            onChange={(e) =>
-              setForm({
-                ...form,
-                syncFrequencyMinutes:
-                  e.target.value,
-              })
-            }
-          />
+          <div>
+            <div style={labelStyle}>
+              Feed Type
+            </div>
+
+            <select
+              style={inputStyle}
+              value={form.feedType}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  feedType:
+                    e.target.value,
+                })
+              }
+            >
+              <option value="xml">
+                XML Feed
+              </option>
+
+              <option value="json">
+                JSON Feed
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <div style={labelStyle}>
+              Sync Frequency
+            </div>
+
+            <input
+              style={inputStyle}
+              type="number"
+              placeholder="60"
+              value={
+                form.syncFrequencyMinutes
+              }
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  syncFrequencyMinutes:
+                    e.target.value,
+                })
+              }
+            />
+          </div>
 
           <button
             onClick={createFeed}
             disabled={saving}
-            style={buttonStyle}
+            style={{
+              ...buttonStyle,
+              height: 50,
+            }}
           >
             {saving
               ? "Saving..."
               : "Add Feed"}
           </button>
         </div>
+      </div>
 
-        <div
+      <div
+        style={{
+          marginTop: 40,
+        }}
+      >
+        <h2
           style={{
-            marginTop: 32,
+            fontSize: 24,
+            fontWeight: 700,
+            marginBottom: 20,
+            color: "#111827",
           }}
         >
-          <h3>
-            Connected Feeds
-          </h3>
+          Connected Feeds
+        </h2>
 
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gap: 16,
-                marginTop: 16,
-              }}
-            >
-              {feeds.map((feed) => (
+        {loading ? (
+          <p>Loading...</p>
+        ) : feeds.length === 0 ? (
+          <div style={emptyStyle}>
+            No property feeds
+            connected yet.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: 20,
+            }}
+          >
+            {feeds.map((feed) => (
+              <div
+                key={feed.id}
+                style={cardStyle}
+              >
                 <div
-                  key={feed.id}
                   style={{
-                    border:
-                      "1px solid #e5e7eb",
-
-                    borderRadius: 12,
-
-                    padding: 16,
+                    display: "flex",
+                    justifyContent:
+                      "space-between",
+                    alignItems:
+                      "center",
+                    marginBottom: 16,
+                    flexWrap: "wrap",
+                    gap: 10,
                   }}
                 >
-                  <h4>
+                  <h3
+                    style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      margin: 0,
+                      color:
+                        "#111827",
+                    }}
+                  >
                     {
                       feed.providerName
                     }
-                  </h4>
+                  </h3>
 
-                  <p>
-                    {feed.feedUrl}
-                  </p>
+                  <div
+                    style={{
+                      background:
+                        feed.syncEnabled
+                          ? "#dcfce7"
+                          : "#fee2e2",
 
-                  <p>
-                    Type:
+                      color:
+                        feed.syncEnabled
+                          ? "#166534"
+                          : "#991b1b",
+
+                      padding:
+                        "6px 12px",
+
+                      borderRadius: 999,
+
+                      fontSize: 13,
+
+                      fontWeight: 600,
+                    }}
+                  >
+                    {feed.syncEnabled
+                      ? "Enabled"
+                      : "Disabled"}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 10,
+                    color:
+                      "#4b5563",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  <div>
+                    <strong>
+                      URL:
+                    </strong>{" "}
                     {
-                      feed.feedType
+                      feed.feedUrl
                     }
-                  </p>
+                  </div>
 
-                  <p>
-                    Properties:
+                  <div>
+                    <strong>
+                      Type:
+                    </strong>{" "}
+                    {feed.feedType.toUpperCase()}
+                  </div>
+
+                  <div>
+                    <strong>
+                      Properties:
+                    </strong>{" "}
                     {
                       feed.totalProperties
                     }
-                  </p>
+                  </div>
 
-                  <p>
-                    Frequency:
+                  <div>
+                    <strong>
+                      Frequency:
+                    </strong>{" "}
                     Every{" "}
                     {
                       feed.syncFrequencyMinutes
                     }{" "}
                     minutes
-                  </p>
-
-                  <p>
-                    Sync:
-                    {feed.syncEnabled
-                      ? " Enabled"
-                      : " Disabled"}
-                  </p>
-
-                  {feed.lastError && (
-                    <p
-                      style={{
-                        color:
-                          "red",
-                      }}
-                    >
-                      {
-                        feed.lastError
-                      }
-                    </p>
-                  )}
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 12,
-                      marginTop: 16,
-                    }}
-                  >
-                    <button
-                      onClick={() =>
-                        syncFeed(
-                          feed.id,
-                        )
-                      }
-                      style={
-                        buttonStyle
-                      }
-                    >
-                      {syncingId ===
-                      feed.id
-                        ? "Syncing..."
-                        : "Sync Now"}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        toggleSync(
-                          feed,
-                        )
-                      }
-                      style={
-                        buttonStyle
-                      }
-                    >
-                      {feed.syncEnabled
-                        ? "Disable"
-                        : "Enable"}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        deleteFeed(
-                          feed.id,
-                        )
-                      }
-                      style={
-                        buttonStyle
-                      }
-                    >
-                      Delete
-                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                {feed.lastError && (
+                  <div
+                    style={{
+                      marginTop: 16,
+                      background:
+                        "#fef2f2",
+                      color:
+                        "#b91c1c",
+                      padding: 12,
+                      borderRadius: 10,
+                      fontSize: 14,
+                    }}
+                  >
+                    {
+                      feed.lastError
+                    }
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    marginTop: 20,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      syncFeed(
+                        feed.id,
+                      )
+                    }
+                    style={
+                      buttonStyle
+                    }
+                  >
+                    {syncingId ===
+                    feed.id
+                      ? "Syncing..."
+                      : "Sync Now"}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      toggleSync(
+                        feed,
+                      )
+                    }
+                    style={
+                      secondaryButton
+                    }
+                  >
+                    {feed.syncEnabled
+                      ? "Disable"
+                      : "Enable"}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      deleteFeed(
+                        feed.id,
+                      )
+                    }
+                    style={
+                      dangerButton
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+const cardStyle = {
+  background: "#fff",
+  borderRadius: 18,
+  padding: 24,
+  border: "1px solid #e5e7eb",
+  boxShadow:
+    "0 4px 20px rgba(0,0,0,0.04)",
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid #d1d5db",
+  fontSize: 15,
+  outline: "none",
+  boxSizing: "border-box",
+  background: "#fff",
+};
+
+const labelStyle = {
+  fontSize: 14,
+  fontWeight: 600,
+  marginBottom: 8,
+  color: "#374151",
+};
+
 const buttonStyle = {
-  padding: "10px 18px",
-  borderRadius: 10,
+  padding: "12px 18px",
+  borderRadius: 12,
   border: "none",
   cursor: "pointer",
+  background: "#2563eb",
+  color: "#fff",
+  fontWeight: 600,
+  fontSize: 15,
 };
+
+const secondaryButton = {
+  ...buttonStyle,
+  background: "#111827",
+};
+
+const dangerButton = {
+  ...buttonStyle,
+  background: "#dc2626",
+};
+
+const emptyStyle = {
+  background: "#fff",
+  border: "1px dashed #d1d5db",
+  borderRadius: 16,
+  padding: 40,
+  textAlign: "center",
+  color: "#6b7280",
+};
+

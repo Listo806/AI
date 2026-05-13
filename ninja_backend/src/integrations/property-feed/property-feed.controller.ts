@@ -13,9 +13,8 @@ import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { PropertyFeedService } from "./property-feed.service";
 
-@Controller(
-  "integrations/property-feed",
-)
+
+@Controller("integrations/property-feed")
 @UseGuards(JwtAuthGuard)
 export class PropertyFeedController {
   constructor(
