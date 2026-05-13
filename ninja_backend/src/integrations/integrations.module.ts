@@ -13,7 +13,7 @@ import { GoogleDriveModule } from "./google-drive/google-drive.module";
 import { InstagramModule } from "./instagram/instagram.module";
 import { MetaWebhookController } from "./instagram/meta-webhook.controller";
 import { CrmImportModule } from "./crm-import/crm-import.module";
-import { CsvLeadsModule } from "./imports/csv-leads/csv-leads.module";
+import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
 
 @Module({
   imports: [
