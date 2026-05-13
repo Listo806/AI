@@ -1,22 +1,13 @@
 import { Injectable } from "@nestjs/common";
-
 import { DatabaseService } from "../../database/database.service";
-
-import * as csvParser from "csv-parser";
-
+import csvParser from "csv-parser";
 import { Readable } from "stream";
 
 @Injectable()
 export class CrmImportService {
-  constructor(
-    private readonly db: DatabaseService,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
-  async createImport({
-    teamId,
-    sourceType,
-    fileName,
-  }) {
+  async createImport({ teamId, sourceType, fileName }) {
     const { rows } = await this.db.query(
       `
       INSERT INTO crm_imports_integrations (
@@ -34,19 +25,15 @@ export class CrmImportService {
     return rows[0];
   }
 
-  async parseCsv(file: Express.Multer.File) {
+  async parseCsv(file: Express.Multer.File): Promise<any[]> {
     return new Promise((resolve, reject) => {
       const results = [];
 
-      const stream = Readable.from(
-        file.buffer,
-      );
+      const stream = Readable.from(file.buffer);
 
       stream
         .pipe(csvParser())
-        .on("data", (data) =>
-          results.push(data),
-        )
+        .on("data", (data) => results.push(data))
         .on("end", () => resolve(results))
         .on("error", reject);
     });
@@ -65,11 +52,7 @@ export class CrmImportService {
     return rows[0];
   }
 
-  async saveMapping(
-    importId: string,
-    mapping: any,
-    duplicateStrategy: string,
-  ) {
+  async saveMapping(importId: string, mapping: any, duplicateStrategy: string) {
     await this.db.query(
       `
       UPDATE crm_imports_integrations
@@ -79,11 +62,7 @@ export class CrmImportService {
         updated_at = NOW()
       WHERE id = $3
       `,
-      [
-        JSON.stringify(mapping),
-        duplicateStrategy,
-        importId,
-      ],
+      [JSON.stringify(mapping), duplicateStrategy, importId],
     );
 
     return {
@@ -163,5 +142,16 @@ export class CrmImportService {
     );
 
     return rows;
+  }
+
+  async updateTotalRows(importId: string, totalRows: number) {
+    await this.db.query(
+      `
+    UPDATE crm_imports
+    SET total_rows = $1
+    WHERE id = $2
+    `,
+      [totalRows, importId],
+    );
   }
 }

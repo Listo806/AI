@@ -18,15 +18,11 @@ import { CrmImportService } from "./crm-import.service";
 @Controller("integrations/crm-import")
 @UseGuards(JwtAuthGuard)
 export class CrmImportController {
-  constructor(
-    private readonly crmImportService: CrmImportService,
-  ) {}
+  constructor(private readonly crmImportService: CrmImportService) {}
 
   private requireTeam(user: any): string {
     if (!user?.teamId) {
-      throw new ForbiddenException(
-        "User must belong to a team",
-      );
+      throw new ForbiddenException("User must belong to a team");
     }
 
     return user.teamId;
@@ -40,43 +36,26 @@ export class CrmImportController {
     @UploadedFile()
     file: Express.Multer.File,
   ) {
-    const teamId =
-      this.requireTeam(user);
+    const teamId = this.requireTeam(user);
 
-    const importJob =
-      await this.crmImportService.createImport(
-        {
-          teamId,
+    const importJob = await this.crmImportService.createImport({
+      teamId,
 
-          sourceType: "csv",
+      sourceType: "csv",
 
-          fileName: file.originalname,
-        },
-      );
+      fileName: file.originalname,
+    });
 
-    const rows =
-      await this.crmImportService.parseCsv(
-        file,
-      );
+    const rows = await this.crmImportService.parseCsv(file);
 
-    await this.crmImportService["db"].query(
-      `
-      UPDATE crm_imports
-      SET total_rows = $1
-      WHERE id = $2
-      `,
-      [rows.length, importJob.id],
-    );
+    await this.crmImportService.updateTotalRows(importJob.id, rows.length);
 
     return {
       importId: importJob.id,
 
       totalRows: rows.length,
 
-      columns:
-        rows.length > 0
-          ? Object.keys(rows[0])
-          : [],
+      columns: rows.length > 0 ? Object.keys(rows[0]) : [],
 
       sampleRows: rows.slice(0, 5),
     };
@@ -87,9 +66,7 @@ export class CrmImportController {
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.analyzeImport(
-      importId,
-    );
+    return this.crmImportService.analyzeImport(importId);
   }
 
   @Post(":importId/mapping")
@@ -117,9 +94,7 @@ export class CrmImportController {
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.startImport(
-      importId,
-    );
+    return this.crmImportService.startImport(importId);
   }
 
   @Get(":importId/progress")
@@ -127,9 +102,7 @@ export class CrmImportController {
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.getProgress(
-      importId,
-    );
+    return this.crmImportService.getProgress(importId);
   }
 
   @Get(":importId/logs")
@@ -137,8 +110,6 @@ export class CrmImportController {
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.getLogs(
-      importId,
-    );
+    return this.crmImportService.getLogs(importId);
   }
 }
