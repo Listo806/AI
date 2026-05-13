@@ -92,8 +92,8 @@ export class AppsIntegrationsService implements OnModuleInit {
   },
 
   {
-    key: "meta_ads",
-    name: "Meta Ads",
+    key: "tiktok",
+    name: "TikTok Lead Sync",
     category: "Marketing",
   },
 

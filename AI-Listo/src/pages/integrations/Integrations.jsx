@@ -158,9 +158,9 @@ const integrationsConfig = [
     //status: "Connect",
   },
   {
-    key: "meta_ads",
-    title: "Meta Ads",
-    description: "Sync Facebook and Instagram leads directly into your CRM.",
+    key: "tiktok",
+    title: "TikTok Lead Sync",
+    description: "Capture TikTok leads directly into your CRM.",
     icon: Globe,
     iconColor: "#1877f2",
     iconBg: "#eff6ff",
