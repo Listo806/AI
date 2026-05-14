@@ -39,10 +39,13 @@ export default function GoogleAdsPage() {
 
       setConfig(configRes);
 
-      if (configRes) {
+      if (configRes?.google_ads_account_id) {
         setSelectedCampaignIds(
-          configRes.selected_campaign_ids ||
-            [],
+          typeof configRes.selected_campaign_ids === "string"
+            ? JSON.parse(
+                configRes.selected_campaign_ids,
+              )
+            : configRes.selected_campaign_ids || [],
         );
 
         setConversionTrackingEnabled(

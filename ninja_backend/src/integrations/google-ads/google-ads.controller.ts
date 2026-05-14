@@ -45,11 +45,10 @@ export class GoogleAdsController {
    |------------------------------------------------------------------
    */
 
-  @Get("auth-url")
-  async getAuthUrl(@CurrentUser() user: any) {
+  @Get("connect")
+  async connect(@CurrentUser() user: any) {
     return this.googleAdsService.getAuthUrl(this.requireTeam(user));
   }
-
   /*
    |------------------------------------------------------------------
    | CALLBACK

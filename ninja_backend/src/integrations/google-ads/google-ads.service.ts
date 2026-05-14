@@ -247,7 +247,7 @@ export class GoogleAdsService {
       const integration = await this.getIntegration(teamId);
 
       if (!integration) {
-        throw new Error("Google Ads not connected");
+        return [];
       }
 
       const accessToken = await this.getAccessToken(integration);
