@@ -26,7 +26,7 @@ export class MlsController {
 
   @Get()
   async get(@CurrentUser() user: any) {
-    return this.mlsService.getConfig(this.requireTeam(user));
+    return this.mlsService.getAll(this.requireTeam(user));
   }
 
   @Post()

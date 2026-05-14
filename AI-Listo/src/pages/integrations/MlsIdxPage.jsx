@@ -33,8 +33,8 @@ export default function MlsIdxPage() {
   const [syncing, setSyncing] = useState(false);
 
   const [toast, setToast] = useState(null);
-
-  const [config, setConfig] = useState({
+  const [feeds, setFeeds] = useState([]);
+  const [form, setForm] = useState({
     providerName: "",
     country: "US",
     integrationType: "idx",
@@ -56,7 +56,25 @@ export default function MlsIdxPage() {
   useEffect(() => {
     load();
   }, []);
+  await load();
+  setForm({
+    providerName: "",
+    country: "US",
+    integrationType: "idx",
 
+    endpointUrl: "",
+    username: "",
+    password: "",
+    apiKey: "",
+
+    syncEnabled: true,
+
+    syncFrequencyMinutes: 60,
+
+    propertyTypes: [],
+
+    compatibilityMode: "reso",
+  });
   const showToast = (message, type = "success") => {
     setToast({
       message,
@@ -71,15 +89,8 @@ export default function MlsIdxPage() {
   const load = async () => {
     try {
       setLoading(true);
-
       const res = await apiClient.request("/integrations/mls");
-
-      if (res) {
-        setConfig({
-          ...config,
-          ...res,
-        });
-      }
+      setFeeds(res || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -92,20 +103,20 @@ export default function MlsIdxPage() {
       /*
        * VALIDATION
        */
-      if (!config.providerName) {
+      if (!form.providerName) {
         showToast("Please select MLS provider", "error");
 
         return;
       }
 
-      if (!config.endpointUrl.trim()) {
+      if (!form.endpointUrl.trim()) {
         showToast("Endpoint URL is required", "error");
 
         return;
       }
 
       try {
-        new URL(config.endpointUrl);
+        new URL(form.endpointUrl);
       } catch {
         showToast("Invalid endpoint URL", "error");
 
@@ -117,7 +128,7 @@ export default function MlsIdxPage() {
       await apiClient.request("/integrations/mls", {
         method: "POST",
 
-        body: JSON.stringify(config),
+        body: JSON.stringify(form),
       });
 
       showToast("MLS integration saved successfully");
@@ -180,10 +191,10 @@ export default function MlsIdxPage() {
 
               <select
                 style={input}
-                value={config.providerName}
+                value={form.providerName}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     providerName: e.target.value,
                   })
                 }
@@ -203,10 +214,10 @@ export default function MlsIdxPage() {
 
               <select
                 style={input}
-                value={config.country}
+                value={form.country}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     country: e.target.value,
                   })
                 }
@@ -228,10 +239,10 @@ export default function MlsIdxPage() {
 
               <select
                 style={input}
-                value={config.integrationType}
+                value={form.integrationType}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     integrationType: e.target.value,
                   })
                 }
@@ -249,10 +260,10 @@ export default function MlsIdxPage() {
 
               <select
                 style={input}
-                value={config.compatibilityMode}
+                value={form.compatibilityMode}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     compatibilityMode: e.target.value,
                   })
                 }
@@ -273,10 +284,10 @@ export default function MlsIdxPage() {
               <input
                 style={input}
                 placeholder="https://api.mlsprovider.com"
-                value={config.endpointUrl}
+                value={form.endpointUrl}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     endpointUrl: e.target.value,
                   })
                 }
@@ -288,10 +299,10 @@ export default function MlsIdxPage() {
 
               <input
                 style={input}
-                value={config.username}
+                value={form.username}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     username: e.target.value,
                   })
                 }
@@ -304,10 +315,10 @@ export default function MlsIdxPage() {
               <input
                 type="password"
                 style={input}
-                value={config.password}
+                value={form.password}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     password: e.target.value,
                   })
                 }
@@ -323,10 +334,10 @@ export default function MlsIdxPage() {
 
               <input
                 style={input}
-                value={config.apiKey}
+                value={form.apiKey}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     apiKey: e.target.value,
                   })
                 }
@@ -339,10 +350,10 @@ export default function MlsIdxPage() {
               <input
                 type="number"
                 style={input}
-                value={config.syncFrequencyMinutes}
+                value={form.syncFrequencyMinutes}
                 onChange={(e) =>
-                  setConfig({
-                    ...config,
+                  setForm({
+                    ...form,
                     syncFrequencyMinutes: e.target.value,
                   })
                 }
@@ -352,11 +363,11 @@ export default function MlsIdxPage() {
             <label style={checkboxRow}>
               <input
                 type="checkbox"
-                checked={config.syncEnabled}
+                checked={form.syncEnabled}
                 onChange={() =>
-                  setConfig({
-                    ...config,
-                    syncEnabled: !config.syncEnabled,
+                  setForm({
+                    ...form,
+                    syncEnabled: !form.syncEnabled,
                   })
                 }
               />
@@ -482,6 +493,7 @@ const input = {
   padding: 14,
   borderRadius: 12,
   border: "1px solid #d1d5db",
+  boxSizing: "border-box",
 };
 
 const checkboxRow = {
