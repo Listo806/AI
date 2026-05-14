@@ -212,6 +212,9 @@ export default function AppsIntegrationsHub() {
   }, []);
   const [integrationStates, setIntegrationStates] = useState([]);
   const [search, setSearch] = useState("");
+  const [apiKey, setApiKey] = useState(null);
+    const [generatingKey, setGeneratingKey] = useState(false);
+    const [revokingKey, setRevokingKey] = useState(false);
   const loadIntegrations = async () => {
     try {
       setLoading(true);
@@ -226,6 +229,7 @@ export default function AppsIntegrationsHub() {
         instagramStatus,
         makeStatus,
         googleAdsStatus,
+        apiAccessStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -236,6 +240,7 @@ export default function AppsIntegrationsHub() {
         loadInstagramStatus(),
         loadMakeStatus(),
         loadGoogleAdsStatus(),
+        loadApiAccessStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -342,7 +347,7 @@ export default function AppsIntegrationsHub() {
     if (integration.status === "connected") {
       return "Connected";
     }
-
+    
     return "Sync Now";
   };
   const handleIntegrationClick = async (integration) => {
@@ -412,6 +417,10 @@ export default function AppsIntegrationsHub() {
         navigate("/dashboard/integrations/google-ads");
         return;
       }
+      if (integration.key === "api_access") {
+          navigate("/dashboard/integrations/api-access");
+          return;
+        }
       /*
        * PLACEHOLDER SYNC
        */
@@ -529,6 +538,13 @@ export default function AppsIntegrationsHub() {
       };
     }
   };
+  const loadApiAccessStatus = async () => {
+      try {
+        return await apiClient.request("/integrations/api-access/status");
+      } catch (err) {
+        return { isConfigured: false };
+      }
+    };
 
   return (
     <div className="apps-page">
