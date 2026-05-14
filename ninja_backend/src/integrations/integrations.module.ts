@@ -15,6 +15,7 @@ import { MetaWebhookController } from "./instagram/meta-webhook.controller";
 import { CrmImportModule } from "./crm-import/crm-import.module";
 import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
 import { PropertyFeedModule } from "./property-feed/property-feed.module";
+import { PropertyFeedController } from "./property-feed/property-feed.controller";
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { PropertyFeedModule } from "./property-feed/property-feed.module";
     CsvLeadsModule,
     PropertyFeedModule,
   ],
-  controllers: [MetaWebhookController],
+  controllers: [MetaWebhookController, PropertyFeedController],
   providers: [],
   exports: [
     MapboxModule,

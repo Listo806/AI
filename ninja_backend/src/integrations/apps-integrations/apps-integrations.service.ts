@@ -48,7 +48,11 @@ export class AppsIntegrationsService implements OnModuleInit {
     name: "Instagram",
     category: "Marketing",
   },
-
+  {
+    key: "appointment",
+    name: "AI Appointment Booking",
+    category: "Communication",
+  },
   {
     key: "whatsapp",
     name: "WhatsApp",
