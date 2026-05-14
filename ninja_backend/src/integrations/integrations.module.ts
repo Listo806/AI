@@ -21,6 +21,7 @@ import { MakeController } from "./make/make.controller";
 import { GoogleAdsModule } from "./google-ads/google-ads.module";
 import { GoogleAdsController } from "./google-ads/google-ads.controller";
 import { ApiAccessModule } from "./api-access/api-access.module";
+import { ApiAccessController } from "./api-access/api-access.controller";
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { ApiAccessModule } from "./api-access/api-access.module";
     GoogleAdsModule,
     ApiAccessModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController],
+  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController],
   providers: [],
   exports: [
     MapboxModule,
