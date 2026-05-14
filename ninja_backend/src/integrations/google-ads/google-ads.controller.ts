@@ -1,15 +1,18 @@
 import {
   Controller,
   Get,
-  Query,
-  Req,
   Post,
   Body,
+  Query,
   UseGuards,
+  ForbiddenException,
+  Res,
 } from "@nestjs/common";
 
-import { GoogleAdsService } from "./google-ads.service";
+import { Response } from "express";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
+import { GoogleAdsService } from "./google-ads.service";
 
 @Controller("integrations/google-ads")
 @UseGuards(JwtAuthGuard)
@@ -18,35 +21,14 @@ export class GoogleAdsController {
     private readonly googleAdsService: GoogleAdsService,
   ) {}
 
-  /*
-   |--------------------------------------------------------------------------
-   | AUTH URL
-   |--------------------------------------------------------------------------
-   */
+  private requireTeam(user: any): string {
+    if (!user.teamId) {
+      throw new ForbiddenException(
+        "User must belong to a team",
+      );
+    }
 
-  @Get("auth-url")
-  async getAuthUrl(@Req() req: any) {
-    return this.googleAdsService.getAuthUrl(
-      req.user.teamId,
-    );
-  }
-
-  /*
-   |--------------------------------------------------------------------------
-   | OAUTH CALLBACK
-   |--------------------------------------------------------------------------
-   */
-
-  @Get("callback")
-  async callback(
-    @Query("code") code: string,
-
-    @Query("state") teamId: string,
-  ) {
-    return this.googleAdsService.handleCallback(
-      code,
-      teamId,
-    );
+    return user.teamId;
   }
 
   /*
@@ -56,9 +38,50 @@ export class GoogleAdsController {
    */
 
   @Get("config/status")
-  async status(@Req() req: any) {
+  async getStatus(
+    @CurrentUser() user: any,
+  ) {
     return this.googleAdsService.getStatus(
-      req.user.teamId,
+      this.requireTeam(user),
+    );
+  }
+
+  /*
+   |--------------------------------------------------------------------------
+   | CONNECT
+   |--------------------------------------------------------------------------
+   */
+
+  @Get("connect")
+  async connect(
+    @CurrentUser() user: any,
+  ) {
+    return this.googleAdsService.getAuthUrl(
+      this.requireTeam(user),
+    );
+  }
+
+  /*
+   |--------------------------------------------------------------------------
+   | CALLBACK
+   |--------------------------------------------------------------------------
+   */
+
+  @Get("callback")
+  async callback(
+    @Query("code") code: string,
+
+    @Query("state") teamId: string,
+
+    @Res() res: Response,
+  ) {
+    await this.googleAdsService.handleCallback(
+      code,
+      teamId,
+    );
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/dashboard/integrations/google-ads?connected=true`,
     );
   }
 
@@ -69,9 +92,11 @@ export class GoogleAdsController {
    */
 
   @Get("campaigns")
-  async campaigns(@Req() req: any) {
+  async campaigns(
+    @CurrentUser() user: any,
+  ) {
     return this.googleAdsService.getCampaigns(
-      req.user.teamId,
+      this.requireTeam(user),
     );
   }
 
@@ -83,12 +108,12 @@ export class GoogleAdsController {
 
   @Post("settings")
   async save(
-    @Req() req: any,
+    @CurrentUser() user: any,
 
     @Body() body: any,
   ) {
     return this.googleAdsService.saveSettings(
-      req.user.teamId,
+      this.requireTeam(user),
       body,
     );
   }
@@ -100,9 +125,11 @@ export class GoogleAdsController {
    */
 
   @Post("disconnect")
-  async disconnect(@Req() req: any) {
+  async disconnect(
+    @CurrentUser() user: any,
+  ) {
     return this.googleAdsService.disconnect(
-      req.user.teamId,
+      this.requireTeam(user),
     );
   }
 }

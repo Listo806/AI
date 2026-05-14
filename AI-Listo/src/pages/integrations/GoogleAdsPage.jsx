@@ -69,7 +69,7 @@ export default function GoogleAdsPage() {
     async () => {
       const res =
         await apiClient.request(
-          "/integrations/google-ads/auth-url",
+          "/integrations/google-ads/connect",
         );
 
       window.location.href =
