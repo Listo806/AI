@@ -41,7 +41,7 @@ import { GoogleAdsController } from "./google-ads/google-ads.controller";
     MakeModule,
     GoogleAdsModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, GoogleAdsController],
+  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController],
   providers: [],
   exports: [
     MapboxModule,
