@@ -23,6 +23,7 @@ import { GoogleAdsController } from "./google-ads/google-ads.controller";
 import { ApiAccessModule } from "./api-access/api-access.module";
 import { ApiAccessController } from "./api-access/api-access.controller";
 import { MlsModule } from "./mls/mls.module";
+import { MlsController } from "./mls/mls.controller";
 
 @Module({
   imports: [
@@ -46,7 +47,7 @@ import { MlsModule } from "./mls/mls.module";
     ApiAccessModule,
     MlsModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController],
+  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController, MlsController],
   providers: [],
   exports: [
     MapboxModule,

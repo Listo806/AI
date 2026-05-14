@@ -56,25 +56,7 @@ export default function MlsIdxPage() {
   useEffect(() => {
     load();
   }, []);
-  await load();
-  setForm({
-    providerName: "",
-    country: "US",
-    integrationType: "idx",
 
-    endpointUrl: "",
-    username: "",
-    password: "",
-    apiKey: "",
-
-    syncEnabled: true,
-
-    syncFrequencyMinutes: 60,
-
-    propertyTypes: [],
-
-    compatibilityMode: "reso",
-  });
   const showToast = (message, type = "success") => {
     setToast({
       message,
@@ -132,6 +114,26 @@ export default function MlsIdxPage() {
       });
 
       showToast("MLS integration saved successfully");
+      await load();
+
+      setForm({
+        providerName: "",
+        country: "US",
+        integrationType: "idx",
+
+        endpointUrl: "",
+        username: "",
+        password: "",
+        apiKey: "",
+
+        syncEnabled: true,
+
+        syncFrequencyMinutes: 60,
+
+        propertyTypes: [],
+
+        compatibilityMode: "reso",
+      });
     } catch (err) {
       console.error(err);
 
