@@ -32,7 +32,7 @@ export default function ApiAccessPage() {
 
       const usageRes =
         await apiClient.request(
-          "/integrations/api/usage",
+          "/integrations/api-access/usage",
         );
 
       setUsage(usageRes || []);
@@ -47,7 +47,7 @@ export default function ApiAccessPage() {
     async () => {
       const res =
         await apiClient.request(
-          "/integrations/api/generate",
+          "/integrations/api-access/generate",
           {
             method: "POST",
           },
@@ -67,7 +67,7 @@ export default function ApiAccessPage() {
       }
 
       await apiClient.request(
-        "/integrations/api/revoke",
+        "/integrations/api-access/revoke",
         {
           method: "POST",
         },
