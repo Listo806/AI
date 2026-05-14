@@ -1,84 +1,108 @@
 import {
   Controller,
   Get,
+  Query,
+  Req,
   Post,
   Body,
-  Query,
-  Res,
   UseGuards,
 } from "@nestjs/common";
 
+import { GoogleAdsService } from "./google-ads.service";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 
-import { CurrentUser } from "../../auth/decorators/current-user.decorator";
-
-import { GoogleAdsService } from "./google-ads.service";
-
-@Controller(
-  "integrations/google-ads",
-)
+@Controller("integrations/google-ads")
 @UseGuards(JwtAuthGuard)
 export class GoogleAdsController {
   constructor(
     private readonly googleAdsService: GoogleAdsService,
   ) {}
 
+  /*
+   |--------------------------------------------------------------------------
+   | AUTH URL
+   |--------------------------------------------------------------------------
+   */
+
   @Get("auth-url")
-  getAuthUrl() {
-    return {
-      url: this.googleAdsService.getAuthUrl(),
-    };
+  async getAuthUrl(@Req() req: any) {
+    return this.googleAdsService.getAuthUrl(
+      req.user.teamId,
+    );
   }
+
+  /*
+   |--------------------------------------------------------------------------
+   | OAUTH CALLBACK
+   |--------------------------------------------------------------------------
+   */
 
   @Get("callback")
   async callback(
-    @Query("code")
-    code: string,
+    @Query("code") code: string,
 
-    @Query("state")
-    state: string,
-
-    @Res()
-    res: any,
+    @Query("state") teamId: string,
   ) {
-    await this.googleAdsService.handleCallback(
+    return this.googleAdsService.handleCallback(
       code,
-      state,
-    );
-
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/dashboard/integrations/google-ads?connected=true`,
+      teamId,
     );
   }
 
-  @Get()
-  async getConfig(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.getConfig(
-      user.teamId,
+  /*
+   |--------------------------------------------------------------------------
+   | STATUS
+   |--------------------------------------------------------------------------
+   */
+
+  @Get("config/status")
+  async status(@Req() req: any) {
+    return this.googleAdsService.getStatus(
+      req.user.teamId,
     );
   }
+
+  /*
+   |--------------------------------------------------------------------------
+   | CAMPAIGNS
+   |--------------------------------------------------------------------------
+   */
 
   @Get("campaigns")
-  async campaigns(
-    @CurrentUser() user: any,
-  ) {
+  async campaigns(@Req() req: any) {
     return this.googleAdsService.getCampaigns(
-      user.teamId,
+      req.user.teamId,
     );
   }
+
+  /*
+   |--------------------------------------------------------------------------
+   | SAVE SETTINGS
+   |--------------------------------------------------------------------------
+   */
 
   @Post("settings")
   async save(
-    @CurrentUser() user: any,
+    @Req() req: any,
 
-    @Body()
-    body: any,
+    @Body() body: any,
   ) {
     return this.googleAdsService.saveSettings(
-      user.teamId,
+      req.user.teamId,
       body,
+    );
+  }
+
+  /*
+   |--------------------------------------------------------------------------
+   | DISCONNECT
+   |--------------------------------------------------------------------------
+   */
+
+  @Post("disconnect")
+  async disconnect(@Req() req: any) {
+    return this.googleAdsService.disconnect(
+      req.user.teamId,
     );
   }
 }
