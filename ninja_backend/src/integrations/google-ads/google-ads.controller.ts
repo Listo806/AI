@@ -16,15 +16,13 @@ import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 @Controller("integrations/google-ads")
 @UseGuards(JwtAuthGuard)
 export class GoogleAdsController {
-  constructor(
-    private readonly googleAdsService: GoogleAdsService,
-  ) {}
+  constructor(private readonly googleAdsService: GoogleAdsService) {
+    console.log("GoogleAdsController INIT");
+  }
 
   private requireTeam(user: any): string {
     if (!user?.teamId) {
-      throw new ForbiddenException(
-        "User must belong to a team",
-      );
+      throw new ForbiddenException("User must belong to a team");
     }
 
     return user.teamId;
@@ -37,12 +35,8 @@ export class GoogleAdsController {
    */
 
   @Get()
-  async getConfig(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.getIntegration(
-      this.requireTeam(user),
-    );
+  async getConfig(@CurrentUser() user: any) {
+    return this.googleAdsService.getIntegration(this.requireTeam(user));
   }
 
   /*
@@ -52,12 +46,8 @@ export class GoogleAdsController {
    */
 
   @Get("auth-url")
-  async getAuthUrl(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.getAuthUrl(
-      this.requireTeam(user),
-    );
+  async getAuthUrl(@CurrentUser() user: any) {
+    return this.googleAdsService.getAuthUrl(this.requireTeam(user));
   }
 
   /*
@@ -72,10 +62,7 @@ export class GoogleAdsController {
 
     @Query("state") teamId: string,
   ) {
-    return this.googleAdsService.handleCallback(
-      code,
-      teamId,
-    );
+    return this.googleAdsService.handleCallback(code, teamId);
   }
 
   /*
@@ -85,12 +72,8 @@ export class GoogleAdsController {
    */
 
   @Get("config/status")
-  async status(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.getStatus(
-      this.requireTeam(user),
-    );
+  async status(@CurrentUser() user: any) {
+    return this.googleAdsService.getStatus(this.requireTeam(user));
   }
 
   /*
@@ -100,12 +83,8 @@ export class GoogleAdsController {
    */
 
   @Get("campaigns")
-  async campaigns(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.getCampaigns(
-      this.requireTeam(user),
-    );
+  async campaigns(@CurrentUser() user: any) {
+    return this.googleAdsService.getCampaigns(this.requireTeam(user));
   }
 
   /*
@@ -120,10 +99,7 @@ export class GoogleAdsController {
 
     @Body() body: any,
   ) {
-    return this.googleAdsService.saveSettings(
-      this.requireTeam(user),
-      body,
-    );
+    return this.googleAdsService.saveSettings(this.requireTeam(user), body);
   }
 
   /*
@@ -133,11 +109,7 @@ export class GoogleAdsController {
    */
 
   @Post("disconnect")
-  async disconnect(
-    @CurrentUser() user: any,
-  ) {
-    return this.googleAdsService.disconnect(
-      this.requireTeam(user),
-    );
+  async disconnect(@CurrentUser() user: any) {
+    return this.googleAdsService.disconnect(this.requireTeam(user));
   }
 }
