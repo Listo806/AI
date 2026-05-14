@@ -243,18 +243,19 @@ export class GoogleAdsService {
    */
 
   async getCampaigns(teamId: string) {
-    const integration = await this.getIntegration(teamId);
+    try {
+      const integration = await this.getIntegration(teamId);
 
-    if (!integration) {
-      throw new Error("Google Ads not connected");
-    }
+      if (!integration) {
+        throw new Error("Google Ads not connected");
+      }
 
-    const accessToken = await this.getAccessToken(integration);
+      const accessToken = await this.getAccessToken(integration);
 
-    const response = await axios.post(
-      `https://googleads.googleapis.com/v16/customers/${integration.google_ads_account_id}/googleAds:search`,
-      {
-        query: `
+      const response = await axios.post(
+        `https://googleads.googleapis.com/v16/customers/${integration.google_ads_account_id}/googleAds:search`,
+        {
+          query: `
             SELECT
               campaign.id,
               campaign.name,
@@ -262,17 +263,29 @@ export class GoogleAdsService {
             FROM campaign
             ORDER BY campaign.name
           `,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-
-          "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
         },
-      },
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
 
-    return response.data.results || [];
+            "developer-token": process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+
+            "login-customer-id": integration.google_ads_account_id?.replaceAll(
+              "-",
+              "",
+            ),
+
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return response.data.results || [];
+    } catch (err: any) {
+      console.error("GOOGLE ADS CAMPAIGNS ERROR", err?.response?.data || err);
+
+      throw err;
+    }
   }
 
   /*
