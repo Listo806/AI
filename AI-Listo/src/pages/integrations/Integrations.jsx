@@ -213,8 +213,8 @@ export default function AppsIntegrationsHub() {
   const [integrationStates, setIntegrationStates] = useState([]);
   const [search, setSearch] = useState("");
   const [apiKey, setApiKey] = useState(null);
-    const [generatingKey, setGeneratingKey] = useState(false);
-    const [revokingKey, setRevokingKey] = useState(false);
+  const [generatingKey, setGeneratingKey] = useState(false);
+  const [revokingKey, setRevokingKey] = useState(false);
   const loadIntegrations = async () => {
     try {
       setLoading(true);
@@ -230,6 +230,7 @@ export default function AppsIntegrationsHub() {
         makeStatus,
         googleAdsStatus,
         apiAccessStatus,
+        mlsStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -241,6 +242,7 @@ export default function AppsIntegrationsHub() {
         loadMakeStatus(),
         loadGoogleAdsStatus(),
         loadApiAccessStatus(),
+        loadMlsStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -300,6 +302,12 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "mls_idx_feed" && mlsStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
 
         return item;
       });
@@ -335,7 +343,8 @@ export default function AppsIntegrationsHub() {
       integration.key === "zapier" ||
       integration.key === "google_calendar" ||
       integration.key === "google_drive" ||
-      integration.key === "google_ads"
+      integration.key === "google_ads" ||
+      integration.key === "mls_idx_feed"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -347,7 +356,7 @@ export default function AppsIntegrationsHub() {
     if (integration.status === "connected") {
       return "Connected";
     }
-    
+
     return "Sync Now";
   };
   const handleIntegrationClick = async (integration) => {
@@ -418,9 +427,13 @@ export default function AppsIntegrationsHub() {
         return;
       }
       if (integration.key === "api_access") {
-          navigate("/dashboard/integrations/api-access");
-          return;
-        }
+        navigate("/dashboard/integrations/api-access");
+        return;
+      }
+      if (integration.key === "mls_idx_feed") {
+        navigate("/dashboard/integrations/mls");
+        return;
+      }
       /*
        * PLACEHOLDER SYNC
        */
@@ -539,13 +552,21 @@ export default function AppsIntegrationsHub() {
     }
   };
   const loadApiAccessStatus = async () => {
-      try {
-        return await apiClient.request("/integrations/api-access/status");
-      } catch (err) {
-        return { isConfigured: false };
-      }
-    };
-
+    try {
+      return await apiClient.request("/integrations/api-access/status");
+    } catch (err) {
+      return { isConfigured: false };
+    }
+  };
+  const loadMlsStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/mls/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
   return (
     <div className="apps-page">
       <div className="apps-layout">

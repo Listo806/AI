@@ -1,20 +1,26 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 
 import apiClient from "../../api/apiClient";
 
 export default function ApiAccessPage() {
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [apiKey, setApiKey] =
-    useState(null);
+  const [apiKey, setApiKey] = useState(null);
 
-  const [usage, setUsage] =
-    useState([]);
+  const [usage, setUsage] = useState([]);
+  const [toast, setToast] = useState(null);
 
+  const showToast = (message, type = "success") => {
+    setToast({
+      message,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+  const [confirmOpen, setConfirmOpen] = useState(false);
   useEffect(() => {
     load();
   }, []);
@@ -23,17 +29,13 @@ export default function ApiAccessPage() {
     try {
       setLoading(true);
 
-      const key =
-        await apiClient.request(
-          "/integrations/api-access",
-        );
+      const key = await apiClient.request("/integrations/api-access");
 
       setApiKey(key);
 
-      const usageRes =
-        await apiClient.request(
-          "/integrations/api-access/usage",
-        );
+      const usageRes = await apiClient.request(
+        "/integrations/api-access/usage",
+      );
 
       setUsage(usageRes || []);
     } catch (err) {
@@ -43,45 +45,48 @@ export default function ApiAccessPage() {
     }
   };
 
-  const generate =
-    async () => {
-      const res =
-        await apiClient.request(
-          "/integrations/api-access/generate",
-          {
-            method: "POST",
-          },
-        );
+  const generate = async () => {
+    try {
+      const res = await apiClient.request("/integrations/api-access/generate", {
+        method: "POST",
+      });
 
       setApiKey(res);
-    };
 
-  const revoke =
-    async () => {
-      if (
-        !window.confirm(
-          "Revoke API key?",
-        )
-      ) {
-        return;
-      }
+      showToast("API key generated successfully");
+    } catch (err) {
+      console.error(err);
 
-      await apiClient.request(
-        "/integrations/api-access/revoke",
-        {
-          method: "POST",
-        },
-      );
+      showToast("Failed to generate API key", "error");
+    }
+  };
+
+  const revoke = async () => {
+    try {
+      await apiClient.request("/integrations/api-access/revoke", {
+        method: "POST",
+      });
 
       setApiKey(null);
-    };
+
+      setConfirmOpen(false);
+
+      showToast("API key revoked");
+    } catch (err) {
+      console.error(err);
+
+      showToast("Failed to revoke API key", "error");
+    }
+  };
 
   const copyKey = async () => {
-    await navigator.clipboard.writeText(
-      apiKey.api_key,
-    );
+    try {
+      await navigator.clipboard.writeText(apiKey.api_key);
 
-    alert("API key copied");
+      showToast("API key copied", "success");
+    } catch (err) {
+      showToast("Failed to copy API key", "error");
+    }
   };
 
   if (loading) {
@@ -103,21 +108,14 @@ export default function ApiAccessPage() {
         }}
       >
         <div style={card}>
-          <h1 style={title}>
-            API Access
-          </h1>
+          <h1 style={title}>API Access</h1>
 
           <p style={desc}>
-            Generate API keys and
-            connect external systems
-            securely.
+            Generate API keys and connect external systems securely.
           </p>
 
           {!apiKey ? (
-            <button
-              style={button}
-              onClick={generate}
-            >
+            <button style={button} onClick={generate}>
               Generate API Key
             </button>
           ) : (
@@ -127,8 +125,7 @@ export default function ApiAccessPage() {
                   <div
                     style={{
                       fontSize: 12,
-                      color:
-                        "#6b7280",
+                      color: "#6b7280",
                     }}
                   >
                     API KEY
@@ -137,14 +134,11 @@ export default function ApiAccessPage() {
                   <div
                     style={{
                       marginTop: 10,
-                      fontFamily:
-                        "monospace",
+                      fontFamily: "monospace",
                       fontSize: 15,
                     }}
                   >
-                    {
-                      apiKey.api_key
-                    }
+                    {apiKey.api_key}
                   </div>
                 </div>
               </div>
@@ -156,28 +150,18 @@ export default function ApiAccessPage() {
                   marginTop: 20,
                 }}
               >
-                <button
-                  style={button}
-                  onClick={copyKey}
-                >
+                <button style={button} onClick={copyKey}>
                   Copy API Key
                 </button>
 
                 <button
-                  style={
-                    dangerButton
-                  }
-                  onClick={revoke}
+                  style={dangerButton}
+                  onClick={() => setConfirmOpen(true)}
                 >
                   Revoke Key
                 </button>
 
-                <button
-                  style={
-                    secondaryButton
-                  }
-                  onClick={generate}
-                >
+                <button style={secondaryButton} onClick={generate}>
                   Regenerate
                 </button>
               </div>
@@ -191,33 +175,23 @@ export default function ApiAccessPage() {
             marginTop: 30,
           }}
         >
-          <h2 style={sectionTitle}>
-            API Documentation
-          </h2>
+          <h2 style={sectionTitle}>API Documentation</h2>
 
           <div style={docBox}>
             <div>
-              <strong>
-                Base URL:
-              </strong>
+              <strong>Base URL:</strong>
             </div>
 
-            <code>
-              https://api.yourdomain.com/api
-            </code>
+            <code>https://api.yourdomain.com/api</code>
 
             <div
               style={{
                 marginTop: 20,
               }}
             >
-              <strong>
-                Headers
-              </strong>
+              <strong>Headers</strong>
 
-              <pre>
-{`x-api-key: YOUR_API_KEY`}
-              </pre>
+              <pre>{`x-api-key: YOUR_API_KEY`}</pre>
             </div>
 
             <div
@@ -225,12 +199,10 @@ export default function ApiAccessPage() {
                 marginTop: 20,
               }}
             >
-              <strong>
-                Example Request
-              </strong>
+              <strong>Example Request</strong>
 
               <pre>
-{`curl --request GET \
+                {`curl --request GET \
 https://api.yourdomain.com/api/leads \
 --header "x-api-key: YOUR_API_KEY"`}
               </pre>
@@ -244,9 +216,7 @@ https://api.yourdomain.com/api/leads \
             marginTop: 30,
           }}
         >
-          <h2 style={sectionTitle}>
-            Usage Logs
-          </h2>
+          <h2 style={sectionTitle}>Usage Logs</h2>
 
           <div
             style={{
@@ -255,34 +225,120 @@ https://api.yourdomain.com/api/leads \
             }}
           >
             {usage.map((log) => (
-              <div
-                key={log.id}
-                style={logRow}
-              >
+              <div key={log.id} style={logRow}>
                 <div>
-                  <strong>
-                    {log.method}
-                  </strong>{" "}
-                  {log.endpoint}
+                  <strong>{log.method}</strong> {log.endpoint}
                 </div>
 
-                <div>
-                  Status:{" "}
-                  {
-                    log.response_status
-                  }
-                </div>
+                <div>Status: {log.response_status}</div>
 
-                <div>
-                  {new Date(
-                    log.created_at,
-                  ).toLocaleString()}
-                </div>
+                <div>{new Date(log.created_at).toLocaleString()}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
+      {confirmOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9998,
+          }}
+        >
+          <div
+            style={{
+              width: 420,
+              background: "#fff",
+              borderRadius: 20,
+              padding: 28,
+              boxShadow: "0 20px 50px rgba(0,0,0,0.2)",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: 24,
+                fontWeight: 700,
+                marginBottom: 12,
+              }}
+            >
+              Revoke API Key?
+            </h3>
+
+            <p
+              style={{
+                color: "#6b7280",
+                lineHeight: 1.7,
+              }}
+            >
+              This will immediately disable all external API access using this
+              key.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                marginTop: 30,
+              }}
+            >
+              <button
+                onClick={() => setConfirmOpen(false)}
+                style={{
+                  padding: "12px 18px",
+                  borderRadius: 12,
+                  border: "1px solid #e5e7eb",
+                  background: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={revoke}
+                style={{
+                  padding: "12px 18px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: "#dc2626",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                Revoke Key
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+            animation: "slideIn 0.25s ease",
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

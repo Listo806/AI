@@ -257,7 +257,7 @@ export default function MakePage() {
           <button
               style={{
                 ...button,
-                oopacity: saving ? 0.7 : 1,
+                opacity: saving ? 0.7 : 1,
               }}
               onClick={save}
               disabled={saving}

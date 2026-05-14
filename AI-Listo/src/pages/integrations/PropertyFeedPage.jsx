@@ -1,31 +1,34 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 
 import apiClient from "../../api/apiClient";
 
 export default function PropertyFeedPage() {
-  const [feeds, setFeeds] =
-    useState([]);
+  const [feeds, setFeeds] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [saving, setSaving] =
-    useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [syncingId, setSyncingId] =
-    useState(null);
+  const [syncingId, setSyncingId] = useState(null);
 
-  const [form, setForm] =
-    useState({
-      providerName: "",
-      feedUrl: "",
-      feedType: "xml",
-      syncFrequencyMinutes: 60,
+  const [form, setForm] = useState({
+    providerName: "",
+    feedUrl: "",
+    feedType: "xml",
+    syncFrequencyMinutes: 60,
+  });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({
+      message,
+      type,
     });
 
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
   useEffect(() => {
     loadFeeds();
   }, []);
@@ -34,10 +37,7 @@ export default function PropertyFeedPage() {
     try {
       setLoading(true);
 
-      const res =
-        await apiClient.request(
-          "/integrations/property-feed",
-        );
+      const res = await apiClient.request("/integrations/property-feed");
 
       setFeeds(res || []);
     } catch (err) {
@@ -49,16 +49,66 @@ export default function PropertyFeedPage() {
 
   const createFeed = async () => {
     try {
+      /*
+       * VALIDATION
+       */
+      if (!form.providerName.trim()) {
+        showToast("Provider name is required", "error");
+
+        return;
+      }
+
+      if (!form.feedUrl.trim()) {
+        showToast("Feed URL is required", "error");
+
+        return;
+      }
+
+      /*
+       * VALIDATE URL
+       */
+      let parsedUrl;
+
+      try {
+        parsedUrl = new URL(form.feedUrl);
+      } catch {
+        showToast("Invalid feed URL", "error");
+
+        return;
+      }
+
+      /*
+       * HTTPS ONLY
+       */
+      if (parsedUrl.protocol !== "https:") {
+        showToast("Feed URL must use HTTPS", "error");
+
+        return;
+      }
+
+      /*
+       * VALIDATE SYNC FREQUENCY
+       */
+      const frequency = Number(form.syncFrequencyMinutes);
+
+      if (Number.isNaN(frequency) || frequency < 5) {
+        showToast("Sync frequency must be at least 5 minutes", "error");
+
+        return;
+      }
+
       setSaving(true);
 
-      await apiClient.request(
-        "/integrations/property-feed",
-        {
-          method: "POST",
+      await apiClient.request("/integrations/property-feed", {
+        method: "POST",
 
-          body: JSON.stringify(form),
-        },
-      );
+        body: JSON.stringify({
+          ...form,
+          syncFrequencyMinutes: frequency,
+        }),
+      });
+
+      showToast("Property feed added successfully");
 
       await loadFeeds();
 
@@ -70,29 +120,24 @@ export default function PropertyFeedPage() {
       });
     } catch (err) {
       console.error(err);
+
+      showToast(err.message || "Failed to create feed", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const syncFeed = async (
-    feedId,
-  ) => {
+  const syncFeed = async (feedId) => {
     try {
       setSyncingId(feedId);
 
-      await apiClient.request(
-        `/integrations/property-feed/${feedId}/sync`,
-        {
-          method: "POST",
-        },
-      );
+      await apiClient.request(`/integrations/property-feed/${feedId}/sync`, {
+        method: "POST",
+      });
 
       await loadFeeds();
 
-      alert(
-        "Feed synced successfully",
-      );
+      alert("Feed synced successfully");
     } catch (err) {
       console.error(err);
     } finally {
@@ -100,9 +145,7 @@ export default function PropertyFeedPage() {
     }
   };
 
-  const toggleSync = async (
-    feed,
-  ) => {
+  const toggleSync = async (feed) => {
     try {
       await apiClient.request(
         `/integrations/property-feed/${feed.id}/toggle-sync`,
@@ -110,8 +153,7 @@ export default function PropertyFeedPage() {
           method: "POST",
 
           body: JSON.stringify({
-            enabled:
-              !feed.syncEnabled,
+            enabled: !feed.syncEnabled,
           }),
         },
       );
@@ -122,16 +164,11 @@ export default function PropertyFeedPage() {
     }
   };
 
-  const deleteFeed = async (
-    feedId,
-  ) => {
+  const deleteFeed = async (feedId) => {
     try {
-      await apiClient.request(
-        `/integrations/property-feed/${feedId}`,
-        {
-          method: "DELETE",
-        },
-      );
+      await apiClient.request(`/integrations/property-feed/${feedId}`, {
+        method: "DELETE",
+      });
 
       await loadFeeds();
     } catch (err) {
@@ -173,11 +210,8 @@ export default function PropertyFeedPage() {
             lineHeight: 1.7,
           }}
         >
-          Connect XML and JSON
-          property feeds into
-          your CRM and
-          automatically sync
-          listings.
+          Connect XML and JSON property feeds into your CRM and automatically
+          sync listings.
         </p>
       </div>
 
@@ -199,30 +233,23 @@ export default function PropertyFeedPage() {
           }}
         >
           <div>
-            <div style={labelStyle}>
-              Provider Name
-            </div>
+            <div style={labelStyle}>Provider Name</div>
 
             <input
               style={inputStyle}
               placeholder="Example: Zillow Feed"
-              value={
-                form.providerName
-              }
+              value={form.providerName}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  providerName:
-                    e.target.value,
+                  providerName: e.target.value,
                 })
               }
             />
           </div>
 
           <div>
-            <div style={labelStyle}>
-              Feed URL
-            </div>
+            <div style={labelStyle}>Feed URL</div>
 
             <input
               style={inputStyle}
@@ -231,17 +258,14 @@ export default function PropertyFeedPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  feedUrl:
-                    e.target.value,
+                  feedUrl: e.target.value,
                 })
               }
             />
           </div>
 
           <div>
-            <div style={labelStyle}>
-              Feed Type
-            </div>
+            <div style={labelStyle}>Feed Type</div>
 
             <select
               style={inputStyle}
@@ -249,38 +273,28 @@ export default function PropertyFeedPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  feedType:
-                    e.target.value,
+                  feedType: e.target.value,
                 })
               }
             >
-              <option value="xml">
-                XML Feed
-              </option>
+              <option value="xml">XML Feed</option>
 
-              <option value="json">
-                JSON Feed
-              </option>
+              <option value="json">JSON Feed</option>
             </select>
           </div>
 
           <div>
-            <div style={labelStyle}>
-              Sync Frequency
-            </div>
+            <div style={labelStyle}>Sync Frequency</div>
 
             <input
               style={inputStyle}
               type="number"
               placeholder="60"
-              value={
-                form.syncFrequencyMinutes
-              }
+              value={form.syncFrequencyMinutes}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  syncFrequencyMinutes:
-                    e.target.value,
+                  syncFrequencyMinutes: e.target.value,
                 })
               }
             />
@@ -294,9 +308,7 @@ export default function PropertyFeedPage() {
               height: 50,
             }}
           >
-            {saving
-              ? "Saving..."
-              : "Add Feed"}
+            {saving ? "Saving..." : "Add Feed"}
           </button>
         </div>
       </div>
@@ -320,10 +332,7 @@ export default function PropertyFeedPage() {
         {loading ? (
           <p>Loading...</p>
         ) : feeds.length === 0 ? (
-          <div style={emptyStyle}>
-            No property feeds
-            connected yet.
-          </div>
+          <div style={emptyStyle}>No property feeds connected yet.</div>
         ) : (
           <div
             style={{
@@ -332,17 +341,12 @@ export default function PropertyFeedPage() {
             }}
           >
             {feeds.map((feed) => (
-              <div
-                key={feed.id}
-                style={cardStyle}
-              >
+              <div key={feed.id} style={cardStyle}>
                 <div
                   style={{
                     display: "flex",
-                    justifyContent:
-                      "space-between",
-                    alignItems:
-                      "center",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                     marginBottom: 16,
                     flexWrap: "wrap",
                     gap: 10,
@@ -353,29 +357,19 @@ export default function PropertyFeedPage() {
                       fontSize: 20,
                       fontWeight: 700,
                       margin: 0,
-                      color:
-                        "#111827",
+                      color: "#111827",
                     }}
                   >
-                    {
-                      feed.providerName
-                    }
+                    {feed.providerName}
                   </h3>
 
                   <div
                     style={{
-                      background:
-                        feed.syncEnabled
-                          ? "#dcfce7"
-                          : "#fee2e2",
+                      background: feed.syncEnabled ? "#dcfce7" : "#fee2e2",
 
-                      color:
-                        feed.syncEnabled
-                          ? "#166534"
-                          : "#991b1b",
+                      color: feed.syncEnabled ? "#166534" : "#991b1b",
 
-                      padding:
-                        "6px 12px",
+                      padding: "6px 12px",
 
                       borderRadius: 999,
 
@@ -384,9 +378,7 @@ export default function PropertyFeedPage() {
                       fontWeight: 600,
                     }}
                   >
-                    {feed.syncEnabled
-                      ? "Enabled"
-                      : "Disabled"}
+                    {feed.syncEnabled ? "Enabled" : "Disabled"}
                   </div>
                 </div>
 
@@ -394,45 +386,25 @@ export default function PropertyFeedPage() {
                   style={{
                     display: "grid",
                     gap: 10,
-                    color:
-                      "#4b5563",
+                    color: "#4b5563",
                     lineHeight: 1.7,
                   }}
                 >
                   <div>
-                    <strong>
-                      URL:
-                    </strong>{" "}
-                    {
-                      feed.feedUrl
-                    }
+                    <strong>URL:</strong> {feed.feedUrl}
                   </div>
 
                   <div>
-                    <strong>
-                      Type:
-                    </strong>{" "}
-                    {feed.feedType.toUpperCase()}
+                    <strong>Type:</strong> {feed.feedType.toUpperCase()}
                   </div>
 
                   <div>
-                    <strong>
-                      Properties:
-                    </strong>{" "}
-                    {
-                      feed.totalProperties
-                    }
+                    <strong>Properties:</strong> {feed.totalProperties}
                   </div>
 
                   <div>
-                    <strong>
-                      Frequency:
-                    </strong>{" "}
-                    Every{" "}
-                    {
-                      feed.syncFrequencyMinutes
-                    }{" "}
-                    minutes
+                    <strong>Frequency:</strong> Every{" "}
+                    {feed.syncFrequencyMinutes} minutes
                   </div>
                 </div>
 
@@ -440,18 +412,14 @@ export default function PropertyFeedPage() {
                   <div
                     style={{
                       marginTop: 16,
-                      background:
-                        "#fef2f2",
-                      color:
-                        "#b91c1c",
+                      background: "#fef2f2",
+                      color: "#b91c1c",
                       padding: 12,
                       borderRadius: 10,
                       fontSize: 14,
                     }}
                   >
-                    {
-                      feed.lastError
-                    }
+                    {feed.lastError}
                   </div>
                 )}
 
@@ -463,46 +431,20 @@ export default function PropertyFeedPage() {
                     flexWrap: "wrap",
                   }}
                 >
-                  <button
-                    onClick={() =>
-                      syncFeed(
-                        feed.id,
-                      )
-                    }
-                    style={
-                      buttonStyle
-                    }
-                  >
-                    {syncingId ===
-                    feed.id
-                      ? "Syncing..."
-                      : "Sync Now"}
+                  <button onClick={() => syncFeed(feed.id)} style={buttonStyle}>
+                    {syncingId === feed.id ? "Syncing..." : "Sync Now"}
                   </button>
 
                   <button
-                    onClick={() =>
-                      toggleSync(
-                        feed,
-                      )
-                    }
-                    style={
-                      secondaryButton
-                    }
+                    onClick={() => toggleSync(feed)}
+                    style={secondaryButton}
                   >
-                    {feed.syncEnabled
-                      ? "Disable"
-                      : "Enable"}
+                    {feed.syncEnabled ? "Disable" : "Enable"}
                   </button>
 
                   <button
-                    onClick={() =>
-                      deleteFeed(
-                        feed.id,
-                      )
-                    }
-                    style={
-                      dangerButton
-                    }
+                    onClick={() => deleteFeed(feed.id)}
+                    style={dangerButton}
                   >
                     Delete
                   </button>
@@ -512,6 +454,25 @@ export default function PropertyFeedPage() {
           </div>
         )}
       </div>
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
@@ -521,8 +482,7 @@ const cardStyle = {
   borderRadius: 18,
   padding: 24,
   border: "1px solid #e5e7eb",
-  boxShadow:
-    "0 4px 20px rgba(0,0,0,0.04)",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
 };
 
 const inputStyle = {
@@ -552,6 +512,7 @@ const buttonStyle = {
   color: "#fff",
   fontWeight: 600,
   fontSize: 15,
+  maxWidth: "150px",
 };
 
 const secondaryButton = {
@@ -572,4 +533,3 @@ const emptyStyle = {
   textAlign: "center",
   color: "#6b7280",
 };
-

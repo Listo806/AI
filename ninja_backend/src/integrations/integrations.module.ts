@@ -22,6 +22,7 @@ import { GoogleAdsModule } from "./google-ads/google-ads.module";
 import { GoogleAdsController } from "./google-ads/google-ads.controller";
 import { ApiAccessModule } from "./api-access/api-access.module";
 import { ApiAccessController } from "./api-access/api-access.controller";
+import { MlsModule } from "./mls/mls.module";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ApiAccessController } from "./api-access/api-access.controller";
     MakeModule,
     GoogleAdsModule,
     ApiAccessModule,
+    MlsModule,
   ],
   controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController],
   providers: [],
@@ -65,6 +67,7 @@ import { ApiAccessController } from "./api-access/api-access.controller";
     MakeModule,
     GoogleAdsModule,
     ApiAccessModule,
+    MlsModule,
   ],
 })
 export class IntegrationsModule {}
