@@ -86,6 +86,8 @@ import InstagramPage from "./pages/integrations/InstagramPage";
 import CrmImportPage from "./pages/integrations/CrmImportPage";
 import CsvLeadImportPage from "./pages/integrations/CsvLeadImportPage";
 import PropertyFeedPage from "./pages/integrations/PropertyFeedPage";
+import MakePage from "./pages/integrations/MakePage";
+import GoogleAdsPage from "./pages/integrations/GoogleAdsPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -227,6 +229,8 @@ function AppRoutes() {
         <Route path="integrations/crm-import" element={<CrmImportPage  />} />
         <Route path="integrations/csv-leads" element={<CsvLeadImportPage  />} />
         <Route path="integrations/property-feed" element={<PropertyFeedPage  />} />
+        <Route path="integrations/make" element={<MakePage  />} />
+        <Route path="integrations/google-ads" element={<GoogleAdsPage  />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />

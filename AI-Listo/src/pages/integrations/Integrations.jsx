@@ -75,19 +75,20 @@ const integrationsConfig = [
     //status: "Connect",
   },
   // {
-    // key: "instagram",
-    // title: "Instagram",
-    // description: "Connect Instagram messaging, lead capture, and automation.",
-    // icon: Camera,
-    // iconColor: "#e1306c",
-    // iconBg: "#fff0f6",
-    // category: "Marketing",
-    // //status: "Connected",
+  // key: "instagram",
+  // title: "Instagram",
+  // description: "Connect Instagram messaging, lead capture, and automation.",
+  // icon: Camera,
+  // iconColor: "#e1306c",
+  // iconBg: "#fff0f6",
+  // category: "Marketing",
+  // //status: "Connected",
   // },
   {
     key: "appointment",
     title: "AI Appointment Booking",
-    description: "Automatically schedule calls, meetings, and property tours with qualified leads.",
+    description:
+      "Automatically schedule calls, meetings, and property tours with qualified leads.",
     icon: ChevronRight,
     iconColor: "#22c55e",
     iconBg: "#f0fdf4",
@@ -224,6 +225,7 @@ export default function AppsIntegrationsHub() {
         googleDriveStatus,
         instagramStatus,
         makeStatus,
+        googleAdsStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -233,6 +235,7 @@ export default function AppsIntegrationsHub() {
         loadGoogleDriveStatus(),
         loadInstagramStatus(),
         loadMakeStatus(),
+        loadGoogleAdsStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -286,6 +289,12 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "google_ads" && googleAdsStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
 
         return item;
       });
@@ -320,7 +329,8 @@ export default function AppsIntegrationsHub() {
       integration.key === "api_access" ||
       integration.key === "zapier" ||
       integration.key === "google_calendar" ||
-      integration.key === "google_drive"
+      integration.key === "google_drive" ||
+      integration.key === "google_ads"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -395,9 +405,13 @@ export default function AppsIntegrationsHub() {
         return;
       }
       if (integration.key === "make") {
-          navigate("/dashboard/integrations/make");
-          return;
-        }
+        navigate("/dashboard/integrations/make");
+        return;
+      }
+      if (integration.key === "google_ads") {
+        navigate("/dashboard/integrations/google-ads");
+        return;
+      }
       /*
        * PLACEHOLDER SYNC
        */
@@ -498,16 +512,23 @@ export default function AppsIntegrationsHub() {
     }
   };
   const loadMakeStatus = async () => {
-      try {
-        return await apiClient.request(
-          "/integrations/make/config/status",
-        );
-      } catch (err) {
-        return {
-          isConfigured: false,
-        };
-      }
-    };
+    try {
+      return await apiClient.request("/integrations/make/config/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+  const loadGoogleAdsStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/google-ads/config/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
 
   return (
     <div className="apps-page">

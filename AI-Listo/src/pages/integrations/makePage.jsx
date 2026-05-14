@@ -2,7 +2,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-
+import "./AppsIntegrationsHub.css";
 import apiClient from "../../api/apiClient";
 
 const availableTriggers = [
@@ -12,7 +12,7 @@ const availableTriggers = [
   "deal_moved",
 ];
 
-export default function MakeIntegrationPage() {
+export default function MakePage() {
   const [loading, setLoading] =
     useState(true);
 
@@ -24,6 +24,17 @@ export default function MakeIntegrationPage() {
       webhookUrl: "",
       triggers: [],
     });
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = "success") => {
+      setToast({
+        message,
+        type,
+      });
+
+      setTimeout(() => {
+        setToast(null);
+      }, 3000);
+    };
 
   useEffect(() => {
     loadConfig();
@@ -88,29 +99,65 @@ export default function MakeIntegrationPage() {
   };
 
   const save = async () => {
-    try {
-      setSaving(true);
+      try {
+        /*
+         * VALIDATION
+         */
+        if (!form.webhookUrl.trim()) {
+          showToast(
+            "Please enter your Make.com webhook URL",
+            "error",
+          );
 
-      await apiClient.request(
-        "/integrations/make",
-        {
-          method: "POST",
+          return;
+        }
 
-          body: JSON.stringify(
-            form,
-          ),
-        },
-      );
+        /*
+         * VALIDATE URL FORMAT
+         */
+        const isValidUrl =
+          form.webhookUrl.startsWith(
+            "https://hook.",
+          );
 
-      alert(
-        "Make.com integration saved",
-      );
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
+        if (!isValidUrl) {
+          showToast(
+            "Invalid Make.com webhook URL",
+            "error",
+          );
+
+          return;
+        }
+
+        setSaving(true);
+
+        await apiClient.request(
+          "/integrations/make",
+          {
+            method: "POST",
+
+            body: JSON.stringify(
+              form,
+            ),
+          },
+        );
+
+        showToast(
+          "Make.com integration saved successfully",
+          "success",
+        );
+      } catch (err) {
+        console.error(err);
+
+        showToast(
+          err.message ||
+            "Failed to save integration",
+          "error",
+        );
+      } finally {
+        setSaving(false);
+      }
+    };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -208,10 +255,13 @@ export default function MakeIntegrationPage() {
           </div>
 
           <button
-            style={button}
-            onClick={save}
-            disabled={saving}
-          >
+              style={{
+                ...button,
+                oopacity: saving ? 0.7 : 1,
+              }}
+              onClick={save}
+              disabled={saving}
+            >
             {saving
               ? "Saving..."
               : "Save Integration"}
@@ -272,6 +322,31 @@ export default function MakeIntegrationPage() {
           </ol>
         </div>
       </div>
+      {toast && (
+          <div
+            style={{
+              position: "fixed",
+              top: 30,
+              right: 30,
+              background:
+                toast.type === "success"
+                  ? "#16a34a"
+                  : "#dc2626",
+              color: "#fff",
+              padding: "14px 18px",
+              borderRadius: 14,
+              fontWeight: 600,
+              boxShadow:
+                "0 10px 30px rgba(0,0,0,0.15)",
+              zIndex: 9999,
+              minWidth: 280,
+              animation:
+                "slideIn 0.25s ease",
+            }}
+          >
+            {toast.message}
+          </div>
+        )}
     </div>
   );
 }

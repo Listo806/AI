@@ -17,7 +17,9 @@ import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
 import { PropertyFeedModule } from "./property-feed/property-feed.module";
 import { PropertyFeedController } from "./property-feed/property-feed.controller";
 import { MakeModule } from "./make/make.module";
-
+import { MakeController } from "./make/make.controller";
+import { GoogleAdsModule } from "./google-ads/google-ads.module";
+import { GoogleAdsController } from "./google-ads/google-ads.controller";
 
 @Module({
   imports: [
@@ -37,8 +39,9 @@ import { MakeModule } from "./make/make.module";
     CsvLeadsModule,
     PropertyFeedModule,
     MakeModule,
+    GoogleAdsModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController],
+  controllers: [MetaWebhookController, PropertyFeedController, GoogleAdsController],
   providers: [],
   exports: [
     MapboxModule,
@@ -57,6 +60,7 @@ import { MakeModule } from "./make/make.module";
     CsvLeadsModule,
     PropertyFeedModule,
     MakeModule,
+    GoogleAdsModule,
   ],
 })
 export class IntegrationsModule {}
