@@ -1,18 +1,17 @@
 import {
   Controller,
   Get,
+  Query,
+  Req,
   Post,
   Body,
-  Query,
   UseGuards,
   ForbiddenException,
-  Res,
 } from "@nestjs/common";
 
-import { Response } from "express";
+import { GoogleAdsService } from "./google-ads.service";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
-import { GoogleAdsService } from "./google-ads.service";
 
 @Controller("integrations/google-ads")
 @UseGuards(JwtAuthGuard)
@@ -22,7 +21,7 @@ export class GoogleAdsController {
   ) {}
 
   private requireTeam(user: any): string {
-    if (!user.teamId) {
+    if (!user?.teamId) {
       throw new ForbiddenException(
         "User must belong to a team",
       );
@@ -32,28 +31,28 @@ export class GoogleAdsController {
   }
 
   /*
-   |--------------------------------------------------------------------------
-   | STATUS
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
+   | GET CONFIG
+   |------------------------------------------------------------------
    */
 
-  @Get("config/status")
-  async getStatus(
+  @Get()
+  async getConfig(
     @CurrentUser() user: any,
   ) {
-    return this.googleAdsService.getStatus(
+    return this.googleAdsService.getIntegration(
       this.requireTeam(user),
     );
   }
 
   /*
-   |--------------------------------------------------------------------------
-   | CONNECT
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
+   | AUTH URL
+   |------------------------------------------------------------------
    */
 
-  @Get("connect")
-  async connect(
+  @Get("auth-url")
+  async getAuthUrl(
     @CurrentUser() user: any,
   ) {
     return this.googleAdsService.getAuthUrl(
@@ -62,9 +61,9 @@ export class GoogleAdsController {
   }
 
   /*
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    | CALLBACK
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    */
 
   @Get("callback")
@@ -72,23 +71,32 @@ export class GoogleAdsController {
     @Query("code") code: string,
 
     @Query("state") teamId: string,
-
-    @Res() res: Response,
   ) {
-    await this.googleAdsService.handleCallback(
+    return this.googleAdsService.handleCallback(
       code,
       teamId,
-    );
-
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/dashboard/integrations/google-ads?connected=true`,
     );
   }
 
   /*
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
+   | STATUS
+   |------------------------------------------------------------------
+   */
+
+  @Get("config/status")
+  async status(
+    @CurrentUser() user: any,
+  ) {
+    return this.googleAdsService.getStatus(
+      this.requireTeam(user),
+    );
+  }
+
+  /*
+   |------------------------------------------------------------------
    | CAMPAIGNS
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    */
 
   @Get("campaigns")
@@ -101,9 +109,9 @@ export class GoogleAdsController {
   }
 
   /*
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    | SAVE SETTINGS
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    */
 
   @Post("settings")
@@ -119,9 +127,9 @@ export class GoogleAdsController {
   }
 
   /*
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    | DISCONNECT
-   |--------------------------------------------------------------------------
+   |------------------------------------------------------------------
    */
 
   @Post("disconnect")

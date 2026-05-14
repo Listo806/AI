@@ -19,7 +19,6 @@ import { PropertyFeedController } from "./property-feed/property-feed.controller
 import { MakeModule } from "./make/make.module";
 import { MakeController } from "./make/make.controller";
 import { GoogleAdsModule } from "./google-ads/google-ads.module";
-import { GoogleAdsController } from "./google-ads/google-ads.controller";
 
 @Module({
   imports: [
@@ -41,7 +40,7 @@ import { GoogleAdsController } from "./google-ads/google-ads.controller";
     MakeModule,
     GoogleAdsModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController],
+  controllers: [MetaWebhookController, PropertyFeedController, MakeController],
   providers: [],
   exports: [
     MapboxModule,
