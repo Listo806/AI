@@ -25,7 +25,7 @@ export default function ApiAccessPage() {
 
       const key =
         await apiClient.request(
-          "/integrations/api",
+          "/integrations/api-access",
         );
 
       setApiKey(key);

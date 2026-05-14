@@ -11,7 +11,7 @@ import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 import { ApiAccessService } from "./api-access.service";
 
-@Controller("integrations/api")
+@Controller("integrations/api-access")
 @UseGuards(JwtAuthGuard)
 export class ApiAccessController {
   constructor(
