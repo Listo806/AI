@@ -16,6 +16,8 @@ import { CrmImportModule } from "./crm-import/crm-import.module";
 import { CsvLeadsModule } from "./csv-leads/csv-leads.module";
 import { PropertyFeedModule } from "./property-feed/property-feed.module";
 import { PropertyFeedController } from "./property-feed/property-feed.controller";
+import { MakeModule } from "./make/make.module";
+
 
 @Module({
   imports: [
@@ -34,6 +36,7 @@ import { PropertyFeedController } from "./property-feed/property-feed.controller
     CrmImportModule,
     CsvLeadsModule,
     PropertyFeedModule,
+    MakeModule,
   ],
   controllers: [MetaWebhookController, PropertyFeedController],
   providers: [],
@@ -53,6 +56,7 @@ import { PropertyFeedController } from "./property-feed/property-feed.controller
     CrmImportModule,
     CsvLeadsModule,
     PropertyFeedModule,
+    MakeModule,
   ],
 })
 export class IntegrationsModule {}

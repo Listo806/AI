@@ -223,6 +223,7 @@ export default function AppsIntegrationsHub() {
         googleCalendarStatus,
         googleDriveStatus,
         instagramStatus,
+        makeStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -231,6 +232,7 @@ export default function AppsIntegrationsHub() {
         loadGoogleCalendarStatus(),
         loadGoogleDriveStatus(),
         loadInstagramStatus(),
+        loadMakeStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -273,6 +275,12 @@ export default function AppsIntegrationsHub() {
           };
         }
         if (item.key === "instagram" && instagramStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
+        if (item.key === "make" && makeStatus?.isConfigured) {
           return {
             ...item,
             status: "connected",
@@ -386,6 +394,10 @@ export default function AppsIntegrationsHub() {
         navigate("/dashboard/integrations/property-feed");
         return;
       }
+      if (integration.key === "make") {
+          navigate("/dashboard/integrations/make");
+          return;
+        }
       /*
        * PLACEHOLDER SYNC
        */
@@ -485,6 +497,17 @@ export default function AppsIntegrationsHub() {
       };
     }
   };
+  const loadMakeStatus = async () => {
+      try {
+        return await apiClient.request(
+          "/integrations/make/config/status",
+        );
+      } catch (err) {
+        return {
+          isConfigured: false,
+        };
+      }
+    };
 
   return (
     <div className="apps-page">
