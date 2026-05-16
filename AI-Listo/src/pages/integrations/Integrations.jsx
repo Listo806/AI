@@ -18,6 +18,7 @@ import {
   Link2,
   Building2,
   ChevronRight,
+  Music2,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
@@ -172,7 +173,7 @@ const integrationsConfig = [
     key: "tiktok",
     title: "TikTok Lead Sync",
     description: "Capture TikTok leads directly into your CRM.",
-    icon: Globe,
+    icon: Music2,
     iconColor: "#1877f2",
     iconBg: "#eff6ff",
     category: "Marketing",
@@ -231,6 +232,7 @@ export default function AppsIntegrationsHub() {
         googleAdsStatus,
         apiAccessStatus,
         mlsStatus,
+        tiktokStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -243,6 +245,7 @@ export default function AppsIntegrationsHub() {
         loadGoogleAdsStatus(),
         loadApiAccessStatus(),
         loadMlsStatus(),
+        loadTikTokStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -308,6 +311,12 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "tiktok" && tiktokStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
 
         return item;
       });
@@ -344,7 +353,8 @@ export default function AppsIntegrationsHub() {
       integration.key === "google_calendar" ||
       integration.key === "google_drive" ||
       integration.key === "google_ads" ||
-      integration.key === "mls_idx_feed"
+      integration.key === "mls_idx_feed" ||
+      integration.key === "tiktok"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -432,6 +442,10 @@ export default function AppsIntegrationsHub() {
       }
       if (integration.key === "mls_idx_feed") {
         navigate("/dashboard/integrations/mls");
+        return;
+      }
+      if (integration.key === "tiktok") {
+        navigate("/dashboard/integrations/tiktok");
         return;
       }
       /*
@@ -567,6 +581,16 @@ export default function AppsIntegrationsHub() {
       };
     }
   };
+  const loadTikTokStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/tiktok/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+
   return (
     <div className="apps-page">
       <div className="apps-layout">
