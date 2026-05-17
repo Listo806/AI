@@ -24,21 +24,23 @@ export class AppointmentService {
     }
 
     return {
-      provider: row.provider,
+      integration: {
+        provider: row.provider,
 
-      bookingEnabled: row.booking_enabled,
+        bookingEnabled: row.booking_enabled,
 
-      propertyToursEnabled: row.property_tours_enabled,
+        propertyToursEnabled: row.property_tours_enabled,
 
-      autoAssignAgent: row.auto_assign_agent,
+        autoAssignAgent: row.auto_assign_agent,
 
-      meetingDurationMinutes: row.meeting_duration_minutes,
+        meetingDurationMinutes: row.meeting_duration_minutes,
 
-      bufferMinutes: row.buffer_minutes,
+        bufferMinutes: row.buffer_minutes,
 
-      timezone: row.timezone,
+        timezone: row.timezone,
 
-      notificationEmail: row.notification_email,
+        notificationEmail: row.notification_email,
+      },
     };
   }
 
