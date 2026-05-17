@@ -43,12 +43,20 @@ export default function AppointmentIntegrationPage() {
         "/integrations/appointment",
       );
 
-      if (res) {
-        setForm((prev) => ({
-          ...prev,
-          ...res,
-        }));
-      }
+      const data = res.integration || res;
+
+        if (data) {
+          setForm((prev) => ({
+            ...prev,
+            ...data,
+
+            bookingEnabled: !!data.bookingEnabled,
+            propertyToursEnabled:
+              !!data.propertyToursEnabled,
+            autoAssignAgent:
+              !!data.autoAssignAgent,
+          }));
+        }
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,7 +72,17 @@ export default function AppointmentIntegrationPage() {
         "/integrations/appointment",
         {
           method: "POST",
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+              ...form,
+
+              bookingEnabled: Boolean(form.bookingEnabled),
+
+              propertyToursEnabled:
+                Boolean(form.propertyToursEnabled),
+
+              autoAssignAgent:
+                Boolean(form.autoAssignAgent),
+            }),
         },
       );
 
@@ -163,7 +181,7 @@ export default function AppointmentIntegrationPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  meetingDurationMinutes: e.target.value,
+                  meetingDurationMinutes: Number(e.target.value),
                 })
               }
             />
@@ -179,7 +197,7 @@ export default function AppointmentIntegrationPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  bufferMinutes: e.target.value,
+                  bufferMinutes: Number(e.target.value),
                 })
               }
             />
