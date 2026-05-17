@@ -42,9 +42,9 @@ export default function AppointmentIntegrationPage() {
       const res = await apiClient.request(
         "/integrations/appointment",
       );
-
+        console.log("APPOINTMENT API:", res);
       const data = res.integration || res;
-
+        console.log("APPOINTMENT DATA:", data);
         if (data) {
           setForm((prev) => ({
             ...prev,

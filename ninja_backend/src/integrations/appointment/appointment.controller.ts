@@ -31,6 +31,7 @@ export class AppointmentController {
 
   @Get()
   async get(@CurrentUser() user: any) {
+    console.log("APPOINTMENT CONTROLLER HIT");
     return this.appointmentService.get(
       this.requireTeam(user),
     );

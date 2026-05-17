@@ -16,7 +16,10 @@ export class AppointmentService {
     `,
       [teamId],
     );
-
+    console.log(
+        "APPOINTMENT DB ROW:",
+        JSON.stringify(rows[0], null, 2),
+    );
     const row = rows[0];
 
     if (!row) {
