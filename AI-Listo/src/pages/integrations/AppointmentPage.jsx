@@ -4,7 +4,7 @@ import apiClient from "../../api/apiClient";
 export default function AppointmentIntegrationPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [toast, setToast] = useState(null);
   const [form, setForm] = useState({
     provider: "google_calendar",
 
@@ -24,8 +24,18 @@ export default function AppointmentIntegrationPage() {
   });
 
   useEffect(() => {
-    load();
-  }, []);
+        load();
+      }, []);
+      const showToast = (message, type = "success") => {
+      setToast({
+        message,
+        type,
+      });
+
+      setTimeout(() => {
+        setToast(null);
+      }, 3000);
+    };
 
   const load = async () => {
     try {
@@ -58,11 +68,11 @@ export default function AppointmentIntegrationPage() {
         },
       );
 
-      alert("Appointment settings saved");
+      showToast("Appointment settings saved");
     } catch (err) {
       console.error(err);
 
-      alert("Failed to save appointment settings");
+      showToast("Failed to save appointment settings");
     } finally {
       setSaving(false);
     }
@@ -273,6 +283,28 @@ export default function AppointmentIntegrationPage() {
           {saving ? "Saving..." : "Save Settings"}
         </button>
       </div>
+       {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background:
+              toast.type === "success"
+                ? "#16a34a"
+                : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
