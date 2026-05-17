@@ -91,6 +91,7 @@ import GoogleAdsPage from "./pages/integrations/GoogleAdsPage";
 import ApiAccessPage from "./pages/integrations/ApiAccessPage";
 import MlsIdxPage from "./pages/integrations/MlsIdxPage";
 import TiktokPage from "./pages/integrations/TiktokPage";
+import AppointmentPage from "./pages/integrations/AppointmentPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -237,6 +238,7 @@ function AppRoutes() {
         <Route path="integrations/api-access" element={<ApiAccessPage  />} />
         <Route path="integrations/mls" element={<MlsIdxPage  />} />
         <Route path="integrations/tiktok" element={<TiktokPage  />} />
+        <Route path="integrations/appointment" element={<AppointmentPage  />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />

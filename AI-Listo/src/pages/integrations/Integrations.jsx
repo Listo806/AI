@@ -19,6 +19,7 @@ import {
   Building2,
   ChevronRight,
   Music2,
+  CalendarCheck2,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
@@ -90,7 +91,7 @@ const integrationsConfig = [
     title: "AI Appointment Booking",
     description:
       "Automatically schedule calls, meetings, and property tours with qualified leads.",
-    icon: ChevronRight,
+    icon: CalendarCheck2,
     iconColor: "#22c55e",
     iconBg: "#f0fdf4",
     category: "Communication",
@@ -233,6 +234,7 @@ export default function AppsIntegrationsHub() {
         apiAccessStatus,
         mlsStatus,
         tiktokStatus,
+        appointmentStatus,
       ] = await Promise.all([
         apiClient.request("/integrations"),
         loadEmailStatus(),
@@ -246,6 +248,7 @@ export default function AppsIntegrationsHub() {
         loadApiAccessStatus(),
         loadMlsStatus(),
         loadTikTokStatus(),
+        loadAppointmentStatus(),
       ]);
 
       const integrations = integrationsRes.integrations || [];
@@ -317,6 +320,12 @@ export default function AppsIntegrationsHub() {
             status: "connected",
           };
         }
+        if (item.key === "appointment" && appointmentStatus?.isConfigured) {
+          return {
+            ...item,
+            status: "connected",
+          };
+        }
 
         return item;
       });
@@ -354,7 +363,8 @@ export default function AppsIntegrationsHub() {
       integration.key === "google_drive" ||
       integration.key === "google_ads" ||
       integration.key === "mls_idx_feed" ||
-      integration.key === "tiktok"
+      integration.key === "tiktok" ||
+      integration.key === "appointment"
     ) {
       return integration.status === "connected" ? "Connected" : "Configure";
     }
@@ -446,6 +456,10 @@ export default function AppsIntegrationsHub() {
       }
       if (integration.key === "tiktok") {
         navigate("/dashboard/integrations/tiktok");
+        return;
+      }
+      if (integration.key === "appointment") {
+        navigate("/dashboard/integrations/appointment");
         return;
       }
       /*
@@ -584,6 +598,15 @@ export default function AppsIntegrationsHub() {
   const loadTikTokStatus = async () => {
     try {
       return await apiClient.request("/integrations/tiktok/status");
+    } catch (err) {
+      return {
+        isConfigured: false,
+      };
+    }
+  };
+  const loadAppointmentStatus = async () => {
+    try {
+      return await apiClient.request("/integrations/appointment/status");
     } catch (err) {
       return {
         isConfigured: false,
