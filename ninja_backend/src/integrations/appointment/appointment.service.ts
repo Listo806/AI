@@ -4,22 +4,42 @@ import { DatabaseService } from "../../database/database.service";
 
 @Injectable()
 export class AppointmentService {
-  constructor(
-    private readonly db: DatabaseService,
-  ) {}
+  constructor(private readonly db: DatabaseService) {}
 
   async get(teamId: string) {
     const { rows } = await this.db.query(
       `
-      SELECT *
-      FROM appointment_integrations
-      WHERE team_id = $1
-      LIMIT 1
-      `,
+    SELECT *
+    FROM appointment_integrations
+    WHERE team_id = $1
+    LIMIT 1
+    `,
       [teamId],
     );
 
-    return rows[0] || null;
+    const row = rows[0];
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      provider: row.provider,
+
+      bookingEnabled: row.booking_enabled,
+
+      propertyToursEnabled: row.property_tours_enabled,
+
+      autoAssignAgent: row.auto_assign_agent,
+
+      meetingDurationMinutes: row.meeting_duration_minutes,
+
+      bufferMinutes: row.buffer_minutes,
+
+      timezone: row.timezone,
+
+      notificationEmail: row.notification_email,
+    };
   }
 
   async save(teamId: string, body: any) {
