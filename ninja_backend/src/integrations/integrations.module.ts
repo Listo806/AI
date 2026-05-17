@@ -26,6 +26,7 @@ import { MlsModule } from "./mls/mls.module";
 import { MlsController } from "./mls/mls.controller";
 import { TiktokModule } from "./tiktok/tiktok.module";
 import { AppointmentModule } from "./appointment/appointment.module";
+import { AppointmentController } from "./appointment/appointment.controller";
 
 @Module({
   imports: [
@@ -51,7 +52,7 @@ import { AppointmentModule } from "./appointment/appointment.module";
     TiktokModule,
     AppointmentModule,
   ],
-  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController, MlsController],
+  controllers: [MetaWebhookController, PropertyFeedController, MakeController, GoogleAdsController, ApiAccessController, MlsController, AppointmentController],
   providers: [],
   exports: [
     MapboxModule,

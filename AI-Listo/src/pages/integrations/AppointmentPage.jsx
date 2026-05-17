@@ -40,7 +40,7 @@ export default function AppointmentIntegrationPage() {
   const load = async () => {
     try {
       const res = await apiClient.request(
-        "/integrations/appointment",
+        "/integrations/ai-appointment",
       );
         console.log("APPOINTMENT API:", res);
       const data = res.integration || res;
@@ -69,7 +69,7 @@ export default function AppointmentIntegrationPage() {
       setSaving(true);
 
       await apiClient.request(
-        "/integrations/appointment",
+        "/integrations/ai-appointment",
         {
           method: "POST",
           body: JSON.stringify({
