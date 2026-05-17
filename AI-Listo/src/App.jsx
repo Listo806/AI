@@ -238,7 +238,7 @@ function AppRoutes() {
         <Route path="integrations/api-access" element={<ApiAccessPage  />} />
         <Route path="integrations/mls" element={<MlsIdxPage  />} />
         <Route path="integrations/tiktok" element={<TiktokPage  />} />
-        <Route path="integrations/appointment" element={<AppointmentPage  />} />
+        <Route path="integrations/ai-appointment" element={<AppointmentPage  />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />

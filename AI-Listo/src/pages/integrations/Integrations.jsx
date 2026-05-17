@@ -459,7 +459,7 @@ export default function AppsIntegrationsHub() {
         return;
       }
       if (integration.key === "appointment") {
-        navigate("/dashboard/integrations/appointment");
+        navigate("/dashboard/integrations/ai-appointment");
         return;
       }
       /*
@@ -606,7 +606,7 @@ export default function AppsIntegrationsHub() {
   };
   const loadAppointmentStatus = async () => {
     try {
-      return await apiClient.request("/integrations/appointment/status");
+      return await apiClient.request("/integrations/ai-appointment/status");
     } catch (err) {
       return {
         isConfigured: false,

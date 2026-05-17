@@ -12,7 +12,7 @@ import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 import { AppointmentService } from "./appointment.service";
 
-@Controller("integrations/appointment")
+@Controller("integrations/ai-appointment")
 @UseGuards(JwtAuthGuard)
 export class AppointmentController {
   constructor(
