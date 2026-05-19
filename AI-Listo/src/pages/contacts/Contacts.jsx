@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./contacts.css";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../../api/apiClient";
 
 import {
   Search,
@@ -19,242 +21,203 @@ import {
   Flame,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
-
 export default function ContactsRelationshipsPage() {
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
-
-  const [stats, setStats] = useState(null);
-
   const [contacts, setContacts] = useState([]);
+  const [stats, setStats] = useState([]);
 
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    type: "Buyer",
+    email: "",
+    phone: "",
+    linkedLeadName: "",
+    interest: "",
+    status: "Cold",
+    source: "",
+    notes: "",
+  });
 
-  // ======================================================
-  // LOAD CONTACTS
-  // ======================================================
+  const [toast, setToast] = useState(null);
 
-  const loadContacts = async (params = "") => {
+  const showToast = (message, type = "success") => {
+    setToast({
+      message,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
+  const createContact = async (e) => {
+    e.preventDefault();
+
+    try {
+      await apiClient.request("/contacts", {
+        method: "POST",
+        body: JSON.stringify(createForm),
+      });
+
+      setShowCreateModal(false);
+
+      setCreateForm({
+        name: "",
+        type: "Buyer",
+        email: "",
+        phone: "",
+        linkedLeadName: "",
+        interest: "",
+        status: "Cold",
+        source: "",
+        notes: "",
+      });
+
+      fetchContacts();
+      fetchStats();
+
+      showToast("Contact created");
+    } catch (err) {
+      console.error(err);
+      showToast("Failed to create contact", "error");
+    }
+  };
+  const fetchContacts = async (query = "") => {
     try {
       setLoading(true);
 
-      const res = await fetch(`/api/contacts${params}`, {
-        credentials: "include",
+      const response = await apiClient.request(`/contacts${query}`, {
+        method: "GET",
       });
 
-      const data = await res.json();
+      const data = response?.data || response || [];
 
-      setContacts(Array.isArray(data) ? data : data.data || []);
+      setContacts(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch contacts error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ======================================================
-  // LOAD STATS
-  // ======================================================
-
-  const loadStats = async () => {
+  const fetchStats = async () => {
     try {
-      const res = await fetch("/api/contacts/stats", {
-        credentials: "include",
+      const response = await apiClient.request("/contacts/stats", {
+        method: "GET",
       });
 
-      const data = await res.json();
+      const data = response?.data || response || {};
 
-      setStats(data);
+      setStats([
+        {
+          label: "Total Contacts",
+          value: data.totalContacts || 0,
+          sub: "All relationships",
+          icon: Users,
+        },
+        {
+          label: "Active Buyers",
+          value: data.activeBuyers || 0,
+          sub: "Looking now",
+          icon: UserCheck,
+        },
+        {
+          label: "Active Sellers",
+          value: data.activeSellers || 0,
+          sub: "Selling properties",
+          icon: Home,
+        },
+        {
+          label: "AI Engagement",
+          value: `${data.aiEngagement || 0}%`,
+          sub: "AI relationship score",
+          icon: Bot,
+        },
+      ]);
     } catch (err) {
-      console.error(err);
+      console.error("Fetch stats error:", err);
     }
   };
 
-  // ======================================================
-  // INITIAL LOAD
-  // ======================================================
-
   useEffect(() => {
-    loadContacts();
-    loadStats();
+    fetchContacts();
+    fetchStats();
   }, []);
 
-  // ======================================================
-  // SEARCH
-  // ======================================================
+  const handleSearch = (e) => {
+    const value = e.target.value;
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!search.trim()) {
-        loadContacts();
-        return;
-      }
+    setSearch(value);
 
-      loadContacts(`?search=${encodeURIComponent(search)}`);
-    }, 400);
-
-    return () => clearTimeout(timeout);
-  }, [search]);
-
-  // ======================================================
-  // FILTERS
-  // ======================================================
-
-  const handleFilter = async (filter) => {
-    setSelectedFilter(filter);
-
-    switch (filter) {
-      case "buyers":
-        return loadContacts("?type=Buyer");
-
-      case "sellers":
-        return loadContacts("?type=Seller");
-
-      case "investors":
-        return loadContacts("?type=Investor");
-
-      case "renters":
-        return loadContacts("?type=Renter");
-
-      case "hot":
-        return loadContacts("?status=Hot");
-
-      case "inactive":
-        return loadContacts("?status=Cold");
-
-      default:
-        return loadContacts();
+    if (!value) {
+      fetchContacts();
+      return;
     }
+
+    fetchContacts(`?search=${encodeURIComponent(value)}`);
   };
 
-  // ======================================================
-  // AI INSIGHTS
-  // ======================================================
+  const applyFilter = (query) => {
+    fetchContacts(query);
+  };
 
-  const handleAiInsights = async () => {
+  const runAiReview = async () => {
     try {
-      const res = await fetch("/api/contacts/ai-insights", {
-        credentials: "include",
+      await apiClient.request("/contacts/ai-review", {
+        method: "POST",
       });
 
-      const data = await res.json();
+      fetchContacts();
+      fetchStats();
 
-      alert(data.summary);
+      showToast("AI review completed");
     } catch (err) {
       console.error(err);
+      showToast(err?.message || "Failed to load AI review", "error");
     }
   };
 
-  // ======================================================
-  // AI REVIEW
-  // ======================================================
-
-  const handleAiReview = async () => {
+  const loadAiInsights = async () => {
     try {
-      const res = await fetch("/api/contacts/ai-review", {
-        method: "POST",
-        credentials: "include",
+      const response = await apiClient.request("/contacts/ai-insights", {
+        method: "GET",
       });
 
-      const data = await res.json();
+      const data = response?.data || response;
 
-      alert(data.message);
-
-      loadContacts();
-      loadStats();
+      showToast(data?.summary || "No insights");
     } catch (err) {
       console.error(err);
+      showToast(err?.message || "Failed to load AI insights", "error");
     }
   };
 
-  // ======================================================
-  // MESSAGE
-  // ======================================================
+  const messageContact = async (contactId) => {
+    const message = prompt("Enter message");
 
-  const handleMessage = async (contact) => {
-    const message = window.prompt(
-      `Message ${contact.name}`
-    );
-
-    if (!message?.trim()) return;
+    if (!message) return;
 
     try {
-      await fetch(`/api/contacts/${contact.id}/message`, {
+      await apiClient.request(`/contacts/${contactId}/message`, {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        credentials: "include",
-
         body: JSON.stringify({
           channel: "whatsapp",
           message,
         }),
       });
 
-      alert("Message sent");
+      showToast("Message sent");
     } catch (err) {
       console.error(err);
+      showToast(err?.message || "Failed to send message", "error");
     }
   };
-
-  // ======================================================
-  // CREATE CONTACT
-  // ======================================================
-
-  const handleCreateContact = async () => {
-    const name = window.prompt("Contact name");
-
-    if (!name?.trim()) return;
-
-    try {
-      await fetch("/api/contacts", {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        credentials: "include",
-
-        body: JSON.stringify({
-          name,
-          type: "Buyer",
-        }),
-      });
-
-      loadContacts();
-      loadStats();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ======================================================
-  // STATS UI
-  // ======================================================
-
-  const statCards = [
-    {
-      label: "Total Contacts",
-      value: stats?.totalContacts || 0,
-      sub: "CRM contacts",
-      icon: Users,
-    },
-
-    {
-      label: "Active Buyers",
-      value: stats?.activeBuyers || 0,
-      sub: "Looking now",
-      icon: UserCheck,
-    },
-  ];
 
   return (
     <div className="contacts-page">
@@ -264,14 +227,12 @@ export default function ContactsRelationshipsPage() {
           <h1>Contacts & Relationships</h1>
 
           <p>
-            Manage buyers, sellers, investors,
-            renters, and conversations from one
-            AI-powered workspace.
+            Manage buyers, sellers, investors, renters, and conversations from
+            one AI-powered workspace.
           </p>
         </div>
 
         <div className="header-actions">
-          {/* SEARCH */}
           <div className="search-box">
             <Search size={18} />
 
@@ -279,136 +240,77 @@ export default function ContactsRelationshipsPage() {
               type="text"
               placeholder="Search contacts..."
               value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
+              onChange={handleSearch}
             />
           </div>
 
-          {/* FILTERS */}
-          <div className="filters-row">
-            <button
-              className={`outline-btn ${
-                selectedFilter === "all"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() => handleFilter("all")}
-            >
-              All
-            </button>
+          <button className="outline-btn" onClick={() => applyFilter("")}>
+            <SlidersHorizontal size={16} />
+            All
+          </button>
 
-            <button
-              className={`outline-btn ${
-                selectedFilter === "buyers"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilter("buyers")
-              }
-            >
-              Buyers
-            </button>
-
-            <button
-              className={`outline-btn ${
-                selectedFilter === "sellers"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilter("sellers")
-              }
-            >
-              Sellers
-            </button>
-
-            <button
-              className={`outline-btn ${
-                selectedFilter === "investors"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilter("investors")
-              }
-            >
-              Investors
-            </button>
-
-            <button
-              className={`outline-btn ${
-                selectedFilter === "renters"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilter("renters")
-              }
-            >
-              Renters
-            </button>
-
-            <button
-              className={`outline-btn ${
-                selectedFilter === "hot"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() => handleFilter("hot")}
-            >
-              Hot Leads
-            </button>
-
-            <button
-              className={`outline-btn ${
-                selectedFilter === "inactive"
-                  ? "active-filter"
-                  : ""
-              }`}
-              onClick={() =>
-                handleFilter("inactive")
-              }
-            >
-              Inactive
-            </button>
-          </div>
-
-          {/* AI */}
           <button
             className="outline-btn"
-            onClick={handleAiInsights}
+            onClick={() => applyFilter("?type=Buyer")}
           >
+            Buyers
+          </button>
+
+          <button
+            className="outline-btn"
+            onClick={() => applyFilter("?type=Seller")}
+          >
+            Sellers
+          </button>
+
+          <button
+            className="outline-btn"
+            onClick={() => applyFilter("?type=Investor")}
+          >
+            Investors
+          </button>
+
+          <button
+            className="outline-btn"
+            onClick={() => applyFilter("?type=Renter")}
+          >
+            Renters
+          </button>
+
+          <button
+            className="outline-btn"
+            onClick={() => applyFilter("?status=Hot")}
+          >
+            Hot Leads
+          </button>
+
+          <button
+            className="outline-btn"
+            onClick={() => applyFilter("?status=Cold")}
+          >
+            Inactive
+          </button>
+
+          <button className="outline-btn" onClick={loadAiInsights}>
             <Bot size={16} />
             AI Insights
           </button>
 
-          <button
-            className="outline-btn"
-            onClick={handleAiReview}
-          >
-            <SlidersHorizontal size={16} />
+          <button className="outline-btn" onClick={runAiReview}>
+            <Bot size={16} />
             Run AI Review
           </button>
 
-          {/* RELATIONSHIP MAP */}
           <button
             className="outline-btn"
-            onClick={() =>
-              navigate(
-                "/dashboard/contacts/relationship-map"
-              )
-            }
+            onClick={() => navigate("/dashboard/contacts/relationship-map")}
           >
-            <Users size={16} />
             Relationship Map
           </button>
 
-          {/* CREATE */}
           <button
             className="primary-btn"
-            onClick={handleCreateContact}
+            onClick={() => setShowCreateModal(true)}
           >
             <Plus size={16} />
             Add Contact
@@ -418,22 +320,17 @@ export default function ContactsRelationshipsPage() {
 
       {/* STATS */}
       <div className="stats-grid">
-        {statCards.map((stat, index) => {
+        {stats.map((stat, index) => {
           const Icon = stat.icon;
 
           return (
-            <div
-              key={index}
-              className="stat-card"
-            >
+            <div key={index} className="stat-card">
               <div className="stat-icon">
                 <Icon size={22} />
               </div>
 
               <div>
-                <p className="stat-label">
-                  {stat.label}
-                </p>
+                <p className="stat-label">{stat.label}</p>
 
                 <h2>{stat.value}</h2>
 
@@ -447,33 +344,24 @@ export default function ContactsRelationshipsPage() {
       {/* CONTACTS */}
       <div className="contacts-grid">
         {loading ? (
-          <div className="loading-box">
-            Loading contacts...
-          </div>
+          <div>Loading...</div>
         ) : (
           contacts.map((contact) => (
-            <div
-              className="contact-card"
-              key={contact.id}
-            >
+            <div className="contact-card" key={contact.id}>
               {/* TOP */}
               <div className="card-top">
                 <div className="card-user">
                   <div className="avatar">
-                    {contact.avatar}
+                    {contact.avatar || contact.name?.charAt(0)?.toUpperCase()}
                   </div>
 
                   <div>
                     <h3>{contact.name}</h3>
 
                     <div className="badges">
-                      <span className="badge blue">
-                        {contact.type}
-                      </span>
+                      <span className="badge blue">{contact.type}</span>
 
-                      <span className="badge red">
-                        {contact.status}
-                      </span>
+                      <span className="badge red">{contact.status}</span>
                     </div>
                   </div>
                 </div>
@@ -485,17 +373,9 @@ export default function ContactsRelationshipsPage() {
 
               {/* INFO */}
               <div className="info-grid">
-                <InfoBox
-                  icon={Mail}
-                  label="Email"
-                  value={contact.email}
-                />
+                <InfoBox icon={Mail} label="Email" value={contact.email} />
 
-                <InfoBox
-                  icon={Phone}
-                  label="Phone"
-                  value={contact.phone}
-                />
+                <InfoBox icon={Phone} label="Phone" value={contact.phone} />
 
                 <InfoBox
                   icon={UserPlus}
@@ -518,30 +398,22 @@ export default function ContactsRelationshipsPage() {
 
                 <div className="ai-content">
                   <div className="ai-header">
-                    <h4>
-                      AI Relationship Score
-                    </h4>
-
-                    <span>
-                      {contact.score || 0}%
-                    </span>
+                    <h4>AI Relationship Score</h4>
                   </div>
-
                   <p>
                     Highly engaged contact.
-                    Recommended follow-up
-                    today.
+                    <br />
+                    Recommended follow-up today.
                   </p>
                 </div>
+                <span>{contact.score || 0}%</span>
               </div>
 
               {/* FOOTER */}
               <div className="card-footer">
                 <div className="footer-left">
                   <Clock size={14} />
-
-                  Last contact:{" "}
-                  {contact.lastContact}
+                  Last contact: {contact.lastContact || "No contact yet"}
                 </div>
 
                 <div className="footer-right">
@@ -552,25 +424,17 @@ export default function ContactsRelationshipsPage() {
 
               {/* ACTIONS */}
               <div className="card-actions">
-                {/* VIEW */}
                 <button
                   className="outline-btn flex-btn"
-                  onClick={() =>
-                    navigate(
-                      `/dashboard/contacts/${contact.id}`
-                    )
-                  }
+                  onClick={() => navigate(`/dashboard/contacts/${contact.id}`)}
                 >
                   <Eye size={14} />
                   View
                 </button>
 
-                {/* MESSAGE */}
                 <button
                   className="primary-btn flex-btn"
-                  onClick={() =>
-                    handleMessage(contact)
-                  }
+                  onClick={() => messageContact(contact.id)}
                 >
                   <Send size={14} />
                   Message
@@ -580,15 +444,212 @@ export default function ContactsRelationshipsPage() {
           ))
         )}
       </div>
+      {/* CREATE CONTACT MODAL */}
+      {showCreateModal && (
+        <div className="modal-overlay">
+          <div className="contact-modal">
+            <div className="modal-header">
+              <h2>Add Contact</h2>
+
+              <button
+                className="icon-btn"
+                onClick={() => setShowCreateModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={createContact}>
+              <div className="modal-grid">
+                <div className="form-group">
+                  <label>Name</label>
+
+                  <input
+                    type="text"
+                    required
+                    value={createForm.name}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Type</label>
+
+                  <select
+                    value={createForm.type}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        type: e.target.value,
+                      })
+                    }
+                  >
+                    <option>Buyer</option>
+                    <option>Seller</option>
+                    <option>Investor</option>
+                    <option>Renter</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Email</label>
+
+                  <input
+                    type="email"
+                    required
+                    value={createForm.email}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Phone</label>
+
+                  <input
+                    type="text"
+                    value={createForm.phone}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Linked Lead</label>
+
+                  <input
+                    type="text"
+                    value={createForm.linkedLeadName}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        linkedLeadName: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Interest</label>
+
+                  <input
+                    type="text"
+                    value={createForm.interest}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        interest: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Status</label>
+
+                  <select
+                    value={createForm.status}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option>Cold</option>
+                    <option>Warm</option>
+                    <option>Hot</option>
+                    <option>Active</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Source</label>
+
+                  <input
+                    type="text"
+                    value={createForm.source}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        source: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Notes</label>
+
+                  <textarea
+                    rows="4"
+                    value={createForm.notes}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        notes: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="outline-btn"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="primary-btn">
+                  Create Contact
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* TOAST */}
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
 
-function InfoBox({
-  icon: Icon,
-  label,
-  value,
-}) {
+function InfoBox({ icon: Icon, label, value }) {
   return (
     <div className="info-box">
       <div className="info-label">
