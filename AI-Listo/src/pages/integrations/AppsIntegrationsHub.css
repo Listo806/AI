@@ -7,16 +7,12 @@ body {
   color: #171717;
 }
 
-.apps-page {
-  min-height: 100vh;
-}
-
 .apps-layout {
   display: flex;
 }
-
-/* SIDEBAR */
-
+.crm-main{
+    height:100%;
+}
 .sidebar {
   width: 165px;
   border-right: 1px solid #eceef2;
@@ -36,9 +32,11 @@ body {
   line-height: 1.7;
   color: #6b7280;
 }
-
+.crm-content{
+    padding-bottom:0;
+    height: calc(100vh - 30px);
+}
 .category-list {
-  margin-top: 32px;
   display: flex;
   flex-direction: column;
   gap: 6px;

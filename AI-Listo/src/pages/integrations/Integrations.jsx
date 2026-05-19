@@ -619,15 +619,6 @@ export default function AppsIntegrationsHub() {
       <div className="apps-layout">
         {/* SIDEBAR */}
         <aside className="sidebar">
-          <div className="sidebar-header">
-            <h1 className="sidebar-title">Apps & Integrations</h1>
-
-            <p className="sidebar-description">
-              Connect your CRM, apps, automations, calendars, APIs, and external
-              services.
-            </p>
-          </div>
-
           <div className="category-list">
             {categories.map((category) => (
               <button
@@ -647,29 +638,7 @@ export default function AppsIntegrationsHub() {
 
         {/* MAIN */}
         <main className="main-content">
-          {/* TOPBAR */}
-          <div className="topbar">
-            <div>
-              <h2 className="page-title">{activeCategory}</h2>
-
-              <p className="page-description">
-                Connect and manage integrations for your real estate business.
-              </p>
-            </div>
-
-            <div className="search-wrapper">
-              <Search size={16} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search integrations..."
-                className="search-input"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* GRID */}
+         
           {loading ? (
             <div className="apps-loading">Loading integrations...</div>
           ) : (
