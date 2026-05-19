@@ -1,34 +1,61 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsUUID, ValidateIf } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsEmail,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
 
 export class CreateContactDto {
-  @ApiProperty({ example: 'Jane Smith' })
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: 'jane@example.com' })
   @IsOptional()
-  @ValidateIf((o) => o.email != null && o.email !== '')
+  @IsString()
+  type?: string;
+
+  @IsOptional()
   @IsEmail()
   email?: string;
 
-  @ApiPropertyOptional({ example: '+1234567890' })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiPropertyOptional({ description: 'Link to a lead' })
   @IsOptional()
   @IsUUID()
   leadId?: string;
 
-  @ApiPropertyOptional({ description: 'Team (owners with multiple teams can specify)' })
   @IsOptional()
-  @IsUUID()
-  teamId?: string;
+  @IsString()
+  linkedLeadName?: string;
 
-  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  interest?: string;
+
+  @IsOptional()
+  @IsNumber()
+  score?: number;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  source?: string;
+
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsDateString()
+  lastContactAt?: string;
+
+  @IsOptional()
+  @IsUUID()
+  teamId?: string;
 }

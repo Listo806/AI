@@ -1,30 +1,58 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsEmail, IsUUID, ValidateIf } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsEmail,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
 
 export class UpdateContactDto {
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @ValidateIf((o) => o.email != null && o.email !== '')
-  @IsEmail()
-  email?: string | null;
-
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  phone?: string | null;
+  type?: string;
 
-  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @IsOptional()
   @IsUUID()
-  leadId?: string | null;
+  leadId?: string;
 
-  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  notes?: string | null;
+  linkedLeadName?: string;
+
+  @IsOptional()
+  @IsString()
+  interest?: string;
+
+  @IsOptional()
+  @IsNumber()
+  score?: number;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  source?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsDateString()
+  lastContactAt?: string;
 }

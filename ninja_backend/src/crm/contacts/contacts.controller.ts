@@ -3,76 +3,215 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
+
 import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
+
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { VaRestrictionGuard } from '../../auth/guards/va-restriction.guard';
 import { CrmAccessGuard } from '../../subscriptions/guards/crm-access.guard';
+
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
-@ApiTags('crm')
+@ApiTags('contacts')
 @ApiBearerAuth('JWT-auth')
-@Controller('crm/contacts')
+@Controller('api/contacts')
 @UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a contact' })
-  @ApiBody({ type: CreateContactDto })
-  @ApiResponse({ status: 201, description: 'Contact created' })
-  @ApiResponse({ status: 403, description: 'CRM access required' })
-  async create(@Body() dto: CreateContactDto, @CurrentUser() user: any) {
-    return this.contactsService.create(dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+  // ======================================================
+  // STATS
+  // ======================================================
+
+  @Get('stats')
+  async getStats(@CurrentUser() user: any) {
+    return this.contactsService.getStats(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
   }
+
+  // ======================================================
+  // AI INSIGHTS
+  // ======================================================
+
+  @Get('ai-insights')
+  async getAiInsights(@CurrentUser() user: any) {
+    return this.contactsService.getAiInsights(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ======================================================
+  // AI REVIEW
+  // ======================================================
+
+  @Post('ai-review')
+  async runAiReview(@CurrentUser() user: any) {
+    return this.contactsService.runAiReview(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ======================================================
+  // ACTIVITY
+  // ======================================================
+
+  @Get('activity')
+  async getActivity(@CurrentUser() user: any) {
+    return this.contactsService.getActivity(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ======================================================
+  // CREATE
+  // ======================================================
+
+  @Post()
+  async create(
+    @Body() dto: CreateContactDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.contactsService.create(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ======================================================
+  // LIST
+  // ======================================================
 
   @Get()
-  @ApiOperation({ summary: 'List contacts (optional teamId for owners)' })
-  @ApiQuery({ name: 'teamId', required: false, description: 'Filter by team' })
-  @ApiResponse({ status: 200, description: 'Contacts list' })
-  @ApiResponse({ status: 403, description: 'CRM access required' })
-  async findAll(@CurrentUser() user: any, @Query('teamId') teamId?: string) {
-    return this.contactsService.findAll(user.id, user.teamId ?? null, user.role ?? 'owner', teamId || undefined);
+  async findAll(
+    @CurrentUser() user: any,
+
+    @Query('search') search?: string,
+    @Query('type') type?: string,
+    @Query('status') status?: string,
+
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.contactsService.findAll(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      {
+        search,
+        type,
+        status,
+        page: Number(page || 1),
+        limit: Number(limit || 20),
+      },
+    );
   }
+
+  // ======================================================
+  // SINGLE
+  // ======================================================
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get one contact' })
-  @ApiParam({ name: 'id', description: 'Contact UUID' })
-  @ApiResponse({ status: 200, description: 'Contact' })
-  @ApiResponse({ status: 404, description: 'Contact not found' })
-  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.contactsService.findOne(id, user.id, user.teamId ?? null, user.role ?? 'owner');
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.contactsService.findOne(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a contact' })
-  @ApiParam({ name: 'id', description: 'Contact UUID' })
-  @ApiBody({ type: UpdateContactDto })
-  @ApiResponse({ status: 200, description: 'Contact updated' })
-  @ApiResponse({ status: 404, description: 'Contact not found' })
+  // ======================================================
+  // UPDATE
+  // ======================================================
+
+  @Put(':id')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateContactDto,
     @CurrentUser() user: any,
   ) {
-    return this.contactsService.update(id, dto, user.id, user.teamId ?? null, user.role ?? 'owner');
+    return this.contactsService.update(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
   }
 
+  // ======================================================
+  // MESSAGE
+  // ======================================================
+
+  @Post(':id/message')
+  async messageContact(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      channel: string;
+      message: string;
+    },
+    @CurrentUser() user: any,
+  ) {
+    return this.contactsService.messageContact(
+      id,
+      body,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ======================================================
+  // DELETE
+  // ======================================================
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a contact' })
-  @ApiParam({ name: 'id', description: 'Contact UUID' })
-  @ApiResponse({ status: 200, description: 'Contact deleted' })
-  @ApiResponse({ status: 404, description: 'Contact not found' })
-  async remove(@Param('id') id: string, @CurrentUser() user: any) {
-    await this.contactsService.remove(id, user.id, user.teamId ?? null, user.role ?? 'owner');
-    return { success: true };
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.contactsService.remove(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+
+    return {
+      success: true,
+    };
   }
 }
