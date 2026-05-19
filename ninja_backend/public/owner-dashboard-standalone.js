@@ -22,7 +22,7 @@
 
   // Configuration
   const CONFIG = {
-    API_BASE_URL: 'https://ai-2-7ikc.onrender.com/api', // Update with your backend URL
+    API_BASE_URL: 'https://backend.cortexaaicrm.com/api', // Update with your backend URL
     DASHBOARD_URL: '/dashboard/owners',
     SIGN_IN_URL: '/sign-in',
     STORAGE_PREFIX: 'listo_',

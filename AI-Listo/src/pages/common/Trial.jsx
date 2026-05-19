@@ -29,7 +29,7 @@ export default function StartTrial() {
     e.preventDefault();
 
         try {
-            const res = await fetch("https://ai-2-7ikc.onrender.com/api/trial/start-trial", {
+            const res = await fetch("https://backend.cortexaaicrm.com/api/trial/start-trial", {
                 method: "POST",
                 headers: {
                 "Content-Type": "application/json",

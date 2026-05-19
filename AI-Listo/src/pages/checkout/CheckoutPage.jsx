@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Common.css";
 
-const API_BASE = "https://ai-2-7ikc.onrender.com";
+const API_BASE = "https://backend.cortexaaicrm.com";
 
 export default function CheckoutPage() {
   const [loadingScreen, setLoadingScreen] = useState(true);
