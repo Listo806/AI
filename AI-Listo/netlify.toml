@@ -2,6 +2,18 @@
   command = "npm run build"
   publish = "dist"
 
+
+[[redirects]]
+from = "https://stirring-liger-864437.netlify.app/*"
+to = "https://www.cortexaaicrm.com/:splat"
+status = 301
+force = true
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
 # ─────────────────────────────────────────────
 # Redirect root domain → vacation rentals page
 # ─────────────────────────────────────────────
