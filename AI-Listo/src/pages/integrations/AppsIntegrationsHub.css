@@ -264,7 +264,11 @@ body {
 
 
 
-
+@media (min-width: 1200px) {
+    .apps-layout {
+        margin-top: 30px;
+    }
+}
 @media (max-width: 1200px) {
   .integrations-grid {
     grid-template-columns: repeat(2, 1fr);
