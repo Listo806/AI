@@ -261,6 +261,13 @@ export default function ContactsRelationshipsPage() {
                     value={stat.value}
                     sub={stat.sub}
                     trend="+12%"
+                    variant={
+                      stat.label === "Active Buyers"
+                        ? "buyers"
+                        : stat.label === "AI Engagement"
+                          ? "ai"
+                          : ""
+                    }
                   />
                 );
               })}
@@ -309,7 +316,10 @@ export default function ContactsRelationshipsPage() {
                     {item.label}
                   </button>
                 ))}
-                <button className="action-btn insights" onClick={loadAiInsights}>
+                <button
+                  className="action-btn insights"
+                  onClick={loadAiInsights}
+                >
                   <Sparkles /> AI Insights
                 </button>
 
@@ -589,9 +599,9 @@ function InfoBox({ icon: Icon, label, value }) {
   );
 }
 
-function KPIBox({ icon, title, value, sub, trend }) {
+function KPIBox({ icon, title, value, sub, trend, variant }) {
   return (
-    <div className="kpi-box">
+    <div className={`kpi-box ${variant}`}>
       <div className="kpi-left">
         <div className="kpi-icon">{icon}</div>
 
@@ -603,6 +613,7 @@ function KPIBox({ icon, title, value, sub, trend }) {
           <div className="kpi-sub">{sub}</div>
         </div>
       </div>
+
       <div className="kpi-right">
         <div className="kpi-trend">{trend}</div>
         <p>vs last 30 days</p>
