@@ -638,7 +638,6 @@ export default function AppsIntegrationsHub() {
 
         {/* MAIN */}
         <main className="main-content">
-         
           {loading ? (
             <div className="apps-loading">Loading integrations...</div>
           ) : (
@@ -648,27 +647,27 @@ export default function AppsIntegrationsHub() {
 
                 return (
                   <div key={integration.key} className="integration-card">
-                    <div
-                      className="integration-icon"
-                      style={{
-                        backgroundColor: integration.iconBg,
-                      }}
-                    >
-                      <Icon
-                        size={24}
-                        color={integration.iconColor}
-                        strokeWidth={2.2}
-                      />
-                    </div>
-
-                    <div className="integration-right">
+                    <div className="integration-left">
+                      <div
+                        className="integration-icon"
+                        style={{
+                          backgroundColor: integration.iconBg,
+                        }}
+                      >
+                        <Icon
+                          size={24}
+                          color={integration.iconColor}
+                          strokeWidth={2.2}
+                        />
+                      </div>
                       <h3 className="integration-title">{integration.title}</h3>
-
+                    </div>
+                    <div className="integration-right">
                       <p className="integration-description">
                         {integration.description}
                       </p>
-
-                      <button
+                    </div>
+                    <button
                         className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
                         onClick={() => handleIntegrationClick(integration)}
                         disabled={syncingKey === integration.key}
@@ -677,7 +676,6 @@ export default function AppsIntegrationsHub() {
                           ? "Syncing..."
                           : getButtonLabel(integration)}
                       </button>
-                    </div>
                   </div>
                 );
               })}
