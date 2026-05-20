@@ -4,7 +4,6 @@
 .contacts-page {
   width: 100%;
   height: 100vh;
-  background: #f7f8fc;
   display: flex;
   font-family: Inter, sans-serif;
 }
@@ -184,14 +183,14 @@
 .contacts-page .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 10px;
 }
 
 .contacts-page .kpi-box {
   height: 138px;
   background: white;
   border: 1px solid #ececf3;
-  border-radius: 30px;
+  border-radius: 16px;
   padding: 0 12px;
   display: flex;
   align-items: center;
@@ -201,13 +200,17 @@
 .contacts-page .kpi-left {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
 }
-
+.kpi-content{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 .contacts-page .kpi-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
   background: linear-gradient(
     to bottom right,
     #4f46e5,
@@ -220,19 +223,18 @@
 }
 
 .contacts-page .kpi-title {
-  font-size: 15px;
+  font-size: 14px;
   color: #6b7280;
 }
 
 .contacts-page .kpi-value {
-  font-size: 42px;
+  font-size: 32px;
   font-weight: bold;
   color: #111827;
 }
 
 .contacts-page .kpi-sub {
-  margin-top: 8px;
-  font-size: 14px;
+  font-size: 12px;
   color: #9ca3af;
 }
 
@@ -243,16 +245,19 @@
   color: #22c55e;
   font-size: 13px;
   font-weight: 600;
+  text-align: center;
 }
 
-/* FILTER */
-
+.contacts-page .kpi-right p{
+    font-size: 11px;
+    color: #9ca3af;
+}
 .contacts-page .filter-bar {
   margin-top: 24px;
   background: white;
   border: 1px solid #ececf3;
   border-radius: 28px;
-  padding: 16px;
+  padding: 16px 10px;
   display: flex;
   justify-content: space-between;
   gap: 20px;
@@ -261,22 +266,22 @@
 .contacts-page .filter-left,
 .contacts-page .filter-right {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .contacts-page .search-box {
-  width: 250px;
   height: 48px;
   border-radius: 18px;
   border: 1px solid #ececf3;
-  background: #fafafa;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 16px;
+  padding: 0 12px;
   margin-top: 0;
+  margin:0;
+  width: 213px;
 }
 
 .contacts-page .search-box input {
@@ -290,11 +295,12 @@
 .contacts-page .action-btn,
 .contacts-page .primary-btn {
   height: 48px;
-  border-radius: 18px;
-  padding: 0 20px;
+  border-radius: 10px;
+  padding: 0 10px;
   border: 1px solid #ececf3;
   cursor: pointer;
   font-weight: 500;
+  background: #fff;
 }
 
 .contacts-page .filter-btn.active {
@@ -306,8 +312,27 @@
 .contacts-page .action-btn {
   background: white;
   color: #2563ff;
+  display: flex;
+    align-items: center;
+    gap: 2px;
 }
-
+body .contacts-page .insights {
+  border: 1px solid #2563ff;
+}
+body .contacts-page .runai {
+  border: 1px solid #b896d7;
+  color: #b896d7;
+}
+body .contacts-page .map {
+  border: 1px solid #2563ff;
+  color: #000;
+}
+body .contacts-page .action-btn svg{
+    width:16px;
+}
+body .contacts-page .map svg{
+    color: #2563ff;
+}
 .contacts-page .primary-btn {
   background: #2563ff;
   color: white;
@@ -343,9 +368,9 @@
 }
 
 .contacts-page .contact-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
   background: linear-gradient(
     to bottom right,
     #4f46e5,
@@ -366,13 +391,26 @@
 }
 
 .contacts-page .intent-badge {
-  margin-top: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: #fff1f1;
   color: #ef4444;
   padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  height: 30px;
+}
+
+.contacts-page .intent-round {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e5e8f1;
+  color: #ef4444;
+  padding: 10px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -424,7 +462,7 @@
   border: 1px solid #dbe5ff;
   background: #f5f8ff;
   border-radius: 28px;
-  padding: 24px;
+  padding: 24px 16px;;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -437,9 +475,9 @@
 }
 
 .contacts-page .ai-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   background: linear-gradient(
     to bottom right,
     #4f46e5,
@@ -460,10 +498,11 @@
 .contacts-page .ai-sub {
   margin-top: 6px;
   color: #4b5563;
+  font-size: 14px;
 }
 
 .contacts-page .ai-score {
-  font-size: 35px;
+  font-size: 30px;
   font-weight: bold;
   color: #2563ff;
 }

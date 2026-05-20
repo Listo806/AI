@@ -19,6 +19,8 @@ import {
   UserPlus,
   Clock,
   Flame,
+  Sparkles,
+  Handshake,
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
@@ -46,17 +48,17 @@ export default function ContactsRelationshipsPage() {
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const showToast = (message, type = "success") => {
-      clearTimeout(toastTimer.current);
+    clearTimeout(toastTimer.current);
 
-      setToast({
-        message,
-        type,
-      });
+    setToast({
+      message,
+      type,
+    });
 
-      toastTimer.current = setTimeout(() => {
-        setToast(null);
-      }, 3000);
-    };
+    toastTimer.current = setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
 
   const createContact = async (e) => {
     e.preventDefault();
@@ -152,6 +154,20 @@ export default function ContactsRelationshipsPage() {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    const crmContent = document.querySelector(".crm-content");
+
+    if (crmContent) {
+      crmContent.classList.add("contacts-crm-content");
+    }
+
+    return () => {
+      if (crmContent) {
+        crmContent.classList.remove("contacts-crm-content");
+      }
+    };
+  }, []);
+
   const handleSearch = (e) => {
     const value = e.target.value;
 
@@ -222,342 +238,340 @@ export default function ContactsRelationshipsPage() {
   };
 
   return (
-    <div className="contacts-page">
-      {/* MAIN */}
-      <main className="main-content">
-        {/* HEADER */}
-        <div className="top-header">
-          <div className="header-left">
-            <Users className="header-icon" size={20} />
+    <div>
+      <div className="heading_page">
+        <Users className="header-icon" size={20} />
+        <h1>Contacts & Relationships</h1>
+      </div>
+      <div className="contacts-page">
+        {/* MAIN */}
+        <main className="main-content">
+          {/* CONTENT */}
+          <div className="content-wrapper">
+            {/* KPI */}
+            <div className="kpi-grid">
+              {stats.map((stat, index) => {
+                const Icon = stat.icon;
 
-            <h1>Contacts & Relationships</h1>
-          </div>
-
-          <div className="header-right">
-            <button className="action-btn" onClick={loadAiInsights}>
-              AI Insights
-            </button>
-
-            <button className="action-btn" onClick={runAiReview}>
-              Run AI Review
-            </button>
-
-            <button
-              className="primary-btn"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus size={18} />
-              Add Contact
-            </button>
-          </div>
-        </div>
-
-        {/* CONTENT */}
-        <div className="content-wrapper">
-          {/* KPI */}
-          <div className="kpi-grid">
-            {stats.map((stat, index) => {
-              const Icon = stat.icon;
-
-              return (
-                <KPIBox
-                  key={index}
-                  icon={<Icon size={26} />}
-                  title={stat.label}
-                  value={stat.value}
-                  sub={stat.sub}
-                  trend="+12%"
-                />
-              );
-            })}
-          </div>
-
-          {/* FILTER BAR */}
-          <div className="filter-bar">
-            <div className="filter-left">
-              <div className="search-box">
-                <Search size={18} />
-
-                <input
-                  placeholder="Search contacts..."
-                  value={search}
-                  onChange={handleSearch}
-                />
-              </div>
-
-              {[
-                {
-                  label: "All",
-                  query: "",
-                },
-                {
-                  label: "Buyers",
-                  query: "?type=Buyer",
-                },
-                {
-                  label: "Sellers",
-                  query: "?type=Seller",
-                },
-                {
-                  label: "Investors",
-                  query: "?type=Investor",
-                },
-                {
-                  label: "Renters",
-                  query: "?type=Renter",
-                },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  className="filter-btn"
-                  onClick={() => applyFilter(item.query)}
-                >
-                  {item.label}
-                </button>
-              ))}
+                return (
+                  <KPIBox
+                    key={index}
+                    icon={<Icon size={26} />}
+                    title={stat.label}
+                    value={stat.value}
+                    sub={stat.sub}
+                    trend="+12%"
+                  />
+                );
+              })}
             </div>
 
-            <div className="filter-right">
-              <button
-                className="action-btn"
-                onClick={() => navigate("/dashboard/contacts/relationship-map")}
-              >
-                Relationship Map
-              </button>
-            </div>
-          </div>
+            {/* FILTER BAR */}
+            <div className="filter-bar">
+              <div className="filter-left">
+                <div className="search-box">
+                  <Search size={18} />
 
-          {/* CONTACTS */}
-          <div className="contacts-grid">
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              contacts.map((contact) => (
-                <div className="contact-card" key={contact.id}>
-                  {/* TOP */}
-                  <div className="contact-top">
-                    <div className="contact-user">
-                      <div className="contact-avatar">
-                        {contact.avatar ||
-                          contact.name?.charAt(0)?.toUpperCase()}
-                      </div>
-
-                      <div>
-                        <div className="contact-name">{contact.name}</div>
-
-                        <div className="intent-badge">
-                          ● {contact.status || "Cold"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <button className="icon-btn">
-                      <MoreVertical size={18} />
-                    </button>
-                  </div>
-
-                  {/* INFO */}
-                  <div className="info-grid">
-                    <InfoBox icon={Mail} label="Email" value={contact.email} />
-
-                    <InfoBox icon={Phone} label="Phone" value={contact.phone} />
-
-                    <InfoBox
-                      icon={UserPlus}
-                      label="Linked Lead"
-                      value={contact.linkedLead || "-"}
-                    />
-
-                    <InfoBox
-                      icon={Home}
-                      label="Interest"
-                      value={contact.interest || "-"}
-                    />
-                  </div>
-
-                  {/* AI SCORE */}
-                  <div className="ai-score-box">
-                    <div className="ai-left">
-                      <div className="ai-icon">
-                        <Bot size={22} />
-                      </div>
-
-                      <div>
-                        <div className="ai-title">AI Relationship Score</div>
-
-                        <div className="ai-sub">
-                          Highly engaged. Recommended follow-up today.
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="ai-score">{contact.score || 0}%</div>
-                  </div>
-
-                  {/* ACTIONS */}
-                  <div className="actions-grid">
-                    <button
-                      className="secondary-action"
-                      onClick={() =>
-                        navigate(`/dashboard/contacts/${contact.id}`)
-                      }
-                    >
-                      <Eye size={18} />
-                      View
-                    </button>
-
-                    <button
-                      className="primary-action"
-                      onClick={() => messageContact(contact.id)}
-                    >
-                      <Send size={18} />
-                      Message
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* CREATE MODAL */}
-        {showCreateModal && (
-          <div className="modal-overlay">
-            <div className="contact-modal">
-              <div className="modal-header">
-                <h2>Add Contact</h2>
-
-                <button
-                  className="icon-btn"
-                  onClick={() => setShowCreateModal(false)}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={createContact}>
-                <div className="modal-grid">
-                  <div className="form-group">
-                    <label>Name</label>
-
-                    <input
-                      type="text"
-                      required
-                      value={createForm.name}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Email</label>
-
-                    <input
-                      type="email"
-                      required
-                      value={createForm.email}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          email: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Phone</label>
-
-                    <input
-                      type="text"
-                      value={createForm.phone}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          phone: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Type</label>
-
-                    <select
-                      value={createForm.type}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          type: e.target.value,
-                        })
-                      }
-                    >
-                      <option>Buyer</option>
-                      <option>Seller</option>
-                      <option>Investor</option>
-                      <option>Renter</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group full">
-                    <label>Notes</label>
-
-                    <textarea
-                      rows="4"
-                      value={createForm.notes}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          notes: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
+                  <input
+                    placeholder="Search contacts..."
+                    value={search}
+                    onChange={handleSearch}
+                  />
                 </div>
 
-                <div className="modal-actions">
+                {[
+                  {
+                    label: "All",
+                    query: "",
+                  },
+                  {
+                    label: "Buyers",
+                    query: "?type=Buyer",
+                  },
+                  {
+                    label: "Sellers",
+                    query: "?type=Seller",
+                  },
+                  {
+                    label: "Investors",
+                    query: "?type=Investor",
+                  },
+                  {
+                    label: "Renters",
+                    query: "?type=Renter",
+                  },
+                ].map((item) => (
                   <button
-                    type="button"
-                    className="secondary-action"
+                    key={item.label}
+                    className="filter-btn"
+                    onClick={() => applyFilter(item.query)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <button className="action-btn insights" onClick={loadAiInsights}>
+                  <Sparkles /> AI Insights
+                </button>
+
+                <button className="action-btn runai" onClick={runAiReview}>
+                  <Bot /> Run AI Review
+                </button>
+                <button
+                  className="action-btn map"
+                  onClick={() =>
+                    navigate("/dashboard/contacts/relationship-map")
+                  }
+                >
+                  <Handshake /> Relationship Map
+                </button>
+                <button
+                  className="primary-btn"
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  <Plus size={18} />
+                  Add Contact
+                </button>
+              </div>
+            </div>
+
+            {/* CONTACTS */}
+            <div className="contacts-grid">
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                contacts.map((contact) => (
+                  <div className="contact-card" key={contact.id}>
+                    {/* TOP */}
+                    <div className="contact-top">
+                      <div className="contact-user">
+                        <div className="contact-avatar">
+                          {contact.avatar ||
+                            contact.name?.charAt(0)?.toUpperCase()}
+                        </div>
+
+                        <div>
+                          <div className="contact-name">{contact.name}</div>
+
+                          <div className="intent-round"></div>
+                        </div>
+                      </div>
+
+                      <div className="intent-badge">
+                        ● {contact.status || "Cold"}
+                      </div>
+                    </div>
+
+                    {/* INFO */}
+                    <div className="info-grid">
+                      <InfoBox
+                        icon={Mail}
+                        label="Email"
+                        value={contact.email}
+                      />
+
+                      <InfoBox
+                        icon={Phone}
+                        label="Phone"
+                        value={contact.phone}
+                      />
+
+                      <InfoBox
+                        icon={UserPlus}
+                        label="Linked Lead"
+                        value={contact.linkedLead || "-"}
+                      />
+
+                      <InfoBox
+                        icon={Home}
+                        label="Interest"
+                        value={contact.interest || "-"}
+                      />
+                    </div>
+
+                    {/* AI SCORE */}
+                    <div className="ai-score-box">
+                      <div className="ai-left">
+                        <div className="ai-icon">
+                          <Bot size={22} />
+                        </div>
+
+                        <div>
+                          <div className="ai-title">AI Relationship Score</div>
+
+                          <div className="ai-sub">
+                            Highly engaged. Recommended follow-up today.
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="ai-score">{contact.score || 0}%</div>
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="actions-grid">
+                      <button
+                        className="secondary-action"
+                        onClick={() =>
+                          navigate(`/dashboard/contacts/${contact.id}`)
+                        }
+                      >
+                        <Eye size={18} />
+                        View
+                      </button>
+
+                      <button
+                        className="primary-action"
+                        onClick={() => messageContact(contact.id)}
+                      >
+                        <Send size={18} />
+                        Message
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* CREATE MODAL */}
+          {showCreateModal && (
+            <div className="modal-overlay">
+              <div className="contact-modal">
+                <div className="modal-header">
+                  <h2>Add Contact</h2>
+
+                  <button
+                    className="icon-btn"
                     onClick={() => setShowCreateModal(false)}
                   >
-                    Cancel
-                  </button>
-
-                  <button type="submit" className="primary-action">
-                    Create Contact
+                    ✕
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
 
-        {/* TOAST */}
-        {toast && (
-          <div
-            style={{
-              position: "fixed",
-              top: 30,
-              right: 30,
-              background: toast.type === "success" ? "#16a34a" : "#dc2626",
-              color: "#fff",
-              padding: "14px 18px",
-              borderRadius: 14,
-              fontWeight: 600,
-              boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-              zIndex: 9999,
-              minWidth: 280,
-            }}
-          >
-            {toast.message}
-          </div>
-        )}
-      </main>
+                <form onSubmit={createContact}>
+                  <div className="modal-grid">
+                    <div className="form-group">
+                      <label>Name</label>
+
+                      <input
+                        type="text"
+                        required
+                        value={createForm.name}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Email</label>
+
+                      <input
+                        type="email"
+                        required
+                        value={createForm.email}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            email: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Phone</label>
+
+                      <input
+                        type="text"
+                        value={createForm.phone}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            phone: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Type</label>
+
+                      <select
+                        value={createForm.type}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            type: e.target.value,
+                          })
+                        }
+                      >
+                        <option>Buyer</option>
+                        <option>Seller</option>
+                        <option>Investor</option>
+                        <option>Renter</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group full">
+                      <label>Notes</label>
+
+                      <textarea
+                        rows="4"
+                        value={createForm.notes}
+                        onChange={(e) =>
+                          setCreateForm({
+                            ...createForm,
+                            notes: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={() => setShowCreateModal(false)}
+                    >
+                      Cancel
+                    </button>
+
+                    <button type="submit" className="primary-action">
+                      Create Contact
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* TOAST */}
+          {toast && (
+            <div
+              style={{
+                position: "fixed",
+                top: 30,
+                right: 30,
+                background: toast.type === "success" ? "#16a34a" : "#dc2626",
+                color: "#fff",
+                padding: "14px 18px",
+                borderRadius: 14,
+                fontWeight: 600,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+                zIndex: 9999,
+                minWidth: 280,
+              }}
+            >
+              {toast.message}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
@@ -581,7 +595,7 @@ function KPIBox({ icon, title, value, sub, trend }) {
       <div className="kpi-left">
         <div className="kpi-icon">{icon}</div>
 
-        <div>
+        <div className="kpi-content">
           <div className="kpi-title">{title}</div>
 
           <div className="kpi-value">{value}</div>
@@ -589,8 +603,10 @@ function KPIBox({ icon, title, value, sub, trend }) {
           <div className="kpi-sub">{sub}</div>
         </div>
       </div>
-
-      <div className="kpi-trend">{trend}</div>
+      <div className="kpi-right">
+        <div className="kpi-trend">{trend}</div>
+        <p>vs last 30 days</p>
+      </div>
     </div>
   );
 }
