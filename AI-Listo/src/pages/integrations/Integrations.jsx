@@ -20,6 +20,9 @@ import {
   ChevronRight,
   Music2,
   CalendarCheck2,
+  Sparkles,
+  Orbit,
+  Brain,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
@@ -616,6 +619,10 @@ export default function AppsIntegrationsHub() {
 
   return (
     <div className="apps-page">
+      <div className="heading_page">
+        <Brain className="header-icon" size={20} />
+        <h1>App & Integrations</h1>
+      </div>
       <div className="apps-layout">
         {/* SIDEBAR */}
         <aside className="sidebar">
@@ -668,14 +675,14 @@ export default function AppsIntegrationsHub() {
                       </p>
                     </div>
                     <button
-                        className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
-                        onClick={() => handleIntegrationClick(integration)}
-                        disabled={syncingKey === integration.key}
-                      >
-                        {syncingKey === integration.key
-                          ? "Syncing..."
-                          : getButtonLabel(integration)}
-                      </button>
+                      className={`integration-btn status-${integration.status?.replaceAll("_", "-")}`}
+                      onClick={() => handleIntegrationClick(integration)}
+                      disabled={syncingKey === integration.key}
+                    >
+                      {syncingKey === integration.key
+                        ? "Syncing..."
+                        : getButtonLabel(integration)}
+                    </button>
                   </div>
                 );
               })}

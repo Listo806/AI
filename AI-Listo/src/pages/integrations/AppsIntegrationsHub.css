@@ -9,9 +9,19 @@ body {
 
 .apps-layout {
   display: flex;
+  padding-top: 11px;
 }
 .crm-main{
     height:100%;
+}
+.heading_page {
+    margin-top: -32px;
+    z-index: 99999999999999;
+    position: absolute;
+}
+.apps-page {
+    position: relative;
+    isolation: isolate;
 }
 .sidebar {
   width: 165px;
@@ -37,6 +47,8 @@ body {
     padding-bottom:0;
     height: calc(100vh - 30px);
     background: #fff !important;
+    z-index: 998;
+    overflow: visible;
 }
 .category-list {
   display: flex;
@@ -257,9 +269,19 @@ body {
       translateX(0);
   }
 }
-
-
-
+.heading_page {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.header-icon {
+    color: #2563ff;
+}
+.heading_page h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+}
 
 
 
