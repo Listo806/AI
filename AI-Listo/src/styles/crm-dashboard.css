@@ -168,7 +168,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0px; /* Reduced from 12px for tighter spacing */
-  padding: 10px 10px 12px; /* Slightly more breathing room */
+  padding: 10px 10px 4px; /* Slightly more breathing room */
   flex-shrink: 0;
   /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
   transition: padding 0.3s ease-in-out;
@@ -947,7 +947,7 @@ body.crm-dark .crm-main::after {
 .crm-sidebar-toggle-inside {
   display: none; /* Hidden on mobile */
   width: 27px;
-  height: 27x;
+  height: 27px;
   background: var(--border);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -960,6 +960,14 @@ body.crm-dark .crm-main::after {
   flex-shrink: 0;
   /* margin-right: 8px; */
   position: relative;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.sidebar-collapsed .crm-sidebar-toggle-inside {
+    position: relative;
+    top: 0;
+    right: 3px;
 }
 
 .crm-sidebar-toggle-inside:hover {
