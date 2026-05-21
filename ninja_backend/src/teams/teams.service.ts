@@ -262,13 +262,13 @@ export class TeamsService {
         [teamId, userId],
       );
 
-      // Increment team token version to invalidate existing tokens
-      await client.query(
+      //* Increment team token version to invalidate existing tokens
+      /*await client.query(
         `UPDATE teams 
          SET token_version = token_version + 1, updated_at = NOW()
          WHERE id = $1`,
         [teamId],
-      );
+      ); */
 
       await client.query('COMMIT');
 
@@ -354,10 +354,10 @@ export class TeamsService {
     if (team.ownerId !== userId) {
       throw new ForbiddenException('You can only delete your own teams');
     }
-    await this.db.query(
+    /*await this.db.query(
       `UPDATE users SET team_id = NULL, token_version = COALESCE(token_version, 0) + 1, updated_at = NOW() WHERE team_id = $1`,
       [teamId],
-    );
+    );*/
     await this.db.query('DELETE FROM teams WHERE id = $1', [teamId]);
     return { deleted: true };
   }
