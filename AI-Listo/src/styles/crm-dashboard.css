@@ -723,7 +723,7 @@ body.crm-dark .crm-main::after {
 }
 
 .crm-header {
-  background: var(--bg);
+  background: transparent;
   padding: 0px 12px;
   /* border-bottom: 1px solid var(--border); */
   position: sticky;

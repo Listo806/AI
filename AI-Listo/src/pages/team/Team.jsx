@@ -1,472 +1,267 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import {
-  getMyTeams,
-  getTeamSeats,
-  getTeamMembers,
-  createTeam,
-  updateTeam,
-  deleteTeam as deleteTeamApi,
-  inviteTeamMemberByEmail,
-  removeTeamMember,
-} from '../../api/platformApi';
-import { useAuth } from '../../context/AuthContext';
-import { useNotification } from '../../context/NotificationContext';
-import './team.css';
+import { useState } from "react";
 
-export default function Team() {
-  const { t } = useTranslation();
-  const { user: currentUser, isAuthenticated } = useAuth();
-  const { showSuccess, showError } = useNotification();
+import "./team.css";
 
-  const [teams, setTeams] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null);
-  const [seats, setSeats] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+/* =========================================================
+  COMPONENTS
+========================================================= */
 
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [createName, setCreateName] = useState('');
-  const [createSeatLimit, setCreateSeatLimit] = useState(1);
-  const [creating, setCreating] = useState(false);
+import TeamHeader from "./components/TeamHeader";
+import TeamStats from "./components/TeamStats";
+import TeamToolbar from "./components/TeamToolbar";
+import TeamMembersTable from "./components/TeamMembersTable";
 
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editSeatLimit, setEditSeatLimit] = useState(1);
-  const [saving, setSaving] = useState(false);
+import TeamPerformanceCard from "./components/TeamPerformanceCard";
+import TeamActivityCard from "./components/TeamActivityCard";
 
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviting, setInviting] = useState(false);
-  const [removing, setRemoving] = useState(null);
-  const [deleteConfirmTeam, setDeleteConfirmTeam] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+import TeamInsightsCard from "./components/TeamInsightsCard";
+import TeamBillingCard from "./components/TeamBillingCard";
 
-  const team = selectedTeam || (teams && teams[0]) || null;
-  const isOwner = team && currentUser?.id === team.ownerId;
+import InviteMemberModal from "./components/InviteMemberModal";
+import DeleteMemberModal from "./components/DeleteMemberModal";
 
-  const loadTeams = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getMyTeams();
-      const list = Array.isArray(data) ? data : [];
-      setTeams(list);
-      setSelectedTeam((prev) => {
-        if (!list?.length) return null;
-        if (prev && list.some((t) => t.id === prev.id)) return prev;
-        return list[0];
-      });
-    } catch (err) {
-      setError(err.message || t('common.error'));
-    } finally {
-      setLoading(false);
-    }
+/* =========================================================
+  HOOKS
+========================================================= */
+
+import useTeamDashboard from "./hooks/useTeamDashboard";
+import useTeamMembers from "./hooks/useTeamMembers";
+
+export default function TeamWorkspace() {
+  /* =====================================================
+    DASHBOARD
+  ===================================================== */
+
+  const {
+    loading,
+
+    teams,
+    selectedTeamId,
+    setSelectedTeamId,
+
+    team,
+    members,
+
+    seatInfo,
+
+    stats,
+
+    reloadDashboard,
+  } = useTeamDashboard();
+
+  /* =====================================================
+    MEMBERS
+  ===================================================== */
+
+  const {
+    inviteEmail,
+    setInviteEmail,
+
+    inviting,
+    removing,
+
+    search,
+
+    searchMembers,
+
+    inviteMember,
+    removeMember,
+    toast,
+  } = useTeamMembers({
+    teamId: selectedTeamId,
+    onReload: reloadDashboard,
+  });
+
+  /* =====================================================
+    MODALS
+  ===================================================== */
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const [selectedMember, setSelectedMember] = useState(null);
+
+  /* =====================================================
+    DELETE MEMBER
+  ===================================================== */
+
+  const handleOpenDelete = (member) => {
+    setSelectedMember(member);
+
+    setDeleteModalOpen(true);
   };
 
-  const loadSeatsAndMembers = async () => {
-    if (!team?.id) {
-      setSeats(null);
-      setMembers([]);
-      return;
-    }
-    try {
-      const [seatsRes, membersRes] = await Promise.all([
-        getTeamSeats(team.id),
-        getTeamMembers(team.id),
-      ]);
-      setSeats(seatsRes || null);
-      setMembers(Array.isArray(membersRes) ? membersRes : []);
-    } catch (err) {
-      setSeats(null);
-      setMembers([]);
-    }
+  const handleConfirmDelete = async () => {
+    if (!selectedMember) return;
+
+    await removeMember(selectedMember._id || selectedMember.id);
+
+    setDeleteModalOpen(false);
+
+    setSelectedMember(null);
   };
 
-  useEffect(() => {
-    if (isAuthenticated() && currentUser) loadTeams();
-  }, [isAuthenticated, currentUser]);
-
-  useEffect(() => {
-    if (team?.id) loadSeatsAndMembers();
-    else {
-      setSeats(null);
-      setMembers([]);
-    }
-  }, [team?.id]);
-
-  const handleCreateTeam = async (e) => {
-    e.preventDefault();
-    if (!createName?.trim()) {
-      showError(t('team.nameRequired') || 'Team name is required');
-      return;
-    }
-    setCreating(true);
-    try {
-      const created = await createTeam({
-        name: createName.trim(),
-        seatLimit: createSeatLimit >= 1 ? createSeatLimit : 1,
-      });
-      showSuccess(t('team.created') || 'Team created');
-      setShowCreateForm(false);
-      setCreateName('');
-      setCreateSeatLimit(1);
-      await loadTeams();
-      if (created?.id) setSelectedTeam(created);
-    } catch (err) {
-      showError(err.message || t('common.error'));
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!team?.id || !editName?.trim()) return;
-    setSaving(true);
-    try {
-      await updateTeam(team.id, {
-        name: editName.trim(),
-        seatLimit: editSeatLimit >= 1 ? editSeatLimit : 1,
-      });
-      showSuccess(t('team.updated') || 'Team updated');
-      setShowEditForm(false);
-      await loadTeams();
-      await loadSeatsAndMembers();
-    } catch (err) {
-      showError(err.message || t('common.error'));
-    } finally {
-      setSaving(false);
-    }
-  };
+  /* =====================================================
+    INVITE MEMBER
+  ===================================================== */
 
   const handleInvite = async (e) => {
-    e.preventDefault();
-    if (!team?.id || !inviteEmail?.trim()) return;
-    setInviting(true);
-    try {
-      await inviteTeamMemberByEmail(team.id, inviteEmail.trim());
-      showSuccess(t('team.memberAdded') || 'Member added');
-      setInviteEmail('');
-      await loadSeatsAndMembers();
-    } catch (err) {
-      showError(err.message || t('common.error'));
-    } finally {
-      setInviting(false);
+    e?.preventDefault?.();
+    console.log(selectedTeamId);
+    const success = await inviteMember();
+
+    if (success !== false) {
+      setInviteModalOpen(false);
     }
   };
 
-  const handleRemoveMember = async (userId) => {
-    if (!team?.id) return;
-    setRemoving(userId);
-    try {
-      await removeTeamMember(team.id, userId);
-      showSuccess(t('team.memberRemoved') || 'Member removed');
-      await loadSeatsAndMembers();
-    } catch (err) {
-      showError(err.message || t('common.error'));
-    } finally {
-      setRemoving(null);
-    }
-  };
-
-  const openEdit = () => {
-    setEditName(team?.name ?? '');
-    setEditSeatLimit(team?.seatLimit ?? 1);
-    setShowEditForm(true);
-  };
-
-  const handleDeleteTeam = async () => {
-    if (!deleteConfirmTeam?.id) return;
-    setDeleting(true);
-    try {
-      await deleteTeamApi(deleteConfirmTeam.id);
-      showSuccess(t('team.deleted') || 'Team deleted');
-      setDeleteConfirmTeam(null);
-      await loadTeams();
-    } catch (err) {
-      showError(err.message || t('common.error'));
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  if (!isAuthenticated() || !currentUser) return null;
+  /* =====================================================
+    LOADING
+  ===================================================== */
 
   if (loading) {
-    return (
-      <div className="team-page">
-        <div className="team-seats-summary">
-          <div className="crm-loading"><div className="crm-skeleton" /></div>
-        </div>
-      </div>
-    );
+    return <div className="team-page-loading">Loading team workspace...</div>;
   }
 
-  const usedSeats = seats?.used ?? 0;
-  const totalSeats = seats?.total ?? 0;
-  const availableSeats = seats?.available ?? 0;
+  /* =====================================================
+    RENDER
+  ===================================================== */
 
   return (
-    <div className="team-page">
-      <div className="team-header">
-        <div>
-          <h1 className="team-title">{t('team.title')}</h1>
-          <p className="team-description">{t('team.description')}</p>
+    <div className="team-workspace">
+      {/* =================================================
+        HEADER
+      ================================================= */}
+
+      <TeamHeader
+        teams={teams}
+        selectedTeamId={selectedTeamId}
+        onChangeTeam={setSelectedTeamId}
+        team={team}
+      />
+
+      {/* =================================================
+        STATS
+      ================================================= */}
+
+      <TeamStats stats={stats} />
+
+      {/* =================================================
+        TOOLBAR
+      ================================================= */}
+
+      <TeamToolbar
+        search={search}
+        onSearch={searchMembers}
+        onInvite={() => setInviteModalOpen(true)}
+        teams={teams}
+        selectedTeam={selectedTeamId}
+        setSelectedTeam={setSelectedTeamId}
+      />
+
+      {/* =================================================
+        MAIN GRID
+      ================================================= */}
+
+      <div className="team-main-grid">
+        {/* =============================================
+          LEFT
+        ============================================= */}
+
+        <div className="team-left-column">
+          <div className="team-members-wrapper">
+            <TeamMembersTable
+              members={members}
+              loading={loading}
+              onRemove={handleOpenDelete}
+            />
+          </div>
+
+          <div className="team-bottom-grid">
+            <TeamPerformanceCard leaderboard={null} />
+
+            <TeamActivityCard activity={null} />
+          </div>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          {teams.length > 1 && team && (
-            <select
-              value={team.id}
-              onChange={(e) => setSelectedTeam(teams.find((t) => t.id === e.target.value))}
-              className="team-input"
-              style={{ minWidth: 180 }}
-            >
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          )}
-          {!showCreateForm && (
-            <button type="button" className="team-add-btn" onClick={() => setShowCreateForm(true)}>
-              + {t('team.createTeam')}
-            </button>
-          )}
-          {team && isOwner && !showCreateForm && !showEditForm && (
-            <>
-              <button type="button" className="team-add-btn" onClick={() => setShowEditForm(true)}>
-                {t('team.editTeam')}
-              </button>
-              <button
-                type="button"
-                className="team-add-btn"
-                style={{ background: 'var(--error, #dc2626)', color: '#fff' }}
-                onClick={() => setDeleteConfirmTeam(team)}
-              >
-                {t('team.deleteTeam')}
-              </button>
-            </>
-          )}
+
+        {/* =============================================
+          RIGHT
+        ============================================= */}
+
+        <div className="team-right-column">
+          <TeamInsightsCard
+            insights={[
+              {
+                title: "Seat Usage",
+                description: `${seatInfo?.used || 0} of ${
+                  seatInfo?.total || 0
+                } seats are currently in use.`,
+              },
+              {
+                title: "Available Seats",
+                description: `${
+                  seatInfo?.available || 0
+                } seats remaining for this team.`,
+              },
+            ]}
+          />
+
+          <TeamBillingCard
+            billing={{
+              plan: team?.name || "Team Workspace",
+
+              status: "Active",
+
+              includedSeats: seatInfo?.total || 0,
+
+              activeSeats: seatInfo?.used || 0,
+
+              additionalSeats: 0,
+
+              nextInvoice: 0,
+            }}
+          />
         </div>
       </div>
 
-      {error && <div className="crm-error" style={{ marginBottom: 16 }}>{error}</div>}
+      {/* =================================================
+        MODALS
+      ================================================= */}
 
-      {/* Create team form */}
-      {showCreateForm && (
-        <div className="team-seats-summary" style={{ marginBottom: 24 }}>
-          <h3 className="team-seats-title">{t('team.createTeam')}</h3>
-          <form onSubmit={handleCreateTeam}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t('team.teamName')}</label>
-              <input
-                type="text"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                required
-                className="team-input"
-              />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t('team.seatLimit')}</label>
-              <input
-                type="number"
-                min={1}
-                value={createSeatLimit}
-                onChange={(e) => setCreateSeatLimit(parseInt(e.target.value, 10) || 1)}
-                className="team-input"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="submit" className="team-add-btn" disabled={creating}>
-                {creating ? t('common.loading') : t('team.create')}
-              </button>
-              <button
-                type="button"
-                className="team-add-btn"
-                style={{ background: 'var(--border)', color: 'var(--text)' }}
-                onClick={() => { setShowCreateForm(false); setCreateName(''); }}
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <InviteMemberModal
+        open={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        inviteEmail={inviteEmail}
+        setInviteEmail={setInviteEmail}
+        onInvite={handleInvite}
+        inviting={inviting}
+      />
 
-      {/* Edit team form */}
-      {showEditForm && team && (
-        <div className="team-seats-summary" style={{ marginBottom: 24 }}>
-          <h3 className="team-seats-title">{t('team.editTeam')}</h3>
-          <form onSubmit={handleSaveEdit}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t('team.teamName')}</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-                className="team-input"
-              />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 4, fontWeight: 500 }}>{t('team.seatLimit')}</label>
-              <input
-                type="number"
-                min={1}
-                value={editSeatLimit}
-                onChange={(e) => setEditSeatLimit(parseInt(e.target.value, 10) || 1)}
-                className="team-input"
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="submit" className="team-add-btn" disabled={saving}>
-                {saving ? t('common.loading') : t('common.save')}
-              </button>
-              <button
-                type="button"
-                className="team-add-btn"
-                style={{ background: 'var(--border)', color: 'var(--text)' }}
-                onClick={() => setShowEditForm(false)}
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* No team */}
-      {!team && !showCreateForm && (
-        <div className="team-empty-state">
-          <div className="team-empty-icon">👥</div>
-          <h3 className="team-empty-title">{t('team.noTeam')}</h3>
-          <p className="team-empty-text">{t('team.createTeamDescription')}</p>
-          <button
-            type="button"
-            className="team-add-btn"
-            style={{ marginTop: 16 }}
-            onClick={() => setShowCreateForm(true)}
-          >
-            + {t('team.createTeam')}
-          </button>
-        </div>
-      )}
-
-      {/* Team overview + members */}
-      {team && !showCreateForm && (
-        <>
-          <div className="team-seats-summary" style={{ marginBottom: 24 }}>
-            <h3 className="team-seats-title">{team.name}</h3>
-            <div className="team-seats-block">
-              <div className="team-seats-line">
-                {t('team.seatsUsed')}: {usedSeats} / {totalSeats}
-              </div>
-              <div className="team-seats-line team-seats-muted">
-                {t('team.available')}: {availableSeats}
-              </div>
-            </div>
-          </div>
-
-          {/* Invite by email (owner only) */}
-          {isOwner && (
-            <div className="team-seats-summary team-invite-section" style={{ marginBottom: 24 }}>
-              <h3 className="team-seats-title">{t('team.inviteByEmail')}</h3>
-              <form onSubmit={handleInvite} className="team-invite-form">
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder={t('team.emailPlaceholder') || 'user@example.com'}
-                  className="team-input team-invite-input"
-                />
-                <button type="submit" className="team-add-btn" disabled={inviting || !inviteEmail?.trim()}>
-                  {inviting ? t('common.loading') : t('team.addMember')}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Members list */}
-          <div className="team-members-list">
-            <h3 className="team-seats-title">{t('team.members')}</h3>
-            {members.length === 0 ? (
-              <p className="team-empty-text" style={{ margin: 0 }}>{t('team.noMembers')}</p>
-            ) : (
-              <table className="admin-table team-members-table" style={{ width: '100%', marginTop: 12 }}>
-                <thead>
-                  <tr>
-                    <th>{t('team.email')}</th>
-                    <th>{t('team.role')}</th>
-                    <th>{t('team.status')}</th>
-                    {isOwner && <th></th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {members.map((m) => {
-                    const isCurrentUser = m.id === currentUser?.id;
-                    const showYouAreOwner = isCurrentUser && m.isOwner;
-                    const canRemove = isOwner && !m.isOwner && !isCurrentUser;
-                    const roleLabel = (m.role && String(m.role).charAt(0).toUpperCase() + String(m.role).slice(1).toLowerCase()) || (m.isOwner ? t('team.owner') : '—');
-                    return (
-                      <tr key={m.id}>
-                        <td>
-                          <span className="team-member-email-cell">
-                            {m.email}
-                            {showYouAreOwner && (
-                              <span className="team-owner-you-badge">{t('team.youAreOwner')}</span>
-                            )}
-                          </span>
-                        </td>
-                        <td className="admin-table-muted">{roleLabel}</td>
-                        <td>{m.isActive ? t('team.active') : t('team.inactive')}</td>
-                        {isOwner && (
-                          <td>
-                            {canRemove && (
-                              <button
-                                type="button"
-                                className="crm-btn crm-btn-secondary admin-action-btn"
-                                onClick={() => handleRemoveMember(m.id)}
-                                disabled={removing === m.id}
-                              >
-                                {removing === m.id ? '…' : t('team.remove')}
-                              </button>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Delete team confirmation */}
-      {deleteConfirmTeam && (
-        <div className="admin-reject-modal-overlay" onClick={() => setDeleteConfirmTeam(null)}>
-          <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ marginTop: 0 }}>{t('team.deleteTeam')}</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: 16 }}>
-              {t('team.deleteConfirm')} <strong>{deleteConfirmTeam.name}</strong>? {t('team.deleteConfirmMembers')}
-            </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" className="crm-btn crm-btn-secondary" onClick={() => setDeleteConfirmTeam(null)}>
-                {t('common.cancel')}
-              </button>
-              <button
-                type="button"
-                className="crm-btn"
-                style={{ background: '#dc2626', color: '#fff' }}
-                onClick={handleDeleteTeam}
-                disabled={deleting}
-              >
-                {deleting ? t('common.loading') : t('common.delete')}
-              </button>
-            </div>
-          </div>
+      <DeleteMemberModal
+        open={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        member={selectedMember}
+        onConfirm={handleConfirmDelete}
+        removing={removing}
+      />
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {toast.message}
         </div>
       )}
     </div>

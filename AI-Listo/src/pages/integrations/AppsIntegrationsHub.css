@@ -47,7 +47,6 @@ body {
     padding-bottom:0;
     height: calc(100vh - 30px);
     background: #fff !important;
-    z-index: 998;
     overflow: visible;
 }
 .category-list {

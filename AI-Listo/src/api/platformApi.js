@@ -181,29 +181,64 @@ export async function removeAdminTeamMember(teamId, userId) {
   });
   return res?.data || res;
 }
-
-// ============================================================================
-// OWNER TEAMS (current user's team(s) - create, members, seats)
-// ============================================================================
+/* ======================================================
+ OWNER TEAMS
+====================================================== */
 
 export async function getMyTeams() {
   const res = await apiClient.request('/teams');
-  return Array.isArray(res) ? res : res?.data ?? [];
+
+  console.log('getMyTeams RAW', res);
+
+  return Array.isArray(res)
+    ? res
+    : res?.data || [];
 }
 
 export async function getTeam(id) {
-  const res = await apiClient.request(`/teams/${id}`);
-  return res?.data ?? res;
+  const res = await apiClient.request(
+    `/teams/${id}`
+  );
+
+  return res?.data || res;
 }
 
-export async function getTeamSeats(teamId) {
-  const res = await apiClient.request(`/teams/${teamId}/seats`);
-  return res?.data ?? res;
+export async function getTeamSeats(
+  teamId
+) {
+  const res = await apiClient.request(
+    `/teams/${teamId}/seats`
+  );
+
+  return res?.data || res;
 }
 
-export async function getTeamMembers(teamId) {
-  const res = await apiClient.request(`/teams/${teamId}/members`);
-  return Array.isArray(res?.data) ? res.data : res?.data ?? [];
+export async function getTeamMembers(
+  teamId
+) {
+  const res = await apiClient.request(
+    `/teams/${teamId}/members`
+  );
+
+  console.log(
+    'getTeamMembers RAW',
+    res
+  );
+
+  /*
+    backend:
+    return { data: members }
+  */
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+
+  return [];
 }
 
 export async function createTeam(payload) {

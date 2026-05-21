@@ -1,3 +1,6 @@
+.crm-main::after{
+    background: #fff!important; 
+}
 .crm-content{
    background: #f7f8fc!important; 
 }
@@ -186,7 +189,7 @@
 }
 
 .contacts-page .kpi-box {
-  height: 138px;
+  height: 110px;
   background: white;
   border: 1px solid #ececf3;
   border-radius: 16px;
@@ -224,7 +227,7 @@
     background:#04ab76;
 }
 .contacts-page .ai .kpi-icon {
-    background:#582cce;
+    background:#b770e3;
 }
 .contacts-page .kpi-title {
   font-size: 14px;
