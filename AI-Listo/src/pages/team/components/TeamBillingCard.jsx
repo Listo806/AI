@@ -1,9 +1,3 @@
-import {
-  ShieldCheck,
-  Users,
-  UserCheck,
-  UserPlus,
-} from 'lucide-react';
 
 export default function TeamBillingCard({
   billing,
@@ -28,170 +22,97 @@ export default function TeamBillingCard({
       : 0;
 
   return (
-    <div className="team-card">
+    <div className="team-billing-modern-card">
+      {/* HEADER */}
 
-      <div className="team-card-header">
+      <div className="team-billing-modern-header">
+        <h3 className="team-billing-modern-title">
+          Team Seats
+        </h3>
 
+        <p className="team-billing-modern-subtitle">
+          Manage your team access
+        </p>
+      </div>
+
+      {/* STATUS CARD */}
+
+      <div className="team-billing-status-card">
         <div>
-
-          <h3 className="team-card-title">
-            Team Seats & Billing
-          </h3>
-
-          <p className="team-card-subtitle">
-            Workspace seat usage overview
+          <p className="team-billing-status-label">
+            Workspace Status
           </p>
 
+          <h4 className="team-billing-status-title">
+            Active
+          </h4>
         </div>
 
-        <ShieldCheck
-          size={20}
-          className="team-blue-icon"
-        />
-
+        <div className="team-billing-status-badge">
+          Active
+        </div>
       </div>
 
-      {/* ========================================
-          PLAN BOX
-      ======================================== */}
+      {/* SEAT USAGE */}
 
-      <div className="team-billing-box">
+      <div className="team-billing-progress-wrap">
+        <div className="team-billing-progress-top">
+          <span>Seats Used</span>
 
-        <div className="team-billing-row">
-
-          <div>
-
-            <p className="team-billing-label">
-              Team Plan
-            </p>
-
-            <h4 className="team-billing-plan">
-              Enterprise CRM
-            </h4>
-
-          </div>
-
-          <span className="team-billing-status">
-            Active
+          <span>
+            {usedSeats} / {totalSeats}
           </span>
-
         </div>
 
-        {/* PROGRESS */}
-
-        <div className="team-seat-progress">
-
-          <div className="team-seat-progress-top">
-
-            <span>
-              Seat Usage
-            </span>
-
-            <span>
-              {usedSeats}/{totalSeats}
-            </span>
-
-          </div>
-
-          <div className="team-seat-progress-bar">
-
-            <div
-              className="team-seat-progress-fill"
-              style={{
-                width: `${usagePercent}%`,
-              }}
-            />
-
-          </div>
-
+        <div className="team-billing-progress-bar">
+          <div
+            className="team-billing-progress-fill"
+            style={{
+              width: `${usagePercent}%`,
+            }}
+          />
         </div>
-
       </div>
 
-      {/* ========================================
-          STATS
-      ======================================== */}
+      {/* ACTIONS */}
 
-      <div className="team-billing-stats">
+      <div className="team-billing-actions">
+        <button className="team-billing-primary-btn">
+          Add Team Seats
+        </button>
 
-        <div className="team-billing-stat">
+        <button className="team-billing-secondary-btn">
+          Remove Team Seats
+        </button>
+      </div>
 
-          <div className="team-billing-stat-top">
+      {/* STATS */}
 
-            <Users
-              size={18}
-              className="team-billing-stat-icon"
-            />
+      <div className="team-billing-bottom-stats">
+        <div className="team-billing-bottom-card">
+          <p>Total Seats</p>
 
-            <span>Total Seats</span>
-
-          </div>
-
-          <strong>
+          <h4>
             {totalSeats}
-          </strong>
-
+          </h4>
         </div>
 
-        <div className="team-billing-stat">
+        <div className="team-billing-bottom-card">
+          <p>Used Seats</p>
 
-          <div className="team-billing-stat-top">
-
-            <UserCheck
-              size={18}
-              className="team-billing-stat-icon"
-            />
-
-            <span>Used Seats</span>
-
-          </div>
-
-          <strong>
+          <h4>
             {usedSeats}
-          </strong>
-
+          </h4>
         </div>
 
-        <div className="team-billing-stat">
+        <div className="team-billing-bottom-card">
+          <p>Status</p>
 
-          <div className="team-billing-stat-top">
-
-            <UserPlus
-              size={18}
-              className="team-billing-stat-icon"
-            />
-
-            <span>Available</span>
-
-          </div>
-
-          <strong>
-            {availableSeats}
-          </strong>
-
-        </div>
-
-        <div className="team-billing-stat">
-
-          <div className="team-billing-stat-top">
-
-            <ShieldCheck
-              size={18}
-              className="team-billing-stat-icon"
-            />
-
-            <span>Status</span>
-
-          </div>
-
-          <strong>
+          <h4 className="active">
             Active
-          </strong>
-
+          </h4>
         </div>
-
       </div>
-
     </div>
   );
 }

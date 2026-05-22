@@ -19,6 +19,8 @@ import TeamBillingCard from "./components/TeamBillingCard";
 
 import InviteMemberModal from "./components/InviteMemberModal";
 import DeleteMemberModal from "./components/DeleteMemberModal";
+import TeamNotificationsCard from "./components/TeamNotificationsCard";
+import TeamQuickActionsCard from "./components/TeamQuickActionsCard";
 
 /* =========================================================
   HOOKS
@@ -160,69 +162,47 @@ export default function TeamWorkspace() {
         setSelectedTeam={setSelectedTeamId}
       />
 
-      {/* =================================================
-        MAIN GRID
-      ================================================= */}
-
       <div className="team-main-grid">
-        {/* =============================================
-          LEFT
-        ============================================= */}
+        <TeamMembersTable
+          members={members}
+          loading={loading}
+          onRemove={handleOpenDelete}
+        />
 
-        <div className="team-left-column">
-          <div className="team-members-wrapper">
-            <TeamMembersTable
-              members={members}
-              loading={loading}
-              onRemove={handleOpenDelete}
-            />
-          </div>
+        <TeamInsightsCard
+          insights={[
+            {
+              title: "Seat Usage",
+              description: `${seatInfo?.used || 0} of ${
+                seatInfo?.total || 0
+              } seats are currently in use.`,
+            },
+            {
+              title: "Available Seats",
+              description: `${
+                seatInfo?.available || 0
+              } seats remaining for this team.`,
+            },
+          ]}
+        />
 
-          <div className="team-bottom-grid">
-            <TeamPerformanceCard leaderboard={null} />
+        <TeamBillingCard
+          billing={{
+            plan: team?.name || "Team Workspace",
+            status: "Active",
+            includedSeats: seatInfo?.total || 0,
+            activeSeats: seatInfo?.used || 0,
+            additionalSeats: 0,
+            nextInvoice: 0,
+          }}
+        />
+      </div>
 
-            <TeamActivityCard activity={null} />
-          </div>
-        </div>
-
-        {/* =============================================
-          RIGHT
-        ============================================= */}
-
-        <div className="team-right-column">
-          <TeamInsightsCard
-            insights={[
-              {
-                title: "Seat Usage",
-                description: `${seatInfo?.used || 0} of ${
-                  seatInfo?.total || 0
-                } seats are currently in use.`,
-              },
-              {
-                title: "Available Seats",
-                description: `${
-                  seatInfo?.available || 0
-                } seats remaining for this team.`,
-              },
-            ]}
-          />
-
-          <TeamBillingCard
-            billing={{
-              plan: team?.name || "Team Workspace",
-
-              status: "Active",
-
-              includedSeats: seatInfo?.total || 0,
-
-              activeSeats: seatInfo?.used || 0,
-
-              additionalSeats: 0,
-
-              nextInvoice: 0,
-            }}
-          />
-        </div>
+      <div className="team-bottom-grid">
+        <TeamPerformanceCard leaderboard={null} />
+        <TeamActivityCard activity={null} />
+        <TeamNotificationsCard />
+        <TeamQuickActionsCard />
       </div>
 
       {/* =================================================

@@ -6,6 +6,7 @@ import {
   Shield,
   Briefcase,
   Sparkles,
+  Plus,
 } from "lucide-react";
 
 import { ROLE_STYLES } from "../utils/teamConstants";
@@ -24,9 +25,12 @@ export default function TeamMembersTable({ members, onRemove }) {
             {members?.length || 0} members total
           </p>
         </div>
+        <button
+          className="team-ai-review-btn">
+          <span>View All</span>
+        </button>
       </div>
 
-      {/* BODY */}
       {/* BODY */}
       <div className="team-members-modern">
         {members?.map((member) => {
@@ -131,6 +135,12 @@ export default function TeamMembersTable({ members, onRemove }) {
             </div>
           );
         })}
+      </div>
+      <div className="team-insights-footer">
+        <button className="team-insights-report-btn team-member">
+          <Plus size={16} />
+          Invite New Member
+        </button>
       </div>
     </div>
   );
