@@ -15,8 +15,8 @@ import {
 /* ======================================================
  TEAMS
 ====================================================== */
-export const fetchTeamDashboard = async () => {
-  return await getTeamDashboard();
+export const fetchTeamDashboard = async (teamId) => {
+  return await getTeamDashboard(teamId);
 };
 
 export async function fetchTeams() {

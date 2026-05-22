@@ -39,7 +39,7 @@ export class TeamsController {
     return this.teamsService.create(createTeamDto, user.id);
   }
 
-  @Get("/old")
+  @Get()
   @ApiOperation({ summary: "Get all teams for current user" })
   @ApiResponse({ status: 200, description: "Teams retrieved successfully" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
@@ -177,7 +177,7 @@ export class TeamsController {
     return { message: "Member removed successfully" };
   }
 
-  @Get()
+  @Get(":id/dashboard")
   async getDashboard(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 

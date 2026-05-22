@@ -62,8 +62,32 @@ console.error("loadDashboard data", data);
   ===================================================== */
 
   useEffect(() => {
-    loadDashboard(selectedTeamId);
-  }, [selectedTeamId]);
+      const loadTeams = async () => {
+        try {
+          setLoading(true);
+
+          const teamsData = await fetchTeams();
+
+          setTeams(teamsData || []);
+
+          if (teamsData?.length) {
+            setSelectedTeamId(teamsData[0].id);
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadTeams();
+    }, []);
+    
+    useEffect(() => {
+      if (!selectedTeamId) return;
+
+      loadDashboard(selectedTeamId);
+    }, [selectedTeamId]);
 
   /* =====================================================
     SEAT INFO
