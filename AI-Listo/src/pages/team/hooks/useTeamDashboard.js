@@ -1,19 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 
 import {
   fetchTeams,
-  fetchTeam,
-  fetchTeamMembers,
-  fetchTeamSeats,
   fetchTeamDashboard,
-} from '../services/team.service';
+} from "../services/team.service";
 
 export default function useTeamDashboard() {
   const [loading, setLoading] = useState(true);
 
   const [teams, setTeams] = useState([]);
 
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [selectedTeamId, setSelectedTeamId] =
+    useState(null);
 
   const [team, setTeam] = useState(null);
 
@@ -21,21 +19,69 @@ export default function useTeamDashboard() {
 
   const [stats, setStats] = useState({});
 
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] =
+    useState([]);
 
-  const [subscription, setSubscription] = useState(null);
+  const [subscription, setSubscription] =
+    useState(null);
+
+  /* =====================================================
+    LOAD TEAMS
+  ===================================================== */
+
+  useEffect(() => {
+    const loadTeams = async () => {
+      try {
+        setLoading(true);
+
+        const teamsData = await fetchTeams();
+
+        console.log(
+          "teamsData",
+          teamsData
+        );
+
+        setTeams(teamsData || []);
+
+        if (teamsData?.length > 0) {
+          setSelectedTeamId(
+            teamsData[0].id
+          );
+        }
+      } catch (error) {
+        console.error(
+          "loadTeams error",
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTeams();
+  }, []);
 
   /* =====================================================
     LOAD DASHBOARD
   ===================================================== */
 
-  const loadDashboard = async (teamId) => {
+  const loadDashboard = async (
+    teamId
+  ) => {
+    if (!teamId) return;
+
     try {
       setLoading(true);
 
-      const data = await fetchTeamDashboard(teamId);
-console.error("loadDashboard data", data);
-      setTeams(data.teams || []);
+      const data =
+        await fetchTeamDashboard(
+          teamId
+        );
+
+      console.log(
+        "Dashboard data",
+        data
+      );
 
       setTeam(data.team || null);
 
@@ -43,51 +89,32 @@ console.error("loadDashboard data", data);
 
       setStats(data.stats || {});
 
-      setActivities(data.activities || []);
+      setActivities(
+        data.activities || []
+      );
 
-      setSubscription(data.subscription || null);
-
-      if (!selectedTeamId && data.team?.id) {
-        setSelectedTeamId(data.team.id);
-      }
+      setSubscription(
+        data.subscription || null
+      );
     } catch (error) {
-      console.error("loadDashboard error", error);
+      console.error(
+        "loadDashboard error",
+        error
+      );
     } finally {
       setLoading(false);
     }
   };
 
   /* =====================================================
-    INITIAL LOAD
+    WHEN TEAM CHANGES
   ===================================================== */
 
   useEffect(() => {
-      const loadTeams = async () => {
-        try {
-          setLoading(true);
+    if (!selectedTeamId) return;
 
-          const teamsData = await fetchTeams();
-
-          setTeams(teamsData || []);
-
-          if (teamsData?.length) {
-            setSelectedTeamId(teamsData[0].id);
-          }
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      loadTeams();
-    }, []);
-    
-    useEffect(() => {
-      if (!selectedTeamId) return;
-
-      loadDashboard(selectedTeamId);
-    }, [selectedTeamId]);
+    loadDashboard(selectedTeamId);
+  }, [selectedTeamId]);
 
   /* =====================================================
     SEAT INFO
@@ -104,21 +131,31 @@ console.error("loadDashboard data", data);
     return {
       total,
       used,
-      available: Math.max(total - used, 0),
+      available: Math.max(
+        total - used,
+        0
+      ),
     };
   }, [subscription, team, members]);
 
   return {
     loading,
+
     teams,
+
     selectedTeamId,
     setSelectedTeamId,
+
     team,
     members,
+
     stats,
     activities,
     subscription,
+
     seatInfo,
-    reloadDashboard: () => loadDashboard(selectedTeamId),
+
+    reloadDashboard: () =>
+      loadDashboard(selectedTeamId),
   };
 }

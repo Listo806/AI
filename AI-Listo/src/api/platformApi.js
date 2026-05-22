@@ -189,11 +189,13 @@ export async function getTeamDashboard(teamId) {
   const res = await apiClient.request(
     `/teams/${teamId}/dashboard`
   );
-  console.log('getTeamDashboard RAW', res);
 
-  return Array.isArray(res)
-    ? res
-    : res?.data || [];
+  console.log(
+    'getTeamDashboard RAW',
+    res
+  );
+
+  return res;
 }
 
 export async function getMyTeams() {

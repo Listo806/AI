@@ -331,36 +331,54 @@ export class TeamsService {
     );
   }
 
-  /** List members of a team. Caller must be team owner or a member. Owner always appears as a member of every team they own (even if their user.team_id points to another team). */
-  async getMembers(teamId: string, requestingUserId: string): Promise<any[]> {
-    const team = await this.ensureCanAccessTeam(teamId, requestingUserId);
-    const { rows } = await this.db.query(
-      `SELECT id, email, role, is_active as "isActive"
-       FROM users WHERE team_id = $1 ORDER BY (id = $2) DESC`,
-      [teamId, team.ownerId],
+  async getMembers(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      u.phone,
+      u.role,
+
+      u.avatar_url as avatar,
+
+      u.job_title as "jobTitle",
+
+      u.is_active as "isActive",
+
+      u.last_seen_at as "lastSeenAt",
+
+      u.created_at as "createdAt",
+
+      /* TOTAL LEADS */
+      (
+        SELECT COUNT(*)
+        FROM leads l
+        WHERE l.assigned_user_id = u.id
+      ) as "totalLeads",
+
+      /* PIPELINE */
+      (
+        SELECT COALESCE(SUM(d.value), 0)
+        FROM deals d
+        WHERE d.assigned_user_id = u.id
+        AND d.stage != 'won'
+      ) as "pipelineValue",
+
+      /* MOCK AI SCORE */
+      FLOOR(RANDOM() * 30 + 70) as "aiScore"
+
+    FROM users u
+
+    WHERE u.team_id = $1
+
+    ORDER BY u.created_at DESC
+    `,
+      [teamId],
     );
-    const members = rows.map((m: any) => ({
-      id: m.id,
-      email: m.email,
-      role: m.role,
-      isActive: m.isActive,
-      isOwner: m.id === team.ownerId,
-    }));
-    // Include team owner in members list even if their team_id is another team (owner has "owner membership" in all their teams)
-    const ownerInList = members.some((m: any) => m.id === team.ownerId);
-    if (!ownerInList) {
-      const ownerUser = await this.usersService.findById(team.ownerId);
-      if (ownerUser) {
-        members.unshift({
-          id: ownerUser.id,
-          email: ownerUser.email,
-          role: ownerUser.role,
-          isActive: ownerUser.isActive,
-          isOwner: true,
-        });
-      }
-    }
-    return members;
+
+    return result.rows;
   }
 
   /** Add a member to the team by email (owner only). */
@@ -439,36 +457,60 @@ export class TeamsService {
   async getStats(teamId: string) {
     const result = await this.db.query(
       `
-      SELECT
-        (SELECT COUNT(*) FROM users WHERE team_id = $1) as total_members,
+    SELECT
+      /* MEMBERS */
+      (
+        SELECT COUNT(*)
+        FROM users
+        WHERE team_id = $1
+      ) as "totalMembers",
 
-        (SELECT COUNT(*) FROM leads WHERE team_id = $1) as total_leads,
+      (
+        SELECT COUNT(*)
+        FROM users
+        WHERE team_id = $1
+        AND is_active = true
+      ) as "activeMembers",
 
-        (
-          SELECT COUNT(*)
-          FROM deals
-          WHERE team_id = $1
-          AND stage = 'won'
-        ) as deals_won,
+      /* LEADS */
+      (
+        SELECT COUNT(*)
+        FROM leads
+        WHERE team_id = $1
+      ) as "totalLeads",
 
-        (
-          SELECT COALESCE(SUM(value),0)
-          FROM deals
-          WHERE team_id = $1
-          AND stage = 'won'
-        ) as revenue
-      `,
+      /* PIPELINE */
+      (
+        SELECT COALESCE(SUM(value), 0)
+        FROM deals
+        WHERE team_id = $1
+        AND stage != 'won'
+      ) as "totalPipeline",
+
+      /* WON DEALS */
+      (
+        SELECT COUNT(*)
+        FROM deals
+        WHERE team_id = $1
+        AND stage = 'won'
+      ) as "dealsWon",
+
+      (
+        SELECT COALESCE(SUM(value),0)
+        FROM deals
+        WHERE team_id = $1
+        AND stage = 'won'
+      ) as "revenue",
+
+      /* MOCK VALUES FOR NOW */
+      82 as "avgAIScore",
+
+      24 as "conversionRate"
+    `,
       [teamId],
     );
 
-    const row = result.rows[0];
-
-    return {
-      totalMembers: Number(row.total_members || 0),
-      totalLeads: Number(row.total_leads || 0),
-      dealsWon: Number(row.deals_won || 0),
-      revenue: Number(row.revenue || 0),
-    };
+    return result.rows[0];
   }
 
   async getDashboardMembers(teamId: string) {
@@ -498,23 +540,70 @@ export class TeamsService {
   async getActivities(teamId: string) {
     const result = await this.db.query(
       `
-      SELECT
-        e.id,
-        e.event_type,
-        e.entity_type,
-        e.metadata,
-        e.created_at,
-        u.name as user_name
-      FROM events e
-      LEFT JOIN users u ON u.id = e.user_id
-      WHERE e.team_id = $1
-      ORDER BY e.created_at DESC
-      LIMIT 20
-      `,
+    SELECT
+      e.id,
+
+      e.event_type as "eventType",
+
+      e.entity_type as "entityType",
+
+      e.metadata,
+
+      e.created_at as "createdAt",
+
+      u.name as "userName",
+
+      u.avatar_url as avatar
+
+    FROM events e
+
+    LEFT JOIN users u
+      ON u.id = e.user_id
+
+    WHERE e.team_id = $1
+
+    ORDER BY e.created_at DESC
+
+    LIMIT 20
+    `,
       [teamId],
     );
 
-    return result.rows;
+    return result.rows.map((item: any) => {
+      return {
+        id: item.id,
+
+        avatar: item.avatar,
+
+        message: `${item.userName || "Someone"} ${String(item.eventType || "")
+          .replaceAll("_", " ")
+          .toLowerCase()}`,
+
+        time: this.formatTimeAgo(item.createdAt),
+      };
+    });
+  }
+
+  private formatTimeAgo(date: Date) {
+    const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
+
+    const intervals = [
+      { label: "year", seconds: 31536000 },
+      { label: "month", seconds: 2592000 },
+      { label: "day", seconds: 86400 },
+      { label: "hour", seconds: 3600 },
+      { label: "minute", seconds: 60 },
+    ];
+
+    for (const interval of intervals) {
+      const count = Math.floor(seconds / interval.seconds);
+
+      if (count > 0) {
+        return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+      }
+    }
+
+    return "Just now";
   }
 
   async getSubscription(teamId: string) {
