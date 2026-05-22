@@ -36,19 +36,17 @@ export default function TeamWorkspace() {
 
   const {
     loading,
-
     teams,
     selectedTeamId,
     setSelectedTeamId,
-
     team,
     members,
-
     seatInfo,
-
     stats,
     activities,
     subscription,
+    insights,
+    leaderboard,
     reloadDashboard,
   } = useTeamDashboard();
 
@@ -172,22 +170,7 @@ export default function TeamWorkspace() {
           onInvite={() => setInviteModalOpen(true)}
         />
 
-        <TeamInsightsCard
-          insights={[
-            {
-              title: "Seat Usage",
-              description: `${seatInfo?.used || 0} of ${
-                seatInfo?.total || 0
-              } seats are currently in use.`,
-            },
-            {
-              title: "Available Seats",
-              description: `${
-                seatInfo?.available || 0
-              } seats remaining for this team.`,
-            },
-          ]}
-        />
+        <TeamInsightsCard insights={insights} />
 
         <TeamBillingCard
           billing={{
@@ -202,7 +185,7 @@ export default function TeamWorkspace() {
       </div>
 
       <div className="team-bottom-grid">
-        <TeamPerformanceCard leaderboard={dashboard?.leaderboard || []} />
+        <TeamPerformanceCard leaderboard={leaderboard} />
         <TeamActivityCard activity={activities} />
         <TeamNotificationsCard />
         <TeamQuickActionsCard />

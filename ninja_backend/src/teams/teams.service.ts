@@ -428,6 +428,7 @@ export class TeamsService {
       membersResult,
       activitiesResult,
       subscriptionResult,
+      insightsResult,
       leaderboardResult,
     ] = await Promise.all([
       this.getTeam(teamId),
@@ -445,6 +446,7 @@ export class TeamsService {
       members: membersResult,
       activities: activitiesResult,
       subscription: subscriptionResult,
+      insights: insightsResult,
       leaderboard: leaderboardResult,
     };
   }

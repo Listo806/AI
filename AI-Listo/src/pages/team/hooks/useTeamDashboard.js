@@ -152,22 +152,18 @@ export default function useTeamDashboard() {
 
   return {
     loading,
-
     teams,
-
     selectedTeamId,
     setSelectedTeamId,
-
     team,
     members,
-
     stats,
     activities,
     subscription,
-
     seatInfo,
     insights,
     billing,
+    leaderboard: dashboard?.leaderboard || [],
     reloadDashboard: () =>
       loadDashboard(selectedTeamId),
   };
