@@ -532,6 +532,7 @@ TEAM MEMBERS MODERN
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-x: scroll;
 }
 
 .team-workspace .team-member-card {

@@ -1,14 +1,18 @@
-export default function TeamBillingCard({ billing }) {
-  const totalSeats = Number(billing?.total || 0);
+export default function TeamBillingCard({ billing = {} }) {
+  const totalSeats = Number(billing?.includedSeats || 0);
 
-  const usedSeats = Number(billing?.used || 0);
+  const usedSeats = Number(billing?.activeSeats || 0);
 
-  const availableSeats = Number(billing?.available || 0);
+  const additionalSeats = Number(billing?.additionalSeats || 0);
+
+  const availableSeats = Math.max(0, totalSeats - usedSeats);
 
   const usagePercent =
     totalSeats > 0
       ? Math.min(100, Math.round((usedSeats / totalSeats) * 100))
       : 0;
+
+  const isFull = usedSeats >= totalSeats;
 
   return (
     <div className="team-billing-modern-card">
@@ -20,23 +24,25 @@ export default function TeamBillingCard({ billing }) {
         <p className="team-billing-modern-subtitle">Manage your team access</p>
       </div>
 
-      {/* STATUS CARD */}
+      {/* STATUS */}
 
       <div className="team-billing-status-card">
         <div>
           <p className="team-billing-status-label">Workspace Status</p>
 
           <h4 className="team-billing-status-title">
-            {availableSeats > 0 ? "Active" : "Full"}
+            {billing?.status || "Active"}
           </h4>
         </div>
 
-        <div className="team-billing-status-badge">
-          {availableSeats > 0 ? "Active" : "Full"}
+        <div
+          className={`team-billing-status-badge ${isFull ? "full" : "active"}`}
+        >
+          {isFull ? "Full" : "Active"}
         </div>
       </div>
 
-      {/* SEAT USAGE */}
+      {/* PROGRESS */}
 
       <div className="team-billing-progress-wrap">
         <div className="team-billing-progress-top">
@@ -62,12 +68,15 @@ export default function TeamBillingCard({ billing }) {
       <div className="team-billing-actions">
         <button
           className="team-billing-primary-btn"
-          onClick={() => alert("Upgrade seats coming soon")}
+          onClick={() => alert("Seat upgrade coming soon")}
         >
           Add Team Seats
         </button>
 
-        <button disabled className="team-billing-secondary-btn">
+        <button
+          disabled={usedSeats <= 1}
+          className="team-billing-secondary-btn"
+        >
           Remove Team Seats
         </button>
       </div>
@@ -88,9 +97,9 @@ export default function TeamBillingCard({ billing }) {
         </div>
 
         <div className="team-billing-bottom-card">
-          <p>Status</p>
+          <p>Available</p>
 
-          <h4 className="active">Active</h4>
+          <h4>{availableSeats}</h4>
         </div>
       </div>
     </div>

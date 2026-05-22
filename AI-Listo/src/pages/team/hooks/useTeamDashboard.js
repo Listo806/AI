@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   fetchTeams,
   fetchTeamDashboard,
+  fetchTeamSeats,
 } from "../services/team.service";
 
 export default function useTeamDashboard() {
@@ -99,7 +100,13 @@ export default function useTeamDashboard() {
         data.subscription || null
       );
       setInsights(data.insights || []);
-      setBilling(data.subscription || null);
+      const [dashboard, seats] =
+      await Promise.all([
+        fetchTeamDashboard(teamId),
+        fetchTeamSeats(teamId),
+      ]);
+
+      setBilling(seats || null);
       
     } catch (error) {
       console.error(

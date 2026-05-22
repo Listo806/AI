@@ -202,7 +202,7 @@ export default function TeamWorkspace() {
       </div>
 
       <div className="team-bottom-grid">
-        <TeamPerformanceCard leaderboard={null} />
+        <TeamPerformanceCard leaderboard={dashboard?.leaderboard || []} />
         <TeamActivityCard activity={activities} />
         <TeamNotificationsCard />
         <TeamQuickActionsCard />

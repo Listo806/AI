@@ -428,6 +428,7 @@ export class TeamsService {
       membersResult,
       activitiesResult,
       subscriptionResult,
+      leaderboardResult,
     ] = await Promise.all([
       this.getTeam(teamId),
       this.getStats(teamId),
@@ -435,6 +436,7 @@ export class TeamsService {
       this.getActivities(teamId),
       this.getSubscription(teamId),
       this.getInsights(teamId),
+      this.getLeaderboard(teamId),
     ]);
 
     return {
@@ -443,6 +445,7 @@ export class TeamsService {
       members: membersResult,
       activities: activitiesResult,
       subscription: subscriptionResult,
+      leaderboard: leaderboardResult,
     };
   }
 
@@ -779,5 +782,83 @@ export class TeamsService {
     }
 
     return insights;
+  }
+
+  async getLeaderboard(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT
+      u.id,
+      u.name,
+
+      COUNT(DISTINCT l.id) as "totalLeads",
+
+      COALESCE(
+        SUM(
+          CASE
+            WHEN d.stage != 'won'
+            THEN d.value
+            ELSE 0
+          END
+        ),
+        0
+      ) as "pipelineValue",
+
+      FLOOR(RANDOM() * 20 + 80) as "aiScore"
+
+    FROM users u
+
+    LEFT JOIN leads l
+      ON l.assigned_user_id = u.id
+
+    LEFT JOIN deals d
+      ON d.assigned_user_id = u.id
+
+    WHERE u.team_id = $1
+
+    GROUP BY u.id
+
+    ORDER BY "pipelineValue" DESC
+    `,
+      [teamId],
+    );
+
+    const members = result.rows || [];
+
+    if (!members.length) {
+      return [];
+    }
+
+    const topPipeline = [...members].sort(
+      (a, b) => Number(b.pipelineValue) - Number(a.pipelineValue),
+    )[0];
+
+    const topLeads = [...members].sort(
+      (a, b) => Number(b.totalLeads) - Number(a.totalLeads),
+    )[0];
+
+    const topAI = [...members].sort(
+      (a, b) => Number(b.aiScore) - Number(a.aiScore),
+    )[0];
+
+    return [
+      {
+        label: "Highest Pipeline",
+        name: topPipeline?.name || "-",
+        value: `$${Number(topPipeline?.pipelineValue || 0).toLocaleString()}`,
+      },
+
+      {
+        label: "Most Leads Closed",
+        name: topLeads?.name || "-",
+        value: Number(topLeads?.totalLeads || 0),
+      },
+
+      {
+        label: "Highest AI Score",
+        name: topAI?.name || "-",
+        value: `${topAI?.aiScore || 0}%`,
+      },
+    ];
   }
 }

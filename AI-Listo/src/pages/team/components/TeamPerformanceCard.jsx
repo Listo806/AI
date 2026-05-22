@@ -22,15 +22,20 @@ export default function TeamPerformanceCard({ leaderboard = [] }) {
       </div>
 
       <div className="team-performance-list">
-        {leaderboard?.map((item) => {
+        {!leaderboard?.length && (
+          <div className="team-empty-state">No performance data yet</div>
+        )}
+
+        {leaderboard?.map((item, index) => {
           const Icon = ICONS[item.label] || Trophy;
 
           return (
             <div
-              key={item.id || item._id || item.email}
+              key={item.id || item._id || `${item.label}-${index}`}
               className="team-performance-item"
             >
               {/* LEFT */}
+
               <div className="team-performance-left">
                 <div className="team-performance-icon">
                   <Icon size={18} />
@@ -44,31 +49,11 @@ export default function TeamPerformanceCard({ leaderboard = [] }) {
               </div>
 
               {/* RIGHT */}
+
               <div className="team-performance-value">{item.value}</div>
             </div>
           );
         })}
-            <div className="team-performance-item" >
-              <div className="team-performance-left">
-                <div className="team-performance-icon">
-                  <Trophy />
-                </div>
-                  <div className="team-performance-label">Top Performer</div>
-                  <div className="team-performance-name">Maria Rodriguez</div>
-              </div>
-              <div className="team-performance-value">93%</div>
-            </div>
-            <div className="team-performance-item" >
-              <div className="team-performance-left">
-                <div className="team-performance-icon">
-                  <Clock3 />
-                </div>
-                  <div className="team-performance-label">Top Performer</div>
-                  <div className="team-performance-name">Maria Rodriguez</div>
-              </div>
-              <div className="team-performance-value">93%</div>
-            </div>
-       
       </div>
     </div>
   );
