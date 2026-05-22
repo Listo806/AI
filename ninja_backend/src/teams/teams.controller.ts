@@ -64,7 +64,8 @@ export class TeamsController {
   @ApiResponse({ status: 200, description: "Members list" })
   @ApiResponse({ status: 403, description: "Not a team member" })
   async getMembers(@Param("id") id: string, @CurrentUser() user: any) {
-    const members = await this.teamsService.getMembers(id, user.id);
+    await this.teamsService.ensureCanAccessTeam(id, user.id);
+    const members = await this.teamsService.getMembers(id);
     return { data: members };
   }
 
