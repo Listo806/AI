@@ -70,7 +70,7 @@ export default function TeamInsightsCard({
 
       <div className="team-insights-list">
 
-        {insights.map((item, index) => (
+        {(insights || []).map((item, index) => (
           <div
             key={item.id || item._id || index}
             className="team-insight-box"

@@ -1,24 +1,13 @@
+export default function TeamBillingCard({ billing }) {
+  const totalSeats = Number(billing?.total || 0);
 
-export default function TeamBillingCard({
-  billing,
-}) {
-  const totalSeats =
-    billing?.total || 0;
+  const usedSeats = Number(billing?.used || 0);
 
-  const usedSeats =
-    billing?.used || 0;
-
-  const availableSeats =
-    billing?.available || 0;
+  const availableSeats = Number(billing?.available || 0);
 
   const usagePercent =
     totalSeats > 0
-      ? Math.min(
-          100,
-          Math.round(
-            (usedSeats / totalSeats) * 100
-          )
-        )
+      ? Math.min(100, Math.round((usedSeats / totalSeats) * 100))
       : 0;
 
   return (
@@ -26,30 +15,24 @@ export default function TeamBillingCard({
       {/* HEADER */}
 
       <div className="team-billing-modern-header">
-        <h3 className="team-billing-modern-title">
-          Team Seats
-        </h3>
+        <h3 className="team-billing-modern-title">Team Seats</h3>
 
-        <p className="team-billing-modern-subtitle">
-          Manage your team access
-        </p>
+        <p className="team-billing-modern-subtitle">Manage your team access</p>
       </div>
 
       {/* STATUS CARD */}
 
       <div className="team-billing-status-card">
         <div>
-          <p className="team-billing-status-label">
-            Workspace Status
-          </p>
+          <p className="team-billing-status-label">Workspace Status</p>
 
           <h4 className="team-billing-status-title">
-            Active
+            {availableSeats > 0 ? "Active" : "Full"}
           </h4>
         </div>
 
         <div className="team-billing-status-badge">
-          Active
+          {availableSeats > 0 ? "Active" : "Full"}
         </div>
       </div>
 
@@ -77,11 +60,14 @@ export default function TeamBillingCard({
       {/* ACTIONS */}
 
       <div className="team-billing-actions">
-        <button className="team-billing-primary-btn">
+        <button
+          className="team-billing-primary-btn"
+          onClick={() => alert("Upgrade seats coming soon")}
+        >
           Add Team Seats
         </button>
 
-        <button className="team-billing-secondary-btn">
+        <button disabled className="team-billing-secondary-btn">
           Remove Team Seats
         </button>
       </div>
@@ -92,25 +78,19 @@ export default function TeamBillingCard({
         <div className="team-billing-bottom-card">
           <p>Total Seats</p>
 
-          <h4>
-            {totalSeats}
-          </h4>
+          <h4>{totalSeats}</h4>
         </div>
 
         <div className="team-billing-bottom-card">
           <p>Used Seats</p>
 
-          <h4>
-            {usedSeats}
-          </h4>
+          <h4>{usedSeats}</h4>
         </div>
 
         <div className="team-billing-bottom-card">
           <p>Status</p>
 
-          <h4 className="active">
-            Active
-          </h4>
+          <h4 className="active">Active</h4>
         </div>
       </div>
     </div>

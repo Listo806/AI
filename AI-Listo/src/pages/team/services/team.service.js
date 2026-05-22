@@ -104,3 +104,6 @@ export async function removeMember(
     userId
   );
 }
+export async function fetchTeamSeats(teamId) {
+    return await getTeamSeats(teamId);
+}

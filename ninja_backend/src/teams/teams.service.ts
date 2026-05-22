@@ -434,6 +434,7 @@ export class TeamsService {
       this.getDashboardMembers(teamId),
       this.getActivities(teamId),
       this.getSubscription(teamId),
+      this.getInsights(teamId),
     ]);
 
     return {
@@ -697,5 +698,86 @@ export class TeamsService {
     );
 
     return result.rows;
+  }
+
+  async getInsights(teamId: string) {
+    const insights: any[] = [];
+
+    /* MEMBERS */
+    const membersResult = await this.db.query(
+      `
+    SELECT COUNT(*) as total
+    FROM users
+    WHERE team_id = $1
+    `,
+      [teamId],
+    );
+
+    const totalMembers = Number(membersResult.rows[0]?.total || 0);
+
+    /* LEADS */
+    const leadsResult = await this.db.query(
+      `
+    SELECT COUNT(*) as total
+    FROM leads
+    WHERE team_id = $1
+    `,
+      [teamId],
+    );
+
+    const totalLeads = Number(leadsResult.rows[0]?.total || 0);
+
+    /* OPEN DEALS */
+    const pipelineResult = await this.db.query(
+      `
+    SELECT COALESCE(SUM(value),0) as total
+    FROM deals
+    WHERE team_id = $1
+    AND stage != 'won'
+    `,
+      [teamId],
+    );
+
+    const pipeline = Number(pipelineResult.rows[0]?.total || 0);
+
+    /* ===== INSIGHTS ===== */
+
+    if (totalMembers <= 2) {
+      insights.push({
+        id: "team-small",
+        type: "warning",
+        title: "Small team detected",
+        description: "Consider inviting more members to improve collaboration.",
+      });
+    }
+
+    if (totalLeads === 0) {
+      insights.push({
+        id: "no-leads",
+        type: "danger",
+        title: "No active leads",
+        description: "Your team currently has no active leads in the pipeline.",
+      });
+    }
+
+    if (pipeline > 10000) {
+      insights.push({
+        id: "pipeline-healthy",
+        type: "success",
+        title: "Healthy pipeline growth",
+        description: "Your team pipeline is performing well this month.",
+      });
+    }
+
+    if (insights.length === 0) {
+      insights.push({
+        id: "all-good",
+        type: "info",
+        title: "Team performance stable",
+        description: "Everything looks healthy across your workspace.",
+      });
+    }
+
+    return insights;
   }
 }

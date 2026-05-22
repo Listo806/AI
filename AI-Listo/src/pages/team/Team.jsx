@@ -68,6 +68,7 @@ export default function TeamWorkspace() {
     toast,
     filter,
     handleFilter,
+    filteredMembers,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,

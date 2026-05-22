@@ -298,3 +298,9 @@ export async function deleteTeam(teamId) {
   });
   return res?.data ?? res;
 }
+export async function getTeamSeats(teamId) {
+  const res = await apiClient.get(
+    `/teams/${teamId}/seats`
+  );
+  return res?.data ?? res;
+}

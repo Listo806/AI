@@ -24,6 +24,8 @@ export default function useTeamDashboard() {
 
   const [subscription, setSubscription] =
     useState(null);
+  const [insights, setInsights] = useState([]);
+  const [billing, setBilling] = useState(null);
 
   /* =====================================================
     LOAD TEAMS
@@ -96,6 +98,9 @@ export default function useTeamDashboard() {
       setSubscription(
         data.subscription || null
       );
+      setInsights(data.insights || []);
+      setBilling(data.subscription || null);
+      
     } catch (error) {
       console.error(
         "loadDashboard error",
@@ -154,7 +159,8 @@ export default function useTeamDashboard() {
     subscription,
 
     seatInfo,
-
+    insights,
+    billing,
     reloadDashboard: () =>
       loadDashboard(selectedTeamId),
   };
