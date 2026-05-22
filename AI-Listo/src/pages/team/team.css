@@ -288,7 +288,7 @@
   height: 44px;
   padding: 0 12px;
   border: 1px solid #f3f4f6;
-  border-radius: 18px;
+  border-radius: 10px;
 }
 
 .team-workspace .team-search-input {
@@ -1375,9 +1375,9 @@ TEAM BILLING
 }
 
 .team-workspace .team-billing-secondary-btn {
-  border: 1px solid #e5e7eb;
+  border: 1px solid #2563eb;
   background: white;
-  color: #111827;
+  color: #2563eb;
 }
 
 .team-workspace .team-billing-secondary-btn:hover {
@@ -1928,7 +1928,12 @@ TEAM QUICK ACTIONS
 .team-workspace .team-quick-action-item svg:last-child {
   color: #2563eb;
 }
-
+.team-select-input{
+    height: 40px;
+    border: 1px solid #ececf3;
+    border-radius: 10px;
+    padding: 0 7px;
+}
 
 
 
