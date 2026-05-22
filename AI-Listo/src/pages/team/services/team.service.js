@@ -9,11 +9,15 @@ import {
   addTeamMember,
   removeTeamMember,
   deleteTeam,
+  getTeamDashboard,
 } from '../../../api/platformApi';
 
 /* ======================================================
  TEAMS
 ====================================================== */
+export const fetchTeamDashboard = async () => {
+  return await getTeamDashboard();
+};
 
 export async function fetchTeams() {
   return await getMyTeams();

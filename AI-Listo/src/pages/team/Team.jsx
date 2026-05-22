@@ -47,7 +47,8 @@ export default function TeamWorkspace() {
     seatInfo,
 
     stats,
-
+    activities,
+    subscription,
     reloadDashboard,
   } = useTeamDashboard();
 
@@ -167,6 +168,7 @@ export default function TeamWorkspace() {
           members={members}
           loading={loading}
           onRemove={handleOpenDelete}
+          onInvite={() => setInviteModalOpen(true)}
         />
 
         <TeamInsightsCard
@@ -200,7 +202,7 @@ export default function TeamWorkspace() {
 
       <div className="team-bottom-grid">
         <TeamPerformanceCard leaderboard={null} />
-        <TeamActivityCard activity={null} />
+        <TeamActivityCard activity={activities} />
         <TeamNotificationsCard />
         <TeamQuickActionsCard />
       </div>

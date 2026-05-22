@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { Team, CreateTeamDto, UpdateTeamDto } from './entities/team.entity';
-import { UsersService } from '../users/users.service';
-import { EventLoggerService } from '../analytics/events/event-logger.service';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import { Team, CreateTeamDto, UpdateTeamDto } from "./entities/team.entity";
+import { UsersService } from "../users/users.service";
+import { EventLoggerService } from "../analytics/events/event-logger.service";
 
 @Injectable()
 export class TeamsService {
@@ -43,16 +48,18 @@ export class TeamsService {
   async ensureCanAccessTeam(teamId: string, userId: string): Promise<Team> {
     const team = await this.findById(teamId);
     if (!team) {
-      throw new NotFoundException('Team not found');
+      throw new NotFoundException("Team not found");
     }
     const isOwner = team.ownerId === userId;
     const { rows: memberCheck } = await this.db.query(
-      'SELECT id FROM users WHERE id = $1 AND team_id = $2',
+      "SELECT id FROM users WHERE id = $1 AND team_id = $2",
       [userId, teamId],
     );
     const isMember = memberCheck.length > 0;
     if (!isOwner && !isMember) {
-      throw new ForbiddenException('You can only access your own teams or teams you are a member of');
+      throw new ForbiddenException(
+        "You can only access your own teams or teams you are a member of",
+      );
     }
     return team;
   }
@@ -70,15 +77,19 @@ export class TeamsService {
     return rows;
   }
 
-  async update(id: string, updateTeamDto: UpdateTeamDto, userId: string): Promise<Team> {
+  async update(
+    id: string,
+    updateTeamDto: UpdateTeamDto,
+    userId: string,
+  ): Promise<Team> {
     const team = await this.findById(id);
     if (!team) {
-      throw new NotFoundException('Team not found');
+      throw new NotFoundException("Team not found");
     }
 
     // Only owner can update team
     if (team.ownerId !== userId) {
-      throw new ForbiddenException('Only team owner can update the team');
+      throw new ForbiddenException("Only team owner can update the team");
     }
 
     const updates: string[] = [];
@@ -92,7 +103,7 @@ export class TeamsService {
 
     if (updateTeamDto.seatLimit !== undefined) {
       if (updateTeamDto.seatLimit < 1) {
-        throw new BadRequestException('Seat limit must be at least 1');
+        throw new BadRequestException("Seat limit must be at least 1");
       }
       updates.push(`seat_limit = $${paramCount++}`);
       values.push(updateTeamDto.seatLimit);
@@ -106,7 +117,7 @@ export class TeamsService {
     values.push(id);
 
     const { rows } = await this.db.query(
-      `UPDATE teams SET ${updates.join(', ')} WHERE id = $${paramCount}
+      `UPDATE teams SET ${updates.join(", ")} WHERE id = $${paramCount}
        RETURNING id, name, owner_id as "ownerId", seat_limit as "seatLimit", created_at as "createdAt", updated_at as "updatedAt"`,
       values,
     );
@@ -153,9 +164,9 @@ export class TeamsService {
 
   async enforceSeatLimits(teamId: string): Promise<void> {
     const client = await this.db.getClient();
-    
+
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       // Lock team row
       const { rows: teamRows } = await client.query(
@@ -164,7 +175,7 @@ export class TeamsService {
       );
 
       if (teamRows.length === 0) {
-        await client.query('ROLLBACK');
+        await client.query("ROLLBACK");
         return;
       }
 
@@ -203,20 +214,24 @@ export class TeamsService {
         }
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
     }
   }
 
-  async addMember(teamId: string, userId: string, requestingUserId: string): Promise<void> {
+  async addMember(
+    teamId: string,
+    userId: string,
+    requestingUserId: string,
+  ): Promise<void> {
     const client = await this.db.getClient();
-    
+
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       // Lock team row to prevent concurrent modifications (row-level locking)
       const { rows: teamRows } = await client.query(
@@ -226,16 +241,16 @@ export class TeamsService {
       );
 
       if (teamRows.length === 0) {
-        await client.query('ROLLBACK');
-        throw new NotFoundException('Team not found');
+        await client.query("ROLLBACK");
+        throw new NotFoundException("Team not found");
       }
 
       const team = teamRows[0];
 
       // Only owner can add members
       if (team.owner_id !== requestingUserId) {
-        await client.query('ROLLBACK');
-        throw new ForbiddenException('Only team owner can add members');
+        await client.query("ROLLBACK");
+        throw new ForbiddenException("Only team owner can add members");
       }
 
       // Get current active seat count (excluding owner)
@@ -250,8 +265,8 @@ export class TeamsService {
       const availableSeats = team.seat_limit - 1 - currentSeats; // -1 for owner
 
       if (availableSeats <= 0) {
-        await client.query('ROLLBACK');
-        throw new BadRequestException('No available seats in this team');
+        await client.query("ROLLBACK");
+        throw new BadRequestException("No available seats in this team");
       }
 
       // Atomically add user to team and activate
@@ -270,38 +285,50 @@ export class TeamsService {
         [teamId],
       ); */
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
 
       // Log event after successful commit
-      await this.eventLogger.logTeamMemberAdded(teamId, requestingUserId, userId);
+      await this.eventLogger.logTeamMemberAdded(
+        teamId,
+        requestingUserId,
+        userId,
+      );
     } catch (error) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw error;
     } finally {
       client.release();
     }
   }
 
-  async removeMember(teamId: string, userId: string, requestingUserId: string): Promise<void> {
+  async removeMember(
+    teamId: string,
+    userId: string,
+    requestingUserId: string,
+  ): Promise<void> {
     const team = await this.findById(teamId);
     if (!team) {
-      throw new NotFoundException('Team not found');
+      throw new NotFoundException("Team not found");
     }
 
     // Only owner can remove members (and can't remove themselves)
     if (team.ownerId !== requestingUserId) {
-      throw new ForbiddenException('Only team owner can remove members');
+      throw new ForbiddenException("Only team owner can remove members");
     }
 
     if (userId === team.ownerId) {
-      throw new BadRequestException('Cannot remove team owner');
+      throw new BadRequestException("Cannot remove team owner");
     }
 
     // Remove user from team
     await this.usersService.update(userId, { teamId: null } as any);
 
     // Log event
-    await this.eventLogger.logTeamMemberRemoved(teamId, requestingUserId, userId);
+    await this.eventLogger.logTeamMemberRemoved(
+      teamId,
+      requestingUserId,
+      userId,
+    );
   }
 
   /** List members of a team. Caller must be team owner or a member. Owner always appears as a member of every team they own (even if their user.team_id points to another team). */
@@ -337,10 +364,14 @@ export class TeamsService {
   }
 
   /** Add a member to the team by email (owner only). */
-  async addMemberByEmail(teamId: string, email: string, requestingUserId: string): Promise<void> {
+  async addMemberByEmail(
+    teamId: string,
+    email: string,
+    requestingUserId: string,
+  ): Promise<void> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('No user found with this email');
+      throw new NotFoundException("No user found with this email");
     }
     await this.addMember(teamId, user.id, requestingUserId);
   }
@@ -349,17 +380,176 @@ export class TeamsService {
   async remove(teamId: string, userId: string): Promise<{ deleted: boolean }> {
     const team = await this.findById(teamId);
     if (!team) {
-      throw new NotFoundException('Team not found');
+      throw new NotFoundException("Team not found");
     }
     if (team.ownerId !== userId) {
-      throw new ForbiddenException('You can only delete your own teams');
+      throw new ForbiddenException("You can only delete your own teams");
     }
     /*await this.db.query(
       `UPDATE users SET team_id = NULL, token_version = COALESCE(token_version, 0) + 1, updated_at = NOW() WHERE team_id = $1`,
       [teamId],
     );*/
-    await this.db.query('DELETE FROM teams WHERE id = $1', [teamId]);
+    await this.db.query("DELETE FROM teams WHERE id = $1", [teamId]);
     return { deleted: true };
   }
-}
+  async getDashboard(teamId: string) {
+    const [
+      teamResult,
+      statsResult,
+      membersResult,
+      activitiesResult,
+      subscriptionResult,
+    ] = await Promise.all([
+      this.getTeam(teamId),
+      this.getStats(teamId),
+      this.getDashboardMembers(teamId),
+      this.getActivities(teamId),
+      this.getSubscription(teamId),
+    ]);
 
+    return {
+      team: teamResult,
+      stats: statsResult,
+      members: membersResult,
+      activities: activitiesResult,
+      subscription: subscriptionResult,
+    };
+  }
+
+  async getTeam(teamId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        t.id,
+        t.name,
+        t.seat_limit,
+        t.created_at,
+        u.name as owner_name,
+        u.email as owner_email
+      FROM teams t
+      LEFT JOIN users u ON u.id = t.owner_id
+      WHERE t.id = $1
+      `,
+      [teamId],
+    );
+
+    return result.rows[0];
+  }
+
+  async getStats(teamId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE team_id = $1) as total_members,
+
+        (SELECT COUNT(*) FROM leads WHERE team_id = $1) as total_leads,
+
+        (
+          SELECT COUNT(*)
+          FROM deals
+          WHERE team_id = $1
+          AND stage = 'won'
+        ) as deals_won,
+
+        (
+          SELECT COALESCE(SUM(value),0)
+          FROM deals
+          WHERE team_id = $1
+          AND stage = 'won'
+        ) as revenue
+      `,
+      [teamId],
+    );
+
+    const row = result.rows[0];
+
+    return {
+      totalMembers: Number(row.total_members || 0),
+      totalLeads: Number(row.total_leads || 0),
+      dealsWon: Number(row.deals_won || 0),
+      revenue: Number(row.revenue || 0),
+    };
+  }
+
+  async getDashboardMembers(teamId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        role,
+        avatar_url,
+        job_title,
+        is_active,
+        last_seen_at,
+        created_at
+      FROM users
+      WHERE team_id = $1
+      ORDER BY created_at DESC
+      `,
+      [teamId],
+    );
+
+    return result.rows;
+  }
+
+  async getActivities(teamId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        e.id,
+        e.event_type,
+        e.entity_type,
+        e.metadata,
+        e.created_at,
+        u.name as user_name
+      FROM events e
+      LEFT JOIN users u ON u.id = e.user_id
+      WHERE e.team_id = $1
+      ORDER BY e.created_at DESC
+      LIMIT 20
+      `,
+      [teamId],
+    );
+
+    return result.rows;
+  }
+
+  async getSubscription(teamId: string) {
+    const result = await this.db.query(
+      `
+      SELECT
+        s.status,
+        s.seat_limit,
+        s.current_period_end,
+        sp.name as plan_name,
+        sp.price
+      FROM subscriptions s
+      LEFT JOIN subscription_plans sp
+        ON sp.id = s.plan_id
+      WHERE s.team_id = $1
+      LIMIT 1
+      `,
+      [teamId],
+    );
+
+    return result.rows[0];
+  }
+
+  async getNotifications(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT *
+    FROM team_notifications
+    WHERE team_id = $1
+    ORDER BY created_at DESC
+    LIMIT 20
+    `,
+      [teamId],
+    );
+
+    return result.rows;
+  }
+}

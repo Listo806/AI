@@ -5,177 +5,96 @@ import {
   fetchTeam,
   fetchTeamMembers,
   fetchTeamSeats,
+  fetchTeamDashboard,
 } from '../services/team.service';
 
 export default function useTeamDashboard() {
+  const [loading, setLoading] = useState(true);
+
   const [teams, setTeams] = useState([]);
 
-  const [selectedTeamId, setSelectedTeamId] =
-    useState(null);
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
 
   const [team, setTeam] = useState(null);
 
   const [members, setMembers] = useState([]);
 
-  const [seatInfo, setSeatInfo] =
-    useState(null);
+  const [stats, setStats] = useState({});
 
-  const [loading, setLoading] =
-    useState(true);
-  
- 
-  /* =====================================================
-    LOAD ALL TEAMS
-  ===================================================== */
+  const [activities, setActivities] = useState([]);
 
-  const loadTeams = async () => {
-      try {
-        setLoading(true);
-
-        const teamsRes = await fetchTeams();
-
-        console.log('TEAMS RES', teamsRes);
-
-        const teamsData = Array.isArray(teamsRes)
-          ? teamsRes
-          : [];
-
-        setTeams(teamsData);
-        if (
-          teamsData.length > 0 &&
-          !selectedTeamId
-        ) {
-          const firstTeam =
-            teamsData[0];
-
-          const teamId =
-            firstTeam.id ||
-            firstTeam._id ||
-            firstTeam.teamId;
-
-          console.log(
-            'AUTO SELECT TEAM ID',
-            teamId
-          );
-
-          setSelectedTeamId(teamId);
-        }
-      } catch (error) {
-        console.error(
-          'LOAD TEAMS ERROR',
-          error
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [subscription, setSubscription] = useState(null);
 
   /* =====================================================
-    LOAD CURRENT TEAM DATA
+    LOAD DASHBOARD
   ===================================================== */
 
-  const loadTeamData = async (
-    teamId
-  ) => {
-    if (!teamId) return;
-
+  const loadDashboard = async (teamId) => {
     try {
       setLoading(true);
 
-      const [
-        teamRes,
-        membersRes,
-        seatsRes,
-      ] = await Promise.all([
-        fetchTeam(teamId),
-        fetchTeamMembers(teamId),
-        fetchTeamSeats(teamId),
-      ]);
+      const data = await fetchTeamDashboard(teamId);
+console.error("loadDashboard data", data);
+      setTeams(data.teams || []);
 
-      setTeam(teamRes || null);
+      setTeam(data.team || null);
 
-      setMembers(
-        Array.isArray(membersRes)
-          ? membersRes
-          : []
-      );
+      setMembers(data.members || []);
 
-      setSeatInfo(seatsRes || null);
+      setStats(data.stats || {});
+
+      setActivities(data.activities || []);
+
+      setSubscription(data.subscription || null);
+
+      if (!selectedTeamId && data.team?.id) {
+        setSelectedTeamId(data.team.id);
+      }
     } catch (error) {
-      console.error(
-        'LOAD TEAM DATA ERROR',
-        error
-      );
+      console.error("loadDashboard error", error);
     } finally {
       setLoading(false);
     }
   };
 
   /* =====================================================
-    STATS
+    INITIAL LOAD
   ===================================================== */
 
-  const stats = useMemo(() => {
+  useEffect(() => {
+    loadDashboard(selectedTeamId);
+  }, [selectedTeamId]);
+
+  /* =====================================================
+    SEAT INFO
+  ===================================================== */
+
+  const seatInfo = useMemo(() => {
+    const total =
+      subscription?.seat_limit ||
+      team?.seat_limit ||
+      0;
+
+    const used = members.length;
+
     return {
-      totalMembers:
-        members.length || 0,
-
-      activeMembers:
-        members.filter(
-          (m) => m?.isActive
-        ).length || 0,
-
-      availableSeats:
-        seatInfo?.available || 0,
-
-      totalSeats:
-        seatInfo?.total || 0,
+      total,
+      used,
+      available: Math.max(total - used, 0),
     };
-  }, [members, seatInfo]);
+  }, [subscription, team, members]);
 
-  /* =====================================================
-    RELOAD
-  ===================================================== */
-
-  const reloadDashboard =
-    async () => {
-      await loadTeamData(
-        selectedTeamId
-      );
-    };
-
-  /* =====================================================
-    INIT
-  ===================================================== */
-
-  useEffect(() => {
-    loadTeams();
-  }, []);
-
-  useEffect(() => {
-      if (!selectedTeamId) return;
-
-      loadTeamData(
-        selectedTeamId
-      );
-    }, [selectedTeamId]);
-  console.log({
-      selectedTeamId,
-      teams,
-    });
   return {
     loading,
-
     teams,
     selectedTeamId,
     setSelectedTeamId,
-
     team,
     members,
-    seatInfo,
-
     stats,
-
-    reloadDashboard,
+    activities,
+    subscription,
+    seatInfo,
+    reloadDashboard: () => loadDashboard(selectedTeamId),
   };
 }

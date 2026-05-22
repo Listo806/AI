@@ -11,7 +11,7 @@ import {
 
 import { ROLE_STYLES } from "../utils/teamConstants";
 
-export default function TeamMembersTable({ members, onRemove }) {
+export default function TeamMembersTable({ members, onRemove, onInvite }) {
   const [openMenu, setOpenMenu] = useState(null);
 
   return (
@@ -137,7 +137,7 @@ export default function TeamMembersTable({ members, onRemove }) {
         })}
       </div>
       <div className="team-insights-footer">
-        <button className="team-insights-report-btn team-member">
+        <button onClick={onInvite} className="team-insights-report-btn team-member">
           <Plus size={16} />
           Invite New Member
         </button>

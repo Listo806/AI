@@ -185,6 +185,16 @@ export async function removeAdminTeamMember(teamId, userId) {
  OWNER TEAMS
 ====================================================== */
 
+export async function getTeamDashboard() {
+  const res = await apiClient.request('/teams');
+
+  console.log('getTeamDashboard RAW', res);
+
+  return Array.isArray(res)
+    ? res
+    : res?.data || [];
+}
+
 export async function getMyTeams() {
   const res = await apiClient.request('/teams');
 
