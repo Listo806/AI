@@ -13,7 +13,6 @@ export default function TeamToolbar({
   teams,
   selectedTeam,
   setSelectedTeam,
-  onInviteClick,
 }) {
   return (
     <div className="team-toolbar">

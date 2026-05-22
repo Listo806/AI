@@ -59,17 +59,15 @@ export default function TeamWorkspace() {
   const {
     inviteEmail,
     setInviteEmail,
-
     inviting,
     removing,
-
     search,
-
     searchMembers,
-
     inviteMember,
     removeMember,
     toast,
+    filter,
+    handleFilter,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -161,11 +159,13 @@ export default function TeamWorkspace() {
         teams={teams}
         selectedTeam={selectedTeamId}
         setSelectedTeam={setSelectedTeamId}
+        filter={filter}
+        onFilter={handleFilter}
       />
 
       <div className="team-main-grid">
         <TeamMembersTable
-          members={members}
+          members={filteredMembers}
           loading={loading}
           onRemove={handleOpenDelete}
           onInvite={() => setInviteModalOpen(true)}

@@ -37,6 +37,10 @@ export default function useTeamMembers({
 
   const [toast, setToast] =
       useState(null);
+  const [filter, setFilter] = useState('all');
+  const [allMembers, setAllMembers] = useState([]);
+
+  const [filteredMembers, setFilteredMembers] = useState([]);
 
     const showToast = (
       message,
@@ -70,7 +74,11 @@ export default function useTeamMembers({
             teamId
           );
 
-        setMembers(membersRes || []);
+        const data = membersRes || [];
+        setAllMembers(data);
+        setFilteredMembers(data);
+        setMembers(data);
+        
       } catch (error) {
         console.error(
           'LOAD MEMBERS ERROR',
@@ -86,30 +94,17 @@ export default function useTeamMembers({
   ===================================================== */
 
   const searchMembers = (value) => {
-    setSearch(value);
+      setSearch(value);
 
-    if (!value?.trim()) {
-      loadMembers();
-      return;
-    }
-
-    const keyword =
-      value.toLowerCase();
-
-    const filtered =
-      members.filter((member) => {
-        return (
-          member.email
-            ?.toLowerCase()
-            .includes(keyword) ||
-          member.role
-            ?.toLowerCase()
-            .includes(keyword)
+      const filtered =
+        applyFilters(
+          allMembers,
+          value,
+          filter
         );
-      });
 
-    setMembers(filtered);
-  };
+      setFilteredMembers(filtered);
+    };
 
   /* =====================================================
     INVITE MEMBER
@@ -219,7 +214,102 @@ export default function useTeamMembers({
           setRemoving(false);
         }
       };
+      
+    const applyFilters = (
+      membersData,
+      keyword,
+      currentFilter
+    ) => {
+      let result = [...membersData];
 
+      /* SEARCH */
+
+      if (keyword?.trim()) {
+        const q =
+          keyword.toLowerCase();
+
+        result = result.filter(
+          (member) =>
+            member.name
+              ?.toLowerCase()
+              .includes(q) ||
+
+            member.email
+              ?.toLowerCase()
+              .includes(q) ||
+
+            member.role
+              ?.toLowerCase()
+              .includes(q)
+        );
+      }
+
+      /* FILTERS */
+
+      switch (currentFilter) {
+        case 'active':
+          result = result.filter(
+            (m) => m.isActive
+          );
+          break;
+
+        case 'pending':
+          result = result.filter(
+            (m) => !m.isActive
+          );
+          break;
+
+        case 'managers':
+          result = result.filter(
+            (m) =>
+              m.role === 'manager'
+          );
+          break;
+
+        case 'agents':
+          result = result.filter(
+            (m) =>
+              m.role === 'agent'
+          );
+          break;
+
+        case 'high-performers':
+          result = result.filter(
+            (m) =>
+              Number(m.aiScore || 0) >=
+              85
+          );
+          break;
+
+        case 'needs-attention':
+          result = result.filter(
+            (m) =>
+              Number(m.aiScore || 0) <
+              70
+          );
+          break;
+
+        default:
+          break;
+      }
+
+      return result;
+    };
+    
+    const handleFilter = (
+          filterValue
+        ) => {
+          setFilter(filterValue);
+
+          const filtered =
+            applyFilters(
+              allMembers,
+              search,
+              filterValue
+            );
+
+          setFilteredMembers(filtered);
+        };
   /* =====================================================
     INIT
   ===================================================== */
@@ -255,5 +345,9 @@ export default function useTeamMembers({
     teamId,
     toast,
     showToast,
+    filteredMembers,
+    filter,
+    setFilter,
+    handleFilter,
   };
 }
