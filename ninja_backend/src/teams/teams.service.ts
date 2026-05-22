@@ -811,10 +811,10 @@ export class TeamsService {
     FROM users u
 
     LEFT JOIN leads l
-      ON l.assigned_user_id = u.id
+      ON l.assigned_to = u.id
 
     LEFT JOIN deals d
-      ON d.assigned_user_id = u.id
+      ON d.assigned_to = u.id
 
     WHERE u.team_id = $1
 
@@ -824,43 +824,5 @@ export class TeamsService {
     `,
       [teamId],
     );
-
-    const members = result.rows || [];
-
-    if (!members.length) {
-      return [];
-    }
-
-    const topPipeline = [...members].sort(
-      (a, b) => Number(b.pipelineValue) - Number(a.pipelineValue),
-    )[0];
-
-    const topLeads = [...members].sort(
-      (a, b) => Number(b.totalLeads) - Number(a.totalLeads),
-    )[0];
-
-    const topAI = [...members].sort(
-      (a, b) => Number(b.aiScore) - Number(a.aiScore),
-    )[0];
-
-    return [
-      {
-        label: "Highest Pipeline",
-        name: topPipeline?.name || "-",
-        value: `$${Number(topPipeline?.pipelineValue || 0).toLocaleString()}`,
-      },
-
-      {
-        label: "Most Leads Closed",
-        name: topLeads?.name || "-",
-        value: Number(topLeads?.totalLeads || 0),
-      },
-
-      {
-        label: "Highest AI Score",
-        name: topAI?.name || "-",
-        value: `${topAI?.aiScore || 0}%`,
-      },
-    ];
   }
 }

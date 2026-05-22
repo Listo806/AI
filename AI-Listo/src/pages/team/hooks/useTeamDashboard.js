@@ -27,6 +27,7 @@ export default function useTeamDashboard() {
     useState(null);
   const [insights, setInsights] = useState([]);
   const [billing, setBilling] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
 
   /* =====================================================
     LOAD TEAMS
@@ -76,37 +77,26 @@ export default function useTeamDashboard() {
     try {
       setLoading(true);
 
-      const data =
-        await fetchTeamDashboard(
-          teamId
-        );
+      const [data, seats] = await Promise.all([
+          fetchTeamDashboard(teamId),
+          fetchTeamSeats(teamId),
+        ]);
 
-      console.log(
-        "Dashboard data",
-        data
-      );
+        setTeam(data.team || null);
 
-      setTeam(data.team || null);
+        setMembers(data.members || []);
 
-      setMembers(data.members || []);
+        setStats(data.stats || {});
 
-      setStats(data.stats || {});
+        setActivities(data.activities || []);
 
-      setActivities(
-        data.activities || []
-      );
+        setSubscription(data.subscription || null);
 
-      setSubscription(
-        data.subscription || null
-      );
-      setInsights(data.insights || []);
-      const [dashboard, seats] =
-      await Promise.all([
-        fetchTeamDashboard(teamId),
-        fetchTeamSeats(teamId),
-      ]);
+        setInsights(data.insights || []);
 
-      setBilling(seats || null);
+        setLeaderboard(data.leaderboard || []);
+
+        setBilling(seats || null);
       
     } catch (error) {
       console.error(
@@ -163,7 +153,7 @@ export default function useTeamDashboard() {
     seatInfo,
     insights,
     billing,
-    leaderboard: dashboard?.leaderboard || [],
+    leaderboard,
     reloadDashboard: () =>
       loadDashboard(selectedTeamId),
   };
