@@ -47,6 +47,7 @@ export default function TeamWorkspace() {
     subscription,
     insights,
     leaderboard,
+    notifications,
     reloadDashboard,
   } = useTeamDashboard();
 

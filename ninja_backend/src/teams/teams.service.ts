@@ -902,7 +902,47 @@ export class TeamsService {
     `,
       [teamId],
     );
-    return result.rows;
+
+    const rows = result.rows;
+
+    if (!rows.length) {
+      return [];
+    }
+
+    const topPipeline = [...rows].sort(
+      (a, b) => Number(b.pipelineValue) - Number(a.pipelineValue),
+    )[0];
+
+    const topLeads = [...rows].sort(
+      (a, b) => Number(b.totalLeads) - Number(a.totalLeads),
+    )[0];
+
+    const topAi = [...rows].sort(
+      (a, b) => Number(b.aiScore) - Number(a.aiScore),
+    )[0];
+
+    return [
+      {
+        id: "highest-pipeline",
+        label: "Highest Pipeline",
+        name: topPipeline?.name || "-",
+        value: `$${Number(topPipeline?.pipelineValue || 0).toLocaleString()}`,
+      },
+
+      {
+        id: "most-leads",
+        label: "Most Leads Closed",
+        name: topLeads?.name || "-",
+        value: `${topLeads?.totalLeads || 0} leads`,
+      },
+
+      {
+        id: "highest-ai",
+        label: "Highest AI Score",
+        name: topAi?.name || "-",
+        value: `${topAi?.aiScore || 0}%`,
+      },
+    ];
   }
 
   private async createNotification({

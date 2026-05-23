@@ -302,7 +302,8 @@ export async function deleteTeam(teamId) {
 export async function getTeamNotifications(
   teamId
 ) {
-  return apiClient.get(
-    `/teams/${teamId}/notifications`
-  );
+  const res = await apiClient.request(`/teams/${teamId}/notifications`, {
+    method: 'GET',
+  });
+  return res?.data ?? res;
 }

@@ -101,7 +101,7 @@ export default function useTeamDashboard() {
 
         setBilling(seats || null);
         setNotifications(
-          notificationsData || []
+          notifications || []
         );
       
     } catch (error) {
