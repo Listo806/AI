@@ -79,11 +79,12 @@ export default function useTeamDashboard() {
     try {
       setLoading(true);
 
-      const [data, seats] = await Promise.all([
-          fetchTeamDashboard(teamId),
-          fetchTeamSeats(teamId),
-          fetchTeamNotifications(teamId),
-        ]);
+      const [data, seats, notifications] =
+          await Promise.all([
+            fetchTeamDashboard(teamId),
+            fetchTeamSeats(teamId),
+            fetchTeamNotifications(teamId),
+          ]);
 
         setTeam(data.team || null);
 

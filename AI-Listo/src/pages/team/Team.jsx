@@ -60,14 +60,19 @@ export default function TeamWorkspace() {
     setInviteEmail,
     inviting,
     removing,
+
     search,
-    searchMembers,
+    setSearch,
+
     inviteMember,
     removeMember,
+
     toast,
+
     filter,
-    handleFilter,
-    filteredMembers,
+    setFilter,
+
+    members: filteredMembers,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -154,13 +159,13 @@ export default function TeamWorkspace() {
 
       <TeamToolbar
         search={search}
-        onSearch={searchMembers}
+        onSearch={setSearch}
         onInvite={() => setInviteModalOpen(true)}
         teams={teams}
         selectedTeam={selectedTeamId}
         setSelectedTeam={setSelectedTeamId}
         filter={filter}
-        onFilter={handleFilter}
+        onFilter={setFilter}
       />
 
       <div className="team-main-grid">

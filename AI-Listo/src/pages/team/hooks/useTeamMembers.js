@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -13,12 +14,10 @@ export default function useTeamMembers({
   teamId,
   onReload,
 }) {
+
   /* =====================================================
     STATE
   ===================================================== */
-
-  const [members, setMembers] =
-    useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -32,322 +31,354 @@ export default function useTeamMembers({
   const [search, setSearch] =
     useState('');
 
+  const [filter, setFilter] =
+    useState('all');
+
   const [inviteEmail, setInviteEmail] =
     useState('');
 
+  const [allMembers, setAllMembers] =
+    useState([]);
+
   const [toast, setToast] =
-      useState(null);
-  const [filter, setFilter] = useState('all');
-  const [allMembers, setAllMembers] = useState([]);
-
-  const [filteredMembers, setFilteredMembers] = useState([]);
-
-    const showToast = (
-      message,
-      type = 'success'
-    ) => {
-      setToast({
-        message,
-        type,
-      });
-
-      setTimeout(() => {
-        setToast(null);
-      }, 3000);
-    };
+    useState(null);
 
   /* =====================================================
-    LOAD TEAM + MEMBERS
+    TOAST
+  ===================================================== */
+
+  const showToast = (
+    message,
+    type = 'success'
+  ) => {
+
+    setToast({
+      message,
+      type,
+    });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
+
+  /* =====================================================
+    FILTER LOGIC
+  ===================================================== */
+
+  function applyFilters(
+    membersData,
+    keyword,
+    currentFilter
+  ) {
+
+    let result = [...membersData];
+
+    /* SEARCH */
+
+    if (keyword?.trim()) {
+
+      const q =
+        keyword.toLowerCase();
+
+      result = result.filter(
+        (member) =>
+          member.name
+            ?.toLowerCase()
+            .includes(q) ||
+
+          member.email
+            ?.toLowerCase()
+            .includes(q) ||
+
+          member.role
+            ?.toLowerCase()
+            .includes(q)
+      );
+    }
+
+    /* FILTER */
+
+    switch (currentFilter) {
+
+      case 'active':
+        result = result.filter(
+          (m) => m.isActive
+        );
+        break;
+
+      case 'pending':
+        result = result.filter(
+          (m) => !m.isActive
+        );
+        break;
+
+      case 'managers':
+        result = result.filter(
+          (m) =>
+            m.role === 'manager'
+        );
+        break;
+
+      case 'agents':
+        result = result.filter(
+          (m) =>
+            m.role === 'agent'
+        );
+        break;
+
+      case 'high-performers':
+        result = result.filter(
+          (m) =>
+            Number(m.aiScore || 0) >= 85
+        );
+        break;
+
+      case 'needs-attention':
+        result = result.filter(
+          (m) =>
+            Number(m.aiScore || 0) < 70
+        );
+        break;
+
+      default:
+        break;
+    }
+
+    return result;
+  }
+
+  /* =====================================================
+    FILTERED MEMBERS
+  ===================================================== */
+
+  const members = useMemo(() => {
+
+    return applyFilters(
+      allMembers,
+      search,
+      filter
+    );
+
+  }, [
+    allMembers,
+    search,
+    filter,
+  ]);
+
+  /* =====================================================
+    LOAD MEMBERS
   ===================================================== */
 
   const loadMembers = async () => {
-      try {
-        if (!teamId) {
-          setMembers([]);
-          return;
-        }
 
-        setLoading(true);
+    try {
 
-        const membersRes =
-          await fetchTeamMembers(
-            teamId
-          );
+      if (!teamId) {
 
-        const data = membersRes || [];
-        setAllMembers(data);
-        setFilteredMembers(data);
-        setMembers(data);
-        
-      } catch (error) {
-        console.error(
-          'LOAD MEMBERS ERROR',
-          error
-        );
-      } finally {
-        setLoading(false);
+        setAllMembers([]);
+
+        return;
       }
-    };
 
-  /* =====================================================
-    SEARCH
-  ===================================================== */
+      setLoading(true);
 
-  const searchMembers = (value) => {
-      setSearch(value);
-
-      const filtered =
-        applyFilters(
-          allMembers,
-          value,
-          filter
+      const data =
+        await fetchTeamMembers(
+          teamId
         );
 
-      setFilteredMembers(filtered);
-    };
+      setAllMembers(data || []);
+      console.log('MEMBERS DATA', data);
+
+    } catch (error) {
+
+      console.error(
+        'LOAD MEMBERS ERROR',
+        error
+      );
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
 
   /* =====================================================
     INVITE MEMBER
   ===================================================== */
 
   const handleInviteMember =
-      async (e = null) => {
-        e?.preventDefault?.();
+    async (e = null) => {
 
-        if (!teamId) {
-          showToast(
-            'No team selected',
-            'error'
-          );
+      e?.preventDefault?.();
 
-          return false;
-        }
+      if (!teamId) {
 
-        if (!inviteEmail?.trim()) {
-          showToast(
-            'Email is required',
-            'error'
-          );
+        showToast(
+          'No team selected',
+          'error'
+        );
 
-          return false;
-        }
+        return false;
+      }
 
-        try {
-          setInviting(true);
+      if (!inviteEmail?.trim()) {
 
-          await inviteMember(
-            teamId,
-            inviteEmail
-          );
+        showToast(
+          'Email is required',
+          'error'
+        );
 
-          showToast(
-            'Invitation sent successfully'
-          );
+        return false;
+      }
 
-          setInviteEmail('');
+      try {
 
-          await loadMembers();
+        setInviting(true);
 
-          return true;
-        } catch (error) {
-          console.error(
-            'INVITE MEMBER ERROR',
-            error
-          );
+        await inviteMember(
+          teamId,
+          inviteEmail
+        );
 
-          showToast(
-            error?.message ||
-              'Failed to invite member',
-            'error'
-          );
+        showToast(
+          'Invitation sent successfully'
+        );
 
-          return false;
-        } finally {
-          setInviting(false);
-        }
-      };
+        setInviteEmail('');
+
+        await Promise.all([
+          loadMembers(),
+          onReload?.(),
+        ]);
+
+        return true;
+
+      } catch (error) {
+
+        console.error(
+          'INVITE MEMBER ERROR',
+          error
+        );
+
+        showToast(
+          error?.message ||
+          'Failed to invite member',
+          'error'
+        );
+
+        return false;
+
+      } finally {
+
+        setInviting(false);
+      }
+    };
 
   /* =====================================================
     REMOVE MEMBER
   ===================================================== */
 
   const handleRemoveMember =
-      async (userId) => {
-        if (!teamId) {
-          showToast(
-            'No team selected',
-            'error'
-          );
+    async (userId) => {
 
-          return false;
-        }
+      if (!teamId) {
 
-        try {
-          setRemoving(true);
-
-          await removeMember(
-            teamId,
-            userId
-          );
-
-          showToast(
-            'Member removed successfully'
-          );
-
-          await loadMembers();
-
-          return true;
-        } catch (error) {
-          console.error(
-            'REMOVE MEMBER ERROR',
-            error
-          );
-
-          showToast(
-            error?.message ||
-              'Failed to remove member',
-            'error'
-          );
-
-          return false;
-        } finally {
-          setRemoving(false);
-        }
-      };
-      
-    const applyFilters = (
-      membersData,
-      keyword,
-      currentFilter
-    ) => {
-      let result = [...membersData];
-
-      /* SEARCH */
-
-      if (keyword?.trim()) {
-        const q =
-          keyword.toLowerCase();
-
-        result = result.filter(
-          (member) =>
-            member.name
-              ?.toLowerCase()
-              .includes(q) ||
-
-            member.email
-              ?.toLowerCase()
-              .includes(q) ||
-
-            member.role
-              ?.toLowerCase()
-              .includes(q)
+        showToast(
+          'No team selected',
+          'error'
         );
+
+        return false;
       }
 
-      /* FILTERS */
+      try {
 
-      switch (currentFilter) {
-        case 'active':
-          result = result.filter(
-            (m) => m.isActive
-          );
-          break;
+        setRemoving(true);
 
-        case 'pending':
-          result = result.filter(
-            (m) => !m.isActive
-          );
-          break;
+        await removeMember(
+          teamId,
+          userId
+        );
 
-        case 'managers':
-          result = result.filter(
-            (m) =>
-              m.role === 'manager'
-          );
-          break;
+        showToast(
+          'Member removed successfully'
+        );
 
-        case 'agents':
-          result = result.filter(
-            (m) =>
-              m.role === 'agent'
-          );
-          break;
+        await Promise.all([
+          loadMembers(),
+          onReload?.(),
+        ]);
 
-        case 'high-performers':
-          result = result.filter(
-            (m) =>
-              Number(m.aiScore || 0) >=
-              85
-          );
-          break;
+        return true;
 
-        case 'needs-attention':
-          result = result.filter(
-            (m) =>
-              Number(m.aiScore || 0) <
-              70
-          );
-          break;
+      } catch (error) {
 
-        default:
-          break;
+        console.error(
+          'REMOVE MEMBER ERROR',
+          error
+        );
+
+        showToast(
+          error?.message ||
+          'Failed to remove member',
+          'error'
+        );
+
+        return false;
+
+      } finally {
+
+        setRemoving(false);
       }
-
-      return result;
     };
-    
-    const handleFilter = (
-          filterValue
-        ) => {
-          setFilter(filterValue);
 
-          const filtered =
-            applyFilters(
-              allMembers,
-              search,
-              filterValue
-            );
-
-          setFilteredMembers(filtered);
-        };
   /* =====================================================
-    INIT
+    EFFECT
   ===================================================== */
 
   useEffect(() => {
-      loadMembers();
-    }, [teamId]);
+
+    loadMembers();
+
+  }, [teamId]);
+
+  /* =====================================================
+    RETURN
+  ===================================================== */
 
   return {
+
     members,
+
+    allMembers,
+
     loading,
 
     inviting,
-    removing,
 
-    inviteEmail,
-    setInviteEmail,
+    removing,
 
     search,
     setSearch,
 
-    searchMembers,
-
-    inviteMember:
-    handleInviteMember,
-
-    removeMember:
-    handleRemoveMember,
-
-    reloadMembers:
-    loadMembers,
-
-    teamId,
-    toast,
-    showToast,
-    filteredMembers,
     filter,
     setFilter,
-    handleFilter,
+
+    inviteEmail,
+    setInviteEmail,
+
+    toast,
+    showToast,
+
+    inviteMember:
+      handleInviteMember,
+
+    removeMember:
+      handleRemoveMember,
+
+    reloadMembers:
+      loadMembers,
   };
 }

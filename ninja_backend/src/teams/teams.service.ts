@@ -316,19 +316,7 @@ export class TeamsService {
         requestingUserId,
         userId,
       );
-      /* CREATE NOTIFICATION */
-      const addedUser = await this.usersService.findById(userId);
-
-      await this.createNotification({
-        teamId,
-        userId: requestingUserId,
-        type: "member_added",
-        title: "New member added",
-        message: `${addedUser?.name || "A user"} joined the team.`,
-        metadata: {
-          addedUserId: userId,
-        },
-      });
+      
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -361,17 +349,6 @@ export class TeamsService {
     // Remove user from team
     await this.usersService.update(userId, { teamId: null } as any);
 
-    /* CREATE NOTIFICATION */
-    await this.createNotification({
-      teamId,
-      userId: requestingUserId,
-      type: "member_removed",
-      title: "Member removed",
-      message: `${removedUser?.name || "A user"} was removed from the team.`,
-      metadata: {
-        removedUserId: userId,
-      },
-    });
 
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
@@ -401,38 +378,41 @@ export class TeamsService {
 
       u.created_at as "createdAt",
 
-      /* TOTAL LEADS */
-      COALESCE((
-        SELECT COUNT(*)
-        FROM leads l
-        WHERE l.team_id = $1
-        AND l.assigned_to = u.id
-      ), 0) as "totalLeads",
+      COUNT(DISTINCT l.id) as "totalLeads",
 
-      /* PIPELINE */
-      COALESCE((
-        SELECT SUM(d.value)
-        FROM deals d
-        WHERE d.team_id = $1
-        AND d.assigned_to = u.id
-        AND d.stage != 'won'
-      ), 0) as "pipelineValue",
+      COALESCE(
+        SUM(
+          CASE
+            WHEN d.stage != 'won'
+            THEN d.value
+            ELSE 0
+          END
+        ),
+        0
+      ) as "pipelineValue",
 
-      /* WON DEALS */
-      COALESCE((
-        SELECT COUNT(*)
-        FROM deals d
-        WHERE d.team_id = $1
-        AND d.assigned_to = u.id
-        AND d.stage = 'won'
-      ), 0) as "dealsWon",
+      COUNT(
+        DISTINCT CASE
+          WHEN d.stage = 'won'
+          THEN d.id
+        END
+      ) as "dealsWon",
 
-      /* AI SCORE */
       FLOOR(RANDOM() * 30 + 70) as "aiScore"
 
     FROM users u
 
+    LEFT JOIN leads l
+      ON l.assigned_to = u.id
+      AND l.team_id = $1
+
+    LEFT JOIN deals d
+      ON d.assigned_to = u.id
+      AND d.team_id = $1
+
     WHERE u.team_id = $1
+
+    GROUP BY u.id
 
     ORDER BY u.created_at DESC
     `,
@@ -1022,7 +1002,11 @@ export class TeamsService {
 
     return Number(result.rows[0]?.total || 0);
   }
-  async markNotificationAsRead(teamId: string, notificationId: string, userId: string) {
+  async markNotificationAsRead(
+    teamId: string,
+    notificationId: string,
+    userId: string,
+  ) {
     await this.db.query(
       `
     UPDATE team_notifications
