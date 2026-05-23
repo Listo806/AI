@@ -23,13 +23,17 @@ import { VaRestrictionGuard } from "../auth/guards/va-restriction.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CreateTeamDto } from "./dto/create-team.dto";
 import { UpdateTeamDto } from "./dto/update-team.dto";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @ApiTags("teams")
 @ApiBearerAuth("JWT-auth")
 @Controller("teams")
 @UseGuards(JwtAuthGuard, VaRestrictionGuard)
 export class TeamsController {
-  constructor(private readonly teamsService: TeamsService) {}
+  constructor(
+    private readonly teamsService: TeamsService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: "Create a new team" })
@@ -193,7 +197,7 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.getNotifications(teamId, user.id);
+    return this.notificationsService.getNotifications(teamId, user.id);
   }
 
   @Patch(":id/notifications/:notificationId/read")
@@ -204,7 +208,11 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.markNotificationAsRead(teamId, notificationId, user.id);
+    return this.notificationsService.markNotificationAsRead(
+      teamId,
+      notificationId,
+      user.id,
+    );
   }
 
   @Patch(":id/notifications/read-all")
@@ -214,14 +222,14 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.markAllNotificationsAsRead(teamId, user.id);
+    return this.notificationsService.markAllNotificationsAsRead(teamId, user.id);
   }
 
   @Get(":id/notifications/unread-count")
   async getUnreadCount(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    const total = await this.teamsService.getUnreadCount(teamId, user.id);
+    const total = await this.notificationsService.getUnreadCount(teamId, user.id);
 
     return {
       total,

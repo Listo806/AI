@@ -216,4 +216,23 @@ export class NotificationsService {
 
     return Number(result.rows[0]?.total || 0);
   }
+  async markNotificationAsRead(
+    teamId: string,
+    notificationId: string,
+    userId: string,
+  ) {
+    await this.markAsRead(notificationId, teamId, userId);
+
+    return {
+      success: true,
+    };
+  }
+
+  async markAllNotificationsAsRead(teamId: string, userId: string) {
+    await this.markAllAsRead(teamId, userId);
+
+    return {
+      success: true,
+    };
+  }
 }
