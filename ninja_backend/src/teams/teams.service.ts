@@ -8,6 +8,7 @@ import { DatabaseService } from "../database/database.service";
 import { Team, CreateTeamDto, UpdateTeamDto } from "./entities/team.entity";
 import { UsersService } from "../users/users.service";
 import { EventLoggerService } from "../analytics/events/event-logger.service";
+import { NotificationsService } from "../notifications/notifications.service";
 
 @Injectable()
 export class TeamsService {
@@ -15,6 +16,7 @@ export class TeamsService {
     private readonly db: DatabaseService,
     private readonly usersService: UsersService,
     private readonly eventLogger: EventLoggerService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto, ownerId: string): Promise<Team> {
@@ -31,13 +33,7 @@ export class TeamsService {
 
     // Set creating owner as a member of the new team (owner is always in the team they create)
     await this.usersService.update(ownerId, { teamId: team.id } as any);
-    await this.createNotification({
-      teamId: team.id,
-      userId: ownerId,
-      type: "team_created",
-      title: "Team created",
-      message: `${team.name} has been created successfully.`,
-    });
+
     return team;
   }
 
@@ -129,14 +125,7 @@ export class TeamsService {
     );
 
     const updatedTeam = rows[0];
-    /* CREATE NOTIFICATION */
-    await this.createNotification({
-      teamId: id,
-      userId,
-      type: "team_updated",
-      title: "Team updated",
-      message: `Team settings have been updated.`,
-    });
+
     // Enforce seat limits if seat limit was changed
     if (updateTeamDto.seatLimit !== undefined) {
       await this.enforceSeatLimits(id);
@@ -216,15 +205,25 @@ export class TeamsService {
              WHERE id = ANY($1::uuid[])`,
             [ids],
           );
-          /* CREATE NOTIFICATIONS FOR DEACTIVATED USERS */
-          for (const memberId of ids) {
-            await this.createNotification({
+          for (const member of toDeactivate) {
+            await this.notificationsService.create({
               teamId,
-              userId: memberId,
-              type: "member_deactivated",
-              title: "Seat limit exceeded",
-              message:
-                "Your account has been deactivated because the team exceeded its seat limit.",
+              userId: member.id,
+
+              type: "team.member_deactivated",
+              category: "team",
+              priority: "high",
+
+              title: "Account deactivated",
+              message: "Your team seat has been removed by the owner",
+
+              url: `/teams`,
+
+              icon: "user-x",
+
+              metadata: {
+                reason: "seat_limit_exceeded",
+              },
             });
           }
           // Increment team token version to invalidate tokens for deactivated users
@@ -286,7 +285,27 @@ export class TeamsService {
 
       const currentSeats = parseInt(seatCountRows[0].count, 10);
       const availableSeats = team.seat_limit - 1 - currentSeats; // -1 for owner
+      if (availableSeats === 1) {
+        await this.notificationsService.create({
+          teamId,
 
+          type: "team.seats_almost_full",
+          category: "billing",
+          priority: "high",
+
+          title: "Team seats almost full",
+          message: `Your team is reaching the seat limit`,
+
+          url: `/teams/${teamId}/billing`,
+
+          icon: "alert-triangle",
+
+          metadata: {
+            seatLimit: team.seat_limit,
+            usedSeats: currentSeats + 1,
+          },
+        });
+      }
       if (availableSeats <= 0) {
         await client.query("ROLLBACK");
         throw new BadRequestException("No available seats in this team");
@@ -318,15 +337,26 @@ export class TeamsService {
       );
       const addedUser = await this.usersService.findById(userId);
 
-      await this.createNotification({
+      await this.notificationsService.create({
         teamId,
-        userId: null,
-        type: "member_invited",
-        title: "New team member",
-        message: `${addedUser?.name || "A new member"} joined the workspace.`,
+        actorUserId: requestingUserId,
+
+        type: "team.member_added",
+        category: "team",
+        priority: "medium",
+
+        title: "New team member added",
+        message: `${addedUser?.name || "A new user"} joined the team`,
+
+        url: `/teams/${teamId}/members`,
+
+        entityType: "user",
+        entityId: userId,
+
+        icon: "user-plus",
+
         metadata: {
-          memberId: userId,
-          memberName: addedUser?.name,
+          userId,
         },
       });
     } catch (error) {
@@ -367,15 +397,26 @@ export class TeamsService {
       requestingUserId,
       userId,
     );
-    await this.createNotification({
+    await this.notificationsService.create({
       teamId,
-      userId: null,
-      type: "member_removed",
+      actorUserId: requestingUserId,
+
+      type: "team.member_removed",
+      category: "team",
+      priority: "medium",
+
       title: "Team member removed",
-      message: `${removedUser?.name || "A member"} was removed from the workspace.`,
+      message: `${removedUser?.name || "A member"} was removed from the team`,
+
+      url: `/teams/${teamId}/members`,
+
+      entityType: "user",
+      entityId: userId,
+
+      icon: "user-minus",
+
       metadata: {
-        memberId: userId,
-        memberName: removedUser?.name,
+        userId,
       },
     });
   }
@@ -492,8 +533,8 @@ export class TeamsService {
       this.getSubscription(teamId),
       this.getInsights(teamId),
       this.getLeaderboard(teamId),
-      this.getNotifications(teamId, userId),
-      this.getUnreadCount(teamId, userId),
+      this.notificationsService.getNotifications(teamId, userId),
+      this.notificationsService.getUnreadCount(teamId, userId),
     ]);
 
     return {
@@ -760,53 +801,6 @@ export class TeamsService {
     return result.rows[0];
   }
 
-  async getNotifications(teamId: string, userId: string) {
-    const result = await this.db.query(
-      `
-    SELECT
-      n.id,
-
-      n.team_id as "teamId",
-
-      n.user_id as "userId",
-
-      n.type,
-
-      n.title,
-
-      n.message,
-
-      n.is_read as "isRead",
-
-      n.metadata,
-
-      n.created_at as "createdAt",
-
-      u.name as "userName",
-
-      u.avatar_url as avatar
-
-    FROM team_notifications n
-
-    LEFT JOIN users u
-      ON u.id = n.user_id
-
-    WHERE n.team_id = $1
-    AND (
-      n.user_id IS NULL
-      OR n.user_id = $2
-    )
-
-    ORDER BY n.created_at DESC
-
-    LIMIT 20
-    `,
-      [teamId, userId],
-    );
-
-    return result.rows;
-  }
-
   async getInsights(teamId: string) {
     const insights: any[] = [];
 
@@ -967,115 +961,5 @@ export class TeamsService {
         value: `${topAi?.aiScore || 0}%`,
       },
     ];
-  }
-
-  private async createNotification({
-    teamId,
-    userId = null,
-    type,
-    title,
-    message = "",
-    metadata = {},
-  }: {
-    teamId: string;
-
-    userId?: string | null;
-
-    type: string;
-
-    title: string;
-
-    message?: string;
-
-    metadata?: Record<string, any>;
-  }) {
-    await this.db.query(
-      `
-    INSERT INTO team_notifications
-    (
-      team_id,
-      user_id,
-      type,
-      title,
-      message,
-      metadata,
-      created_at
-    )
-    VALUES
-    (
-      $1,
-      $2,
-      $3,
-      $4,
-      $5,
-      $6,
-      NOW()
-    )
-    `,
-      [teamId, userId, type, title, message, JSON.stringify(metadata)],
-    );
-  }
-  async getUnreadCount(teamId: string, userId: string) {
-    const result = await this.db.query(
-      `
-    SELECT COUNT(*) as total
-
-    FROM team_notifications
-
-    WHERE team_id = $1
-
-    AND (
-      user_id IS NULL
-      OR user_id = $2
-    )
-
-    AND is_read = false
-    `,
-      [teamId, userId],
-    );
-
-    return Number(result.rows[0]?.total || 0);
-  }
-  async markNotificationAsRead(
-    teamId: string,
-    notificationId: string,
-    userId: string,
-  ) {
-    await this.db.query(
-      `
-    UPDATE team_notifications
-    SET is_read = true
-    WHERE id = $1
-    AND team_id = $2
-    AND (
-      user_id IS NULL
-      OR user_id = $3
-    )
-    `,
-      [notificationId, teamId, userId],
-    );
-
-    return {
-      success: true,
-    };
-  }
-
-  async markAllNotificationsAsRead(teamId: string, userId: string) {
-    await this.db.query(
-      `
-    UPDATE team_notifications
-    SET is_read = true
-    WHERE team_id = $1
-    AND (
-      user_id IS NULL
-      OR user_id = $2
-    )
-    `,
-      [teamId, userId],
-    );
-
-    return {
-      success: true,
-    };
   }
 }
