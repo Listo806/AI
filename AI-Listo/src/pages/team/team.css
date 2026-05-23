@@ -532,7 +532,7 @@ TEAM MEMBERS MODERN
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 
 .team-workspace .team-member-card {
@@ -1599,8 +1599,8 @@ TEAM ACTIVITY
 }
 
 .team-workspace .team-activity-avatar {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   object-fit: cover;
   border: 2px solid #fff;
@@ -1625,9 +1625,9 @@ TEAM ACTIVITY
 }
 
 .team-workspace .team-activity-message {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
-  color: #0f172a;
+  color: #3d4047;
 }
 
 .team-workspace .team-activity-message strong {
@@ -1642,7 +1642,7 @@ TEAM ACTIVITY
 }
 
 .team-workspace .team-activity-footer {
-  padding: 18px;
+  padding: 5px 18px;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -1651,7 +1651,7 @@ TEAM ACTIVITY
   height: 46px;
   border: none;
   border-radius: 14px;
-  background: #f8fafc;
+  background: #fff;
   color: #2563eb;
   font-size: 14px;
   font-weight: 700;
@@ -1774,7 +1774,7 @@ TEAM PERFORMANCE
 .team-workspace .team-performance-label {
   font-size: 13px;
   font-weight: 600;
-  color: #64748b;
+  color: #3d4047;
   min-width: 130px;
 }
 
@@ -1793,7 +1793,7 @@ TEAM PERFORMANCE
 .team-workspace .team-bottom-grid{
     display: grid;
     gap: 20px;
-    grid-template-columns: 29fr 29fr 22fr 20fr;
+    grid-template-columns: 29fr 27fr 24fr 20fr;
     margin-bottom: 20px;
 }
 .team-workspace .team-bottom-grid > *{
@@ -1815,9 +1815,8 @@ TEAM NOTIFICATIONS
   align-items: flex-start;
   gap: 14px;
   padding: 5px 0;
-  border-radius: 16px;
+  border-radius: 10px;
   transition: all 0.2s ease;
-  border: 1px solid transparent;
 }
 
 .team-workspace .team-notification-item:hover {
@@ -1827,8 +1826,8 @@ TEAM NOTIFICATIONS
 }
 
 .team-workspace .team-notification-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -1867,8 +1866,8 @@ TEAM NOTIFICATIONS
 
 .team-workspace .team-notification-title {
   font-size: 13px;
-  font-weight: 700;
-  color: #111827;
+  font-weight: 600;
+  color: #3d4047;
   line-height: 1.4;
 }
 
@@ -1948,7 +1947,7 @@ TEAM QUICK ACTIONS
 }
 .team-workspace .team-quick-action-icon {
   width: 30px;
-  height: 40px;
+  height: 42px;
   color: #2563eb;
   display: flex;
   align-items: center;
@@ -1964,7 +1963,9 @@ TEAM QUICK ACTIONS
     border-radius: 10px;
     padding: 0 7px;
 }
-
+.team-workspace{
+    padding-bottom: 20px;
+}
 
 
 

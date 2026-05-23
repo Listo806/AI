@@ -9,7 +9,7 @@ import {
   UserMinus,
   Users,
 } from "lucide-react";
-
+import { formatTimeAgo } from "../../../utils/helpers";
 const notificationConfig = {
   team_created: {
     icon: CheckCircle2,
@@ -77,9 +77,9 @@ export default function TeamNotificationsCard({ notifications = [] }) {
                 </div>
 
                 <div className="team-notification-content">
-                  <div className="team-notification-title">{item.title}</div>
+                  <div className="team-notification-title">{item.message}</div>
 
-                  <div className="team-notification-time">{item.message}</div>
+                  <div className="team-notification-time">{formatTimeAgo(item.createdAt)}</div>
                 </div>
               </div>
             );

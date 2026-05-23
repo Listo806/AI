@@ -879,7 +879,7 @@ export class TeamsService {
       });
     }
 
-    return insights.slice(0, 4);
+    return insights.slice(0, 5);
   }
 
   async getLeaderboard(teamId: string) {
