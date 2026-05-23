@@ -4,6 +4,7 @@ import {
   fetchTeams,
   fetchTeamDashboard,
   fetchTeamSeats,
+  fetchTeamNotifications,
 } from "../services/team.service";
 
 export default function useTeamDashboard() {
@@ -28,6 +29,7 @@ export default function useTeamDashboard() {
   const [insights, setInsights] = useState([]);
   const [billing, setBilling] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   /* =====================================================
     LOAD TEAMS
@@ -80,6 +82,7 @@ export default function useTeamDashboard() {
       const [data, seats] = await Promise.all([
           fetchTeamDashboard(teamId),
           fetchTeamSeats(teamId),
+          fetchTeamNotifications(teamId),
         ]);
 
         setTeam(data.team || null);
@@ -97,6 +100,9 @@ export default function useTeamDashboard() {
         setLeaderboard(data.leaderboard || []);
 
         setBilling(seats || null);
+        setNotifications(
+          notificationsData || []
+        );
       
     } catch (error) {
       console.error(
@@ -154,6 +160,7 @@ export default function useTeamDashboard() {
     insights,
     billing,
     leaderboard,
+    notifications,
     reloadDashboard: () =>
       loadDashboard(selectedTeamId),
   };

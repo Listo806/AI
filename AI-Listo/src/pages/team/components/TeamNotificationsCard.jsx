@@ -7,76 +7,70 @@ import {
   Clock3,
 } from "lucide-react";
 
-const notifications = [
-  {
-    icon: AlertTriangle,
-    color: "warning",
-    title: "Seat limit approaching",
-    time: "2 seats remaining",
-  },
-  {
-    icon: CheckCircle2,
-    color: "success",
-    title: "New member invitation accepted",
-    time: "5 minutes ago",
-  },
-  // {
-    // icon: Bell,
-    // color: "info",
-    // title: "Leads requiring follow-up",
-    // time: "12 pending leads",
-  // },
-  {
-    icon: CreditCard,
-    color: "purple",
-    title: "Billing payment successful",
-    time: "Today at 09:24 AM",
-  },
-  {
-    icon: Sparkles,
-    color: "info",
-    title: "AI review completed",
-    time: "Performance insights updated",
-  },
-  {
-    icon: Clock3,
-    color: "danger",
-    title: "Team inactivity warning",
-    time: "3 members inactive",
-  },
-];
+const iconMap = {
+  warning: AlertTriangle,
+  success: CheckCircle2,
+  info: Bell,
+  billing: CreditCard,
+  ai: Sparkles,
+  danger: Clock3,
+};
 
-export default function TeamNotificationsCard() {
+export default function TeamNotificationsCard({
+  notifications = [],
+}) {
   return (
     <div className="team-card team-notifications-card">
       <div className="team-card-header">
         <div>
-          <h3 className="team-card-title">Team Notifications</h3>
+          <h3 className="team-card-title">
+            Team Notifications
+          </h3>
 
-          <p className="team-card-subtitle">Latest workspace updates</p>
+          <p className="team-card-subtitle">
+            Latest workspace updates
+          </p>
         </div>
 
-        <button className="team-link-btn">View All</button>
+        <button className="team-link-btn">
+          View All
+        </button>
       </div>
 
       <div className="team-notifications-list">
-        {notifications.map((item, index) => {
-          const Icon = item.icon;
+        {notifications.length === 0 ? (
+          <div className="team-empty-state">
+            No notifications yet
+          </div>
+        ) : (
+          notifications.map((item) => {
+            const Icon =
+              iconMap[item.type] || Bell;
 
-          return (
-            <div key={index} className="team-notification-item">
-              <div className={`team-notification-icon ${item.color}`}>
-                <Icon size={18} />
+            return (
+              <div
+                key={item.id}
+                className="team-notification-item"
+              >
+                <div
+                  className={`team-notification-icon ${item.type}`}
+                >
+                  <Icon size={18} />
+                </div>
+
+                <div className="team-notification-content">
+                  <div className="team-notification-title">
+                    {item.title}
+                  </div>
+
+                  <div className="team-notification-time">
+                    {item.message}
+                  </div>
+                </div>
               </div>
-
-              <div className="team-notification-content">
-                <div className="team-notification-title">{item.title}</div>
-
-                <div className="team-notification-time">{item.time}</div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

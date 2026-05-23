@@ -10,6 +10,7 @@ import {
   removeTeamMember,
   deleteTeam,
   getTeamDashboard,
+  getTeamNotifications,
 } from '../../../api/platformApi';
 
 /* ======================================================
@@ -104,3 +105,10 @@ export async function removeMember(
     userId
   );
 }
+
+export const fetchTeamNotifications =
+  async (teamId) => {
+    return await getTeamNotifications(
+      teamId
+    );
+  };

@@ -298,3 +298,11 @@ export async function deleteTeam(teamId) {
   });
   return res?.data ?? res;
 }
+
+export async function getTeamNotifications(
+  teamId
+) {
+  return apiClient.get(
+    `/teams/${teamId}/notifications`
+  );
+}

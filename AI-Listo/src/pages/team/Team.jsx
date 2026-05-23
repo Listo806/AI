@@ -187,7 +187,7 @@ export default function TeamWorkspace() {
       <div className="team-bottom-grid">
         <TeamPerformanceCard leaderboard={leaderboard} />
         <TeamActivityCard activity={activities} />
-        <TeamNotificationsCard />
+        <TeamNotificationsCard notifications={notifications} />
         <TeamQuickActionsCard />
       </div>
 

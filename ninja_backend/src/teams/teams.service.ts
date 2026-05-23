@@ -693,10 +693,21 @@ export class TeamsService {
   async getNotifications(teamId: string) {
     const result = await this.db.query(
       `
-    SELECT *
+    SELECT
+      id,
+      type,
+      title,
+      message,
+      metadata,
+
+      created_at as "createdAt"
+
     FROM team_notifications
+
     WHERE team_id = $1
+
     ORDER BY created_at DESC
+
     LIMIT 20
     `,
       [teamId],
@@ -824,5 +835,6 @@ export class TeamsService {
     `,
       [teamId],
     );
+    return result.rows;
   }
 }
