@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Delete,
+  Patch,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -193,5 +194,37 @@ export class TeamsController {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
     return this.teamsService.getNotifications(teamId);
+  }
+
+  @Patch(":id/notifications/:notificationId/read")
+  async markNotificationAsRead(
+    @Param("id") teamId: string,
+    @Param("notificationId") notificationId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.markNotificationAsRead(teamId, notificationId);
+  }
+
+  @Patch(":id/notifications/read-all")
+  async markAllNotificationsAsRead(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.markAllNotificationsAsRead(teamId);
+  }
+
+  @Get(":id/notifications/unread-count")
+  async getUnreadCount(@Param("id") teamId: string, @CurrentUser() user: any) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    const total = await this.teamsService.getUnreadCount(teamId);
+
+    return {
+      total,
+    };
   }
 }

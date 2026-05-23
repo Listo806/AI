@@ -31,7 +31,13 @@ export class TeamsService {
 
     // Set creating owner as a member of the new team (owner is always in the team they create)
     await this.usersService.update(ownerId, { teamId: team.id } as any);
-
+    await this.createNotification({
+      teamId: team.id,
+      userId: ownerId,
+      type: "team_created",
+      title: "Team created",
+      message: `${team.name} has been created successfully.`,
+    });
     return team;
   }
 
@@ -123,7 +129,14 @@ export class TeamsService {
     );
 
     const updatedTeam = rows[0];
-
+    /* CREATE NOTIFICATION */
+    await this.createNotification({
+      teamId: id,
+      userId,
+      type: "team_updated",
+      title: "Team updated",
+      message: `Team settings have been updated.`,
+    });
     // Enforce seat limits if seat limit was changed
     if (updateTeamDto.seatLimit !== undefined) {
       await this.enforceSeatLimits(id);
@@ -203,7 +216,17 @@ export class TeamsService {
              WHERE id = ANY($1::uuid[])`,
             [ids],
           );
-
+          /* CREATE NOTIFICATIONS FOR DEACTIVATED USERS */
+          for (const memberId of ids) {
+            await this.createNotification({
+              teamId,
+              userId: memberId,
+              type: "member_deactivated",
+              title: "Seat limit exceeded",
+              message:
+                "Your account has been deactivated because the team exceeded its seat limit.",
+            });
+          }
           // Increment team token version to invalidate tokens for deactivated users
           await client.query(
             `UPDATE teams 
@@ -293,6 +316,19 @@ export class TeamsService {
         requestingUserId,
         userId,
       );
+      /* CREATE NOTIFICATION */
+      const addedUser = await this.usersService.findById(userId);
+
+      await this.createNotification({
+        teamId,
+        userId: requestingUserId,
+        type: "member_added",
+        title: "New member added",
+        message: `${addedUser?.name || "A user"} joined the team.`,
+        metadata: {
+          addedUserId: userId,
+        },
+      });
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -320,8 +356,22 @@ export class TeamsService {
       throw new BadRequestException("Cannot remove team owner");
     }
 
+    const removedUser = await this.usersService.findById(userId);
+
     // Remove user from team
     await this.usersService.update(userId, { teamId: null } as any);
+
+    /* CREATE NOTIFICATION */
+    await this.createNotification({
+      teamId,
+      userId: requestingUserId,
+      type: "member_removed",
+      title: "Member removed",
+      message: `${removedUser?.name || "A user"} was removed from the team.`,
+      metadata: {
+        removedUserId: userId,
+      },
+    });
 
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
@@ -694,19 +744,36 @@ export class TeamsService {
     const result = await this.db.query(
       `
     SELECT
-      id,
-      type,
-      title,
-      message,
-      metadata,
+      n.id,
 
-      created_at as "createdAt"
+      n.team_id as "teamId",
 
-    FROM team_notifications
+      n.user_id as "userId",
 
-    WHERE team_id = $1
+      n.type,
 
-    ORDER BY created_at DESC
+      n.title,
+
+      n.message,
+
+      n.is_read as "isRead",
+
+      n.metadata,
+
+      n.created_at as "createdAt",
+
+      u.name as "userName",
+
+      u.avatar_url as avatar
+
+    FROM team_notifications n
+
+    LEFT JOIN users u
+      ON u.id = n.user_id
+
+    WHERE n.team_id = $1
+
+    ORDER BY n.created_at DESC
 
     LIMIT 20
     `,
@@ -836,5 +903,98 @@ export class TeamsService {
       [teamId],
     );
     return result.rows;
+  }
+
+  private async createNotification({
+    teamId,
+    userId = null,
+    type,
+    title,
+    message = "",
+    metadata = {},
+  }: {
+    teamId: string;
+
+    userId?: string | null;
+
+    type: string;
+
+    title: string;
+
+    message?: string;
+
+    metadata?: Record<string, any>;
+  }) {
+    await this.db.query(
+      `
+    INSERT INTO team_notifications
+    (
+      team_id,
+      user_id,
+      type,
+      title,
+      message,
+      metadata,
+      created_at
+    )
+    VALUES
+    (
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      NOW()
+    )
+    `,
+      [teamId, userId, type, title, message, JSON.stringify(metadata)],
+    );
+  }
+  async getUnreadCount(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT COUNT(*) as total
+
+    FROM team_notifications
+
+    WHERE team_id = $1
+
+    AND is_read = false
+    `,
+      [teamId],
+    );
+
+    return Number(result.rows[0]?.total || 0);
+  }
+  async markNotificationAsRead(teamId: string, notificationId: string) {
+    await this.db.query(
+      `
+    UPDATE team_notifications
+    SET is_read = true
+    WHERE id = $1
+    AND team_id = $2
+    `,
+      [notificationId, teamId],
+    );
+
+    return {
+      success: true,
+    };
+  }
+
+  async markAllNotificationsAsRead(teamId: string) {
+    await this.db.query(
+      `
+    UPDATE team_notifications
+    SET is_read = true
+    WHERE team_id = $1
+    `,
+      [teamId],
+    );
+
+    return {
+      success: true,
+    };
   }
 }
