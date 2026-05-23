@@ -421,7 +421,7 @@ export class TeamsService {
     });
   }
 
-  async getMembers(teamId: string) {
+  async getMembers(teamId: string, limit = 20) {
     const result = await this.db.query(
       `
     SELECT
@@ -477,9 +477,9 @@ export class TeamsService {
 
     GROUP BY u.id
 
-    ORDER BY u.created_at DESC
+    ORDER BY u.created_at DESC LIMIT $2
     `,
-      [teamId],
+      [teamId, limit],
     );
 
     return result.rows;
@@ -529,7 +529,7 @@ export class TeamsService {
       this.getTeam(teamId),
       this.getStats(teamId),
       this.getDashboardMembers(teamId),
-      this.getActivities(teamId),
+      this.getActivities(teamId, 5),
       this.getSubscription(teamId),
       this.getInsights(teamId),
       this.getLeaderboard(teamId),
@@ -673,7 +673,7 @@ export class TeamsService {
     return result.rows[0];
   }
   async getDashboardMembers(teamId: string) {
-    return this.getMembers(teamId);
+    return this.getMembers(teamId, 5);
   }
   async getDashboardMembersOld(teamId: string) {
     const result = await this.db.query(
@@ -699,7 +699,7 @@ export class TeamsService {
     return result.rows;
   }
 
-  async getActivities(teamId: string) {
+  async getActivities(teamId: string, limit = 20) {
     const result = await this.db.query(
       `
     SELECT
@@ -726,9 +726,9 @@ export class TeamsService {
 
     ORDER BY e.created_at DESC
 
-    LIMIT 20
+    LIMIT $2
     `,
-      [teamId],
+      [teamId, limit],
     );
 
     return result.rows.map((item: any) => {
@@ -879,7 +879,7 @@ export class TeamsService {
       });
     }
 
-    return insights;
+    return insights.slice(0, 4);
   }
 
   async getLeaderboard(teamId: string) {
@@ -916,7 +916,7 @@ export class TeamsService {
 
     GROUP BY u.id
 
-    ORDER BY "pipelineValue" DESC
+    ORDER BY "pipelineValue" DESC LIMIT 4
     `,
       [teamId],
     );

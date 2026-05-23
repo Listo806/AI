@@ -123,7 +123,7 @@ export class NotificationsService {
     );
   }
 
-  async getNotifications(teamId: string, userId: string) {
+  async getNotifications(teamId: string, userId: string, limit = 20) {
     const result = await this.db.query(
       `
     SELECT
@@ -187,9 +187,9 @@ export class NotificationsService {
 
     ORDER BY n.created_at DESC
 
-    LIMIT 20
+    LIMIT $3
     `,
-      [teamId, userId],
+      [teamId, userId, limit],
     );
 
     return result.rows;
