@@ -316,7 +316,19 @@ export class TeamsService {
         requestingUserId,
         userId,
       );
-      
+      const addedUser = await this.usersService.findById(userId);
+
+      await this.createNotification({
+        teamId,
+        userId: null,
+        type: "member_invited",
+        title: "New team member",
+        message: `${addedUser?.name || "A new member"} joined the workspace.`,
+        metadata: {
+          memberId: userId,
+          memberName: addedUser?.name,
+        },
+      });
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;
@@ -349,13 +361,23 @@ export class TeamsService {
     // Remove user from team
     await this.usersService.update(userId, { teamId: null } as any);
 
-
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
       teamId,
       requestingUserId,
       userId,
     );
+    await this.createNotification({
+      teamId,
+      userId: null,
+      type: "member_removed",
+      title: "Team member removed",
+      message: `${removedUser?.name || "A member"} was removed from the workspace.`,
+      metadata: {
+        memberId: userId,
+        memberName: removedUser?.name,
+      },
+    });
   }
 
   async getMembers(teamId: string) {
@@ -669,15 +691,27 @@ export class TeamsService {
     );
 
     return result.rows.map((item: any) => {
+      let message = "";
+
+      switch (item.eventType) {
+        case "team.member_added":
+          message = `${item.userName} invited a new team member`;
+          break;
+
+        case "team.member_removed":
+          message = `${item.userName} removed a team member`;
+          break;
+
+        default:
+          message = `${item.userName} ${String(item.eventType || "")
+            .replaceAll("_", " ")
+            .toLowerCase()}`;
+      }
+
       return {
         id: item.id,
-
         avatar: item.avatar,
-
-        message: `${item.userName || "Someone"} ${String(item.eventType || "")
-          .replaceAll("_", " ")
-          .toLowerCase()}`,
-
+        message,
         time: this.formatTimeAgo(item.createdAt),
       };
     });
