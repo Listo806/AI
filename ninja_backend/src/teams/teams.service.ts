@@ -471,7 +471,7 @@ export class TeamsService {
     await this.db.query("DELETE FROM teams WHERE id = $1", [teamId]);
     return { deleted: true };
   }
-  async getDashboard(teamId: string) {
+  async getDashboard(teamId: string, userId: string) {
     const [
       teamResult,
       statsResult,
@@ -480,6 +480,8 @@ export class TeamsService {
       subscriptionResult,
       insightsResult,
       leaderboardResult,
+      notificationsResult,
+      unreadCount,
     ] = await Promise.all([
       this.getTeam(teamId),
       this.getStats(teamId),
@@ -488,6 +490,8 @@ export class TeamsService {
       this.getSubscription(teamId),
       this.getInsights(teamId),
       this.getLeaderboard(teamId),
+      this.getNotifications(teamId, userId),
+      this.getUnreadCount(teamId, userId),
     ]);
 
     return {
@@ -498,6 +502,8 @@ export class TeamsService {
       subscription: subscriptionResult,
       insights: insightsResult,
       leaderboard: leaderboardResult,
+      notifications: notificationsResult,
+      unreadNotifications: unreadCount,
     };
   }
 
@@ -740,7 +746,7 @@ export class TeamsService {
     return result.rows[0];
   }
 
-  async getNotifications(teamId: string) {
+  async getNotifications(teamId: string, userId: string) {
     const result = await this.db.query(
       `
     SELECT
@@ -772,12 +778,16 @@ export class TeamsService {
       ON u.id = n.user_id
 
     WHERE n.team_id = $1
+    AND (
+      n.user_id IS NULL
+      OR n.user_id = $2
+    )
 
     ORDER BY n.created_at DESC
 
     LIMIT 20
     `,
-      [teamId],
+      [teamId, userId],
     );
 
     return result.rows;
@@ -991,7 +1001,7 @@ export class TeamsService {
       [teamId, userId, type, title, message, JSON.stringify(metadata)],
     );
   }
-  async getUnreadCount(teamId: string) {
+  async getUnreadCount(teamId: string, userId: string) {
     const result = await this.db.query(
       `
     SELECT COUNT(*) as total
@@ -1000,22 +1010,31 @@ export class TeamsService {
 
     WHERE team_id = $1
 
+    AND (
+      user_id IS NULL
+      OR user_id = $2
+    )
+
     AND is_read = false
     `,
-      [teamId],
+      [teamId, userId],
     );
 
     return Number(result.rows[0]?.total || 0);
   }
-  async markNotificationAsRead(teamId: string, notificationId: string) {
+  async markNotificationAsRead(teamId: string, notificationId: string, userId: string) {
     await this.db.query(
       `
     UPDATE team_notifications
     SET is_read = true
     WHERE id = $1
     AND team_id = $2
+    AND (
+      user_id IS NULL
+      OR user_id = $3
+    )
     `,
-      [notificationId, teamId],
+      [notificationId, teamId, userId],
     );
 
     return {
@@ -1023,14 +1042,18 @@ export class TeamsService {
     };
   }
 
-  async markAllNotificationsAsRead(teamId: string) {
+  async markAllNotificationsAsRead(teamId: string, userId: string) {
     await this.db.query(
       `
     UPDATE team_notifications
     SET is_read = true
     WHERE team_id = $1
+    AND (
+      user_id IS NULL
+      OR user_id = $2
+    )
     `,
-      [teamId],
+      [teamId, userId],
     );
 
     return {

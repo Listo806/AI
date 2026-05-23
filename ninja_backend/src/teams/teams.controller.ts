@@ -183,7 +183,7 @@ export class TeamsController {
   async getDashboard(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.getDashboard(teamId);
+    return this.teamsService.getDashboard(teamId, user.id);
   }
 
   @Get(":id/notifications")
@@ -193,7 +193,7 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.getNotifications(teamId);
+    return this.teamsService.getNotifications(teamId, user.id);
   }
 
   @Patch(":id/notifications/:notificationId/read")
@@ -204,7 +204,7 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.markNotificationAsRead(teamId, notificationId);
+    return this.teamsService.markNotificationAsRead(teamId, notificationId, user.id);
   }
 
   @Patch(":id/notifications/read-all")
@@ -214,14 +214,14 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.teamsService.markAllNotificationsAsRead(teamId);
+    return this.teamsService.markAllNotificationsAsRead(teamId, user.id);
   }
 
   @Get(":id/notifications/unread-count")
   async getUnreadCount(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    const total = await this.teamsService.getUnreadCount(teamId);
+    const total = await this.teamsService.getUnreadCount(teamId, user.id);
 
     return {
       total,

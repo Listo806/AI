@@ -1775,6 +1775,7 @@ TEAM PERFORMANCE
   font-size: 13px;
   font-weight: 600;
   color: #64748b;
+  min-width: 130px;
 }
 
 .team-workspace .team-performance-name {

@@ -40,12 +40,9 @@ export default function TeamPerformanceCard({ leaderboard = [] }) {
                 <div className="team-performance-icon">
                   <Icon size={18} />
                 </div>
+                <div className="team-performance-label">{item.label}</div>
 
-                <div>
-                  <div className="team-performance-label">{item.label}</div>
-
-                  <div className="team-performance-name">{item.name}</div>
-                </div>
+                <div className="team-performance-name">{item.name}</div>
               </div>
 
               {/* RIGHT */}
