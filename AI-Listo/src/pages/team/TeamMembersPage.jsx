@@ -46,6 +46,8 @@ export default function TeamMembersPage() {
 
     inviteEmail,
     setInviteEmail,
+
+    toast,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -412,6 +414,25 @@ export default function TeamMembersPage() {
         onInvite={handleInvite}
         inviting={inviting}
       />
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

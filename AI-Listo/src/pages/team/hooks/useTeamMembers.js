@@ -201,12 +201,11 @@ export default function useTeamMembers({
           response
         );
 
-        const membersData =
-          Array.isArray(response)
-            ? response
-            : response?.members ||
-              response?.data ||
-              [];
+        const membersData = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
 
         setAllMembers(membersData);
 

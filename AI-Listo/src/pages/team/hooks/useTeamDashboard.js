@@ -9,7 +9,11 @@ import {
 
 export default function useTeamDashboard() {
   const [loading, setLoading] = useState(true);
+  const [teamsLoading, setTeamsLoading] =
+    useState(true);
 
+  const [dashboardLoading, setDashboardLoading] =
+    useState(true);
   const [teams, setTeams] = useState([]);
 
   const [selectedTeamId, setSelectedTeamId] =
@@ -126,9 +130,7 @@ export default function useTeamDashboard() {
       if (!selectedTeamId) return;
 
       loadDashboard(selectedTeamId);
-
-      // eslint-disable-next-line
-    }, []);
+    }, [selectedTeamId]);
 
   /* =====================================================
     SEAT INFO

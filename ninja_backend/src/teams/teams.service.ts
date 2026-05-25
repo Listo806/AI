@@ -324,14 +324,6 @@ export class TeamsService {
         [teamId, role || "agent", userId],
       );
 
-      //* Increment team token version to invalidate existing tokens
-      /*await client.query(
-        `UPDATE teams 
-         SET token_version = token_version + 1, updated_at = NOW()
-         WHERE id = $1`,
-        [teamId],
-      ); */
-
       await client.query("COMMIT");
 
       // Log event after successful commit
@@ -495,12 +487,13 @@ export class TeamsService {
     teamId: string,
     email: string,
     requestingUserId: string,
+    role = "agent",
   ): Promise<void> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
       throw new NotFoundException("No user found with this email");
     }
-    await this.addMember(teamId, user.id, requestingUserId);
+    await this.addMember(teamId, user.id, requestingUserId, role);
   }
 
   /** Delete a team (owner only). Unlinks all members, then deletes the team. Owner can only delete their own teams. */

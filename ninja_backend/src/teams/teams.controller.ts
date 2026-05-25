@@ -70,27 +70,24 @@ export class TeamsController {
   @ApiResponse({ status: 200, description: "Members list" })
   @ApiResponse({ status: 403, description: "Not a team member" })
   async getMembers(
-  @Param("id") id: string,
-  @CurrentUser() user: any,
+    @Param("id") id: string,
+    @CurrentUser() user: any,
 
-  @Query("page") page = "1",
-  @Query("limit") limit = "10",
-  @Query("search") search = "",
-  @Query("filter") filter = "all",
-) {
-  await this.teamsService.ensureCanAccessTeam(
-    id,
-    user.id,
-  );
+    @Query("page") page = "1",
+    @Query("limit") limit = "10",
+    @Query("search") search = "",
+    @Query("filter") filter = "all",
+  ) {
+    await this.teamsService.ensureCanAccessTeam(id, user.id);
 
-  return this.teamsService.getMembersPaginated({
-    teamId: id,
-    page: Number(page),
-    limit: Number(limit),
-    search,
-    filter,
-  });
-}
+    return this.teamsService.getMembersPaginated({
+      teamId: id,
+      page: Number(page),
+      limit: Number(limit),
+      search,
+      filter,
+    });
+  }
 
   @Post(":id/members/invite")
   @ApiOperation({ summary: "Invite member by email (owner only)" })
@@ -106,13 +103,14 @@ export class TeamsController {
   @ApiResponse({ status: 404, description: "User not found" })
   async inviteByEmail(
     @Param("id") teamId: string,
-    @Body() body: { email: string },
+    @Body() body: { email: string; role?: string },
     @CurrentUser() user: any,
   ) {
     await this.teamsService.addMemberByEmail(
       teamId,
       body.email?.trim?.() || "",
       user.id,
+      body.role || "agent",
     );
     return { message: "Member added successfully" };
   }
@@ -240,14 +238,20 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.notificationsService.markAllNotificationsAsRead(teamId, user.id);
+    return this.notificationsService.markAllNotificationsAsRead(
+      teamId,
+      user.id,
+    );
   }
 
   @Get(":id/notifications/unread-count")
   async getUnreadCount(@Param("id") teamId: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    const total = await this.notificationsService.getUnreadCount(teamId, user.id);
+    const total = await this.notificationsService.getUnreadCount(
+      teamId,
+      user.id,
+    );
 
     return {
       total,
