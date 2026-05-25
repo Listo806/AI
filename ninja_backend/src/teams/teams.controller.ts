@@ -5,6 +5,7 @@ import {
   Put,
   Body,
   Param,
+  Query,
   UseGuards,
   Delete,
   Patch,
@@ -68,11 +69,28 @@ export class TeamsController {
   @ApiParam({ name: "id", description: "Team ID" })
   @ApiResponse({ status: 200, description: "Members list" })
   @ApiResponse({ status: 403, description: "Not a team member" })
-  async getMembers(@Param("id") id: string, @CurrentUser() user: any) {
-    await this.teamsService.ensureCanAccessTeam(id, user.id);
-    const members = await this.teamsService.getMembers(id);
-    return { data: members };
-  }
+  async getMembers(
+  @Param("id") id: string,
+  @CurrentUser() user: any,
+
+  @Query("page") page = "1",
+  @Query("limit") limit = "10",
+  @Query("search") search = "",
+  @Query("filter") filter = "all",
+) {
+  await this.teamsService.ensureCanAccessTeam(
+    id,
+    user.id,
+  );
+
+  return this.teamsService.getMembersPaginated({
+    teamId: id,
+    page: Number(page),
+    limit: Number(limit),
+    search,
+    filter,
+  });
+}
 
   @Post(":id/members/invite")
   @ApiOperation({ summary: "Invite member by email (owner only)" })
