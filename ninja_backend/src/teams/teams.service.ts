@@ -249,6 +249,7 @@ export class TeamsService {
     teamId: string,
     userId: string,
     requestingUserId: string,
+    role = "agent",
   ): Promise<void> {
     const client = await this.db.getClient();
 
