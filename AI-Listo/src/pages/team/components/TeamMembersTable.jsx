@@ -8,12 +8,12 @@ import {
   Sparkles,
   Plus,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import { ROLE_STYLES } from "../utils/teamConstants";
 
 export default function TeamMembersTable({ members, onRemove, onInvite }) {
   const [openMenu, setOpenMenu] = useState(null);
-
+  const navigate = useNavigate();
   return (
     <div className="team-card">
       {/* HEADER */}
@@ -26,7 +26,9 @@ export default function TeamMembersTable({ members, onRemove, onInvite }) {
           </p>
         </div>
         <button
-          className="team-ai-review-btn">
+          className="team-ai-review-btn"
+          onClick={() => navigate("/dashboard/team/members")}
+        >
           <span>View All</span>
         </button>
       </div>
@@ -137,7 +139,10 @@ export default function TeamMembersTable({ members, onRemove, onInvite }) {
         })}
       </div>
       <div className="team-insights-footer">
-        <button onClick={onInvite} className="team-insights-report-btn team-member">
+        <button
+          onClick={onInvite}
+          className="team-insights-report-btn team-member"
+        >
           <Plus size={16} />
           Invite New Member
         </button>

@@ -34,12 +34,6 @@ export async function fetchTeamSeats(
   return await getTeamSeats(teamId);
 }
 
-export async function fetchTeamMembers(
-  teamId
-) {
-  return await getTeamMembers(teamId);
-}
-
 /* ======================================================
  CREATE / UPDATE TEAM
 ====================================================== */
@@ -112,3 +106,13 @@ export const fetchTeamNotifications =
       teamId
     );
   };
+  
+export async function fetchTeamMembers(
+  teamId,
+  params
+) {
+  return await getTeamMembers(
+    teamId,
+    params
+  );
+}

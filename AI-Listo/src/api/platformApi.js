@@ -226,34 +226,6 @@ export async function getTeamSeats(
   return res?.data || res;
 }
 
-export async function getTeamMembers(
-  teamId
-) {
-  const res = await apiClient.request(
-    `/teams/${teamId}/members`
-  );
-
-  console.log(
-    'getTeamMembers RAW',
-    res
-  );
-
-  /*
-    backend:
-    return { data: members }
-  */
-
-  if (Array.isArray(res)) {
-    return res;
-  }
-
-  if (Array.isArray(res?.data)) {
-    return res.data;
-  }
-
-  return [];
-}
-
 export async function createTeam(payload) {
   const res = await apiClient.request('/teams', {
     method: 'POST',
@@ -306,4 +278,82 @@ export async function getTeamNotifications(
     method: 'GET',
   });
   return res?.data ?? res;
+}
+
+export async function getTeamMembers(
+  teamId,
+  params = {}
+) {
+
+  const qs =
+    new URLSearchParams();
+
+  if (params.page) {
+    qs.append(
+      'page',
+      String(params.page)
+    );
+  }
+
+  if (params.limit) {
+    qs.append(
+      'limit',
+      String(params.limit)
+    );
+  }
+
+  if (params.search) {
+    qs.append(
+      'search',
+      params.search
+    );
+  }
+
+  if (params.filter) {
+    qs.append(
+      'filter',
+      params.filter
+    );
+  }
+
+  if (params.role) {
+    qs.append(
+      'role',
+      params.role
+    );
+  }
+
+  if (params.sort) {
+    qs.append(
+      'sort',
+      params.sort
+    );
+  }
+
+  const queryString =
+    qs.toString();
+
+  const res =
+    await apiClient.request(
+      `/teams/${teamId}/members${
+        queryString
+          ? `?${queryString}`
+          : ''
+      }`
+    );
+
+  console.log(
+    'getTeamMembers RAW',
+    res
+  );
+
+  /*
+    backend return:
+    {
+      data: [],
+      pagination: {}
+    }
+  */
+
+  return res?.data || res;
 }

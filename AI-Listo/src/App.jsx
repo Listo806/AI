@@ -92,6 +92,7 @@ import ApiAccessPage from "./pages/integrations/ApiAccessPage";
 import MlsIdxPage from "./pages/integrations/MlsIdxPage";
 import TiktokPage from "./pages/integrations/TiktokPage";
 import AppointmentPage from "./pages/integrations/AppointmentPage";
+import TeamMembersPage from "./pages/team/TeamMembersPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -222,6 +223,7 @@ function AppRoutes() {
         
         {/* Team Route */}
         <Route path="team" element={<Team />} />
+        <Route path="team/members" element={<TeamMembersPage />} />
         
         {/* Integrations Routes */}
         <Route path="integrations" element={<Integrations />} />

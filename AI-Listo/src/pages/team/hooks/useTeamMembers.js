@@ -43,6 +43,19 @@ export default function useTeamMembers({
   const [toast, setToast] =
     useState(null);
 
+  const [page, setPage] =
+    useState(1);
+
+  const [limit, setLimit] =
+    useState(10);
+
+  const [pagination, setPagination] =
+    useState({
+      total: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+    });
   /* =====================================================
     TOAST
   ===================================================== */
@@ -66,105 +79,93 @@ export default function useTeamMembers({
     FILTER LOGIC
   ===================================================== */
 
-  function applyFilters(
-    membersData,
-    keyword,
-    currentFilter
-  ) {
+  // function applyFilters(
+    // membersData,
+    // keyword,
+    // currentFilter
+  // ) {
 
-    let result = [...membersData];
+    // let result = [...membersData];
 
-    /* SEARCH */
+    // /* SEARCH */
 
-    if (keyword?.trim()) {
+    // if (keyword?.trim()) {
 
-      const q =
-        keyword.toLowerCase();
+      // const q =
+        // keyword.toLowerCase();
 
-      result = result.filter(
-        (member) =>
-          member.name
-            ?.toLowerCase()
-            .includes(q) ||
+      // result = result.filter(
+        // (member) =>
+          // member.name
+            // ?.toLowerCase()
+            // .includes(q) ||
 
-          member.email
-            ?.toLowerCase()
-            .includes(q) ||
+          // member.email
+            // ?.toLowerCase()
+            // .includes(q) ||
 
-          member.role
-            ?.toLowerCase()
-            .includes(q)
-      );
-    }
+          // member.role
+            // ?.toLowerCase()
+            // .includes(q)
+      // );
+    // }
 
-    /* FILTER */
+    // /* FILTER */
 
-    switch (currentFilter) {
+    // switch (currentFilter) {
 
-      case 'active':
-        result = result.filter(
-          (m) => m.isActive
-        );
-        break;
+      // case 'active':
+        // result = result.filter(
+          // (m) => m.isActive
+        // );
+        // break;
 
-      case 'pending':
-        result = result.filter(
-          (m) => !m.isActive
-        );
-        break;
+      // case 'pending':
+        // result = result.filter(
+          // (m) => !m.isActive
+        // );
+        // break;
 
-      case 'managers':
-        result = result.filter(
-          (m) =>
-            m.role === 'manager'
-        );
-        break;
+      // case 'managers':
+        // result = result.filter(
+          // (m) =>
+            // m.role === 'manager'
+        // );
+        // break;
 
-      case 'agents':
-        result = result.filter(
-          (m) =>
-            m.role === 'agent'
-        );
-        break;
+      // case 'agents':
+        // result = result.filter(
+          // (m) =>
+            // m.role === 'agent'
+        // );
+        // break;
 
-      case 'high-performers':
-        result = result.filter(
-          (m) =>
-            Number(m.aiScore || 0) >= 85
-        );
-        break;
+      // case 'high-performers':
+        // result = result.filter(
+          // (m) =>
+            // Number(m.aiScore || 0) >= 85
+        // );
+        // break;
 
-      case 'needs-attention':
-        result = result.filter(
-          (m) =>
-            Number(m.aiScore || 0) < 70
-        );
-        break;
+      // case 'needs-attention':
+        // result = result.filter(
+          // (m) =>
+            // Number(m.aiScore || 0) < 70
+        // );
+        // break;
 
-      default:
-        break;
-    }
+      // default:
+        // break;
+    // }
 
-    return result;
-  }
+    // return result;
+  // }
 
   /* =====================================================
     FILTERED MEMBERS
   ===================================================== */
 
-  const members = useMemo(() => {
-
-    return applyFilters(
-      allMembers,
-      search,
-      filter
-    );
-
-  }, [
-    allMembers,
-    search,
-    filter,
-  ]);
+  const members = allMembers;
 
   /* =====================================================
     LOAD MEMBERS
@@ -183,13 +184,43 @@ export default function useTeamMembers({
 
       setLoading(true);
 
-      const data =
+        const response =
         await fetchTeamMembers(
-          teamId
+          teamId,
+          {
+            page,
+            limit,
+            search,
+            filter,
+          }
         );
 
-      setAllMembers(data || []);
-      console.log('MEMBERS DATA', data);
+          setAllMembers(
+            response?.data || []
+          );
+
+          setPagination({
+            total:
+              response?.pagination
+                ?.total || 0,
+
+            totalPages:
+              response?.pagination
+                ?.totalPages || 1,
+
+            hasNextPage:
+              response?.pagination
+                ?.hasNextPage || false,
+
+            hasPrevPage:
+              response?.pagination
+                ?.hasPrevPage || false,
+          });
+
+          console.log(
+            'MEMBERS RESPONSE',
+            response
+      );
 
     } catch (error) {
 
@@ -339,10 +370,22 @@ export default function useTeamMembers({
   ===================================================== */
 
   useEffect(() => {
+      loadMembers();
+    }, [
+      teamId,
+      page,
+      limit,
+      search,
+      filter,
+    ]);
+    useEffect(() => {
 
-    loadMembers();
+      setPage(1);
 
-  }, [teamId]);
+    }, [
+      search,
+      filter,
+    ]);
 
   /* =====================================================
     RETURN
@@ -371,9 +414,16 @@ export default function useTeamMembers({
 
     toast,
     showToast,
+    page,
+    setPage,
+
+    limit,
+    setLimit,
+
+    pagination,
 
     inviteMember:
-      handleInviteMember,
+    handleInviteMember,
 
     removeMember:
       handleRemoveMember,

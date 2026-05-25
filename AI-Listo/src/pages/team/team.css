@@ -1966,7 +1966,234 @@ TEAM QUICK ACTIONS
 .team-workspace{
     padding-bottom: 20px;
 }
+.team-members-page {
+  padding: 24px;
+}
 
+.team-members-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.team-page-title {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.team-page-subtitle {
+  color: #64748b;
+  margin-top: 6px;
+}
+
+.team-members-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.team-primary-btn,
+.team-secondary-btn {
+  height: 42px;
+  border-radius: 12px;
+  padding: 0 18px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.team-primary-btn {
+  background: #111827;
+  color: white;
+}
+
+.team-secondary-btn {
+  background: #f1f5f9;
+}
+
+.team-members-filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.team-search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0 14px;
+  height: 48px;
+}
+
+.team-search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+}
+
+.team-filter-select {
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 0 14px;
+}
+
+.team-table-wrapper {
+  overflow-x: auto;
+}
+
+.team-full-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.team-full-table th {
+  text-align: left;
+  padding: 16px;
+  font-size: 13px;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.team-full-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.team-full-table tr {
+  cursor: pointer;
+}
+
+.team-full-table tr:hover {
+  background: #fafafa;
+}
+
+.team-table-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-table-user img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.team-table-user strong {
+  display: block;
+}
+
+.team-table-user span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.team-status-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.team-status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.team-status-badge.inactive {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.team-member-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 9999;
+}
+
+.team-member-drawer {
+  width: 420px;
+  height: 100%;
+  background: white;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.team-member-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-member-profile {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.team-member-profile img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+}
+
+.team-member-profile h2 {
+  margin-top: 16px;
+}
+
+.team-member-profile p {
+  color: #64748b;
+}
+
+.team-member-section {
+  margin-top: 28px;
+}
+
+.team-member-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.team-member-section label {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.team-log-item {
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.team-remove-btn {
+  width: 100%;
+  margin-top: 32px;
+  height: 46px;
+  border: none;
+  border-radius: 14px;
+  background: #dc2626;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
 
 
 
