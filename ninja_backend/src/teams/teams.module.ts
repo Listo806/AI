@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef  } from '@nestjs/common';
 import { TeamsService } from './teams.service';
 import { TeamsController } from './teams.controller';
 import { UsersModule } from '../users/users.module';
@@ -7,7 +7,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { MembersModule } from './members/members.module';
 
 @Module({
-  imports: [UsersModule, AnalyticsModule, NotificationsModule, MembersModule],
+  imports: [UsersModule, AnalyticsModule, NotificationsModule, forwardRef(() => MembersModule),],
   controllers: [TeamsController],
   providers: [TeamsService],
   exports: [TeamsService],
