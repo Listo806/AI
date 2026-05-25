@@ -213,7 +213,7 @@ export class TeamsController {
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    return this.notificationsService.getNotifications(teamId, user.id);
+    return this.notificationsService.getNotifications(teamId, user.id, 5);
   }
 
   @Patch(":id/notifications/:notificationId/read")

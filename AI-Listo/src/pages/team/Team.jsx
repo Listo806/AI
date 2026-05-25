@@ -171,7 +171,7 @@ export default function TeamWorkspace() {
 
       <div className="team-main-grid">
         <TeamMembersTable
-          members={filteredMembers}
+          members={members}
           loading={loading}
           onRemove={handleOpenDelete}
           onInvite={() => setInviteModalOpen(true)}
