@@ -50,7 +50,7 @@ export default function TeamMembersPage() {
   ===================================================== */
 
   const [selectedMember, setSelectedMember] = useState(null);
-
+  const [showInviteModal, setShowInviteModal] = useState(false);
   /* =====================================================
     REMOVE MEMBER
   ===================================================== */
@@ -62,7 +62,15 @@ export default function TeamMembersPage() {
 
     setSelectedMember(null);
   };
+  const handleExport = () => {
+    const csvRows = members.map((m) => ({
+      Name: m.name || "",
+      Email: m.email || "",
+      Role: m.role || "",
+    }));
 
+    console.log(csvRows);
+  };
   /* =====================================================
     LOADING
   ===================================================== */
@@ -91,12 +99,20 @@ export default function TeamMembersPage() {
         </div>
 
         <div className="team-members-header-actions">
-          <button className="team-secondary-btn">
+          <button
+            type="button"
+            className="team-secondary-btn"
+            onClick={handleExport}
+          >
             <Download size={16} />
             Export CSV
           </button>
 
-          <button className="team-primary-btn">
+          <button
+            type="button"
+            className="team-primary-btn"
+            onClick={() => setShowInviteModal(true)}
+          >
             <Plus size={16} />
             Invite Member
           </button>
@@ -136,7 +152,7 @@ export default function TeamMembersPage() {
           <option value="high-performers">High Performers</option>
         </select>
 
-        <button className="team-secondary-btn">
+        <button type="button" className="team-secondary-btn">
           <SlidersHorizontal size={16} />
           Filters
         </button>
@@ -226,7 +242,13 @@ export default function TeamMembersPage() {
 
                   {/* ACTIONS */}
                   <td>
-                    <button className="team-icon-btn">
+                    <button
+                      type="button"
+                      className="team-icon-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
                       <MoreHorizontal size={18} />
                     </button>
                   </td>
@@ -242,13 +264,20 @@ export default function TeamMembersPage() {
       ================================================= */}
 
       {selectedMember && (
-        <div className="team-member-drawer-overlay">
-          <div className="team-member-drawer">
+        <div
+          className="team-member-drawer-overlay"
+          onClick={() => setSelectedMember(null)}
+        >
+          <div
+            className="team-member-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* HEADER */}
             <div className="team-member-drawer-header">
               <h3>Member Details</h3>
 
               <button
+                type="button"
                 className="team-icon-btn"
                 onClick={() => setSelectedMember(null)}
               >
@@ -325,7 +354,11 @@ export default function TeamMembersPage() {
             </div>
 
             {/* REMOVE */}
-            <button className="team-remove-btn" onClick={handleRemoveMember}>
+            <button
+              type="button"
+              className="team-remove-btn"
+              onClick={handleRemoveMember}
+            >
               <Trash2 size={16} />
               Remove Member
             </button>

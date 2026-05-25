@@ -30,7 +30,8 @@ export default function useTeamMembers({
 
   const [search, setSearch] =
     useState('');
-
+  const [debouncedSearch, setDebouncedSearch] =
+    useState('');
   const [filter, setFilter] =
     useState('all');
 
@@ -185,42 +186,47 @@ export default function useTeamMembers({
       setLoading(true);
 
         const response =
-        await fetchTeamMembers(
-          teamId,
-          {
-            page,
-            limit,
-            search,
-            filter,
-          }
+          await fetchTeamMembers(
+              teamId,
+              {
+                page,
+                limit,
+                search: debouncedSearch,
+                filter,
+              }
+            );
+
+        console.log(
+          'MEMBERS RESPONSE',
+          response
         );
 
-          setAllMembers(
-            response?.data || []
-          );
+        const membersData =
+          Array.isArray(response)
+            ? response
+            : response?.members ||
+              response?.data ||
+              [];
 
-          setPagination({
-            total:
-              response?.pagination
-                ?.total || 0,
+        setAllMembers(membersData);
 
-            totalPages:
-              response?.pagination
-                ?.totalPages || 1,
+        setPagination({
+          total:
+            response?.pagination
+              ?.total || membersData.length,
 
-            hasNextPage:
-              response?.pagination
-                ?.hasNextPage || false,
+          totalPages:
+            response?.pagination
+              ?.totalPages || 1,
 
-            hasPrevPage:
-              response?.pagination
-                ?.hasPrevPage || false,
-          });
+          hasNextPage:
+            response?.pagination
+              ?.hasNextPage || false,
 
-          console.log(
-            'MEMBERS RESPONSE',
-            response
-      );
+          hasPrevPage:
+            response?.pagination
+              ?.hasPrevPage || false,
+        });
 
     } catch (error) {
 
@@ -368,16 +374,24 @@ export default function useTeamMembers({
   /* =====================================================
     EFFECT
   ===================================================== */
+  useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedSearch(search);
+      }, 400);
 
+      return () => clearTimeout(timer);
+    }, [search]);
+    
   useEffect(() => {
       loadMembers();
     }, [
       teamId,
       page,
       limit,
-      search,
+      debouncedSearch,
       filter,
     ]);
+    
     useEffect(() => {
 
       setPage(1);

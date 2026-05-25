@@ -27,7 +27,7 @@ export class MembersService {
     max: 100
   */
 
-    const limit = Math.min(100, Math.max(1, Number(query.limit || 20)));
+    const limit = Math.min(100, Math.max(1, Number(query.limit || 2)));
 
     return this.repository.findMembers(teamId, {
       page,
