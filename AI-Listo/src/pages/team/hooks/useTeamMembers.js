@@ -246,9 +246,13 @@ export default function useTeamMembers({
   ===================================================== */
 
   const handleInviteMember =
-    async (e = null) => {
+      async (payload = {}) => {
 
-      e?.preventDefault?.();
+      const email =
+        payload.email || inviteEmail;
+
+      const role =
+        payload.role || 'agent';
 
       if (!teamId) {
 
@@ -260,7 +264,7 @@ export default function useTeamMembers({
         return false;
       }
 
-      if (!inviteEmail?.trim()) {
+      if (!email?.trim()) {
 
         showToast(
           'Email is required',
@@ -276,7 +280,10 @@ export default function useTeamMembers({
 
         await inviteMember(
           teamId,
-          inviteEmail
+          {
+            email,
+            role,
+          }
         );
 
         showToast(
@@ -333,7 +340,7 @@ export default function useTeamMembers({
       try {
 
         setRemoving(true);
-
+        console.log('REMOVE', teamId, userId);
         await removeMember(
           teamId,
           userId
@@ -383,6 +390,8 @@ export default function useTeamMembers({
     }, [search]);
     
   useEffect(() => {
+      if (!teamId) return;
+
       loadMembers();
     }, [
       teamId,
@@ -393,11 +402,11 @@ export default function useTeamMembers({
     ]);
     
     useEffect(() => {
-
-      setPage(1);
-
+      if (page !== 1) {
+        setPage(1);
+      }
     }, [
-      search,
+      debouncedSearch,
       filter,
     ]);
 

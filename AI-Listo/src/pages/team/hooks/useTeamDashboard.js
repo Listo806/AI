@@ -49,7 +49,10 @@ export default function useTeamDashboard() {
 
         setTeams(teamsData || []);
 
-        if (teamsData?.length > 0) {
+        if (
+          teamsData?.length > 0 &&
+          !selectedTeamId
+        ) {
           setSelectedTeamId(
             teamsData[0].id
           );
@@ -120,10 +123,12 @@ export default function useTeamDashboard() {
   ===================================================== */
 
   useEffect(() => {
-    if (!selectedTeamId) return;
+      if (!selectedTeamId) return;
 
-    loadDashboard(selectedTeamId);
-  }, [selectedTeamId]);
+      loadDashboard(selectedTeamId);
+
+      // eslint-disable-next-line
+    }, []);
 
   /* =====================================================
     SEAT INFO

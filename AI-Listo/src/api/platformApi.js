@@ -242,11 +242,24 @@ export async function updateTeam(teamId, payload) {
   return res?.data ?? res;
 }
 
-export async function inviteTeamMemberByEmail(teamId, email) {
-  const res = await apiClient.request(`/teams/${teamId}/members/invite`, {
-    method: 'POST',
-    body: JSON.stringify({ email: email?.trim?.() || '' }),
-  });
+export async function inviteTeamMemberByEmail(
+  teamId,
+  payload
+) {
+
+  const body = {
+    email: payload?.email?.trim?.() || '',
+    role: payload?.role || 'agent',
+  };
+
+  const res = await apiClient.request(
+    `/teams/${teamId}/members/invite`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }
+  );
+
   return res?.data ?? res;
 }
 

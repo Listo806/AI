@@ -64,19 +64,19 @@ export async function removeTeam(teamId) {
 
 export async function inviteMember(
   teamId,
-  email
+  payload
 ) {
   console.log(
     'INVITE MEMBER API',
     {
       teamId,
-      email,
+      payload,
     }
   );
 
   return await inviteTeamMemberByEmail(
     teamId,
-    email
+    payload
   );
 }
 

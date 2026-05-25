@@ -1992,28 +1992,6 @@ TEAM QUICK ACTIONS
   gap: 12px;
 }
 
-.team-primary-btn,
-.team-secondary-btn {
-  height: 42px;
-  border-radius: 12px;
-  padding: 0 18px;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.team-primary-btn {
-  background: #111827;
-  color: white;
-}
-
-.team-secondary-btn {
-  background: #f1f5f9;
-}
-
 .team-members-filters {
   display: flex;
   align-items: center;
@@ -2194,10 +2172,9 @@ TEAM QUICK ACTIONS
   justify-content: center;
   gap: 8px;
 }
-
-
-
-
+/* =========================================================
+  MODAL
+========================================================= */
 
 
 

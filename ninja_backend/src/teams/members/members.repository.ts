@@ -43,6 +43,13 @@ export class MembersRepository {
     if (filter === "pending") {
       where.push(`u.is_active = false`);
     }
+    if (filter === "managers") {
+      where.push(`LOWER(u.role) = 'manager'`);
+    }
+
+    if (filter === "agents") {
+      where.push(`LOWER(u.role) = 'agent'`);
+    }
     if (filter === "high-performers") {
       where.push(`
         (
@@ -207,7 +214,7 @@ export class MembersRepository {
     );
     const total = Number(countResult.rows[0].total);
 
-    const totalPages = Math.ceil(total / limit);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
     return {
       data: result.rows,
 

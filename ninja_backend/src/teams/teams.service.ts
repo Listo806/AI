@@ -314,9 +314,13 @@ export class TeamsService {
       // Atomically add user to team and activate
       await client.query(
         `UPDATE users 
-         SET team_id = $1, is_active = true, updated_at = NOW()
-         WHERE id = $2`,
-        [teamId, userId],
+          SET 
+            team_id = $1,
+            role = $2,
+            is_active = true,
+            updated_at = NOW()
+          WHERE id = $3`,
+        [teamId, role || "agent", userId],
       );
 
       //* Increment team token version to invalidate existing tokens

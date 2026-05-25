@@ -17,7 +17,7 @@ import {
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
 import useTeamMembers from "./hooks/useTeamMembers";
-
+import InviteMemberModal from "./components/InviteMemberModal";
 export default function TeamMembersPage() {
   /* =====================================================
     DASHBOARD
@@ -40,6 +40,12 @@ export default function TeamMembersPage() {
     setFilter,
 
     removeMember,
+
+    inviteMember,
+    inviting,
+
+    inviteEmail,
+    setInviteEmail,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -62,29 +68,53 @@ export default function TeamMembersPage() {
 
     setSelectedMember(null);
   };
-  const handleExport = () => {
-    const csvRows = members.map((m) => ({
-      Name: m.name || "",
-      Email: m.email || "",
-      Role: m.role || "",
-    }));
 
-    console.log(csvRows);
+  const handleInvite = async ({ email, role }) => {
+    const success = await inviteMember({
+      email,
+      role,
+    });
+
+    if (success !== false) {
+      setShowInviteModal(false);
+    }
   };
-  /* =====================================================
-    LOADING
-  ===================================================== */
 
-  if (loading) {
-    return <div className="team-page-loading">Loading members...</div>;
-  }
+  const handleExport = () => {
+    const headers = ["Name", "Email", "Role"];
+
+    const rows = members.map((m) => [
+      m.name || "",
+      m.email || "",
+      m.role || "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((r) => r.join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+
+    link.download = "team-members.csv";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
 
   /* =====================================================
     RENDER
   ===================================================== */
 
   return (
-    <div className="team-members-page">
+    <div className="team-members-page team-workspace">
       {/* =================================================
         PAGE HEADER
       ================================================= */}
@@ -188,72 +218,81 @@ export default function TeamMembersPage() {
             </thead>
 
             <tbody>
-              {members?.map((member) => (
-                <tr
-                  key={member._id || member.id}
-                  onClick={() => setSelectedMember(member)}
-                >
-                  {/* MEMBER */}
-                  <td>
-                    <div className="team-table-user">
-                      <img
-                        src={member.avatar || "https://i.pravatar.cc/150"}
-                        alt=""
-                      />
-
-                      <div>
-                        <strong>{member.name}</strong>
-
-                        <span>{member.email}</span>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* ROLE */}
-                  <td>{member.role}</td>
-
-                  {/* STATUS */}
-                  <td>
-                    <span
-                      className={`team-status-badge ${
-                        member.isActive ? "active" : "inactive"
-                      }`}
-                    >
-                      {member.isActive ? "Active" : "Pending"}
-                    </span>
-                  </td>
-
-                  {/* PERMISSIONS */}
-                  <td>CRM Access</td>
-
-                  {/* LEADS */}
-                  <td>{member.totalLeads || 0}</td>
-
-                  {/* PERFORMANCE */}
-                  <td>
-                    <strong>{member.aiScore || 0}%</strong>
-                  </td>
-
-                  {/* LAST ACTIVE */}
-                  <td>Recently</td>
-
-                  {/* SEAT */}
-                  <td>1 Seat</td>
-
-                  {/* ACTIONS */}
-                  <td>
-                    <button
-                      type="button"
-                      className="team-icon-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                      }}
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </td>
+              {loading ? (
+                <tr>
+                  <td colSpan="9">Loading...</td>
                 </tr>
-              ))}
+              ) : (
+                members?.map((member) => (
+                  <tr
+                    key={member._id || member.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedMember(member);
+                    }}
+                  >
+                    {/* MEMBER */}
+                    <td>
+                      <div className="team-table-user">
+                        <img
+                          src={member.avatar || "https://i.pravatar.cc/150"}
+                          alt=""
+                        />
+
+                        <div>
+                          <strong>{member.name}</strong>
+
+                          <span>{member.email}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* ROLE */}
+                    <td>{member.role}</td>
+
+                    {/* STATUS */}
+                    <td>
+                      <span
+                        className={`team-status-badge ${
+                          member.isActive ? "active" : "inactive"
+                        }`}
+                      >
+                        {member.isActive ? "Active" : "Pending"}
+                      </span>
+                    </td>
+
+                    {/* PERMISSIONS */}
+                    <td>CRM Access</td>
+
+                    {/* LEADS */}
+                    <td>{member.totalLeads || 0}</td>
+
+                    {/* PERFORMANCE */}
+                    <td>
+                      <strong>{member.aiScore || 0}%</strong>
+                    </td>
+
+                    {/* LAST ACTIVE */}
+                    <td>Recently</td>
+
+                    {/* SEAT */}
+                    <td>1 Seat</td>
+
+                    {/* ACTIONS */}
+                    <td>
+                      <button
+                        type="button"
+                        className="team-icon-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                      >
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -365,6 +404,14 @@ export default function TeamMembersPage() {
           </div>
         </div>
       )}
+      <InviteMemberModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        inviteEmail={inviteEmail}
+        setInviteEmail={setInviteEmail}
+        onInvite={handleInvite}
+        inviting={inviting}
+      />
     </div>
   );
 }

@@ -112,10 +112,11 @@ export default function TeamWorkspace() {
     INVITE MEMBER
   ===================================================== */
 
-  const handleInvite = async (e) => {
-    e?.preventDefault?.();
-    console.log(selectedTeamId);
-    const success = await inviteMember();
+  const handleInvite = async ({ email, role }) => {
+    const success = await inviteMember({
+      email,
+      role,
+    });
 
     if (success !== false) {
       setInviteModalOpen(false);
