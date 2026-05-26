@@ -355,10 +355,7 @@ export async function getTeamMembers(
       }`
     );
 
-  console.log(
-    'getTeamMembers RAW',
-    res
-  );
+  console.log('TEAM MEMBERS API RAW', res);
 
   /*
     backend return:

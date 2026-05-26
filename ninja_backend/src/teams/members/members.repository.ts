@@ -43,11 +43,11 @@ export class MembersRepository {
     if (filter === "pending") {
       where.push(`tm.status = 'pending'`);
     }
-    if (filter === "managers") {
+    if (filter === "manager") {
       where.push(`LOWER(tm.role) = 'manager'`);
     }
 
-    if (filter === "agents") {
+    if (filter === "agent") {
       where.push(`LOWER(tm.role) = 'agent'`);
     }
     if (filter === "viewer") {

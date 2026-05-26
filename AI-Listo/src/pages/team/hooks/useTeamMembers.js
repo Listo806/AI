@@ -2,6 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from 'react';
 
 import {
@@ -86,34 +87,30 @@ export default function useTeamMembers({
     LOAD MEMBERS
   ===================================================== */
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
+      try {
 
-    try {
+        if (!teamId) {
+          setAllMembers([]);
+          return;
+        }
 
-      if (!teamId) {
+        setLoading(true);
 
-        setAllMembers([]);
-
-        return;
-      }
-
-      setLoading(true);
+        console.log("CURRENT FILTER", filter);
 
         const response =
           await fetchTeamMembers(
-              teamId,
-              {
-                page,
-                limit,
-                search: debouncedSearch,
-                filter,
-              }
-            );
+            teamId,
+            {
+              page,
+              limit,
+              search: debouncedSearch,
+              filter,
+            }
+          );
 
-        console.log(
-          'MEMBERS RESPONSE',
-          response
-        );
+        console.log('HOOK RESPONSE', response);
 
         const membersData = Array.isArray(response)
           ? response
@@ -125,34 +122,37 @@ export default function useTeamMembers({
 
         setPagination({
           total:
-            response?.pagination
-              ?.total || membersData.length,
+            response?.pagination?.total ||
+            membersData.length,
 
           totalPages:
-            response?.pagination
-              ?.totalPages || 1,
+            response?.pagination?.totalPages || 1,
 
           hasNextPage:
-            response?.pagination
-              ?.hasNextPage || false,
+            response?.pagination?.hasNextPage || false,
 
           hasPrevPage:
-            response?.pagination
-              ?.hasPrevPage || false,
+            response?.pagination?.hasPrevPage || false,
         });
 
-    } catch (error) {
+      } catch (error) {
 
-      console.error(
-        'LOAD MEMBERS ERROR',
-        error
-      );
+        console.error(
+          'LOAD MEMBERS ERROR',
+          error
+        );
 
-    } finally {
+      } finally {
 
-      setLoading(false);
-    }
-  };
+        setLoading(false);
+      }
+    }, [
+      teamId,
+      page,
+      limit,
+      debouncedSearch,
+      filter,
+    ]);
 
   /* =====================================================
     INVITE MEMBER
@@ -312,6 +312,7 @@ export default function useTeamMembers({
       limit,
       debouncedSearch,
       filter,
+      
     ]);
     
     useEffect(() => {
@@ -322,7 +323,7 @@ export default function useTeamMembers({
       debouncedSearch,
       filter,
     ]);
-
+    
   /* =====================================================
     RETURN
   ===================================================== */
