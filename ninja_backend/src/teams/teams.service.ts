@@ -820,9 +820,26 @@ export class TeamsService {
           message = `${item.userName} removed a team member`;
           break;
 
+        case "user.logged_in":
+          message = `${item.userName} logged in`;
+          break;
+
+        case "property.created":
+          message = `${item.userName} created a new property`;
+          break;
+
+        case "lead.updated":
+          message = `${item.userName} updated a lead`;
+          break;
+
+        case "lead.status_changed":
+          message = `${item.userName} changed the lead status`;
+          break;
+
         default:
           message = `${item.userName} ${String(item.eventType || "")
             .replaceAll("_", " ")
+            .replaceAll(".", " ")
             .toLowerCase()}`;
       }
 
