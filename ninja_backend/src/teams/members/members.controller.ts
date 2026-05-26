@@ -28,7 +28,7 @@ export class MembersController {
 
     @Query()
     query: GetTeamMembersDto,
-  ) {
+  ) { console.log('controller check:');console.log(query);
     return this.membersService.getMembers(teamId, query);
   }
 
