@@ -51,7 +51,14 @@ export class MembersService {
       throw new NotFoundException("User not found");
     }
 
-    await this.teamsService.addMember(teamId, user.id, userId, dto.role);
+    console.log("FOUND USER", user);
+
+    await this.teamsService.addMember(
+      teamId,
+      user.id,
+      userId,
+      dto.role,
+    );
 
     return {
       success: true,
