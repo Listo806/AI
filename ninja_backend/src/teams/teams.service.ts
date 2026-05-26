@@ -32,7 +32,20 @@ export class TeamsService {
     const team = rows[0];
 
     // Set creating owner as a member of the new team (owner is always in the team they create)
-    await this.usersService.update(ownerId, { teamId: team.id } as any);
+    await this.db.query(
+      `
+      INSERT INTO team_members (
+        team_id,
+        user_id,
+        role,
+        status,
+        created_at,
+        updated_at
+      )
+      VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+      `,
+      [team.id, ownerId],
+    );
 
     return team;
   }
@@ -54,7 +67,14 @@ export class TeamsService {
     }
     const isOwner = team.ownerId === userId;
     const { rows: memberCheck } = await this.db.query(
-      "SELECT id FROM users WHERE id = $1 AND team_id = $2",
+      `
+      SELECT id
+      FROM team_members
+      WHERE user_id = $1
+      AND team_id = $2
+      AND status = 'active'
+      LIMIT 1
+      `,
       [userId, teamId],
     );
     const isMember = memberCheck.length > 0;
@@ -69,13 +89,30 @@ export class TeamsService {
   /** Teams the user owns (owner_id = userId) OR the single team they are a member of (team_id). One owner can have multiple teams. */
   async findByUserId(userId: string): Promise<Team[]> {
     const { rows } = await this.db.query(
-      `SELECT t.id, t.name, t.owner_id as "ownerId", t.seat_limit as "seatLimit", t.created_at as "createdAt", t.updated_at as "updatedAt"
-       FROM teams t
-       WHERE t.owner_id = $1
-          OR t.id = (SELECT team_id FROM users WHERE id = $1 AND team_id IS NOT NULL LIMIT 1)
-       ORDER BY t.created_at DESC`,
+      `
+      SELECT DISTINCT
+        t.id,
+        t.name,
+        t.owner_id as "ownerId",
+        t.seat_limit as "seatLimit",
+        t.created_at as "createdAt",
+        t.updated_at as "updatedAt"
+
+      FROM teams t
+
+      LEFT JOIN team_members tm
+        ON tm.team_id = t.id
+        AND tm.status = 'active'
+
+      WHERE
+        t.owner_id = $1
+        OR tm.user_id = $1
+
+      ORDER BY t.created_at DESC
+      `,
       [userId],
     );
+
     return rows;
   }
 
@@ -136,18 +173,19 @@ export class TeamsService {
 
   /** Used seats: users with team_id = teamId, plus the owner if their team_id is not this team (owner always counts in every team they own). */
   async getSeatCount(teamId: string): Promise<number> {
-    const team = await this.findById(teamId);
-    if (!team) return 0;
     const { rows } = await this.db.query(
-      `SELECT COUNT(*) as count FROM users WHERE team_id = $1 AND is_active = true`,
+      `
+      SELECT COUNT(*) as count
+      FROM team_members tm
+      INNER JOIN users u
+        ON u.id = tm.user_id
+      WHERE tm.team_id = $1
+      AND tm.status = 'active'
+      `,
       [teamId],
     );
-    let count = parseInt(rows[0].count, 10);
-    const owner = await this.usersService.findById(team.ownerId);
-    if (owner && owner.teamId !== teamId) {
-      count += 1; // owner has "owner membership" in this team
-    }
-    return count;
+
+    return Number(rows[0].count || 0);
   }
 
   async getAvailableSeats(teamId: string): Promise<number> {
@@ -182,13 +220,21 @@ export class TeamsService {
       }
 
       const seatLimit = teamRows[0].seat_limit;
-      const limit = seatLimit - 1; // -1 for owner
+      const limit = seatLimit;
 
       // Get active members (excluding owner) ordered by creation date
       const { rows } = await client.query(
-        `SELECT id FROM users
-         WHERE team_id = $1 AND is_active = true AND role != 'owner'
-         ORDER BY created_at ASC`,
+        `
+        SELECT
+          tm.user_id as id
+        FROM team_members tm
+        INNER JOIN users u
+          ON u.id = tm.user_id
+        WHERE tm.team_id = $1
+        AND tm.status = 'active'
+        AND tm.role != 'owner'
+        ORDER BY tm.created_at ASC
+        `,
         [teamId],
       );
 
@@ -201,9 +247,12 @@ export class TeamsService {
         if (ids.length > 0) {
           // Deactivate excess members
           await client.query(
-            `UPDATE users SET is_active = false, updated_at = NOW() 
-             WHERE id = ANY($1::uuid[])`,
-            [ids],
+            `UPDATE team_members
+            SET status = 'removed',
+                updated_at = NOW()
+            WHERE team_id = $1
+            AND user_id = ANY($2::uuid[])`,
+            [teamId, ids],
           );
           for (const member of toDeactivate) {
             await this.notificationsService.create({
@@ -264,7 +313,7 @@ export class TeamsService {
       );
 
       if (teamRows.length === 0) {
-        await client.query("ROLLBACK");
+        //await client.query("ROLLBACK");
         throw new NotFoundException("Team not found");
       }
 
@@ -272,20 +321,25 @@ export class TeamsService {
 
       // Only owner can add members
       if (team.owner_id !== requestingUserId) {
-        await client.query("ROLLBACK");
+        //await client.query("ROLLBACK");
         throw new ForbiddenException("Only team owner can add members");
       }
 
       // Get current active seat count (excluding owner)
       const { rows: seatCountRows } = await client.query(
-        `SELECT COUNT(*) as count
-         FROM users
-         WHERE team_id = $1 AND is_active = true AND role != 'owner'`,
+        `
+        SELECT COUNT(*) as count
+        FROM team_members tm
+        INNER JOIN users u
+          ON u.id = tm.user_id
+        WHERE tm.team_id = $1
+        AND tm.status = 'active'
+        `,
         [teamId],
       );
 
       const currentSeats = parseInt(seatCountRows[0].count, 10);
-      const availableSeats = team.seat_limit - 1 - currentSeats; // -1 for owner
+      const availableSeats = team.seat_limit - currentSeats;
       if (availableSeats === 1) {
         await this.notificationsService.create({
           teamId,
@@ -303,25 +357,34 @@ export class TeamsService {
 
           metadata: {
             seatLimit: team.seat_limit,
-            usedSeats: currentSeats + 1,
+            usedSeats: currentSeats,
           },
         });
       }
       if (availableSeats <= 0) {
-        await client.query("ROLLBACK");
+        //await client.query("ROLLBACK");
         throw new BadRequestException("No available seats in this team");
       }
 
       // Atomically add user to team and activate
       await client.query(
-        `UPDATE users 
-          SET 
-            team_id = $1,
-            role = $2,
-            is_active = true,
-            updated_at = NOW()
-          WHERE id = $3`,
-        [teamId, role || "agent", userId],
+        `
+        INSERT INTO team_members (
+          team_id,
+          user_id,
+          role,
+          status,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, 'active', NOW(), NOW())
+        ON CONFLICT (team_id, user_id)
+        DO UPDATE SET
+          role = EXCLUDED.role,
+          status = 'active',
+          updated_at = NOW()
+        `,
+        [teamId, userId, role || "agent"],
       );
 
       await client.query("COMMIT");
@@ -385,8 +448,17 @@ export class TeamsService {
 
     const removedUser = await this.usersService.findById(userId);
 
-    // Remove user from team
-    await this.usersService.update(userId, { teamId: null } as any);
+    await this.db.query(
+      `
+      UPDATE team_members
+      SET
+        status = 'removed',
+        updated_at = NOW()
+      WHERE team_id = $1
+      AND user_id = $2
+      `,
+      [teamId, userId],
+    );
 
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
@@ -421,61 +493,77 @@ export class TeamsService {
   async getMembers(teamId: string, limit = 20) {
     const result = await this.db.query(
       `
-    SELECT
-      u.id,
-      u.name,
-      u.email,
-      u.phone,
-      u.role,
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
 
-      u.avatar_url as avatar,
+        tm.role,
 
-      u.job_title as "jobTitle",
+        u.avatar_url as avatar,
 
-      u.is_active as "isActive",
+        u.job_title as "jobTitle",
 
-      u.last_seen_at as "lastSeenAt",
+        u.is_active as "isActive",
 
-      u.created_at as "createdAt",
+        u.last_seen_at as "lastSeenAt",
 
-      COUNT(DISTINCT l.id) as "totalLeads",
+        u.created_at as "createdAt",
 
-      COALESCE(
-        SUM(
-          CASE
-            WHEN d.stage != 'won'
-            THEN d.value
-            ELSE 0
+        COUNT(DISTINCT l.id) as "totalLeads",
+
+        COALESCE(
+          SUM(
+            CASE
+              WHEN d.stage != 'won'
+              THEN d.value
+              ELSE 0
+            END
+          ),
+          0
+        ) as "pipelineValue",
+
+        COUNT(
+          DISTINCT CASE
+            WHEN d.stage = 'won'
+            THEN d.id
           END
-        ),
-        0
-      ) as "pipelineValue",
+        ) as "dealsWon",
 
-      COUNT(
-        DISTINCT CASE
-          WHEN d.stage = 'won'
-          THEN d.id
-        END
-      ) as "dealsWon",
+        FLOOR(RANDOM() * 30 + 70) as "aiScore"
 
-      FLOOR(RANDOM() * 30 + 70) as "aiScore"
+      FROM team_members tm
 
-    FROM users u
+      INNER JOIN users u
+        ON u.id = tm.user_id
 
-    LEFT JOIN leads l
-      ON l.assigned_to = u.id
-      AND l.team_id = $1
+      LEFT JOIN leads l
+        ON l.assigned_to = u.id
+        AND l.team_id = $1
 
-    LEFT JOIN deals d
-      ON d.assigned_to = u.id
-      AND d.team_id = $1
+      LEFT JOIN deals d
+        ON d.assigned_to = u.id
+        AND d.team_id = $1
 
-    WHERE u.team_id = $1
+      WHERE tm.team_id = $1
+      AND tm.status = 'active'
 
-    GROUP BY u.id
+      GROUP BY
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
+        u.avatar_url,
+        u.job_title,
+        u.last_seen_at,
+        u.created_at,
+        tm.role
 
-    ORDER BY u.created_at DESC LIMIT $2
-    `,
+      ORDER BY u.created_at DESC
+
+      LIMIT $2
+      `,
       [teamId, limit],
     );
 
@@ -505,11 +593,11 @@ export class TeamsService {
     if (team.ownerId !== userId) {
       throw new ForbiddenException("You can only delete your own teams");
     }
-    /*await this.db.query(
-      `UPDATE users SET team_id = NULL, token_version = COALESCE(token_version, 0) + 1, updated_at = NOW() WHERE team_id = $1`,
-      [teamId],
-    );*/
-    await this.db.query("DELETE FROM teams WHERE id = $1", [teamId]);
+    await this.db.query(`DELETE FROM team_members WHERE team_id = $1`, [
+      teamId,
+    ]);
+
+    await this.db.query(`DELETE FROM teams WHERE id = $1`, [teamId]);
     return { deleted: true };
   }
   async getDashboard(teamId: string, userId: string) {
@@ -573,52 +661,59 @@ export class TeamsService {
       `
     WITH current_month AS (
       SELECT
-        COUNT(DISTINCT u.id) as total_members,
+        (
+          SELECT COUNT(DISTINCT tm.user_id)
+          FROM team_members tm
+          INNER JOIN users u
+            ON u.id = tm.user_id
+          WHERE tm.team_id = $1
+          AND tm.status = 'active'
+        ) as total_members,
 
-        COUNT(DISTINCT CASE
-          WHEN u.is_active = true THEN u.id
-        END) as active_members,
+        (
+          SELECT COUNT(DISTINCT tm.user_id)
+          FROM team_members tm
+          INNER JOIN users u
+            ON u.id = tm.user_id
+          WHERE tm.team_id = $1
+          AND tm.status = 'active'
+        ) as active_members,
 
-        COUNT(DISTINCT l.id) as total_leads,
+        (
+          SELECT COUNT(*)
+          FROM leads
+          WHERE team_id = $1
+        ) as total_leads,
 
-        COALESCE(SUM(
-          CASE
-            WHEN d.stage != 'won' THEN d.value
-            ELSE 0
-          END
-        ), 0) as total_pipeline,
+        (
+          SELECT COALESCE(SUM(value), 0)
+          FROM deals
+          WHERE team_id = $1
+          AND stage != 'won'
+        ) as total_pipeline,
 
-        COUNT(DISTINCT CASE
-          WHEN d.stage = 'won' THEN d.id
-        END) as deals_won,
+        (
+          SELECT COUNT(*)
+          FROM deals
+          WHERE team_id = $1
+          AND stage = 'won'
+        ) as deals_won,
 
-        COALESCE(SUM(
-          CASE
-            WHEN d.stage = 'won' THEN d.value
-            ELSE 0
-          END
-        ), 0) as revenue
-
-      FROM teams t
-
-      LEFT JOIN users u
-        ON u.team_id = t.id
-
-      LEFT JOIN leads l
-        ON l.team_id = t.id
-
-      LEFT JOIN deals d
-        ON d.team_id = t.id
-
-      WHERE t.id = $1
+        (
+          SELECT COALESCE(SUM(value), 0)
+          FROM deals
+          WHERE team_id = $1
+          AND stage = 'won'
+        ) as revenue
     ),
 
     previous_month AS (
       SELECT
         COUNT(*) as previous_members
-      FROM users
-      WHERE team_id = $1
-      AND created_at < NOW() - INTERVAL '30 days'
+      FROM team_members tm
+      WHERE tm.team_id = $1
+      AND tm.status = 'active'
+      AND tm.created_at < NOW() - INTERVAL '30 days'
     )
 
     SELECT
@@ -672,29 +767,6 @@ export class TeamsService {
   }
   async getDashboardMembers(teamId: string) {
     return this.getMembers(teamId, 5);
-  }
-  async getDashboardMembersOld(teamId: string) {
-    const result = await this.db.query(
-      `
-      SELECT
-        id,
-        name,
-        email,
-        phone,
-        role,
-        avatar_url,
-        job_title,
-        is_active,
-        last_seen_at,
-        created_at
-      FROM users
-      WHERE team_id = $1
-      ORDER BY created_at DESC
-      `,
-      [teamId],
-    );
-
-    return result.rows;
   }
 
   async getActivities(teamId: string, limit = 20) {
@@ -806,9 +878,10 @@ export class TeamsService {
     const membersResult = await this.db.query(
       `
     SELECT COUNT(*) as total
-    FROM users
+    FROM team_members
     WHERE team_id = $1
-    `,
+    AND status = 'active'
+        `,
       [teamId],
     );
 
@@ -887,34 +960,35 @@ export class TeamsService {
       u.id,
       u.name,
 
-      COUNT(DISTINCT l.id) as "totalLeads",
+      (
+        SELECT COUNT(*)
+        FROM leads l
+        WHERE l.assigned_to = u.id
+        AND l.team_id = $1
+      ) as "totalLeads",
 
-      COALESCE(
-        SUM(
-          CASE
-            WHEN d.stage != 'won'
-            THEN d.value
-            ELSE 0
-          END
-        ),
-        0
+      (
+        SELECT COALESCE(SUM(d.value), 0)
+        FROM deals d
+        WHERE d.assigned_to = u.id
+        AND d.team_id = $1
+        AND d.stage != 'won'
       ) as "pipelineValue",
 
       FLOOR(RANDOM() * 20 + 80) as "aiScore"
 
-    FROM users u
+    FROM team_members tm
 
-    LEFT JOIN leads l
-      ON l.assigned_to = u.id
+    INNER JOIN users u
+      ON u.id = tm.user_id
 
-    LEFT JOIN deals d
-      ON d.assigned_to = u.id
+    WHERE tm.team_id = $1
+    AND tm.status = 'active'
 
-    WHERE u.team_id = $1
+    GROUP BY u.id, u.name
 
-    GROUP BY u.id
-
-    ORDER BY "pipelineValue" DESC LIMIT 4
+    ORDER BY "pipelineValue" DESC
+    LIMIT 4
     `,
       [teamId],
     );
@@ -975,7 +1049,7 @@ export class TeamsService {
   }) {
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = [`u.team_id = $1`];
+    const conditions: string[] = [`tm.team_id = $1`, `tm.status = 'active'`];
 
     const values: any[] = [teamId];
 
@@ -994,11 +1068,11 @@ export class TeamsService {
     }
 
     if (filter === "active") {
-      conditions.push(`u.is_active = true`);
+      conditions.push(`tm.status = 'active'`);
     }
 
     if (filter === "inactive") {
-      conditions.push(`u.is_active = false`);
+      conditions.push(`tm.status != 'active'`);
     }
 
     const whereClause = conditions.join(" AND ");
@@ -1006,7 +1080,9 @@ export class TeamsService {
     const totalResult = await this.db.query(
       `
     SELECT COUNT(*) as total
-    FROM users u
+    FROM team_members tm
+    INNER JOIN users u
+      ON u.id = tm.user_id
     WHERE ${whereClause}
     `,
       values,
@@ -1024,7 +1100,7 @@ export class TeamsService {
       u.name,
       u.email,
       u.phone,
-      u.role,
+      tm.role,
 
       u.avatar_url as avatar,
 
@@ -1058,7 +1134,10 @@ export class TeamsService {
 
       FLOOR(RANDOM() * 30 + 70) as "aiScore"
 
-    FROM users u
+    FROM team_members tm
+
+    INNER JOIN users u
+      ON u.id = tm.user_id
 
     LEFT JOIN leads l
       ON l.assigned_to = u.id
@@ -1070,7 +1149,17 @@ export class TeamsService {
 
     WHERE ${whereClause}
 
-    GROUP BY u.id
+    GROUP BY
+      u.id,
+      u.name,
+      u.email,
+      u.phone,
+      u.avatar_url,
+      u.job_title,
+      u.is_active,
+      u.last_seen_at,
+      u.created_at,
+      tm.role
 
     ORDER BY u.created_at DESC
 
