@@ -67,7 +67,7 @@ export default function TeamMembersPage() {
   const handleRemoveMember = async () => {
     if (!selectedMember) return;
 
-    await removeMember(selectedMember.id);
+    await removeMember(selectedMember.memberId);
 
     setSelectedMember(null);
   };
@@ -175,6 +175,7 @@ export default function TeamMembersPage() {
           <option value="managers">Managers</option>
 
           <option value="agents">Agents</option>
+          <option value="viewer">Viewer</option>
 
           <option value="high-performers">High Performers</option>
         </select>

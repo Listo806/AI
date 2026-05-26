@@ -10,7 +10,7 @@ export class MembersRepository {
 
     const offset = (page - 1) * limit;
 
-    const where: string[] = [`tm.team_id = $1`, `tm.status = 'active'`];
+    const where: string[] = [`tm.team_id = $1`];
 
     const values: any[] = [teamId];
 
@@ -37,11 +37,11 @@ export class MembersRepository {
     /* FILTER */
 
     if (filter === "active") {
-      where.push(`u.is_active = true`);
+      where.push(`tm.status = 'active'`);
     }
 
     if (filter === "pending") {
-      where.push(`u.is_active = false`);
+      where.push(`tm.status = 'pending'`);
     }
     if (filter === "managers") {
       where.push(`LOWER(tm.role) = 'manager'`);
@@ -49,6 +49,9 @@ export class MembersRepository {
 
     if (filter === "agents") {
       where.push(`LOWER(tm.role) = 'agent'`);
+    }
+    if (filter === "viewer") {
+      where.push(`LOWER(tm.role) = 'viewer'`);
     }
     if (filter === "high-performers") {
       where.push(`
