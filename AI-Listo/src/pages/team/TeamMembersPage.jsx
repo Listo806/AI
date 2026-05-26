@@ -66,7 +66,7 @@ export default function TeamMembersPage() {
   const handleRemoveMember = async () => {
     if (!selectedMember) return;
 
-    await removeMember(selectedMember._id || selectedMember.id);
+    await removeMember(selectedMember._id || selectedMember.memberId);
 
     setSelectedMember(null);
   };

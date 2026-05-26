@@ -238,7 +238,7 @@ export default function useTeamMembers({
   ===================================================== */
 
   const handleRemoveMember =
-    async (userId) => {
+    async (memberId) => {
 
       if (!teamId) {
 
@@ -253,10 +253,10 @@ export default function useTeamMembers({
       try {
 
         setRemoving(true);
-        console.log('REMOVE', teamId, userId);
+        console.log('REMOVE', teamId, memberId);
         await removeMember(
           teamId,
-          userId
+          memberId
         );
 
         showToast(

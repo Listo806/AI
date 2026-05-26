@@ -93,6 +93,7 @@ export default function InviteMemberModal({
                 <option value="manager">Manager</option>
 
                 <option value="admin">Admin</option>
+                <option value="viewer">Viewer</option>
               </select>
             </div>
           </div>

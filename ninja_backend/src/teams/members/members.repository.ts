@@ -10,7 +10,7 @@ export class MembersRepository {
 
     const offset = (page - 1) * limit;
 
-    const where: string[] = [`u.team_id = $1`];
+    const where: string[] = [`tm.team_id = $1`, `tm.status = 'active'`];
 
     const values: any[] = [teamId];
 
@@ -44,11 +44,11 @@ export class MembersRepository {
       where.push(`u.is_active = false`);
     }
     if (filter === "managers") {
-      where.push(`LOWER(u.role) = 'manager'`);
+      where.push(`LOWER(tm.role) = 'manager'`);
     }
 
     if (filter === "agents") {
-      where.push(`LOWER(u.role) = 'agent'`);
+      where.push(`LOWER(tm.role) = 'agent'`);
     }
     if (filter === "high-performers") {
       where.push(`
@@ -84,7 +84,7 @@ export class MembersRepository {
     /* ROLE */
 
     if (role) {
-      where.push(`u.role = $${index}`);
+      where.push(`tm.role = $${index}`);
 
       values.push(role);
 
@@ -131,10 +131,10 @@ export class MembersRepository {
         u.id,
         u.name,
         u.email,
-
+        tm.id as "memberId",
         u.avatar_url as avatar,
 
-        u.role,
+        tm.role,
 
         u.is_active as "isActive",
 
@@ -175,7 +175,10 @@ export class MembersRepository {
           )
         )::int as "aiScore"
 
-      FROM users u
+      FROM team_members tm
+
+      INNER JOIN users u
+        ON u.id = tm.user_id
 
       LEFT JOIN leads l
         ON l.assigned_to = u.id
@@ -187,10 +190,11 @@ export class MembersRepository {
 
       GROUP BY
         u.id,
+        memberId,
         u.name,
         u.email,
         u.avatar_url,
-        u.role,
+        tm.role,
         u.is_active,
         u.last_seen_at
 
@@ -206,7 +210,10 @@ export class MembersRepository {
       `
       SELECT COUNT(DISTINCT u.id) as total
 
-      FROM users u
+      FROM team_members tm
+
+      INNER JOIN users u
+        ON u.id = tm.user_id
 
       WHERE ${where.join(" AND ")}
       `,
