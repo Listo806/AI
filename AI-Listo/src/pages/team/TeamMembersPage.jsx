@@ -13,6 +13,7 @@ import {
   Shield,
   Activity,
   Brain,
+  Users,
 } from "lucide-react";
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
@@ -121,34 +122,28 @@ export default function TeamMembersPage() {
         PAGE HEADER
       ================================================= */}
 
-      <div className="team-members-header">
-        <div>
-          <h1 className="team-page-title">Team Members</h1>
+      <div className="team-members-header heading_page">
+        <Users />
+        <h1 className="team-page-title">Team Members</h1>
+      </div>
+      <div className="team-members-header-actions">
+        <button
+          type="button"
+          className="team-secondary-btn"
+          onClick={handleExport}
+        >
+          <Download size={16} />
+          Export CSV
+        </button>
 
-          <p className="team-page-subtitle">
-            Manage members, permissions and seats
-          </p>
-        </div>
-
-        <div className="team-members-header-actions">
-          <button
-            type="button"
-            className="team-secondary-btn"
-            onClick={handleExport}
-          >
-            <Download size={16} />
-            Export CSV
-          </button>
-
-          <button
-            type="button"
-            className="team-primary-btn"
-            onClick={() => setShowInviteModal(true)}
-          >
-            <Plus size={16} />
-            Invite Member
-          </button>
-        </div>
+        <button
+          type="button"
+          className="team-primary-btn"
+          onClick={() => setShowInviteModal(true)}
+        >
+          <Plus size={16} />
+          Invite Member
+        </button>
       </div>
 
       {/* =================================================

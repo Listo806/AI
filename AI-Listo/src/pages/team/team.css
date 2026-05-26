@@ -1988,9 +1988,6 @@ TEAM QUICK ACTIONS
 .team-workspace{
     padding-bottom: 20px;
 }
-.team-members-page {
-  padding: 24px;
-}
 
 .team-members-header {
   display: flex;
@@ -2012,6 +2009,8 @@ TEAM QUICK ACTIONS
 .team-members-header-actions {
   display: flex;
   gap: 12px;
+  justify-content: right;
+  margin-bottom: 10px;
 }
 
 .team-members-filters {
