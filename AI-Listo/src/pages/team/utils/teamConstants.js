@@ -25,11 +25,11 @@ export const TEAM_FILTERS = [
     label: 'Pending',
   },
   {
-    key: 'managers',
+    key: 'manager',
     label: 'Managers',
   },
   {
-    key: 'agents',
+    key: 'agent',
     label: 'Agents',
   },
   {

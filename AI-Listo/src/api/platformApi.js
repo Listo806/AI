@@ -348,7 +348,7 @@ export async function getTeamMembers(
 
   const res =
     await apiClient.request(
-      `/teams/${teamId}/members${
+      `/teams/members/${teamId}${
         queryString
           ? `?${queryString}`
           : ''

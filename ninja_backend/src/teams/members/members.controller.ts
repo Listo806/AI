@@ -17,7 +17,7 @@ import { MembersService } from "./members.service";
 import { GetTeamMembersDto } from "./dto/get-team-members.dto";
 import { InviteTeamMemberDto } from "./dto/invite-team-member.dto";
 
-@Controller("teams/:teamId/members")
+@Controller("teams/members/:teamId")
 @UseGuards(JwtAuthGuard)
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
