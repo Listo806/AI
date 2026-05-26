@@ -190,7 +190,7 @@ export class MembersRepository {
 
       GROUP BY
         u.id,
-        memberId,
+        tm.id,
         u.name,
         u.email,
         u.avatar_url,
