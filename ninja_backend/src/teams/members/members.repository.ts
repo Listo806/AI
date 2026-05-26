@@ -140,24 +140,18 @@ export class MembersRepository {
 
         u.last_seen_at as "lastSeenAt",
 
-        COUNT(DISTINCT l.id)
-          as "totalLeads",
+        COALESCE(
+          lead_stats.total_leads,
+          0
+        ) as "totalLeads"
 
-        COUNT(
-          DISTINCT CASE
-            WHEN d.stage = 'won'
-            THEN d.id
-          END
+        COALESCE(
+          deal_stats.deals_won,
+          0
         ) as "dealsWon",
 
         COALESCE(
-          SUM(
-            CASE
-              WHEN d.stage != 'won'
-              THEN d.value
-              ELSE 0
-            END
-          ),
+          deal_stats.pipeline_value,
           0
         ) as "pipelineValue",
 
@@ -180,23 +174,51 @@ export class MembersRepository {
       INNER JOIN users u
         ON u.id = tm.user_id
 
-      LEFT JOIN leads l
-        ON l.assigned_to = u.id
+      LEFT JOIN (
+          SELECT
+            assigned_to,
+            COUNT(*) as total_leads
+          FROM leads
+          GROUP BY assigned_to
+        ) lead_stats
+          ON lead_stats.assigned_to = u.id
 
-      LEFT JOIN deals d
-        ON d.assigned_to = u.id
+        LEFT JOIN (
+          SELECT
+            assigned_to,
+
+            COUNT(
+              CASE
+                WHEN stage = 'won'
+                THEN 1
+              END
+            ) as deals_won,
+
+            COALESCE(
+              SUM(
+                CASE
+                  WHEN stage != 'won'
+                  THEN value
+                  ELSE 0
+                END
+              ),
+              0
+            ) as pipeline_value
+
+          FROM deals
+
+          GROUP BY assigned_to
+        ) deal_stats
+          ON deal_stats.assigned_to = u.id
 
       WHERE ${where.join(" AND ")}
 
       GROUP BY
         u.id,
         tm.id,
-        u.name,
-        u.email,
-        u.avatar_url,
-        tm.role,
-        u.is_active,
-        u.last_seen_at
+        lead_stats.total_leads,
+        deal_stats.deals_won,
+        deal_stats.pipeline_value
 
       ORDER BY ${orderBy} ${direction}
 

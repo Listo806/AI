@@ -334,6 +334,8 @@ export class TeamsService {
           ON u.id = tm.user_id
         WHERE tm.team_id = $1
         AND tm.status = 'active'
+        AND tm.role != 'owner'
+        AND u.is_active = true
         `,
         [teamId],
       );
@@ -420,7 +422,12 @@ export class TeamsService {
         },
       });
     } catch (error) {
-      await client.query("ROLLBACK");
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error("ROLLBACK ERROR", rollbackError);
+      }
+
       throw error;
     } finally {
       client.release();

@@ -66,7 +66,7 @@ export default function TeamMembersPage() {
   const handleRemoveMember = async () => {
     if (!selectedMember) return;
 
-    await removeMember(selectedMember._id || selectedMember.memberId);
+    await removeMember(selectedMember.id);
 
     setSelectedMember(null);
   };
@@ -259,7 +259,7 @@ export default function TeamMembersPage() {
                           member.isActive ? "active" : "inactive"
                         }`}
                       >
-                        {member.isActive ? "Active" : "Pending"}
+                        {member.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
 
