@@ -143,7 +143,7 @@ export class MembersRepository {
         COALESCE(
           lead_stats.total_leads,
           0
-        ) as "totalLeads"
+        ) as "totalLeads",
 
         COALESCE(
           deal_stats.deals_won,
@@ -158,13 +158,14 @@ export class MembersRepository {
         LEAST(
           100,
           (
-            COUNT(DISTINCT l.id) * 3
+            COALESCE(
+              lead_stats.total_leads,
+              0
+            ) * 3
             +
-            COUNT(
-              DISTINCT CASE
-                WHEN d.stage = 'won'
-                THEN d.id
-              END
+            COALESCE(
+              deal_stats.deals_won,
+              0
             ) * 10
           )
         )::int as "aiScore"
@@ -215,7 +216,13 @@ export class MembersRepository {
 
       GROUP BY
         u.id,
+        u.name,
+        u.email,
+        u.avatar_url,
+        u.is_active,
+        u.last_seen_at,
         tm.id,
+        tm.role,
         lead_stats.total_leads,
         deal_stats.deals_won,
         deal_stats.pipeline_value

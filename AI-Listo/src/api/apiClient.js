@@ -138,12 +138,7 @@ class ApiClient {
       } else if (response.status === 422) {
         errorMessage = 'Invalid input. Please check your information and try again.';
       } else if (response.status >= 500) {
-        const message =
-          data?.message ||
-          data?.error ||
-          "Server error. Please try again later.";
-
-        throw new Error(message);
+        Server error. Please try again later.
       }
 
       const error = new Error(errorMessage);
