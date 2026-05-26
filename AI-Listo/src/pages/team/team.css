@@ -533,9 +533,31 @@ TEAM MEMBERS MODERN
   flex-direction: column;
   gap: 16px;
   overflow-x: auto;
+
+}
+.team-workspace .team-members-modern {
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-.team-workspace .team-member-card {
+/* scrollbar */
+.team-workspace .team-members-modern::-webkit-scrollbar {
+    height: 6px;
+}
+
+.team-workspace .team-members-modern::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.team-workspace .team-members-modern::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 999px;
+}
+
+.team-workspace .team-members-modern::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+.team-workspace .team-member-card, .team-full-table tr {
   position: relative;
   display: flex;
   align-items: center;
@@ -551,7 +573,7 @@ TEAM MEMBERS MODERN
   border-bottom: 1px solid #f1f5f9;
 }
 
-.team-workspace .team-member-card:hover {
+.team-workspace .team-member-card:hover, .team-full-table tr:hover {
   transform: translateY(-2px);
   border-color: #dbeafe;
   box-shadow:
