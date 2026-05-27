@@ -48,17 +48,12 @@ export default function TeamAIInsightsPage() {
   return (
     <div className="team-ai-page">
       {/* HEADER */}
-
+      <div className="team-members-header heading_page">
+        <Sparkles />
+        <h1 className="team-page-title">AI Team Insights</h1>
+      </div>  
       <div className="team-ai-page-header">
-        <div>
-          <h1>AI Team Insights</h1>
-
-          <p>
-            AI-powered analysis for team productivity, collaboration,
-            performance, and risk detection.
-          </p>
-        </div>
-
+        
         <button className="team-ai-refresh-btn" onClick={loadInsights}>
           <RefreshCcw size={16} />
           Refresh Analysis
@@ -80,11 +75,12 @@ export default function TeamAIInsightsPage() {
             ))}
           </div>
         )}
-        <div>
-          <strong>AI Status:</strong> Team performance is improving this week.
+        <div className="block_performance">
+          <div>
+            <strong>AI Status:</strong> Team performance is improving this week.
+          </div>
+          <span className="team-ai-banner-badge">+12% Productivity</span>
         </div>
-
-        <span className="team-ai-banner-badge">+12% Productivity</span>
       </div>
       {insights?.pipelineRisks?.length > 0 && (
         <div className="team-ai-alerts">
