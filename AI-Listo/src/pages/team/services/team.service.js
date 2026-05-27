@@ -116,3 +116,13 @@ export async function fetchTeamMembers(
     params
   );
 }
+
+export async function fetchTeamMembersDashboard(
+  teamId,
+  params
+) {
+  return await getTeamMembersDashboard(
+    teamId,
+    params
+  );
+}

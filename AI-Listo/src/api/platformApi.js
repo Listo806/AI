@@ -367,3 +367,78 @@ export async function getTeamMembers(
 
   return res?.data || res;
 }
+
+export async function getTeamMembersDashboard(
+  teamId,
+  params = {}
+) {
+
+  const qs =
+    new URLSearchParams();
+
+  if (params.page) {
+    qs.append(
+      'page',
+      String(params.page)
+    );
+  }
+
+  if (params.limit) {
+    qs.append(
+      'limit',
+      String(params.limit)
+    );
+  }
+
+  if (params.search) {
+    qs.append(
+      'search',
+      params.search
+    );
+  }
+
+  if (params.filter) {
+    qs.append(
+      'filter',
+      params.filter
+    );
+  }
+
+  if (params.role) {
+    qs.append(
+      'role',
+      params.role
+    );
+  }
+
+  if (params.sort) {
+    qs.append(
+      'sort',
+      params.sort
+    );
+  }
+
+  const queryString =
+    qs.toString();
+
+  const res =
+    await apiClient.request(
+      `/teams/${teamId}/members${
+        queryString
+          ? `?${queryString}`
+          : ''
+      }`
+    );
+
+  console.log('member Dashboard:', res);
+
+  /*
+    backend return:
+    {
+      data: [],
+      pagination: {}
+    }
+  */
+
+  return res?.data || res;
+}

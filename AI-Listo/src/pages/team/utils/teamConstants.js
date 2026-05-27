@@ -33,13 +33,13 @@ export const TEAM_FILTERS = [
     label: 'Agents',
   },
   {
-    key: 'high-performers',
-    label: 'High Performers',
+    key: 'viewer',
+    label: 'Viewer',
   },
   {
-    key: 'needs-attention',
-    label: 'Needs Attention',
-  },
+    key: 'high-performers',
+    label: 'High Performers',
+  }
 ];
 
 /* =========================================================

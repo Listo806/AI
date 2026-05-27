@@ -7,6 +7,7 @@ import {
 
 import {
   fetchTeamMembers,
+  fetchTeamMembersDashboard,
   inviteMember,
   removeMember,
 } from '../services/team.service';
@@ -35,7 +36,9 @@ export default function useTeamMembers({
     useState('');
   const [filter, setFilter] =
     useState('all');
-
+  
+  const [filterDashboard, setFilterDashboard] =
+    useState('all');
   const [inviteEmail, setInviteEmail] =
     useState('');
 
@@ -153,7 +156,62 @@ export default function useTeamMembers({
       debouncedSearch,
       filter,
     ]);
+    
+    const loadMembersDashboard = useCallback(async () => {
+      try {
 
+        const response =
+          await fetchTeamMembersDashboard(
+            teamId,
+            {
+              page,
+              limit,
+              search: debouncedSearch,
+              filterDashboard,
+            }
+          );
+
+        const membersData = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+
+        setAllMembers(membersData);
+
+        setPagination({
+          total:
+            response?.pagination?.total ||
+            membersData.length,
+
+          totalPages:
+            response?.pagination?.totalPages || 1,
+
+          hasNextPage:
+            response?.pagination?.hasNextPage || false,
+
+          hasPrevPage:
+            response?.pagination?.hasPrevPage || false,
+        });
+
+      } catch (error) {
+
+        console.error(
+          'LOAD MEMBERS ERROR',
+          error
+        );
+
+      } finally {
+
+        setLoading(false);
+      }
+    }, [
+      teamId,
+      page,
+      limit,
+      debouncedSearch,
+      filterDashboard,
+    ]);
   /* =====================================================
     INVITE MEMBER
   ===================================================== */
@@ -324,6 +382,18 @@ export default function useTeamMembers({
       filter,
     ]);
     
+    useEffect(() => {
+      if (!teamId) return;
+
+      loadMembersDashboard();
+    }, [
+      teamId,
+      page,
+      limit,
+      debouncedSearch,
+      filterDashboard,
+      
+    ]);
   /* =====================================================
     RETURN
   ===================================================== */
@@ -345,7 +415,10 @@ export default function useTeamMembers({
 
     filter,
     setFilter,
-
+    
+    filterDashboard,
+    setFilterDashboard,
+    
     inviteEmail,
     setInviteEmail,
 

@@ -1095,8 +1095,49 @@ export class TeamsService {
       conditions.push(`tm.status = 'active'`);
     }
 
-    if (filter === "inactive") {
-      conditions.push(`tm.status != 'active'`);
+    if (filter === "pending") {
+      conditions.push(`tm.status = 'pending'`);
+    }
+    if (filter === "manager") {
+      conditions.push(`LOWER(tm.role) = 'manager'`);
+    }
+
+    if (filter === "agent") {
+      conditions.push(`LOWER(tm.role) = 'agent'`);
+    }
+    if (filter === "viewer") {
+      conditions.push(`LOWER(tm.role) = 'viewer'`);
+    }
+    if (filter === "high-performers") {
+      conditions.push(`
+        (
+          SELECT
+            LEAST(
+              100,
+              (
+                COUNT(DISTINCT l2.id) * 3
+              )
+            )
+          FROM leads l2
+          WHERE l2.assigned_to = u.id
+        ) >= 85
+      `);
+    }
+
+    if (filter === "needs-attention") {
+      conditions.push(`
+        (
+          SELECT
+            LEAST(
+              100,
+              (
+                COUNT(DISTINCT l2.id) * 3
+              )
+            )
+          FROM leads l2
+          WHERE l2.assigned_to = u.id
+        ) < 70
+      `);
     }
 
     const whereClause = conditions.join(" AND ");

@@ -74,7 +74,7 @@ export class TeamsController {
     @CurrentUser() user: any,
 
     @Query("page") page = "1",
-    @Query("limit") limit = "10",
+    @Query("limit") limit = "5",
     @Query("search") search = "",
     @Query("filter") filter = "all",
   ) {
