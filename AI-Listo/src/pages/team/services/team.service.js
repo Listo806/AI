@@ -12,6 +12,7 @@ import {
   getTeamDashboard,
   getTeamNotifications,
   getTeamMembersDashboard,
+  getTeamAIInsights,
 } from '../../../api/platformApi';
 
 /* ======================================================

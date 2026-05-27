@@ -446,7 +446,7 @@ export async function getTeamMembersDashboard(
   return res?.data || res;
 }
 
-export async function fetchTeamAIInsights(teamId) {
+export async function getTeamAIInsights(teamId) {
 
   const res = await apiClient.request(
     `/teams/${teamId}/ai-insights`

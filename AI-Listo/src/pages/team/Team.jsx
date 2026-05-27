@@ -156,7 +156,7 @@ export default function TeamWorkspace() {
     } catch (err) {
       console.error(err);
 
-      setAiError("Unable to load AI team insights right now.");
+      //setAiError("Unable to load AI team insights right now.");
 
       /* FALLBACK */
 

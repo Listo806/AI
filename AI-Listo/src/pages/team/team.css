@@ -2271,7 +2271,7 @@ TEAM QUICK ACTIONS
   border-radius: 20px;
 }
 
-.team-ai-score {
+.team-ai-modal .team-ai-score {
   width: 90px;
   height: 90px;
   border-radius: 999px;

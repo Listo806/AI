@@ -9,7 +9,7 @@ import { Team, CreateTeamDto, UpdateTeamDto } from "./entities/team.entity";
 import { UsersService } from "../users/users.service";
 import { EventLoggerService } from "../analytics/events/event-logger.service";
 import { NotificationsService } from "../notifications/notifications.service";
-
+import { TeamAIInsightsService } from "./insights/ai-insights.service";
 @Injectable()
 export class TeamsService {
   constructor(
@@ -17,6 +17,7 @@ export class TeamsService {
     private readonly usersService: UsersService,
     private readonly eventLogger: EventLoggerService,
     private readonly notificationsService: NotificationsService,
+    private readonly aiInsightsService: TeamAIInsightsService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto, ownerId: string): Promise<Team> {
@@ -1247,85 +1248,6 @@ export class TeamsService {
   }
 
   async getAIInsights(teamId: string) {
-    const members = await this.getMembers(teamId, 50);
-
-    const totalMembers = members.length;
-
-    const inactiveMembers = members.filter((m: any) => !m.isActive);
-
-    const highPerformers = members.filter((m: any) => m.aiScore >= 85);
-
-    const needsAttention = members.filter((m: any) => m.aiScore < 70);
-
-    const teamHealthScore = Math.min(
-      100,
-      60 + highPerformers.length * 5 - needsAttention.length * 3,
-    );
-
-    const risks: string[] = [];
-
-    const recommendations: string[] = [];
-
-    if (totalMembers <= 1) {
-      risks.push("Only 1 active member is currently handling all leads.");
-
-      recommendations.push("Invite at least 1 additional team member.");
-    }
-
-    if (inactiveMembers.length > 0) {
-      risks.push(`${inactiveMembers.length} inactive members detected.`);
-    }
-
-    recommendations.push("Review AI score weekly.");
-
-    recommendations.push("Set up automated reassignment for stale leads.");
-
-    return {
-      teamHealthScore,
-
-      collaborationScore: 78,
-
-      workloadBalance: 71,
-
-      leadOwnershipRisks: risks,
-
-      inactiveMembers: inactiveMembers.map((m: any) => ({
-        id: m.id,
-        name: m.name,
-      })),
-
-      highPerformers: highPerformers.map((m: any) => ({
-        id: m.id,
-        name: m.name,
-        aiScore: m.aiScore,
-      })),
-
-      membersNeedingAttention: needsAttention.map((m: any) => ({
-        id: m.id,
-        name: m.name,
-        aiScore: m.aiScore,
-      })),
-
-      summary:
-        totalMembers <= 1
-          ? "Small team detected. Add more members or assign backup ownership to avoid missed leads."
-          : "Team collaboration and workload distribution look healthy overall.",
-
-      risks,
-
-      recommendations,
-
-      nextActions: [
-        {
-          label: "Invite Member",
-          route: "/dashboard/team",
-        },
-
-        {
-          label: "View Analytics",
-          route: "/dashboard/analytics",
-        },
-      ],
-    };
+    return this.aiInsightsService.generate(teamId);
   }
 }

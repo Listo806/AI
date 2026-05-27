@@ -175,7 +175,7 @@ export default function useTeamMembers({
             teamId,
             {
               page,
-              dashboardLimit,
+              limit: dashboardLimit,
               search: debouncedSearch,
               filter: filterDashboard,
             }

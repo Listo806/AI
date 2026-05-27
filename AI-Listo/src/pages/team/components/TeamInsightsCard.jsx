@@ -4,25 +4,25 @@ import {
   Clock3,
   TrendingUp,
   BellRing,
-} from 'lucide-react';
+} from "lucide-react";
 
 const getInsightIcon = (type) => {
   switch (type) {
-    case 'warning':
+    case "warning":
       return (
         <div className="team-insight-icon warning">
           <AlertTriangle size={18} />
         </div>
       );
 
-    case 'danger':
+    case "danger":
       return (
         <div className="team-insight-icon danger">
           <Clock3 size={18} />
         </div>
       );
 
-    case 'success':
+    case "success":
       return (
         <div className="team-insight-icon success">
           <TrendingUp size={18} />
@@ -37,74 +37,49 @@ const getInsightIcon = (type) => {
       );
   }
 };
-
-export default function TeamInsightsCard({
-  insights = [],
-  onRunAIReview,
-}) {
+import { useNavigate } from "react-router-dom";
+export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
+  const navigate = useNavigate();
   return (
     <div className="team-card team-insights-card">
-
       <div className="team-card-header">
-
         <div>
-          <h3 className="team-card-title">
-            AI Team Insights
-          </h3>
+          <h3 className="team-card-title">AI Team Insights</h3>
 
-          <p className="team-card-subtitle">
-            Updated just now
-          </p>
+          <p className="team-card-subtitle">Updated just now</p>
         </div>
 
         <button
           className="team-ai-review-btn"
-          onClick={onRunAIReview}
+          onClick={() => navigate("/dashboard/team/ai-insights")}
         >
           <Sparkles size={16} />
 
           <span>Run AI Review</span>
         </button>
-
       </div>
 
       <div className="team-insights-list">
-
         {(insights || []).map((item, index) => (
-          <div
-            key={item.id || item._id || index}
-            className="team-insight-box"
-          >
-
+          <div key={item.id || item._id || index} className="team-insight-box">
             <div className="team-insight-left">
-
               {getInsightIcon(item.type)}
 
               <div>
-                <p className="team-insight-title">
-                  {item.title}
-                </p>
+                <p className="team-insight-title">{item.title}</p>
 
-                <p className="team-insight-description">
-                  {item.description}
-                </p>
+                <p className="team-insight-description">{item.description}</p>
               </div>
-
             </div>
-
           </div>
         ))}
-
       </div>
 
       <div className="team-insights-footer">
-
         <button className="team-insights-report-btn">
           View Full AI Report
         </button>
-
       </div>
-
     </div>
   );
 }
