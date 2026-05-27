@@ -2193,10 +2193,134 @@ TEAM QUICK ACTIONS
   justify-content: center;
   gap: 8px;
 }
-/* =========================================================
-  MODAL
-========================================================= */
+.team-ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
 
+.team-ai-modal {
+  width: 100%;
+  max-width: 760px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.18);
+}
+
+.team-ai-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.team-ai-header h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.team-ai-header p {
+  margin-top: 8px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.team-ai-close {
+  border: none;
+  background: #f1f5f9;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.team-ai-loading,
+.team-ai-error {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.team-ai-loading {
+  background: #f8fafc;
+}
+
+.team-ai-error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.team-ai-score-card {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.team-ai-score {
+  width: 90px;
+  height: 90px;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.team-ai-section {
+  margin-top: 28px;
+}
+
+.team-ai-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.team-ai-section ul {
+  padding-left: 18px;
+}
+
+.team-ai-section li {
+  margin-bottom: 10px;
+  color: #334155;
+}
+
+.team-ai-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+
+.team-ai-action-btn {
+  border: none;
+  background: #111827;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 
 

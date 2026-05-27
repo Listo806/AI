@@ -257,4 +257,11 @@ export class TeamsController {
       total,
     };
   }
+
+  @Get(":id/ai-insights")
+  async getAIInsights(@Param("id") teamId: string, @CurrentUser() user: any) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.getAIInsights(teamId);
+  }
 }

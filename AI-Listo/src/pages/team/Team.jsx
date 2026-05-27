@@ -21,7 +21,8 @@ import InviteMemberModal from "./components/InviteMemberModal";
 import DeleteMemberModal from "./components/DeleteMemberModal";
 import TeamNotificationsCard from "./components/TeamNotificationsCard";
 import TeamQuickActionsCard from "./components/TeamQuickActionsCard";
-
+import TeamAIInsightsModal from "./components/TeamAIInsightsModal";
+import { fetchTeamAIInsights } from "./services/team.service";
 /* =========================================================
   HOOKS
 ========================================================= */
@@ -71,7 +72,7 @@ export default function TeamWorkspace() {
 
     filter,
     setFilter,
-    
+
     filterDashboard,
     setFilterDashboard,
 
@@ -79,7 +80,7 @@ export default function TeamWorkspace() {
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
-    mode: 'dashboard',
+    mode: "dashboard",
   });
 
   /* =====================================================
@@ -91,7 +92,13 @@ export default function TeamWorkspace() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState(null);
+  const [showAIInsights, setShowAIInsights] = useState(false);
 
+  const [aiInsights, setAiInsights] = useState(null);
+
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const [aiError, setAiError] = useState(null);
   /* =====================================================
     DELETE MEMBER
   ===================================================== */
@@ -135,6 +142,40 @@ export default function TeamWorkspace() {
     return <div className="team-page-loading">Loading team workspace...</div>;
   }
 
+  const handleOpenAIInsights = async () => {
+    setShowAIInsights(true);
+
+    setAiLoading(true);
+
+    setAiError(null);
+
+    try {
+      const data = await fetchTeamAIInsights(selectedTeamId);
+
+      setAiInsights(data);
+    } catch (err) {
+      console.error(err);
+
+      setAiError("Unable to load AI team insights right now.");
+
+      /* FALLBACK */
+
+      setAiInsights({
+        teamHealthScore: 0,
+
+        summary:
+          "AI insights are being prepared. Connect team activity, leads, and pipeline data to unlock full recommendations.",
+
+        risks: [],
+
+        recommendations: [],
+
+        nextActions: [],
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
   /* =====================================================
     RENDER
   ===================================================== */
@@ -171,6 +212,7 @@ export default function TeamWorkspace() {
         setSelectedTeam={setSelectedTeamId}
         filter={filterDashboard}
         onFilter={setFilterDashboard}
+        onRunAI={handleOpenAIInsights}
       />
 
       <div className="team-main-grid">
@@ -241,6 +283,13 @@ export default function TeamWorkspace() {
           {toast.message}
         </div>
       )}
+      <TeamAIInsightsModal
+        open={showAIInsights}
+        onClose={() => setShowAIInsights(false)}
+        loading={aiLoading}
+        error={aiError}
+        insights={aiInsights}
+      />
     </div>
   );
 }

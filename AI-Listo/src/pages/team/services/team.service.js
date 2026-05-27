@@ -127,3 +127,7 @@ export async function fetchTeamMembersDashboard(
     params
   );
 }
+
+export async function fetchTeamAIInsights(teamId) {
+  return await getTeamAIInsights(teamId);
+}
