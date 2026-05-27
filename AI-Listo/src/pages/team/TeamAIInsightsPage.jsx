@@ -17,7 +17,7 @@ import "./team-ai-insights.css";
 import { fetchTeamAIInsights } from "../team/services/team.service";
 
 import useTeamDashboard from "../team/hooks/useTeamDashboard";
-
+import TeamAICharts from "./components/TeamAICharts";
 export default function TeamAIInsightsPage() {
   const { selectedTeamId, team } = useTeamDashboard();
 
@@ -86,6 +86,21 @@ export default function TeamAIInsightsPage() {
 
         <span className="team-ai-banner-badge">+12% Productivity</span>
       </div>
+      {insights?.pipelineRisks?.length > 0 && (
+        <div className="team-ai-alerts">
+          {insights.pipelineRisks.map((risk, index) => (
+            <div key={index} className={`team-ai-alert ${risk.type}`}>
+              <AlertTriangle size={16} />
+
+              <div>
+                <strong>{risk.title}</strong>
+
+                <p>{risk.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {/* LOADING */}
 
       {loading && <div className="team-ai-loading">Loading AI analysis...</div>}
@@ -178,7 +193,34 @@ export default function TeamAIInsightsPage() {
 
               <strong>{insights.inactiveLeads}</strong>
             </div>
+
+            <div className="team-ai-mini-card">
+              <span>Conversion Rate</span>
+
+              <strong>{insights.conversionRate}%</strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Average Deal Value</span>
+
+              <strong>
+                ${Number(insights.averageDealValue || 0).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Won Deals</span>
+
+              <strong>{insights.wonDeals}</strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Lost Deals</span>
+
+              <strong>{insights.lostDeals}</strong>
+            </div>
           </div>
+          <TeamAICharts insights={insights} />
           {/* GRID */}
 
           <div className="team-ai-grid">
@@ -282,7 +324,27 @@ export default function TeamAIInsightsPage() {
             </div>
           </div>
           {/* NEED ATTENTION */}
+          <div className="team-ai-section-block">
+            <div className="team-ai-section-header">
+              <AlertTriangle size={18} />
 
+              <h3>Overloaded Members</h3>
+            </div>
+
+            <div className="team-ai-attention-list">
+              {(insights.overloadedMembers || []).map((member) => (
+                <div key={member.id} className="team-ai-attention-item">
+                  <div>
+                    <strong>{member.name}</strong>
+
+                    <p>Managing {member.totalLeads} leads</p>
+                  </div>
+
+                  <span>{member.severity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="team-ai-section-block">
             <div className="team-ai-section-header">
               <Users size={18} />

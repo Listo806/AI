@@ -15,7 +15,7 @@ export class TeamAIInsightsService {
   ) {}
 
   async generate(teamId: string) {
-    const [members, conversations, notifications, properties, leads] =
+    const [members, conversations, notifications, properties, leads, deals] =
       await Promise.all([
         this.getMembers(teamId),
 
@@ -25,6 +25,7 @@ export class TeamAIInsightsService {
 
         this.getProperties(teamId),
         this.getLeads(teamId),
+        this.getDeals(teamId),
       ]);
 
     const metrics = this.buildMetrics({
@@ -33,10 +34,17 @@ export class TeamAIInsightsService {
       notifications,
       properties,
       leads,
+      deals,
     });
 
     const health = this.calculateHealthScore(metrics);
+    const shouldSave = await this.shouldCreateSnapshot(teamId);
 
+    if (shouldSave) {
+      await this.saveSnapshot(teamId, metrics, health);
+    }
+    const history = await this.getTeamHistory(teamId);
+    const previousSnapshot = await this.getPreviousSnapshot(teamId);
     return {
       teamHealthScore: health,
 
@@ -56,13 +64,25 @@ export class TeamAIInsightsService {
 
       membersNeedingAttention: this.generateMembersNeedingAttention(members),
 
-      trends: this.generateTrends(metrics),
+      trends: this.generateTrends(metrics, previousSnapshot),
 
       workloadDistribution: this.generateWorkloadDistribution(metrics),
 
       alerts: this.generateAlerts(metrics),
 
       nextActions: this.generateActions(metrics),
+      overloadedMembers: this.generateOverloadedMembers(members),
+      pipelineRisks: this.generatePipelineRisks(metrics),
+      conversionRate: metrics.conversionRate,
+
+      averageDealValue: metrics.averageDealValue,
+
+      wonDeals: metrics.wonDeals,
+
+      lostDeals: metrics.lostDeals,
+
+      openDeals: metrics.openDeals,
+      history,
     };
   }
 
@@ -218,6 +238,7 @@ export class TeamAIInsightsService {
     notifications,
     properties,
     leads,
+    deals,
   }): TeamAIMetrics {
     const totalMembers = members.length;
 
@@ -283,6 +304,25 @@ export class TeamAIInsightsService {
       return days >= 14;
     }).length;
 
+    const wonDeals = deals.filter((d: any) => d.stage === "won").length;
+
+    const lostDeals = deals.filter((d: any) => d.stage === "lost").length;
+
+    const openDeals = deals.filter(
+      (d: any) => d.stage !== "won" && d.stage !== "lost",
+    ).length;
+
+    const conversionRate =
+      deals.length > 0 ? Math.round((wonDeals / deals.length) * 100) : 0;
+
+    const averageDealValue =
+      deals.length > 0
+        ? Math.round(
+            deals.reduce((sum, d) => sum + Number(d.value || 0), 0) /
+              deals.length,
+          )
+        : 0;
+
     return {
       totalMembers,
 
@@ -314,6 +354,16 @@ export class TeamAIInsightsService {
       activeLeads,
 
       inactiveLeads,
+
+      wonDeals,
+
+      lostDeals,
+
+      openDeals,
+
+      conversionRate,
+
+      averageDealValue,
     };
   }
 
@@ -383,22 +433,40 @@ export class TeamAIInsightsService {
     RECOMMENDATIONS
   ===================================================== */
 
-  private generateRecommendations(metrics: TeamAIMetrics) {
+  private generateRecommendations(metrics: any) {
     const recommendations = [];
 
-    if (metrics.productivityScore < 70) {
-      recommendations.push("Increase daily team activity tracking.");
+    if (metrics.conversionRate < 20) {
+      recommendations.push(
+        "Review lead qualification process to improve conversion rates.",
+      );
+    }
+
+    if (metrics.inactiveLeads >= 5) {
+      recommendations.push("Reassign or follow up inactive leads immediately.");
+    }
+
+    if (metrics.unreadNotifications > 10) {
+      recommendations.push("Reduce notification overload for better focus.");
     }
 
     if (metrics.collaborationScore < 70) {
-      recommendations.push("Encourage more team collaboration and follow-ups.");
+      recommendations.push("Encourage more team collaboration sessions.");
     }
 
-    if (metrics.unreadNotifications > 5) {
-      recommendations.push("Review and clear pending notifications.");
+    if (metrics.pipelineValue < 10000) {
+      recommendations.push(
+        "Increase pipeline generation activities this week.",
+      );
     }
 
-    recommendations.push("Schedule weekly AI performance review.");
+    if (metrics.averageAIScore < 75) {
+      recommendations.push(
+        "Schedule AI performance coaching for lower-performing members.",
+      );
+    }
+
+    recommendations.push("Run weekly AI operational review.");
 
     return recommendations;
   }
@@ -468,19 +536,41 @@ export class TeamAIInsightsService {
       }));
   }
 
+  private generateOverloadedMembers(members: any[]) {
+    return members
+      .filter((member) => member.totalLeads >= 15)
+      .map((member) => ({
+        id: member.id,
+
+        name: member.name,
+
+        totalLeads: member.totalLeads,
+
+        aiScore: member.aiScore,
+
+        severity: member.totalLeads >= 30 ? "high" : "medium",
+      }));
+  }
   /* =====================================================
   TRENDS
 ===================================================== */
 
-  private generateTrends(metrics: TeamAIMetrics) {
+  private generateTrends(metrics: TeamAIMetrics, previous: any) {
     return {
-      productivity: "+12%",
+      productivity: this.calculateTrend(
+        metrics.productivityScore,
+        previous?.productivity_score || 0,
+      ),
 
-      collaboration: "+7%",
+      collaboration: this.calculateTrend(
+        metrics.collaborationScore,
+        previous?.collaboration_score || 0,
+      ),
 
-      efficiency: "+5%",
-
-      responseRate: `${metrics.responseRate}%`,
+      efficiency: this.calculateTrend(
+        metrics.efficiencyScore,
+        previous?.efficiency_score || 0,
+      ),
     };
   }
 
@@ -559,5 +649,194 @@ export class TeamAIInsightsService {
     } catch {
       return [];
     }
+  }
+
+  private async getDeals(teamId: string) {
+    try {
+      const result = await this.db.query(
+        `
+      SELECT
+        id,
+        stage,
+        value,
+        assigned_to,
+        created_at,
+        updated_at
+      FROM deals
+      WHERE team_id = $1
+      `,
+        [teamId],
+      );
+
+      return result.rows;
+    } catch {
+      return [];
+    }
+  }
+
+  private generatePipelineRisks(metrics: any) {
+    const risks = [];
+
+    if (metrics.conversionRate < 20) {
+      risks.push({
+        type: "danger",
+
+        title: "Low conversion rate",
+
+        description: "Deal conversion rate is below healthy threshold.",
+      });
+    }
+
+    if (metrics.inactiveLeads >= 10) {
+      risks.push({
+        type: "warning",
+
+        title: "Inactive leads increasing",
+
+        description: "Many leads have not been updated recently.",
+      });
+    }
+
+    if (metrics.pipelineValue <= 5000) {
+      risks.push({
+        type: "warning",
+
+        title: "Low pipeline value",
+
+        description: "Current pipeline value is lower than expected.",
+      });
+    }
+
+    return risks;
+  }
+
+  private async saveSnapshot(
+    teamId: string,
+    metrics: TeamAIMetrics,
+    health: number,
+  ) {
+    await this.db.query(
+      `
+    INSERT INTO team_ai_snapshots (
+      team_id,
+      productivity_score,
+      collaboration_score,
+      efficiency_score,
+      health_score,
+      pipeline_value,
+      conversion_rate,
+      active_leads,
+      inactive_leads,
+      won_deals,
+      lost_deals
+    )
+    VALUES (
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11
+    )
+    `,
+      [
+        teamId,
+        metrics.productivityScore,
+        metrics.collaborationScore,
+        metrics.efficiencyScore,
+        health,
+        metrics.pipelineValue,
+        metrics.conversionRate,
+        metrics.activeLeads,
+        metrics.inactiveLeads,
+        metrics.wonDeals,
+        metrics.lostDeals,
+      ],
+    );
+  }
+
+  private async shouldCreateSnapshot(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT created_at
+    FROM team_ai_snapshots
+    WHERE team_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+    `,
+      [teamId],
+    );
+
+    const latest = result.rows[0];
+
+    if (!latest) {
+      return true;
+    }
+
+    const lastCreatedAt = new Date(latest.created_at).getTime();
+
+    const now = Date.now();
+
+    const diffHours = (now - lastCreatedAt) / (1000 * 60 * 60);
+
+    return diffHours >= 1;
+  }
+
+  private async getTeamHistory(teamId: string) {
+    try {
+      const result = await this.db.query(
+        `
+      SELECT
+        DATE(created_at) as date,
+
+        productivity_score,
+
+        collaboration_score,
+
+        efficiency_score,
+
+        health_score,
+
+        conversion_rate,
+
+        pipeline_value
+
+      FROM team_ai_snapshots
+      WHERE team_id = $1
+      ORDER BY created_at ASC
+      LIMIT 30
+      `,
+        [teamId],
+      );
+
+      return result.rows;
+    } catch (error) {
+      console.error(error);
+
+      return [];
+    }
+  }
+
+  private calculateTrend(current: number, previous: number) {
+    if (!previous) {
+      return "0%";
+    }
+
+    const diff = ((current - previous) / previous) * 100;
+
+    const sign = diff >= 0 ? "+" : "";
+
+    return `${sign}${Math.round(diff)}%`;
+  }
+
+  private async getPreviousSnapshot(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT *
+    FROM team_ai_snapshots
+    WHERE team_id = $1
+    ORDER BY created_at DESC
+    OFFSET 1
+    LIMIT 1
+    `,
+      [teamId],
+    );
+
+    return result.rows[0];
   }
 }

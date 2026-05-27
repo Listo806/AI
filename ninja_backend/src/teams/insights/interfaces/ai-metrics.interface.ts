@@ -30,4 +30,14 @@ export interface TeamAIMetrics {
   activeLeads: number;
 
   inactiveLeads: number;
+
+  wonDeals: number;
+
+  lostDeals: number;
+
+  openDeals: number;
+
+  conversionRate: number;
+
+  averageDealValue: number;
 }
