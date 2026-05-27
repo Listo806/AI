@@ -152,6 +152,33 @@ export default function TeamAIInsightsPage() {
               </div>
             </div>
           </div>
+          <div className="team-ai-extra-metrics">
+            <div className="team-ai-mini-card">
+              <span>Average AI Score</span>
+
+              <strong>{insights.averageAIScore}%</strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Pipeline Value</span>
+
+              <strong>
+                ${Number(insights.pipelineValue || 0).toLocaleString()}
+              </strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Deals Won</span>
+
+              <strong>{insights.dealsWon}</strong>
+            </div>
+
+            <div className="team-ai-mini-card">
+              <span>Inactive Leads</span>
+
+              <strong>{insights.inactiveLeads}</strong>
+            </div>
+          </div>
           {/* GRID */}
 
           <div className="team-ai-grid">

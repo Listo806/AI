@@ -15,7 +15,7 @@ export class TeamAIInsightsService {
   ) {}
 
   async generate(teamId: string) {
-    const [members, conversations, notifications, properties] =
+    const [members, conversations, notifications, properties, leads] =
       await Promise.all([
         this.getMembers(teamId),
 
@@ -24,6 +24,7 @@ export class TeamAIInsightsService {
         this.getNotifications(teamId),
 
         this.getProperties(teamId),
+        this.getLeads(teamId),
       ]);
 
     const metrics = this.buildMetrics({
@@ -31,6 +32,7 @@ export class TeamAIInsightsService {
       conversations,
       notifications,
       properties,
+      leads,
     });
 
     const health = this.calculateHealthScore(metrics);
@@ -71,40 +73,97 @@ export class TeamAIInsightsService {
   private async getMembers(teamId: string) {
     const result = await this.db.query(
       `
-      SELECT
-        u.id,
-        u.name,
-        u.email,
-        u.last_seen_at,
-        u.is_active,
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      u.last_seen_at,
+      u.is_active,
 
-        COUNT(DISTINCT l.id) as "totalLeads",
+      COUNT(DISTINCT l.id) as "totalLeads",
 
-        FLOOR(RANDOM() * 30 + 70) as "aiScore"
+      COUNT(
+        DISTINCT CASE
+          WHEN d.stage = 'won'
+          THEN d.id
+        END
+      ) as "dealsWon",
 
-      FROM team_members tm
+      COALESCE(
+        SUM(
+          CASE
+            WHEN d.stage != 'won'
+            THEN d.value
+            ELSE 0
+          END
+        ),
+        0
+      ) as "pipelineValue"
 
-      INNER JOIN users u
-        ON u.id = tm.user_id
+    FROM team_members tm
 
-      LEFT JOIN leads l
-        ON l.assigned_to = u.id
-        AND l.team_id = $1
+    INNER JOIN users u
+      ON u.id = tm.user_id
 
-      WHERE tm.team_id = $1
-      AND tm.status = 'active'
+    LEFT JOIN leads l
+      ON l.assigned_to = u.id
+      AND l.team_id = $1
 
-      GROUP BY
-        u.id,
-        u.name,
-        u.email,
-        u.last_seen_at,
-        u.is_active
-      `,
+    LEFT JOIN deals d
+      ON d.assigned_to = u.id
+      AND d.team_id = $1
+
+    WHERE tm.team_id = $1
+    AND tm.status = 'active'
+
+    GROUP BY
+      u.id,
+      u.name,
+      u.email,
+      u.last_seen_at,
+      u.is_active
+    `,
       [teamId],
     );
 
-    return result.rows;
+    return result.rows.map((member: any) => {
+      const totalLeads = Number(member.totalLeads || 0);
+
+      const dealsWon = Number(member.dealsWon || 0);
+
+      const pipelineValue = Number(member.pipelineValue || 0);
+
+      const engagementScore = member.is_active ? 90 : 45;
+
+      const performanceScore = Math.min(100, dealsWon * 15 + totalLeads * 2);
+
+      const responseScore = Math.min(
+        100,
+        Math.floor(pipelineValue / 1000) + 50,
+      );
+
+      const aiScore = Math.round(
+        (engagementScore + performanceScore + responseScore) / 3,
+      );
+
+      return {
+        ...member,
+
+        totalLeads,
+
+        dealsWon,
+
+        pipelineValue,
+
+        engagementScore,
+
+        performanceScore,
+
+        responseScore,
+
+        aiScore,
+      };
+    });
   }
 
   private async getConversations(teamId: string) {
@@ -158,6 +217,7 @@ export class TeamAIInsightsService {
     conversations,
     notifications,
     properties,
+    leads,
   }): TeamAIMetrics {
     const totalMembers = members.length;
 
@@ -185,14 +245,43 @@ export class TeamAIInsightsService {
 
     const collaborationScore = Math.round((engagementRate + responseRate) / 2);
 
+    const averageAIScore =
+      totalMembers > 0
+        ? Math.round(
+            members.reduce((sum, m) => sum + m.aiScore, 0) / totalMembers,
+          )
+        : 0;
+
+    const pipelineValue = members.reduce(
+      (sum, m) => sum + Number(m.pipelineValue || 0),
+      0,
+    );
+
     const productivityScore = Math.min(
       100,
-      Math.round(totalProperties * 4 + responseRate * 0.4),
+      Math.round(
+        totalProperties * 2 + responseRate * 0.3 + averageAIScore * 0.4,
+      ),
     );
 
     const efficiencyScore = Math.round(
-      (productivityScore + collaborationScore) / 2,
+      (productivityScore + collaborationScore + averageAIScore) / 3,
     );
+
+    const dealsWon = members.reduce(
+      (sum, m) => sum + Number(m.dealsWon || 0),
+      0,
+    );
+
+    const activeLeads = leads.filter((l: any) => l.status !== "closed").length;
+
+    const inactiveLeads = leads.filter((l: any) => {
+      const updatedAt = new Date(l.updated_at).getTime();
+
+      const days = (Date.now() - updatedAt) / (1000 * 60 * 60 * 24);
+
+      return days >= 14;
+    }).length;
 
     return {
       totalMembers,
@@ -216,6 +305,15 @@ export class TeamAIInsightsService {
       productivityScore,
 
       efficiencyScore,
+      averageAIScore,
+
+      pipelineValue,
+
+      dealsWon,
+
+      activeLeads,
+
+      inactiveLeads,
     };
   }
 
@@ -238,19 +336,17 @@ export class TeamAIInsightsService {
 
   private generateSummary(metrics: TeamAIMetrics) {
     return `
-Team collaboration is currently at
-${metrics.collaborationScore}% with
-${metrics.activeMembers} active members.
+        Your team currently has ${metrics.activeMembers} active members
+        with an average AI score of ${metrics.averageAIScore}%.
 
-AI detected
-${metrics.totalConversations}
-team conversations and
-${metrics.totalProperties}
-active properties.
+        The team is managing ${metrics.activeLeads} active leads
+        with ${metrics.dealsWon} successful closed deals.
 
-Overall operational efficiency is
-${metrics.efficiencyScore}%.
-    `.trim();
+        Current collaboration performance is ${metrics.collaborationScore}%
+        and operational efficiency is ${metrics.efficiencyScore}%.
+
+        Unread notifications: ${metrics.unreadNotifications}.
+        `.trim();
   }
 
   /* =====================================================
@@ -268,8 +364,16 @@ ${metrics.efficiencyScore}%.
       risks.push("Large amount of unread notifications detected.");
     }
 
+    if (metrics.inactiveLeads >= 5) {
+      risks.push("Multiple stale leads may require reassignment.");
+    }
+
     if (metrics.responseRate < 40) {
       risks.push("Low response rate may affect lead conversion.");
+    }
+
+    if (metrics.averageAIScore < 70) {
+      risks.push("Overall AI performance score is below healthy range.");
     }
 
     return risks;
@@ -406,32 +510,54 @@ ${metrics.efficiencyScore}%.
       alerts.push({
         type: "warning",
 
-        title: "High unread notifications",
+        title: "Unread notifications increasing",
 
-        description: "Your team has many unread notifications.",
+        description: "Your team has too many unread notifications pending.",
       });
     }
 
-    if (metrics.inactiveMembers >= 3) {
+    if (metrics.inactiveLeads >= 5) {
       alerts.push({
         type: "danger",
 
-        title: "Inactive members detected",
+        title: "Inactive leads detected",
 
-        description: "Some members may require follow-up.",
+        description: "Several leads have not been updated in over 14 days.",
       });
     }
 
-    if (metrics.collaborationScore >= 80) {
+    if (metrics.averageAIScore >= 85) {
       alerts.push({
         type: "success",
 
-        title: "Excellent collaboration",
+        title: "Excellent AI performance",
 
-        description: "Team collaboration is performing well.",
+        description: "Your team is maintaining strong AI productivity metrics.",
       });
     }
 
     return alerts;
+  }
+
+  private async getLeads(teamId: string) {
+    try {
+      const result = await this.db.query(
+        `
+      SELECT
+        id,
+        status,
+        assigned_to,
+        created_at,
+        updated_at
+      FROM leads
+      WHERE team_id = $1
+      `,
+        [teamId],
+      );
+
+      return result.rows;
+    } catch {
+      return [];
+    }
   }
 }

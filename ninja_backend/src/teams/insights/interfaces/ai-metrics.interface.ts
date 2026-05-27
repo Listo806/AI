@@ -20,4 +20,14 @@ export interface TeamAIMetrics {
   productivityScore: number;
 
   efficiencyScore: number;
+
+  averageAIScore: number;
+
+  pipelineValue: number;
+
+  dealsWon: number;
+
+  activeLeads: number;
+
+  inactiveLeads: number;
 }
