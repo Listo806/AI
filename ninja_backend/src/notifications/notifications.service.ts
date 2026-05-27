@@ -194,6 +194,66 @@ export class NotificationsService {
 
     return result.rows;
   }
+ 
+  async getTeamNotifications(teamId: string, limit = 50) {
+    const result = await this.db.query(
+      `
+    SELECT
+      n.id,
+
+      n.team_id as "teamId",
+
+      n.user_id as "userId",
+
+      n.actor_user_id as "actorUserId",
+
+      n.type,
+
+      n.category,
+
+      n.priority,
+
+      n.title,
+
+      n.message,
+
+      n.url,
+
+      n.entity_type as "entityType",
+
+      n.entity_id as "entityId",
+
+      n.icon,
+
+      n.image_url as "imageUrl",
+
+      n.action_label as "actionLabel",
+
+      n.action_url as "actionUrl",
+
+      n.is_read as "isRead",
+
+      n.read_at as "readAt",
+
+      n.metadata,
+
+      n.created_at as "createdAt"
+
+    FROM team_notifications n
+
+    WHERE n.team_id = $1
+
+    AND n.deleted_at IS NULL
+
+    ORDER BY n.created_at DESC
+
+    LIMIT $2
+    `,
+      [teamId, limit],
+    );
+
+    return result.rows;
+  }
 
   async getUnreadCount(teamId: string, userId: string) {
     const result = await this.db.query(
