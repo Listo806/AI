@@ -52,9 +52,8 @@ export default function useTeamMembers({
   const [page, setPage] =
     useState(1);
 
-  const [limit, setLimit] =
-    useState(10);
-
+  const [limit, setLimit] = useState(10);
+  const [dashboardLimit, setDashboardLimit] = useState(5);
   const [pagination, setPagination] =
     useState({
       total: 0,
@@ -176,7 +175,7 @@ export default function useTeamMembers({
             teamId,
             {
               page,
-              limit,
+              dashboardLimit,
               search: debouncedSearch,
               filter: filterDashboard,
             }
@@ -219,7 +218,7 @@ export default function useTeamMembers({
     }, [
       teamId,
       page,
-      limit,
+      dashboardLimit,
       debouncedSearch,
       filterDashboard,
     ]);
@@ -396,6 +395,7 @@ export default function useTeamMembers({
       teamId,
       page,
       limit,
+      dashboardLimit,
       debouncedSearch,
       filter,
       filterDashboard,
@@ -438,6 +438,9 @@ export default function useTeamMembers({
 
     limit,
     setLimit,
+    
+    dashboardLimit,
+    setDashboardLimit,
 
     pagination,
 

@@ -123,6 +123,14 @@ export const ROLE_STYLES = {
     bg: '#dcfce7',
     text: '#16a34a',
   },
+  viewer: {
+    bg: '#e6cdcc',
+    text: '#5d0d09',
+  },
+  admin: {
+    bg: '#e7cfee',
+    text: '#4b095d',
+  },
 };
 
 /* =========================================================
