@@ -52,6 +52,7 @@ export default function TeamMembersPage() {
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
+    mode: 'members',
   });
 
   /* =====================================================

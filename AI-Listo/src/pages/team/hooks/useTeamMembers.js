@@ -15,6 +15,7 @@ import {
 export default function useTeamMembers({
   teamId,
   onReload,
+  mode = 'members',
 }) {
 
   /* =====================================================
@@ -159,7 +160,17 @@ export default function useTeamMembers({
     
     const loadMembersDashboard = useCallback(async () => {
       try {
+        if (!teamId) {
+          setAllMembers([]);
+          return;
+        }
 
+        setLoading(true);
+
+        console.log(
+          'DASHBOARD FILTER',
+          filterDashboard
+        );
         const response =
           await fetchTeamMembersDashboard(
             teamId,
@@ -167,7 +178,7 @@ export default function useTeamMembers({
               page,
               limit,
               search: debouncedSearch,
-              filterDashboard,
+              filter: filterDashboard,
             }
           );
 
@@ -176,7 +187,7 @@ export default function useTeamMembers({
           : Array.isArray(response?.data)
             ? response.data
             : [];
-
+        
         setAllMembers(membersData);
 
         setPagination({
@@ -197,7 +208,7 @@ export default function useTeamMembers({
       } catch (error) {
 
         console.error(
-          'LOAD MEMBERS ERROR',
+          'LOAD MEMBERS db',
           error
         );
 
@@ -359,19 +370,7 @@ export default function useTeamMembers({
 
       return () => clearTimeout(timer);
     }, [search]);
-    
-  useEffect(() => {
-      if (!teamId) return;
-
-      loadMembers();
-    }, [
-      teamId,
-      page,
-      limit,
-      debouncedSearch,
-      filter,
-      
-    ]);
+ 
     
     useEffect(() => {
       if (page !== 1) {
@@ -385,14 +384,24 @@ export default function useTeamMembers({
     useEffect(() => {
       if (!teamId) return;
 
-      loadMembersDashboard();
+      if (mode === 'members') {
+        loadMembers();
+      }
+
+      if (mode === 'dashboard') {
+        loadMembersDashboard();
+      }
+
     }, [
       teamId,
       page,
       limit,
       debouncedSearch,
+      filter,
       filterDashboard,
-      
+      mode,
+      loadMembersDashboard,
+      loadMembers,
     ]);
   /* =====================================================
     RETURN
@@ -440,5 +449,6 @@ export default function useTeamMembers({
 
     reloadMembers:
       loadMembers,
+      loadMembersDashboard,
   };
 }

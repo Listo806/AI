@@ -1061,7 +1061,7 @@ export class TeamsService {
   async getMembersPaginated({
     teamId,
     page = 1,
-    limit = 10,
+    limit = 5,
     search = "",
     filter = "all",
   }: {

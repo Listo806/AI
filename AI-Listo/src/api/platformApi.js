@@ -397,12 +397,15 @@ export async function getTeamMembersDashboard(
     );
   }
 
-  if (params.filter) {
-    qs.append(
-      'filter',
-      params.filter
-    );
-  }
+  if (
+      params.filter &&
+      params.filter !== 'all'
+    ) {
+      qs.append(
+        'filter',
+        params.filter
+      );
+    }
 
   if (params.role) {
     qs.append(

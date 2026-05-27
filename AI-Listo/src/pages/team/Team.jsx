@@ -40,7 +40,7 @@ export default function TeamWorkspace() {
     selectedTeamId,
     setSelectedTeamId,
     team,
-    members,
+    //members,
     seatInfo,
     stats,
     activities,
@@ -71,11 +71,15 @@ export default function TeamWorkspace() {
 
     filter,
     setFilter,
+    
+    filterDashboard,
+    setFilterDashboard,
 
     members: filteredMembers,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
+    mode: 'dashboard',
   });
 
   /* =====================================================
@@ -165,13 +169,13 @@ export default function TeamWorkspace() {
         teams={teams}
         selectedTeam={selectedTeamId}
         setSelectedTeam={setSelectedTeamId}
-        filter={filter}
-        onFilter={setFilter}
+        filter={filterDashboard}
+        onFilter={setFilterDashboard}
       />
 
       <div className="team-main-grid">
         <TeamMembersTable
-          members={members}
+          members={filteredMembers}
           loading={loading}
           onRemove={handleOpenDelete}
           onInvite={() => setInviteModalOpen(true)}

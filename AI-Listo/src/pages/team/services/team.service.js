@@ -11,6 +11,7 @@ import {
   deleteTeam,
   getTeamDashboard,
   getTeamNotifications,
+  getTeamMembersDashboard,
 } from '../../../api/platformApi';
 
 /* ======================================================
