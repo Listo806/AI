@@ -1,5 +1,5 @@
 import { X, AlertTriangle, Sparkles, Brain, ShieldAlert } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 export default function TeamAIInsightsModal({
   open,
   onClose,
@@ -7,6 +7,7 @@ export default function TeamAIInsightsModal({
   error,
   insights,
 }) {
+  const navigate = useNavigate();
   if (!open) return null;
 
   return (
@@ -109,17 +110,30 @@ export default function TeamAIInsightsModal({
             {/* ACTIONS */}
 
             <div className="team-ai-actions">
-              {(insights.nextActions || []).map((action, index) => (
-                <button
-                  key={index}
-                  className="team-ai-action-btn"
-                  onClick={() => {
-                    window.location.href = action.route;
-                  }}
-                >
-                  {action.label}
-                </button>
-              ))}
+              <button
+                type="button"
+                className="team-ai-action-btn"
+                onClick={() => {
+                  navigate("/dashboard/team/members");
+                }}
+              >
+                Open Team Members
+              </button>
+
+              <button
+                type="button"
+                className="team-ai-action-btn"
+              >
+                Notifications page coming soon.
+              </button>
+
+              <button
+                type="button"
+                className="team-ai-action-btn"
+                onClick={onClose}
+              >
+                Open Team Dashboard
+              </button>
             </div>
           </div>
         )}

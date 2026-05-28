@@ -1,35 +1,55 @@
 import { Injectable } from "@nestjs/common";
-
 import { DatabaseService } from "../../database/database.service";
-
 import { NotificationsService } from "../../notifications/notifications.service";
-
 import { TeamAIMetrics } from "./interfaces/ai-metrics.interface";
-
+import { TeamAnalyticsService } from "../analytics/team-analytics.service";
 @Injectable()
 export class TeamAIInsightsService {
   constructor(
     private readonly db: DatabaseService,
-
     private readonly notificationsService: NotificationsService,
+    private readonly analyticsService: TeamAnalyticsService,
   ) {}
 
   async generate(teamId: string) {
-    const [members, conversations, notifications, properties, leads, deals] =
-      await Promise.all([
-        this.getMembers(teamId),
-
-        this.getConversations(teamId),
-
-        this.getNotifications(teamId),
-
-        this.getProperties(teamId),
-        this.getLeads(teamId),
-        this.getDeals(teamId),
-      ]);
-
-    const metrics = this.buildMetrics({
+    const [
       members,
+      memberStats,
+      conversations,
+      notifications,
+      properties,
+      leads,
+      deals,
+    ] = await Promise.all([
+      this.getMembers(teamId),
+
+      this.analyticsService.getMemberStats(teamId),
+
+      this.getConversations(teamId),
+
+      this.getNotifications(teamId),
+
+      this.getProperties(teamId),
+
+      this.getLeads(teamId),
+
+      this.getDeals(teamId),
+    ]);
+    const mergedMembers = members.map((member: any) => {
+      const stats = memberStats.find((s: any) => s.id === member.id);
+
+      return {
+        ...member,
+
+        totalLeads: Number(stats?.totalLeads || 0),
+
+        dealsWon: Number(stats?.dealsWon || 0),
+
+        pipelineValue: Number(stats?.pipelineValue || 0),
+      };
+    });
+    const metrics = this.buildMetrics({
+      members: mergedMembers,
       conversations,
       notifications,
       properties,
@@ -70,7 +90,6 @@ export class TeamAIInsightsService {
 
       alerts: this.generateAlerts(metrics),
 
-      nextActions: this.generateActions(metrics),
       overloadedMembers: this.generateOverloadedMembers(members),
       pipelineRisks: this.generatePipelineRisks(metrics),
       conversionRate: metrics.conversionRate,
@@ -83,6 +102,13 @@ export class TeamAIInsightsService {
 
       openDeals: metrics.openDeals,
       history,
+      averageAIScore: metrics.averageAIScore,
+
+      pipelineValue: metrics.pipelineValue,
+
+      inactiveLeads: metrics.inactiveLeads,
+
+      dealsWon: metrics.dealsWon,
     };
   }
 
@@ -99,6 +125,7 @@ export class TeamAIInsightsService {
       u.email,
       u.last_seen_at,
       u.is_active,
+      tm.role,
 
       COUNT(DISTINCT l.id) as "totalLeads",
 
@@ -141,6 +168,7 @@ export class TeamAIInsightsService {
       u.name,
       u.email,
       u.last_seen_at,
+      tm.role,
       u.is_active
     `,
       [teamId],
@@ -483,35 +511,15 @@ export class TeamAIInsightsService {
         id: member.id,
 
         name: member.name,
+        email: member.email,
 
+        role: member.role || "Team Member",
+
+        totalLeads: member.totalLeads,
+
+        pipelineValue: member.pipelineValue,
         score: member.aiScore || 90 - index * 5,
       }));
-  }
-
-  /* =====================================================
-    ACTIONS
-  ===================================================== */
-
-  private generateActions(metrics: TeamAIMetrics) {
-    return [
-      {
-        label: "Open Team Members",
-
-        route: "/dashboard/team/members",
-      },
-
-      {
-        label: "Review Notifications",
-
-        route: "/dashboard/notifications",
-      },
-
-      {
-        label: "Open Team Dashboard",
-
-        route: "/dashboard/team",
-      },
-    ];
   }
 
   /* =====================================================
@@ -531,8 +539,10 @@ export class TeamAIInsightsService {
 
         issue:
           member.aiScore < 60
-            ? "Low engagement detected"
-            : "Performance slightly below average",
+            ? `${member.name} has low engagement this week.`
+            : `${member.name} performance is below team average.`,
+
+        suggestion: "Review notifications and assign new lead activity.",
       }));
   }
 
@@ -838,5 +848,15 @@ export class TeamAIInsightsService {
     );
 
     return result.rows[0];
+  }
+
+  async refreshAIInsights(teamId: string, userId: string) {
+    const insights = await this.generate(teamId);
+
+    return {
+      success: true,
+      refreshedAt: new Date(),
+      insights,
+    };
   }
 }

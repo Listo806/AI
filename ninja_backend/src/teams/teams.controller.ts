@@ -264,4 +264,14 @@ export class TeamsController {
 
     return this.teamsService.getAIInsights(teamId);
   }
+
+  @Post(":id/ai-insights/refresh")
+  async refreshAIInsights(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.refreshAIInsights(teamId, user.id);
+  }
 }

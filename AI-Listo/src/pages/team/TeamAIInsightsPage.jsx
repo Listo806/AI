@@ -15,12 +15,12 @@ import {
 import "./team-ai-insights.css";
 
 import { fetchTeamAIInsights } from "../team/services/team.service";
-
+import { useNavigate } from "react-router-dom";
 import useTeamDashboard from "../team/hooks/useTeamDashboard";
 import TeamAICharts from "./components/TeamAICharts";
 export default function TeamAIInsightsPage() {
   const { selectedTeamId, team } = useTeamDashboard();
-
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   const [insights, setInsights] = useState(null);
@@ -51,9 +51,8 @@ export default function TeamAIInsightsPage() {
       <div className="team-members-header heading_page">
         <Sparkles />
         <h1 className="team-page-title">AI Team Insights</h1>
-      </div>  
+      </div>
       <div className="team-ai-page-header">
-        
         <button className="team-ai-refresh-btn" onClick={loadInsights}>
           <RefreshCcw size={16} />
           Refresh Analysis
@@ -111,9 +110,12 @@ export default function TeamAIInsightsPage() {
             <div className="team-ai-score">{insights.teamHealthScore || 0}</div>
 
             <div>
-              <h2>Team Health Score</h2>
+              <h2>Overall Team Health</h2>
 
-              <p>AI-generated collaboration & performance score</p>
+              <p>
+                Combined score from productivity, collaboration and operational
+                efficiency
+              </p>
               <div className="team-ai-score-breakdown">
                 <div>
                   <span>Productivity</span>
@@ -167,12 +169,12 @@ export default function TeamAIInsightsPage() {
             <div className="team-ai-mini-card">
               <span>Average AI Score</span>
 
-              <strong>{insights.averageAIScore}%</strong>
+              <strong>{insights.averageAIScore ?? 0}%</strong>
             </div>
 
             <div className="team-ai-mini-card">
-              <span>Pipeline Value</span>
-
+              <span>Active Pipeline Value</span>
+              <p className="team-ai-mini-subtext">Open deals only</p>
               <strong>
                 ${Number(insights.pipelineValue || 0).toLocaleString()}
               </strong>
@@ -197,7 +199,7 @@ export default function TeamAIInsightsPage() {
             </div>
 
             <div className="team-ai-mini-card">
-              <span>Average Deal Value</span>
+              <span>Average Won Deal Value</span>
 
               <strong>
                 ${Number(insights.averageDealValue || 0).toLocaleString()}
@@ -279,19 +281,19 @@ export default function TeamAIInsightsPage() {
                 <div>
                   <span>Productivity</span>
 
-                  <strong>{insights.productivityScore}%</strong>
+                  <strong>{insights?.productivityScore ?? 0}%</strong>
                 </div>
 
                 <div>
                   <span>Collaboration</span>
 
-                  <strong>{insights.collaborationScore}%</strong>
+                  <strong>{insights?.collaborationScore ?? 0}%</strong>
                 </div>
 
                 <div>
                   <span>Efficiency</span>
 
-                  <strong>{insights.efficiencyScore}%</strong>
+                  <strong>{insights?.efficiencyScore ?? 0}%</strong>
                 </div>
               </div>
             </div>
@@ -312,8 +314,13 @@ export default function TeamAIInsightsPage() {
 
                   <div>
                     <strong>{member.name}</strong>
-
+                    <p>{member.email}</p>
                     <p>AI Score: {member.score}%</p>
+                    <p>Leads: {member.totalLeads}</p>
+                    <p>
+                      Pipeline: $
+                      {Number(member.pipelineValue || 0).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -328,17 +335,23 @@ export default function TeamAIInsightsPage() {
             </div>
 
             <div className="team-ai-attention-list">
-              {(insights.overloadedMembers || []).map((member) => (
-                <div key={member.id} className="team-ai-attention-item">
-                  <div>
-                    <strong>{member.name}</strong>
+              {insights.overloadedMembers?.length > 0 ? (
+                (insights.overloadedMembers || []).map((member) => (
+                  <div key={member.id} className="team-ai-attention-item">
+                    <div>
+                      <strong>{member.name}</strong>
 
-                    <p>Managing {member.totalLeads} leads</p>
+                      <p>Managing {member.totalLeads} leads</p>
+                    </div>
+
+                    <span>{member.severity}</span>
                   </div>
-
-                  <span>{member.severity}</span>
+                ))
+              ) : (
+                <div className="team-ai-empty">
+                  No overloaded members detected.
                 </div>
-              ))}
+              )}
             </div>
           </div>
           <div className="team-ai-section-block">
@@ -355,6 +368,7 @@ export default function TeamAIInsightsPage() {
                     <strong>{member.name}</strong>
 
                     <p>{member.issue}</p>
+                    <small>{member.suggestion}</small>
                   </div>
 
                   <span>{member.aiScore}%</span>
@@ -365,17 +379,29 @@ export default function TeamAIInsightsPage() {
           {/* ACTIONS */}
 
           <div className="team-ai-actions">
-            {(insights.nextActions || []).map((action, index) => (
-              <button
-                key={index}
-                className="team-ai-action-btn"
-                onClick={() => {
-                  window.location.href = action.route;
-                }}
-              >
-                {action.label}
-              </button>
-            ))}
+            <button
+              type="button"
+              className="team-ai-action-btn"
+              onClick={() => {
+                navigate("/dashboard/team/members");
+              }}
+            >
+              Open Team Members
+            </button>
+
+            <button type="button" className="team-ai-action-btn">
+              Notifications page coming soon.
+            </button>
+
+            <button
+              type="button"
+              className="team-ai-action-btn"
+              onClick={() => {
+                navigate("/dashboard/team");
+              }}
+            >
+              Open Team Dashboard
+            </button>
           </div>
         </>
       )}

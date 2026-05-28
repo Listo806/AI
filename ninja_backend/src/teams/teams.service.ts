@@ -10,6 +10,7 @@ import { UsersService } from "../users/users.service";
 import { EventLoggerService } from "../analytics/events/event-logger.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
+import { TeamAnalyticsService } from "./analytics/team-analytics.service";
 @Injectable()
 export class TeamsService {
   constructor(
@@ -18,6 +19,7 @@ export class TeamsService {
     private readonly eventLogger: EventLoggerService,
     private readonly notificationsService: NotificationsService,
     private readonly aiInsightsService: TeamAIInsightsService,
+    private readonly analyticsService: TeamAnalyticsService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto, ownerId: string): Promise<Team> {
@@ -344,25 +346,32 @@ export class TeamsService {
       const currentSeats = parseInt(seatCountRows[0].count, 10);
       const availableSeats = team.seat_limit - currentSeats;
       if (availableSeats === 1) {
-        await this.notificationsService.create({
-          teamId,
+        try {
+          await this.notificationsService.create({
+            teamId,
 
-          type: "team.seats_almost_full",
-          category: "billing",
-          priority: "high",
+            type: "team.seats_almost_full",
+            category: "billing",
+            priority: "high",
 
-          title: "Team seats almost full",
-          message: `Your team is reaching the seat limit`,
+            title: "Team seats almost full",
+            message: `Your team is reaching the seat limit`,
 
-          url: `/teams/${teamId}/billing`,
+            url: `/teams/${teamId}/billing`,
 
-          icon: "alert-triangle",
+            icon: "alert-triangle",
 
-          metadata: {
-            seatLimit: team.seat_limit,
-            usedSeats: currentSeats,
-          },
-        });
+            metadata: {
+              seatLimit: team.seat_limit,
+              usedSeats: currentSeats,
+            },
+          });
+        } catch (error) {
+          console.error(
+            "Failed to create notification after member added",
+            error,
+          );
+        }
       }
       if (availableSeats <= 0) {
         //await client.query("ROLLBACK");
@@ -399,29 +408,35 @@ export class TeamsService {
         userId,
       );
       const addedUser = await this.usersService.findById(userId);
+      try {
+        await this.notificationsService.create({
+          teamId,
+          actorUserId: requestingUserId,
 
-      await this.notificationsService.create({
-        teamId,
-        actorUserId: requestingUserId,
+          type: "team.member_added",
+          category: "team",
+          priority: "medium",
 
-        type: "team.member_added",
-        category: "team",
-        priority: "medium",
+          title: "New team member added",
+          message: `${addedUser?.name || "A new user"} joined the team`,
 
-        title: "New team member added",
-        message: `${addedUser?.name || "A new user"} joined the team`,
+          url: `/teams/${teamId}/members`,
 
-        url: `/teams/${teamId}/members`,
+          entityType: "user",
+          entityId: userId,
 
-        entityType: "user",
-        entityId: userId,
+          icon: "user-plus",
 
-        icon: "user-plus",
-
-        metadata: {
-          userId,
-        },
-      });
+          metadata: {
+            userId,
+          },
+        });
+      } catch (error) {
+        console.error(
+          "Failed to create notification after member added",
+          error,
+        );
+      }
     } catch (error) {
       try {
         await client.query("ROLLBACK");
@@ -456,7 +471,7 @@ export class TeamsService {
 
     const removedUser = await this.usersService.findById(userId);
 
-    await this.db.query(
+    const result = await this.db.query(
       `
       UPDATE team_members
       SET
@@ -467,7 +482,9 @@ export class TeamsService {
       `,
       [teamId, userId],
     );
-
+    if (result.rowCount === 0) {
+      throw new NotFoundException("Member not found in this team");
+    }
     // Log event
     await this.eventLogger.logTeamMemberRemoved(
       teamId,
@@ -539,8 +556,6 @@ export class TeamsService {
           END
         ) as "dealsWon",
 
-        FLOOR(RANDOM() * 30 + 70) as "aiScore"
-
       FROM team_members tm
 
       INNER JOIN users u
@@ -575,7 +590,25 @@ export class TeamsService {
       [teamId, limit],
     );
 
-    return result.rows;
+    return result.rows.map((member: any) => {
+      const totalLeads = Number(member.totalLeads || 0);
+
+      const dealsWon = Number(member.dealsWon || 0);
+
+      const pipelineValue = Number(member.pipelineValue || 0);
+
+      const aiScore = Math.min(
+        100,
+        Math.round(
+          dealsWon * 12 + totalLeads * 2 + Math.min(pipelineValue / 2000, 30),
+        ),
+      );
+
+      return {
+        ...member,
+        aiScore,
+      };
+    });
   }
 
   /** Add a member to the team by email (owner only). */
@@ -625,7 +658,7 @@ export class TeamsService {
       this.getDashboardMembers(teamId),
       this.getActivities(teamId, 5),
       this.getSubscription(teamId),
-      this.getInsights(teamId),
+      this.aiInsightsService.generate(teamId),
       this.getLeaderboard(teamId),
       this.notificationsService.getNotifications(teamId, userId),
       this.notificationsService.getUnreadCount(teamId, userId),
@@ -896,169 +929,78 @@ export class TeamsService {
     return result.rows[0];
   }
 
-  async getInsights(teamId: string) {
-    const insights: any[] = [];
-
-    /* MEMBERS */
-    const membersResult = await this.db.query(
-      `
-    SELECT COUNT(*) as total
-    FROM team_members
-    WHERE team_id = $1
-    AND status = 'active'
-        `,
-      [teamId],
-    );
-
-    const totalMembers = Number(membersResult.rows[0]?.total || 0);
-
-    /* LEADS */
-    const leadsResult = await this.db.query(
-      `
-    SELECT COUNT(*) as total
-    FROM leads
-    WHERE team_id = $1
-    `,
-      [teamId],
-    );
-
-    const totalLeads = Number(leadsResult.rows[0]?.total || 0);
-
-    /* OPEN DEALS */
-    const pipelineResult = await this.db.query(
-      `
-    SELECT COALESCE(SUM(value),0) as total
-    FROM deals
-    WHERE team_id = $1
-    AND stage != 'won'
-    `,
-      [teamId],
-    );
-
-    const pipeline = Number(pipelineResult.rows[0]?.total || 0);
-
-    /* ===== INSIGHTS ===== */
-
-    if (totalMembers <= 2) {
-      insights.push({
-        id: "team-small",
-        type: "warning",
-        title: "Small team detected",
-        description: "Consider inviting more members to improve collaboration.",
-      });
-    }
-
-    if (totalLeads === 0) {
-      insights.push({
-        id: "no-leads",
-        type: "danger",
-        title: "No active leads",
-        description: "Your team currently has no active leads in the pipeline.",
-      });
-    }
-
-    if (pipeline > 10000) {
-      insights.push({
-        id: "pipeline-healthy",
-        type: "success",
-        title: "Healthy pipeline growth",
-        description: "Your team pipeline is performing well this month.",
-      });
-    }
-
-    if (insights.length === 0) {
-      insights.push({
-        id: "all-good",
-        type: "info",
-        title: "Team performance stable",
-        description: "Everything looks healthy across your workspace.",
-      });
-    }
-
-    return insights.slice(0, 5);
-  }
-
   async getLeaderboard(teamId: string) {
-    const result = await this.db.query(
-      `
-    SELECT
-      u.id,
-      u.name,
+    const rows = await this.analyticsService.getMemberStats(teamId);
 
-      (
-        SELECT COUNT(*)
-        FROM leads l
-        WHERE l.assigned_to = u.id
-        AND l.team_id = $1
-      ) as "totalLeads",
+    const normalizedRows = rows.map((member: any) => {
+      const totalLeads = Number(member.totalLeads || 0);
 
-      (
-        SELECT COALESCE(SUM(d.value), 0)
-        FROM deals d
-        WHERE d.assigned_to = u.id
-        AND d.team_id = $1
-        AND d.stage != 'won'
-      ) as "pipelineValue",
+      const dealsWon = Number(member.dealsWon || 0);
 
-      FLOOR(RANDOM() * 20 + 80) as "aiScore"
+      const pipelineValue = Number(member.pipelineValue || 0);
 
-    FROM team_members tm
+      const aiScore = Math.min(
+        100,
+        Math.round(
+          dealsWon * 12 + totalLeads * 2 + Math.min(pipelineValue / 2000, 30),
+        ),
+      );
 
-    INNER JOIN users u
-      ON u.id = tm.user_id
+      return {
+        ...member,
+        aiScore,
+      };
+    });
 
-    WHERE tm.team_id = $1
-    AND tm.status = 'active'
-
-    GROUP BY u.id, u.name
-
-    ORDER BY "pipelineValue" DESC
-    LIMIT 4
-    `,
-      [teamId],
-    );
-
-    const rows = result.rows;
-
-    if (!rows.length) {
+    if (!normalizedRows.length) {
       return [];
     }
 
-    const topPipeline = [...rows].sort(
+    const topPipeline = [...normalizedRows].sort(
       (a, b) => Number(b.pipelineValue) - Number(a.pipelineValue),
     )[0];
 
-    const topLeads = [...rows].sort(
+    const topLeads = [...normalizedRows].sort(
       (a, b) => Number(b.totalLeads) - Number(a.totalLeads),
     )[0];
 
-    const topAi = [...rows].sort(
+    const topAi = [...normalizedRows].sort(
       (a, b) => Number(b.aiScore) - Number(a.aiScore),
     )[0];
 
     return [
       {
         id: "highest-pipeline",
+
         label: "Highest Pipeline",
+
         name: topPipeline?.name || "-",
+
         value: `$${Number(topPipeline?.pipelineValue || 0).toLocaleString()}`,
       },
 
       {
         id: "most-leads",
+
         label: "Most Leads Closed",
+
         name: topLeads?.name || "-",
+
         value: `${topLeads?.totalLeads || 0} leads`,
       },
 
       {
         id: "highest-ai",
+
         label: "Highest AI Score",
+
         name: topAi?.name || "-",
+
         value: `${topAi?.aiScore || 0}%`,
       },
     ];
   }
+
   async getMembersPaginated({
     teamId,
     page = 1,
@@ -1090,10 +1032,6 @@ export class TeamsService {
 
       values.push(`%${search}%`);
       paramIndex++;
-    }
-
-    if (filter === "active") {
-      conditions.push(`tm.status = 'active'`);
     }
 
     if (filter === "pending") {
@@ -1161,82 +1099,112 @@ export class TeamsService {
 
     const membersResult = await this.db.query(
       `
-    SELECT
-      u.id,
-      u.name,
-      u.email,
-      u.phone,
-      tm.role,
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.phone,
 
-      u.avatar_url as avatar,
+        tm.role,
 
-      u.job_title as "jobTitle",
+        u.avatar_url as avatar,
 
-      u.is_active as "isActive",
+        u.job_title as "jobTitle",
 
-      u.last_seen_at as "lastSeenAt",
+        u.is_active as "isActive",
 
-      u.created_at as "createdAt",
+        u.last_seen_at as "lastSeenAt",
 
-      COUNT(DISTINCT l.id) as "totalLeads",
+        u.created_at as "createdAt",
 
-      COALESCE(
-        SUM(
-          CASE
-            WHEN d.stage != 'won'
-            THEN d.value
-            ELSE 0
-          END
-        ),
-        0
-      ) as "pipelineValue",
+        COALESCE(ls.total_leads, 0) as "totalLeads",
 
-      COUNT(
-        DISTINCT CASE
-          WHEN d.stage = 'won'
-          THEN d.id
-        END
-      ) as "dealsWon",
+        COALESCE(ds.pipeline_value, 0) as "pipelineValue",
 
-      FLOOR(RANDOM() * 30 + 70) as "aiScore"
+        COALESCE(ds.deals_won, 0) as "dealsWon"
 
-    FROM team_members tm
+      FROM team_members tm
 
-    INNER JOIN users u
-      ON u.id = tm.user_id
+      INNER JOIN users u
+        ON u.id = tm.user_id
 
-    LEFT JOIN leads l
-      ON l.assigned_to = u.id
-      AND l.team_id = $1
+      LEFT JOIN (
+        SELECT
+          assigned_to,
 
-    LEFT JOIN deals d
-      ON d.assigned_to = u.id
-      AND d.team_id = $1
+          COUNT(*) as total_leads
 
-    WHERE ${whereClause}
+        FROM leads
 
-    GROUP BY
-      u.id,
-      u.name,
-      u.email,
-      u.phone,
-      u.avatar_url,
-      u.job_title,
-      u.is_active,
-      u.last_seen_at,
-      u.created_at,
-      tm.role
+        WHERE team_id = $1
 
-    ORDER BY u.created_at DESC
+        GROUP BY assigned_to
+      ) ls
+        ON ls.assigned_to = u.id
 
-    LIMIT $${paramIndex}
-    OFFSET $${paramIndex + 1}
+      LEFT JOIN (
+        SELECT
+          assigned_to,
+
+          COALESCE(
+            SUM(
+              CASE
+                WHEN stage != 'won'
+                THEN value
+                ELSE 0
+              END
+            ),
+            0
+          ) as pipeline_value,
+
+          COUNT(
+            CASE
+              WHEN stage = 'won'
+              THEN 1
+            END
+          ) as deals_won
+
+        FROM deals
+
+        WHERE team_id = $1
+
+        GROUP BY assigned_to
+      ) ds
+        ON ds.assigned_to = u.id
+
+      WHERE ${whereClause}
+
+      ORDER BY u.created_at DESC
+
+      LIMIT $${paramIndex}
+      OFFSET $${paramIndex + 1}
+
     `,
       values,
     );
 
+    const members = membersResult.rows.map((member: any) => {
+      const totalLeads = Number(member.totalLeads || 0);
+
+      const dealsWon = Number(member.dealsWon || 0);
+
+      const pipelineValue = Number(member.pipelineValue || 0);
+
+      const aiScore = Math.min(
+        100,
+        Math.round(
+          dealsWon * 12 + totalLeads * 2 + Math.min(pipelineValue / 2000, 30),
+        ),
+      );
+
+      return {
+        ...member,
+        aiScore,
+      };
+    });
+
     return {
-      data: membersResult.rows,
+      data: members,
 
       pagination: {
         total,
@@ -1249,5 +1217,9 @@ export class TeamsService {
 
   async getAIInsights(teamId: string) {
     return this.aiInsightsService.generate(teamId);
+  }
+
+  async refreshAIInsights(teamId: string, userId: string) {
+    return this.aiInsightsService.refreshAIInsights(teamId, userId);
   }
 }

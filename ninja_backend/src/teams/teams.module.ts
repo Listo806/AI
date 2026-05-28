@@ -6,11 +6,12 @@ import { AnalyticsModule } from '../analytics/analytics.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MembersModule } from './members/members.module';
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
+import { TeamAnalyticsService } from "./analytics/team-analytics.service";
 
 @Module({
   imports: [UsersModule, AnalyticsModule, NotificationsModule, forwardRef(() => MembersModule),],
   controllers: [TeamsController],
-  providers: [TeamsService, TeamAIInsightsService],
+  providers: [TeamsService, TeamAIInsightsService, TeamAnalyticsService],
   exports: [TeamsService],
 })
 export class TeamsModule {}
