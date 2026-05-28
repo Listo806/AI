@@ -948,8 +948,8 @@ body.crm-dark .crm-main::after {
   display: none; /* Hidden on mobile */
   width: 27px;
   height: 27px;
-  background: var(--border);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 0;
   border-radius: 8px;
   color: var(--text);
   cursor: pointer;

@@ -75,7 +75,9 @@
     background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
 }
 .team-notifications-stat-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(59, 130, 246, 0.06);
 }
 
 .team-notifications-stat-card span {
