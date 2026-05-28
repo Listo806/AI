@@ -554,7 +554,7 @@ export class TeamsService {
             WHEN d.stage = 'won'
             THEN d.id
           END
-        ) as "dealsWon",
+        ) as "dealsWon"
 
       FROM team_members tm
 
