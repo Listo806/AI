@@ -7,8 +7,9 @@ const ICONS = {
   "Highest Pipeline": TrendingUp,
   "Highest AI Score": Sparkles,
 };
-
+import { useNavigate } from "react-router-dom";
 export default function TeamPerformanceCard({ leaderboard = [] }) {
+  const navigate = useNavigate();
   return (
     <div className="team-card">
       <div className="team-card-header">
@@ -18,7 +19,7 @@ export default function TeamPerformanceCard({ leaderboard = [] }) {
           <p className="team-card-description">Top metrics from your team</p>
         </div>
 
-        <button className="team-link-btn">View Full Report</button>
+        <button className="team-link-btn" onClick={() => navigate("/dashboard/team/performance")}>View Full Report</button>
       </div>
 
       <div className="team-performance-list">

@@ -78,7 +78,7 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
       </div>
 
       <div className="team-insights-footer">
-        <button className="team-insights-report-btn">
+        <button className="team-insights-report-btn" onClick={() => navigate("/dashboard/team/ai-insights")}>
           View Full AI Report
         </button>
       </div>
