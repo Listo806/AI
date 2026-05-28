@@ -95,6 +95,7 @@ import AppointmentPage from "./pages/integrations/AppointmentPage";
 import TeamMembersPage from "./pages/team/TeamMembersPage";
 import TeamAIInsightsPage from "./pages/team/TeamAIInsightsPage";
 import TeamPerformancePage from "./pages/team/TeamPerformancePage";
+import TeamActivityPage from "./pages/team/TeamActivityPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -228,6 +229,7 @@ function AppRoutes() {
         <Route path="team/members" element={<TeamMembersPage />} />
         <Route path="team/ai-insights" element={<TeamAIInsightsPage />} />
         <Route path="team/performance" element={<TeamPerformancePage  />} />
+        <Route path="team/activity" element={<TeamActivityPage   />} />
         
         {/* Integrations Routes */}
         <Route path="integrations" element={<Integrations />} />

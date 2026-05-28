@@ -316,14 +316,9 @@
   min-height: 84px;
   padding: 16px 18px;
   border-radius: 18px;
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.025),
-      rgba(255, 255, 255, 0.015)
-    );
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.22s ease;
+  background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .team-performance-row:hover {
