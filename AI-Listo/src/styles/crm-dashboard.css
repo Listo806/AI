@@ -42,7 +42,7 @@ body {
 /* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
   width: 195px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
-  background: #f9f8fc;
+  background: #fff;
   color: var(--text);
   padding: 0;
   display: flex;

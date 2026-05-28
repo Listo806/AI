@@ -1,0 +1,309 @@
+.team-notifications-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-bottom: 40px;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.team-notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-notifications-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.team-notifications-header-icon {
+  width: 46px;
+  height: 46px;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.18),
+      rgba(99, 102, 241, 0.18)
+    );
+
+  color: #60a5fa;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.team-notifications-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  padding-top: 30px;
+}
+
+.team-notifications-stat-card {
+  padding: 22px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 10px #0000000a;
+}
+.team-notifications-stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
+}
+.team-notifications-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.team-notifications-stat-card span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.team-notifications-stat-card h2 {
+  font-size: 32px;
+  margin: 16px 0 8px;
+}
+
+.team-notifications-stat-card p {
+  color: #22c55e;
+  font-size: 13px;
+}
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.team-notifications-table {
+  margin-top: 10px;
+}
+
+.team-notifications-table-head {
+  display: grid;
+  grid-template-columns: 1.5fr 180px 140px;
+
+  padding: 0 18px 14px;
+
+  color: var(--text-secondary);
+
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.team-notifications-table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-notifications-row {
+  transition: all 0.22s ease;
+  display: grid;
+    grid-template-columns: 1.5fr 180px 140px;
+    align-items: center;
+    min-height: 84px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.team-notifications-row:hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(59, 130, 246, 0.18);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(59, 130, 246, 0.06),
+      rgba(255, 255, 255, 0.02)
+    );
+}
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.team-notifications-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.team-notifications-icon {
+  width: 44px;
+  height: 44px;
+
+  border-radius: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid transparent;
+}
+
+.team-notifications-icon.success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.team-notifications-icon.warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #facc15;
+}
+
+.team-notifications-icon.danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.team-notifications-icon.billing {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+.team-notifications-icon.info {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.team-notifications-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.team-notifications-description {
+  margin-top: 4px;
+
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.team-notifications-badge {
+  width: fit-content;
+
+  padding: 8px 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-transform: capitalize;
+}
+
+.team-notifications-badge.success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+}
+
+.team-notifications-badge.warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #facc15;
+}
+
+.team-notifications-badge.danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+.team-notifications-badge.billing {
+  background: rgba(168, 85, 247, 0.12);
+  color: #c084fc;
+}
+
+.team-notifications-badge.info {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+/* =========================================================
+   TIME
+========================================================= */
+
+.team-notifications-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.team-notifications-time span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.team-notifications-arrow {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: var(--text-secondary);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+  .team-notifications-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .team-notifications-table-head {
+    display: none;
+  }
+
+  .team-notifications-row {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .team-notifications-time {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-notifications-stats {
+    grid-template-columns: 1fr;
+  }
+}

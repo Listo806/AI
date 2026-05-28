@@ -190,7 +190,7 @@ console.log("USER IN SIDEBAR:", user);
         </div>
 
         <nav className="crm-nav">
-          {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.core")}</div>}
+          {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.core")}</div>*/}
           {navItems.map((item, index) => (
             <span key={`${item.path}-${index}`} style={{ display: "contents" }}>
               <NavLink
@@ -233,7 +233,7 @@ console.log("USER IN SIDEBAR:", user);
           {showAiCenterAndBottom && (
             <>
               
-              {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.ai_agent")}</div>}
+              {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.ai_agent")}</div>*/}
               {/*<div className="crm-nav-group crm-nav-group-ai">*/}
               {isCollapsed ? (
                 <NavLink
@@ -295,7 +295,7 @@ console.log("USER IN SIDEBAR:", user);
           )}
           {!canSeeAdmin && (
             <>
-            {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.intelligence")}</div>}
+            {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.intelligence")}</div>*/}
             {analyticsNavItems.map((item, index) => (
                 <NavLink
                   key={`${item.path}-${index}`}
@@ -317,7 +317,7 @@ console.log("USER IN SIDEBAR:", user);
           {showAiCenterAndBottom && !canSeeAdmin && (
             <>
             
-            {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.management")}</div>}
+            {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.management")}</div>*/}
               {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
               <div className="crm-nav-group-bottom">
               {bottomNavItems.map((item, index) => (
@@ -340,7 +340,7 @@ console.log("USER IN SIDEBAR:", user);
             </>
           )}
           
-          {!isCollapsed && <div className="crm-nav-fix-label">{t("nav.system")}</div>}
+          {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.system")}</div>*/}
           {systemNavItems.map((item, index) => (
               <NavLink
                 key={`${item.path}-${index}`}
@@ -357,7 +357,7 @@ console.log("USER IN SIDEBAR:", user);
                 )}
               </NavLink>
             ))}
-            <div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
+            {/*<div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
               <div className="ai-usage-header">
                 <span className="ai-usage-title">{t("nav.ai_usage")}</span>
               </div>     
@@ -381,7 +381,7 @@ console.log("USER IN SIDEBAR:", user);
                 </div>
                 <span className="ai-usage-reset">{t("nav.ai_usage_reset")}</span>
               </div>
-            </div>
+            </div>*/}
         </nav>
         
         {/* {!isCollapsed && (

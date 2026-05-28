@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { formatTimeAgo } from "../../../utils/helpers";
+import { useNavigate } from "react-router-dom";
 const notificationConfig = {
   team_created: {
     icon: CheckCircle2,
@@ -48,6 +49,7 @@ const notificationConfig = {
 };
 
 export default function TeamNotificationsCard({ notifications = [] }) {
+  const navigate = useNavigate();
   return (
     <div className="team-card team-notifications-card">
       <div className="team-card-header">
@@ -57,7 +59,12 @@ export default function TeamNotificationsCard({ notifications = [] }) {
           <p className="team-card-subtitle">Latest workspace updates</p>
         </div>
 
-        <button className="team-link-btn">View All</button>
+        <button
+          className="team-link-btn"
+          onClick={() => navigate("/dashboard/team/notifications")}
+        >
+          View All
+        </button>
       </div>
 
       <div className="team-notifications-list">
@@ -79,7 +86,9 @@ export default function TeamNotificationsCard({ notifications = [] }) {
                 <div className="team-notification-content">
                   <div className="team-notification-title">{item.message}</div>
 
-                  <div className="team-notification-time">{formatTimeAgo(item.createdAt)}</div>
+                  <div className="team-notification-time">
+                    {formatTimeAgo(item.createdAt)}
+                  </div>
                 </div>
               </div>
             );
