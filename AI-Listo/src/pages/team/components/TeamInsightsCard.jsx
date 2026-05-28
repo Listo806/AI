@@ -40,6 +40,10 @@ const getInsightIcon = (type) => {
 import { useNavigate } from "react-router-dom";
 export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
   const navigate = useNavigate();
+  const insightItems = [
+    ...(insights?.alerts || []),
+    ...(insights?.pipelineRisks || []),
+  ].slice(0, 5);
   return (
     <div className="team-card team-insights-card">
       <div className="team-card-header">
@@ -60,14 +64,12 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
       </div>
 
       <div className="team-insights-list">
-        {(insights || []).map((item, index) => (
+        {insightItems.map((item, index) => (
           <div key={item.id || item._id || index} className="team-insight-box">
             <div className="team-insight-left">
               {getInsightIcon(item.type)}
-
               <div>
                 <p className="team-insight-title">{item.title}</p>
-
                 <p className="team-insight-description">{item.description}</p>
               </div>
             </div>
