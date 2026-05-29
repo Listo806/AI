@@ -21,6 +21,12 @@ import {
   Flame,
   Sparkles,
   Handshake,
+  Edit3,
+  Trash2,
+  Archive,
+  UserCog,
+  StickyNote,
+  GitBranch,
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
@@ -45,6 +51,17 @@ export default function ContactsRelationshipsPage() {
     notes: "",
   });
 
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  useEffect(() => {
+    const closeMenu = () => setOpenMenuId(null);
+
+    window.addEventListener("click", closeMenu);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+    };
+  }, []);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const showToast = (message, type = "success") => {
@@ -260,7 +277,7 @@ export default function ContactsRelationshipsPage() {
                     title={stat.label}
                     value={stat.value}
                     sub={stat.sub}
-                    trend="+12%"
+                    trend={stat.label === "Active Sellers" ? "0%" : "+12%"}
                     variant={
                       stat.label === "Active Buyers"
                         ? "buyers"
@@ -359,20 +376,91 @@ export default function ContactsRelationshipsPage() {
                             contact.name?.charAt(0)?.toUpperCase()}
                         </div>
 
-                        <div>
+                        <div className="contact-group-right">
                           <div className="contact-name">{contact.name}</div>
-
-                          <div className="intent-round"></div>
+                          <div className="intent-badge">
+                            {contact.status || "Cold"}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="intent-badge">
-                        ● {contact.status || "Cold"}
+                      <div
+                        className="contact-action"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(
+                            openMenuId === contact.id ? null : contact.id,
+                          );
+                        }}
+                      >
+                        <MoreVertical size={18} />
+
+                        {openMenuId === contact.id && (
+                          <div
+                            className="contact-menu"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={() =>
+                                navigate(`/dashboard/contacts/${contact.id}`)
+                              }
+                            >
+                              <Eye size={15} />
+                              View Contact
+                            </button>
+
+                            <button>
+                              <Edit3 size={15} />
+                              Edit Contact
+                            </button>
+
+                            <button onClick={() => messageContact(contact.id)}>
+                              <Send size={15} />
+                              Message
+                            </button>
+
+                            <button>
+                              <UserCog size={15} />
+                              Assign Agent
+                            </button>
+
+                            <button>
+                              <StickyNote size={15} />
+                              Add Note
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/contacts/relationship-map?id=${contact.id}`,
+                                )
+                              }
+                            >
+                              <GitBranch size={15} />
+                              Open Relationship Map
+                            </button>
+
+                            <button onClick={runAiReview}>
+                              <Bot size={15} />
+                              Run AI Review
+                            </button>
+
+                            <button className="warning">
+                              <Archive size={15} />
+                              Archive Contact
+                            </button>
+
+                            <button className="danger">
+                              <Trash2 size={15} />
+                              Delete Contact
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* INFO */}
-                    <div className="info-grid">
+                    <div className="info-grid modern">
                       <InfoBox
                         icon={Mail}
                         label="Email"
@@ -405,16 +493,14 @@ export default function ContactsRelationshipsPage() {
                           <Bot size={22} />
                         </div>
 
-                        <div>
-                          <div className="ai-title">AI Relationship Score</div>
-
-                          <div className="ai-sub">
-                            Highly engaged. Recommended follow-up today.
-                          </div>
+                        <div className="ai-top">
+                          <div className="ai-title">AI Score: </div>
+                          <div className="ai-score">{contact.score || 0}%</div>
+                        </div>
+                        <div className="ai-sub">
+                          Highly engaged. Recommended follow-up today.
                         </div>
                       </div>
-
-                      <div className="ai-score">{contact.score || 0}%</div>
                     </div>
 
                     {/* ACTIONS */}
@@ -425,16 +511,26 @@ export default function ContactsRelationshipsPage() {
                           navigate(`/dashboard/contacts/${contact.id}`)
                         }
                       >
-                        <Eye size={18} />
+                        <Eye size={16} />
                         View
                       </button>
 
                       <button
-                        className="primary-action"
+                        className="secondary-action"
                         onClick={() => messageContact(contact.id)}
                       >
-                        <Send size={18} />
+                        <Send size={16} />
                         Message
+                      </button>
+
+                      <button className="secondary-action">
+                        <Phone size={16} />
+                        Call
+                      </button>
+
+                      <button className="secondary-action">
+                        <StickyNote size={16} />
+                        Notes
                       </button>
                     </div>
                   </div>
@@ -590,11 +686,11 @@ function InfoBox({ icon: Icon, label, value }) {
   return (
     <div className="info-box">
       <div className="info-label">
-        <Icon size={13} />
-        {label}
+        <Icon size={12} />
+        <span>{label}</span>
       </div>
 
-      <p>{value || "-"}</p>
+      <div className="info-text">{value || "-"}</div>
     </div>
   );
 }
@@ -602,21 +698,46 @@ function InfoBox({ icon: Icon, label, value }) {
 function KPIBox({ icon, title, value, sub, trend, variant }) {
   return (
     <div className={`kpi-box ${variant}`}>
-      <div className="kpi-left">
-        <div className="kpi-icon">{icon}</div>
+      <div className="kpi-top">
+        <div className="kpi-left">
+          <div className="kpi-icon">{icon}</div>
 
-        <div className="kpi-content">
-          <div className="kpi-title">{title}</div>
+          <div className="kpi-content">
+            <div className="kpi-title">{title}</div>
 
-          <div className="kpi-value">{value}</div>
+            <div className="kpi-value-row">
+              <div className="kpi-value">{value}</div>
 
-          <div className="kpi-sub">{sub}</div>
+              <div className={`kpi-trend ${trend === "0%" ? "neutral" : ""}`}>
+                {trend}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="kpi-right">
-        <div className="kpi-trend">{trend}</div>
-        <p>vs last 30 days</p>
+      <div className="kpi-chart">
+        <svg viewBox="0 0 180 42" preserveAspectRatio="none">
+          <path
+            d={
+              title === "Active Sellers"
+                ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
+                : title === "AI Engagement"
+                  ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
+                  : title === "Active Buyers"
+                    ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"
+                    : "M0 34 L20 30 L40 32 L60 24 L80 28 L100 18 L120 8 L140 14 L160 10 L180 4"
+            }
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+
+      <div className="kpi-bottom">
+        <span>this month</span>
       </div>
     </div>
   );
