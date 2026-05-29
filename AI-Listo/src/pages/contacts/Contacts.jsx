@@ -475,7 +475,7 @@ export default function ContactsRelationshipsPage() {
 
                       <InfoBox
                         icon={UserPlus}
-                        label="Linked Lead"
+                        label="Source"
                         value={contact.linkedLead || "-"}
                       />
 

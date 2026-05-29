@@ -421,10 +421,18 @@ body .contacts-page .map svg{
 
 .contacts-page .contacts-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 12px;
   padding-bottom: 10px;
+  width: 100%;
+  overflow: hidden;
+}
+.sidebar-collapsed .contacts-page .contacts-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.contacts-page .contact-card {
+  min-width: 0;
 }
 
 .contacts-page .contact-card {
@@ -791,7 +799,7 @@ body .contacts-page .map svg{
   background: #fff;
   border-right: 1px solid #edf0f5;
   border-radius: 0;
-  padding: 10px;
+  padding: 10px 5px;
   min-height: 72px;
   display: flex;
   flex-direction: column;
@@ -817,7 +825,22 @@ body .contacts-page .map svg{
   font-weight: 600;
   color: #111827;
   line-height: 1.4;
+  overflow-wrap: break-word;
   word-break: break-word;
+  min-width: 0;
+}
+.contacts-page .info-grid.modern .info-box {
+  min-width: 0;
+}
+
+@media (min-width: 1400px) {
+  .contacts-page .contacts-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.crm-sidebar-toggle-inside ~ .crm-content .contacts-page .contacts-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 @media (min-width: 1200px) {
     .contacts-page .main-content {
