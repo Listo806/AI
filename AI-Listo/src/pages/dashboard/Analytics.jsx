@@ -1,823 +1,911 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import Select from 'react-select';
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area
-} from 'recharts';
-import { useAuth } from '../../context/AuthContext';
-import { getDashboardSummary, getAnalyticsDashboard, getActivityMetrics, getOwnerLeads } from '../../api/analyticsApi';
-import './analytics.css';
+import React, { useState } from "react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+} from "recharts";
 
-// Collapsible Section: optional collapsible on desktop for lower-priority sections
-function CollapsibleSection({ title, children, defaultExpanded = false, isMobile = false, collapsibleOnDesktop = false }) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [renderKey, setRenderKey] = useState(0);
+import {
+  BarChart3,
+  DollarSign,
+  TrendingUp,
+  Users,
+  AlertTriangle,
+  Sparkles,
+  Zap,
+  Bot,
+  CalendarCheck,
+  Globe,
+  Clock3,
+  Target,
+  Download,
+  MessageCircle,
+  Megaphone,
+  FileDown,
+  RefreshCw,
+  Percent,
+  LayoutDashboard,
+  Briefcase,
+  Home,
+  Contact,
+  ShieldCheck,
+  CheckSquare,
+  Calendar,
+  Layers,
+  Settings,
+  LogOut,
+  Bell,
+  HelpCircle,
+  ChevronDown,
+} from "lucide-react";
 
-  useEffect(() => {
-    if (isExpanded) {
-      const timer = setTimeout(() => setRenderKey(prev => prev + 1), 150);
-      return () => clearTimeout(timer);
-    }
-  }, [isExpanded]);
+import "./analytics.css";
 
-  const showCollapsible = isMobile || collapsibleOnDesktop;
-
-  if (!showCollapsible) {
-    return (
-      <section className="analytics-section">
-        <h2 className="analytics-section-title">{title}</h2>
-        {children}
-      </section>
-    );
-  }
-
-  return (
-    <section className="analytics-section analytics-section-collapsible">
-      <button
-        className="analytics-section-header-button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        aria-expanded={isExpanded}
-      >
-        <h2 className="analytics-section-title">{title}</h2>
-        <span className="analytics-section-toggle-icon">
-          {isExpanded ? '▼' : '▶'}
-        </span>
-      </button>
-      {isExpanded && (
-        <div className="analytics-section-content" key={renderKey}>
-          {children}
-        </div>
-      )}
-    </section>
-  );
+function money(value) {
+  const amount = Number(value || 0);
+  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`;
+  if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
+  return `$${amount.toLocaleString()}`;
 }
 
-// Build funnel from analytics leads.byStatus (backend: new, contacted, qualified, converted, lost)
-function buildFunnelFromLeads(leads) {
-  if (!leads?.byStatus) return [];
-  const { total, byStatus } = leads;
-  const newCount = byStatus.new ?? 0;
-  const contacted = byStatus.contacted ?? 0;
-  const qualified = byStatus.qualified ?? 0;
-  const converted = byStatus.converted ?? 0;
-  const totalCount = typeof total === 'number' ? total : (newCount + contacted + qualified + converted + (byStatus.lost ?? 0));
-  const pct = (n) => totalCount > 0 ? ((n / totalCount) * 100).toFixed(1) : 0;
-  return [
-    { stage: 'Lead', count: totalCount, conversion: 100 },
-    { stage: 'Contacted', count: contacted, conversion: parseFloat(pct(contacted)) },
-    { stage: 'Qualified', count: qualified, conversion: parseFloat(pct(qualified)) },
-    { stage: 'Proposal', count: 0, conversion: 0 },
-    { stage: 'Closed', count: converted, conversion: parseFloat(pct(converted)) },
-  ].filter((row) => row.count > 0 || row.stage === 'Lead');
-}
-
-// Aggregate leads by source for source performance (from /crm/owner/leads)
-function aggregateBySource(leads, leadSourceFilter) {
-  let list = Array.isArray(leads) ? leads : [];
-  if (leadSourceFilter?.length) {
-    const values = leadSourceFilter.map((o) => o.value?.toLowerCase());
-    list = list.filter((l) => values.includes((l.source || '').toLowerCase()));
-  }
-  const bySource = {};
-  list.forEach((l) => {
-    const src = (l.source || 'other').trim() || 'other';
-    const key = src.charAt(0).toUpperCase() + src.slice(1).toLowerCase();
-    if (!bySource[key]) bySource[key] = { leads: 0, converted: 0 };
-    bySource[key].leads += 1;
-    if (l.status === 'converted' || l.status === 'qualified') bySource[key].converted += 1;
-  });
-  return Object.entries(bySource).map(([source, d]) => ({
-    source,
-    leads: d.leads,
-    conversion: d.leads > 0 ? ((d.converted / d.leads) * 100).toFixed(1) : 0,
-    revenue: 0,
-  }));
-}
-
-export default function Analytics() {
-  const { t } = useTranslation();
-  const { isAuthenticated, user } = useAuth();
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dashboardSummary, setDashboardSummary] = useState(null);
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [activityData, setActivityData] = useState(null);
-  const [leadsForSource, setLeadsForSource] = useState([]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const dateRangeOptions = [
-    { value: 'today', label: t('common.today') },
-    { value: '7d', label: '7d' },
-    { value: '30d', label: '30d' },
-    { value: 'custom', label: t('common.all') },
+export default function CortexaAnalyticsDashboard() {
+  const kpisRow1 = [
+    {
+      title: "Projected Revenue",
+      value: "$2.48M",
+      delta: "18.4%",
+      positive: true,
+      subtext: "Expected closings this quarter",
+      icon: DollarSign,
+      iconBg: "bg-green-light",
+      iconColor: "text-green-strong",
+    },
+    {
+      title: "Conversion Rate",
+      value: "21.8%",
+      delta: "3.2%",
+      positive: true,
+      subtext: "Lead-to-close conversion",
+      icon: TrendingUp,
+      iconBg: "bg-orange-light",
+      iconColor: "text-orange-strong",
+    },
+    {
+      title: "AI Close Rate",
+      value: "31%",
+      delta: "8.1%",
+      positive: true,
+      subtext: "Deals assisted by AI",
+      icon: ShieldCheck,
+      iconBg: "bg-purple-light",
+      iconColor: "text-purple-strong",
+    },
+    {
+      title: "Appointments",
+      value: "148",
+      delta: "26",
+      positive: true,
+      subtext: "Showings booked this period",
+      icon: CalendarCheck,
+      iconBg: "bg-blue-light",
+      iconColor: "text-blue-strong",
+    },
+    {
+      title: "Avg Time to Close",
+      value: "18 Days",
+      delta: "4 days",
+      positive: false,
+      subtext: "Average deal cycle",
+      icon: Clock3,
+      iconBg: "bg-red-light",
+      iconColor: "text-red-strong",
+    },
+    {
+      title: "Lead Quality Score",
+      value: "2m 34s",
+      delta: "384",
+      positive: true,
+      subtext: "Average speed to lead",
+      icon: Target,
+      iconBg: "bg-cyan-light",
+      iconColor: "text-cyan-strong",
+    },
+    {
+      title: "ROAS",
+      value: "4.62x",
+      delta: "22.1%",
+      positive: true,
+      subtext: "Revenue return on ad spend",
+      icon: Percent,
+      iconBg: "bg-pink-light",
+      iconColor: "text-pink-strong",
+    },
   ];
 
-  const leadSourceOptions = [
-    { value: 'website', label: 'Website' },
-    { value: 'whatsapp', label: 'WhatsApp' },
-    { value: 'instagram', label: 'Instagram' },
-    { value: 'email', label: 'Email' },
+  const kpisRow2 = [
+    {
+      title: "Ad Spend",
+      value: "$53,420",
+      delta: "6.2%",
+      positive: true,
+      subtext: "Total campaign spend",
+      icon: Megaphone,
+      iconColor: "text-blue-spend",
+      iconBg: "bg-blue-light",
+    },
+    {
+      title: "Cost Per Lead",
+      value: "$12.48",
+      delta: "8.5%",
+      positive: false,
+      subtext: "Average CPL",
+      icon: Target,
+      iconColor: "text-red-cpl",
+      iconBg: "bg-red-light",
+    },
+    {
+      title: "Cost Per Appointment",
+      value: "$48.21",
+      delta: "5.1%",
+      positive: true,
+      subtext: "Cost to book a showing",
+      icon: Calendar,
+      iconColor: "text-purple-cpa",
+      iconBg: "bg-purple-light",
+    },
+    {
+      title: "Cost Per Closing",
+      value: "$342.65",
+      delta: "7.7%",
+      positive: true,
+      subtext: "Cost to close a deal",
+      icon: DollarSign,
+      iconColor: "text-darkblue-cpc",
+      iconBg: "bg-cyan-light",
+    },
   ];
 
-  const leadStatusOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'contacted', label: 'Contacted' },
-    { value: 'qualified', label: 'Qualified' },
-    { value: 'proposal', label: 'Proposal' },
-    { value: 'closed', label: 'Closed' },
+  const revenueTrend = [
+    { month: "Jan", revenue: 180000 },
+    { month: "Feb", revenue: 240000 },
+    { month: "Mar", revenue: 210000 },
+    { month: "Apr", revenue: 310000 },
+    { month: "May", revenue: 510000 },
+    { month: "Jun", revenue: 600000 },
   ];
 
-  const agentOptions = [];
-  const teamOptions = [];
-  const campaignOptions = [];
+  const leadSources = [
+    {
+      source: "WhatsApp",
+      leads: 123,
+      conversion: 58,
+      revenue: 920000,
+      fill: "#2563eb",
+    },
+    {
+      source: "Instagram",
+      leads: 92,
+      conversion: 19,
+      revenue: 910000,
+      fill: "#7c3aed",
+    },
+    {
+      source: "Website",
+      leads: 74,
+      conversion: 17,
+      revenue: 539000,
+      fill: "#ea580c",
+    },
+    {
+      source: "Marketplace",
+      leads: 41,
+      conversion: 15,
+      revenue: 200000,
+      fill: "#0d9488",
+    },
+    {
+      source: "Referrals",
+      leads: 16,
+      conversion: 17,
+      revenue: 510000,
+      fill: "#16a34a",
+    },
+  ];
 
-  const [filters, setFilters] = useState({
-    dateRange: { value: '30d', label: '30d' },
-    comparePeriod: false,
-    agents: [],
-    teams: [],
-    leadSources: [],
-    campaigns: [],
-    leadStatuses: [],
-  });
+  const pipelineStages = [
+    { name: "Leeds", count: 218, conversion: "156%", drop: "-" },
+    { name: "Qualified", count: 218, conversion: "68%", drop: "-32%" },
+    { name: "Showings", count: 216, conversion: "37%", drop: "-32%" },
+    { name: "Offers", count: 54, conversion: "17%", drop: "-22%" },
+    { name: "Closings", count: 16, conversion: "6%", drop: "-11%" },
+  ];
 
-  const dateValue = filters.dateRange?.value || '30d';
+  const aiPerformance = [
+    { day: "Mon", replies: 42, appointments: 8 },
+    { day: "Tue", replies: 51, appointments: 11 },
+    { day: "Wed", replies: 67, appointments: 15 },
+    { day: "Thu", replies: 74, appointments: 18 },
+    { day: "Fri", replies: 83, appointments: 21 },
+    { day: "Sat", replies: 58, appointments: 12 },
+    { day: "Sun", replies: 63, appointments: 14 },
+  ];
 
-  // Fetch data: Dashboard summary (KPI match), analytics dashboard (funnel), activity, leads for source
-  useEffect(() => {
-    if (!isAuthenticated() || !user) return;
+  const lostReasons = [
+    { reason: "No response", count: 42, percentage: 28, width: "85%" },
+    { reason: "Price too high", count: 31, percentage: 20, width: "65%" },
+    { reason: "Wrong location", count: 22, percentage: 15, width: "45%" },
+    { reason: "Financing issue", count: 18, percentage: 12, width: "35%" },
+    { reason: "Bought elsewhere", count: 15, percentage: 10, width: "30%" },
+    { reason: "Not qualified", count: 12, percentage: 8, width: "20%" },
+    {
+      reason: "Agent did not follow up",
+      count: 10,
+      percentage: 7,
+      width: "15%",
+    },
+  ];
 
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    (async () => {
-      try {
-        const [summary, analytics, activity, leads] = await Promise.allSettled([
-          getDashboardSummary(),
-          getAnalyticsDashboard(dateValue),
-          getActivityMetrics(dateValue),
-          getOwnerLeads(),
-        ]);
-
-        if (cancelled) return;
-
-        const summaryVal = summary.status === 'fulfilled' ? summary.value : null;
-        const analyticsVal = analytics.status === 'fulfilled' ? analytics.value : null;
-        const activityVal = activity.status === 'fulfilled' ? activity.value : null;
-        const leadsVal = leads.status === 'fulfilled' ? leads.value : [];
-
-        setDashboardSummary(summaryVal);
-        setAnalyticsData(analyticsVal);
-        setActivityData(activityVal);
-        setLeadsForSource(Array.isArray(leadsVal) ? leadsVal : []);
-      } catch (err) {
-        if (!cancelled) setError(err.message || t('common.error'));
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [isAuthenticated, user, dateValue]);
-
-  // KPI from dashboard summary (match Dashboard page)
-  const kpiData = useMemo(() => {
-    const total = dashboardSummary?.leads?.total ?? 0;
-    const qualified = dashboardSummary?.leads?.qualified ?? 0;
-    const conversionRate = total > 0 ? ((qualified / total) * 100).toFixed(1) : 0;
-    const deals = dashboardSummary?.deals || {};
-    return {
-      totalLeads: total,
-      qualifiedLeads: qualified,
-      conversionRate: parseFloat(conversionRate) || 0,
-      revenue: deals.wonValue != null ? Number(deals.wonValue) : null,
-      pipelineValue: deals.pipelineValue != null ? Number(deals.pipelineValue) : null,
-      dealsTotal: deals.total ?? 0,
-      avgTimeToFirstContact: null,
-      changes: null,
-    };
-  }, [dashboardSummary]);
-
-  // Deals by stage for chart (from dashboard summary)
-  const dealsByStageData = useMemo(() => {
-    const byStage = dashboardSummary?.deals?.byStage || {};
-    const stageLabels = [
-      { key: 'new', label: 'New' },
-      { key: 'qualified', label: 'Qualified' },
-      { key: 'proposal', label: 'Proposal' },
-      { key: 'negotiation', label: 'Negotiation' },
-      { key: 'won', label: 'Won' },
-      { key: 'lost', label: 'Lost' },
-    ];
-    return stageLabels.map(({ key, label }) => ({
-      stage: label,
-      count: Number(byStage[key]) || 0,
-    })).filter((d) => d.count > 0);
-  }, [dashboardSummary]);
-
-  // Funnel from analytics dashboard leads
-  const funnelData = useMemo(() => {
-    if (!analyticsData?.leads) return buildFunnelFromLeads({ byStatus: {}, total: 0 });
-    return buildFunnelFromLeads(analyticsData.leads);
-  }, [analyticsData]);
-
-  // Source performance from leads list (when available)
-  const sourcePerformanceData = useMemo(
-    () => aggregateBySource(leadsForSource, filters.leadSources),
-    [leadsForSource, filters.leadSources],
-  );
-
-  // Lead source over time: use activity eventsByDay if present
-  const leadSourceData = useMemo(() => {
-    if (activityData?.eventsByDay?.length) {
-      return activityData.eventsByDay.slice(-14).map((d) => ({
-        date: d.date.slice(5) || d.date,
-        count: d.count || 0,
-      }));
-    }
-    return [];
-  }, [activityData]);
-
-  // Activity outcome from analytics activity (eventsByType)
-  const activityOutcomeData = useMemo(() => {
-    if (!activityData?.eventsByType || typeof activityData.eventsByType !== 'object') return [];
-    return Object.entries(activityData.eventsByType).map(([activity, count]) => ({
-      activity,
-      count: Number(count) || 0,
-      conversions: 0,
-      closures: 0,
-    }));
-  }, [activityData]);
-
-  // Agent performance: no backend per-agent metrics yet
-  const agentPerformanceData = [];
-
-  // Time-to-conversion and campaign: no backend data
-  const timeToConversionData = [];
-  const campaignData = [];
-
-  const COLORS = ['#2563EB', '#16A34A', '#F59E0B', '#EF4444', '#8B5CF6'];
-
-  const handleDateRangeChange = (selected) => {
-    setFilters((f) => ({ ...f, dateRange: selected }));
-  };
-
-  const handleCompareToggle = () => {
-    setFilters((f) => ({ ...f, comparePeriod: !f.comparePeriod }));
-  };
-
-  if (!isAuthenticated() || !user) return null;
-
-  // Custom styles for react-select (dark theme)
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      backgroundColor: '#0F172A',
-      borderColor: state.isFocused ? '#2563EB' : '#1E293B',
-      boxShadow: state.isFocused ? '0 0 0 3px rgba(37, 99, 235, 0.1)' : 'none',
-      '&:hover': {
-        borderColor: '#2563EB'
-      },
-      minHeight: '38px'
-    }),
-    menu: (base) => ({
-      ...base,
-      backgroundColor: '#0F172A',
-      border: '1px solid #1E293B',
-      borderRadius: '6px',
-      zIndex: 9999
-    }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isFocused 
-        ? 'rgba(37, 99, 235, 0.1)' 
-        : state.isSelected 
-        ? 'rgba(37, 99, 235, 0.2)' 
-        : '#0F172A',
-      color: state.isSelected ? '#E5E7EB' : '#94A3B8',
-      '&:active': {
-        backgroundColor: 'rgba(37, 99, 235, 0.2)'
-      }
-    }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: 'rgba(37, 99, 235, 0.2)',
-      borderRadius: '4px'
-    }),
-    multiValueLabel: (base) => ({
-      ...base,
-      color: '#E5E7EB',
-      fontSize: '13px'
-    }),
-    multiValueRemove: (base) => ({
-      ...base,
-      color: '#94A3B8',
-      '&:hover': {
-        backgroundColor: 'rgba(239, 68, 68, 0.2)',
-        color: '#EF4444'
-      }
-    }),
-    input: (base) => ({
-      ...base,
-      color: '#E5E7EB'
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: '#94A3B8'
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: '#E5E7EB'
-    }),
-    indicatorSeparator: (base) => ({
-      ...base,
-      backgroundColor: '#1E293B'
-    }),
-    dropdownIndicator: (base) => ({
-      ...base,
-      color: '#94A3B8',
-      '&:hover': {
-        color: '#E5E7EB'
-      }
-    }),
-    clearIndicator: (base) => ({
-      ...base,
-      color: '#94A3B8',
-      '&:hover': {
-        color: '#EF4444'
-      }
-    })
-  };
-
-  if (loading) {
-    return (
-      <div className="analytics-page">
-        <div className="analytics-content" style={{ padding: '24px', color: 'var(--text-muted)' }}>
-          {t('common.loading')}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="analytics-page">
-        <div className="analytics-content" style={{ padding: '24px', color: 'var(--danger, #dc2626)' }}>
-          {error}
-        </div>
-      </div>
-    );
-  }
+  const teamPerformance = [
+    {
+      name: "Sofia Reyes",
+      rate: "27%",
+      time: "5m",
+      deals: 18,
+      revenue: "$640,000",
+      color: "bg-green-strong",
+      width: "80%",
+    },
+    {
+      name: "Carlos Vega",
+      rate: "27%",
+      time: "4m",
+      deals: 14,
+      revenue: "$450,000",
+      color: "bg-green-strong",
+      width: "70%",
+    },
+    {
+      name: "Maria Lopez",
+      rate: "24%",
+      time: "5m",
+      deals: 11,
+      revenue: "$310,000",
+      color: "bg-green-strong",
+      width: "60%",
+    },
+    {
+      name: "Diego Ruiz",
+      rate: "21%",
+      time: "6m",
+      deals: 9,
+      revenue: "$270,000",
+      color: "bg-green-strong",
+      width: "50%",
+    },
+    {
+      name: "Ana Torres",
+      rate: "19%",
+      time: "8m",
+      deals: 7,
+      revenue: "$210,000",
+      color: "bg-green-strong",
+      width: "40%",
+    },
+  ];
 
   return (
     <div className="analytics-page">
-      {/* Sticky Top Bar */}
-      <div className="analytics-controls-bar">
-        <div className="analytics-controls-left">
-          <div className="analytics-select-wrapper">
-            <Select
-              value={filters.dateRange}
-              onChange={handleDateRangeChange}
-              options={dateRangeOptions}
-              styles={selectStyles}
-              isSearchable={false}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
+      <div className="heading_page">
+        <BarChart3 className="header-icon" size={20} />
+        <h1>Analytics Overview</h1>
+      </div>
+      <header className="main-header">
+        <div className="header-controls">
+          <div className="date-picker-wrapper">
+            <span>May 12 – May 18, 2025</span>
+            <Calendar size={16} className="text-gray-icon" />
           </div>
 
-          <label className="analytics-toggle">
-            <input
-              type="checkbox"
-              checked={filters.comparePeriod}
-              onChange={handleCompareToggle}
-            />
-            <span>{t('analytics.comparePeriod')}</span>
-          </label>
+          <div className="select-wrapper">
+            <select className="control-select">
+              <option>vs Previous Period</option>
+            </select>
+            <ChevronDown size={14} className="select-arrow" />
+          </div>
+
+          <button className="btn-secondary">
+            <Download size={15} /> CSV
+          </button>
+          <button className="btn-secondary">
+            <FileDown size={15} /> PDF
+          </button>
+          <button className="btn-primary">
+            <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
+          </button>
+        </div>
+      </header>
+
+      {/* FILTERS */}
+      <div className="filter-bar">
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Agents</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Teams</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Sources</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Cities</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Property Types</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <div className="filter-select-wrapper">
+          <select>
+            <option>All Pipeline Stages</option>
+          </select>
+          <ChevronDown size={12} />
+        </div>
+        <button className="clear-filter-btn">
+          <RefreshCw size={14} /> Clear Filters
+        </button>
+      </div>
+
+      {/* KPI ROW 1 */}
+      <div className="kpi-grid-row1">
+        {kpisRow1.map((kpi, i) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={i} className="kpi-card-mini">
+              <div className="kpi-header">
+                <div
+                  className={`kpi-icon-container ${kpi.iconBg} ${kpi.iconColor}`}
+                >
+                  <Icon size={20} />
+                </div>
+                <div className="kpi-body">
+                  <span className="kpi-title">{kpi.title}</span>
+                  <span className="kpi-value">{kpi.value}</span>
+                  <span className={`kpi-badge ${kpi.positive ? "pos" : "neg"}`}>
+                    {kpi.title === "Lead Quality Score"
+                      ? "↓"
+                      : kpi.positive
+                        ? "↑"
+                        : "↓"}{" "}
+                    {kpi.delta}
+                  </span>
+                </div>
+              </div>
+              <p className="kpi-subtext">{kpi.subtext}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* KPI ROW 2 */}
+      <div className="kpi-grid-row2">
+        {kpisRow2.map((kpi, i) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={i} className="kpi-card-detailed">
+              <div className="kpi-det-left">
+                <div
+                  className={`kpi-det-icon-wrapper ${kpi.iconBg} ${kpi.iconColor}`}
+                >
+                  <Icon size={20} className={kpi.iconColor} />
+                </div>
+                <div className="kpi-det-right">
+                  <span className="kpi-det-title">{kpi.title}</span>
+                  <div className="kpi-det-value-wrap">
+                    <span className="kpi-det-value">{kpi.value}</span>
+                    <span
+                      className={`kpi-det-badge ${kpi.positive ? "pos" : "neg"}`}
+                    >
+                      {kpi.positive ? "↓" : "↑"} {kpi.delta}
+                    </span>
+                  </div>
+                  <p className="kpi-det-subtext">{kpi.subtext}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ROW 3: REVENUE + LEAD SOURCE + PIPELINE LEAKAGE */}
+      <div className="charts-grid-3col">
+        {/* Revenue Performance */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <BarChart3 size={18} className="text-royal-blue" />
+              <h3>Revenue Performance</h3>
+            </div>
+            <div className="card-toggle">
+              <button className="active">Revenue</button>
+              <button>Closings</button>
+            </div>
+          </div>
+          <p className="card-subtitle">Revenue & closing trends over time</p>
+          <div className="chart-container-fixed">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={revenueTrend}
+                margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#f1f5f9"
+                />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 11 }}
+                />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#2563eb"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorRev)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="analytics-controls-right">
-          <div className="analytics-multi-select-wrapper">
-            <Select
-              isMulti
-              placeholder={t('analytics.agent')}
-              options={agentOptions}
-              value={filters.agents}
-              onChange={(selected) => setFilters({ ...filters, agents: selected || [] })}
-              styles={selectStyles}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
+        {/* Lead Source Intelligence */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <Globe size={18} className="text-royal-blue" />
+              <h3>Lead Source Intelligence</h3>
+            </div>
           </div>
-          <div className="analytics-multi-select-wrapper">
-            <Select
-              isMulti
-              placeholder={t('analytics.team')}
-              options={teamOptions}
-              value={filters.teams}
-              onChange={(selected) => setFilters({ ...filters, teams: selected || [] })}
-              styles={selectStyles}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
+          <p className="card-subtitle">
+            Compare lead volume, conversion rate, and revenue
+          </p>
+
+          <div className="lead-source-layout">
+            <div className="chart-container-half">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={leadSources}
+                  margin={{ top: 10, right: 5, left: -25, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
+                  <XAxis
+                    dataKey="source"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "#94a3b8", fontSize: 10 }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                  />
+                  <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
+                    {leadSources.map((entry, index) => (
+                      <rect key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="lead-source-list">
+              <div className="list-header-row">
+                <span>Source</span>
+                <span>Leads</span>
+                <span>Conversion</span>
+                <span>Revenue</span>
+              </div>
+              {leadSources.map((src, i) => (
+                <div key={i} className="list-item-row">
+                  <div className="src-name-dot">
+                    <span
+                      className="dot"
+                      style={{ backgroundColor: src.fill }}
+                    ></span>
+                    <span className="name">{src.source}</span>
+                  </div>
+                  <span className="val font-semibold">{src.leads}</span>
+                  <span className="val text-gray-500">{src.conversion}%</span>
+                  <span className="val font-bold text-gray-800">
+                    {money(src.revenue)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="analytics-multi-select-wrapper">
-            <Select
-              isMulti
-              placeholder={t('analytics.leadSource')}
-              options={leadSourceOptions}
-              value={filters.leadSources}
-              onChange={(selected) => setFilters({ ...filters, leadSources: selected || [] })}
-              styles={selectStyles}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
+        </div>
+
+        {/* Pipeline Leakage Analysis */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <AlertTriangle size={18} className="text-royal-blue" />
+              <h3>Pipeline Leakage Analysis</h3>
+            </div>
+            <a href="#all" className="card-link text-royal-blue">
+              View All Sources →
+            </a>
           </div>
-          <div className="analytics-multi-select-wrapper">
-            <Select
-              isMulti
-              placeholder={t('analytics.campaign')}
-              options={campaignOptions}
-              value={filters.campaigns}
-              onChange={(selected) => setFilters({ ...filters, campaigns: selected || [] })}
-              styles={selectStyles}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
-          </div>
-          <div className="analytics-multi-select-wrapper">
-            <Select
-              isMulti
-              placeholder={t('analytics.leadStatus')}
-              options={leadStatusOptions}
-              value={filters.leadStatuses}
-              onChange={(selected) => setFilters({ ...filters, leadStatuses: selected || [] })}
-              styles={selectStyles}
-              className="analytics-react-select"
-              classNamePrefix="analytics-select"
-            />
+          <p className="card-subtitle">
+            Identtfy dently deals ine shopping in the pipeline
+          </p>
+
+          <div className="pipeline-funnel-wrapper">
+            <div className="funnel-table-header">
+              <span>Leeds</span>
+              <span className="text-right">Conversion</span>
+              <span className="text-right">Drsp Off</span>
+            </div>
+            <div className="funnel-bars-container">
+              {pipelineStages.map((stage, i) => {
+                const widths = ["100%", "100%", "98%", "35%", "12%"];
+                return (
+                  <div key={i} className="funnel-row">
+                    <div className="funnel-label-bar">
+                      <span className="stage-name">{stage.name}</span>
+                      <div className="funnel-bar-bg">
+                        <div
+                          className="funnel-bar-fill"
+                          style={{
+                            width: widths[i],
+                            backgroundColor: i === 4 ? "#2563eb" : "#bfdbfe",
+                          }}
+                        ></div>
+                      </div>
+                      <span className="stage-count">{stage.count}</span>
+                    </div>
+                    <span className="funnel-percent">{stage.conversion}</span>
+                    <span
+                      className={`funnel-drop ${stage.drop !== "-" ? "text-red-strong" : "text-gray-400"}`}
+                    >
+                      {stage.drop}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="funnel-footer">
+              <span>Overall Conversion</span>
+              <span className="total-conv-val text-royal-blue">6%</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="analytics-content">
-        {/* 1. KPI Overview */}
-        <CollapsibleSection 
-          title={t('analytics.kpiOverview')} 
-          defaultExpanded={true}
-          isMobile={isMobile}
-        >
-          <div className="analytics-kpi-grid">
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.totalLeads')}</div>
-              <div className="analytics-kpi-value">{Number(kpiData.totalLeads).toLocaleString()}</div>
-              {filters.comparePeriod && kpiData.changes && (
-                <div className={`analytics-kpi-change ${kpiData.changes.totalLeads >= 0 ? 'positive' : 'negative'}`}>
-                  {kpiData.changes.totalLeads >= 0 ? '+' : ''}{kpiData.changes.totalLeads}%
-                </div>
-              )}
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.qualifiedLeads')}</div>
-              <div className="analytics-kpi-value">{Number(kpiData.qualifiedLeads).toLocaleString()}</div>
-              {filters.comparePeriod && kpiData.changes && (
-                <div className={`analytics-kpi-change ${kpiData.changes.qualifiedLeads >= 0 ? 'positive' : 'negative'}`}>
-                  {kpiData.changes.qualifiedLeads >= 0 ? '+' : ''}{kpiData.changes.qualifiedLeads}%
-                </div>
-              )}
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.conversionRate')}</div>
-              <div className="analytics-kpi-value">{kpiData.conversionRate}%</div>
-              {filters.comparePeriod && kpiData.changes && (
-                <div className={`analytics-kpi-change ${kpiData.changes.conversionRate >= 0 ? 'positive' : 'negative'}`}>
-                  {kpiData.changes.conversionRate >= 0 ? '+' : ''}{kpiData.changes.conversionRate}%
-                </div>
-              )}
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.revenue')}</div>
-              <div className="analytics-kpi-value">{kpiData.revenue != null ? `$${(Number(kpiData.revenue) / 1000).toFixed(0)}k` : '—'}</div>
-              {filters.comparePeriod && kpiData.changes && kpiData.changes.revenue != null && (
-                <div className={`analytics-kpi-change ${kpiData.changes.revenue >= 0 ? 'positive' : 'negative'}`}>
-                  {kpiData.changes.revenue >= 0 ? '+' : ''}{kpiData.changes.revenue}%
-                </div>
-              )}
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.avgTimeToFirstContact')}</div>
-              <div className="analytics-kpi-value">{kpiData.avgTimeToFirstContact ?? '—'}</div>
-              {filters.comparePeriod && kpiData.changes && kpiData.changes.avgTimeToFirstContact != null && (
-                <div className={`analytics-kpi-change ${kpiData.changes.avgTimeToFirstContact >= 0 ? 'positive' : 'negative'}`}>
-                  {kpiData.changes.avgTimeToFirstContact >= 0 ? '+' : ''}{kpiData.changes.avgTimeToFirstContact}h
-                </div>
-              )}
+      {/* ROW 4: AI PERFORMANCE + WHATSAPP + LOST REASONS + TEAM */}
+      <div className="charts-grid-4col">
+        {/* AI Performance */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <Bot size={18} className="text-royal-blue" />
+              <h3>AI Performance</h3>
             </div>
           </div>
-        </CollapsibleSection>
-
-        {/* 2. Full Conversion Funnel - compressed */}
-        <CollapsibleSection 
-          title={t('analytics.fullConversionFunnel')}
-          defaultExpanded={true}
-          isMobile={isMobile}
-        >
-          <div className="analytics-funnel-container analytics-funnel-compressed">
-            {funnelData.length === 0 ? (
-              <p className="analytics-empty-inline">{t('analytics.noData') || 'No funnel data for this period.'}</p>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
-                  <BarChart data={funnelData} layout="vertical" margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis type="number" stroke="#64748b" fontSize={isMobile ? 10 : 12} />
-                    <YAxis dataKey="stage" type="category" stroke="#64748b" fontSize={isMobile ? 10 : 12} width={isMobile ? 70 : 100} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                    <Bar dataKey="count" fill="#2563EB" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-                <div className="analytics-funnel-stats">
-                  {funnelData.map((item, index) => {
-                    if (index === 0) return null;
-                    const prevItem = funnelData[index - 1];
-                    const dropoff = prevItem.count > 0 ? ((prevItem.count - item.count) / prevItem.count * 100).toFixed(1) : 0;
-                    return (
-                      <div key={item.stage} className="analytics-funnel-stat">
-                        <span className="analytics-funnel-stat-label">{prevItem.stage} → {item.stage}</span>
-                        <span className="analytics-funnel-stat-value">{item.conversion}% ({dropoff}% drop-off)</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </CollapsibleSection>
-
-        {/* 2b. Pipeline & Deals */}
-        <CollapsibleSection 
-          title={t('analytics.pipelineDeals')}
-          defaultExpanded={true}
-          isMobile={isMobile}
-        >
-          <div className="analytics-kpi-grid" style={{ marginBottom: '16px' }}>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.totalDeals')}</div>
-              <div className="analytics-kpi-value">{Number(kpiData.dealsTotal || 0).toLocaleString()}</div>
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.pipelineValue')}</div>
-              <div className="analytics-kpi-value">{kpiData.pipelineValue != null ? `$${Number(kpiData.pipelineValue).toLocaleString()}` : '—'}</div>
-            </div>
-            <div className="analytics-kpi-card">
-              <div className="analytics-kpi-label">{t('analytics.wonValue')}</div>
-              <div className="analytics-kpi-value">{kpiData.revenue != null ? `$${Number(kpiData.revenue).toLocaleString()}` : '—'}</div>
-            </div>
-          </div>
-          {dealsByStageData.length === 0 ? (
-            <p className="analytics-empty-inline">{t('analytics.noData')}</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={isMobile ? 220 : 280}>
-              <BarChart data={dealsByStageData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="stage" stroke="#64748b" fontSize={isMobile ? 10 : 12} />
-                <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 12} />
-                <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                <Bar dataKey="count" fill="#22c55e" radius={[4, 4, 0, 0]} name={t('analytics.dealsByStage')} />
-              </BarChart>
+          <p className="card-subtitle">
+            Track AI replies and appointments over time
+          </p>
+          <div className="chart-container-mini">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={aiPerformance}
+                margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#f1f5f9"
+                />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 10 }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 10 }}
+                />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="replies"
+                  stroke="#2563eb"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="appointments"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
             </ResponsiveContainer>
-          )}
-        </CollapsibleSection>
-
-        {/* 3. Source Performance - unified block */}
-        <CollapsibleSection 
-          title={t('analytics.leadSourcePerformance')}
-          defaultExpanded={true}
-          isMobile={isMobile}
-        >
-          <div className="analytics-source-block">
-          <div className="analytics-chart-grid analytics-chart-grid-tight">
-            <div className="analytics-chart-card">
-              <h3 className="analytics-chart-title">{t('analytics.leadsBySourceOverTime')}</h3>
-              {leadSourceData.length === 0 ? (
-                <p className="analytics-empty-inline">{t('analytics.noData') || 'No data for this period.'}</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                  <AreaChart data={leadSourceData}>
-                    <defs>
-                      <linearGradient id="activityGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                    <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                    <Area type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={1.25} fill="url(#activityGradient)" name={t('analytics.activityVolume') || 'Activity'} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
+          </div>
+          <div className="mini-stats-row">
+            <div className="mini-stat-box">
+              <div className="mini-stat-icon1"><ShieldCheck  size={16} /></div>
+              <div>
+                <span>AI Replies This Period</span>
+                <h4>438</h4>
+              </div>
             </div>
-            <div className="analytics-chart-card">
-              <h3 className="analytics-chart-title">{t('analytics.conversionRateBySource')}</h3>
-              {sourcePerformanceData.length === 0 ? (
-                <p className="analytics-empty-inline">{t('analytics.noData') || 'No source data. Connect leads with sources to see metrics.'}</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                  <BarChart data={sourcePerformanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="source" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                    <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                    <Bar dataKey="conversion" fill="#2563EB" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+            <div className="mini-stat-box">
+              <div className="mini-stat-icon2"><CalendarCheck  size={16} /></div>
+              <div>
+              <span>Appointments Booked</span>
+              <h4>101</h4>
+              </div>
             </div>
           </div>
-          <div className="analytics-table-container">
-            {sourcePerformanceData.length === 0 ? (
-              <p className="analytics-empty-inline">{t('analytics.noData') || 'No source data.'}</p>
-            ) : (
-              <table className="analytics-table">
-                <thead>
-                  <tr>
-                    <th>{t('analytics.leadSource')}</th>
-                    <th>{t('analytics.totalLeads')}</th>
-                    <th>{t('analytics.conversionRate')}</th>
-                    <th>{t('analytics.revenue')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sourcePerformanceData.map((item) => (
-                    <tr key={item.source}>
-                      <td>{item.source}</td>
-                      <td>{item.leads}</td>
-                      <td>{Number(item.conversion)}%</td>
-                      <td>{item.revenue != null && item.revenue > 0 ? `$${(Number(item.revenue) / 1000).toFixed(0)}k` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-          </div>
-        </CollapsibleSection>
+        </div>
 
-        {/* 4. Agent Performance - table only, improved spacing */}
-        <CollapsibleSection 
-          title={t('analytics.agentPerformance')}
-          defaultExpanded={true}
-          isMobile={isMobile}
-        >
-          <div className="analytics-table-container analytics-agent-table-wrap">
-            {agentPerformanceData.length === 0 ? (
-              <p className="analytics-empty-inline">{t('analytics.noData') || 'No agent metrics for this period.'}</p>
-            ) : (
-              <table className="analytics-table">
-                <thead>
-                  <tr>
-                    <th>{t('analytics.agent')}</th>
-                    <th>{t('analytics.leadsHandled')}</th>
-                    <th>{t('analytics.conversionRate')}</th>
-                    <th>{t('analytics.avgResponseTime')}</th>
-                    <th>{t('analytics.revenue')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agentPerformanceData.map((item) => (
-                    <tr key={item.agent} className="analytics-table-row-clickable">
-                      <td>{item.agent}</td>
-                      <td>{item.leads}</td>
-                      <td>{item.conversion}%</td>
-                      <td>{item.responseTime}</td>
-                      <td>{item.revenue != null ? `$${(Number(item.revenue) / 1000).toFixed(0)}k` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+        {/* WhatsApp Analytics */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <MessageCircle size={18} className="text-green-strong" />
+              <h3>WhatsApp Analytics</h3>
+            </div>
           </div>
-        </CollapsibleSection>
+          <div className="whatsapp-stats-grid">
+            <div className="wa-box">
+              <span>WhatsApp Leads</span>
+              <h4>246</h4>
+            </div>
+            <div className="wa-box">
+              <span>AI Replies Sent</span>
+              <h4>382</h4>
+            </div>
+            <div className="wa-box">
+              <span>Unread Conversation</span>
+              <h4>27</h4>
+            </div>
+            <div className="wa-box">
+              <span>Booked From WhatsApp</span>
+              <h4>63</h4>
+            </div>
+            <div className="wa-box">
+              <span>WhatsApp Close Rate</span>
+              <h4>24.3%</h4>
+            </div>
+            <div className="wa-box">
+              <span>Human Replies Sent</span>
+              <h4>118</h4>
+            </div>
+          </div>
+          <a href="#wa" className="wa-workspace-link text-royal-blue">
+            Open WhatsApp Workspace →
+          </a>
+        </div>
 
-        {/* 5. Activity → Outcome - collapsible on desktop */}
-        <CollapsibleSection 
-          title={t('analytics.activityOutcome')}
-          defaultExpanded={false}
-          isMobile={isMobile}
-          collapsibleOnDesktop
-        >
-          <div className="analytics-chart-grid">
-            {activityOutcomeData.length === 0 ? (
-              <p className="analytics-empty-inline">{t('analytics.noData') || 'No activity data for this period.'}</p>
-            ) : (
-              <>
-                <div className="analytics-chart-card">
-                  <h3 className="analytics-chart-title">{t('analytics.activityVolume')}</h3>
-                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <BarChart data={activityOutcomeData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="activity" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                      <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                      <Bar dataKey="count" fill="#2563EB" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+        {/* Lost Deal Reasons */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <AlertTriangle size={18} className="text-red-strong" />
+              <h3>Lost Deal Reasons</h3>
+            </div>
+          </div>
+          <div className="lost-reasons-list">
+            <div className="lost-header-row">
+              <span>Reason</span>
+              <span></span>
+              <span className="text-right">Last Deals</span>
+              <span className="text-right">% of Total</span>
+            </div>
+            {lostReasons.map((item, i) => (
+              <div key={i} className="lost-item-row">
+                <span className="reason-text">{item.reason}</span>
+                <div className="reason-progress-bar">
+                  <div className="bar-fill" style={{ width: item.width }}></div>
                 </div>
-                <div className="analytics-chart-card">
-                  <h3 className="analytics-chart-title">{t('analytics.outcomesByActivity')}</h3>
-                  <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
-                    <BarChart data={activityOutcomeData} margin={isMobile ? { top: 5, right: 10, left: 5, bottom: 5 } : { top: 20, right: 30, left: 20, bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="activity" stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                      <YAxis stroke="#64748b" fontSize={isMobile ? 10 : 11} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0F172A', border: '1px solid #1E293B', borderRadius: '6px', color: '#E5E7EB' }} />
-                      <Legend wrapperStyle={{ color: '#94A3B8', fontSize: '12px' }} />
-                      <Bar dataKey="conversions" fill="#16A34A" radius={[4, 4, 0, 0]} name={t('analytics.conversions') || 'Conversions'} />
-                      <Bar dataKey="closures" fill="#F59E0B" radius={[4, 4, 0, 0]} name={t('analytics.closures') || 'Closures'} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
-            )}
+                <span className="count-text font-semibold">{item.count}</span>
+                <span className="percent-text font-semibold">
+                  {item.percentage}%
+                </span>
+              </div>
+            ))}
           </div>
-        </CollapsibleSection>
+        </div>
 
-        {/* 6. Time-to-Conversion - collapsible on desktop */}
-        <CollapsibleSection 
-          title={t('analytics.timeToConversion')}
-          defaultExpanded={false}
-          isMobile={isMobile}
-          collapsibleOnDesktop
-        >
-          {timeToConversionData.length === 0 ? (
-            <p className="analytics-empty-inline">{t('analytics.noData') || 'No time-to-conversion data for this period.'}</p>
-          ) : (
-            <div className="analytics-time-conversion">
-              {timeToConversionData.map((item) => (
-                <div key={item.metric} className="analytics-time-card">
-                  <div className="analytics-time-metric">{item.metric}</div>
-                  <div className="analytics-time-value">{item.avg}</div>
-                  <div className="analytics-time-breakdown">
-                    <div>
-                      <span className="analytics-time-label">By Agent:</span>
-                      <span>{item.byAgent?.min} - {item.byAgent?.max}</span>
-                    </div>
-                    <div>
-                      <span className="analytics-time-label">By Source:</span>
-                      <span>{item.bySource?.min} - {item.bySource?.max}</span>
-                    </div>
+        {/* Team Performance */}
+        <div className="dashboard-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <Users size={18} className="text-royal-blue" />
+              <h3>Team Performance</h3>
+            </div>
+            <a href="#team" className="card-link text-royal-blue">
+              View Full Report →
+            </a>
+          </div>
+          <div className="team-performance-list">
+            <div className="team-header-row">
+              <span>Agent</span>
+              <span>Close Rate</span>
+              <span>Response Time</span>
+              <span>Deals</span>
+              <span>Revenue</span>
+            </div>
+            {teamPerformance.map((agent, i) => (
+              <div key={i} className="team-item-row">
+                <span className="agent-name">
+                  <img
+                    src="https://i.pravatar.cc/150"
+                    className="team-avatar"
+                  />
+                  <span>{agent.name}</span>
+                </span>
+                <div className="rate-progress-wrapper">
+                  <span className="rate-val font-semibold">{agent.rate}</span>
+                  <div className="mini-progress-bg">
+                    <div
+                      className={`mini-progress-fill ${agent.color}`}
+                      style={{ width: agent.width }}
+                    ></div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CollapsibleSection>
+                <span className="time-val text-gray-400">{agent.time}</span>
+                <span className="deals-val font-semibold">{agent.deals}</span>
+                <span className="rev-val font-bold text-gray-800">
+                  {agent.revenue}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-        {/* 7. Campaign Performance - collapsible on desktop */}
-        <CollapsibleSection 
-          title={t('analytics.campaignPerformance')}
-          defaultExpanded={false}
-          isMobile={isMobile}
-          collapsibleOnDesktop
-        >
-          {campaignData.length === 0 ? (
-            <p className="analytics-empty-inline">{t('analytics.noData') || 'No campaign data for this period.'}</p>
-          ) : (
-            <div className="analytics-table-container">
-              <table className="analytics-table">
-                <thead>
-                  <tr>
-                    <th>{t('analytics.campaign')}</th>
-                    <th>{t('analytics.totalLeads')}</th>
-                    <th>{t('analytics.conversionRate')}</th>
-                    <th>{t('analytics.revenue')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaignData.map((item) => (
-                    <tr key={item.campaign}>
-                      <td>{item.campaign}</td>
-                      <td>{item.leads}</td>
-                      <td>{item.conversion}%</td>
-                      <td>${(Number(item.revenue) / 1000).toFixed(0)}k</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      {/* ROW 5: AI INSIGHTS & FORECAST */}
+      <div className="insights-forecast-grid">
+        {/* AI Revenue Insights */}
+        <div className="dashboard-card insights-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <Sparkles size={18} className="text-royal-blue" />
+              <h3>AI Revenue Insights</h3>
             </div>
-          )}
-        </CollapsibleSection>
+          </div>
+          <p className="card-subtitle">
+            Actionable insights generated by Cortesa AI
+          </p>
+
+          <div className="insights-list-row">
+            <div className="insight-item-box">
+              <div className="insight-icon-title">
+                <div className="insight-icon-wrap green"><MessageCircle size={20} className="text-green-strong" /></div>
+                <h4>WhatsApp is outperforming of other sources</h4>
+              </div>
+              <p>
+                WhatsApp leads we converting 2.4x higher than Instagram traffic.
+              </p>
+              <a href="#action" className="text-royal-blue">
+                Open WhatsApp Leads →
+              </a>
+            </div>
+
+            <div className="insight-item-box">
+              <div className="insight-icon-title">
+                <div className="insight-icon-wrap orange"><Target size={20} className="text-orange-strong" /></div>
+                <h4>Pipeline leakage in Showing stage</h4>
+              </div>
+              <p>
+                41% of cheuring stage leads are vet rooching follow up within 24
+                hours.
+              </p>
+              <a href="#action" className="text-royal-blue">
+                Review Showing Pipeline →
+              </a>
+            </div>
+
+            <div className="insight-item-box">
+              <div className="insight-icon-title">
+                <div className="insight-icon-wrap purple"><Zap size={20} className="text-purple-strong" /></div>
+                <h4>AI follw-up automation lacremed appointments</h4>
+              </div>
+              <p>
+                AI igameisest replies improves benving rotes for TM this week.
+              </p>
+              <a href="#action" className="text-royal-blue">
+                Open AI Performance →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Predictive Revenue Forecast */}
+        <div className="forecast-dark-card">
+          <div className="forecast-content">
+            <div className="forecast-header">
+              <BarChart3 size={20} className="text-blue-400" />
+              <h3>Predictive Revenue Forecast</h3>
+            </div>
+            <p className="forecast-desc">
+              AI forecasts 18 additiod closiogs over the neat period based on
+              active plocline velaocy and lead quatity signals.
+            </p>
+
+            <div className="forecast-metrics">
+              <div className="m-box">
+                <span>Forecasted Revenue:</span>
+                <h3>$1.25M</h3>
+              </div>
+              <p className="top-opp">
+                Top Opportunity: Conerotau Agortment – $420K
+              </p>
+            </div>
+
+            <button className="btn-forecast-action">
+              Generate AI Forecast →
+            </button>
+          </div>
+
+          <div className="forecast-chart-graphic">
+            <div className="bar white-bar" style={{ height: "30%" }}></div>
+            <div className="bar white-bar" style={{ height: "45%" }}></div>
+            <div className="bar white-bar" style={{ height: "60%" }}></div>
+            <div className="bar white-bar" style={{ height: "50%" }}></div>
+            <div className="bar blue-bar" style={{ height: "75%" }}></div>
+            <div
+              className="bar blue-bar animate-pulse"
+              style={{ height: "90%" }}
+            ></div>
+          </div>
+        </div>
       </div>
     </div>
   );
