@@ -8,7 +8,7 @@ export default function TeamStats({
 
   return (
     <div className="team-stats-wrap">
-    <div className="team-stats-grid">
+     <div className="team-stats-grid">
 
       {cards.map((item) => {
         const Icon = item.icon;
