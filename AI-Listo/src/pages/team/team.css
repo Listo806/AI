@@ -278,11 +278,51 @@
 /* COMMAND BAR */
 
 .team-workspace .team-toolbar {
-   display: flex;
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
   justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.team-toolbar-left,
+.team-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.team-toolbar-left {
+  flex: 1;
+  overflow: hidden;
+}
+
+.team-toolbar-right {
+  flex-shrink: 0;
+}
+
+.team-filter-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.team-filter-list::-webkit-scrollbar {
+  display: none;
+}
+
+.team-search-box {
+  flex-shrink: 0;
+}
+
+.team-select-box {
+  flex-shrink: 0;
 }
 .team-toolbar-left, .team-toolbar-right{
     display: flex;
@@ -2056,11 +2096,14 @@ TEAM QUICK ACTIONS
 
 .team-table-wrapper {
   overflow-x: auto;
+  width: 100%;
+  overflow-x: auto;
 }
 
 .team-full-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 900px;
 }
 
 .team-full-table th {
@@ -2355,8 +2398,32 @@ TEAM QUICK ACTIONS
 }
 
 @media (max-width: 1100px) {
-  .team-workspace .team-stat-grid {
+  .team-workspace .team-stats-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 1024px) {
+  .team-workspace .team-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .team-workspace .team-toolbar {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  .team-toolbar-left {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .team-toolbar-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .team-search-box {
+    flex: 1;
+    min-width: 220px;
   }
 }
 @media (max-width: 900px) {
@@ -2384,6 +2451,9 @@ TEAM QUICK ACTIONS
 }
 
 @media (max-width: 768px) {
+  .team-full-table {
+    min-width: 700px;
+  }
   .team-workspace .team-billing-actions,
   .team-workspace .team-billing-bottom-stats {
     grid-template-columns: 1fr;
@@ -2420,10 +2490,18 @@ TEAM QUICK ACTIONS
   .team-workspace .team-bottom-grid{
     grid-template-columns: repeat(1, 1fr);
   }
+  .team-workspace .team-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    border-radius: 16px;
+  }
+
+  .team-workspace .team-stat-card:not(:last-child)::after {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
-  .team-workspace .team-stat-grid {
+  .team-workspace .team-stats-grid {
     grid-template-columns: 1fr;
   }
 
