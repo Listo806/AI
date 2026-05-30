@@ -7,6 +7,7 @@ export default function TeamStats({
     buildStatsCards(stats);
 
   return (
+    <div className="team-stats-wrap">
     <div className="team-stats-grid">
 
       {cards.map((item) => {
@@ -57,7 +58,7 @@ export default function TeamStats({
           </div>
         );
       })}
-
+      </div>
     </div>
   );
 }
