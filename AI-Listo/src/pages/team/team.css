@@ -96,7 +96,7 @@
 
 .team-workspace .team-stat-card {
   background: #fff;
-  padding: 25px 16px;
+  padding: 20px 16px 14px;
   position: relative;
 }
 .team-workspace .team-stat-card:not(:last-child)::after {
