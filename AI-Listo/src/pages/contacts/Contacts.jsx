@@ -172,7 +172,7 @@ export default function ContactsRelationshipsPage() {
           variant: "developers",
         },
         {
-          label: "AI Engagement",
+          label: "AI score",
           value: `${data.aiEngagement || 0}%`,
           sub: "AI relationship score",
           icon: Bot,
@@ -329,8 +329,8 @@ export default function ContactsRelationshipsPage() {
                     query: "?type=Seller",
                   },
                   {
-                    label: "Investors",
-                    query: "?type=Investor",
+                    label: "Developers",
+                    query: "?type=Developers",
                   },
                   {
                     label: "Renters",
@@ -610,7 +610,7 @@ export default function ContactsRelationshipsPage() {
                       >
                         <option>Buyer</option>
                         <option>Seller</option>
-                        <option>Investor</option>
+                        <option>Developers</option>
                         <option>Renter</option>
                       </select>
                     </div>
@@ -715,7 +715,7 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
             d={
               title === "Active Sellers"
                 ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
-                : title === "AI Engagement"
+                : title === "AI score"
                   ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
                   : title === "Active Buyers"
                     ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"

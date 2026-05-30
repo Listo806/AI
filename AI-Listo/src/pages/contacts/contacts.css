@@ -445,6 +445,7 @@ body .contacts-page .map svg{
 .contacts-page .contact-top {
   display: flex;
   justify-content: space-between;
+  padding-bottom:16px;
 }
 
 .contacts-page .contact-user {
@@ -497,6 +498,7 @@ body .contacts-page .map svg{
   flex-direction: column;
   gap: 16px;
   border-bottom: 1px solid #f3f4f6;
+  border-top: 1px solid #f3f4f6;
 }
 .contacts-page .info-item {
   display: flex;
@@ -911,6 +913,38 @@ body .contacts-page .map svg{
 .kpi-box.developers .kpi-chart {
   color: #f59e0b;
 }
+.contacts-page .badge-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.contacts-page .badge-status.cold {
+  background: #eef4ff;
+  color: #2563eb;
+}
+.contacts-page .badge-status.warm {
+  background: #f4ecff;
+  color: #7c3aed;
+}
+.contacts-page .badge-status.hot {
+  background: #fff1f2;
+  color: #ef4444;
+}
+.contacts-page .badge-status.active {
+  background: #ecfdf3;
+  color: #16a34a;
+}
+
+.contacts-page .badge-status.closed {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
 @media (min-width: 1400px) {
   .contacts-page .contacts-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
