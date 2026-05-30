@@ -27,6 +27,7 @@ import {
   UserCog,
   StickyNote,
   GitBranch,
+  Building2,
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
@@ -147,18 +148,35 @@ export default function ContactsRelationshipsPage() {
           value: data.activeBuyers || 0,
           sub: "Looking now",
           icon: UserCheck,
+          variant: "buyers",
         },
         {
           label: "Active Sellers",
           value: data.activeSellers || 0,
           sub: "Selling properties",
           icon: Home,
+          variant: "sellers",
+        },
+        {
+          label: "Active Renters",
+          value: data.activeRenters || 0,
+          sub: "Rental demand",
+          icon: Handshake,
+          variant: "renters",
+        },
+        {
+          label: "Active Developers",
+          value: data.activeDevelopers || 0,
+          sub: "Developer network",
+          icon: Building2,
+          variant: "developers",
         },
         {
           label: "AI Engagement",
           value: `${data.aiEngagement || 0}%`,
           sub: "AI relationship score",
           icon: Bot,
+          variant: "ai",
         },
       ]);
     } catch (err) {
@@ -278,13 +296,7 @@ export default function ContactsRelationshipsPage() {
                     value={stat.value}
                     sub={stat.sub}
                     trend={stat.label === "Active Sellers" ? "0%" : "+12%"}
-                    variant={
-                      stat.label === "Active Buyers"
-                        ? "buyers"
-                        : stat.label === "AI Engagement"
-                          ? "ai"
-                          : ""
-                    }
+                    variant={stat.variant}
                   />
                 );
               })}
@@ -362,13 +374,13 @@ export default function ContactsRelationshipsPage() {
             </div>
 
             {/* CONTACTS */}
+            {/* CONTACTS GRID */}
             <div className="contacts-grid">
               {loading ? (
                 <div>Loading...</div>
               ) : (
                 contacts.map((contact) => (
                   <div className="contact-card" key={contact.id}>
-                    {/* TOP */}
                     <div className="contact-top">
                       <div className="contact-user">
                         <div className="contact-avatar">
@@ -378,8 +390,20 @@ export default function ContactsRelationshipsPage() {
 
                         <div className="contact-group-right">
                           <div className="contact-name">{contact.name}</div>
-                          <div className="intent-badge">
-                            {contact.status || "Cold"}
+                          <div className="contact-badges-row">
+                            <span className="badge-type">
+                              {contact.type || "Buyer"}
+                            </span>
+                            <span className="badge-dot">•</span>
+                            <span
+                              className={`badge-status ${String(contact.status).toLowerCase()}`}
+                            >
+                              {contact.status || "Cold"}
+                            </span>
+                            <span className="badge-dot">•</span>
+                            <span className="badge-ai-score">
+                              AI {contact.score || "25"}%
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -400,35 +424,16 @@ export default function ContactsRelationshipsPage() {
                             className="contact-menu"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              onClick={() =>
-                                navigate(`/dashboard/contacts/${contact.id}`)
-                              }
-                            >
-                              <Eye size={15} />
-                              View Contact
-                            </button>
-
+                           
                             <button>
-                              <Edit3 size={15} />
-                              Edit Contact
+                              <Edit3 size={15} /> Edit Contact
                             </button>
-
-                            <button onClick={() => messageContact(contact.id)}>
-                              <Send size={15} />
-                              Message
-                            </button>
-
                             <button>
-                              <UserCog size={15} />
-                              Assign Agent
+                              <UserCog size={15} /> Assign Agent
                             </button>
-
                             <button>
-                              <StickyNote size={15} />
-                              Add Note
+                              <StickyNote size={15} /> Change Status
                             </button>
-
                             <button
                               onClick={() =>
                                 navigate(
@@ -436,101 +441,89 @@ export default function ContactsRelationshipsPage() {
                                 )
                               }
                             >
-                              <GitBranch size={15} />
-                              Open Relationship Map
+                              <GitBranch size={15} /> Open Relationship Map
                             </button>
-
                             <button onClick={runAiReview}>
-                              <Bot size={15} />
-                              Run AI Review
+                              <Bot size={15} /> Run AI Review
                             </button>
-
                             <button className="warning">
-                              <Archive size={15} />
-                              Archive Contact
+                              <Archive size={15} /> Archive Contact
                             </button>
-
                             <button className="danger">
-                              <Trash2 size={15} />
-                              Delete Contact
+                              <Trash2 size={15} /> Delete Contact
                             </button>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* INFO */}
-                    <div className="info-grid modern">
-                      <InfoBox
-                        icon={Mail}
-                        label="Email"
-                        value={contact.email}
-                      />
-
-                      <InfoBox
-                        icon={Phone}
-                        label="Phone"
-                        value={contact.phone}
-                      />
-
-                      <InfoBox
-                        icon={UserPlus}
-                        label="Source"
-                        value={contact.linkedLead || "-"}
-                      />
-
-                      <InfoBox
-                        icon={Home}
-                        label="Interest"
-                        value={contact.interest || "-"}
-                      />
-                    </div>
-
-                    {/* AI SCORE */}
-                    <div className="ai-score-box">
-                      <div className="ai-left">
-                        <div className="ai-icon">
-                          <Bot size={22} />
+                    <div className="contact-info-list">
+                      <div className="info-item">
+                        <div className="info-label-group">
+                          <Mail size={16} />
+                          <span>Email:</span>
                         </div>
-
-                        <div className="ai-top">
-                          <div className="ai-title">AI Score: </div>
-                          <div className="ai-score">{contact.score || 0}%</div>
+                        <div className="info-value text-link">
+                          {contact.email || "-"}
                         </div>
-                        <div className="ai-sub">
-                          Highly engaged. Recommended follow-up today.
+                      </div>
+
+                      <div className="info-item">
+                        <div className="info-label-group">
+                          <Phone size={16} />
+                          <span>Phone:</span>
+                        </div>
+                        <div className="info-value">{contact.phone || "-"}</div>
+                      </div>
+
+                      <div className="info-item">
+                        <div className="info-label-group">
+                          <UserPlus size={16} />{" "}
+                          <span>Source:</span>
+                        </div>
+                        <div className="info-value">
+                          {contact.source || "-"}
+                        </div>
+                      </div>
+
+                      <div className="info-item">
+                        <div className="info-label-group">
+                          <Home size={16} />
+                          <span>Interested:</span>
+                        </div>
+                        <div className="info-value emphasis">
+                          {contact.interest || "-"}
                         </div>
                       </div>
                     </div>
 
-                    {/* ACTIONS */}
-                    <div className="actions-grid">
+                    <div className="contact-actions-footer">
                       <button
-                        className="secondary-action"
+                        className="footer-action-btn"
                         onClick={() =>
                           navigate(`/dashboard/contacts/${contact.id}`)
                         }
                       >
                         <Eye size={16} />
-                        View
+                        <span>View</span>
                       </button>
 
                       <button
-                        className="secondary-action"
+                        className="footer-action-btn"
                         onClick={() => messageContact(contact.id)}
                       >
                         <Send size={16} />
-                        Message
+                        <span>Message</span>
                       </button>
 
-                      <button className="secondary-action">
+                      <button className="footer-action-btn">
                         <Phone size={16} />
-                        Call
+                        <span>Call</span>
                       </button>
 
-                      <button className="secondary-action">
+                      <button className="footer-action-btn">
                         <StickyNote size={16} />
-                        Notes
+                        <span>Notes</span>
                       </button>
                     </div>
                   </div>
