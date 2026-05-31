@@ -1,1232 +1,558 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import apiClient from '../../api/apiClient';
-import { getDashboardSummary, getAnalyticsDashboard, getOwnerLeads } from '../../api/analyticsApi';
-import { useAuth } from '../../context/AuthContext';
-import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
-import { useTheme } from '../../theme/ThemeProvider';
+import React from "react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  Cell
+} from "recharts";
 
-// New KPI Card with light theme and accent colors
-function KpiCard({ icon, value, label, accentColor = '#3b82f6', sub }) {
-  // Initialize Lucide icons when component renders
-  React.useEffect(() => {
-      if (window.lucide) {
-        window.lucide.createIcons();
-      }
-    }, []);
+import {
+  LayoutDashboard,
+  Users,
+  TrendingUp,
+  DollarSign,
+  Percent,
+  MessageCircle,
+  Calendar,
+  Clock3,
+  CheckCircle2,
+  Target,
+  Zap,
+  AlertTriangle,
+  Search,
+  SlidersHorizontal,
+  Bell,
+  Download,
+  Phone,
+  UserPlus,
+  ArrowUpRight,
+  ShieldCheck,
+  Menu,
+  ChevronDown,
+  Briefcase,
+  Layers,
+  Settings,
+  HelpCircle,
+  FileText,
+  Activity,
+  Award,
+  Globe,
+  Camera,
+  Shuffle
+} from "lucide-react";
 
-  return (
-    <div className="dashboard-kpi-card" style={{
-      background: 'var(--card)',
-      border: '1px solid var(--border)',
-      borderLeft: `4px solid ${accentColor}`,
-      borderRadius: '12px',
-      padding: '16px',
-      transition: 'all 0.2s',
-      position: 'relative',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        marginBottom: '8px'
-      }}>
-        <div style={{
-          display: 'grid',
-          placeItems: 'center',
-          height: '40px',
-          width: '40px',
-          borderRadius: '8px',
-          background: `${accentColor}15`,
-          color: accentColor,
-          flexShrink: 0
-        }}>
-          <i data-lucide={icon} style={{ width: '22px', height: '22px', stroke: accentColor }}></i>
-        </div>
-        {sub && (
-          <div style={{ 
-            fontSize: '12px', 
-            fontWeight: '500', 
-            color: accentColor,
-            padding: '2px 8px',
-            background: `${accentColor}15`,
-            borderRadius: '4px'
-          }}>
-            {sub}
-          </div>
-        )}
-      </div>
-      <div style={{ 
-        fontSize: '28px', 
-        fontWeight: '700', 
-        color: 'var(--text)',
-        marginBottom: '4px',
-        lineHeight: '1.2'
-      }}>
-        {value}
-      </div>
-      <div style={{ 
-        fontSize: '13px', 
-        color: 'var(--text-muted)',
-        fontWeight: '500'
-      }}>
-        {label}
-      </div>
-    </div>
-  );
-}
+import "./dashboard.css";
 
-// Funnel Visualization Component - Using clip-path for funnel shape
-function FunnelVisualization({ data }) {
-  const { t } = useTranslation();
-  const { newLeads, contacted, showings, offers } = data;
-  
-  // Calculate percentages based on previous stage (not total)
-  const contactedPercent = newLeads > 0 ? Math.round((contacted / newLeads) * 100) : 0;
-  const showingsPercent = newLeads > 0 ? Math.round((showings / newLeads) * 100) : 0;
-  
-  // Blue shades getting progressively darker (matching the image)
-  const segments = [
-    { 
-      label: t('dashboard.newLeadsLabel'), 
-      value: newLeads, 
-      clipPath: 'polygon(0% 0%, 100% 0%, 94% 100%, 6% 100%)', // Top segment - narrows slightly
-      bg: 'rgba(59, 130, 246, 0.1)', // Light blue with opacity for light theme
-      text: 'var(--text)', // Dark text
-      showPercent: false
-    },
-    { 
-      label: t('dashboard.contactedLabel'), 
-      value: contacted, 
-      clipPath: 'polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%)', // Second segment - narrower
-      bg: 'rgba(59, 130, 246, 0.15)', // Medium blue
-      text: 'var(--text)', // Dark text
-      showPercent: true, 
-      percent: contactedPercent,
-      percentBg: 'var(--card)', // Light box
-      percentText: 'var(--text)', // Dark text
-      percentBorder: 'var(--border)'
-    },
-    { 
-      label: t('dashboard.showingsLabel'), 
-      value: showings, 
-      clipPath: 'polygon(12% 0%, 88% 0%, 82% 100%, 18% 100%)', // Third segment - even narrower
-      bg: 'rgba(59, 130, 246, 0.2)', // Darker blue
-      text: 'var(--text)', // Dark text
-      showPercent: true, 
-      percent: showingsPercent,
-      percentBg: 'var(--card)', // Light box
-      percentText: 'var(--text)', // Dark text
-      percentBorder: 'var(--border)'
-    },
-    { 
-      label: t('dashboard.offersLabel'), 
-      value: offers, 
-      clipPath: 'polygon(18% 0%, 82% 0%, 76% 100%, 24% 100%)', // Bottom segment - narrowest
-      bg: 'rgba(59, 130, 246, 0.25)', // Darkest blue
-      text: 'var(--text)', // Dark text
-      showPercent: true, 
-      percent: offers,
-      isNumber: true,
-      percentBg: 'var(--card)', // Light box
-      percentText: 'var(--text)', // Dark text
-      percentBorder: 'var(--border)'
-    },
+export default function CortexaDashboard() {
+  const confidenceSparkData = [{ v: 50 }, { v: 65 }, { v: 55 }, { v: 78 }, { v: 70 }, { v: 92 }];
+  const riskSparkData = [{ v: 30 }, { v: 45 }, { v: 35 }, { v: 60 }, { v: 40 }, { v: 55 }];
+
+  const miniKpis = [
+    { title: "New Leads", value: "18", delta: "12.4%", positive: true, subtext: "3 from WhatsApp • 2 from Website", icon: <Users size={16} className="text-royal-blue" />, iconBg: "bg-light-blue", intime: "vs last week" },
+    { title: "Active Deals", value: "$148K", delta: "2", positive: true, subtext: "2 deals likely to close this week", icon: <Briefcase size={16} className="text-purple" />, iconBg: "bg-light-purple", intime: "deals" },
+    { title: "Revenue", value: "$24.6K", delta: "8.1%", positive: true, subtext: "1 closing scheduled today", icon: <DollarSign size={16} className="text-green" />, iconBg: "bg-light-green", intime: "vs last week" },
+    { title: "Conversion Rate", value: "21.8%", delta: "1.3%", positive: false, subtext: "Warm leads need follow-up", icon: <Percent size={16} className="text-orange" />, iconBg: "bg-light-orange", intime: "vs last week" },
+    { title: "AI Conversations", value: "327", delta: "41", positive: true, subtext: "AI handled 142 replies today", icon: <MessageCircle size={16} className="text-royal-blue" />, iconBg: "bg-light-blue", intime: "today" },
+    { title: "Appointments", value: "18", delta: "6", positive: true, subtext: "Showings & closings scheduled", icon: <Calendar size={16} className="text-green" />, iconBg: "bg-light-green", intime: "this week" },
   ];
 
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0',
-      width: '100%',
-      position: 'relative'
-    }}>
-      {segments.map((segment, index) => (
-        <div
-          key={index}
-          style={{
-            position: 'relative',
-            width: '100%',
-            // minHeight: '90px',
-            background: segment.bg,
-            clipPath: segment.clipPath,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '14px 18px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            marginBottom: index < segments.length - 1 ? '2px' : '0',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <div style={{
-            fontSize: '16px',
-            fontWeight: '400',
-            color: segment.text,
-            lineHeight: '1.2',
-            textAlign: 'center',
-            opacity: 0.9,
-            marginBottom: '6px'
-          }}>
-            {segment.label}
-          </div>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            color: segment.text,
-            lineHeight: '1',
-            textAlign: 'center'
-          }}>
-            {segment.value}
-          </div>
-          {segment.showPercent && (
-            <div style={{
-              position: 'absolute',
-              right: '80px',
-              bottom: '0%',
-              transform: 'translateY(-50%)',
-              background: segment.percentBg,
-              borderRadius: '6px',
-              padding: '4px 10px',
-              fontSize: '12px',
-              fontWeight: '500',
-              color: segment.percentText,
-              whiteSpace: 'nowrap'
-            }}>
-              {segment.isNumber ? segment.percent : `${segment.percent}%`}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
+  const secondaryKpis = [
+    { title: "First Response Time", value: "2m 34s", delta: "18%", positive: true, icon: <Clock3 size={16} className="text-royal-blue" />, intime: "vs last week" },
+    { title: "Follow-up Completion", value: "78%", delta: "11%", positive: true, icon: <CheckCircle2 size={16} className="text-green" />, intime: "vs last week" },
+    { title: "Lead Quality Score", value: "87/100", delta: "9", positive: true, icon: <Award size={16} className="text-purple" />, intime: "vs last week" },
+    { title: "Pipeline Velocity", value: "1.42x", delta: "15%", positive: true, icon: <Activity size={16} className="text-royal-blue" />, intime: "vs last week" },
+    { title: "Revenue at Risk", value: "$18.7K", delta: "23%", positive: true, icon: <AlertTriangle size={16} className="text-orange" />, intime: "vs last week" },
+    { title: "WhatsApp Response", value: "94%", delta: "8%", positive: true, icon: <MessageCircle size={16} className="text-green" />, intime: "vs last week" },
+  ];
 
-function LeadsKpiCard({ stats, timeframe, onTimeframeChange }) {
-  const { t } = useTranslation();
-  
-  // Initialize Lucide icons
-  React.useEffect(() => {
-      if (window.lucide) {
-        window.lucide.createIcons();
-      }
-    }, []);
-  
-  const getLeadsValue = () => {
-    switch (timeframe) {
-      case 'Today':
-        return stats.newLeadsToday || 0;
-      case '7d':
-        return stats.newLeads7d || 0;
-      case '30d':
-        return stats.newLeads30d || 0;
-      default:
-        return stats.newLeadsToday || 0;
-    }
-  };
+  const revenueTrendData = [
+    { day: "Mon", trend: 18000 },
+    { day: "Tue", trend: 25000 },
+    { day: "Wed", trend: 20000 },
+    { day: "Thu", trend: 36000 },
+    { day: "Fri", trend: 28000 },
+    { day: "Sat", trend: 22000 },
+    { day: "Sun", trend: 32000 },
+  ];
 
-  const getLabel = () => {
-    const baseLabel = t('dashboard.newLeads');
-    switch (timeframe) {
-      case 'Today':
-        return `${baseLabel} (${t('common.today')})`;
-      case '7d':
-        return `${baseLabel} (7d)`;
-      case '30d':
-        return `${baseLabel} (30d)`;
-      default:
-        return baseLabel;
-    }
-  };
+  const leadSources = [
+    { source: "WhatsApp", leads: 96, conversion: 28, revenue: 920000, color: "#2563eb", icon: <MessageCircle size={12} className="text-green" /> },
+    { source: "Instagram", leads: 62, conversion: 19, revenue: 410000, color: "#7c3aed", icon: <Camera size={12} style={{ color: "#d946ef" }} /> },
+    { source: "Website", leads: 54, conversion: 16, revenue: 360000, color: "#ea580c", icon: <Globe size={12} className="text-royal-blue" /> },
+    { source: "Marketplace", leads: 42, conversion: 14, revenue: 280000, color: "#0d9488", icon: <Briefcase size={12} className="text-orange" /> },
+    { source: "Referral", leads: 36, conversion: 31, revenue: 510000, color: "#16a34a", icon: <Users size={12} className="text-purple" /> },
+    { source: "Google Ads", leads: 28, conversion: 17, revenue: 300000, color: "#eab308", icon: <Search size={12} style={{ color: "#eab308" }} /> },
+    { source: "Meta Ads", leads: 21, conversion: 15, revenue: 250000, color: "#3b82f6", icon: <SlidersHorizontal size={12} className="text-royal-blue" /> },
+  ];
 
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      borderRadius: '12px',
-      background: '#f0f9ff',
-      padding: '12px 16px',
-      boxShadow: '0 2px 8px 0 rgba(59, 130, 246, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-      border: '1px solid #3b82f6',
-      transition: 'all 0.2s',
-      position: 'relative'
-    }}>
-      <div style={{
-        display: 'grid',
-        placeItems: 'center',
-        height: '36px',
-        width: '36px',
-        borderRadius: '8px',
-        background: '#dbeafe',
-        color: '#3b82f6'
-      }}>
-        <i data-lucide="bar-chart-3" style={{ width: '20px', height: '20px', stroke: '#3b82f6' }}></i>
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', justifyContent: 'space-between' }}>
-          <div style={{ 
-            fontSize: '22px', 
-            fontWeight: '700', 
-            color: '#1e40af' 
-          }}>
-            {getLeadsValue()}
-          </div>
-          <select
-            value={timeframe}
-            onChange={(e) => onTimeframeChange(e.target.value)}
-            style={{
-              fontSize: '12px',
-              fontWeight: '500',
-              color: '#1e40af',
-              background: '#dbeafe',
-              border: '1px solid #93c5fd',
-              borderRadius: '6px',
-              padding: '4px 8px',
-              cursor: 'pointer',
-              outline: 'none',
-              minWidth: '60px'
-            }}
-          >
-            <option value="Today">{t('common.today')}</option>
-            <option value="7d">7d</option>
-            <option value="30d">30d</option>
-          </select>
-        </div>
-        <div style={{ 
-          fontSize: '12px', 
-          color: '#1e40af',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          fontWeight: '500',
-          marginTop: '4px'
-        }}>
-          {getLabel()}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function Dashboard() {
-  const { t } = useTranslation();
-  const { user, isAuthenticated, loading, initialized  } = useAuth();
-  const { handleError } = useApiErrorHandler();
-  const navigate = useNavigate();
-
-  // Redirect to sign-in if not authenticated
-    useEffect(() => {
-      if (initialized && !isAuthenticated()) {
-        navigate('/sign-in');
-      }
-    }, [initialized, isAuthenticated, navigate]);
-
-  // Redirect VA users to properties page
-  if (user?.role === 'va') {
-    return <Navigate to="/dashboard/properties" replace />;
-  }
-
-  const [dashboardSummary, setDashboardSummary] = useState(null);
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [ownerLeads, setOwnerLeads] = useState([]);
-  const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dateFilter, setDateFilter] = useState('30d'); // 'Today', '7d', '30d' - applied to KPIs and charts
-  const [leadsTimeframe, setLeadsTimeframe] = useState('30d'); // synced with dateFilter for LeadsKpiCard
-  const [recentLeads, setRecentLeads] = useState([]);
-  const [recentProperties, setRecentProperties] = useState([]);
-  const { isDark } = useTheme();
-
-  // KPIs and chart data from API (match Leads page counts; no hardcoded values)
-  const stats = useMemo(() => {
-    const summary = dashboardSummary;
-    const analytics = analyticsData;
-    const lead = summary?.leads || {};
-    const periodLeads = analytics?.leads || {};
-    const byStatus = periodLeads.byStatus || {};
-    const createdInPeriod = typeof periodLeads.created === 'number' ? periodLeads.created : 0;
-    const new7d = lead.new ?? 0;
-    const dealsData = summary?.deals || {};
-    const byStage = dealsData.byStage || {};
-    const openDeals = (byStage.new ?? 0) + (byStage.qualified ?? 0) + (byStage.proposal ?? 0) + (byStage.negotiation ?? 0);
-    return {
-      totalLeads: lead.total ?? 0,
-      newLeadsToday: dateFilter === 'Today' ? createdInPeriod : new7d,
-      newLeads7d: new7d,
-      newLeads30d: createdInPeriod,
-      contactedLeads: lead.contacted ?? byStatus.contacted ?? 0,
-      qualifiedLeads: lead.qualified ?? 0,
-      dealsInPipeline: openDeals,
-      closedDeals: byStatus.converted ?? 0,
-      dealsWonCount: byStage.won ?? 0,
-      dealsLostCount: byStage.lost ?? 0,
-      revenueClosed: Number(dealsData.wonValue) ?? 0,
-      pipelineValue: Number(dealsData.pipelineValue) ?? 0,
-      dealsClosingSoon: 0,
-      priorityAlerts: 0,
-      whatsappLeadsToday: 0,
-      instagramLeadsToday: 0,
-    };
-  }, [dashboardSummary, analyticsData, dateFilter]);
-
-  // Funnel from analytics leads byStatus (same source as Analytics page)
-  const funnelData = useMemo(() => {
-    const a = analyticsData?.leads;
-    const by = a?.byStatus || {};
-    return {
-      newLeads: by.new ?? 0,
-      contacted: by.contacted ?? 0,
-      showings: by.qualified ?? 0,
-      offers: by.converted ?? 0,
-    };
-  }, [analyticsData]);
-
-  // Leads over time: real leads created per day (from owner leads, not events)
-  const dashboardPerformanceData = useMemo(() => {
-    const leads = Array.isArray(ownerLeads) ? ownerLeads : [];
-    if (leads.length === 0) return [];
-    const days = dateFilter === 'Today' ? 1 : dateFilter === '7d' ? 7 : 30;
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - days);
-    const startStr = start.toISOString().split('T')[0];
-    const endStr = end.toISOString().split('T')[0];
-    const byDay = {};
-    leads.forEach((lead) => {
-      const created = lead.created_at ?? lead.createdAt;
-      if (!created) return;
-      const d = new Date(created);
-      const key = d.toISOString().split('T')[0];
-      if (key >= startStr && key <= endStr) {
-        byDay[key] = (byDay[key] || 0) + 1;
-      }
-    });
-    const sorted = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0]));
-    return sorted.map(([date, count]) => ({
-      date,
-      leads: count,
-      pipeline: 0,
-      deals: 0,
-    }));
-  }, [ownerLeads, dateFilter]);
-
-  // Conversion funnel chart (bar) from analytics
-  const conversionFunnelData = useMemo(() => {
-    const by = analyticsData?.leads?.byStatus || {};
-    return [
-      { stage: 'New', count: by.new ?? 0 },
-      { stage: 'Contacted', count: by.contacted ?? 0 },
-      { stage: 'Qualified', count: by.qualified ?? 0 },
-      { stage: 'Converted', count: by.converted ?? 0 },
-    ].filter((row) => row.count > 0);
-  }, [analyticsData]);
-
-  // Activity distribution from analytics
-  const activityDistributionData = useMemo(() => {
-    const ev = analyticsData?.activity?.eventsByType || {};
-    const entries = Object.entries(ev).filter(([, n]) => n > 0);
-    if (entries.length === 0) return [];
-    return entries.map(([activity, count]) => ({ activity, count }));
-  }, [analyticsData]);
-
-  // Lead source: no backend breakdown; show empty or minimal
-  //const leadSourceData = useMemo(() => [], []);
-
-  // Chart colors - theme-aware
-  const chartColors = {
-    leads: "#4F8DFF",
-    pipeline: "#22C55E",
-    deals: "#A855F7",
-    grid: isDark ? "#1f2933" : "#e5e7eb",
-    axis: isDark ? "#94a3b8" : "#64748b",
-    panel: isDark ? "#111827" : "#ffffff"
-  };
-
-  // Google Ads-style tooltip component
-  const InspectionTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || !payload.length) return null;
-
-    const data = payload[0].payload;
-
+  const CustomXAxisTick = ({ x, y, payload }) => {
+    const matchedSource = leadSources.find(src => src.source === payload.value);
     return (
-      <div
-        style={{
-          background: chartColors.panel,
-          border: `1px solid ${chartColors.grid}`,
-          padding: "10px 12px",
-          fontSize: 12,
-          color: isDark ? "#E5E7EB" : "#0f172a",
-          minWidth: 180,
-          borderRadius: "8px",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)"
-        }}
-      >
-        <div style={{ color: chartColors.axis, marginBottom: 6 }}>
-          {new Date(label).toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric"
-          })}
-        </div>
-
-        <div style={{ marginBottom: 4 }}>
-          Leads: <strong style={{ color: chartColors.leads }}>{data.leads}</strong>
-        </div>
-        <div style={{ marginBottom: 4 }}>
-          Pipeline: <strong style={{ color: chartColors.pipeline }}>${(data.pipeline ?? 0).toLocaleString()}</strong>
-        </div>
-        <div>
-          Deals: <strong style={{ color: chartColors.deals }}>{data.deals ?? 0}</strong>
-        </div>
-      </div>
+      <g transform={`translate(${x - 6},${y + 6})`}>
+        {matchedSource ? matchedSource.icon : null}
+      </g>
     );
   };
 
-
-  // Keep old data for other charts
-  const leadsOverTimeData = [
-    { date: "Jan 1", leads: 2, deals: 0, revenue: 0 },
-    { date: "Jan 8", leads: 5, deals: 1, revenue: 0 },
-    { date: "Jan 15", leads: 8, deals: 2, revenue: 2500 },
-    { date: "Jan 22", leads: 6, deals: 2, revenue: 5000 },
-    { date: "Jan 29", leads: 10, deals: 3, revenue: 7500 },
-    { date: "Feb 5", leads: 14, deals: 4, revenue: 12500 },
-    { date: "Feb 12", leads: 18, deals: 5, revenue: 18000 },
-    { date: "Feb 19", leads: 22, deals: 6, revenue: 24000 },
-    { date: "Feb 26", leads: 26, deals: 7, revenue: 31000 },
-    { date: "Mar 5", leads: 32, deals: 9, revenue: 42000 },
-    { date: "Mar 12", leads: 38, deals: 11, revenue: 56000 },
-    { date: "Mar 19", leads: 45, deals: 14, revenue: 72000 }
-  ];
-
-  // Demo data for funnel visualization
-  /*const funnelData = {
-    newLeads: 120,
-    contacted: 85,
-    showings: 42,
-    offers: 18
-  };*/
-
-  const leadSourceData = [
-    { name: 'Website', value: 45, color: '#3b82f6' },
-    { name: 'WhatsApp', value: 32, color: '#25D366' },
-    { name: 'Email', value: 18, color: '#8b5cf6' },
-    { name: 'Referral', value: 12, color: '#f59e0b' },
-    { name: 'Social Media', value: 8, color: '#ec4899' },
-  ];
-
-  /*const conversionFunnelData = [
-    { stage: 'New Leads', count: 150 },
-    { stage: 'Contacted', count: 120 },
-    { stage: 'Qualified', count: 85 },
-    { stage: 'Proposal', count: 45 },
-    { stage: 'Negotiation', count: 28 },
-    { stage: 'Closed Won', count: 18 },
-  ];
-
-  const activityDistributionData = [
-    { activity: 'Calls', count: 145 },
-    { activity: 'WhatsApp', count: 98 },
-    { activity: 'Emails', count: 67 },
-    { activity: 'Meetings', count: 34 },
-    { activity: 'Follow-ups', count: 52 },
-  ];*/
-
-  useEffect(() => {
-    if (initialized && isAuthenticated() && user) {
-      loadDashboard();
-    }
-  }, [initialized, isAuthenticated, user, dateFilter]);
-
-
-  const loadDashboard = async () => {
-    setDashboardLoading(true);
-    setError(null);
-
-    try {
-      const summaryPromise = getDashboardSummary();
-      const analyticsPromise = getAnalyticsDashboard(dateFilter === 'Today' ? 'today' : dateFilter);
-      const [summary, analytics] = await Promise.all([summaryPromise, analyticsPromise]);
-
-      setDashboardSummary(summary || null);
-      setAnalyticsData(analytics || null);
-
-      // Owner leads for "Leads over Time" chart (real leads created per day)
-      try {
-        const leadsList = await getOwnerLeads();
-        setOwnerLeads(Array.isArray(leadsList) ? leadsList : []);
-      } catch (leadsErr) {
-        if (leadsErr.status === 403 && leadsErr.isSubscriptionError) {
-          // Expected for FREE/PRO users
-        } else {
-          console.error('Failed to load leads:', leadsErr);
-        }
-        setOwnerLeads([]);
-      }
-
-      try {
-        const propertiesResponse = await apiClient.request('/crm/owner/properties');
-        // Store properties if needed for future use
-      } catch (propertiesErr) {
-        // If CRM access is required, just ignore (don't show error)
-        if (propertiesErr.status === 403 && propertiesErr.isSubscriptionError) {
-          // Don't show error notification - this is expected for FREE/PRO users
-        } else {
-          console.error('Failed to load properties:', propertiesErr);
-        }
-      }
-
-      // Recent activity (existing endpoints - may 403 for non-CRM users)
-      try {
-        const [leadsRes, propsRes] = await Promise.all([
-          apiClient.request('/crm/leads/recent?limit=10'),
-          apiClient.request('/crm/properties/recent?limit=10'),
-        ]);
-        setRecentLeads(Array.isArray(leadsRes?.data) ? leadsRes.data : leadsRes?.data ?? []);
-        setRecentProperties(Array.isArray(propsRes?.data) ? propsRes.data : propsRes?.data ?? []);
-      } catch (recentErr) {
-        if (recentErr.status !== 403) console.error('Failed to load recent activity:', recentErr);
-        setRecentLeads([]);
-        setRecentProperties([]);
-      }
-    } catch (err) {
-      console.error('Failed to load dashboard:', err);
-      // Only show error if it's not a subscription error (subscription errors are handled above)
-      if (!err.isSubscriptionError) {
-        handleError(err, 'Failed to load dashboard');
-        setError(err.message || 'Failed to load dashboard');
-      }
-    } finally {
-      setDashboardLoading(false);
-    }
-  };
-    
- 
-  // Show loading while checking auth
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="dashboard-page-dark">
-      {error && (
-        <div className="crm-error">
-          {error}
+    <div className="dashboard-container dashboard-page">
+      <div className="heading_page">
+        <Layers className="header-icon" size={20} />
+        <h1>Dashboard Overview</h1>
+      </div>
+      
+      <header className="dashboard-header">
+        <div className="header-actions">
+          <div className="control-btn"><Calendar size={15} /> <span>This Week</span></div>
+          <div className="control-btn"><Users size={15} /> <span>All Teams</span> <ChevronDown size={14} /></div>
+          <div className="control-btn"><Layers size={15} /> <span>All Sources</span> <ChevronDown size={14} /></div>
+          <div className="control-btn"><Users size={15} /> <span>All Agents</span> <ChevronDown size={14} /></div>
+          <div className="control-btn"><Layers size={15} /> <span>All Stages</span> <ChevronDown size={14} /></div>
+          <div className="control-btn"><SlidersHorizontal size={15} /> <span>Filters</span></div>
+          <div className="notification-icon">
+            <Bell size={18} />
+            <span className="notif-badge">8</span>
+          </div>
+          <button className="btn-export">
+            <Download size={15} /> Export <ChevronDown size={14} />
+          </button>
         </div>
-      )}
+      </header>
 
-      {/* MAIN LAYOUT: Main Section (Full Width) */}
-      <div className="dashboard-layout" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {/* MAIN SECTION */}
-        <div className="dashboard-main-section" style={{ width: '100%' }}>
-          {/* FIRST ROW: 4 KPIs */}
-          <div className="dashboard-kpi-row">
-            <LeadsKpiCard 
-              stats={stats}
-              timeframe={leadsTimeframe}
-              onTimeframeChange={(value) => {
-                setLeadsTimeframe(value);
-                setDateFilter(value);
-              }}
-            />
-            <KpiCard 
-              icon="phone" 
-              value={stats.contactedLeads || 0} 
-              label={t('dashboard.contactedLabel')}
-              accentColor="#14B8A6"
-            />
-            <KpiCard 
-              icon="git-branch" 
-              value={stats.dealsInPipeline || 0} 
-              label={t('dashboard.dealsInPipeline')}
-              accentColor="#6366F1"
-            />
-            <KpiCard 
-              icon="dollar-sign" 
-              value={`$${(stats.revenueClosed || 0).toLocaleString()}`} 
-              label={t('dashboard.revenue')}
-              accentColor="#22C55E"
-            />
+      {/* AI COMMAND CENTER */}
+      <section className="ai-command-banner">
+        <div className="banner-left">
+          <div className="ai-avatar-glow">
+            <div className="ai-bot-icon">🤖</div>
           </div>
-
-          {/* RECENT ACTIVITY */}
-          {(recentLeads.length > 0 || recentProperties.length > 0) && (
-            <div className="crm-section" style={{ marginBottom: '24px' }}>
-              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: 'var(--text)' }}>
-                {t('dashboard.recentActivity') || 'Recent Activity'}
-              </h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-                {recentLeads.length > 0 && (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
-                    <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>Recent Leads</h3>
-                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                      {recentLeads.slice(0, 5).map((lead) => (
-                        <li key={lead.id} style={{ marginBottom: '8px' }}>
-                          <Link to={`/dashboard/leads/${lead.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontSize: '14px' }}>
-                            {lead.name || 'Unnamed'} — <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{lead.status}</span>
-                          </Link>
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : ''}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link to="/dashboard/leads" className="crm-btn crm-btn-secondary" style={{ marginTop: '12px', fontSize: '13px' }}>
-                      View all leads
-                    </Link>
-                  </div>
-                )}
-                {recentProperties.length > 0 && (
-                  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px' }}>
-                    <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>Recent Properties</h3>
-                    <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                      {recentProperties.slice(0, 5).map((prop) => (
-                        <li key={prop.id} style={{ marginBottom: '8px' }}>
-                          <Link to={`/dashboard/properties/${prop.id}`} style={{ color: 'var(--text)', textDecoration: 'none', fontSize: '14px' }}>
-                            {prop.title || 'Untitled'}
-                          </Link>
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                            {prop.location && `${prop.location} · `}
-                            {prop.created_at ? new Date(prop.created_at).toLocaleDateString() : ''}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link to="/dashboard/properties" className="crm-btn crm-btn-secondary" style={{ marginTop: '12px', fontSize: '13px' }}>
-                      View all properties
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* SECOND ROW: Leads Over Time with Ladder Rectangles and Graph */}
-          <div className="dashboard-second-row">
-            <div className="crm-section">
-              {/* Header */}
-              <div className="crm-section-header-wrapper" style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '24px'
-              }}>
-                <h2 style={{
-                  margin: 0,
-                  fontSize: '20px',
-                  fontWeight: '700',
-                  color: 'var(--text)'
-                }}>
-                  {t('dashboard.leadsOverTime')}
-                </h2>
-                <select
-                  value={dateFilter}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setDateFilter(v);
-                    setLeadsTimeframe(v);
-                  }}
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: 'var(--text)',
-                    background: 'var(--card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    padding: '8px 32px 8px 12px',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%2364748b\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 12px center'
-                  }}
-                >
-                  <option value="Today">{t('common.today')}</option>
-                  <option value="7d">7d</option>
-                  <option value="30d">30d</option>
-                </select>
-              </div>
-
-              {/* Body: Two Columns */}
-              <div className="dashboard-second-row-body">
-                {/* Left Column: Funnel Visualization */}
-                <div className="dashboard-ladder-column">
-                  <FunnelVisualization data={funnelData} />
-                </div>
-
-                {/* Right Column: Big Graph */}
-                <div className="dashboard-graph-column">
-                  <div className="dashboard-performance-chart-container" style={{
-                    width: '100%',
-                    height: '400px',
-                    background: 'var(--card)',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxSizing: 'border-box',
-                    overflow: 'hidden',
-                    position: 'relative'
-                  }}>
-                    <h3 style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: 'var(--text)',
-                      marginBottom: '12px',
-                      flexShrink: 0
-                    }}>
-                      {t('dashboard.leadsOverTime')}
-                    </h3>
-                    <div style={{ flex: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}>
-                      {dashboardPerformanceData.length === 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
-                          No data for this period
-                        </div>
-                      ) : (
-                      <div style={{ width: "100%", height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={dashboardPerformanceData}
-                          margin={{ top: 16, right: 24, left: 0, bottom: 8 }}
-                        >
-                          <CartesianGrid
-                            stroke={chartColors.grid}
-                            strokeOpacity={0.04}
-                            vertical={false}
-                          />
-
-                          <XAxis
-                            dataKey="date"
-                            tickFormatter={(d) =>
-                              new Date(d).toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric"
-                              })
-                            }
-                            tick={{ fill: chartColors.axis, fontSize: 11 }}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-
-                          {/* Left Y-Axis for Leads and Deals (counts) */}
-                          <YAxis
-                            yAxisId="left"
-                            tick={{ fill: chartColors.axis, fontSize: 11 }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(value) => value.toString()}
-                          />
-
-                          {/* Right Y-Axis for Pipeline (dollars) */}
-                          <YAxis
-                            yAxisId="right"
-                            orientation="right"
-                            tick={{ fill: chartColors.axis, fontSize: 11 }}
-                            axisLine={false}
-                            tickLine={false}
-                            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                          />
-
-                          <Tooltip
-                            content={<InspectionTooltip />}
-                            cursor={{
-                              stroke: chartColors.axis,
-                              strokeOpacity: 0.25,
-                              strokeDasharray: "4 4"
-                            }}
-                          />
-
-                          {/* LEADS - Left Y-axis */}
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="leads"
-                            stroke={chartColors.leads}
-                            strokeWidth={1.2}
-                            dot={false}
-                            activeDot={{ r: 4 }}
-                            isAnimationActive={false}
-                          />
-
-                          {/* PIPELINE - Right Y-axis */}
-                          <Line
-                            yAxisId="right"
-                            type="monotone"
-                            dataKey="pipeline"
-                            stroke={chartColors.pipeline}
-                            strokeWidth={1.1}
-                            dot={false}
-                            activeDot={{ r: 4 }}
-                            isAnimationActive={false}
-                          />
-
-                          {/* DEALS - Left Y-axis */}
-                          <Line
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="deals"
-                            stroke={chartColors.deals}
-                            strokeWidth={1}
-                            dot={false}
-                            activeDot={{ r: 4 }}
-                            isAnimationActive={false}
-                          />
-
-                        </LineChart>
-                      </ResponsiveContainer>
-                      </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="ai-message-ctx">
+            <span>AI Command Center</span>
+            <h2>You have <span className="highlight-blue">3</span> high-intent leads ready to close.</h2>
+            <p>Next best action: <span className="clickable-link">Call Maria Lopez</span> now</p>
+            <div className="banner-alert-tag">🔥 2 leads require immediate follow-up</div>
           </div>
+        </div>
 
-          {/* THIRD ROW: 4 Charts (3 charts + Revenue Summary) */}
-          <div className="dashboard-charts-row">
-            <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                {t('dashboard.conversionFunnel')}
-              </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Lead progression through stages
-              </p>
-              <div style={{
-                height: '250px',
-                background: 'var(--card)',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                padding: '16px'
-              }}>
-                {conversionFunnelData.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
-                    No data for this period
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={conversionFunnelData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis type="number" stroke="var(--text-muted)" style={{ fontSize: '11px' }} />
-                      <YAxis 
-                        dataKey="stage" 
-                        type="category" 
-                        stroke="var(--text-muted)"
-                        style={{ fontSize: '11px' }}
-                        width={90}
-                      />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'var(--card)', 
-                          border: '1px solid var(--border)',
-                          borderRadius: '6px',
-                          color: 'var(--text)'
-                        }}
-                      />
-                      <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                    </BarChart>
+        <div className="banner-right">
+          <div className="banner-right-top">
+            <div className="mini-insight-card">
+              <div className="card-lbl">AI Confidence</div>
+              <div className="card-val-group">
+                <h3 className="text-green">92%</h3>
+                <div className="mini-sparkline-container">
+                  <ResponsiveContainer width="100%" height={25}>
+                    <AreaChart data={confidenceSparkData} margin={{ top: 2, bottom: 2, left: 2, right: 2 }}>
+                      <Area type="monotone" dataKey="v" stroke="#22c55e" strokeWidth={1.5} fill="none" />
+                    </AreaChart>
                   </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
-            <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                Lead Source Breakdown
-              </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Where your leads come from
-              </p>
-              <div style={{
-                height: '250px',
-                background: 'var(--card)',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                padding: '16px'
-              }}>
-                {leadSourceData.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
-                    No data for this period
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={leadSourceData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={70}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {leadSourceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
-            <div className="crm-section">
-              <h2 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                {t('dashboard.activityDistribution')}
-              </h2>
-              <p style={{ margin: '0 0 16px 0', fontSize: '12px', color: 'var(--text-muted)' }}>
-                Communication touchpoints with leads
-              </p>
-              <div style={{
-                height: '250px',
-                background: 'var(--card)',
-                borderRadius: '8px',
-                border: '1px solid var(--border)',
-                padding: '16px'
-              }}>
-                {activityDistributionData.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
-                    No data for this period
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={activityDistributionData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis 
-                      dataKey="activity" 
-                      stroke="var(--text-muted)"
-                      style={{ fontSize: '11px' }}
-                    />
-                    <YAxis 
-                      stroke="var(--text-muted)"
-                      style={{ fontSize: '11px' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'var(--card)', 
-                        border: '1px solid var(--border)',
-                        borderRadius: '6px',
-                        color: 'var(--text)'
-                      }}
-                    />
-                    <Bar dataKey="count" fill="#22C55E" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
-            {/* Revenue Summary - 4th column */}
-            <div className="crm-section">
-              <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '600', color: 'var(--text)' }}>
-                {t('dashboard.revenueSummary')}
-              </h2>
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>{t('dashboard.revenue')}</div>
-                <div style={{ fontSize: '24px', fontWeight: '600', color: '#22C55E' }}>
-                  ${(stats.revenueClosed || 0).toLocaleString()}
                 </div>
               </div>
+            </div>
+            <div className="mini-insight-card">
+              <div className="card-lbl">Revenue at Risk</div>
+              <div className="card-val-group">
+                <h3 className="text-orange">$18.7K</h3>
+                <div className="mini-sparkline-container">
+                  <ResponsiveContainer width="100%" height={25}>
+                    <AreaChart data={riskSparkData} margin={{ top: 2, bottom: 2, left: 2, right: 2 }}>
+                      <Area type="monotone" dataKey="v" stroke="#ea580c" strokeWidth={1.5} fill="none" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+            <div className="mini-insight-card next-action-card">
+              <Phone size={16} />
               <div>
-                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '4px' }}>Pipeline Value</div>
-                <div style={{ fontSize: '24px', fontWeight: '600', color: '#3b82f6' }}>
-                  ${(stats.pipelineValue || 0).toLocaleString()}
-                </div>
+                <div className="card-lbl">Next Best Action</div>
+                <h4>Call Maria Lopez</h4>
               </div>
             </div>
           </div>
-
-          {/* SECTION 4: ACTION SIGNAL GRID */}
-          <div className="dashboard-action-grid">
-            {/* Card 1: Deals Closing Soon */}
-            <Link to="/dashboard/pipeline" className="dashboard-action-card" style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderLeft: '4px solid #F59E0B',
-              borderRadius: '12px',
-              padding: '20px',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  height: '36px',
-                  width: '36px',
-                  borderRadius: '8px',
-                  background: 'rgba(245, 158, 11, 0.15)',
-                  color: '#F59E0B',
-                  fontSize: '20px'
-                }}>
-                  ⏰
-                </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                  {t('dashboard.dealsClosingSoon')}
-                </h3>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px' }}>
-                {stats.dealsClosingSoon || 0}
-              </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                {t('dashboard.next7Days')}
-              </div>
-            </Link>
-
-            {/* Card 2: Priority Alerts */}
-            <div className="dashboard-action-card" style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderLeft: '4px solid #EF4444',
-              borderRadius: '12px',
-              padding: '20px',
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  height: '36px',
-                  width: '36px',
-                  borderRadius: '8px',
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  color: '#EF4444',
-                  fontSize: '20px'
-                }}>
-                  🚨
-                </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                  {t('dashboard.priorityAlerts')}
-                </h3>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px' }}>
-                {stats.priorityAlerts || 0}
-              </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                {t('dashboard.requiresAttention')}
-              </div>
-            </div>
-
-            {/* Card 3: WhatsApp Leads */}
-            <Link to="/dashboard/whatsapp" className="dashboard-action-card" style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderLeft: '4px solid #22C55E',
-              borderRadius: '12px',
-              padding: '20px',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              position: 'relative',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)';
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  height: '36px',
-                  width: '36px',
-                  borderRadius: '8px',
-                  background: 'rgba(34, 197, 94, 0.15)',
-                  color: '#22C55E',
-                  fontSize: '20px'
-                }}>
-                  💬
-                </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                  {t('dashboard.whatsappLeads')}
-                </h3>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px' }}>
-                {stats.whatsappLeadsToday || 0}
-              </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                {t('dashboard.newToday')}
-              </div>
-            </Link>
-
-            {/* Card 4: Instagram Leads */}
-            <Link to="/dashboard/instagram" className="dashboard-action-card" style={{
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '20px',
-              textDecoration: 'none',
-              color: 'inherit',
-              transition: 'all 0.2s',
-              cursor: 'pointer',
-              position: 'relative',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 15px rgba(225, 48, 108, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)';
-            }}>
-              <div style={{ 
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: '4px',
-                background: 'linear-gradient(180deg, #E1306C 0%, #F77737 100%)',
-                borderRadius: '12px 0 0 12px'
-              }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <div style={{
-                  display: 'grid',
-                  placeItems: 'center',
-                  height: '36px',
-                  width: '36px',
-                  borderRadius: '8px',
-                  background: 'linear-gradient(135deg, rgba(225, 48, 108, 0.15) 0%, rgba(247, 119, 55, 0.15) 100%)',
-                  color: '#E1306C',
-                  fontSize: '20px'
-                }}>
-                  📷
-                </div>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--text)' }}>
-                  {t('dashboard.instagramLeads')}
-                </h3>
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px' }}>
-                {stats.instagramLeadsToday || 0}
-              </div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                {t('dashboard.newToday')}
-              </div>
-            </Link>
+          <div className="banner-action-row">
+            <button className="banner-btn text-dark"><Phone size={16} /> Call</button>
+            <button className="banner-btn btn-whatsapp-color"><MessageCircle size={16} /> WhatsApp</button>
+            <button className="banner-btn btn-assign-color"><Users size={16} /> Assign</button>
+            <button className="banner-btn btn-followup-color"><Calendar size={16} /> Follow-up</button>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* PRIMARY KPI CARDS */}
+      <section className="kpi-row-grid grid-6-col">
+        {miniKpis.map((kpi, idx) => (
+          <div key={idx} className="kpi-mini-card version-primary">
+            <div className="kpi-main-row">
+              <div className={`kpi-icon-wrapper ${kpi.iconBg}`}>{kpi.icon}</div>
+              <div className="kpi-main-right">
+                <span className="kpi-lbl">{kpi.title}</span>
+                <h2 className="kpi-main-val">{kpi.value}</h2>
+                {/* ĐÃ FIX: Đổi class sang className ở dòng dưới đây */}
+                <span className={`kpi-indicator-badge ${kpi.positive ? "pos" : "neg"}`}>
+                  {kpi.positive ? "↑" : "↓"} {kpi.delta} 
+                </span> <span className="kpi-indicator-badge">{kpi.intime}</span>
+              </div>
+            </div>
+            <div className="kpi-meta-content">
+              <p className="kpi-helper-txt">{kpi.subtext}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* SECONDARY KPI CARDS */}
+      <section className="kpi-row-grid grid-6-col">
+        {secondaryKpis.map((kpi, idx) => (
+          <div key={idx} className="kpi-mini-card version-secondary subtle-border">
+            <div className="kpi-main-row">
+              <div className="kpi-icon-wrapper clean-icon">{kpi.icon}</div>
+              <div className="kpi-flex-body">
+                <span className="kpi-lbl">{kpi.title}</span>
+                <h3 className="kpi-sub-val">{kpi.value}</h3>
+                {/* ĐÃ FIX: Đổi class sang className ở dòng dưới đây */}
+                <div><span className="kpi-indicator-badge pos">↑ {kpi.delta} </span> <span className="kpi-indicator-badge">{kpi.intime}</span></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* CHARTS AND QUEUE */}
+      <section className="dashboard-chart-row grid-3-col">
+        {/* Revenue & Lead Trend */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <TrendingUp size={16} className="text-royal-blue" />
+              <h3>Revenue & Lead Trend</h3>
+            </div>
+            <div className="pill-toggles">
+              <button>Leads</button>
+              <button>Appointments</button>
+              <button className="active">Revenue</button>
+            </div>
+          </div>
+          <div className="chart-viewbox">
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={revenueTrendData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="dashboardRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="trend" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#dashboardRev)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Lead Source Performance */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <Target size={16} className="text-royal-blue" />
+              <h3>Lead Source Performance</h3>
+            </div>
+            <a href="#all-sources" className="card-text-link">View All Sources →</a>
+          </div>
+          <div className="split-layout-grid">
+            <div className="chart-half">
+              <ResponsiveContainer width="100%" height={195}>
+                <BarChart data={leadSources} margin={{ top: 5, right: 5, left: -25, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="source" tickLine={false} axisLine={false} tick={<CustomXAxisTick />} interval={0} />
+                  <YAxis tickLine={false} axisLine={false} tick={{ fill: "#94a3b8", fontSize: 9 }} />
+                  <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
+                    {leadSources.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="table-list-half">
+              <div className="list-tbl-header">
+                <span>Source</span>
+                <span className="text-right">Conv.</span>
+                <span className="text-right">Revenue</span>
+              </div>
+              {leadSources.map((item, idx) => (
+                <div key={idx} className="list-tbl-row">
+                  <span className="src-label-dot">
+                    <span className="color-dot" style={{ backgroundColor: item.color }}></span>
+                    {item.source}
+                  </span>
+                  <span className="text-right text-gray">{item.conversion}%</span>
+                  <span className="text-right font-bold">
+                    ${item.revenue >= 1000 ? `${item.revenue / 1000}K` : item.revenue}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Priority Queue */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <Zap size={16} className="text-orange" />
+              <h3>AI Priority Queue</h3>
+            </div>
+            <a href="#view-all" className="card-text-link">View All →</a>
+          </div>
+          <div className="queue-list-wrapper">
+            <div className="list-tbl-header">
+              <span>Lead</span>
+              <span className="text-left">Intent</span>
+              <span className="text-left">Probability</span>
+              <span>Next Action</span>
+            </div>
+            {[
+              { name: "Maria Lopez", intent: "Luxury Buyer", prob: "87%", img: "https://i.pravatar.cc/150?img=41" },
+              { name: "Carlos Vega", intent: "Appointment", prob: "79%", img: "https://i.pravatar.cc/150?img=60" },
+              { name: "Daniela Ortiz", intent: "Financing Ready", prob: "82%", img: "https://i.pravatar.cc/150?img=45" },
+              { name: "Pablo Torres", intent: "Property Interested", prob: "76%", img: "https://i.pravatar.cc/150?img=11" },
+              { name: "Sofia Reyes", intent: "High Intent", prob: "72%", img: "https://i.pravatar.cc/150?img=23" },
+            ].map((lead, idx) => (
+              <div key={idx} className="queue-item-row">
+                <div className="lead-meta-profile">
+                  <img src={lead.img} alt={lead.name} className="mini-avatar" />
+                  <div className="meta-name"><h4>{lead.name}</h4></div>
+                </div>
+                <span className="meta-intent">{lead.intent}</span>
+                <span className="prob-badge">{lead.prob}</span>
+                <div className="action-icon-shortcuts">
+                  <button className="shortcut-btn black-btn"><Phone size={12} /></button>
+                  <button className="shortcut-btn green-btn"><MessageCircle size={12} /></button>
+                  <button className="shortcut-btn white-btn"><Users size={12} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DATA LOGS AND TIMELINES */}
+      <section className="dashboard-logs-row grid-3-col">
+        {/* Today's Revenue Risk */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <AlertTriangle size={16} className="text-red" />
+              <h3>Today's Revenue Risk</h3>
+            </div>
+            <a href="#view-all" className="card-text-link">View All →</a>
+          </div>
+          <div className="risk-alerts-list">
+            {[
+              { title: "Leads going cold (no activity > 48h)", count: 12, icon: <Clock3 size={12} className="text-muted" /> },
+              { title: "Deals stuck in stage > 7 days", count: 8, icon: <Layers size={12} className="text-muted" /> },
+              { title: "Missed follow-ups", count: 6, icon: <AlertTriangle size={12} className="text-orange" /> },
+              { title: "Unanswered WhatsApp messages", count: 27, icon: <MessageCircle size={12} className="text-green" /> },
+            ].map((risk, idx) => (
+              <div key={idx} className="risk-item-row">
+                <span className="risk-title-lbl">
+                  {risk.icon} {risk.title}
+                </span>
+                <span className="risk-count-badge">{risk.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Live AI Tracking */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <ShieldCheck size={16} className="text-royal-blue" />
+              <h3>Live AI Tracking</h3>
+            </div>
+            <a href="#view-all" className="card-text-link">View All →</a>
+          </div>
+          <div className="tracking-timeline-list">
+            {[
+              { text: "Maria Lopez viewed 3 new listings", time: "9m ago" },
+              { text: "Carlos Vega opened WhatsApp message", time: "22m ago" },
+              { text: "AI qualified Daniela Ortiz as financing-ready", time: "35m ago" },
+              { text: "Pablo Torres moved to Offer stage", time: "1h ago" },
+              { text: "Sofia Reyes scheduled showing", time: "1h 20m ago" },
+            ].map((log, idx) => (
+              <div key={idx} className="timeline-item-row">
+                <div className="timeline-marker-dot"></div>
+                <span className="timeline-log-txt">{log.text}</span>
+                <span className="timeline-time-stamp">{log.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Deals by Stage */}
+        <div className="content-card">
+          <div className="card-top-header">
+            <div className="title-left">
+              <Briefcase size={16} className="text-royal-blue" />
+              <h3>Active Deals by Stage</h3>
+            </div>
+            <a href="#pipeline" className="card-text-link">View Pipeline →</a>
+          </div>
+          <div className="deals-by-stage-box">
+            <div className="stage-stats-columns">
+              {[
+                { name: "New", count: "12", value: "$48K" },
+                { name: "Qualified", count: "9", value: "$67K" },
+                { name: "Showing", count: "5", value: "$91K" },
+                { name: "Offer", count: "3", value: "$114K" },
+                { name: "Closed", count: "2", value: "$24.6K" },
+              ].map((stage, idx) => (
+                <div key={idx} className="stage-column-item">
+                  <span className="stage-head-lbl">{stage.name}</span>
+                </div>
+              ))}
+            </div>
+            <div className="stage-progress-bar-wrapper">
+              <div className="bar-chunk chunk-new" style={{ width: "25%" }}></div>
+              <div className="bar-chunk chunk-qualified" style={{ width: "20%" }}></div>
+              <div className="bar-chunk chunk-showing" style={{ width: "25%" }}></div>
+              <div className="bar-chunk chunk-offer" style={{ width: "15%" }}></div>
+              <div className="bar-chunk chunk-closed" style={{ width: "15%" }}></div>
+            </div>
+            <div className="stage-stats-columns">
+              {[
+                { name: "New", count: "12", value: "$48K" },
+                { name: "Qualified", count: "9", value: "$67K" },
+                { name: "Showing", count: "5", value: "$91K" },
+                { name: "Offer", count: "3", value: "$114K" },
+                { name: "Closed", count: "2", value: "$24.6K" },
+              ].map((stage, idx) => (
+                <div key={idx} className="stage-column-item">
+                  <h4>{stage.count}</h4>
+                  <span>{stage.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BOTTOM FOOTER UTILITIES */}
+      <section className="dashboard-footer-grid grid-5-col">
+        {/* Pipeline Funnel */}
+        <div className="content-card">
+          <div className="card-top-header"><AlertTriangle size={18} /><h5>Pipeline Funnel</h5></div>
+          <div className="funnel-vertical-stack">
+            {[
+              { stage: "Leads", count: "120", percent: "100%", width: "100%" },
+              { stage: "Qualified", count: "82", percent: "68%", width: "80%" },
+              { stage: "Showings", count: "39", percent: "32%", width: "60%" },
+              { stage: "Offers", count: "19", percent: "16%", width: "40%" },
+              { stage: "Closed", count: "8", percent: "7%", width: "20%" },
+            ].map((item, idx) => (
+              <div key={idx} className="funnel-layer-bar">
+                <span className="layer-name">{item.stage}</span>
+                <div className="layer-graphic-track"><div className="layer-fill" style={{ width: item.width }}></div></div>
+                <span className="layer-metrics">{item.count} <span className="text-gray">({item.percent})</span></span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Automation Health */}
+        <div className="content-card">
+          <div className="card-top-header"><Clock3 size={16} /><h5>Automation Health</h5></div>
+          <div className="health-status-list">
+            {[
+              { label: "WhatsApp Connected", status: "Active", color: "green", icon: <MessageCircle size={12} className="text-green" /> },
+              { label: "AI Replies", status: "Active", color: "green", icon: <CheckCircle2 size={12} className="text-green" /> },
+              { label: "Tasks Generated", status: "156", color: "gray", icon: <FileText size={12} className="text-muted" /> },
+              { label: "Follow-ups Completed", status: "78%", color: "green", icon: <Activity size={12} className="text-royal-blue" /> },
+              { label: "Missed Actions", status: "5", color: "orange", icon: <AlertTriangle size={12} className="text-orange" /> },
+            ].map((health, idx) => (
+              <div key={idx} className="health-row-item">
+                <span className="health-lbl">
+                  {health.icon} {health.label}
+                </span>
+                <span className={`status-pill ${health.color}`}>{health.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Next Actions */}
+        <div className="content-card">
+          <div className="card-top-header"><Shuffle size={16} /><h5>Next Actions</h5></div>
+          <div className="action-todo-list">
+            <div className="todo-row-item">
+              <div className="todo-details">
+                <span className="todo-txt">
+                  <CheckCircle2 size={13} className="text-muted" style={{ marginRight: 4 }} /> Call Maria Lopez
+                </span>
+                <span className="tag-urgent">Urgent</span>
+              </div>
+              <span className="todo-time">Today</span>
+            </div>
+            <div className="todo-row-item">
+              <span className="todo-txt">
+                <CheckCircle2 size={13} className="text-muted" style={{ marginRight: 4 }} /> Send property options to Carlos Vega
+              </span>
+              <span className="todo-time text-blue" style={{ fontSize: '9px' }}>Today • 3:00 PM</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Closings */}
+        <div className="content-card">
+          <div className="card-top-header ">
+            <Calendar size={12} />
+            <h5>Upcoming Closings</h5>
+            </div>
+          <div className="closing-list-wrapper">
+            {[
+              { label: "Showing — Maria Lopez", time: "Today • 4:00 PM", icon: <Calendar size={12} className="text-muted" /> },
+              { label: "Closing call — Sofia Reyes", time: "Today • 6:30 PM", icon: <Briefcase size={12} className="text-muted" /> },
+              { label: "Negotiation review — Pablo Torres", time: "Tomorrow • 9:00 AM", icon: <FileText size={12} className="text-muted" /> },
+              { label: "Final walk-through — Carlos Vega", time: "Tomorrow • 2:00 PM", icon: <CheckCircle2 size={12} className="text-muted" /> },
+            ].map((item, idx) => (
+              <div key={idx} className="closing-row-item">
+                <div className="closing-details">
+                  {item.icon}
+                  <span>{item.label}</span>
+                </div>
+                <span className="closing-time">{item.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Action Center */}
+        <div className="content-card action-center-dark-card">
+          <div className="dark-card-body">
+            <div className="card-head-title">
+              <Zap size={16} className="text-orange" />
+              <h4>AI Action Center</h4>
+            </div>
+            <p className="dark-card-desc">Cortexa analyzes your pipeline, detects risks, and recommends actions to close more deals.</p>
+            <div className="dark-card-counter-row">
+              <div className="counter-box"><span>Recommends Actions</span><h3>14</h3></div>
+              <div className="counter-box urgent-border"><span className="text-red">Urgent Tasks</span><h3 className="text-red">7</h3></div>
+            </div>
+            <button className="btn-run-analysis">
+              Run AI Dashboard Review <Zap size={14} fill="currentColor" />
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
