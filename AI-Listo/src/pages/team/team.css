@@ -1355,7 +1355,7 @@ TEAM BILLING
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  padding: 6px 0;
     border-top: 1px solid #e9edf5;
 }
 
@@ -1393,7 +1393,6 @@ TEAM BILLING
 .team-workspace .team-billing-stats-list {
   display: flex;
   flex-direction: column;
-  padding-top: 4px;
 }
 
 .team-workspace .team-billing-stat-row {
@@ -1403,7 +1402,7 @@ TEAM BILLING
   font-size: 13px;
     color: #3d4047;
     font-weight: 600;
-    padding: 20px 0;
+    padding: 14px 0;
     border-top: 1px solid #e9edf5;
 }
 .team-workspace .team-billing-stat-row:last-child {
@@ -1421,6 +1420,7 @@ TEAM BILLING
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-top: 14px;
 }
 
 .team-workspace .team-billing-add-seat-btn {
@@ -1434,7 +1434,7 @@ TEAM BILLING
 }
 
 .team-workspace .team-billing-mini-btn {
-  padding: 6px 16px;
+  padding: 8px 16px;
   border-radius: 10px;
   border: none;
   background: #2563eb;
