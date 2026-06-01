@@ -6,7 +6,6 @@ import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
 import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
-import './Leads.css';
 import './lead-detail-page.css';
 
 export default function LeadDetail() {
