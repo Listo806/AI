@@ -1,1084 +1,773 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import apiClient from '../../api/apiClient';
-import { useAuth } from '../../context/AuthContext';
-import { useApiErrorHandler } from '../../utils/useApiErrorHandler';
-import { useNotification } from '../../context/NotificationContext';
-import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
-import WhatsAppChat from '../../components/WhatsAppChat';
-import { showQrRoute, primaryRouteIsQr } from '../../config/whatsappUi';
-import './Leads.css';
-import './leads-master-detail.css';
+import React from "react";
+import "./leads.css";
 
-export default function LeadsList() {
-  const { t } = useTranslation();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { handleError } = useApiErrorHandler();
-  const { showSuccess, showError } = useNotification();
-  const [deletingLeadId, setDeletingLeadId] = useState(null);
-  const [allHotLeads, setAllHotLeads] = useState([]);
-  const [allOtherLeads, setAllOtherLeads] = useState([]);
-  const [filteredHotLeads, setFilteredHotLeads] = useState([]);
-  const [filteredOtherLeads, setFilteredOtherLeads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null);
+import {
+  Search,
+  SlidersHorizontal,
+  Download,
+  ChevronDown,
+  Plus,
+  Calendar,
+  MessageCircle,
+  Phone,
+  Video,
+  MoreVertical,
+  Sparkles,
+  Send,
+  Users,
+  Bot,
+  Clock3,
+  TrendingUp,
+  Flame,
+  ArrowRight,
+  Brain,
+  Settings2,
+  Home,
+  Smile,
+  Paperclip,
+  ImageIcon,
+  Mic,
+  ArrowUpRight,
+} from "lucide-react";
 
-  // Filters (secondary)
-  const [filters, setFilters] = useState({
-    status: '',
-    search: '',
-  });
+export default function LeadsPage() {
+  const stats = [
+    {
+      title: "Total Leads",
+      value: "248",
+      change: "+32 this month",
+      icon: <Users size={20} />,
+      className: "blue",
+    },
+    {
+      title: "AI Qualified",
+      value: "156",
+      change: "63% qualified",
+      icon: <Bot size={20} />,
+      className: "green",
+    },
+    {
+      title: "Active Conversations",
+      value: "41",
+      change: "+28 today",
+      icon: <MessageCircle size={20} />,
+      className: "purple",
+    },
+    {
+      title: "Appointments",
+      value: "18",
+      change: "+6 this week",
+      icon: <Calendar size={20} />,
+      className: "orange",
+    },
+    {
+      title: "Conversion Rate",
+      value: "21%",
+      change: "+4.8%",
+      icon: <TrendingUp size={20} />,
+      className: "cyan",
+    },
+    {
+      title: "Avg Response",
+      value: "2m",
+      change: "-18%",
+      icon: <Clock3 size={20} />,
+      className: "pink",
+    },
+  ];
 
-  // WhatsApp phone number
-  const whatsappPhone = user?.phone || 
-                        import.meta.env.VITE_WHATSAPP_PHONE || 
-                        '+1234567890';
+  const leads = [
+    {
+      name: "WhatsApp Lead",
+      phone: "+593 988885817",
+      score: "92%",
+      status: "Hot",
+      active: true,
+    },
+    {
+      name: "Makoto Kawamoto",
+      phone: "+81 90 7788 5541",
+      score: "74%",
+      status: "Warm",
+    },
+    {
+      name: "Maria Fernanda",
+      phone: "+593 995552277",
+      score: "68%",
+      status: "Warm",
+    },
+    {
+      name: "Andres Lopez",
+      phone: "+593 983311122",
+      score: "55%",
+      status: "Cool",
+    },
+  ];
 
-  useEffect(() => {
-    if (isAuthenticated() && user && !authLoading) {
-      loadLeads();
-    }
-  }, [isAuthenticated, user, authLoading]);
+  return (
+    <div className="leads-page">
+      <div className="heading_page">
+        <Users className="header-icon" size={20} />
+        <h1>Leads & Conversations</h1>
+      </div>
+      <div className="leads-header">
+        <div className="header-actions">
+          <button className="secondary-btn">
+            <Calendar size={16} />
+            May 12 - May 18
+            <ChevronDown size={15} />
+          </button>
 
-  // Apply client-side filtering (secondary)
-  useEffect(() => {
-    let filteredHot = [...allHotLeads];
-    let filteredOther = [...allOtherLeads];
+          <button className="secondary-btn">
+            <Download size={16} />
+            Export
+          </button>
 
-    if (filters.status) {
-      filteredHot = filteredHot.filter(l => l.status === filters.status);
-      filteredOther = filteredOther.filter(l => l.status === filters.status);
-    }
+          <button className="secondary-btn ai-btn">
+            <Sparkles size={16} />
+            AI View
+          </button>
 
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filteredHot = filteredHot.filter(l => 
-        (l.name && l.name.toLowerCase().includes(searchLower)) ||
-        (l.email && l.email.toLowerCase().includes(searchLower)) ||
-        (l.phone && l.phone.toLowerCase().includes(searchLower)) ||
-        (l.property?.title && l.property.title.toLowerCase().includes(searchLower))
-      );
-      filteredOther = filteredOther.filter(l => 
-        (l.name && l.name.toLowerCase().includes(searchLower)) ||
-        (l.email && l.email.toLowerCase().includes(searchLower)) ||
-        (l.phone && l.phone.toLowerCase().includes(searchLower)) ||
-        (l.property?.title && l.property.title.toLowerCase().includes(searchLower))
-      );
-    }
-
-    setFilteredHotLeads(filteredHot);
-    setFilteredOtherLeads(filteredOther);
-  }, [allHotLeads, allOtherLeads, filters]);
-
-  // Auto-select first lead on desktop when leads are loaded
-  useEffect(() => {
-    const isDesktop = window.innerWidth >= 1024;
-    if (isDesktop && !selectedLead && !loading) {
-      const allLeads = [...filteredHotLeads, ...filteredOtherLeads];
-      if (allLeads.length > 0) {
-        setSelectedLead(allLeads[0]);
-      }
-    }
-  }, [filteredHotLeads, filteredOtherLeads, loading, selectedLead]);
-
-  const loadLeads = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiClient.request('/crm/owner/leads');
-      const leadsData = Array.isArray(response) ? response : (response.data || []);
-      
-      // Normalize field names (backend returns camelCase)
-      const normalizedLeads = leadsData.map(lead => ({
-        ...lead,
-        propertyId: lead.property?.id || lead.property_id || null,
-        property: lead.property || null,
-        aiScore: lead.aiScore !== undefined ? lead.aiScore : (lead.ai_score !== undefined ? lead.ai_score : null),
-        aiTier: lead.aiTier || lead.ai_tier || 'COLD',
-        urgencyState: lead.urgencyState || lead.urgency_state || 'COOLING',
-        aiScoreLabel: lead.aiScoreLabel || lead.ai_score_label || '',
-        aiReasonBullets: lead.aiReasonBullets || lead.ai_reason_bullets || [],
-        recommendedAction: lead.recommendedAction || lead.recommended_action || 'FOLLOW_UP',
-        recommendedActionReason: lead.recommendedActionReason || lead.recommended_action_reason || '',
-        followUpRecommended: lead.followUpRecommended || lead.follow_up_recommended || false,
-        cooldownActive: lead.cooldownActive || lead.cooldown_active || false,
-        lastContactedAt: lead.lastContactedAt || lead.last_contacted_at || null,
-        hasResponded: lead.hasResponded || lead.has_responded || false,
-        lastActivityAt: lead.lastActivityAt || lead.last_activity_at || null,
-        lastActionType: lead.lastActionType || lead.last_action_type || null,
-        lastActionAt: lead.lastActionAt || lead.last_action_at || null,
-        createdAt: lead.createdAt || lead.created_at,
-        updatedAt: lead.updatedAt || lead.updated_at,
-      }));
-
-      // Backend already sorts by aiTier desc, aiScore desc, createdAt desc
-      // Separate HOT leads from others
-      const hot = normalizedLeads.filter(l => l.aiTier === 'HOT');
-      const other = normalizedLeads.filter(l => l.aiTier !== 'HOT');
-
-      setAllHotLeads(hot);
-      setAllOtherLeads(other);
-    } catch (err) {
-      console.error('Failed to load leads:', err);
-      handleError(err, 'Failed to load leads');
-      setError(err.message || 'Failed to load leads');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatAiScore = (score) => {
-    if (!score && score !== 0) return 'N/A';
-    return `${Math.round(score)}%`;
-  };
-
-  // Format time ago (e.g., "5 minutes ago", "2 hours ago")
-  const formatTimeAgo = (dateString) => {
-    if (!dateString) return null;
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
-  };
-
-  // Get status display label (mapping logic)
-  const getStatusDisplayLabel = (status, hasResponded) => {
-    if (hasResponded) return 'Engaged';
-    if (status === 'new') return 'Not Contacted';
-    if (status === 'contacted') return 'Attempted';
-    return getStatusLabel(status);
-  };
-
-  // Get urgency state color and style (distinct from AI tier)
-  const getUrgencyStateStyle = (urgencyState) => {
-    switch (urgencyState) {
-      case 'ACTIVE':
-        return { 
-          color: '#10b981', 
-          bgColor: '#f0fdf4', 
-          border: '1px solid #10b981',
-          label: 'Active'
-        };
-      case 'NEEDS_ATTENTION':
-        return { 
-          color: '#f59e0b', 
-          bgColor: '#fffbeb', 
-          border: '1px solid #f59e0b',
-          label: 'Needs Attention'
-        };
-      case 'COOLING':
-        return { 
-          color: '#64748b', 
-          bgColor: '#f1f5f9', 
-          border: '1px dashed #64748b',
-          label: 'Cooling'
-        };
-      default:
-        return { 
-          color: '#64748b', 
-          bgColor: '#f1f5f9', 
-          border: '1px solid #64748b',
-          label: 'Unknown'
-        };
-    }
-  };
-
-  // Calculate urgency level and get follow-up guidance
-  const getUrgencyInfo = (lead) => {
-    if (!lead) return { level: 'normal', badge: null, guidance: null };
-    
-    const now = new Date();
-    const createdAt = lead.createdAt ? new Date(lead.createdAt) : null;
-    const lastContactedAt = lead.lastContactedAt ? new Date(lead.lastContactedAt) : null;
-    
-    const hoursSinceLastContact = lastContactedAt ? (now - lastContactedAt) / (1000 * 60 * 60) : null;
-    const daysSinceLastContact = lastContactedAt ? Math.floor((now - lastContactedAt) / (1000 * 60 * 60 * 24)) : null;
-    const daysSinceCreation = createdAt ? Math.floor((now - createdAt) / (1000 * 60 * 60 * 24)) : null;
-    
-    const isUncontacted = !lastContactedAt;
-    const aiTier = lead.aiTier || 'COLD';
-    
-    // Urgency rules - all leads get a badge for consistency
-    if (aiTier === 'HOT') {
-      if (isUncontacted) {
-        return {
-          level: 'urgent',
-          badge: { text: 'Urgent — Contact now', color: '#ef4444', bgColor: '#fef2f2' },
-          guidance: 'Follow up if no response within 24 hours.'
-        };
-      } else if (hoursSinceLastContact > 24) {
-        return {
-          level: 'high',
-          badge: { text: 'Follow up needed', color: '#f59e0b', bgColor: '#fffbeb' },
-          guidance: 'Follow up if no response within 48 hours.'
-        };
-      } else {
-        // HOT lead contacted recently - still show badge but less urgent
-        return {
-          level: 'normal',
-          badge: { text: 'Active', color: '#10b981', bgColor: '#f0fdf4' },
-          guidance: 'Follow up if no response within 48 hours.'
-        };
-      }
-    } else if (aiTier === 'WARM') {
-      // Warm lead urgency decay: show warning if no contact after 3 days
-      if (isUncontacted) {
-        // Uncontacted warm lead - check days since creation
-        if (daysSinceCreation > 3) {
-          return {
-            level: 'medium',
-            badge: { text: 'Contact soon', color: '#3b82f6', bgColor: '#eff6ff' },
-            guidance: 'Follow up if no response within 3 days.'
-          };
-        }
-        return {
-          level: 'medium',
-          badge: { text: 'Contact soon', color: '#3b82f6', bgColor: '#eff6ff' },
-          guidance: 'Follow up if no response within 3 days.'
-        };
-      } else if (daysSinceLastContact > 3) {
-        // Warm lead with no contact for 3+ days - show decay warning
-        return {
-          level: 'medium',
-          badge: { text: 'Re-engagement needed', color: '#3b82f6', bgColor: '#eff6ff' },
-          guidance: 'Follow up if no response within 7 days.'
-        };
-      } else {
-        // WARM lead contacted recently - still show badge
-        return {
-          level: 'normal',
-          badge: { text: 'Active', color: '#10b981', bgColor: '#f0fdf4' },
-          guidance: 'Follow up if no response within 7 days.'
-        };
-      }
-    } else {
-      return {
-        level: 'low',
-        badge: { text: 'Low priority', color: '#64748b', bgColor: '#f1f5f9' },
-        guidance: 'Follow up when convenient.'
-      };
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    const labels = {
-      'new': 'New',
-      'contacted': 'Contacted',
-      'qualified': 'Qualified',
-      'follow-up': 'Follow-Up',
-      'closed-won': 'Closed-Won',
-      'closed-lost': 'Closed-Lost',
-    };
-    return labels[status] || status;
-  };
-
-  const getStatusBadgeClass = (status) => {
-    return `crm-item-badge badge-${status || 'new'}`;
-  };
-
-  const getAiTierColor = (aiTier) => {
-    switch (aiTier) {
-      case 'HOT':
-        return '#ef4444'; // red
-      case 'WARM':
-        return '#f59e0b'; // orange
-      case 'COLD':
-        return '#64748b'; // gray
-      default:
-        return '#64748b';
-    }
-  };
-
-  const getAiTierLabel = (aiTier) => {
-    switch (aiTier) {
-      case 'HOT':
-        return t('leads.hot');
-      case 'WARM':
-        return t('leads.warm');
-      case 'COLD':
-        return t('leads.cold');
-      default:
-        return t('leads.cold');
-    }
-  };
-
-  const getActionLabel = (action) => {
-    const labels = {
-      'CALL': 'Call Now',
-      'WHATSAPP': 'WhatsApp',
-      'EMAIL': 'Send Email',
-      'FOLLOW_UP': 'Follow Up',
-    };
-    return labels[action] || action;
-  };
-
-  const handleAction = (lead) => {
-    switch (lead.recommendedAction) {
-      case 'CALL':
-        if (lead.phone) {
-          window.location.href = `tel:${lead.phone}`;
-        }
-        break;
-      case 'WHATSAPP':
-        if (lead.phone) {
-          const message = `Hi ${lead.name || ''}, I'm following up on your interest. How can I help you?`.trim();
-          window.open(buildWhatsAppLink(whatsappPhone, { phone: lead.phone, message }), '_blank');
-        }
-        break;
-      case 'EMAIL':
-        if (lead.email) {
-          window.location.href = `mailto:${lead.email}`;
-        }
-        break;
-      case 'FOLLOW_UP':
-        // Could mark as contacted or show reminder
-        break;
-      default:
-        break;
-    }
-    // Note: Contact logging is handled in the onClick handler
-  };
-
-  const handleEmailClick = (lead) => {
-    if (lead.email) {
-      window.location.href = `mailto:${lead.email}`;
-    }
-  };
-
-  const handleWhatsAppClick = (lead, isFollowUp = false) => {
-    if (lead.phone) {
-      let message;
-      if (isFollowUp) {
-        // AI follow-up message template
-        const agentName = user?.name || 'our team';
-        message = `Hi ${lead.name || ''}, this is ${agentName} regarding the property you inquired about. Just following up to see if you're still interested or have any questions. Happy to help.`;
-      } else {
-        message = `Hi ${lead.name || ''}, I'm following up on your interest. How can I help you?`.trim();
-      }
-      window.open(buildWhatsAppLink(whatsappPhone, { phone: lead.phone, message }), '_blank');
-      logContactAction(lead.id, 'whatsapp');
-    }
-  };
-
-  // Log contact action to backend
-  const logContactAction = async (leadId, actionType) => {
-    try {
-      await apiClient.request(`/leads/${leadId}/contact`, {
-        method: 'POST',
-        body: JSON.stringify({ actionType }),
-      });
-      // Reload leads to get updated data
-      loadLeads();
-    } catch (err) {
-      console.error('Failed to log contact action:', err);
-      // Show notification for subscription errors, but don't block the action
-      if (err.isSubscriptionError || err.status === 403) {
-        handleError(err);
-      }
-    }
-  };
-
-  const handleCallClick = (lead) => {
-    if (lead.phone) {
-      window.location.href = `tel:${lead.phone}`;
-      logContactAction(lead.id, 'call');
-    }
-  };
-
-  const handleEmailAction = (lead) => {
-    if (lead.email) {
-      window.location.href = `mailto:${lead.email}`;
-      logContactAction(lead.id, 'email');
-    }
-  };
-
-  const handleDeleteLead = async (lead) => {
-    if (!window.confirm(t('leads.deleteConfirm'))) return;
-    setDeletingLeadId(lead.id);
-    try {
-      await apiClient.request(`/leads/${lead.id}`, { method: 'DELETE' });
-      showSuccess(t('leads.leadDeleted'));
-      setSelectedLead((prev) => (prev?.id === lead.id ? null : prev));
-      loadLeads();
-    } catch (err) {
-      showError(err?.message || t('leads.deleteError'));
-    } finally {
-      setDeletingLeadId(null);
-    }
-  };
-
-  const renderLeadCard = (lead) => {
-    const aiTier = lead.aiTier || 'COLD';
-    const urgencyState = lead.urgencyState || 'COOLING';
-    const showPrimaryAction = lead.recommendedAction === 'CALL' || lead.recommendedAction === 'WHATSAPP' || lead.recommendedAction === 'EMAIL';
-    const urgencyInfo = getUrgencyInfo(lead);
-    const urgencyStyle = getUrgencyStateStyle(urgencyState);
-    const lastActionTimeAgo = lead.lastActionAt ? formatTimeAgo(lead.lastActionAt) : null;
-    const statusDisplayLabel = getStatusDisplayLabel(lead.status, lead.hasResponded);
-    
-    return (
-    <div key={lead.id} className="crm-lead-card" data-priority={aiTier.toLowerCase()}>
-      <div className="crm-lead-card-header">
-        <div className="crm-lead-card-main">
-          <div className="crm-lead-card-title-row">
-            <h3 className="crm-lead-card-name">{lead.name || 'Unnamed Lead'}</h3>
-            <div className="crm-lead-card-badges">
-              {/* Urgency State Badge (separate from AI tier - distinct labels) */}
-              <span 
-                style={{ 
-                  padding: '4px 10px', 
-                  borderRadius: '12px', 
-                  fontSize: '10px', 
-                  fontWeight: '600',
-                  backgroundColor: urgencyStyle.bgColor,
-                  color: urgencyStyle.color,
-                  border: urgencyStyle.border,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {urgencyStyle.label}
-              </span>
-              {/* AI Tier Badge */}
-              <span 
-                className="crm-lead-priority-badge"
-                style={{ backgroundColor: `${getAiTierColor(aiTier)}20`, color: getAiTierColor(aiTier) }}
-              >
-                {getAiTierLabel(aiTier)}
-              </span>
-              {/* Status Badge (mapped) */}
-              <span className={getStatusBadgeClass(lead.status)}>
-                {statusDisplayLabel}
-              </span>
-            </div>
-          </div>
-          
-          <div className="crm-lead-card-contact">
-            {lead.email && <span>📧 {lead.email}</span>}
-            {lead.phone && <span>📞 {lead.phone}</span>}
-            {!lead.email && !lead.phone && <span style={{ color: '#94a3b8' }}>No contact information</span>}
-          </div>
-        </div>
-
-        <div className="crm-lead-card-ai">
-          <div className="crm-lead-ai-score" style={{ color: lead.aiScore >= 80 ? '#10b981' : lead.aiScore >= 60 ? '#3b82f6' : '#f59e0b' }}>
-            {formatAiScore(lead.aiScore)}
-          </div>
-          <div className="crm-lead-ai-label">AI Score</div>
-          {lead.aiScoreLabel && (
-            <div className="crm-lead-ai-score-label" style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', lineHeight: '1.3' }}>
-              {lead.aiScoreLabel}
-            </div>
-          )}
+          <button className="primary-btn">
+            <Plus size={17} />
+            New Lead
+          </button>
         </div>
       </div>
 
-      {/* AI-Recommended Action - Moved higher (right after AI score) */}
-      {lead.recommendedAction && (
-        <div className="crm-lead-action-section">
-          <div className="crm-lead-action-label">AI-Recommended Action:</div>
-          {showPrimaryAction && (
-            <>
-              {(() => {
-                // Check if this specific action was recently attempted
-                const actionWasAttempted = lead.lastActionType && 
-                  lead.lastActionAt && 
-                  lead.lastActionType === lead.recommendedAction.toLowerCase();
-                
-                // Check if in cooldown period (< 2 hours)
-                const now = new Date();
-                const lastActionDate = lead.lastActionAt ? new Date(lead.lastActionAt) : null;
-                const hoursSinceLastAction = lastActionDate ? (now - lastActionDate) / (1000 * 60 * 60) : null;
-                const inCooldown = actionWasAttempted && hoursSinceLastAction !== null && hoursSinceLastAction < 2;
-                
-                if (inCooldown && lastActionTimeAgo) {
-                  // Show "Attempted X minutes ago" and disable button
-                  return (
-                    <div style={{ 
-                      flex: 1, 
-                      padding: '12px 16px', 
-                      background: '#f0fdf4', 
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      color: '#16a34a',
-                      border: '1px solid #86efac',
-                      fontWeight: '500',
-                      cursor: 'not-allowed',
-                      opacity: 0.8
-                    }}>
-                      Attempted {lastActionTimeAgo}
-                    </div>
-                  );
-                } else {
-                  // Show active button
-                  return (
-                    <button
-                      onClick={() => {
-                        handleAction(lead);
-                        // Log contact action
-                        if (lead.recommendedAction === 'CALL') {
-                          logContactAction(lead.id, 'call');
-                        } else if (lead.recommendedAction === 'WHATSAPP') {
-                          logContactAction(lead.id, 'whatsapp');
-                        } else if (lead.recommendedAction === 'EMAIL') {
-                          logContactAction(lead.id, 'email');
-                        }
-                      }}
-                      className="crm-lead-action-button"
-                      disabled={lead.cooldownActive}
-                      style={{
-                        backgroundColor: lead.recommendedAction === 'WHATSAPP' 
-                          ? '#25D366' // WhatsApp green
-                          : (aiTier === 'HOT' ? '#ef4444' : '#3b82f6'),
-                        opacity: lead.cooldownActive ? 0.6 : 1,
-                        cursor: lead.cooldownActive ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {lead.followUpRecommended && lead.recommendedAction === 'WHATSAPP' 
-                        ? 'Send AI Follow-Up SMS'
-                        : getActionLabel(lead.recommendedAction)}
-                    </button>
-                  );
-                }
-              })()}
-            </>
-          )}
-          {!showPrimaryAction && (
-            <div style={{ 
-              flex: 1, 
-              padding: '12px 16px', 
-              background: '#f8fafc', 
-              borderRadius: '8px',
-              fontSize: '14px',
-              color: '#64748b',
-              border: '1px solid #e5e7eb'
-            }}>
-              {getActionLabel(lead.recommendedAction)}
-            </div>
-          )}
-          <div className="crm-lead-action-quick">
-            {lead.phone && lead.recommendedAction !== 'CALL' && (
-              <button
-                onClick={() => {
-                  handleCallClick(lead);
-                }}
-                className="crm-lead-action-quick-btn"
-                title="Call (Primary)"
-              >
-                📞
-              </button>
-            )}
-            {lead.phone && lead.recommendedAction !== 'WHATSAPP' && (
-              <button
-                onClick={() => {
-                  handleWhatsAppClick(lead, lead.followUpRecommended);
-                }}
-                className="crm-lead-action-quick-btn"
-                title="Text (Fallback if call fails)"
-              >
-                💬
-              </button>
-            )}
-            {lead.email && lead.recommendedAction !== 'EMAIL' && (
-              <button
-                onClick={() => {
-                  handleEmailAction(lead);
-                }}
-                className="crm-lead-action-quick-btn"
-                title="Email (Last attempt)"
-              >
-                📧
-              </button>
-            )}
-          </div>
-          {lead.recommendedActionReason && (
-            <div style={{ 
-              width: '100%', 
-              marginTop: '8px', 
-              fontSize: '12px', 
-              color: lead.cooldownActive ? '#f59e0b' : '#64748b',
-              fontStyle: 'italic',
-              fontWeight: lead.cooldownActive ? '500' : 'normal'
-            }}>
-              {lead.recommendedActionReason}
-            </div>
-          )}
-          {/* Last Action Info */}
-          {lead.lastActionType && lead.lastActionAt && (
-            <div style={{ 
-              width: '100%', 
-              marginTop: '8px', 
-              fontSize: '11px', 
-              color: '#94a3b8'
-            }}>
-              Last action: {lead.lastActionType.charAt(0).toUpperCase() + lead.lastActionType.slice(1)} attempt • {formatTimeAgo(lead.lastActionAt)}
-            </div>
-          )}
-          {urgencyInfo.guidance && (
-            <div style={{ 
-              width: '100%', 
-              marginTop: '8px', 
-              padding: '8px 12px', 
-              background: '#f8fafc', 
-              borderRadius: '6px',
-              fontSize: '12px', 
-              color: '#475569',
-              borderLeft: '3px solid #cbd5e1'
-            }}>
-              💡 {urgencyInfo.guidance}
-            </div>
-          )}
-        </div>
-      )}
+      {/* FILTERS */}
 
-      {/* AI Reason Bullets */}
-      {lead.aiReasonBullets && lead.aiReasonBullets.length > 0 && (
-        <div className="crm-lead-ai-explanation">
-          <div className="crm-lead-ai-explanation-title">Why this lead matters:</div>
-          <div className="crm-lead-ai-explanation-items">
-            {lead.aiReasonBullets.map((reason, idx) => (
-              <span key={idx} className="crm-lead-ai-explanation-item">
-                {reason}
-              </span>
+      <div className="filters-row">
+        <div className="filter-btn">
+          <select>
+            <option>All Sources</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+        <div className="filter-btn">
+          <select>
+            <option>All Temperatures</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+        <div className="filter-btn">
+          <select>
+            <option>All AI Scores</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+        <div className="filter-btn">
+          <select>
+            <option>All Stages</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+        <div className="filter-btn">
+          <select>
+            <option>All Agents</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+        <div className="search-box">
+          <Search size={16} />
+          <input placeholder="Search leads..." />
+        </div>
+
+        <button className="filter-btn">
+          <SlidersHorizontal size={16} />
+          Filters
+        </button>
+        <div className="filter-btn">
+          <select>
+            <option>Bulk Actions</option>
+          </select>
+          <ChevronDown size={15} />
+        </div>
+      </div>
+
+      {/* STATS */}
+
+      <div className="stats-grid">
+        {stats.map((item, index) => (
+          <div className="stats-card" key={index}>
+            <div className={`stats-icon ${item.className}`}>{item.icon}</div>
+
+            <div>
+              <span>{item.title}</span>
+              <h2>{item.value}</h2>
+              <p>{item.change}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* PRIORITY BAR */}
+
+      <div className="priority-bar">
+        <div className="item-line">
+          <div className="priority-title">
+            <h3>AI Priority Queue</h3>
+            <p>Real-time lead insights</p>
+          </div>
+        </div>
+        <div className="item-line">
+          <div className="priority-item">
+            <div className="red icon">
+              {" "}
+              <Flame size={18} />
+            </div>
+            <div>
+              <strong>12</strong>
+              <span>Urgent Leads</span>
+            </div>
+          </div>
+        </div>
+        <div className="item-line">
+          <div className="priority-item">
+            <div className="orange icon">
+              <Clock3 size={18} />
+            </div>
+            <div>
+              <strong>8</strong>
+              <span>Need Follow-Up</span>
+            </div>
+          </div>
+        </div>
+        <div className="item-line">
+          <div className="priority-item">
+            <div className="blue icon">
+              <Phone size={18} />
+            </div>
+            <div>
+              <strong>5</strong>
+              <span>Ready To Call</span>
+            </div>
+          </div>
+        </div>
+        <div className="item-line">
+          <div className="priority-item">
+            <div className="green icon">
+              <MessageCircle size={18} />
+            </div>
+            <div>
+              <strong>14</strong>
+              <span>Pending Replies</span>
+            </div>
+          </div>
+        </div>
+        <div className="item-line">
+          <div className="priority-item">
+            <div className="purple icon">
+              <MessageCircle size={18} />
+            </div>
+            <div>
+              <strong>23</strong>
+              <span>AI Qualifield Today</span>
+            </div>
+          </div>
+        </div>
+        <div className="item-line">
+          <button className="queue-btn">
+            View Queue
+            <ArrowRight size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT */}
+      <div className="leads-layout">
+        {/* LEFT PANEL - AI LEAD INBOX */}
+        <div className="lead-sidebar">
+          <div className="panel-header">
+            <div>
+              <h3>AI Lead Inbox</h3>
+              <p>Ranked by urgency & AI score</p>
+            </div>
+            <button className="icon-btn">
+              <SlidersHorizontal size={16} />
+            </button>
+          </div>
+
+          <div className="lead-list">
+            {/* Lead 1: WhatsApp Lead (Active) */}
+            <div className="lead-card active count-badge-container">
+              <div className="lead-card-top">
+                <div className="avatar-wrapper">
+                  <div className="lead-avatar avatar-whatsapp">W</div>
+                  <div className="avatar-icon-badge">
+                    <MessageCircle size={12} color="#16a34a" fill="#16a34a" />
+                  </div>
+                </div>
+                <div className="lead-meta">
+                  <h4>WhatsApp Lead</h4>
+                  <span>+593 988885817</span>
+                </div>
+                <div className="lead-score">
+                  <strong>92%</strong>
+                  <p className="score-hot">Hot</p>
+                </div>
+              </div>
+              <div className="lead-message-wrap">
+                <p className="lead-message">
+                  I'm interested in seeing available homes this week.
+                </p>
+                <div className="lead-card-financials">
+                  <span className="budget-range">$180K - $250K</span>
+                  <span className="timestamp">2m ago</span>
+                </div>
+              </div>
+
+              <div className="lead-tags">
+                <span className="tag-property">Modern Luxury Villa</span>
+                <span className="tag-status status-showing">Showing</span>
+              </div>
+              <div className="unread-count">3</div>
+            </div>
+
+            {/* Lead 2: Makoto Kawamoto */}
+            <div className="lead-card count-badge-container">
+              <div className="lead-card-top">
+                <div className="avatar-wrapper">
+                  <div className="lead-avatar avatar-purple">MK</div>
+                  <div className="avatar-icon-badge">
+                    <Search size={12} color="#2563eb" />
+                  </div>
+                </div>
+                <div className="lead-meta">
+                  <h4>Makoto Kawamoto</h4>
+                  <span>+81 90 7788 5541</span>
+                </div>
+                <div className="lead-score">
+                  <strong>74%</strong>
+                  <p className="score-warm">Warm</p>
+                </div>
+              </div>
+              <div className="lead-message-wrap">
+                <p className="lead-message">
+                  Can you send me more details about the apartment?
+                </p>
+                <div className="lead-card-financials">
+                  <span className="budget-range">$250K - $400K</span>
+                  <span className="timestamp">18m ago</span>
+                </div>
+              </div>
+              <div className="lead-tags">
+                <span className="tag-property">Downtown Apartment</span>
+                <span className="tag-status status-showing">Qualified</span>
+              </div>
+              <div className="unread-count">1</div>
+            </div>
+
+            {/* Lead 3: Maria Fernanda */}
+            <div className="lead-card">
+              <div className="lead-card-top">
+                <div className="avatar-wrapper">
+                  <div className="lead-avatar avatar-pink">MF</div>
+                  <div className="avatar-icon-badge">
+                    <Users size={12} color="#1877f2" />
+                  </div>
+                </div>
+                <div className="lead-meta">
+                  <h4>Maria Fernanda</h4>
+                  <span>+593 995552277</span>
+                </div>
+                <div className="lead-score">
+                  <strong>68%</strong>
+                  <p className="score-warm">Warm</p>
+                </div>
+              </div>
+              <div className="lead-message-wrap">
+                <p className="lead-message">
+                  Do you have something near the beach?
+                </p>
+                <div className="lead-card-financials">
+                  <span className="budget-range">$150K - $200K</span>
+                  <span className="timestamp">2h ago</span>
+                </div>
+              </div>
+              <div className="lead-tags">
+                <span className="tag-property">Beach Condo</span>
+                <span className="tag-status status-showing">Qualified</span>
+              </div>
+            </div>
+
+            {/* Lead 4: Andres Lopez */}
+            <div className="lead-card">
+              <div className="lead-card-top">
+                <div className="avatar-wrapper">
+                  <div className="lead-avatar avatar-blue">AL</div>
+                  <div className="avatar-icon-badge">
+                    <Bot size={12} color="#0077b5" />
+                  </div>
+                </div>
+                <div className="lead-meta">
+                  <h4>Andres Lopez</h4>
+                  <span>+593 983311122</span>
+                </div>
+                <div className="lead-score">
+                  <strong>55%</strong>
+                  <p className="score-cool">Cool</p>
+                </div>
+              </div>
+              <div className="lead-message-wrap">
+                <p className="lead-message">
+                  Looking for investment opportunities.
+                </p>
+                <div className="lead-card-financials">
+                  <span className="budget-range">$300K+</span>
+                  <span className="timestamp">3h ago</span>
+                </div>
+              </div>
+              <div className="lead-tags">
+                <span className="tag-property">Investment Property</span>
+                <span className="tag-status status-new">New</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer of Sidebar */}
+          <div className="sidebar-footer">
+            <span className="footer-counter">Showing 1-4 of 248 leads</span>
+            <button className="view-all-btn">
+              View all leads <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+
+        {/* CENTER PANEL - CONVERSATION WORKSPACE */}
+        <div className="conversation-panel">
+          <div className="conversation-header">
+            <div className="conversation-user">
+              <div className="lead-avatar large avatar-whatsapp">W</div>
+              <div>
+                <h3 className="user-status-title">
+                  WhatsApp Lead <span className="status-online">● Online</span>
+                </h3>
+                <p className="user-sub-info">
+                  +593 988885817 • WhatsApp • Quito, Ecuador
+                </p>
+              </div>
+            </div>
+
+            <div className="conversation-actions">
+              <button className="icon-btn">
+                <Phone size={16} />
+              </button>
+              <button className="icon-btn">
+                <Video size={16} />
+              </button>
+              <button className="icon-btn">
+                <MoreVertical size={16} />
+              </button>
+
+              <div className="score-badge">
+                <span className="score-value">92%</span>
+                <span className="score-label">Score</span>
+              </div>
+              <span className="hot-tag text-tag-align">Hot Lead</span>
+            </div>
+          </div>
+
+          {/* AI SUMMARY */}
+          <div className="ai-summary">
+            <div className="summary-icon">
+              <Brain size={18} />
+            </div>
+            <div className="summary-text-box">
+              <h4>AI Lead Summary</h4>
+              <p>
+                High intent lead looking for a 3-bedroom home in Quito. Budget
+                between <strong>$180K - $250K</strong>. Ready to see properties
+                this week. Best time to contact: 10AM - 2PM.
+              </p>
+            </div>
+            <button className="view-profile-btn">View Profile</button>
+          </div>
+
+          {/* CHAT BODY */}
+          <div className="chat-body">
+            <div className="message left">
+              <p>Hi, I'm interested in a property in Quito.</p>
+              <span>10:32 AM</span>
+            </div>
+
+            <div className="message right robot-msg-container">
+              <p>
+                Thanks for reaching out! Are you looking to buy, rent, or
+                invest?
+              </p>
+              <span className="msg-status-right">10:33 AM ✔✔</span>
+              <div className="robot-badge-icon">🤖</div>
+            </div>
+
+            <div className="message left">
+              <p>I'm looking to buy. I need at least 3 bedrooms.</p>
+              <span>10:35 AM</span>
+            </div>
+
+            <div className="message right robot-msg-container">
+              <p>
+                Perfect! I found several matching homes. What budget range are
+                you comfortable with?
+              </p>
+              <span className="msg-status-right">10:36 AM ✔✔</span>
+              <div className="robot-badge-icon">🤖</div>
+            </div>
+
+            <div className="typing-indicator">Lead is typing...</div>
+          </div>
+
+          {/* AI SUGGESTED REPLIES */}
+          <div className="suggested-replies-container">
+            <div className="suggested-title">
+              <Sparkles size={12} /> AI Suggested Replies
+            </div>
+            <div className="suggested-chips-scroll">
+              {[
+                "Send matching properties",
+                "Ask budget range",
+                "Suggest viewing time",
+              ].map((text, idx) => (
+                <button key={idx} className="chip-btn">
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* INPUT FORM */}
+          <div className="chat-input-box">
+            <div className="chat-input-top">
+              <input placeholder="Type a message or let AI assist..." />
+            </div>
+
+            <div className="chat-input-bottom">
+              <div className="chat-util-icons">
+                <button className="util-icon-btn">
+                  <Smile size={18} />
+                </button>
+                <button className="util-icon-btn">
+                  <Paperclip size={18} />
+                </button>
+                <button className="util-icon-btn">
+                  <ImageIcon size={18} />
+                </button>
+                <button className="util-icon-btn">
+                  <Mic size={18} />
+                </button>
+              </div>
+
+              <div className="chat-action-buttons">
+                <button className="secondary-btn ai-btn assist-btn-custom">
+                  <Sparkles size={14} />
+                  AI Assist
+                </button>
+                <button className="send-btn fixed-send-btn">
+                  <Send size={16} fill="white" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* QUICK CHAT ACTIONS */}
+          <div className="quick-actions-grid">
+            {[
+              {
+                title: "AI Follow-Up",
+                desc: "Send automated follow-up",
+                icon: <Send size={14} color="#22c55e" />,
+                bgClass: "icon-bg-green",
+              },
+              {
+                title: "Book Showing",
+                desc: "Schedule appointment",
+                icon: <Calendar size={14} color="#2563eb" />,
+                bgClass: "icon-bg-blue",
+              },
+              {
+                title: "Send Properties",
+                desc: "Send matching homes",
+                icon: <Home size={14} color="#0284c7" />,
+                bgClass: "icon-bg-sky",
+              },
+              {
+                title: "Escalate Lead",
+                desc: "Mark as urgent",
+                icon: <Flame size={14} color="#dc2626" />,
+                bgClass: "icon-bg-red",
+              },
+            ].map((act, i) => (
+              <button key={i} className="quick-action-card-btn">
+                <div className={`action-icon-circle ${act.bgClass}`}>
+                  {act.icon}
+                </div>
+                <div className="action-text-wrapper">
+                  <span className="action-title">{act.title}</span>
+                  <span className="action-desc">{act.desc}</span>
+                </div>
+              </button>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Property Association */}
-      {lead.property && (
-        <div className="crm-lead-property">
-          <strong>Property:</strong>{' '}
-          <Link to={`/properties/${lead.property.id}`} className="crm-lead-property-link">
-            {lead.property.title || 'Untitled Property'}
-          </Link>
-          {lead.property.price && (
-            <span className="crm-lead-property-price">
-              {' • '}${lead.property.price.toLocaleString()}
-            </span>
-          )}
-        </div>
-      )}
+        {/* RIGHT PANEL - INSIGHTS & CONTROLS */}
+        <div className="insights-panel">
+          {/* BOX 1: LEAD INTELLIGENCE */}
+          <div className="insight-card">
+            <div className="panel-header">
+              <h3>Lead Intelligence</h3>
+              <span className="hot-tag">Hot Lead</span>
+            </div>
+            <div className="insight-wrap">
+              <div className="score-circle">
+                <div>
+                  <h2>92%</h2>
+                  <span>AI Score</span>
+                </div>
+              </div>
 
-      {/* Urgency Decay Warning for COOLING state */}
-      {urgencyState === 'COOLING' && (
-        <div style={{ 
-          marginTop: '8px',
-          marginBottom: '16px',
-          padding: '10px 14px', 
-          background: '#f1f5f9', 
-          borderRadius: '6px',
-          borderLeft: '3px dashed #64748b',
-          fontSize: '13px',
-          color: '#475569',
-          border: '1px dashed #64748b'
-        }}>
-          Cooling — follow up recommended
-        </div>
-      )}
-
-      <div className="crm-lead-card-footer">
-        {lead.lastContactedAt && (
-          <span>Last contact: {formatDate(lead.lastContactedAt)}</span>
-        )}
-        <span>Created: {formatDate(lead.createdAt)}</span>
-        <Link to={`/dashboard/leads/${lead.id}`} className="crm-lead-view-details">
-          View Details →
-        </Link>
-      </div>
-    </div>
-    );
-  };
-
-  if (authLoading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated() || !user) {
-    return null;
-  }
-
-  // Get all leads for list
-  const allLeads = [...filteredHotLeads, ...filteredOtherLeads];
-
-  // Get source icon
-  const getSourceIcon = (source) => {
-    if (!source) return '🌐';
-    const sourceLower = source.toLowerCase();
-    if (sourceLower.includes('whatsapp')) return '💬';
-    if (sourceLower.includes('instagram')) return '📷';
-    if (sourceLower.includes('email')) return '📧';
-    return '🌐';
-  };
-
-  // Render compact lead card for list
-  const renderCompactLeadCard = (lead) => {
-    const aiTier = (lead.aiTier || 'COLD').toLowerCase();
-    const isActive = selectedLead?.id === lead.id;
-    const isContacted = lead.lastContactedAt || lead.status === 'contacted';
-    
-    return (
-      <div
-        key={lead.id}
-        className={`lead-list-card ${isActive ? 'active' : ''}`}
-        onClick={() => setSelectedLead(lead)}
-      >
-        <div className="lead-list-card-header">
-          <div className="lead-list-card-name">{lead.name || 'Unnamed Lead'}</div>
-          <div className="lead-list-card-ai-score">{formatAiScore(lead.aiScore)}</div>
-        </div>
-        <div className="lead-list-card-badges">
-          <span className={`lead-status-badge ${aiTier}`}>
-            {getAiTierLabel(lead.aiTier)}
-          </span>
-        </div>
-        <div className="lead-list-card-meta">
-          <span className="lead-source-icon">{getSourceIcon(lead.source)}</span>
-          <span className={`lead-contacted-indicator ${isContacted ? '' : 'not-contacted'}`}>
-            {isContacted ? 'Contacted' : 'Not Contacted'}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div>
-      <h1 style={{ marginBottom: '24px', fontSize: '28px', fontWeight: 600 }}>Leads</h1>
-      
-      {error && (
-        <div className="crm-error" style={{ marginBottom: '24px' }}>
-          {error}
-        </div>
-      )}
-
-      {/* 2-COLUMN MASTER-DETAIL LAYOUT */}
-      <div className="leads-master-detail">
-        {/* LEFT COLUMN: Lead List (Master) */}
-        <div className="leads-list-column">
-          <div className="leads-list-header">
-            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#E5E7EB', margin: '0 0 12px 0' }}>
-              All Leads ({allLeads.length})
-            </h2>
+              <div className="insight-list">
+                <div className="insight-row">
+                  <span>Sentiment</span>
+                  <strong>High Intent</strong>
+                </div>
+                <div className="insight-row">
+                  <span>Interest Level</span>
+                  <strong>Very High</strong>
+                </div>
+                <div className="insight-row">
+                  <span>Response Likelihood</span>
+                  <strong>Very High</strong>
+                </div>
+                <div className="insight-row">
+                  <span>Engagement Score</span>
+                  <strong className="dark-insight-text">85/100</strong>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="leads-list-scrollable">
-            {loading ? (
-              <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
-                {t('common.loading')}
+
+          {/* BOX 2: REVENUE INTELLIGENCE */}
+          <div className="insight-card">
+            <div className="panel-header header-spacing">
+              <h3>Revenue Intelligence</h3>
+            </div>
+            <div className="revenue-grid">
+              <div className="revenue-box">
+                <span className="revenue-label">Deal Value</span>
+                <strong className="revenue-val-green">$220,000</strong>
               </div>
-            ) : allLeads.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#64748b', padding: '20px' }}>
-                {t('leads.noLeads')}
+              <div className="revenue-box">
+                <span className="revenue-label">Close Probability</span>
+                <strong className="revenue-val-blue">78%</strong>
               </div>
-            ) : (
+              <div className="revenue-box">
+                <span className="revenue-label">Est. Close Date</span>
+                <strong className="revenue-val-dark">May 28, 2025</strong>
+              </div>
+              <div className="revenue-box">
+                <span className="revenue-label">Pipeline Stage</span>
+                <strong className="revenue-val-orange">Negotiation</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* BOX 3: AI AUTOMATION CONTROLS */}
+          <div className="insight-card automation-card-custom">
+            <div className="panel-header automation-header">
               <div>
-                {filteredHotLeads.length > 0 && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#fca5a5', padding: '0 4px' }}>
-                      🔥 HOT ({filteredHotLeads.length})
-                    </div>
-                    {filteredHotLeads.map(lead => renderCompactLeadCard(lead))}
-                  </div>
-                )}
-                {filteredOtherLeads.length > 0 && (
-                  <div>
-                    {filteredHotLeads.length > 0 && (
-                      <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#94a3b8', padding: '0 4px', marginTop: '16px' }}>
-                        OTHERS ({filteredOtherLeads.length})
-                      </div>
-                    )}
-                    {filteredOtherLeads.map(lead => renderCompactLeadCard(lead))}
-                  </div>
-                )}
+                <h3>AI Automation Controls</h3>
+                <p className="panel-header-desc">
+                  Manage AI actions for this lead
+                </p>
               </div>
-            )}
+              <button className="manage-all-link">Manage All</button>
+            </div>
+
+            <div className="automation-list automation-list-spacing">
+              {[
+                { title: "AI Auto Follow-Up", icon: <Sparkles size={16} /> },
+                { title: "AI Qualification", icon: <Bot size={16} /> },
+                {
+                  title: "Auto Appointment Booking",
+                  icon: <Calendar size={16} />,
+                },
+                { title: "Smart Property Matching", icon: <Home size={16} /> },
+                {
+                  title: "Escalate Hot Leads",
+                  icon: <ArrowUpRight size={16} />,
+                },
+              ].map((item, idx) => (
+                <div className="automation-row-custom" key={idx}>
+                  <div className="automation-left-group">
+                    <span className="automation-row-icon">{item.icon}</span>
+                    <h4 className="automation-item-title">{item.title}</h4>
+                  </div>
+
+                  <div className="automation-right-group">
+                    <span className="status-active-text">Active</span>
+                    <div className="switch active"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* RIGHT COLUMN: Lead Detail (Detail View) */}
-        <div className="lead-detail-column">
-          {selectedLead ? (
-            <div className="lead-detail-scrollable">
-              <div style={{ marginBottom: '12px' }}>
-                <Link
-                  to={`/dashboard/leads/${selectedLead.id}`}
-                  className="crm-btn crm-btn-primary"
-                  style={{ fontSize: '13px', padding: '8px 16px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                >
-                  View full lead details →
-                </Link>
-              </div>
-              {/* Section 1: Lead Header Card */}
-              <div className="lead-header-card">
-                <div className="lead-header-top">
-                  <div style={{ flex: 1 }}>
-                    <h2 className="lead-header-name">{selectedLead.name || 'Unnamed Lead'}</h2>
-                    <div className="lead-header-contact">
-                      {selectedLead.email && <div>📧 {selectedLead.email}</div>}
-                      {selectedLead.phone && <div>📞 {selectedLead.phone}</div>}
-                    </div>
-                  </div>
-                  <div className="lead-header-ai-score">
-                    <div className="lead-header-ai-score-value">{formatAiScore(selectedLead.aiScore)}</div>
-                    <div className="lead-header-ai-score-label">{t('leads.aiScore')}</div>
-                  </div>
-                </div>
-                <div className="lead-header-status-badges">
-                  <span className={`lead-status-badge ${(selectedLead.aiTier || 'COLD').toLowerCase()}`}>
-                    {selectedLead.aiTier || 'COLD'}
-                  </span>
-                  <span className={getStatusBadgeClass(selectedLead.status)}>
-                    {getStatusDisplayLabel(selectedLead.status, selectedLead.hasResponded)}
-                  </span>
-                </div>
-                <div className="lead-header-last-contact">
-                  {selectedLead.lastContactedAt 
-                    ? `Last contacted: ${formatTimeAgo(selectedLead.lastContactedAt)}`
-                    : 'Not contacted yet'}
-                </div>
-                <div className="lead-header-cta">
-                  {selectedLead.phone && (
-                    <button
-                      className="lead-cta-whatsapp"
-                      onClick={() => handleWhatsAppClick(selectedLead)}
-                    >
-                      💬 {t('leads.whatsapp')}
-                    </button>
-                  )}
-                  {selectedLead.phone && (
-                    <button
-                      className="lead-cta-secondary"
-                      onClick={() => handleCallClick(selectedLead)}
-                      title="Call"
-                    >
-                      📞
-                    </button>
-                  )}
-                  {selectedLead.email && (
-                    <button
-                      className="lead-cta-secondary"
-                      onClick={() => handleEmailAction(selectedLead)}
-                      title="Email"
-                    >
-                      📧
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Section 2: AI Insights Panel */}
-              <div className="lead-ai-insights">
-                <div className="lead-ai-insights-title">AI Panel</div>
-                <div className="lead-ai-insights-content">
-                  {selectedLead.aiReasonBullets && selectedLead.aiReasonBullets.length > 0 ? (
-                    selectedLead.aiReasonBullets.map((reason, idx) => (
-                      <div key={idx} className="lead-ai-insight-item">
-                        • {reason}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="lead-ai-insight-item">
-                      High intent — contact within 24h
-                    </div>
-                  )}
-                  {selectedLead.recommendedActionReason && (
-                    <div className="lead-ai-insight-item">
-                      Recommended follow-up if no response
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Section 3: Lead Timeline */}
-              <div className="lead-timeline">
-                <div className="lead-timeline-title">{t('leads.timeline')}</div>
-                <div className="lead-timeline-item">
-                  <div className="lead-timeline-content">
-                    <div className="lead-timeline-event">Lead created</div>
-                    <div className="lead-timeline-time">{formatDate(selectedLead.createdAt)}</div>
-                  </div>
-                </div>
-                {selectedLead.lastContactedAt && (
-                  <div className="lead-timeline-item">
-                    <div className="lead-timeline-content">
-                      <div className="lead-timeline-event">Contacted</div>
-                      <div className="lead-timeline-time">{formatTimeAgo(selectedLead.lastContactedAt)}</div>
-                    </div>
-                  </div>
-                )}
-                {selectedLead.status && selectedLead.status !== 'new' && (
-                  <div className="lead-timeline-item">
-                    <div className="lead-timeline-content">
-                      <div className="lead-timeline-event">Status changed to {getStatusLabel(selectedLead.status)}</div>
-                      <div className="lead-timeline-time">{formatDate(selectedLead.updatedAt)}</div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Section 4: Quick Notes */}
-              <div className="lead-notes">
-                <div className="lead-notes-title">{t('leads.notes')}</div>
-                <textarea
-                  className="lead-notes-textarea"
-                  placeholder={t('leads.addNote')}
-                  defaultValue=""
-                />
-              </div>
-
-              {/* Section 5: WhatsApp — real chat with channel label in header */}
-              <div className="lead-whatsapp-panel" style={{ minHeight: '320px', display: 'flex', flexDirection: 'column' }}>
-                {showQrRoute && selectedLead.phone && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <Link
-                      to={`${primaryRouteIsQr ? '/dashboard/whatsapp' : '/dashboard/whatsapp-qr'}?contactPhone=${encodeURIComponent(normalizePhoneToE164(selectedLead.phone) || selectedLead.phone)}`}
-                      className="crm-btn crm-btn-secondary"
-                      style={{ fontSize: '13px', padding: '8px 14px' }}
-                    >
-                      Open in WhatsApp Inbox (QR)
-                    </Link>
-                  </div>
-                )}
-                <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                  <WhatsAppChat
-                    leadId={selectedLead.id}
-                    leadPhone={selectedLead.phone}
-                    leadName={selectedLead.name}
-                    onSendSuccess={loadLeads}
-                  />
-                </div>
-              </div>
+          {/* BOX 4: LEAD JOURNEY TIMELINE */}
+          <div className="insight-card">
+            <div className="panel-header header-spacing">
+              <h3>Lead Journey Timeline</h3>
             </div>
-          ) : (
-              <div className="lead-detail-empty">
-              <div className="lead-detail-empty-icon">👥</div>
-              <div className="lead-detail-empty-text">{t('leads.selectLead')}</div>
-            </div>
-          )}
-        </div>
 
-        {/* RIGHT COLUMN: Agent & Lead Attribution (Desktop Only) */}
-        <div className="lead-attribution-column">
-          {selectedLead ? (
-            <div className="lead-attribution-scrollable">
-              <h2 className="lead-attribution-title" style={{ marginBottom: '20px', fontSize: '16px' }}>
-                Agent & Lead Attribution
-              </h2>
+            <div className="timeline-container">
+              <div className="timeline-vertical-line"></div>
 
-              {/* SECTION A - Lead Origin */}
-              <div className="lead-attribution-section">
-                <h3 className="lead-attribution-title">Lead Origin</h3>
-                <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">{t('leads.source')}</div>
-                  <div className="lead-attribution-value">
-                    {selectedLead.source ? (
-                      <>
-                        {getSourceIcon(selectedLead.source)} {selectedLead.source}
-                      </>
-                    ) : (
-                      `🌐 ${t('leads.website')}`
-                    )}
-                  </div>
-                </div>
-                <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">{t('leads.capturedBy')}</div>
-                  <div className="lead-attribution-value">
-                    {user?.name || 'System'}
-                  </div>
-                </div>
-                {selectedLead.property && (
-                  <div className="lead-attribution-item">
-                    <div className="lead-attribution-label">{t('leads.campaign')}</div>
-                    <div className="lead-attribution-value">
-                      {selectedLead.property.title}
+              {[
+                {
+                  title: "Lead Captured",
+                  desc: "Inbound message from WhatsApp",
+                  time: "May 12, 10:32 AM",
+                  class: "dot-green",
+                },
+                {
+                  title: "AI Assistant Engaged",
+                  desc: "Automated greeting & qualification",
+                  time: "May 12, 10:33 AM",
+                  class: "dot-blue",
+                },
+                {
+                  title: "Requirements Identified",
+                  desc: "3 beds, Quito, $180K-$250K budget",
+                  time: "May 12, 10:35 AM",
+                  class: "dot-purple",
+                },
+                {
+                  title: "Stage Updated to 'Hot'",
+                  desc: "Score triggered urgency escalation",
+                  time: "May 12, 10:36 AM",
+                  class: "dot-red",
+                },
+              ].map((step, idx) => (
+                <div key={idx} className="timeline-item">
+                  <div className={`timeline-dot ${step.class}`}></div>
+                  <div className="timeline-content">
+                    <div className="timeline-content-top">
+                      <h5 className="timeline-title">{step.title}</h5>
+                      <span className="timeline-time">{step.time}</span>
                     </div>
-                  </div>
-                )}
-                <div className="lead-attribution-item">
-                  <div className="lead-attribution-label">{t('leads.dateTime')}</div>
-                  <div className="lead-attribution-value">
-                    {formatDate(selectedLead.createdAt)} {selectedLead.createdAt ? new Date(selectedLead.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    <p className="timeline-desc">{step.desc}</p>
                   </div>
                 </div>
-              </div>
-
-              {/* SECTION B - Assigned Agent */}
-              <div className="lead-attribution-section">
-                <h3 className="lead-attribution-title">{t('leads.assignedAgent')}</h3>
-                <div className="lead-agent-card">
-                  <div className="lead-agent-avatar">
-                    {(user?.name || 'A').charAt(0).toUpperCase()}
-                  </div>
-                  <div className="lead-agent-info">
-                    <div className="lead-agent-name">{user?.name || 'Unassigned'}</div>
-                    <div className="lead-agent-role">{user?.role || 'Agent'}</div>
-                  </div>
-                </div>
-                <button className="lead-reassign-btn">
-                  Reassign Lead
-                </button>
-              </div>
-
-              {/* SECTION C - Team Context */}
-              <div className="lead-attribution-section">
-                <h3 className="lead-attribution-title">Team Context</h3>
-                <div className="lead-team-stat">
-                  <span className="lead-team-stat-label">Active leads owned</span>
-                  <span className="lead-team-stat-value">
-                    {allLeads.filter(l => l.status && l.status !== 'closed-won' && l.status !== 'closed-lost').length}
-                  </span>
-                </div>
-                <div className="lead-team-stat">
-                  <span className="lead-team-stat-label">Team average</span>
-                  <span className="lead-team-stat-value">
-                    {Math.round(allLeads.length / 1)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Last row: Delete lead */}
-              <div className="lead-attribution-section lead-attribution-delete-row">
-                <button
-                  type="button"
-                  className="lead-cta-delete"
-                  onClick={() => handleDeleteLead(selectedLead)}
-                  disabled={deletingLeadId === selectedLead.id}
-                  title={t('leads.deleteLead')}
-                >
-                  {deletingLeadId === selectedLead.id ? '…' : '🗑️'} {t('leads.deleteLead')}
-                </button>
-              </div>
+              ))}
             </div>
-          ) : (
-            <div className="lead-attribution-empty">
-              <div className="lead-attribution-empty-icon">👤</div>
-              <div className="lead-attribution-empty-text">{t('leads.selectLead')}</div>
+
+            <div className="timeline-footer">
+              <button className="full-timeline-btn">
+                Full Timeline <ArrowRight size={12} />
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
