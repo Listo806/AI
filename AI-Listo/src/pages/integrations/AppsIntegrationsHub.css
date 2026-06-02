@@ -281,7 +281,14 @@ body {
     font-weight: 600;
     color: #111827;
 }
-
+.sub_head{
+    font-size:13px;
+    margin-bottom: 10px;
+}
+.next_head{
+    font-size: 16px;
+    font-weight: 600;
+}
 
 
 

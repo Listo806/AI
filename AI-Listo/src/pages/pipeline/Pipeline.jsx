@@ -302,7 +302,7 @@ export default function PipelinePage() {
         <Users className="header-icon" size={20} />
         <h1>Pipeline & Deals</h1>
       </div>
-
+      <p className="sub_head">Tract opportunities, AI deal flow, revenue risk, and close probability in real time.</p>
       <header className="pipeline-page-header">
         <div className="header-global-actions">
           <div className="header-search-input-wrapper">

@@ -189,7 +189,10 @@ export default function PropertiesPage() {
       <div className="heading_page">
         <Home className="header-icon" size={20} />
         <h1>AI Property Inventory</h1>
+        <p className="next_head">Command Center</p>
+        <Sparkles size={16} color="#2563eb" />
       </div>
+      <p className="sub_head">Manage, analyze and optimize your property listing with AI intelligence</p>
       <div className="page-header">
         <div className="header-actions">
           <button className="btn btn-secondary">

@@ -307,6 +307,7 @@ export default function CortexaAnalyticsDashboard() {
         <BarChart3 className="header-icon" size={20} />
         <h1>Analytics Overview</h1>
       </div>
+      <p className="sub_head">Monitor revenue, conversation performance, AI effectiveness, ROI and pipeline intelligence in real time.</p>
       <header className="main-header">
         <div className="header-controls">
           <div className="date-picker-wrapper">

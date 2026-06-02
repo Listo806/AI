@@ -110,6 +110,7 @@ export default function LeadsPage() {
         <Users className="header-icon" size={20} />
         <h1>Leads & Conversations</h1>
       </div>
+      <p className="sub_head">Manage leads, AI conversations, and deal activity in real time.</p>
       <div className="leads-header">
         <div className="header-actions">
           <button className="secondary-btn">

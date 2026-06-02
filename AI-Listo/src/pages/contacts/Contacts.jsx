@@ -278,6 +278,7 @@ export default function ContactsRelationshipsPage() {
         <Users className="header-icon" size={20} />
         <h1>Contacts & Relationships</h1>
       </div>
+      <p className="sub_head">Manage buyers, sellers, investors, venters and conversations from one AI-powered workspace.</p>
       <div className="contacts-page">
         {/* MAIN */}
         <main className="main-content">

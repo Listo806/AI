@@ -50,6 +50,7 @@ export default function WhatsAppPage() {
           />
         </h1>
       </div>
+      <p className="sub_head">Connect Whatsapp, manage conversations, automate follow-ups, and let AI assist your team in real time.</p>
       <div className="leads-header-top-row">
         <div className="header-actions-right">
           <button className="secondary-btn">

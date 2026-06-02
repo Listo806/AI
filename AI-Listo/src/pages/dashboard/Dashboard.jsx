@@ -105,8 +105,9 @@ export default function CortexaDashboard() {
       <div className="heading_page">
         <Layers className="header-icon" size={20} />
         <h1>Dashboard Overview</h1>
+        
       </div>
-      
+      <p className="sub_head">Real-time overview of your pipeline, performance, and AI activity.</p>
       <header className="dashboard-header">
         <div className="header-actions">
           <div className="control-btn"><Calendar size={15} /> <span>This Week</span></div>
