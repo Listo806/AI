@@ -97,6 +97,7 @@ import TeamAIInsightsPage from "./pages/team/TeamAIInsightsPage";
 import TeamPerformancePage from "./pages/team/TeamPerformancePage";
 import TeamActivityPage from "./pages/team/TeamActivityPage";
 import TeamNotificationsPage from "./pages/team/TeamNotificationsPage";
+import WhatsAppPage from "./pages/whatsapp/WhatsAppPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -249,9 +250,10 @@ function AppRoutes() {
         <Route path="integrations/mls" element={<MlsIdxPage  />} />
         <Route path="integrations/tiktok" element={<TiktokPage  />} />
         <Route path="integrations/ai-appointment" element={<AppointmentPage  />} />
+        <Route path="whatsapp" element={<WhatsAppPage />} />
         
-        {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js */}
-        <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />
+        {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 
+        <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />*/}
         <Route path="whatsapp-qr" element={<WhatsAppQrRoute />} />
         
         {/* Instagram Route */}

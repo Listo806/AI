@@ -309,6 +309,7 @@ body {
   gap: 8px; /* Reduced from 12px - icons closer to text */
   width: 100%;
   margin: 0;
+  padding-right: 0;
 }
 
 .crm-nav-icon {
@@ -364,7 +365,15 @@ i[data-lucide] {
   font-size: 12px;
   font-weight: 400;
 }
-
+.crm-nav-addon{
+    text-transform: uppercase;
+    font-size: 7px;
+    border: 1px solid #916fd8;
+    padding: 3px 1px;
+    color: #916fd8;
+    font-weight: 600;
+    border-radius: 4px;
+}
 /* Hide labels when collapsed */
 @media (min-width: 769px) {
   .crm-sidebar.collapsed .crm-nav-label {
