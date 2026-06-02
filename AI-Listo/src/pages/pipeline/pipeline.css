@@ -815,15 +815,6 @@
   background: transparent;
 }
 
-.pipeline-page .intelligence-card-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 12px;
-}
-
 .pipeline-page .intelligence-header-icon {
   color: #64748b;
   flex-shrink: 0;
@@ -872,6 +863,9 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
 }
 
 .pipeline-page .risk-table-cell-deal-value {
@@ -921,7 +915,7 @@
 .pipeline-page .revenue-forecast-metric-quad-card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 5px;
 }
 
 .pipeline-page .forecast-quad-card-label {
@@ -958,14 +952,6 @@
   border-radius: 50%;
 }
 
-.pipeline-page .automation-health-row-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 9px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
 .pipeline-page .automation-item-check-icon {
   color: #94a3b8;
 }
@@ -993,14 +979,15 @@
   background-color: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 12px;
+  padding: 12px 8px;
 }
 
 .pipeline-page .intelligence-card-header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 14px;
+  margin-bottom: 0;
+  padding-bottom: 7px;
 }
 
 .pipeline-page .intelligence-card-main-title {
@@ -1107,7 +1094,7 @@
 }
 
 .pipeline-page .revenue-forecast-metric-quad-card {
-  padding: 6px;
+  padding: 10px 6px;
   position: relative;
 }
 
@@ -1169,16 +1156,21 @@
 .pipeline-page .automation-health-list-rows-stack {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
 }
 
 .pipeline-page .automation-health-row-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px 0;
+  padding: 5px 0;
+  border-bottom: 1px solid #f1f5f9;
 }
-
+.pipeline-page .automation-health-row-item:last-child {
+  border: 0;
+}
 .pipeline-page .automation-health-item-title-text {
   font-size: 12px;
   color: #334155;
