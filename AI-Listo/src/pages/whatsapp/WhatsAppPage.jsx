@@ -1,5 +1,5 @@
 import React from "react";
-import "./whatsapp.css";
+import "./Whatsapp.css";
 
 import {
   Search,
