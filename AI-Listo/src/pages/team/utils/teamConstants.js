@@ -32,10 +32,10 @@ export const TEAM_FILTERS = [
     key: 'agent',
     label: 'Agents',
   },
-  {
-    key: 'viewer',
-    label: 'Viewer',
-  },
+  // {
+    // key: 'viewer',
+    // label: 'Viewer',
+  // },
   {
     key: 'high-performers',
     label: 'High Performers',

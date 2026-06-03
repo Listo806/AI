@@ -447,6 +447,10 @@
   align-items: center;
   gap: 6px;
   padding: 16px 12px 12px;
+  justify-content: space-between;
+}
+.team-workspace .team-insights-card .team-card-header {
+  justify-content: flex-start;
 }
 .team-members-table, .team-billing-box, .team-billing-stats{
     padding: 16px;
