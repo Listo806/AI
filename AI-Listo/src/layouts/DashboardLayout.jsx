@@ -229,13 +229,13 @@ export default function DashboardLayout() {
                   >
                     {t('header.billing')}
                   </Link>
-                  <Link 
+                  {/*<Link 
                     to="/account/settings" 
                     className="crm-account-menu-item"
                     onClick={() => setAccountDropdownOpen(false)}
                   >
                     {t('header.settings')}
-                  </Link>
+                  </Link>*/}
                   <div className="crm-account-menu-divider"></div>
                   <div className="crm-theme-toggle-wrap">
                     <span className="crm-theme-toggle-label">{t('header.theme') || 'Theme'}</span>
