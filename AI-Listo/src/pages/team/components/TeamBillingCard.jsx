@@ -1,4 +1,6 @@
-export default function TeamBillingCard({ billing = {} }) {
+import { Users } from "lucide-react";
+
+export default function TeamBillingCard({ billing = {}, onInvite }) {
   const totalSeats = Number(billing?.includedSeats || 0);
 
   const usedSeats = Number(billing?.activeSeats || 0);
@@ -11,23 +13,11 @@ export default function TeamBillingCard({ billing = {} }) {
 
   return (
     <div className="team-billing-modern-card">
-      {/* HEADER */}
-
-      <div className="team-billing-modern-header">
-        <div>
-          <h3 className="team-billing-modern-title">Team Seats</h3>
-
-          <p className="team-billing-modern-subtitle">
-            Manage your team access
-          </p>
-        </div>
-      </div>
-
       {/* STATUS */}
 
       <div className="team-billing-status-card">
         <div className="team-billing-status-label">
-          Workspace Status
+          <h3 className="team-billing-modern-title">Team Seats</h3>
         </div>
         <div
           className={`team-billing-status-badge ${isFull ? "full" : "active"}`}
@@ -48,18 +38,6 @@ export default function TeamBillingCard({ billing = {} }) {
         </div>
 
         <div className="team-billing-stat-row">
-          <span>Base seats included</span>
-
-          <strong>{totalSeats}</strong>
-        </div>
-
-        <div className="team-billing-stat-row">
-          <span>Extra seats</span>
-
-          <strong>{additionalSeats}</strong>
-        </div>
-
-        <div className="team-billing-stat-row">
           <span>Available seats</span>
 
           <strong>{availableSeats}</strong>
@@ -69,9 +47,11 @@ export default function TeamBillingCard({ billing = {} }) {
       {/* FOOTER */}
 
       <div className="team-billing-footer">
-        <button className="team-billing-add-seat-btn">Add a seat</button>
-
-        <button className="team-billing-mini-btn">Add +</button>
+        <button onClick={onInvite} className="team-primary-btn">
+          <Users size={16} />
+          Invite Team Member
+        </button>
+        <button className="team-billing-mini-btn">+ Add a seat</button>
       </div>
     </div>
   );

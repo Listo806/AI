@@ -222,19 +222,20 @@ export default function TeamWorkspace() {
           onRemove={handleOpenDelete}
           onInvite={() => setInviteModalOpen(true)}
         />
-
-        <TeamInsightsCard insights={insights} />
-
-        <TeamBillingCard
-          billing={{
-            plan: team?.name || "Team Workspace",
-            status: "Active",
-            includedSeats: seatInfo?.total || 0,
-            activeSeats: seatInfo?.used || 0,
-            additionalSeats: 0,
-            nextInvoice: 0,
-          }}
-        />
+        <div className="team-main-grid-right">
+          <TeamBillingCard
+            onInvite={() => setInviteModalOpen(true)}
+            billing={{
+              plan: team?.name || "Team Workspace",
+              status: "Active",
+              includedSeats: seatInfo?.total || 0,
+              activeSeats: seatInfo?.used || 0,
+              additionalSeats: 0,
+              nextInvoice: 0,
+            }}
+          />
+          <TeamInsightsCard insights={insights} />
+        </div>
       </div>
 
       <div className="team-bottom-grid">
