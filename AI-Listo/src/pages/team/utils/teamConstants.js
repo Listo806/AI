@@ -52,7 +52,7 @@ export const buildStatsCards = (stats = {}) => [
     label: 'Total Members',
     value: stats.totalMembers || 0,
     change: stats.membersGrowth || '+0%',
-    changetext: 'this month',
+    changetext: 'Last 30 days',
     icon: Users,
   },
 
@@ -61,7 +61,7 @@ export const buildStatsCards = (stats = {}) => [
     label: 'Active Members',
     value: stats.activeMembers || 0,
     change: stats.activeGrowth || '+0%',
-    changetext: 'of team',
+    changetext: 'Last 30 days',
     icon: UserCheck,
   },
 
@@ -72,7 +72,7 @@ export const buildStatsCards = (stats = {}) => [
       stats.totalPipeline || 0
     ).toLocaleString()}`,
     change: stats.pipelineGrowth || '+0%',
-    changetext: 'this month',
+    changetext: 'Last 30 days',
     icon: DollarSign,
   },
 
@@ -81,7 +81,7 @@ export const buildStatsCards = (stats = {}) => [
     label: 'Total Leads',
     value: stats.totalLeads || 0,
     change: stats.leadsGrowth || '+0%',
-    changetext: 'this week',
+    changetext: 'Last 30 days',
     icon: Target,
   },
 
@@ -90,7 +90,7 @@ export const buildStatsCards = (stats = {}) => [
     label: 'Avg AI Score',
     value: `${stats.avgAIScore || 0}%`,
     change: stats.aiGrowth || '+0%',
-    changetext: 'this month',
+    changetext: 'Last 30 days',
     icon: Brain,
   },
 
@@ -99,7 +99,7 @@ export const buildStatsCards = (stats = {}) => [
     label: 'Conversion Rate',
     value: `${stats.conversionRate || 0}%`,
     change: stats.conversionGrowth || '+0%',
-    changetext: 'this month',
+    changetext: 'Last 30 days',
     icon: TrendingUp,
   },
 ];

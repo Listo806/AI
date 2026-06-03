@@ -74,10 +74,10 @@ export default function TeamToolbar({
           {runningAI ? "Running..." : "AI Insights"}
         </button>
 
-        <button onClick={onInvite} className="team-primary-btn">
+        {/*<button onClick={onInvite} className="team-primary-btn">
           <Plus size={16} />
           Invite Member
-        </button>
+        </button>*/}
       </div>
     </div>
   );

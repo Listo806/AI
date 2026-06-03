@@ -43,24 +43,21 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
   const insightItems = [
     ...(insights?.alerts || []),
     ...(insights?.pipelineRisks || []),
-  ].slice(0, 5);
+  ].slice(0, 1);
   return (
     <div className="team-card team-insights-card">
       <div className="team-card-header">
-        <div>
-          <h3 className="team-card-title">AI Team Insights</h3>
+        <Sparkles className="blue" size={16} />
+        <h3 className="team-card-title">AI Team Insights</h3>
 
-          <p className="team-card-subtitle">Updated just now</p>
-        </div>
-
-        <button
+        {/*<button
           className="team-ai-review-btn"
           onClick={() => navigate("/dashboard/team/ai-insights")}
         >
           <Sparkles size={16} />
 
           <span>Run AI Review</span>
-        </button>
+        </button>*/}
       </div>
 
       <div className="team-insights-list">
@@ -78,8 +75,11 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
       </div>
 
       <div className="team-insights-footer">
-        <button className="team-insights-report-btn" onClick={() => navigate("/dashboard/team/ai-insights")}>
-          View Full AI Report
+        <button
+          className="team-insights-report-btn"
+          onClick={() => navigate("/dashboard/team/ai-insights")}
+        >
+          View Full AI Report →
         </button>
       </div>
     </div>
