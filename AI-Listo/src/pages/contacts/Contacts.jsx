@@ -278,7 +278,10 @@ export default function ContactsRelationshipsPage() {
         <Users className="header-icon" size={20} />
         <h1>Contacts & Relationships</h1>
       </div>
-      <p className="sub_head">Manage buyers, sellers, investors, venters and conversations from one AI-powered workspace.</p>
+      <p className="sub_head">
+        Manage buyers, sellers, investors, venters and conversations from one
+        AI-powered workspace.
+      </p>
       <div className="contacts-page">
         {/* MAIN */}
         <main className="main-content">
@@ -425,7 +428,6 @@ export default function ContactsRelationshipsPage() {
                             className="contact-menu"
                             onClick={(e) => e.stopPropagation()}
                           >
-                           
                             <button>
                               <Edit3 size={15} /> Edit Contact
                             </button>
@@ -479,8 +481,7 @@ export default function ContactsRelationshipsPage() {
 
                       <div className="info-item">
                         <div className="info-label-group">
-                          <UserPlus size={16} />{" "}
-                          <span>Source:</span>
+                          <UserPlus size={16} /> <span>Source:</span>
                         </div>
                         <div className="info-value">
                           {contact.source || "-"}
@@ -709,29 +710,30 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
           </div>
         </div>
       </div>
+      <div className="kpi-chart_wrap">
+        <div className="kpi-chart">
+          <svg viewBox="0 0 180 42" preserveAspectRatio="none">
+            <path
+              d={
+                title === "Active Sellers"
+                  ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
+                  : title === "AI score"
+                    ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
+                    : title === "Active Buyers"
+                      ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"
+                      : "M0 34 L20 30 L40 32 L60 24 L80 28 L100 18 L120 8 L140 14 L160 10 L180 4"
+              }
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
 
-      <div className="kpi-chart">
-        <svg viewBox="0 0 180 42" preserveAspectRatio="none">
-          <path
-            d={
-              title === "Active Sellers"
-                ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
-                : title === "AI score"
-                  ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
-                  : title === "Active Buyers"
-                    ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"
-                    : "M0 34 L20 30 L40 32 L60 24 L80 28 L100 18 L120 8 L140 14 L160 10 L180 4"
-            }
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-
-      <div className="kpi-bottom">
-        <span>this month</span>
+        <div className="kpi-bottom">
+          <span>this month</span>
+        </div>
       </div>
     </div>
   );
