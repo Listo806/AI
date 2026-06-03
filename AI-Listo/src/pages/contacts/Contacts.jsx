@@ -732,7 +732,7 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
         </div>
 
         <div className="kpi-bottom">
-          <span>this month</span>
+          <span>Last 30 days</span>
         </div>
       </div>
     </div>
