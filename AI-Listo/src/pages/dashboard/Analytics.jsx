@@ -323,10 +323,7 @@ export default function CortexaAnalyticsDashboard() {
           </div>
 
           <button className="btn-secondary">
-            <Download size={15} /> CSV
-          </button>
-          <button className="btn-secondary">
-            <FileDown size={15} /> PDF
+            <Download size={15} /> Export
           </button>
           <button className="btn-primary">
             <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
@@ -334,7 +331,7 @@ export default function CortexaAnalyticsDashboard() {
         </div>
       </header>
 
-      {/* FILTERS */}
+      {/* FILTERS 
       <div className="filter-bar">
         <div className="filter-select-wrapper">
           <select>
@@ -375,7 +372,7 @@ export default function CortexaAnalyticsDashboard() {
         <button className="clear-filter-btn">
           <RefreshCw size={14} /> Clear Filters
         </button>
-      </div>
+      </div>*/}
 
       {/* KPI ROW 1 */}
       <div className="kpi-grid-row1">

@@ -193,7 +193,7 @@
 
 .contacts-page .kpi-box {
   background: transparent;
-  padding: 14px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -211,19 +211,17 @@
 }
 .contacts-page .kpi-top {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
 }
 
 .contacts-page .kpi-left {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
 }
 
 .contacts-page .kpi-icon {
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border-radius: 18px;
   background: linear-gradient(
     135deg,
@@ -257,11 +255,11 @@
 .contacts-page .kpi-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
 }
 
 .contacts-page .kpi-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #6b7280;
 }
@@ -273,7 +271,7 @@
 }
 
 .contacts-page .kpi-value {
-  font-size: 30px;
+  font-size: 26px;
   line-height: 1;
   font-weight: 700;
   color: #111827;
@@ -946,6 +944,7 @@ body .contacts-page .map svg{
 .kpi-chart_wrap{
     display: flex;
     align-items: end;
+    gap: 2px;
 }
 @media (min-width: 1400px) {
   .contacts-page .contacts-grid {

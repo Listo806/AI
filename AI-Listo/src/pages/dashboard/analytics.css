@@ -14,6 +14,7 @@
   justify-content: right;
   align-items: flex-start;
   gap: 20px;
+  margin-bottom: 10px;
 }
 
 .analytics-page .title-with-icon {
