@@ -193,8 +193,7 @@
 
 .contacts-page .kpi-box {
   background: transparent;
-  padding: 20px 14px;
-  min-height: 165px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -304,7 +303,6 @@
 
 .contacts-page .kpi-chart {
   width: 100%;
-  height: 42px;
   margin-top: 10px;
   color: #2563ff;
 }
