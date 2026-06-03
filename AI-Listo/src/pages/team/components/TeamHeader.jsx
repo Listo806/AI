@@ -7,12 +7,13 @@ export default function TeamHeader({
   onChangeTeam,
 }) {
   return (
+    <>
     <div className="team-header heading_page">
         <Users/>
         <h1 className="team-page-title">
           Team Workspace
         </h1>
-     
+        
       <div className="team-header-right">
         {/*
         
@@ -62,5 +63,7 @@ export default function TeamHeader({
           </div>*/}
       </div>
     </div>
+    <p className="sub_head">Manage agents, assign roles, track seats and collaborate with your brokerage in real time.</p>
+    </>
   );
 }
