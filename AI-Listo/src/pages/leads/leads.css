@@ -95,7 +95,6 @@ body .leads-page {
 
 .leads-page .search-box {
   flex: 1;
-  min-width: 183px;
   height: 38px;
   border-radius: 10px;
   background: white;
