@@ -21,8 +21,7 @@ export default function Profile() {
   const [name, setName] = useState(user?.name ?? 'Alex Morgan');
   const [phone, setPhone] = useState(user?.phone ?? '+1 (555) 123-4567');
   const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? 'Real Estate Professional');
-  const [bio, setBio] = useState(user?.bio ?? 'Helping real estate professionals streamline their workflow and close more deals with AI-powered automation.');
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -45,7 +44,6 @@ export default function Profile() {
         name: name.trim() || null,
         phone: phone.trim(),
         jobTitle: jobTitle.trim(),
-        bio: bio.trim()
       });
       await refreshUser();
       setSuccess(true);
@@ -195,23 +193,12 @@ export default function Profile() {
               />
             </div>
 
-            {/* Bio */}
-            <div className="form-group full-width">
-              <label className="form-label">Bio</label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className="form-textarea"
-                rows="4"
-                placeholder="Enter your bio"
-              />
-            </div>
           </div>
 
           <div className="form-actions">
             <button 
               type="submit" 
-              className={`btn-save-changes ${name && phone && jobTitle && bio ? 'active' : ''}`}
+              className={`btn-save-changes ${name && phone && jobTitle ? 'active' : ''}`}
               disabled={isSaving}
             >
               {isSaving ? 'Saving...' : 'Save changes'}
