@@ -21,6 +21,7 @@ import social1 from "../../assets/cortexa/social1.png";
 import social2 from "../../assets/cortexa/social2.png";
 import social3 from "../../assets/cortexa/social3.png";
 import social4 from "../../assets/cortexa/social4.png";
+import { Check, Users } from "lucide-react";
 export default function PricingPage() {
   const featureSections = [
     {
@@ -190,7 +191,7 @@ export default function PricingPage() {
               <div className="price-box">
                 <div>
                   <span>Get started</span>
-                  <strong>$27</strong>
+                  <strong>$97</strong>
                 </div>
                 <p>One-time access fee</p>
               </div>
@@ -199,14 +200,11 @@ export default function PricingPage() {
                 Start My Free Trial
               </a>
 
-              <p>
-                <span class="check">✓</span> Cancel anytime.
+              <p className="fill">
+                <Users size={18} /> 3 users included
               </p>
               <p>
-                <span class="check">✓</span> 3 users included
-              </p>
-              <p>
-                <span class="check">✓</span> Add team members anytime
+                <span className="check">✓</span> Add team members anytime
               </p>
             </aside>
           </div>
