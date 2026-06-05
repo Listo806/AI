@@ -311,7 +311,7 @@ export default function PricingPage() {
                   <a href="/help">Help Center</a>
                 </li>
                 <li>
-                  <a href="/contact">Guides</a>
+                  <a href="/setup-guide">Guides</a>
                 </li>
                 <li>
                   <a href="/contact">Community</a>

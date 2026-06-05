@@ -1802,7 +1802,7 @@ export default function Landing() {
                     <li><a href="/signup">Create Account</a></li>
                     <li><a href="/signin">Login</a></li>
                     <li><a href="/crm">Dashboard</a></li>
-                    <li><a href="/setup">Setup Guide</a></li>
+                    <li><a href="/setup-guide">Setup Guide</a></li>
                   </ul>
                 </div>
 

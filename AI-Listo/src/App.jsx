@@ -26,10 +26,6 @@ import Pipeline from "./pages/pipeline/Pipeline";
 import Properties from "./pages/properties/PropertiesList";
 import Contacts from "./pages/contacts/Contacts";
 
-//import Profile from "./pages/account/Profile";
-//import Billing from "./pages/account/Billing";
-//import Settings from "./pages/account/Settings";
-//import SignIn from "./pages/auth/SignIn";
 import Privacy from "./pages/common/Privacy";
 import Refund from "./pages/common/Refund";
 import Terms from "./pages/common/Terms";
@@ -99,6 +95,7 @@ import TeamActivityPage from "./pages/team/TeamActivityPage";
 import TeamNotificationsPage from "./pages/team/TeamNotificationsPage";
 import WhatsAppPage from "./pages/whatsapp/WhatsAppPage";
 import LeadGeneratorPage from "./pages/generator/LeadGeneratorPage";
+import SetupGuidePage from "./pages/common/SetupGuidePage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -146,6 +143,7 @@ function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/support" element={<Support />} />
 
+      <Route path="/setup-guide" element={<SetupGuidePage />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/trial" element={<Trial />} />
       <Route path="/checkout" element={<CheckoutPage />} />
