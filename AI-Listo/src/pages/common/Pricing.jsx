@@ -334,9 +334,6 @@ export default function PricingPage() {
                 <li>
                   <a href="/refund-policy">Refund Policy</a>
                 </li>
-                <li>
-                  <a href="/cancellation">Cancellation Policy</a>
-                </li>
               </ul>
             </div>
 

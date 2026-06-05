@@ -15,7 +15,7 @@ import {
   ChevronRight,
   TrendingUp,
 } from "lucide-react";
-
+import headlogoImg from "../../assets/cortexa/headlogo.png";
 import styles from "./SetupGuide.module.css";
 
 export default function SetupGuide() {
@@ -79,13 +79,9 @@ export default function SetupGuide() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div className={styles.logoWrap}>
-          <div className={styles.logoIcon}>C</div>
-          <div>
-            <div className={styles.logoText}>CORTEXA</div>
-            <div className={styles.logoSub}>AI POWERED. 24/7. REAL RESULTS.</div>
-          </div>
-        </div>
+        <a href="/" className={styles.logoWrap}>
+          <img src={headlogoImg} className="cx-logo-img" />
+        </a>
 
         <nav className={styles.nav}>
           <a href="/#features" className={styles.navLink}>Features</a>
