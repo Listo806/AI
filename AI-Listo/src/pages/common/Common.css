@@ -797,13 +797,23 @@
 .pricing-page .fill{
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 4px;
   font-weight: 600;
+  padding-left: 45px;
 }
 .pricing-page .fill svg{
   fill: #302feb;
   color: #302feb;  
+}
+.pricing-page .fillcheck {
+  align-items: flex-start;
+  font-weight: 400;
+  text-align: left;
+}
+.pricing-page .fillcheck svg{
+  fill: transparent;
+  min-width: 18px;
+  margin-top: 3px;
 }
 .pricing-page .hero .sidebar p {
   margin-top: 25px;

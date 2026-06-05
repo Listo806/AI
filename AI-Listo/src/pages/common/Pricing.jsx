@@ -193,7 +193,7 @@ export default function PricingPage() {
                   <span>Get started</span>
                   <strong>$97</strong>
                 </div>
-                <p>One-time access fee</p>
+                <p>One-time setup fee</p>
               </div>
 
               <a href="/trial" className="btn-primary full">
@@ -203,8 +203,8 @@ export default function PricingPage() {
               <p className="fill">
                 <Users size={18} /> 3 users included
               </p>
-              <p>
-                <span className="check">✓</span> Add team members anytime
+              <p className="fill fillcheck">
+                <Check size={18} /> Add team <br/>members anytime
               </p>
             </aside>
           </div>
