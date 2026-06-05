@@ -237,8 +237,8 @@ export default function Landing() {
       stripRevenue: "Revenue",
       stripAI: "AI Summary: You're on track to beat your monthly goal by 24%",
 
-      roiTitle: "Replace 3–5 agents. Pay for one system. Close more deals.",
-      roiSub: "CORTEXA runs your lead flow, follow-ups, and pipeline automatically — capturing every opportunity and turning missed leads into closed revenue 24/7.",
+      roiTitle: "Cut Payroll. Scale With Your AI Agent.",
+      roiSub: "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
       roiBtn: "Start Free Trial",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
@@ -536,8 +536,8 @@ export default function Landing() {
       stripRevenue: "Ingresos",
       stripAI: "Resumen IA: Estás en camino de superar tu objetivo mensual en un 24%",
 
-      roiTitle: "Reemplaza de 3 a 5 agentes. Paga por un solo sistema. Cierra más ventas.",
-      roiSub: "CORTEXA gestiona automáticamente tus leads, seguimientos y pipeline — capturando cada oportunidad y convirtiendo leads perdidos en ingresos cerrados 24/7.",
+      roiTitle: "Reduce los costos de nómina. Escala con tu agente de IA.",
+      roiSub: "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
       roiBtn: "Prueba gratis",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
@@ -819,8 +819,8 @@ export default function Landing() {
       stripRevenue: "Receita",
       stripAI: "Resumo da IA: Você está no caminho para superar sua meta mensal em 24%",
 
-      roiTitle: "Substitua de 3 a 5 agentes. Pague por um único sistema. Feche mais negócios.",
-      roiSub: "O CORTEXA gerencia automaticamente seus leads, follow-ups e pipeline — capturando todas as oportunidades e transformando leads perdidos em receita 24/7.",
+      roiTitle: "Reduza os custos da folha de pagamento. Escale com seu agente de IA.",
+      roiSub: "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
       roiBtn: "Teste grátis",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",

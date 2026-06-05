@@ -16,8 +16,12 @@ import icon2Img from "../../assets/cortexa/icon2.png";
 import icon3Img from "../../assets/cortexa/icon3.png";
 import icon4Img from "../../assets/cortexa/icon4.png";
 import userImg from "../../assets/cortexa/user.png";
+
+import social1 from "../../assets/cortexa/social1.png";
+import social2 from "../../assets/cortexa/social2.png";
+import social3 from "../../assets/cortexa/social3.png";
+import social4 from "../../assets/cortexa/social4.png";
 export default function PricingPage() {
-   
   const featureSections = [
     {
       icon: saleImg,
@@ -120,34 +124,37 @@ export default function PricingPage() {
 
   return (
     <div className="pricing-page">
-
       <header className="header">
         <div className="container header-inner">
           <div className="logo">
             <img src={headlogo} alt="Cortexa" className="cx-logo-img" />
           </div>
 
-          {/*<nav className="nav">
+          <nav className="nav">
             <a href="/features">Features</a>
-            <a href="/pricing" className="active">Pricing</a>
+            <a href="/pricing" className="active">
+              Pricing
+            </a>
             <a href="/about">About Us</a>
             <a href="/contact">Contact</a>
-</nav>*/}
+          </nav>
 
           <div className="actions">
-            <a href="/trial">Start Free Trial</a>
             <a href="/login">Log in</a>
+            <a href="/trial" className="trial">
+              Start Free Trial
+            </a>
           </div>
         </div>
       </header>
 
       <main className="main">
-
         <section className="container hero">
           <div className="hero-text">
             <h1>The smarter way to run your real estate business.</h1>
             <p>
-              One platform. Everything you need to capture, engage, and close more deals.
+              One platform. Everything you need to capture, engage, and close
+              more deals.
               <br />
               Built for modern agents and teams who want results.
             </p>
@@ -158,7 +165,10 @@ export default function PricingPage() {
               {featureSections.map((section) => (
                 <div key={section.title} className="feature-card">
                   <div className="feature-title">
-                    <span className="icon"> <img src={section.icon} alt="Cortexa" /></span>
+                    <span className="icon">
+                      {" "}
+                      <img src={section.icon} alt="Cortexa" />
+                    </span>
                     <h3>{section.title}</h3>
                   </div>
 
@@ -179,21 +189,25 @@ export default function PricingPage() {
 
               <div className="price-box">
                 <div>
-                    <span>Get started</span>
-                    <strong>$27</strong>
+                  <span>Get started</span>
+                  <strong>$27</strong>
                 </div>
                 <p>One-time access fee</p>
               </div>
-                
+
               <a href="/trial" className="btn-primary full">
                 Start My Free Trial
               </a>
 
-              <p>Cancel anytime.</p>
-              <p><span class="check">✓</span> 3 users included</p>
-              <p><span class="check">✓</span> Add team members anytime</p>
-              
-
+              <p>
+                <span class="check">✓</span> Cancel anytime.
+              </p>
+              <p>
+                <span class="check">✓</span> 3 users included
+              </p>
+              <p>
+                <span class="check">✓</span> Add team members anytime
+              </p>
             </aside>
           </div>
 
@@ -218,7 +232,9 @@ export default function PricingPage() {
 
               {powerItems.map((item) => (
                 <div key={item.title} className="power-item">
-                  <div className="icon"><img src={item.icon} alt="Cortexa" /></div>
+                  <div className="icon">
+                    <img src={item.icon} alt="Cortexa" />
+                  </div>
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
                 </div>
@@ -226,94 +242,121 @@ export default function PricingPage() {
 
               <div className="power-final">
                 <p>
-                  Built for real estate.<br />
-                  Made to scale.<br />
+                  Built for real estate.
+                  <br />
+                  Made to scale.
+                  <br />
                   Designed to win.
                 </p>
                 <h3>That’s the power of Cortexa.</h3>
               </div>
             </div>
           </div>
-
         </section>
-
       </main>
       <footer className="footer-final">
         <div className="container">
-
           <div className="footer-grid">
-            
             <div className="footer-brand">
               <img src={footlogo} alt="Cortexa" className="cx-logo-img" />
               <p>
-                The AI-powered CRM that helps you capture leads, automate follow-ups, 
-                and close more deals — faster.
+                The AI-powered Real Estate CRM <br/>Close more deals — Automatically.
               </p>
-              <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
-
               <div className="footer-tags">
-                <span>✨ AI-Powered</span>
-                <span>🛡 Secure</span>
-                <span>⚡ Automation</span>
-                <span>📊 Insights</span>
+                <span><img src={social1} alt="Social" /></span>
+                <span><img src={social2} alt="Social" /></span>
+                <span><img src={social3} alt="Social" /></span>
+                <span><img src={social4} alt="Social" /></span>
               </div>
             </div>
 
             <div className="footer-col">
               <h3>Product</h3>
               <ul>
-                <li><a href="/features">Features</a></li>
-                <li><a href="/ai-assistant">AI Assistant</a></li>
-                <li><a href="/automations">Automations</a></li>
-                <li><a href="/integrations">Integrations</a></li>
-                <li><a href="/analytics">Analytics</a></li>
-                <li><a href="/pricing">Pricing</a></li>
+                <li>
+                  <a href="/features">Features</a>
+                </li>
+                <li>
+                  <a href="/pricing">Pricing</a>
+                </li>
+                <li>
+                  <a href="/dashboard/integrations">Integrations</a>
+                </li>
+                <li>
+                  <a href="/analytics">Changelog</a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-col">
-              <h3>Get Started</h3>
+              <h3>Company</h3>
               <ul>
-                <li><a href="/signup">Create Account</a></li>
-                <li><a href="/signin">Login</a></li>
-                <li><a href="/crm">Dashboard</a></li>
-                <li><a href="/setup">Setup Guide</a></li>
+                <li>
+                  <a href="/about">About us</a>
+                </li>
+                <li>
+                  <a href="/signin">Blog</a>
+                </li>
+                <li>
+                  <a href="/crm">Careers</a>
+                </li>
+                <li>
+                  <a href="/contact">Contact</a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-col">
-              <h3>Connect</h3>
+              <h3>Resources</h3>
               <ul>
-                <li><a href="/integrations">Connect Your Apps</a></li>
-                <li><a href="/help/import-crm">Import Your CRM</a></li>
-                <li><a href="/help/import-csv">Import CSV / Excel</a></li>
-                <li><a href="/help/zapier">Zapier & Automations</a></li>
-                <li><a href="/help/api">API & Webhooks</a></li>
-              </ul>
-            </div>
-
-            <div className="footer-col">
-              <h3>Support</h3>
-              <ul>
-                <li><a href="/support">24-7 Support</a></li>
-                <li><a href="/help">Help Center</a></li>
-                <li><a href="/contact">Contact Us</a></li>
-                <li><a href="/about">About Us</a></li>
+                <li>
+                  <a href="/help">Help Center</a>
+                </li>
+                <li>
+                  <a href="/contact">Guides</a>
+                </li>
+                <li>
+                  <a href="/contact">Community</a>
+                </li>
+                <li>
+                  <a href="/help/api">API Docs</a>
+                </li>
               </ul>
             </div>
 
             <div className="footer-col">
               <h3>Legal</h3>
               <ul>
-                <li><a href="/terms">Terms & Conditions</a></li>
-                <li><a href="/privacy-policy">Privacy Policy</a></li>
-                <li><a href="/refund-policy">Refund Policy</a></li>
-                <li><a href="/cancellation">Cancellation Policy</a></li>
+                <li>
+                  <a href="/terms">Terms of Service</a>
+                </li>
+                <li>
+                  <a href="/privacy-policy">Privacy Policy</a>
+                </li>
+                <li>
+                  <a href="/refund-policy">Refund Policy</a>
+                </li>
+                <li>
+                  <a href="/cancellation">Cancellation Policy</a>
+                </li>
               </ul>
             </div>
 
+            <div className="footer-col">
+              <h3>Get Started</h3>
+              <ul>
+                <li>
+                  <a href="/login">Login</a>
+                </li>
+                <li>
+                  <a href="/trial" className="btn-primary">
+                    Start Free Trial
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-
+          <p className="copt-right text-center">&copy; 2026 Corrtexa. All rights reserved.</p>
         </div>
       </footer>
     </div>

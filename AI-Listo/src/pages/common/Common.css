@@ -867,6 +867,7 @@
   border-radius: 12px;
   text-align: center;
   background: #fff;
+  width: 100%;
 }
 .pricing-page .sidebar h3{
     display: flex;
@@ -991,6 +992,13 @@
 .pricing-page .footer-final .footer-col h3{
     color: #fff;
 }
+.pricing-page .footer-final .footer-tags{
+    flex-direction: row;
+}
+.copt-right{
+    color:#fff;
+    padding-bottom:20px;
+}
 .pricing-page  .footer-final .footer-grid{
     margin-bottom: 0 ;
     padding: 20px 0;
@@ -1000,6 +1008,12 @@
 }
 .pricing-page .footer-brand .cx-logo-img {
     height: auto; 
+}
+.pricing-page .header-inner a.trial{
+    padding: 9px 20px;
+    background: #302feb;
+    color:#fff;
+    border-radius:10px;
 }
 
 .trial-page {
