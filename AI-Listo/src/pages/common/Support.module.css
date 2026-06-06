@@ -1,0 +1,847 @@
+/* =========================================================
+   SHARED STYLES
+========================================================= */
+.header {
+  height: 85px !important;
+  padding: 0 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 1px solid #E5EAF1 !important;
+  background: #FFFFFF !important;
+}
+
+.logoWrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  text-decoration: none !important;
+  color: #08142B !important;
+}
+
+.logoIcon {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 14px !important;
+  border: 2px solid #2563EB !important;
+  color: #2563EB !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 950 !important;
+  font-size: 22px !important;
+}
+
+.logoText {
+  letter-spacing: 10px !important;
+  font-size: 25px !important;
+  font-weight: 950 !important;
+}
+
+.headerRight {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: #08142B !important;
+  font-weight: 800 !important;
+}
+
+.avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #2563EB, #7C3AED) !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 900 !important;
+  margin-left: 10px !important;
+}
+
+.bottomAction {
+  min-height: 92px !important;
+  display: grid !important;
+  grid-template-columns: 62px 1fr 30px !important;
+  gap: 18px !important;
+  align-items: center !important;
+  padding: 18px 26px !important;
+  border-right: 1px solid #E5EAF1 !important;
+}
+
+.bottomIcon {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 14px !important;
+  background: #EEF5FF !important;
+  color: #2563EB !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+
+/* =========================================================
+   SUPPORT PAGE STYLES
+========================================================= */
+.supportPage {
+  min-height: 100vh !important;
+  background: radial-gradient(circle at 15% 35%, rgba(37,99,235,0.08), transparent 22%), radial-gradient(circle at 85% 25%, rgba(124,58,237,0.10), transparent 24%), #FFFFFF !important;
+  color: #08142B !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  padding-bottom: 42px !important;
+}
+
+.supportHero {
+  max-width: 1460px !important;
+  margin: 0 auto !important;
+  padding: 28px 36px 20px !important;
+  text-align: center !important;
+}
+
+.supportBadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 24px !important;
+  border: 1px solid #A5B4FC !important;
+  border-radius: 999px !important;
+  color: #2563EB !important;
+  font-weight: 900 !important;
+  margin-bottom: 10px !important;
+}
+
+.supportTitle {
+  margin: 0 !important;
+  font-size: 50px !important;
+  line-height: 1.08 !important;
+  letter-spacing: -1.8px !important;
+  font-weight: 950 !important;
+}
+
+.supportSubtitle {
+  margin: 12px auto 24px !important;
+  color: #51607A !important;
+  font-size: 18px !important;
+  max-width: 820px !important;
+}
+
+.supportAiBox {
+  max-width: 1300px !important;
+  margin: 0 auto !important;
+  padding: 26px 36px 20px !important;
+  border: 1px solid #A5B4FC !important;
+  border-radius: 20px !important;
+  background: rgba(255,255,255,0.88) !important;
+  box-shadow: 0 24px 70px rgba(79,70,229,0.10) !important;
+  text-align: left !important;
+}
+
+.supportTabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 26px !important;
+}
+
+.supportActiveTab {
+  height: 46px !important;
+  padding: 0 38px !important;
+  border: 1px solid #2563EB !important;
+  background: #FFFFFF !important;
+  color: #2563EB !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.supportTab {
+  height: 46px !important;
+  padding: 0 38px !important;
+  border: 1px solid #DDE3EF !important;
+  background: #F8FAFC !important;
+  color: #334155 !important;
+  font-weight: 850 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-radius: 8px !important;
+}
+
+.supportOnlineBadge {
+  margin-left: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 20px !important;
+  border-radius: 999px !important;
+  background: #F8FAFC !important;
+  color: #334155 !important;
+  font-weight: 800 !important;
+}
+
+.supportAssistantRow {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  margin-bottom: 18px !important;
+}
+
+.supportBotAvatar {
+  position: relative !important;
+  width: 70px !important;
+  height: 70px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #60A5FA, #7C3AED) !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.supportAskBox {
+  min-height: 128px !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 14px !important;
+  padding: 22px !important;
+  color: #8A94A8 !important;
+}
+
+.supportAskActions {
+  margin-top: 36px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.supportSecurityLine {
+  margin-top: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  color: #64748B !important;
+  font-size: 14px !important;
+}
+
+.supportIssueSection {
+  max-width: 1500px !important;
+  margin: 18px auto 0 !important;
+  padding: 0 36px !important;
+  text-align: center !important;
+}
+
+.supportChipGrid {
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr) !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+.supportIssueChip {
+  height: 56px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  font-weight: 850 !important;
+  color: #08142B !important;
+}
+
+.supportHelpSection {
+  max-width: 1300px !important;
+  margin: 22px auto !important;
+  text-align: center !important;
+}
+
+.supportGridStyle {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 18px !important;
+  margin-top: 14px !important;
+}
+
+.supportCard {
+  min-height: 112px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  padding: 20px !important;
+  display: grid !important;
+  grid-template-columns: 64px 1fr !important;
+  gap: 18px !important;
+  text-align: left !important;
+}
+
+.supportCardIcon {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.supportBottomBar {
+  max-width: 1400px !important;
+  margin: 20px auto !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+
+/* =========================================================
+   HELP CENTER STYLES
+========================================================= */
+.helpPage {
+  min-height: 100vh !important;
+  background: radial-gradient(circle at 18% 30%, rgba(37,99,235,0.08), transparent 22%), radial-gradient(circle at 82% 28%, rgba(124,58,237,0.10), transparent 24%), #FFFFFF !important;
+  color: #08142B !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  padding-bottom: 42px !important;
+}
+
+.helpHero {
+  text-align: center !important;
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding: 30px 28px 20px !important;
+}
+
+.helpBadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 24px !important;
+  border: 1px solid #A5B4FC !important;
+  border-radius: 999px !important;
+  color: #2563EB !important;
+  font-weight: 900 !important;
+  margin-bottom: 18px !important;
+}
+
+.helpTitle {
+  margin: 0 !important;
+  font-size: 52px !important;
+  line-height: 1.08 !important;
+  letter-spacing: -2px !important;
+  font-weight: 950 !important;
+}
+
+.helpSubtitle {
+  margin: 16px auto 24px !important;
+  color: #51607A !important;
+  font-size: 18px !important;
+  max-width: 900px !important;
+}
+
+.helpSearchBox {
+  height: 74px !important;
+  max-width: 820px !important;
+  margin: 0 auto 24px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 14px !important;
+  background: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 0 26px !important;
+  color: #8A94A8 !important;
+  font-size: 18px !important;
+  text-align: left !important;
+}
+
+.helpFilterRow {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 18px !important;
+  flex-wrap: wrap !important;
+}
+
+.helpCategoryGrid {
+  max-width: 1260px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 18px !important;
+  padding: 0 28px !important;
+}
+
+.helpCategoryCard {
+  min-height: 172px !important;
+  padding: 24px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  display: grid !important;
+  grid-template-columns: 70px 1fr !important;
+  gap: 18px !important;
+}
+
+.helpCategoryIcon {
+  width: 66px !important;
+  height: 66px !important;
+  border-radius: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.helpCardBottom {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-top: 18px !important;
+}
+
+.helpBottomBar {
+  max-width: 1260px !important;
+  margin: 18px auto 22px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.helpTrustLine {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  color: #64748B !important;
+  font-size: 15px !important;
+}
+
+
+/* =========================================================
+   CONTACT STYLES
+========================================================= */
+.contactPage {
+  min-height: 100vh !important;
+  background: radial-gradient(circle at 17% 28%, rgba(37,99,235,0.08), transparent 22%), radial-gradient(circle at 82% 25%, rgba(124,58,237,0.10), transparent 24%), #FFFFFF !important;
+  color: #08142B !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  padding-bottom: 42px !important;
+}
+
+.contactHero {
+  text-align: center !important;
+  padding: 28px 28px 24px !important;
+}
+
+.contactBadge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 11px 24px !important;
+  border: 1px solid #A5B4FC !important;
+  border-radius: 999px !important;
+  color: #2563EB !important;
+  font-weight: 900 !important;
+  margin-bottom: 18px !important;
+}
+
+.contactTitle {
+  margin: 0 !important;
+  font-size: 52px !important;
+  line-height: 1.08 !important;
+  letter-spacing: -2px !important;
+  font-weight: 950 !important;
+}
+
+.contactSubtitle {
+  margin: 16px auto 0 !important;
+  color: #51607A !important;
+  font-size: 18px !important;
+}
+
+.contactGrid {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1.55fr 0.75fr !important;
+  gap: 28px !important;
+  padding: 0 28px !important;
+}
+
+.contactFormBox {
+  padding: 34px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+}
+
+.contactFieldGroup {
+  margin-bottom: 18px !important;
+  position: relative !important;
+}
+
+.contactInputRow {
+  height: 44px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 0 18px !important;
+  color: #8A94A8 !important;
+}
+
+.contactSelectRow {
+  height: 44px !important;
+  border: 1px solid #7C70FF !important;
+  border-radius: 8px !important;
+  display: grid !important;
+  grid-template-columns: 24px 1fr 20px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 18px !important;
+  color: #8A94A8 !important;
+}
+
+.contactReasonMenu {
+  position: absolute !important;
+  right: 0 !important;
+  top: 30px !important;
+  width: 320px !important;
+  padding: 18px 24px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 13px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 18px 40px rgba(15,23,42,0.08) !important;
+}
+
+.contactMessageBox {
+  min-height: 96px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  gap: 16px !important;
+  padding: 18px !important;
+  color: #8A94A8 !important;
+}
+
+.contactSendButton {
+  height: 50px !important;
+  min-width: 380px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+  background: linear-gradient(135deg, #2563EB, #7C3AED) !important;
+  font-weight: 900 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  font-size: 16px !important;
+}
+
+.contactSideColumn {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+}
+
+.contactInfoCard {
+  min-height: 134px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+  padding: 24px !important;
+  display: grid !important;
+  grid-template-columns: 74px 1fr !important;
+  gap: 20px !important;
+  align-items: center !important;
+}
+
+.contactInfoIcon {
+  width: 66px !important;
+  height: 66px !important;
+  border-radius: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.contactHelpCard {
+  border: 1px solid #DDE3EF !important;
+  border-radius: 18px !important;
+  background: #FFFFFF !important;
+  padding: 28px !important;
+}
+
+.contactHelpIcon {
+  width: 66px !important;
+  height: 66px !important;
+  border-radius: 18px !important;
+  background: #EAFBF2 !important;
+  color: #059669 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 18px !important;
+}
+
+.contactHelpItem {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #475569 !important;
+  margin-bottom: 12px !important;
+}
+
+.contactBottomBar {
+  max-width: 1200px !important;
+  margin: 24px auto 0 !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 14px !important;
+  background: #FFFFFF !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+
+/* =========================================================
+   ABOUT STYLES
+========================================================= */
+.aboutPage {
+  min-height: 100vh !important;
+  background: #FFFFFF !important;
+  color: #08142B !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  padding-bottom: 48px !important;
+}
+
+.aboutHero {
+  max-width: 1500px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 0.82fr 1.18fr !important;
+  gap: 52px !important;
+  align-items: center !important;
+  padding: 42px 52px 52px !important;
+}
+
+.aboutHeroText {
+  max-width: 560px !important;
+}
+
+.aboutBadge {
+  display: inline-flex !important;
+  padding: 9px 18px !important;
+  border: 1px solid #A5B4FC !important;
+  border-radius: 999px !important;
+  color: #2563EB !important;
+  font-weight: 900 !important;
+  margin-bottom: 26px !important;
+}
+
+.aboutCommandVisual {
+  min-height: 420px !important;
+  border: 1px solid #4F6BFF !important;
+  border-radius: 18px !important;
+  background: radial-gradient(circle at center, rgba(0,153,255,0.20), transparent 34%), linear-gradient(135deg, #06152F, #071B46) !important;
+  color: #FFFFFF !important;
+  padding: 22px !important;
+  box-shadow: 0 30px 80px rgba(37,99,235,0.25) !important;
+}
+
+.aboutVisualTitle {
+  font-weight: 950 !important;
+  letter-spacing: 1px !important;
+  margin-bottom: 16px !important;
+}
+
+.aboutVisualGrid {
+  display: grid !important;
+  grid-template-columns: 0.75fr 1.3fr 0.95fr !important;
+  gap: 16px !important;
+}
+
+.aboutSignalColumn {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.aboutMiniMetric {
+  padding: 14px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,0.06) !important;
+}
+
+.aboutCenterBrain {
+  min-height: 220px !important;
+  border: 1px solid rgba(99,102,241,0.45) !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(37,99,235,0.18) !important;
+}
+
+.aboutPipelinePanel {
+  padding: 18px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 14px !important;
+  background: rgba(255,255,255,0.05) !important;
+}
+
+.aboutFunnel {
+  height: 22px !important;
+  margin: 8px auto !important;
+  border-radius: 4px !important;
+  background: linear-gradient(90deg, #2563EB, #22C55E) !important;
+  clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%) !important;
+}
+
+.aboutVisualBottom {
+  margin-top: 16px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 14px !important;
+}
+
+.aboutMiniBox {
+  padding: 14px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,0.06) !important;
+}
+
+.aboutProblemSection {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+  padding: 44px 28px !important;
+}
+
+.aboutProblemGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 26px !important;
+  margin-top: 32px !important;
+}
+
+.aboutProblemCard {
+  min-height: 126px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  display: grid !important;
+  grid-template-columns: 80px 1fr !important;
+  gap: 18px !important;
+  align-items: center !important;
+  padding: 24px !important;
+  text-align: left !important;
+}
+
+.aboutConnectSection {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 0.8fr 1.2fr !important;
+  gap: 48px !important;
+  align-items: center !important;
+  padding: 54px 52px !important;
+}
+
+.aboutConnectVisual {
+  display: grid !important;
+  grid-template-columns: 1fr 180px 1fr !important;
+  gap: 24px !important;
+  align-items: center !important;
+}
+
+.aboutLeftApps {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.aboutRightApps {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+.aboutCenterCore {
+  height: 180px !important;
+  border: 1px solid #DDE3EF !important;
+  border-radius: 24px !important;
+  background: #FFFFFF !important;
+  color: #2563EB !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 22px 55px rgba(37,99,235,0.12) !important;
+}
+
+.aboutWhatSection {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 40px 52px !important;
+}
+
+.aboutWhatGrid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 28px !important;
+  margin-top: 26px !important;
+}
+
+.aboutWhatCard {
+  min-height: 250px !important;
+  border: 1px solid #DDE3EF !important;
+  border-top: 3px solid #2563EB !important;
+  border-radius: 12px !important;
+  padding: 30px !important;
+  background: #FFFFFF !important;
+}
+
+.aboutWhatIcon {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 999px !important;
+  background: #EEF5FF !important;
+  color: #2563EB !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 24px !important;
+}
+
+.aboutFinalSection {
+  max-width: 1400px !important;
+  margin: 40px auto 0 !important;
+  padding: 44px 52px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, #FFFFFF 0%, #F4F7FF 100%) !important;
+  display: grid !important;
+  grid-template-columns: 0.95fr 1.05fr !important;
+  gap: 40px !important;
+  align-items: center !important;
+}
+
+.aboutCityVisual {
+  min-height: 260px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #EEF5FF, #FFFFFF) !important;
+  color: #2563EB !important;
+  display: flex !important;
+  gap: 50px !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

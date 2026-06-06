@@ -1,6 +1,7 @@
 import React from "react";
 import "./Common.css";
 import { Link } from "react-router-dom";
+import { HashLink } from "react-router-hash-link";
 import headlogo from "../../assets/cortexa/pheadlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 
@@ -132,7 +133,7 @@ export default function PricingPage() {
           </div>
 
           <nav className="nav">
-            <a href="/features">Features</a>
+            <HashLink smooth to="/#features">Features</HashLink>
             <a href="/pricing" className="active">
               Pricing
             </a>
@@ -271,14 +272,12 @@ export default function PricingPage() {
             <div className="footer-col">
               <h3>Product</h3>
               <ul>
-                <li>
-                  <a href="/features">Features</a>
-                </li>
+                <li><HashLink smooth to="/#features">Features</HashLink></li>
                 <li>
                   <a href="/pricing">Pricing</a>
                 </li>
                 <li>
-                  <a href="/dashboard/integrations">Integrations</a>
+                  <a href="/integrations">Integrations</a>
                 </li>
                 <li>
                   <a href="/analytics">Changelog</a>

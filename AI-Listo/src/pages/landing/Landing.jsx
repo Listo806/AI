@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
-    UserPlus,
-    RefreshCcw,
-    DollarSign,
-    BarChart3,
-    Brain,
-    Plug,
-    ArrowRight 
-  } from "lucide-react";
+  UserPlus,
+  RefreshCcw,
+  DollarSign,
+  BarChart3,
+  Brain,
+  Plug,
+  ArrowRight,
+  CheckCircle,
+  Zap,
+} from "lucide-react";
+import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
 
+import CountriesCitiesSection from "./CountriesCitiesSection";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
@@ -179,7 +183,8 @@ export default function Landing() {
       ],
 
       finalTitle: "Replace the work of multiple agents — with one AI system",
-      finalDesc: "Capture, follow up, and move every lead forward automatically — without adding payroll.",
+      finalDesc:
+        "Capture, follow up, and move every lead forward automatically — without adding payroll.",
       footer: {
         desc: "The AI-powered CRM that helps teams close more deals, faster.",
         btn: "Start Your Free Trial →",
@@ -207,7 +212,8 @@ export default function Landing() {
       aipointTitle3: "Automatic Booking",
       aipointText3: "Appointments scheduled without back-and-forth.",
       aialt: "AI Setter handling conversations and booking appointments",
-      reinforcement: "Run your entire pipeline with AI — no extra hires, no missed opportunities.",
+      reinforcement:
+        "Run your entire pipeline with AI — no extra hires, no missed opportunities.",
       beTitle: "What This Actually Does For You",
       besubTitle:
         "Automation handles the work. Communication never stops. Every lead keeps moving forward — without you chasing it.",
@@ -238,50 +244,58 @@ export default function Landing() {
       stripAI: "AI Summary: You're on track to beat your monthly goal by 24%",
 
       roiTitle: "Cut Payroll. Scale With Your AI Agent.",
-      roiSub: "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
+      roiSub:
+        "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
       roiBtn: "Start Free Trial",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
-      roiStat1Desc: "CORTEXA transforms your lead handling into a revenue engine — automating follow-ups and deal flow to generate more closed deals.",
+      roiStat1Desc:
+        "CORTEXA transforms your lead handling into a revenue engine — automating follow-ups and deal flow to generate more closed deals.",
       roiStat2Number: "+$2.4M+",
       roiStat2Label: "Revenue Increase",
-      roiStat2Desc: "More conversations. Faster responses. Zero missed leads — turning your pipeline into predictable revenue.",
+      roiStat2Desc:
+        "More conversations. Faster responses. Zero missed leads — turning your pipeline into predictable revenue.",
       roiStat3Number: "80,000+",
       roiStat3Label: "Hours Saved",
-      roiStat3Desc: "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
+      roiStat3Desc:
+        "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
       roiStat4Number: "< 30 Days",
       roiStat4Label: "Payback",
-      roiStat4Desc: "Most users recover their investment within the first month from deals that would have otherwise been lost.",
+      roiStat4Desc:
+        "Most users recover their investment within the first month from deals that would have otherwise been lost.",
 
       aiCrmBadge: "AI-Powered CRM",
       aiCrmTitle1: "Meet Your",
       aiCrmTitleHighlight: "AI CRM",
-      aiCrmSub: "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
-      aiCrmSupport: "Capture more leads. Close more deals. Never miss an opportunity.",
+      aiCrmSub:
+        "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
+      aiCrmSupport:
+        "Capture more leads. Close more deals. Never miss an opportunity.",
       aiCrmF1Title: "Fills Your Pipeline",
       aiCrmF1Desc: "AI finds, qualifies, and engages new leads for you.",
       aiCrmF2Title: "Chats & Closes",
-      aiCrmF2Desc: "AI handles conversations, answers questions, and closes deals.",
+      aiCrmF2Desc:
+        "AI handles conversations, answers questions, and closes deals.",
       aiCrmF3Title: "Shows You the Money",
-      aiCrmF3Desc: "Real-time insights, revenue tracking, and growth visibility.",
+      aiCrmF3Desc:
+        "Real-time insights, revenue tracking, and growth visibility.",
       aiCrmF4Title: "Works 24/7",
-      aiCrmF4Desc: "Always on. Always working. Never misses a lead or opportunity.",
+      aiCrmF4Desc:
+        "Always on. Always working. Never misses a lead or opportunity.",
       aiCrmF5Title: "Keeps Customers Happy",
       aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
 
-      heroTitleLine1: "Get Instant Leads —",
-      heroTitleLine2: "Close More Deals 24/7",
+      heroTitleLine1: "Get Instant Leads.",
+      heroTitleLine2: "Close More Deals.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
-      heroCheck1: "Replace multiple agents with one AI system",
-      heroCheck2: "Save thousands per month on staffing & missed opportunities",
-      heroCheck3: "Works 24/7 — never misses a lead or opportunity",
-      heroCheck4: "Close more deals with zero manual follow-up",
-      heroCheck5: "Your AI Agent finds & qualifies leads automatically",
-      heroCheck6: "Capture every lead from ads, listings & funnels — in one place",
-      heroCheck7: "No missed opportunities — everything flows in instantly",
-      heroCheck8: "Start getting leads without lifting a finger",
-      heroCheck9: "Your AI Agent follows up instantly via calls, texts & WhatsApp",
+      herotextabove: "CORTEXA is the all-in-one AI CRM that finds leads, engages instantly, nurtures automatically, and helps you close more deals—on autopilot.",
+      heroCheck6:
+        "Your AI Agent finds, captures, and qualifies leads automatically",
+      heroCheck7: "Connect WhatsApp and let AI take over conversations instantly",
+      heroCheck8: "Calls, texts, follow-ups, and appointment booking run 24/7",
+      heroCheck9:
+        "Pipeline Intelligence, revenue forecasting, and every deal in one connected dashboard.",
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
@@ -318,14 +332,11 @@ export default function Landing() {
       dominantStep1Desc:
         "Import your leads, listings, and deals into the system.",
       dominantStep2Title: "AI Activates",
-      dominantStep2Desc:
-        "AI captures, responds, and follows up instantly.",
+      dominantStep2Desc: "AI captures, responds, and follows up instantly.",
       dominantStep3Title: "Pipeline Moves",
-      dominantStep3Desc:
-        "Leads move through your pipeline automatically.",
+      dominantStep3Desc: "Leads move through your pipeline automatically.",
       dominantBottom1Title: "Deals Close",
-      dominantBottom1Desc:
-        "Your system keeps momentum until deals are closed.",
+      dominantBottom1Desc: "Your system keeps momentum until deals are closed.",
       dominantBottom2Title: "Analytics Track Everything",
       dominantBottom2Desc:
         "See exactly where your business stands in real time.",
@@ -336,21 +347,27 @@ export default function Landing() {
         "From first lead to closing — everything is handled inside one system.",
 
       smartEyebrow: "Intelligent Integrations",
-      smartTitle: "Turn your entire real estate business into an automated revenue machine",
-      smartSubtitle: "Bring your listings, leads, messages, and funnels into one place. Cortexa connects everything, organizes everything, and uses AI to track, analyze, and move every deal forward — automatically.",
+      smartTitle:
+        "Turn your entire real estate business into an automated revenue machine",
+      smartSubtitle:
+        "Bring your listings, leads, messages, and funnels into one place. Cortexa connects everything, organizes everything, and uses AI to track, analyze, and move every deal forward — automatically.",
       smartFlow: "Flow",
       smartAutomated: "Automated",
       smartOptimized: "Optimized",
       smartFlow1Label: "Lead Capture & Follow-Up",
       smartFlow1Title: "Ads → CRM → WhatsApp → AI",
-      smartFlow1Desc: "Every lead is captured instantly, qualified, and followed up automatically — so you never miss another opportunity.",
+      smartFlow1Desc:
+        "Every lead is captured instantly, qualified, and followed up automatically — so you never miss another opportunity.",
       smartFlow2Label: "Listings, Funnels & Automation",
       smartFlow2Title: "Website + Listings → CRM → Smart Sequences",
-      smartFlow2Desc: "Your properties, landing pages, and funnels feed into one system — triggering intelligent follow-ups until leads are ready to buy.",
+      smartFlow2Desc:
+        "Your properties, landing pages, and funnels feed into one system — triggering intelligent follow-ups until leads are ready to buy.",
       smartFlow3Label: "Deals, Data & Analytics",
       smartFlow3Title: "Pipeline → AI Tracking → Performance Insights",
-      smartFlow3Desc: "Every deal is tracked, every action is analyzed, and your performance is organized into clear insights you can act on.",
-      smartBottom: "Your entire operation — connected, automated, and optimized in one intelligent system.",
+      smartFlow3Desc:
+        "Every deal is tracked, every action is analyzed, and your performance is organized into clear insights you can act on.",
+      smartBottom:
+        "Your entire operation — connected, automated, and optimized in one intelligent system.",
       smartCTA: "Turn your business into an automated machine",
 
       topLine1: "Meet Your AI CRM.",
@@ -358,7 +375,6 @@ export default function Landing() {
       topHighlight: "AI Agents",
       topLine3: "that capture, follow up, and close your leads automatically.",
       pricing: "Pricing",
-
     },
 
     es: {
@@ -466,8 +482,10 @@ export default function Landing() {
         },
       ],
 
-      finalTitle: "Reemplaza el trabajo de múltiples agentes — con un solo sistema de IA",
-      finalDesc: "Captura, da seguimiento y avanza cada lead automáticamente — sin aumentar la nómina.",
+      finalTitle:
+        "Reemplaza el trabajo de múltiples agentes — con un solo sistema de IA",
+      finalDesc:
+        "Captura, da seguimiento y avanza cada lead automáticamente — sin aumentar la nómina.",
       footer: {
         desc: "El CRM con IA que ayuda a los equipos a cerrar más ventas más rápido.",
         btn: "Empieza tu prueba gratuita →",
@@ -534,53 +552,62 @@ export default function Landing() {
       stripLeads: "Leads",
       stripDeals: "Ventas",
       stripRevenue: "Ingresos",
-      stripAI: "Resumen IA: Estás en camino de superar tu objetivo mensual en un 24%",
+      stripAI:
+        "Resumen IA: Estás en camino de superar tu objetivo mensual en un 24%",
 
       roiTitle: "Reduce los costos de nómina. Escala con tu agente de IA.",
-      roiSub: "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
+      roiSub:
+        "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
       roiBtn: "Prueba gratis",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
-      roiStat1Desc: "CORTEXA transforma la gestión de tus leads en un motor de ingresos — automatizando seguimientos y el flujo de ventas para generar más cierres.",
+      roiStat1Desc:
+        "CORTEXA transforma la gestión de tus leads en un motor de ingresos — automatizando seguimientos y el flujo de ventas para generar más cierres.",
       roiStat2Number: "+$2.4M+",
       roiStat2Label: "Incremento de ingresos",
-      roiStat2Desc: "Más conversaciones. Respuestas más rápidas. Cero leads perdidos — convirtiendo tu pipeline en ingresos predecibles.",
+      roiStat2Desc:
+        "Más conversaciones. Respuestas más rápidas. Cero leads perdidos — convirtiendo tu pipeline en ingresos predecibles.",
       roiStat3Number: "80,000+",
       roiStat3Label: "Horas ahorradas",
-      roiStat3Desc: "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
+      roiStat3Desc:
+        "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
       roiStat4Number: "< 30 días",
       roiStat4Label: "Recuperación",
-      roiStat4Desc: "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
+      roiStat4Desc:
+        "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
 
       aiCrmBadge: "CRM con IA",
       aiCrmTitle1: "Conoce tu",
       aiCrmTitleHighlight: "CRM con IA",
-      aiCrmSub: "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
-      aiCrmSupport: "Captura más leads. Cierra más ventas. Nunca pierdas una oportunidad.",
+      aiCrmSub:
+        "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
+      aiCrmSupport:
+        "Captura más leads. Cierra más ventas. Nunca pierdas una oportunidad.",
       aiCrmF1Title: "Llena tu pipeline",
       aiCrmF1Desc: "La IA encuentra, califica y conecta nuevos leads por ti.",
       aiCrmF2Title: "Chatea y cierra",
-      aiCrmF2Desc: "La IA gestiona conversaciones, responde preguntas y cierra ventas.",
+      aiCrmF2Desc:
+        "La IA gestiona conversaciones, responde preguntas y cierra ventas.",
       aiCrmF3Title: "Te muestra el dinero",
-      aiCrmF3Desc: "Insights en tiempo real, seguimiento de ingresos y crecimiento.",
+      aiCrmF3Desc:
+        "Insights en tiempo real, seguimiento de ingresos y crecimiento.",
       aiCrmF4Title: "Funciona 24/7",
       aiCrmF4Desc: "Siempre activo. Nunca pierde un lead ni una oportunidad.",
       aiCrmF5Title: "Clientes felices",
       aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
 
-      heroTitleLine1: "Obtén leads al instante —",
-      heroTitleLine2: "Cierra más ventas 24/7",
+      heroTitleLine1: "Obtén clientes potenciales al instante.",
+      heroTitleLine2: "Cierra más ventas.",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
-      heroCheck1: "Reemplaza múltiples agentes con un solo sistema de IA",
-      heroCheck2: "Ahorra miles al mes en personal y oportunidades perdidas",
-      heroCheck3: "Funciona 24/7 — nunca pierde un lead u oportunidad",
-      heroCheck4: "Cierra más ventas sin seguimiento manual",
+      herotextabove: "CORTEXA es el CRM de IA todo en uno que encuentra clientes potenciales, interactúa al instante, realiza seguimientos automáticos y te ayuda a cerrar más ventas, todo en piloto automático.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
-      heroCheck6: "Captura cada lead de anuncios, listados y embudos — en un solo lugar",
-      heroCheck7: "Sin oportunidades perdidas — todo fluye instantáneamente",
-      heroCheck8: "Empieza a recibir leads sin mover un dedo",
-      heroCheck9: "Tu agente de IA hace seguimiento instantáneo vía llamadas, mensajes y WhatsApp",
+      heroCheck6:
+        "Tu agente de IA encuentra, captura y califica leads automáticamente.",
+      heroCheck7: "Conecta WhatsApp y deja que la IA se encargue de las conversaciones al instante.",
+      heroCheck8: "Llamadas, mensajes, seguimientos y agendamiento de citas, disponibles 24/7.",
+      heroCheck9:
+        "Inteligencia de pipeline, previsión de ingresos y cada oportunidad en un único panel conectado.",
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
@@ -620,8 +647,7 @@ export default function Landing() {
       dominantStep2Desc:
         "La IA captura, responde y da seguimiento al instante.",
       dominantStep3Title: "El pipeline avanza",
-      dominantStep3Desc:
-        "Los leads avanzan automáticamente en tu pipeline.",
+      dominantStep3Desc: "Los leads avanzan automáticamente en tu pipeline.",
       dominantBottom1Title: "Las ventas se cierran",
       dominantBottom1Desc:
         "Tu sistema mantiene el impulso hasta cerrar las operaciones.",
@@ -633,30 +659,39 @@ export default function Landing() {
         "Visibilidad clara, mejores decisiones y mayor rendimiento.",
       dominantFinal:
         "Desde el primer lead hasta el cierre — todo se gestiona dentro de un solo sistema.",
-      
+
       smartEyebrow: "Integraciones Inteligentes",
-      smartTitle: "Convierte todo tu negocio inmobiliario en una máquina de ingresos automatizada",
-      smartSubtitle: "Lleva tus propiedades, leads, mensajes y embudos a un solo lugar. Cortexa conecta todo, organiza todo y utiliza IA para rastrear, analizar y avanzar cada oportunidad automáticamente.",
+      smartTitle:
+        "Convierte todo tu negocio inmobiliario en una máquina de ingresos automatizada",
+      smartSubtitle:
+        "Lleva tus propiedades, leads, mensajes y embudos a un solo lugar. Cortexa conecta todo, organiza todo y utiliza IA para rastrear, analizar y avanzar cada oportunidad automáticamente.",
       smartFlow: "Flujo",
       smartAutomated: "Automatizado",
       smartOptimized: "Optimizado",
       smartFlow1Label: "Captación de Leads y Seguimiento",
       smartFlow1Title: "Anuncios → CRM → WhatsApp → IA",
-      smartFlow1Desc: "Cada lead se captura al instante, se califica y se sigue automáticamente — para que nunca pierdas otra oportunidad.",
+      smartFlow1Desc:
+        "Cada lead se captura al instante, se califica y se sigue automáticamente — para que nunca pierdas otra oportunidad.",
       smartFlow2Label: "Propiedades, Funnels y Automatización",
-      smartFlow2Title: "Sitio Web + Propiedades → CRM → Secuencias Inteligentes",
-      smartFlow2Desc: "Tus propiedades, páginas de aterrizaje y embudos se integran en un solo sistema — activando seguimientos inteligentes hasta que los leads estén listos para comprar.",
+      smartFlow2Title:
+        "Sitio Web + Propiedades → CRM → Secuencias Inteligentes",
+      smartFlow2Desc:
+        "Tus propiedades, páginas de aterrizaje y embudos se integran en un solo sistema — activando seguimientos inteligentes hasta que los leads estén listos para comprar.",
       smartFlow3Label: "Ventas, Datos y Analítica",
-      smartFlow3Title: "Pipeline → Seguimiento con IA → Insights de Rendimiento",
-      smartFlow3Desc: "Cada operación se rastrea, cada acción se analiza y tu rendimiento se organiza en insights claros que puedes usar.",
-      smartBottom: "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
+      smartFlow3Title:
+        "Pipeline → Seguimiento con IA → Insights de Rendimiento",
+      smartFlow3Desc:
+        "Cada operación se rastrea, cada acción se analiza y tu rendimiento se organiza en insights claros que puedes usar.",
+      smartBottom:
+        "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
       smartCTA: "Convierte tu negocio en una máquina automatizada",
 
       topLine1: "Conoce tu CRM con IA.",
       topLine2: "Impulsado por",
       topHighlight: "Agentes de IA",
-      topLine3: "que capturan, dan seguimiento y cierran tus leads automáticamente.",
-      pricing: "Precios"
+      topLine3:
+        "que capturan, dan seguimiento y cierran tus leads automáticamente.",
+      pricing: "Precios",
     },
 
     pt: {
@@ -756,8 +791,10 @@ export default function Landing() {
         },
       ],
 
-      finalTitle: "Substitua o trabalho de vários agentes — com um único sistema de IA",
-      finalDesc: "Capture, faça o acompanhamento e avance cada lead automaticamente — sem aumentar a folha de pagamento.",
+      finalTitle:
+        "Substitua o trabalho de vários agentes — com um único sistema de IA",
+      finalDesc:
+        "Capture, faça o acompanhamento e avance cada lead automaticamente — sem aumentar a folha de pagamento.",
       footer: {
         desc: "O CRM com IA que ajuda equipes a fechar mais negócios rapidamente.",
         btn: "Comece seu teste gratuito →",
@@ -817,56 +854,68 @@ export default function Landing() {
       stripLeads: "Leads",
       stripDeals: "Negócios",
       stripRevenue: "Receita",
-      stripAI: "Resumo da IA: Você está no caminho para superar sua meta mensal em 24%",
+      stripAI:
+        "Resumo da IA: Você está no caminho para superar sua meta mensal em 24%",
 
-      roiTitle: "Reduza os custos da folha de pagamento. Escale com seu agente de IA.",
-      roiSub: "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
+      roiTitle:
+        "Reduza os custos da folha de pagamento. Escale com seu agente de IA.",
+      roiSub:
+        "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
       roiBtn: "Teste grátis",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
-      roiStat1Desc: "O CORTEXA transforma a gestão de leads em um motor de receita — automatizando follow-ups e o fluxo de vendas para gerar mais fechamentos.",
+      roiStat1Desc:
+        "O CORTEXA transforma a gestão de leads em um motor de receita — automatizando follow-ups e o fluxo de vendas para gerar mais fechamentos.",
       roiStat2Number: "+$2.4M+",
       roiStat2Label: "Aumento de receita",
-      roiStat2Desc: "Mais conversas. Respostas mais rápidas. Zero leads perdidos — transformando seu pipeline em receita previsível.",
+      roiStat2Desc:
+        "Mais conversas. Respostas mais rápidas. Zero leads perdidos — transformando seu pipeline em receita previsível.",
       roiStat3Number: "80,000+",
       roiStat3Label: "Horas economizadas",
-      roiStat3Desc: "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
+      roiStat3Desc:
+        "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
       roiStat4Number: "< 30 dias",
       roiStat4Label: "Retorno",
-      roiStat4Desc: "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",  
+      roiStat4Desc:
+        "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
 
       aiCrmBadge: "CRM com IA",
       aiCrmTitle1: "Conheça seu",
       aiCrmTitleHighlight: "CRM com IA",
-      aiCrmSub: "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
-      aiCrmSupport: "Capture mais leads. Feche mais negócios. Nunca perca oportunidades.",
+      aiCrmSub:
+        "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
+      aiCrmSupport:
+        "Capture mais leads. Feche mais negócios. Nunca perca oportunidades.",
       aiCrmF1Title: "Enche seu pipeline",
       aiCrmF1Desc: "A IA encontra, qualifica e engaja novos leads para você.",
       aiCrmF2Title: "Conversa e fecha",
-      aiCrmF2Desc: "A IA gerencia conversas, responde dúvidas e fecha negócios.",
+      aiCrmF2Desc:
+        "A IA gerencia conversas, responde dúvidas e fecha negócios.",
       aiCrmF3Title: "Mostra o dinheiro",
-      aiCrmF3Desc: "Insights em tempo real, acompanhamento de receita e crescimento.",
+      aiCrmF3Desc:
+        "Insights em tempo real, acompanhamento de receita e crescimento.",
       aiCrmF4Title: "Funciona 24/7",
       aiCrmF4Desc: "Sempre ativo. Nunca perde leads ou oportunidades.",
       aiCrmF5Title: "Clientes felizes",
-      aiCrmF5Desc: "A IA cuida do relacionamento e oferece suporte instantâneo.",
+      aiCrmF5Desc:
+        "A IA cuida do relacionamento e oferece suporte instantâneo.",
 
-      heroTitleLine1: "Gere leads instantaneamente —",
-      heroTitleLine2: "Feche mais negócios 24/7",
+      heroTitleLine1: "Receba leads instantaneamente.",
+      heroTitleLine2: "Feche mais negócios.",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
-      heroCheck1: "Substitua vários agentes por um único sistema de IA",
-      heroCheck2: "Economize milhares por mês com equipe e oportunidades perdidas",
-      heroCheck3: "Funciona 24/7 — nunca perde um lead ou oportunidade",
-      heroCheck4: "Feche mais negócios sem acompanhamento manual",
+      herotextabove: "CORTEXA é o CRM de IA tudo em um que encontra leads, interage instantaneamente, faz acompanhamentos automáticos e ajuda você a fechar mais negócios — tudo no piloto automático.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
-      heroCheck6: "Capture todos os leads de anúncios, listagens e funis — em um só lugar",
-      heroCheck7: "Sem oportunidades perdidas — tudo flui instantaneamente",
-      heroCheck8: "Comece a gerar leads sem esforço",
-      heroCheck9: "Seu agente de IA faz follow-up instantâneo via chamadas, mensagens e WhatsApp",
+      heroCheck6:
+        "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
+      heroCheck7: "Conecte o WhatsApp e deixe a IA assumir as conversas instantaneamente.",
+      heroCheck8: "Chamadas, mensagens, acompanhamentos e agendamentos, disponíveis 24/7.",
+      heroCheck9:
+        "Inteligência de pipeline, previsão de receita e todos os negócios em um único painel integrado.",
       heroCheck10: "Gerencia conversas, qualifica e nutre cada lead",
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
-      heroCheck12: "Veja todos os leads, negócios e oportunidades em um único painel",
+      heroCheck12:
+        "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Gerar Leads",
@@ -903,8 +952,7 @@ export default function Landing() {
       dominantStep2Desc:
         "A IA captura, responde e faz follow-up instantaneamente.",
       dominantStep3Title: "O pipeline avança",
-      dominantStep3Desc:
-        "Os leads avançam automaticamente no seu pipeline.",
+      dominantStep3Desc: "Os leads avançam automaticamente no seu pipeline.",
       dominantBottom1Title: "Negócios são fechados",
       dominantBottom1Desc:
         "Seu sistema mantém o ritmo até fechar as negociações.",
@@ -918,28 +966,36 @@ export default function Landing() {
         "Do primeiro lead ao fechamento — tudo é gerenciado dentro de um único sistema.",
 
       smartEyebrow: "Integrações Inteligentes",
-      smartTitle: "Transforme todo o seu negócio imobiliário em uma máquina de receita automatizada",
-      smartSubtitle: "Traga seus imóveis, leads, mensagens e funis para um só lugar. O Cortexa conecta tudo, organiza tudo e usa IA para rastrear, analisar e impulsionar cada oportunidade automaticamente.",
+      smartTitle:
+        "Transforme todo o seu negócio imobiliário em uma máquina de receita automatizada",
+      smartSubtitle:
+        "Traga seus imóveis, leads, mensagens e funis para um só lugar. O Cortexa conecta tudo, organiza tudo e usa IA para rastrear, analisar e impulsionar cada oportunidade automaticamente.",
       smartFlow: "Fluxo",
       smartAutomated: "Automatizado",
       smartOptimized: "Otimizado",
       smartFlow1Label: "Captação de Leads e Follow-up",
       smartFlow1Title: "Anúncios → CRM → WhatsApp → IA",
-      smartFlow1Desc: "Cada lead é capturado instantaneamente, qualificado e acompanhado automaticamente — para que você nunca perca outra oportunidade.",
+      smartFlow1Desc:
+        "Cada lead é capturado instantaneamente, qualificado e acompanhado automaticamente — para que você nunca perca outra oportunidade.",
       smartFlow2Label: "Imóveis, Funis e Automação",
       smartFlow2Title: "Website + Imóveis → CRM → Sequências Inteligentes",
-      smartFlow2Desc: "Seus imóveis, páginas e funis alimentam um único sistema — ativando follow-ups inteligentes até que os leads estejam prontos para comprar.",
+      smartFlow2Desc:
+        "Seus imóveis, páginas e funis alimentam um único sistema — ativando follow-ups inteligentes até que os leads estejam prontos para comprar.",
       smartFlow3Label: "Vendas, Dados e Análises",
-      smartFlow3Title: "Pipeline → Monitoramento com IA → Insights de Performance",
-      smartFlow3Desc: "Cada negócio é monitorado, cada ação é analisada e sua performance é organizada em insights claros para tomada de decisão.",
-      smartBottom: "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
+      smartFlow3Title:
+        "Pipeline → Monitoramento com IA → Insights de Performance",
+      smartFlow3Desc:
+        "Cada negócio é monitorado, cada ação é analisada e sua performance é organizada em insights claros para tomada de decisão.",
+      smartBottom:
+        "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
       smartCTA: "Transforme seu negócio em uma máquina automatizada",
 
       topLine1: "Conheça o seu CRM com IA.",
       topLine2: "Impulsionado por",
       topHighlight: "Agentes de IA",
-      topLine3: "que capturam, fazem follow-up e fecham seus leads automaticamente.",
-      pricing: "Preços"
+      topLine3:
+        "que capturam, fazem follow-up e fecham seus leads automaticamente.",
+      pricing: "Preços",
     },
   };
 
@@ -995,8 +1051,7 @@ export default function Landing() {
       <div className="hero-text">
         <h2 className="hero-title">
           {tr.topLine1}
-          {tr.topLine2}{" "}
-          <span className="highlight">{tr.topHighlight}</span>{" "}
+          {tr.topLine2} <span className="highlight">{tr.topHighlight}</span>{" "}
           {tr.topLine3}
         </h2>
       </div>
@@ -1018,12 +1073,19 @@ export default function Landing() {
               ];
 
               return (
-                <button key={i} onClick={() => scrollTo(ids[i])}>
+                <HashLink
+                  className="nav-menu"
+                  key={i}
+                  smooth
+                  to={`/#${ids[i]}`}
+                >
                   {n}
-                </button>
+                </HashLink>
               );
             })}
-            <a className="nav-menu" href="/pricing">{tr.pricing}</a>
+            <a className="nav-menu" href="/pricing">
+              {tr.pricing}
+            </a>
           </nav>
 
           <div className="cx-actions">
@@ -1088,78 +1150,64 @@ export default function Landing() {
           </div>
         </div>
       </header>
-
+      
       <section className="hero mt-50">
         <div className="hero-container">
-
           <div className="hero-left">
             <div className="hero-left-in">
+              <p className="hero-head1 hero-head">AI POWERED</p>
               <p className="hero-head">{tr.heroHead}</p>
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
+                <br />
+                <span>24/7.</span>
               </h1>
               <div className="hero-checks">
-                {[
-                  tr.heroCheck1,
-                  tr.heroCheck2,
-                  tr.heroCheck3,
-                  tr.heroCheck4,
-                ].map((item, index) => (
-                  <div className="check-item" key={index}>
-                    <span className="check">✔</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
+                <p>{tr.herotextabove}</p>
               </div>
               <div className="hero-inline">
                 <a href="/trial" className="hero-btn">
-                  {tr.heroCTA}
-                </a>  
+                  <Zap size={21} />{tr.heroCTA}
+                </a>
                 <p className="next-btn">{tr.heroUnlock}</p>
               </div>
-              
+
               <div className="hero-checks">
                 {[
-                  tr.heroCheck5,
                   tr.heroCheck6,
                   tr.heroCheck7,
                   tr.heroCheck8,
                   tr.heroCheck9,
-                  tr.heroCheck10,
-                  tr.heroCheck11,
-                  tr.heroCheck12,
                 ].map((item, index) => (
                   <div className="check-item" key={index}>
-                    <span className="check">✔</span>
+                    <span className="check"><CheckCircle size={18} /></span>
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
-            </div>    
-            
+            </div>
           </div>
 
           <div className="hero-right">
             <div className="hero-image">
-              <img src={heroImg} />
+              {/*<img src={heroImg} />*/}
             </div>
           </div>
-                
         </div>
-        <div className="hero-tags">
-              <UserPlus className="icon blue" />
-              <span>{tr.heroTag1}</span>
-              <RefreshCcw className="icon purple" />
-              <span>{tr.heroTag2}</span>
-              <DollarSign className="icon green" />
-              <span>{tr.heroTag3}</span>
-              <BarChart3 className="icon blue2" />
-              <span>{tr.heroTag4}</span>
-              <Brain className="icon indigo" />
-              <span>{tr.heroTag5}</span>
-              <Plug className="icon pink" />
-              <span>{tr.heroTag6}</span>
-            </div>
+        {/*<div className="hero-tags">
+          <UserPlus className="icon blue" />
+          <span>{tr.heroTag1}</span>
+          <RefreshCcw className="icon purple" />
+          <span>{tr.heroTag2}</span>
+          <DollarSign className="icon green" />
+          <span>{tr.heroTag3}</span>
+          <BarChart3 className="icon blue2" />
+          <span>{tr.heroTag4}</span>
+          <Brain className="icon indigo" />
+          <span>{tr.heroTag5}</span>
+          <Plug className="icon pink" />
+          <span>{tr.heroTag6}</span>
+        </div>*/}
       </section>
 
       {/* COMPARE */}
@@ -1238,31 +1286,21 @@ export default function Landing() {
 
       <section className="ai-crm-section pt-20">
         <div className="ai-crm-container">
-
-          <div className="ai-crm-badge">
-            {tr.aiCrmBadge}
-          </div>
+          <div className="ai-crm-badge">{tr.aiCrmBadge}</div>
 
           {/* Title */}
           <h2 className="ai-crm-title">
             {tr.aiCrmTitle1}{" "}
-            <span className="ai-crm-highlight">
-              {tr.aiCrmTitleHighlight}
-            </span>
+            <span className="ai-crm-highlight">{tr.aiCrmTitleHighlight}</span>
           </h2>
 
           {/* Sub */}
-          <p className="ai-crm-sub">
-            {tr.aiCrmSub}
-          </p>
+          <p className="ai-crm-sub">{tr.aiCrmSub}</p>
 
-          <p className="ai-crm-support">
-            {tr.aiCrmSupport}
-          </p>
+          <p className="ai-crm-support">{tr.aiCrmSupport}</p>
 
           {/* Grid */}
           <div className="ai-crm-grid">
-
             <div className="ai-crm-card">
               <div className="ai-icon purple">⚡</div>
               <h3>{tr.aiCrmF1Title}</h3>
@@ -1292,7 +1330,6 @@ export default function Landing() {
               <h3>{tr.aiCrmF5Title}</h3>
               <p>{tr.aiCrmF5Desc}</p>
             </div>
-
           </div>
         </div>
       </section>
@@ -1305,18 +1342,12 @@ export default function Landing() {
 
         <div className="container center">
           <h2 className="heading">
-            <span className="text-gradient-white">
-              {tr.dominantTitleLine1}
-            </span>
+            <span className="text-gradient-white">{tr.dominantTitleLine1}</span>
             <br />
-            <span className="text-gradient-blue">
-              {tr.dominantTitleLine2}
-            </span>
+            <span className="text-gradient-blue">{tr.dominantTitleLine2}</span>
           </h2>
 
-          <p className="subline">
-            {tr.dominantSubtitle}
-          </p>
+          <p className="subline">{tr.dominantSubtitle}</p>
         </div>
 
         <div className="divider"></div>
@@ -1347,7 +1378,7 @@ export default function Landing() {
           </p>
           <a href="/trial" className="btn-gradient">
             {tr.dominantCTA}
-          </a> 
+          </a>
         </div>
       </section>
 
@@ -1355,9 +1386,7 @@ export default function Landing() {
         <div className="container center">
           <h2 className="heading-dark">{tr.dominantHowTitle}</h2>
 
-          <p className="subline-dark">
-            {tr.dominantHowSubtitle}
-          </p>
+          <p className="subline-dark">{tr.dominantHowSubtitle}</p>
 
           <div className="flow">
             <div className="step">
@@ -1397,9 +1426,7 @@ export default function Landing() {
               <p>{tr.dominantBottom3Desc}</p>
             </div>
           </div>
-          <p className="final-line">
-            {tr.dominantFinal}
-          </p>
+          <p className="final-line">{tr.dominantFinal}</p>
         </div>
       </section>
 
@@ -1408,32 +1435,24 @@ export default function Landing() {
           <div className="smart-head">
             <p className="smart-eyebrow">{tr.smartEyebrow}</p>
 
-            <h2 className="smart-title">
-              {tr.smartTitle}
-            </h2>
+            <h2 className="smart-title">{tr.smartTitle}</h2>
 
-            <p className="smart-sub">
-              {tr.smartSubtitle}
-            </p>
+            <p className="smart-sub">{tr.smartSubtitle}</p>
           </div>
 
           <div className="smart-flow">
-
             <div className="smart-line"></div>
 
             {flows.map((flow, index) => (
               <div key={index} className="smart-item">
-
                 {index !== 0 && <div className="smart-divider"></div>}
 
                 <div className="smart-grid">
-
                   <div className="smart-left">
                     <p>{flow.label}</p>
                   </div>
 
                   <div className="smart-right">
-
                     <h3>{flow.title}</h3>
 
                     <div className="smart-arrow">
@@ -1444,10 +1463,7 @@ export default function Landing() {
                       <span>{tr.smartOptimized}</span>
                     </div>
 
-                    <p className="smart-desc">
-                      {flow.text}
-                    </p>
-
+                    <p className="smart-desc">{flow.text}</p>
                   </div>
                 </div>
 
@@ -1457,10 +1473,8 @@ export default function Landing() {
                     <div className="line"></div>
                   </div>
                 )}
-
               </div>
             ))}
-
           </div>
 
           <div className="smart-bottom">
@@ -1468,26 +1482,19 @@ export default function Landing() {
           </div>
 
           <div className="smart-cta">
-            <a href="/trial">
-              {tr.smartCTA} →
-            </a>
+            <a href="/trial">{tr.smartCTA} →</a>
           </div>
-
         </div>
-      </section>       
+      </section>
 
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
       </section>
-      
+
       <section className="roi-section pt-50">
         <div className="roi-container">
-          <h2 className="roi-title">
-            {tr.roiTitle}
-          </h2>
-          <p className="roi-sub">
-            {tr.roiSub}
-          </p>
+          <h2 className="roi-title">{tr.roiTitle}</h2>
+          <p className="roi-sub">{tr.roiSub}</p>
           <div className="roi-cta">
             <a href="/trial" className="roi-btn">
               {tr.roiBtn}
@@ -1497,34 +1504,26 @@ export default function Landing() {
             <div className="roi-item">
               <p className="roi-number">{tr.roiStat1Number}</p>
               <p className="roi-label">{tr.roiStat1Label}</p>
-              <p className="roi-desc">
-                {tr.roiStat1Desc}
-              </p>
+              <p className="roi-desc">{tr.roiStat1Desc}</p>
             </div>
             <div className="roi-item">
               <p className="roi-number">{tr.roiStat2Number}</p>
               <p className="roi-label">{tr.roiStat2Label}</p>
-              <p className="roi-desc">
-                {tr.roiStat2Desc}
-              </p>
+              <p className="roi-desc">{tr.roiStat2Desc}</p>
             </div>
             <div className="roi-item">
               <p className="roi-number">{tr.roiStat3Number}</p>
               <p className="roi-label">{tr.roiStat3Label}</p>
-              <p className="roi-desc">
-                {tr.roiStat3Desc}
-              </p>
+              <p className="roi-desc">{tr.roiStat3Desc}</p>
             </div>
             <div className="roi-item">
               <p className="roi-number">{tr.roiStat4Number}</p>
               <p className="roi-label">{tr.roiStat4Label}</p>
-              <p className="roi-desc">
-                {tr.roiStat4Desc}
-              </p>
+              <p className="roi-desc">{tr.roiStat4Desc}</p>
             </div>
           </div>
         </div>
-      </section>        
+      </section>
       <section className="cx-strip pt-50 cta-section">
         <div className="cta-container">
           <div className="cta-box">
@@ -1533,7 +1532,9 @@ export default function Landing() {
               <h2 className="cta-title">{tr.stripTitle}</h2>
               <p className="cta-sub">{tr.stripSub}</p>
               <div className="cta-actions">
-                <a href="/trial" className="cta-btn">{tr.stripBtn}</a>
+                <a href="/trial" className="cta-btn">
+                  {tr.stripBtn}
+                </a>
               </div>
               <p className="cta-trust">{tr.stripTrust}</p>
               <div className="cta-benefits">
@@ -1637,9 +1638,8 @@ export default function Landing() {
       </section>
       <section id="testimonials" className="cx-hero pt-50">
         <div className="img-container">
-            <img src={currenttestimonialsImg} alt="" />
+          <img src={currenttestimonialsImg} alt="" />
         </div>
-        
       </section>
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
@@ -1650,7 +1650,9 @@ export default function Landing() {
 
           <p className="cx-sub">{tr.finalDesc}</p>
 
-          <a href="/trial" className="cx-btn cx-btn-secondary">{tr.trial}</a>
+          <a href="/trial" className="cx-btn cx-btn-secondary">
+            {tr.trial}
+          </a>
           <p className="final-reinforcement">{tr.reinforcement}</p>
           <div className="cx-final-shot">
             <img src={finalImg} alt="" />
@@ -1659,188 +1661,221 @@ export default function Landing() {
       </section>
 
       <section>
-          <footer className="footer-final">
-            <div className="container">
-
-              <div className="footer-location">
-                <div className="section">
-                  <div className="cities-grid">
-                    <div className="country-block">
-                      <h4 className="country-name">Brazil</h4>
-                      <div className="cities">
-                        <Link to="/brazil/sao-paulo">São Paulo</Link> ·
-                        <Link to="/brazil/rio-de-janeiro">Rio de Janeiro</Link> ·
-                        <Link to="/brazil/brasilia">Brasília</Link> ·
-                        <Link to="/brazil/salvador">Salvador</Link> ·
-                        <Link to="/brazil/fortaleza">Fortaleza</Link> ·
-                        <Link to="/brazil/curitiba">Curitiba</Link> ·
-                        <Link to="/brazil/belo-horizonte">Belo Horizonte</Link> ·
-                        <Link to="/brazil/recife">Recife</Link>
-                      </div>
+        <footer className="footer-final">
+          <div className="container">
+            <div className="footer-location">
+              <CountriesCitiesSection />
+              {/*<div className="section">
+                <div className="cities-grid">
+                  <div className="country-block">
+                    <h4 className="country-name">Brazil</h4>
+                    <div className="cities">
+                      <Link to="/brazil/sao-paulo">São Paulo</Link> ·
+                      <Link to="/brazil/rio-de-janeiro">Rio de Janeiro</Link> ·
+                      <Link to="/brazil/brasilia">Brasília</Link> ·
+                      <Link to="/brazil/salvador">Salvador</Link> ·
+                      <Link to="/brazil/fortaleza">Fortaleza</Link> ·
+                      <Link to="/brazil/curitiba">Curitiba</Link> ·
+                      <Link to="/brazil/belo-horizonte">Belo Horizonte</Link> ·
+                      <Link to="/brazil/recife">Recife</Link>
                     </div>
+                  </div>
 
-                    <div className="country-block">
-                      <h4 className="country-name">Mexico</h4>
-                      <div className="cities">
-                        <Link to="/mexico/mexico-city">Mexico City</Link> ·
-                        <Link to="/mexico/guadalajara">Guadalajara</Link> ·
-                        <Link to="/mexico/monterrey">Monterrey</Link> ·
-                        <Link to="/mexico/cancun">Cancún</Link> ·
-                        <Link to="/mexico/tulum">Tulum</Link> ·
-                        <Link to="/mexico/playa-del-carmen">Playa del Carmen</Link> ·
-                        <Link to="/mexico/puebla">Puebla</Link> ·
-                        <Link to="/mexico/merida">Mérida</Link>
-                      </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Mexico</h4>
+                    <div className="cities">
+                      <Link to="/mexico/mexico-city">Mexico City</Link> ·
+                      <Link to="/mexico/guadalajara">Guadalajara</Link> ·
+                      <Link to="/mexico/monterrey">Monterrey</Link> ·
+                      <Link to="/mexico/cancun">Cancún</Link> ·
+                      <Link to="/mexico/tulum">Tulum</Link> ·
+                      <Link to="/mexico/playa-del-carmen">
+                        Playa del Carmen
+                      </Link>{" "}
+                      ·<Link to="/mexico/puebla">Puebla</Link> ·
+                      <Link to="/mexico/merida">Mérida</Link>
                     </div>
-                    <div className="country-block">
-                      <h4 className="country-name">Argentina</h4>
-                      <div className="cities">
-                        <Link to="/argentina/buenos-aires">Buenos Aires</Link> ·
-                        <Link to="/argentina/cordoba">Córdoba</Link> ·
-                        <Link to="/argentina/rosario">Rosario</Link> ·
-                        <Link to="/argentina/mendoza">Mendoza</Link> ·
-                        <Link to="/argentina/salta">Salta</Link> ·
-                        <Link to="/argentina/mar-del-plata">Mar del Plata</Link> ·
-                        <Link to="/argentina/la-plata">La Plata</Link> ·
-                        <Link to="/argentina/bariloche">Bariloche</Link>
-                      </div>
+                  </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Argentina</h4>
+                    <div className="cities">
+                      <Link to="/argentina/buenos-aires">Buenos Aires</Link> ·
+                      <Link to="/argentina/cordoba">Córdoba</Link> ·
+                      <Link to="/argentina/rosario">Rosario</Link> ·
+                      <Link to="/argentina/mendoza">Mendoza</Link> ·
+                      <Link to="/argentina/salta">Salta</Link> ·
+                      <Link to="/argentina/mar-del-plata">Mar del Plata</Link> ·
+                      <Link to="/argentina/la-plata">La Plata</Link> ·
+                      <Link to="/argentina/bariloche">Bariloche</Link>
                     </div>
+                  </div>
 
-                    <div className="country-block">
-                      <h4 className="country-name">Chile</h4>
-                      <div className="cities">
-                        <Link to="/chile/santiago">Santiago</Link> ·
-                        <Link to="/chile/valparaiso">Valparaíso</Link> ·
-                        <Link to="/chile/vina-del-mar">Viña del Mar</Link> ·
-                        <Link to="/chile/concepcion">Concepción</Link> ·
-                        <Link to="/chile/antofagasta">Antofagasta</Link> ·
-                        <Link to="/chile/la-serena">La Serena</Link> ·
-                        <Link to="/chile/pucon">Pucón</Link> ·
-                        <Link to="/chile/temuco">Temuco</Link>
-                      </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Chile</h4>
+                    <div className="cities">
+                      <Link to="/chile/santiago">Santiago</Link> ·
+                      <Link to="/chile/valparaiso">Valparaíso</Link> ·
+                      <Link to="/chile/vina-del-mar">Viña del Mar</Link> ·
+                      <Link to="/chile/concepcion">Concepción</Link> ·
+                      <Link to="/chile/antofagasta">Antofagasta</Link> ·
+                      <Link to="/chile/la-serena">La Serena</Link> ·
+                      <Link to="/chile/pucon">Pucón</Link> ·
+                      <Link to="/chile/temuco">Temuco</Link>
                     </div>
+                  </div>
 
-                    <div className="country-block">
-                      <h4 className="country-name">Colombia</h4>
-                      <div className="cities">
-                        <Link to="/colombia/bogota">Bogotá</Link> ·
-                        <Link to="/colombia/medellin">Medellín</Link> ·
-                        <Link to="/colombia/cali">Cali</Link> ·
-                        <Link to="/colombia/cartagena">Cartagena</Link> ·
-                        <Link to="/colombia/barranquilla">Barranquilla</Link> ·
-                        <Link to="/colombia/santa-marta">Santa Marta</Link> ·
-                        <Link to="/colombia/pereira">Pereira</Link> ·
-                        <Link to="/colombia/manizales">Manizales</Link>
-                      </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Colombia</h4>
+                    <div className="cities">
+                      <Link to="/colombia/bogota">Bogotá</Link> ·
+                      <Link to="/colombia/medellin">Medellín</Link> ·
+                      <Link to="/colombia/cali">Cali</Link> ·
+                      <Link to="/colombia/cartagena">Cartagena</Link> ·
+                      <Link to="/colombia/barranquilla">Barranquilla</Link> ·
+                      <Link to="/colombia/santa-marta">Santa Marta</Link> ·
+                      <Link to="/colombia/pereira">Pereira</Link> ·
+                      <Link to="/colombia/manizales">Manizales</Link>
                     </div>
+                  </div>
 
-                    <div className="country-block">
-                      <h4 className="country-name">Peru</h4>
-                      <div className="cities">
-                        <Link to="/peru/lima">Lima</Link> ·
-                        <Link to="/peru/cusco">Cusco</Link> ·
-                        <Link to="/peru/arequipa">Arequipa</Link> ·
-                        <Link to="/peru/trujillo">Trujillo</Link> ·
-                        <Link to="/peru/piura">Piura</Link> ·
-                        <Link to="/peru/chiclayo">Chiclayo</Link> ·
-                        <Link to="/peru/ica">Ica</Link> ·
-                        <Link to="/peru/huancayo">Huancayo</Link>
-                      </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Peru</h4>
+                    <div className="cities">
+                      <Link to="/peru/lima">Lima</Link> ·
+                      <Link to="/peru/cusco">Cusco</Link> ·
+                      <Link to="/peru/arequipa">Arequipa</Link> ·
+                      <Link to="/peru/trujillo">Trujillo</Link> ·
+                      <Link to="/peru/piura">Piura</Link> ·
+                      <Link to="/peru/chiclayo">Chiclayo</Link> ·
+                      <Link to="/peru/ica">Ica</Link> ·
+                      <Link to="/peru/huancayo">Huancayo</Link>
                     </div>
+                  </div>
 
-                    <div className="country-block">
-                      <h4 className="country-name">Ecuador</h4>
-                      <div className="cities">
-                        <Link to="/ecuador/quito">Quito</Link> ·
-                        <Link to="/ecuador/guayaquil">Guayaquil</Link> ·
-                        <Link to="/ecuador/cuenca">Cuenca</Link> ·
-                        <Link to="/ecuador/manta">Manta</Link> ·
-                        <Link to="/ecuador/ambato">Ambato</Link> ·
-                        <Link to="/ecuador/loja">Loja</Link> ·
-                        <Link to="/ecuador/portoviejo">Portoviejo</Link> ·
-                        <Link to="/ecuador/santo-domingo">Santo Domingo</Link>
-                      </div>
+                  <div className="country-block">
+                    <h4 className="country-name">Ecuador</h4>
+                    <div className="cities">
+                      <Link to="/ecuador/quito">Quito</Link> ·
+                      <Link to="/ecuador/guayaquil">Guayaquil</Link> ·
+                      <Link to="/ecuador/cuenca">Cuenca</Link> ·
+                      <Link to="/ecuador/manta">Manta</Link> ·
+                      <Link to="/ecuador/ambato">Ambato</Link> ·
+                      <Link to="/ecuador/loja">Loja</Link> ·
+                      <Link to="/ecuador/portoviejo">Portoviejo</Link> ·
+                      <Link to="/ecuador/santo-domingo">Santo Domingo</Link>
                     </div>
-
                   </div>
                 </div>
-
-              </div>
-              <div className="footer-grid">
-                
-                <div className="footer-brand">
-                  <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
-                  <p>
-                    The AI-powered CRM that helps you capture leads, automate follow-ups, 
-                    and close more deals — faster.
-                  </p>
-                  <a href="/trial" className="btn-primary">Start Your Free Trial →</a>
-
-                  <div className="footer-tags">
-                    <span>✨ AI-Powered</span>
-                    <span>🛡 Secure</span>
-                    <span>⚡ Automation</span>
-                    <span>📊 Insights</span>
-                  </div>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Product</h3>
-                  <ul>
-                    <li><a href="/features">Features</a></li>
-                    <li><a href="/ai-assistant">AI Assistant</a></li>
-                    <li><a href="/automations">Automations</a></li>
-                    <li><a href="/integrations">Integrations</a></li>
-                    <li><a href="/analytics">Analytics</a></li>
-                    <li><a href="/pricing">Pricing</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Get Started</h3>
-                  <ul>
-                    <li><a href="/signup">Create Account</a></li>
-                    <li><a href="/signin">Login</a></li>
-                    <li><a href="/crm">Dashboard</a></li>
-                    <li><a href="/setup-guide">Setup Guide</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Connect</h3>
-                  <ul>
-                    <li><a href="/integrations">Connect Your Apps</a></li>
-                    <li><a href="/help/import-crm">Import Your CRM</a></li>
-                    <li><a href="/help/import-csv">Import CSV / Excel</a></li>
-                    <li><a href="/help/zapier">Zapier & Automations</a></li>
-                    <li><a href="/help/api">API & Webhooks</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Support</h3>
-                  <ul>
-                    <li><a href="/support">24-7 Support</a></li>
-                    <li><a href="/help">Help Center</a></li>
-                    <li><a href="/contact">Contact Us</a></li>
-                    <li><a href="/about">About Us</a></li>
-                  </ul>
-                </div>
-
-                <div className="footer-col">
-                  <h3>Legal</h3>
-                  <ul>
-                    <li><a href="/terms">Terms & Conditions</a></li>
-                    <li><a href="/privacy-policy">Privacy Policy</a></li>
-                    <li><a href="/refund-policy">Refund Policy</a></li>
-                    <li><a href="/cancellation">Cancellation Policy</a></li>
-                  </ul>
-                </div>
-
-              </div>
-
+              </div>*/}
             </div>
-          </footer>
+            <div className="footer-grid">
+              <div className="footer-brand">
+                <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
+                <p>
+                  The AI-powered CRM that helps you capture leads, automate
+                  follow-ups, and close more deals — faster.
+                </p>
+                <a href="/trial" className="btn-primary">
+                  Start Your Free Trial →
+                </a>
+
+                <div className="footer-tags">
+                  <span>✨ AI-Powered</span>
+                  <span>🛡 Secure</span>
+                  <span>⚡ Automation</span>
+                  <span>📊 Insights</span>
+                </div>
+              </div>
+
+              <div className="footer-col">
+                <h3>Product</h3>
+                <ul>
+                  <li><HashLink smooth to="/#features">Features</HashLink></li>
+                  <li><HashLink smooth to="/#ai-assistant">AI Assistant</HashLink></li>
+                  <li><HashLink smooth to="/#automation">Automations</HashLink></li>
+                  <li><a href="/integrations">Integrations</a></li>
+                  <li><HashLink smooth to="/#analytics">Analytics</HashLink></li>
+                  <li><a href="/pricing">Pricing</a></li>
+                </ul>
+              </div>
+
+              <div className="footer-col">
+                <h3>Get Started</h3>
+                <ul>
+                  <li>
+                    <a href="/signup">Create Account</a>
+                  </li>
+                  <li>
+                    <a href="/signin">Login</a>
+                  </li>
+                  <li>
+                    <a href="/crm">Dashboard</a>
+                  </li>
+                  <li>
+                    <a href="/setup-guide">Setup Guide</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="footer-col">
+                <h3>Connect</h3>
+                <ul>
+                  <li>
+                    <a href="/integrations">Connect Your Apps</a>
+                  </li>
+                  <li>
+                    <a href="/help/import-crm">Import Your CRM</a>
+                  </li>
+                  <li>
+                    <a href="/help/import-csv">Import CSV / Excel</a>
+                  </li>
+                  <li>
+                    <a href="/help/zapier">Zapier & Automations</a>
+                  </li>
+                  <li>
+                    <a href="/help/api">API & Webhooks</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="footer-col">
+                <h3>Support</h3>
+                <ul>
+                  <li>
+                    <a href="/support">24-7 Support</a>
+                  </li>
+                  <li>
+                    <a href="/help">Help Center</a>
+                  </li>
+                  <li>
+                    <a href="/contact">Contact Us</a>
+                  </li>
+                  <li>
+                    <a href="/about">About Us</a>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="footer-col">
+                <h3>Legal</h3>
+                <ul>
+                  <li>
+                    <a href="/terms">Terms & Conditions</a>
+                  </li>
+                  <li>
+                    <a href="/privacy-policy">Privacy Policy</a>
+                  </li>
+                  <li>
+                    <a href="/refund-policy">Refund Policy</a>
+                  </li>
+                  <li>
+                    <a href="/cancellation">Cancellation Policy</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </footer>
       </section>
     </div>
   );

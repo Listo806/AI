@@ -1365,8 +1365,9 @@
 }
 
 .hero-container {
-  display: flex;
-  gap: 40px;
+  display: grid;
+    gap: 40px;
+    grid-template-columns: 1fr 1.4fr;
 }
 
 #cortexa-ai-crm-landing .hero-title {
@@ -1377,7 +1378,12 @@
   color: #111827;
   margin-bottom:15px;
 }
-
+#cortexa-ai-crm-landing .hero-title span{
+  background: linear-gradient(90deg, #0b63ff, #743cff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
 .hero-sub {
   margin-top: 16px;
   font-size: 18px;
@@ -1394,13 +1400,17 @@
   margin-bottom: 10px;
   color: #1f2937;
 }
-
-.check {
-  color: #16a34a;
+.check-item .check{
+    min-width: 22px;
+}
+.check svg{
+  fill: #5044ff;
+    color: #fff;
 }
 
 .hero-btn {
-  background: #2563eb;
+  background: linear-gradient(100deg, #0b63ff, #7b42ff);
+  box-shadow: 0 18px 34px rgba(70, 62, 255, 0.27);
   color: #fff;
   padding: 14px 24px;
   border-radius: 12px;
@@ -1410,6 +1420,9 @@
   transition: 0.3s;
   text-decoration: none;
   font-weight: 500;
+  display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .hero-btn:hover {
@@ -1431,10 +1444,14 @@
     padding-top: 10px;
 }
 #cortexa-ai-crm-landing .hero-head{
-    font-weight: 500;
-    margin-bottom: 10px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #000;
+    font-size: 19px;
+    text-transform: uppercase;
+}
+#cortexa-ai-crm-landing .hero-head1{
     color: #2563eb;
-    font-size: 25px;
 }
 .roi-grid {
   display: flex;
@@ -1649,7 +1666,8 @@
     width: 50%;
 }
 .hero-left-in{
-    padding-left: 16%;
+    padding: 26% 0;
+    padding-left: 11%;
 }
 .hero-right{
     width: 50%;
@@ -1846,7 +1864,6 @@
 
 
 .footer-location {
-  background: #fafafa;
   padding: 60px 20px;
 }
 
@@ -1935,13 +1952,14 @@
   text-decoration: underline;
 }
 .next-btn{
-    color:#1d4ed8;
+    font-weight:500;
 }
-
-
-
-
-
+#cortexa-ai-crm-landing .hero{
+    background: url('../../assets/cortexa/hero_bg.jpg');
+    background-position: right;
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
 
 
 

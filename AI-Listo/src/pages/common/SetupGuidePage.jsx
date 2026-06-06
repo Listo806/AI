@@ -15,6 +15,7 @@ import {
   ChevronRight,
   TrendingUp,
 } from "lucide-react";
+import { HashLink } from "react-router-hash-link";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import styles from "./SetupGuide.module.css";
 
@@ -84,11 +85,11 @@ export default function SetupGuide() {
         </a>
 
         <nav className={styles.nav}>
-          <a href="/#features" className={styles.navLink}>Features</a>
-          <a href="/#ai-assistant" className={styles.navLink}>AI Assistant</a>
-          <a href="/#automations" className={styles.navLink}>Automations</a>
+          <HashLink className={styles.navLink} smooth to="/#features">Features</HashLink>
+          <HashLink className={styles.navLink} smooth to="/#ai-assistant">AI Assistant</HashLink>
+          <HashLink className={styles.navLink} smooth to="/#automations">Automations</HashLink>
           <a href="/integrations" className={styles.navLink}>Integrations</a>
-          <a href="/#analytics" className={styles.navLink}>Analytics</a>
+          <HashLink className={styles.navLink} smooth to="/#analytics">Analytics</HashLink>
           <a href="/pricing" className={styles.navLink}>Pricing</a>
         </nav>
 
