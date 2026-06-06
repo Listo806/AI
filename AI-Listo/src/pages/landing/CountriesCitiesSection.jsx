@@ -1,8 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 
 export default function CountriesCitiesSection() {
- 
+  
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobile = windowWidth < 640;   
+  const isTablet = windowWidth < 1024;   
+  const isNotebook = windowWidth < 1280;  
+
+  let gridColumns = "repeat(7, 1fr)";
+  if (isMobile) gridColumns = "repeat(1, 1fr)";
+  else if (isTablet) gridColumns = "repeat(3, 1fr)";
+  else if (isNotebook) gridColumns = "repeat(4, 1fr)";
+
   const countries = [
     {
       country: "Brazil",
@@ -87,37 +106,39 @@ export default function CountriesCitiesSection() {
     <div style={styles.inner}>
       <h2 style={styles.title}>BROWSE CITIES</h2>
 
-      <div style={styles.grid}>
-        {countries.map((item, index) => (
-          <div
-            key={item.country}
-            style={{
-              ...styles.countryColumn,
-              borderRight:
-                index === countries.length - 1
-                  ? "none"
-                  : "1px solid #DDE3EF",
-            }}
-          >
-            <div style={styles.countryHeader}>
-              <img
-                src={`https://flagcdn.com/w40/${item.flagCode}.png`}
-                alt={`${item.country} flag`}
-                style={styles.flagImg}
-              />
-              <h3 style={styles.countryName}>{item.country}</h3>
-            </div>
+      <div style={{ ...styles.grid, gridTemplateColumns: gridColumns }}>
+        {countries.map((item, index) => {
+          const hideBorder = isTablet || index === countries.length - 1;
 
-            <div style={styles.cityList}>
-              {item.cities.map((city) => (
-                <a key={city.name} href={city.href} style={styles.cityLink}>
-                  <span>{city.name}</span>
-                  <ChevronRight size={18} strokeWidth={2} />
-                </a>
-              ))}
+          return (
+            <div
+              key={item.country}
+              style={{
+                ...styles.countryColumn,
+                borderRight: hideBorder ? "none" : "1px solid #DDE3EF",
+                borderBottom: isTablet ? "1px solid #DDE3EF" : "none", 
+              }}
+            >
+              <div style={styles.countryHeader}>
+                <img
+                  src={`https://flagcdn.com/w40/${item.flagCode}.png`}
+                  alt={`${item.country} flag`}
+                  style={styles.flagImg}
+                />
+                <h3 style={styles.countryName}>{item.country}</h3>
+              </div>
+
+              <div style={styles.cityList}>
+                {item.cities.map((city) => (
+                  <a key={city.name} href={city.href} style={styles.cityLink}>
+                    <span>{city.name}</span>
+                    <ChevronRight size={18} strokeWidth={2} />
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -125,7 +146,9 @@ export default function CountriesCitiesSection() {
 
 const styles = {
   inner: {
-    padding: "40px 0",
+    padding: "40px 20px",
+    maxWidth: "100%",
+    overflowX: "hidden",
   },
 
   title: {
@@ -139,19 +162,19 @@ const styles = {
 
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
+    gap: "30px 0px",
     alignItems: "start",
   },
 
   countryColumn: {
-    padding: "10px 25px 0 25px",
+    padding: "10px 20px 25px 20px",
   },
 
   countryHeader: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    marginBottom: "34px",
+    marginBottom: "24px",
   },
 
   flagImg: {
@@ -159,7 +182,7 @@ const styles = {
     height: "24px",
     objectFit: "cover",
     borderRadius: "50%",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.15)", 
+    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
   },
 
   countryName: {
@@ -174,7 +197,7 @@ const styles = {
   cityList: {
     display: "flex",
     flexDirection: "column",
-    gap: "24px", 
+    gap: "20px",
   },
 
   cityLink: {
@@ -188,6 +211,4 @@ const styles = {
     fontWeight: 500,
     letterSpacing: "-0.5px",
   },
-
-  "@media": {},
 };
