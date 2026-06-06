@@ -16,6 +16,8 @@ import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
 
 import CountriesCitiesSection from "./CountriesCitiesSection";
+import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
+import headlogotranImg from "../../assets/cortexa/headlogotran.png";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
@@ -182,9 +184,10 @@ export default function Landing() {
         },
       ],
 
-      finalTitle: "Replace the work of multiple agents — with one AI system",
+      finalTitle:
+        "Automate your workflow with AI agents — powered by CORTEXA OS",
       finalDesc:
-        "Capture, follow up, and move every lead forward automatically — without adding payroll.",
+        "Capture leads, follow up instantly, and move every opportunity forward automatically inside one intelligent operating system.",
       footer: {
         desc: "The AI-powered CRM that helps teams close more deals, faster.",
         btn: "Start Your Free Trial →",
@@ -289,10 +292,12 @@ export default function Landing() {
       heroTitleLine2: "Close More Deals.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
-      herotextabove: "CORTEXA is the all-in-one AI CRM that finds leads, engages instantly, nurtures automatically, and helps you close more deals—on autopilot.",
+      herotextabove:
+        "CORTEXA is the all-in-one AI CRM that finds leads, engages instantly, nurtures automatically, and helps you close more deals—on autopilot.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
-      heroCheck7: "Connect WhatsApp and let AI take over conversations instantly",
+      heroCheck7:
+        "Connect WhatsApp and let AI take over conversations instantly",
       heroCheck8: "Calls, texts, follow-ups, and appointment booking run 24/7",
       heroCheck9:
         "Pipeline Intelligence, revenue forecasting, and every deal in one connected dashboard.",
@@ -483,9 +488,9 @@ export default function Landing() {
       ],
 
       finalTitle:
-        "Reemplaza el trabajo de múltiples agentes — con un solo sistema de IA",
+        "Automatiza tus procesos con agentes de IA impulsados por CORTEXA OS",
       finalDesc:
-        "Captura, da seguimiento y avanza cada lead automáticamente — sin aumentar la nómina.",
+        "Captura leads, realiza seguimientos al instante y haz avanzar cada oportunidad automáticamente dentro de un sistema operativo inteligente.",
       footer: {
         desc: "El CRM con IA que ayuda a los equipos a cerrar más ventas más rápido.",
         btn: "Empieza tu prueba gratuita →",
@@ -600,12 +605,15 @@ export default function Landing() {
       heroTitleLine2: "Cierra más ventas.",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
-      herotextabove: "CORTEXA es el CRM de IA todo en uno que encuentra clientes potenciales, interactúa al instante, realiza seguimientos automáticos y te ayuda a cerrar más ventas, todo en piloto automático.",
+      herotextabove:
+        "CORTEXA es el CRM de IA todo en uno que encuentra clientes potenciales, interactúa al instante, realiza seguimientos automáticos y te ayuda a cerrar más ventas, todo en piloto automático.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
       heroCheck6:
         "Tu agente de IA encuentra, captura y califica leads automáticamente.",
-      heroCheck7: "Conecta WhatsApp y deja que la IA se encargue de las conversaciones al instante.",
-      heroCheck8: "Llamadas, mensajes, seguimientos y agendamiento de citas, disponibles 24/7.",
+      heroCheck7:
+        "Conecta WhatsApp y deja que la IA se encargue de las conversaciones al instante.",
+      heroCheck8:
+        "Llamadas, mensajes, seguimientos y agendamiento de citas, disponibles 24/7.",
       heroCheck9:
         "Inteligencia de pipeline, previsión de ingresos y cada oportunidad en un único panel conectado.",
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
@@ -792,9 +800,9 @@ export default function Landing() {
       ],
 
       finalTitle:
-        "Substitua o trabalho de vários agentes — com um único sistema de IA",
+        "Automatize seus processos com agentes de IA impulsionados pelo CORTEXA OS",
       finalDesc:
-        "Capture, faça o acompanhamento e avance cada lead automaticamente — sem aumentar a folha de pagamento.",
+        "Capture leads, faça acompanhamentos instantaneamente e avance cada oportunidade automaticamente dentro de um sistema operacional inteligente.",
       footer: {
         desc: "O CRM com IA que ajuda equipes a fechar mais negócios rapidamente.",
         btn: "Comece seu teste gratuito →",
@@ -904,12 +912,15 @@ export default function Landing() {
       heroTitleLine2: "Feche mais negócios.",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
-      herotextabove: "CORTEXA é o CRM de IA tudo em um que encontra leads, interage instantaneamente, faz acompanhamentos automáticos e ajuda você a fechar mais negócios — tudo no piloto automático.",
+      herotextabove:
+        "CORTEXA é o CRM de IA tudo em um que encontra leads, interage instantaneamente, faz acompanhamentos automáticos e ajuda você a fechar mais negócios — tudo no piloto automático.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
       heroCheck6:
         "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
-      heroCheck7: "Conecte o WhatsApp e deixe a IA assumir as conversas instantaneamente.",
-      heroCheck8: "Chamadas, mensagens, acompanhamentos e agendamentos, disponíveis 24/7.",
+      heroCheck7:
+        "Conecte o WhatsApp e deixe a IA assumir as conversas instantaneamente.",
+      heroCheck8:
+        "Chamadas, mensagens, acompanhamentos e agendamentos, disponíveis 24/7.",
       heroCheck9:
         "Inteligência de pipeline, previsão de receita e todos os negócios em um único painel integrado.",
       heroCheck10: "Gerencia conversas, qualifica e nutre cada lead",
@@ -1150,7 +1161,7 @@ export default function Landing() {
           </div>
         </div>
       </header>
-      
+
       <section className="hero mt-50">
         <div className="hero-container">
           <div className="hero-left">
@@ -1167,7 +1178,8 @@ export default function Landing() {
               </div>
               <div className="hero-inline">
                 <a href="/trial" className="hero-btn">
-                  <Zap size={21} />{tr.heroCTA}
+                  <Zap size={21} />
+                  {tr.heroCTA}
                 </a>
                 <p className="next-btn">{tr.heroUnlock}</p>
               </div>
@@ -1180,7 +1192,9 @@ export default function Landing() {
                   tr.heroCheck9,
                 ].map((item, index) => (
                   <div className="check-item" key={index}>
-                    <span className="check"><CheckCircle size={18} /></span>
+                    <span className="check">
+                      <CheckCircle size={18} />
+                    </span>
                     <span>{item}</span>
                   </div>
                 ))}
@@ -1189,9 +1203,7 @@ export default function Landing() {
           </div>
 
           <div className="hero-right">
-            <div className="hero-image">
-              {/*<img src={heroImg} />*/}
-            </div>
+            <div className="hero-image">{/*<img src={heroImg} />*/}</div>
           </div>
         </div>
         {/*<div className="hero-tags">
@@ -1644,6 +1656,7 @@ export default function Landing() {
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
         <div className="cx-final-box">
+          <img src={headlogotranImg} className="cx-logo-img" />
           <h2 className="cx-title-lg" style={{ color: "#fff" }}>
             {tr.finalTitle}
           </h2>
@@ -1651,11 +1664,16 @@ export default function Landing() {
           <p className="cx-sub">{tr.finalDesc}</p>
 
           <a href="/trial" className="cx-btn cx-btn-secondary">
-            {tr.trial}
+            <Zap size={22} />
+            Start free trial
           </a>
-          <p className="final-reinforcement">{tr.reinforcement}</p>
-          <div className="cx-final-shot">
-            <img src={finalImg} alt="" />
+          <p className="final-reinforcement">
+            {" "}
+            <CheckCircle size={17} />
+            {tr.reinforcement}
+          </p>
+          <div className="cx-final-shot"> 
+            <img src={trialmobileImg} className="desktop-none" />
           </div>
         </div>
       </section>
@@ -1790,12 +1808,32 @@ export default function Landing() {
               <div className="footer-col">
                 <h3>Product</h3>
                 <ul>
-                  <li><HashLink smooth to="/#features">Features</HashLink></li>
-                  <li><HashLink smooth to="/#ai-assistant">AI Assistant</HashLink></li>
-                  <li><HashLink smooth to="/#automation">Automations</HashLink></li>
-                  <li><a href="/integrations">Integrations</a></li>
-                  <li><HashLink smooth to="/#analytics">Analytics</HashLink></li>
-                  <li><a href="/pricing">Pricing</a></li>
+                  <li>
+                    <HashLink smooth to="/#features">
+                      Features
+                    </HashLink>
+                  </li>
+                  <li>
+                    <HashLink smooth to="/#ai-assistant">
+                      AI Assistant
+                    </HashLink>
+                  </li>
+                  <li>
+                    <HashLink smooth to="/#automation">
+                      Automations
+                    </HashLink>
+                  </li>
+                  <li>
+                    <a href="/integrations">Integrations</a>
+                  </li>
+                  <li>
+                    <HashLink smooth to="/#analytics">
+                      Analytics
+                    </HashLink>
+                  </li>
+                  <li>
+                    <a href="/pricing">Pricing</a>
+                  </li>
                 </ul>
               </div>
 
