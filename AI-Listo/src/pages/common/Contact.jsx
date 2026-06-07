@@ -1,191 +1,236 @@
-import React, { useState } from "react";
-import { Mail, MessageCircle, ArrowRight, Bot, UserRound, CheckCircle } from "lucide-react";
-import "./Common.css";
+import { useState } from "react"; // 1. Thêm useState ở đầu file
+import {
+  User,
+  Briefcase,
+  Clock,
+  CheckCircle,
+  Mail,
+  MessageCircle,
+  ChevronDown,
+  Paperclip,
+  Send,
+  Headphones,
+  Globe,
+  ChevronRight,
+} from "lucide-react";
+import headlogoImg from "../../assets/cortexa/headlogo.png";
+import styles from "./Contact.module.css";
 
 export default function Contact() {
-  const [messages, setMessages] = useState([
-    {
-      role: "ai",
-      text: "Hi, I’m Cortexa AI Support. Tell me what you need help with, and I’ll guide you or send your request to our support team.",
-    },
-  ]);
+  const helpItems = [
+    "Account support",
+    "Billing questions",
+    "Technical issues",
+    "Sales & partnerships",
+    "General inquiries",
+  ];
 
-  const [input, setInput] = useState("");
-  const [email, setEmail] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState("");
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = { role: "user", text: input };
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
-    setInput("");
-    setIsSending(true);
-
-    try {
-      const res = await fetch("/api/support/ai-chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          message: userMessage.text,
-          email,
-          transcript: updatedMessages,
-        }),
-      });
-
-      const data = await res.json();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          text:
-            data.reply ||
-            "Thanks — I’ve logged your request. Our team can follow up if needed.",
-        },
-      ]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "ai",
-          text:
-            "I saved your message locally, but there was an issue reaching support.",
-        },
-      ]);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const submitTranscript = async () => {
-    if (!email.trim()) {
-      alert("Please enter your email.");
-      return;
-    }
-
-    setIsSending(true);
-
-    try {
-      await fetch("/api/support/transcript", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          email,
-          transcript: messages,
-          source: "contact-us-page",
-        }),
-      });
-
-      setSubmitted(true);
-    } catch {
-      alert("Error sending request.");
-    } finally {
-      setIsSending(false);
-    }
-  };
+  const reasons = [
+    "Account Support",
+    "Billing Question",
+    "Sales & Partnerships",
+    "Technical Issue",
+    "General Inquiry",
+  ];
 
   return (
-    <main className="contact-page">
+    <main className={styles.page}>
+      <PublicHeader />
 
-      <section className="contact-hero">
-        <div className="sub_container center">
-          <p className="contact-label">Contact Support</p>
-          <h1>Need help? Talk to our AI first.</h1>
-          <p className="contact-sub">
-            Ask a question or describe your issue. AI will guide you instantly.
-          </p>
+      <section className={styles.hero}>
+        <div className={styles.badge}>
+          <Mail size={18} />
+          CONTACT CORTEXA
         </div>
+        <h1 className={styles.title}>
+          Get in touch with the <span>CORTEXA</span> team.
+        </h1>
+        <p className={styles.subtitle}>
+          Send us your question and we’ll route it to the right team as quickly
+          as possible.
+        </p>
       </section>
 
-      <section className="contact-main">
-        <div className="sub_container grid">
+      <section className={styles.contactGrid}>
+        <form className={styles.formBox}>
+          <Field
+            label="Full Name"
+            icon={<User size={19} />}
+            placeholder="Enter your full name"
+          />
+          <Field
+            label="Email"
+            icon={<Mail size={19} />}
+            placeholder="Enter your email address"
+          />
+          <Field
+            label="Company (Optional)"
+            icon={<Briefcase size={19} />}
+            placeholder="Enter your company name"
+          />
 
-          <div className="chat-box">
+          <div className={styles.fieldGroup}>
+            <label>Reason for Contact</label>
 
-            <div className="chat-header">
-              <div className="chat-header-left">
-                <Bot />
-                <div>
-                  <h2>Cortexa AI Support</h2>
-                  <p>Instant help</p>
-                </div>
-              </div>
-              <span className="status">Online</span>
-            </div>
-
-            <div className="chat-email">
-              <label>Email</label>
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
+            <div
+              className={`${styles.selectRow} ${isOpen ? styles.selectRowActive : ""}`}
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              <MessageCircle className={styles.blue} size={19} />
+              <span className={selectedReason ? styles.selectedText : ""}>
+                {selectedReason || "Select a reason"}
+              </span>
+              <ChevronDown
+                size={18}
+                className={`${styles.arrowIcon} ${isOpen ? styles.arrowRotate : ""}`}
               />
             </div>
 
-            <div className="chat-messages">
-              {messages.map((msg, i) => (
-                <div key={i} className={`msg ${msg.role}`}>
-                  {msg.role === "ai" && <Bot />}
-                  <div className="bubble">{msg.text}</div>
-                  {msg.role === "user" && <UserRound />}
-                </div>
-              ))}
-              {isSending && <p className="thinking">Thinking...</p>}
-            </div>
-
-            <div className="chat-input">
-              <div className="row">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Type message..."
-                />
-                <button onClick={sendMessage}>Send</button>
+            {isOpen && (
+              <div className={styles.reasonMenu}>
+                {reasons.map((reason) => (
+                  <div
+                    key={reason}
+                    className={styles.menuItem}
+                    onClick={() => {
+                      setSelectedReason(reason);
+                      setIsOpen(false);
+                    }}
+                  >
+                    {reason}
+                  </div>
+                ))}
               </div>
-
-              <button
-                className="submit-btn"
-                onClick={submitTranscript}
-                disabled={submitted}
-              >
-                {submitted ? "Sent" : "Send Transcript"}
-              </button>
-            </div>
-
+            )}
           </div>
 
-          <aside className="contact-side">
-
-            <div className="card">
-              <MessageCircle />
-              <h3>What can AI help with?</h3>
-              <ul>
-                <li>Apps & integrations</li>
-                <li>Leads & follow-ups</li>
-                <li>Listings</li>
-                <li>Billing</li>
-              </ul>
+          <div className={styles.fieldGroup}>
+            <label>Message</label>
+            <div className={styles.messageBox}>
+              <Paperclip size={19} />
+              <span>Tell us how we can help you...</span>
             </div>
+          </div>
 
-            <div className="card dark">
-              <Mail />
-              <h3>Email support</h3>
-              <a href="mailto:support@cortexacrm.com">
-                support@cortexacrm.com
-              </a>
+          <button type="button" className={styles.sendButton}>
+            <Send size={20} />
+            Send Message
+          </button>
+        </form>
+
+        <aside className={styles.sideColumn}>
+          <InfoCard
+            icon={<Mail size={34} />}
+            title="Support Email"
+            text="support@cortexacrm.com"
+            color="#2563EB"
+            bg="#EEF5FF"
+          />
+          <InfoCard
+            icon={<Clock size={34} />}
+            title="Response Time"
+            text="Usually within 24 hours"
+            color="#6D5BFF"
+            bg="#F1EDFF"
+          />
+          <div className={styles.helpCard}>
+            <div className={styles.helpCardHead}>
+              <div className={styles.helpIcon}>
+                <Headphones size={34} />
+              </div>
+              <h3>What can we help with?</h3>
             </div>
-
-          </aside>
-
-        </div>
+            {helpItems.map((item) => (
+              <div key={item} className={styles.helpItem}>
+                <CheckCircle size={18} />
+                {item}
+              </div>
+            ))}
+          </div>
+        </aside>
       </section>
 
+      <section className={styles.bottomBar}>
+        <div className={styles.bottomAction}>
+          <div className={styles.bottomIcon}>
+            <Mail size={30} />
+          </div>
+          <div>
+            <h3>Support Email</h3>
+            <p className={styles.blue}>support@cortexacrm.com</p>
+          </div>
+          <ChevronRight size={24} />
+        </div>
+        <div className={styles.bottomAction}>
+          <div
+            className={styles.bottomIcon}
+            style={{ background: "#f1edff", color: "#6d5bff" }}
+          >
+            <Clock size={30} />
+          </div>
+          <div>
+            <h3>Response Time</h3>
+            <p>Usually within 24 hours</p>
+          </div>
+          <ChevronRight size={24} />
+        </div>
+        <div className={styles.bottomAction}>
+          <div
+            className={styles.bottomIcon}
+            style={{ background: "#EAFBF2", color: "#059669" }}
+          >
+            <Headphones size={30} />
+          </div>
+          <h3>Need instant help?</h3>
+          <a href="/support" className={styles.support}>
+            <p>Open 24-7 AI Support</p>
+            <ChevronRight size={24} />
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
 
+function Field({ label, icon, placeholder }) {
+  return (
+    <div className={styles.fieldGroup}>
+      <label>{label}</label>
+      <div className={styles.inputRow}>
+        {icon}
+        <span>{placeholder}</span>
+      </div>
+    </div>
+  );
+}
+function InfoCard({ icon, title, text, color, bg }) {
+  return (
+    <div className={styles.infoCard}>
+      <div className={styles.infoIcon} style={{ background: bg, color: color }}>
+        {icon}
+      </div>
+      <div>
+        <h3>{title}</h3>
+        <p style={{ color: color }}>{text}</p>
+      </div>
+    </div>
+  );
+}
+function PublicHeader() {
+  return (
+    <header className={styles.header}>
+      <a href="/" className={styles.logoWrap}>
+        <img src={headlogoImg} className="cx-logo-img" alt="logo" />
+      </a>
+      <div className={styles.headerRight}>
+        <Globe size={22} />
+        <span>EN</span>
+        <ChevronDown size={16} />
+        <div className={styles.avatar}>A</div>
+      </div>
+    </header>
+  );
+}
