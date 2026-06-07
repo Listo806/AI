@@ -117,7 +117,10 @@
     letter-spacing: -1.8px !important;
     font-weight: 700 !important;
 }
-
+.supportTitle span{
+    -webkit-text-fill-color: transparent;
+    background: linear-gradient(90deg, rgb(11, 99, 255), rgb(116, 60, 255)) text;
+}
 .supportSubtitle {
     margin: 12px auto 24px !important;
     color: #51607A !important;
