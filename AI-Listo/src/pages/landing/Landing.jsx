@@ -11,11 +11,15 @@ import {
   ArrowRight,
   CheckCircle,
   Zap,
+  MessageCircleCheck,
+  ShieldX,
+  ChartColumn,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
 
 import CountriesCitiesSection from "./CountriesCitiesSection";
+import herorightImg from "../../assets/cortexa/hero_right.png";
 import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
 import headlogotranImg from "../../assets/cortexa/headlogotran.png";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
@@ -306,12 +310,12 @@ export default function Landing() {
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
       heroUnlock: "Unlock potential today!",
-      heroTag1: "Get Leads",
-      heroTag2: "Automate Follow-Up",
-      heroTag3: "Close Deals",
-      heroTag4: "Track Everything",
-      heroTag5: "AI Engine",
-      heroTag6: "Connect Your Apps",
+      heroTag1: "One AI Platform. Everything Connected.",
+      heroTag2: "AI Auto Follow-Ups 24/7",
+      heroTag3: "Smart Nurturing That Converts",
+      heroTag4: "Pipeline Intelligence That Closes",
+      heroTag5: "WhatsApp Integration Built-in",
+      heroTag6: "Secure. Reliable. Built for Real Estate.",
       heroHead: "Real Estate Agents & Teams",
 
       dominantTitleLine1: "A Real Estate Platform",
@@ -621,12 +625,12 @@ export default function Landing() {
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza tu prueba gratuita",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
-      heroTag1: "Generar Leads",
-      heroTag2: "Automatizar Seguimiento",
-      heroTag3: "Cerrar Ventas",
-      heroTag4: "Seguimiento Total",
-      heroTag5: "Motor de IA",
-      heroTag6: "Conecta tus Apps",
+      heroTag1: "Una plataforma de IA. Todo conectado.",
+      heroTag2: "Seguimientos automáticos con IA 24/7",
+      heroTag3: "Nutrición inteligente que convierte",
+      heroTag4: "Inteligencia de pipeline que cierra ventas",
+      heroTag5: "Integración de WhatsApp incorporada",
+      heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
       heroHead: "Agentes y equipos inmobiliarios",
 
       dominantTitleLine1: "Una plataforma inmobiliaria",
@@ -929,12 +933,12 @@ export default function Landing() {
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
       heroUnlock: "Desbloqueie seu potencial hoje!",
-      heroTag1: "Gerar Leads",
-      heroTag2: "Automatizar Follow-up",
-      heroTag3: "Fechar Negócios",
-      heroTag4: "Acompanhar Tudo",
-      heroTag5: "Motor de IA",
-      heroTag6: "Conecte seus Apps",
+      heroTag1: "Uma plataforma de IA. Tudo conectado.",
+      heroTag2: "Acompanhamentos automáticos com IA 24/7",
+      heroTag3: "Nutrição inteligente que converte",
+      heroTag4: "Inteligência de pipeline que fecha negócios",
+      heroTag5: "Integração nativa com WhatsApp",
+      heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",
       heroHead: "Agentes e equipes imobiliárias",
 
       dominantTitleLine1: "Uma plataforma imobiliária",
@@ -1056,6 +1060,13 @@ export default function Landing() {
       title: tr.smartFlow3Title,
       text: tr.smartFlow3Desc,
     },
+  ];
+  const avatars = [
+    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=100&auto=format&fit=crop&q=80",
   ];
   return (
     <div id="cortexa-ai-crm-landing">
@@ -1199,27 +1210,72 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
+              <div className="social-badge-container">
+                <div className="avatar-group">
+                  {avatars.map((url, index) => (
+                    <img
+                      key={index}
+                      src={url}
+                      alt={`User avatar ${index + 1}`}
+                      className="badge-avatar"
+                    />
+                  ))}
+                </div>
+
+                <div className="badge-content">
+                  <div className="stars-row">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="star-icon"
+                        viewBox="0 0 24 24"
+                        fill="#FFB800"
+                      >
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="badge-text">
+                    Trusted by 10,000+ real estate professionals to grow and
+                    scale their bussiness.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="hero-right">
-            <div className="hero-image">{/*<img src={heroImg} />*/}</div>
+            <div className="hero-image">
+              <img src={herorightImg} />
+            </div>
           </div>
         </div>
-        {/*<div className="hero-tags">
-          <UserPlus className="icon blue" />
-          <span>{tr.heroTag1}</span>
-          <RefreshCcw className="icon purple" />
-          <span>{tr.heroTag2}</span>
-          <DollarSign className="icon green" />
-          <span>{tr.heroTag3}</span>
-          <BarChart3 className="icon blue2" />
-          <span>{tr.heroTag4}</span>
-          <Brain className="icon indigo" />
-          <span>{tr.heroTag5}</span>
-          <Plug className="icon pink" />
-          <span>{tr.heroTag6}</span>
-        </div>*/}
+        <div className="hero-tags">
+          <div className="tags-item">
+            <UserPlus className="icon blue" />
+            <span>{tr.heroTag1}</span>
+          </div>
+          <div className="tags-item">
+            <RefreshCcw className="icon purple" />
+            <span>{tr.heroTag2}</span>
+          </div>
+          <div className="tags-item">
+            <DollarSign className="icon green" />
+            <span>{tr.heroTag3}</span>
+          </div>
+          <div className="tags-item">
+            <ChartColumn className="icon green" />
+            <span>{tr.heroTag4}</span>
+          </div>
+          <div className="tags-item">
+            <MessageCircleCheck className="icon green" />
+            <span>{tr.heroTag5}</span>
+          </div>
+          <div className="tags-item">
+            <ShieldX className="icon green" />
+            <span>{tr.heroTag6}</span>
+          </div>
+        </div>
       </section>
 
       {/* COMPARE */}
@@ -1672,7 +1728,7 @@ export default function Landing() {
             <CheckCircle size={17} />
             {tr.reinforcement}
           </p>
-          <div className="cx-final-shot"> 
+          <div className="cx-final-shot">
             <img src={trialmobileImg} className="desktop-none" />
           </div>
         </div>
