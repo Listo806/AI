@@ -91,7 +91,7 @@ export default function Landing() {
       nav: [
         "Features",
         "AI Assistant",
-        "Automation",
+        "AI Automation",
         "Pipeline",
         "Analytics",
         "Testimonials",
@@ -397,7 +397,7 @@ export default function Landing() {
       nav: [
         "Características",
         "Asistente de IA",
-        "Automatización",
+        "AI Automatización",
         "Pipeline",
         "Análisis",
         "Testimonios",
@@ -719,7 +719,7 @@ export default function Landing() {
       nav: [
         "Recursos",
         "Assistente de IA",
-        "Automação",
+        "AI Automação",
         "Pipeline",
         "Análises",
         "Testemunhos",
@@ -1186,7 +1186,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="hero mt-30">
+      <section className="hero mt-30-">
         <div className="hero-container">
           <div className="hero-left">
             <div className="hero-left-in">
@@ -1251,7 +1251,7 @@ export default function Landing() {
                     ))}
                   </div>
                   <p className="badge-text">
-                    Trusted by 10,000+ real estate professionals accross the U.S.
+                    Trusted by 10,000+ real estate agents worldwide.
                   </p>
                 </div>
               </div>

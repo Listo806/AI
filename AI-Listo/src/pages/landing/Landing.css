@@ -614,7 +614,10 @@
      align-items: center;
      justify-content: space-between;
  }
-
+#cortexa-ai-crm-landing .cx-header-inner {
+    max-width: unset;
+    padding: 0px 32px;
+}
  .cx-nav button, .cx-nav a.nav-menu {
      background: none;
      border: none;
@@ -633,7 +636,7 @@
  }
 
  .cx-logo-img {
-     height: 84px;
+     height: 70px;
      width: auto;
      object-fit: contain;
  }
@@ -1374,7 +1377,7 @@
 }
 
 #cortexa-ai-crm-landing .hero-title {
-  font-size: clamp(34px, 4vw, 45px);
+  font-size: clamp(34px, 4vw, 37px);
     line-height: 1;
     letter-spacing: -0.04em;
     font-weight: 700;
@@ -1394,13 +1397,12 @@
 }
 
 .hero-checks {
-  margin-top: 10px;
+  margin-top: 5px;
 }
 
 #cortexa-ai-crm-landing .check-item {
   display: flex;
   gap: 10px;
-  margin-bottom: 4px;
   color: #1f2937;
   font-size: 13px;
 }
@@ -1416,7 +1418,7 @@
   background: linear-gradient(100deg, #0b63ff, #7b42ff);
   box-shadow: 0 0 7px rgba(70, 62, 255, 0.27);
   color: #fff;
-  padding: 12px 24px;
+  padding: 10px 24px;
   border-radius: 12px;
   font-size: 18px;
   border: none;
@@ -1436,7 +1438,6 @@
 
 }
 #cortexa-ai-crm-landing .hero-tags {
-  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   font-size: 13px;
@@ -1444,7 +1445,6 @@
   margin-left: auto;
   margin-right: auto;
   padding: 15px 5px;
-  box-shadow: 0 4px 20px rgba(8, 20, 43, 0.06);
 }
 #cortexa-ai-crm-landing .hero-tags .tags-item{
    display:flex; 
@@ -1461,7 +1461,7 @@
     top: 4px;
     bottom: 4px;
     width: 1px;
-    background: #e2e8f0;
+    background: #ced0d0;
 }
 .roi-grid{
     border-top: 1px solid #e1e1e1;
@@ -1694,19 +1694,20 @@
     width: 50%;
 }
 .hero-left-in{
-    padding-left: 11%;
+    padding-left: 7%;
+    padding-top: 10px;
 }
 #cortexa-ai-crm-landing .hero-right{
     align-items: flex-start;
 }
-
+#cortexa-ai-crm-landing .hero-right .hero-image img{
+    width: 83%;
+    float: right;
+}
 .mt-30{
     margin-top: 30px;
 }
-.hero-image img {
-  width: 95%;
-  float: right;
-}
+
 .hero-inline{
     display: flex;
     align-items: center;
@@ -2008,9 +2009,9 @@
   background-color: #ffffff;
   padding: 8px 18px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(8, 20, 43, 0.06); 
-  border: 1px solid #f0f3f8;
+  border: 1px solid #edeff0;
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  margin-top: 5px;
 }
 
 #cortexa-ai-crm-landing .avatar-group {
