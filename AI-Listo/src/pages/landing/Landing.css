@@ -633,7 +633,7 @@
  }
 
  .cx-logo-img {
-     height: 84px;
+     height: 70px;
      width: auto;
      object-fit: contain;
  }
@@ -1374,7 +1374,7 @@
 }
 
 #cortexa-ai-crm-landing .hero-title {
-  font-size: clamp(34px, 4vw, 45px);
+  font-size: clamp(34px, 4vw, 37px);
     line-height: 1;
     letter-spacing: -0.04em;
     font-weight: 700;
@@ -1394,13 +1394,14 @@
 }
 
 .hero-checks {
-  margin-top: 10px;
+  margin-top: 4px;
 }
-
+#cortexa-ai-crm-landing .hero-checks p{
+  line-height: 1;
+}
 #cortexa-ai-crm-landing .check-item {
   display: flex;
   gap: 10px;
-  margin-bottom: 4px;
   color: #1f2937;
   font-size: 13px;
 }
@@ -1436,7 +1437,7 @@
 
 }
 #cortexa-ai-crm-landing .hero-tags {
-  margin-top: 20px;
+  margin-top: 5px;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   font-size: 13px;
@@ -1444,7 +1445,7 @@
   margin-left: auto;
   margin-right: auto;
   padding: 15px 5px;
-  box-shadow: 0 4px 20px rgba(8, 20, 43, 0.06);
+  box-shadow: 0 0px 7px rgb(8 20 43 / 21%);
 }
 #cortexa-ai-crm-landing .hero-tags .tags-item{
    display:flex; 
@@ -1699,13 +1700,13 @@
 #cortexa-ai-crm-landing .hero-right{
     align-items: flex-start;
 }
-.mt-50{
-    margin-top: 50px;
+#cortexa-ai-crm-landing .hero-right .hero-image img{
+        width: 83%;
 }
-.hero-image img {
-  width: 95%;
-  float: right;
+.mt-30{
+    margin-top: 30px;
 }
+
 .hero-inline{
     display: flex;
     align-items: center;

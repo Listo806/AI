@@ -40,6 +40,10 @@ import sec4Img from "../../assets/cortexa/Cortexa sec 4.png";
 import sec4ImgES from "../../assets/cortexa/sec4ES.png";
 import sec4ImgPT from "../../assets/cortexa/sec4PT.png";
 
+import sec5Img from "../../assets/cortexa/Cortexa sec 5.png";
+import sec5ImgES from "../../assets/cortexa/sec5ES.png";
+import sec5ImgPT from "../../assets/cortexa/sec5PT.png";
+
 import feaImg1 from "../../assets/cortexa/featured1.png";
 import feaImg2 from "../../assets/cortexa/featured2.png";
 import feaImg3 from "../../assets/cortexa/featured3.png";
@@ -1040,6 +1044,9 @@ export default function Landing() {
 
   const currentSec4 =
     lang === "es" ? sec4ImgES : lang === "pt" ? sec4ImgPT : sec4Img;
+  
+  const currentSec5 =
+    lang === "es" ? sec5ImgES : lang === "pt" ? sec5ImgPT : sec5Img;
 
   const currentaiSetterImg =
     lang === "es" ? aiSetterImgES : lang === "pt" ? aiSetterImgPT : aiSetterImg;
@@ -1179,7 +1186,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="hero mt-50">
+      <section className="hero mt-30-">
         <div className="hero-container">
           <div className="hero-left">
             <div className="hero-left-in">
@@ -1655,11 +1662,13 @@ export default function Landing() {
       </section>
       {/* FEATURES */}
       <section id="automation" className="cx-section pt-50">
+        
         <div className="land-container">
           <div className="cx-center cx-grid-intro">
             <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
           </div>
-          <div className="cx-grid4">
+          <img src={currentSec5} alt="" />
+          {/*<div className="cx-grid4">
             {[feaImg1, feaImg2, feaImg3, feaImg4].map((img, i) => (
               <div className="cx-card" key={i}>
                 <div>
@@ -1672,7 +1681,7 @@ export default function Landing() {
                 </div>
               </div>
             ))}
-          </div>
+          </div>*/}
         </div>
       </section>
       <section id="ai-assistant" className="cx-hero pt-50">
