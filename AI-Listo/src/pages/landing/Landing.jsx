@@ -294,22 +294,24 @@ export default function Landing() {
 
       heroTitleLine1: "Get Instant Leads.",
       heroTitleLine2: "Close More Deals.",
+      heroTitleLine3: "Run Your Real Estate Bussiness",
+      heroTitleLine4: "with AI.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
       herotextabove:
-        "CORTEXA is the all-in-one AI CRM that finds leads, engages instantly, nurtures automatically, and helps you close more deals—on autopilot.",
+        "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
       heroCheck7:
-        "Connect WhatsApp and let AI take over conversations instantly",
-      heroCheck8: "Calls, texts, follow-ups, and appointment booking run 24/7",
+        "Multi-chanel outreach via calls, texts, Whatsapp & more",
+      heroCheck8: "Automated follow-ups and appointment booking run 24/7",
       heroCheck9:
-        "Pipeline Intelligence, revenue forecasting, and every deal in one connected dashboard.",
+        "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
-      heroUnlock: "Unlock potential today!",
+      heroUnlock: "— Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
       heroTag3: "Smart Nurturing That Converts",
@@ -607,24 +609,26 @@ export default function Landing() {
 
       heroTitleLine1: "Obtén clientes potenciales al instante.",
       heroTitleLine2: "Cierra más ventas.",
+      heroTitleLine3: "Gestiona tu negocio inmobiliario",
+      heroTitleLine4: "con IA.",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
       herotextabove:
-        "CORTEXA es el CRM de IA todo en uno que encuentra clientes potenciales, interactúa al instante, realiza seguimientos automáticos y te ayuda a cerrar más ventas, todo en piloto automático.",
+        "Plataforma de IA todo en uno que te ayuda a captar más clientes potenciales, dar seguimiento al instante, cerrar más ventas y aumentar los ingresos en piloto automático.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
       heroCheck6:
         "Tu agente de IA encuentra, captura y califica leads automáticamente.",
       heroCheck7:
-        "Conecta WhatsApp y deja que la IA se encargue de las conversaciones al instante.",
+        "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
       heroCheck8:
-        "Llamadas, mensajes, seguimientos y agendamiento de citas, disponibles 24/7.",
+        "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
       heroCheck9:
-        "Inteligencia de pipeline, previsión de ingresos y cada oportunidad en un único panel conectado.",
+        "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza tu prueba gratuita",
-      heroUnlock: "¡Desbloquea tu potencial hoy!",
+      heroUnlock: "— ¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
       heroTag3: "Nutrición inteligente que convierte",
@@ -914,25 +918,27 @@ export default function Landing() {
 
       heroTitleLine1: "Receba leads instantaneamente.",
       heroTitleLine2: "Feche mais negócios.",
+      heroTitleLine3: "Gerencie seu negócio imobiliário",
+      heroTitleLine4: "com IA.",
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
       herotextabove:
-        "CORTEXA é o CRM de IA tudo em um que encontra leads, interage instantaneamente, faz acompanhamentos automáticos e ajuda você a fechar mais negócios — tudo no piloto automático.",
+        "Plataforma de IA tudo-em-um que ajuda você a captar mais leads, fazer o acompanhamento instantaneamente, fechar mais negócios e aumentar a receita no piloto automático.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
       heroCheck6:
         "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
       heroCheck7:
-        "Conecte o WhatsApp e deixe a IA assumir as conversas instantaneamente.",
+        "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
       heroCheck8:
-        "Chamadas, mensagens, acompanhamentos e agendamentos, disponíveis 24/7.",
+        "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
       heroCheck9:
-        "Inteligência de pipeline, previsão de receita e todos os negócios em um único painel integrado.",
+        "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
       heroCheck10: "Gerencia conversas, qualifica e nutre cada lead",
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
-      heroUnlock: "Desbloqueie seu potencial hoje!",
+      heroUnlock: "— Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
       heroTag3: "Nutrição inteligente que converte",
@@ -1177,12 +1183,14 @@ export default function Landing() {
         <div className="hero-container">
           <div className="hero-left">
             <div className="hero-left-in">
-              <p className="hero-head1 hero-head">AI POWERED</p>
-              <p className="hero-head">{tr.heroHead}</p>
+              <div className="hero-dead-wrap">
+                <span className="hero-head1 hero-head">AI POWERED</span><br/>
+                <span className="hero-head">{tr.heroHead}</span>
+              </div>
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
                 <br />
-                <span>24/7.</span>
+                {tr.heroTitleLine3}<span> 24/7 </span>{tr.heroTitleLine4}
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>
@@ -1236,8 +1244,7 @@ export default function Landing() {
                     ))}
                   </div>
                   <p className="badge-text">
-                    Trusted by 10,000+ real estate professionals to grow and
-                    scale their bussiness.
+                    Trusted by 10,000+ real estate professionals accross the U.S.
                   </p>
                 </div>
               </div>
