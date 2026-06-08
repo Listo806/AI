@@ -1,4 +1,3 @@
-/* IntegrationsPage.module.css */
 
 .page {
     min-height: 100vh;
@@ -7,7 +6,6 @@
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Header & Nav */
 .header {
     height: 85px;
     padding: 0 48px;
@@ -168,7 +166,6 @@
     font-size: 15px;
 }
 
-/* Integration Visual / Canvas */
 .integrationVisual {
     height: 390px;
     position: relative;
@@ -194,7 +191,6 @@
     display: flex;
 }
 
-/* Center Dashboard Mockup */
 .centerMockup {
     position: absolute;
     top: 88px;
@@ -304,7 +300,6 @@
     padding: 6px 0;
 }
 
-/* Dotted Connecting Lines */
 .dottedLineOne {
     position: absolute;
     top: 75px;
@@ -332,7 +327,6 @@
     border-top: 2px dashed #A5B4FC;
 }
 
-/* Quick Steps Cards Grid */
 .quickSection {
     padding: 26px 48px 34px !important;
 }
@@ -400,7 +394,6 @@
     color: #4F46E5;
 }
 
-/* Detail Sections Border Box Wrapper */
 .detailWrap {
     max-width: 1180px;
     margin: 0 auto;
@@ -489,7 +482,6 @@
     padding-left: 14px;
 }
 
-/* Inner Visual Subcomponents Styling */
 .appsVisual {
     min-height: 210px;
     display: flex;
@@ -998,22 +990,19 @@
     align-items: center;
     gap: 32px;
 }
-/* ==========================================================================
-   NEWSLETTER / STAY CONNECTED SECTION IN FOOTER
-   ========================================================================== */
 
 .footerNewsletterTitle {
-  color: #1e293b;       /* Màu chữ tiêu đề đậm đà */
+  color: #1e293b;       
   font-size: 16px;
   font-weight: 700;
-  margin: 0 0 16px 0;   /* Khoảng cách phía dưới tiêu đề */
+  margin: 0 0 16px 0;   
 }
 
 .footerNewsletterText {
-  color: #64748b;       /* Màu chữ xám mô tả */
+  color: #64748b;      
   font-size: 14px;
   line-height: 1.5;
-  margin: 0 0 20px 0;   /* Khoảng cách tới ô input */
+  margin: 0 0 20px 0; 
 }
 
 .newsletterForm {
@@ -1021,39 +1010,37 @@
   align-items: center;
   position: relative;
   width: 100%;
-  max-width: 320px;     /* Giới hạn độ rộng tối đa để form không bị quá dài */
+  max-width: 320px;     
 }
 
 .newsletterInput {
   width: 100%;
-  padding: 10px 54px 10px 16px; /* Chừa khoảng trống bên phải (54px) để nút bấm không đè lên chữ */
+  padding: 10px 54px 10px 16px; 
   font-size: 14px;
   color: #1e293b;
-  border: 1px solid #e2e8f0;   /* Viền mảnh */
-  border-radius: 6px;          /* Bo góc đồng bộ với hệ thống */
+  border: 1px solid #e2e8f0;   
+  border-radius: 6px;          
   outline: none;
   transition: all 0.2s ease-in-out;
 }
 
-/* Hiệu ứng khi người dùng click vào ô input */
 .newsletterInput:focus {
   background-color: #ffffff;
-  border-color: #4f46e5;       /* Đổi sang viền màu xanh tím chủ đạo */
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); /* Đổ bóng nhẹ xung quanh viền */
+  border-color: #4f46e5;       
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
 }
 
-/* Nút bấm Subscribe nằm gọn bên trong ô Input */
 .newsletterBtn {
   position: absolute;
-  right: 0;                  /* Cách lề phải ô input 6px */
+  right: 0;                 
   top: 50%;
-  transform: translateY(-50%); /* Căn giữa hoàn hảo theo chiều dọc */
+  transform: translateY(-50%); 
   width: 38px;
   height: 38px;
-  background-color: #4f46e5;   /* Nền xanh tím đồng bộ thương hiệu */
-  color: #ffffff;              /* Mũi tên màu trắng */
+  background-color: #4f46e5;   
+  color: #ffffff;             
   border: none;
-  border-radius: 0 7px 7px 0;          /* Bo góc nút bấm */
+  border-radius: 0 7px 7px 0; 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1061,9 +1048,11 @@
   transition: background-color 0.2s ease-in-out;
 }
 
-/* Hiệu ứng hover cho nút bấm */
 .newsletterBtn:hover {
-  background-color: #4338ca;   /* Đậm màu hơn một chút khi hover */
+  background-color: #4338ca; 
+}
+.integrationSection {
+    scroll-margin-top: 90px; 
 }
 @media (max-width: 1100px) {
 
@@ -1097,7 +1086,6 @@
 
     .nav {
         display: none;
-        /* Ẩn navigation trên Mobile */
     }
 
     .heroTitle {
@@ -1114,13 +1102,12 @@
 
     .connectorArrow {
         transform: rotate(90deg);
-        /* Biến mũi tên ngang thành dọc */
         margin: 4px 0;
     }
 
     .integrationVisual {
         display: none;
-        /* Ẩn canvas trôi nổi phức tạp trên Mobile */
+       
     }
 }
 

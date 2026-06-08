@@ -1928,17 +1928,18 @@ export default function Landing() {
                 <h3>{tr.product}</h3>
                 <ul>
                   <li>
-                    <HashLink smooth to="/#features">
+                    <HashLink smooth to="/features">
                       {tr.features}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/#ai-assistant">
+                    <HashLink smooth to="/features#ai-assistant">
                       {tr.aiAssistant}
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/#automation">
+                    <HashLink smooth to="/features#automations
+">
                       {tr.automations}
                     </HashLink>
                   </li>
@@ -1946,7 +1947,7 @@ export default function Landing() {
                     <a href="/integrations">{tr.integrations}</a>
                   </li>
                   <li>
-                    <HashLink smooth to="/#analytics">
+                    <HashLink smooth to="/features#analytics">
                       {tr.analytics}
                     </HashLink>
                   </li>
@@ -1978,19 +1979,19 @@ export default function Landing() {
                 <h3>{tr.connect}</h3>
                 <ul>
                   <li>
-                    <a href="/integrations">{tr.connectApps}</a>
+                    <HashLink smooth to="/integrations#connect-apps">{tr.connectApps}</HashLink>
                   </li>
                   <li>
-                    <a href="/help/import-crm">{tr.importCrm}</a>
+                    <HashLink smooth to="/integrations#import-crm">{tr.importCrm}</HashLink>
                   </li>
                   <li>
-                    <a href="/help/import-csv">{tr.importCsv}</a>
+                    <HashLink smooth to="/integrations#import-csv">{tr.importCsv}</HashLink>
                   </li>
                   <li>
-                    <a href="/help/zapier">{tr.zapierAutomation}</a>
+                    <HashLink smooth to="/integrations#zapier-automations">{tr.zapierAutomation}</HashLink>
                   </li>
                   <li>
-                    <a href="/help/api">{tr.apiWebhooks}</a>
+                    <HashLink smooth to="/integrations#api-webhooks">{tr.apiWebhooks}</HashLink>
                   </li>
                 </ul>
               </div>

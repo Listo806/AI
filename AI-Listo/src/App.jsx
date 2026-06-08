@@ -97,6 +97,7 @@ import WhatsAppPage from "./pages/whatsapp/WhatsAppPage";
 import LeadGeneratorPage from "./pages/generator/LeadGeneratorPage";
 import SetupGuidePage from "./pages/common/SetupGuidePage";
 import IntegrationsPage from "./pages/common/IntegrationsPage";
+import FeaturesPage from "./pages/common/FeaturesPage";
 
 function VacationUploadPublicRedirect() {
   const { id } = useParams();
@@ -144,6 +145,7 @@ function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/support" element={<Support />} />
 
+      <Route path="/features" element={<FeaturesPage />} />
       <Route path="/integrations" element={<IntegrationsPage />} />
       <Route path="/setup-guide" element={<SetupGuidePage />} />
       <Route path="/pricing" element={<Pricing />} />

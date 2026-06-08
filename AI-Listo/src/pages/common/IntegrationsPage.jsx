@@ -259,7 +259,6 @@ export default function IntegrationsPage() {
               </div>
 
               <div className={styles.dottedLineOne} />
-              {/* ĐÃ SỬA LỖI ĐOẠN NÀY: Xóa thuộc tính style sai cấu trúc */}
               <div className={styles.dottedLineTwo} />
               <div className={styles.dottedLineThree} />
             </div>
@@ -418,7 +417,7 @@ export default function IntegrationsPage() {
         </section>
       </main>
 
-      <footer className={styles.footer}>
+      {/*}footer className={styles.footer}>
         <div className={styles.footerBrand}>
           <div className={styles.logoWrapFooter}>
             <img src={headlogoImg} className="cx-logo-img" alt="logo" />
@@ -482,7 +481,7 @@ export default function IntegrationsPage() {
             </button>
           </form>
         </div>
-      </footer>
+      </footer>*/}
     </div>
   );
 }
