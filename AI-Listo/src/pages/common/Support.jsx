@@ -34,6 +34,7 @@ export default function SupportHub() {
     ["Invite Team Member", Users, "#DB2777", "#FCE7F3"],
     ["Report a Bug", Bug, "#4B5563", "#F3F4F6"],
   ];
+  
   const supportCards = [
     {
       title: "Troubleshoot a Problem",
@@ -64,11 +65,11 @@ export default function SupportHub() {
       color: "#F97316",
     },
   ];
+
   const handleSend = (e) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
     console.log("AI câu hỏi của user:", query);
-    // API AI Chatbot here...
     setQuery("");
   };
 
@@ -145,19 +146,19 @@ export default function SupportHub() {
       </section>
 
       <section className={styles.supportBottomBar}>
-        <BottomAction
+        <BottomActionSP
           icon={<Mail size={30} />}
           title="Email Support"
-          text="We’ll get back to you."
+          text="We'll get back to you."
         />
 
-        <BottomAction
+        <BottomActionSP
           icon={<PlusSquare size={30} />}
           title="Open Support Ticket"
           text="Submit a request and track progress."
         />
 
-        <BottomAction
+        <BottomActionSP
           icon={<BookOpen size={30} />}
           title="Help Center"
           text="Guides, tutorials and resources."
@@ -167,64 +168,17 @@ export default function SupportHub() {
   );
 }
 
-function Field({ label, icon, placeholder }) {
-  return (
-    <div className={styles.contactFieldGroup}>
-      <label>{label}</label>
-
-      <div className={styles.contactInputRow}>
-        {icon}
-        <span>{placeholder}</span>
-      </div>
-    </div>
-  );
-}
-
-function InfoCard({ icon, title, text, color, bg }) {
-  return (
-    <div className={styles.contactInfoCard}>
-      <div className={styles.contactInfoIcon} style={{ background: bg, color }}>
-        {icon}
-      </div>
-
-      <div>
-        <h3>{title}</h3>
-        <p>{text}</p>
-      </div>
-    </div>
-  );
-}
-
-function MiniMetric({ label, value }) {
-  return (
-    <div className={styles.aboutMiniMetric}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>+17% vs last week</small>
-    </div>
-  );
-}
-
-function MiniBox({ title, value }) {
-  return (
-    <div className={styles.aboutMiniBox}>
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function BottomAction({ icon, title, text }) {
+function BottomActionSP({ icon, title, text }) {
   return (
     <div className={styles.bottomAction}>
       <div className={styles.bottomIcon}>{icon}</div>
 
-      <div>
+      <div className={styles.bottomActionTextWrap}>
         <h3>{title}</h3>
         <p>{text}</p>
       </div>
 
-      <ChevronRight size={24} />
+      <ChevronRight size={24} className={styles.arrowRightIcon} />
     </div>
   );
 }

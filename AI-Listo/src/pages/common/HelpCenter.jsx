@@ -23,7 +23,6 @@ import {
 export default function HelpCenter() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 6 Chips định hướng nhanh ở trên cùng
   const quickChips = [
     { label: "Getting Started", icon: Rocket, color: "#2563EB" },
     { label: "WhatsApp Setup", icon: MessageCircle, color: "#059669" },

@@ -1,143 +1,175 @@
 import React from "react";
+import styles from "./About.module.css";
 import {
-  Brain,
-  Network,
+  ScatterChart,
+  Timer,
+  Puzzle,
+  Crosshair,
+  Building2,
   Zap,
   BarChart3,
-  MessageCircle,
-  ArrowRight,
-  ShieldCheck,
-  Workflow,
-  Target,
+  Users,
+  Bot,
 } from "lucide-react";
-import "./Common.css";
-
+import aboutTopImg from "../../assets/cortexa/about_top.png";
+import aboutBottomImg from "../../assets/cortexa/about_bottom.png";
+import aboutCenterImg from "../../assets/cortexa/about_center.png";
 export default function About() {
+  const problemCards = [
+    {
+      title: "Scattered leads",
+      text: "Leads arrive from everywhere — ads, websites, referrals, listings, and more. They get lost, duplicated, or forgotten.",
+      icon: ScatterChart,
+    },
+    {
+      title: "Slow follow-up",
+      text: "Manual processes and inbox chaos create delays. Most leads cool down before anyone responds.",
+      icon: Timer,
+    },
+    {
+      title: "Disconnected tools",
+      text: "CRMs, spreadsheets, calendars, messaging apps, and forms do not talk to each other or your team.",
+      icon: Puzzle,
+    },
+  ];
+
+  const featureCards = [
+    {
+      title: "Capture Every Lead",
+      text: "Collect leads from every source instantly and keep your database clean, complete, and up to date.",
+      icon: Crosshair,
+    },
+    {
+      title: "Automate Follow-Up",
+      text: "AI handles the right follow-up at the right time so every lead stays engaged and warm.",
+      icon: Zap,
+    },
+    {
+      title: "See What Matters",
+      text: "Unified analytics show pipeline health, conversion trends, and performance that drives growth.",
+      icon: BarChart3,
+    },
+    {
+      title: "Coordinate the Team",
+      text: "Align tasks, conversations, and deal progress across your entire team in real time.",
+      icon: Users,
+    },
+  ];
+
   return (
-    <main className="about-page">
-
-      {/* HERO */}
-      <section className="about-hero">
-        <div className="sub_container hero-grid">
-
-          <div className="hero-left">
-            <p className="label">About Cortexa</p>
-
-            <h1>
-              The AI brain behind modern real estate operations.
-            </h1>
-
-            <p className="desc">
-              Cortexa connects leads, listings, conversations, automations,
-              and analytics into one intelligent CRM system.
-            </p>
-
-            <div className="cta-group">
-              <a className="btn-primary" href="/signup">
-                Start Free Trial <ArrowRight size={16} />
-              </a>
-
-              <a className="btn-secondary" href="/features">
-                Explore Features
-              </a>
-            </div>
-          </div>
-
-          <div className="hero-right">
-            <div className="brain-card">
-
-              <div className="brain-icon">
-                <Brain size={50} />
-              </div>
-
-              <div className="flow-box">Leads, listings, messages</div>
-              <div className="arrow">↓</div>
-              <div className="flow-box dark">AI processes & automates</div>
-              <div className="arrow">↓</div>
-              <div className="flow-box green">Faster deals & insights</div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* WHY */}
-      <section className="section">
-        <div className="sub_container center">
-          <h2>Real estate has a systems problem, not a lead problem.</h2>
+    <main className={styles.aboutPage}>
+      {/* Hero Section */}
+      <section className={styles.aboutHero}>
+        <div className={styles.aboutHeroText}>
+          <div className={styles.aboutBadge}>ABOUT CORTEXA</div>
+          <h1>
+            The intelligence layer behind modern <span>real estate operations.</span>
+          </h1>
           <p>
-            Leads come from many channels but are rarely connected in one system.
+            CORTEXA unifies leads, listings, conversations, automations, analytics,
+            and team workflows into one AI operating system built for real estate professionals.
           </p>
         </div>
+
+        <img src={aboutTopImg} className={styles.aboutTop} />
       </section>
 
-      {/* PROBLEMS */}
-      <section className="section">
-        <div className="sub_container grid-3">
+      {/* Problem Section */}
+      <section className={styles.aboutProblemSection}>
+        <h2>
+          Real estate doesn’t have a lead problem. <br />
+          It has an <span>operations problem.</span>
+        </h2>
+        <p>Leads come from many channels but are rarely connected in one system.</p>
 
-          <div className="card">
-            <MessageCircle />
-            <h3>Leads get scattered</h3>
-            <p>Messages and forms are disconnected.</p>
-          </div>
-
-          <div className="card">
-            <Workflow />
-            <h3>Follow-up delays</h3>
-            <p>Manual work slows everything down.</p>
-          </div>
-
-          <div className="card">
-            <BarChart3 />
-            <h3>No clear data</h3>
-            <p>Hard to know what is working.</p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* INTELLIGENCE */}
-      <section className="dark-section">
-        <div className="sub_container split">
-
-          <div>
-            <h2>Cortexa thinks with your business.</h2>
-            <p>
-              AI organizes, automates, and recommends next actions.
-            </p>
-          </div>
-
-          <div className="list">
-            {[
-              "Capture every lead",
-              "Analyze conversations",
-              "Trigger workflows",
-              "Track deals",
-              "Generate insights",
-            ].map((t, i) => (
-              <div key={i} className="list-item">
-                <Network />
-                <span>{t}</span>
+        <div className={styles.aboutProblemGrid}>
+          {problemCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.title} className={styles.aboutProblemCard}>
+                <div className={styles.problemCardIconWrap}>
+                  <Icon size={42} />
+                </div>
+                <div>
+                  <h3>{card.title}</h3>
+                  <p>{card.text}</p>
+                </div>
               </div>
-            ))}
-          </div>
-
+            );
+          })}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="cta">
-        <div className="sub_container cta-box">
-          <h2>Ready to connect your business to the brain?</h2>
-          <p>Start your free trial today.</p>
+      {/* Connect Section */}
+      <section className={styles.aboutConnectSection}>
+        <div className={styles.aboutConnectText}>
+          <span>HOW CORTEXA CONNECTS EVERYTHING</span>
+          <h2>One operating system for your entire real estate workflow.</h2>
+          <p>
+            CORTEXA connects your channels, syncs your data, and turns scattered
+            activity into coordinated action.
+          </p>
+        </div>
 
-          <a href="/signup" className="btn-white">
-            Start Free Trial <ArrowRight size={16} />
-          </a>
+        <img src={aboutCenterImg} className={styles.aboutCenter} />
+      </section>
+
+      {/* What CORTEXA Does Section */}
+      <section className={styles.aboutWhatSection}>
+       
+        <div className={styles.aboutWhatGrid}>
+          {featureCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.title} className={styles.aboutWhatCard}>
+                <div className={styles.aboutWhatIcon}>
+                  <Icon size={32} />
+                </div>
+                <div>
+                  <h3>{card.title}</h3>
+                  <p>{card.text}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
+      {/* Final Callout Section */}
+      <section className={styles.aboutFinalSection}>
+        <div className={styles.finalSectionText}>
+          <h2>
+            Built for real estate professionals. Designed to make the entire business{" "}
+            <span>think and move as one.</span>
+          </h2>
+          <p>
+            We believe technology should simplify the complex, not add to it.
+            CORTEXA brings clarity, speed, and intelligence to every part of your
+            real estate business.
+          </p>
+        </div>
+
+        <img src={aboutBottomImg} className={styles.aboutBottom} />
+      </section>
     </main>
+  );
+}
+
+function MiniMetric({ label, value }) {
+  return (
+    <div className={styles.aboutMiniMetric}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>+17% vs last week</small>
+    </div>
+  );
+}
+
+function MiniBox({ title, value }) {
+  return (
+    <div className={styles.aboutMiniBox}>
+      <span>{title}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
