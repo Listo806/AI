@@ -1,4 +1,4 @@
-import { useState } from "react"; // 1. Thêm useState ở đầu file
+import { useState } from "react";
 import {
   User,
   Briefcase,
@@ -26,7 +26,14 @@ export default function Contact() {
   ];
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedReason, setSelectedReason] = useState("");
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    company: "",
+    reason: "",
+    message: "",
+  });
 
   const reasons = [
     "Account Support",
@@ -35,6 +42,18 @@ export default function Contact() {
     "Technical Issue",
     "General Inquiry",
   ];
+
+  const handleInputChange = (key, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Dữ liệu gửi đi:", formData);
+  };
 
   return (
     <main className={styles.page}>
@@ -55,67 +74,84 @@ export default function Contact() {
       </section>
 
       <section className={styles.contactGrid}>
-        <form className={styles.formBox}>
-          <Field
-            label="Full Name"
-            icon={<User size={19} />}
-            placeholder="Enter your full name"
-          />
-          <Field
-            label="Email"
-            icon={<Mail size={19} />}
-            placeholder="Enter your email address"
-          />
-          <Field
-            label="Company (Optional)"
-            icon={<Briefcase size={19} />}
-            placeholder="Enter your company name"
-          />
+        <form className={styles.formBox} onSubmit={handleSubmit}>
+          
+          <div className={styles.formGrid2Cols}>
+            <Field
+              label="Full Name"
+              icon={<User size={19} />}
+              placeholder="Enter your full name"
+              type="text"
+              value={formData.fullName}
+              onChange={(val) => handleInputChange("fullName", val)}
+            />
+            <Field
+              label="Email"
+              icon={<Mail size={19} />}
+              placeholder="Enter your email address"
+              type="email"
+              value={formData.email}
+              onChange={(val) => handleInputChange("email", val)}
+            />
+            <Field
+              label="Company (Optional)"
+              icon={<Briefcase size={19} />}
+              placeholder="Enter your company name"
+              type="text"
+              value={formData.company}
+              onChange={(val) => handleInputChange("company", val)}
+            />
 
-          <div className={styles.fieldGroup}>
-            <label>Reason for Contact</label>
-
-            <div
-              className={`${styles.selectRow} ${isOpen ? styles.selectRowActive : ""}`}
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              <MessageCircle className={styles.blue} size={19} />
-              <span className={selectedReason ? styles.selectedText : ""}>
-                {selectedReason || "Select a reason"}
-              </span>
-              <ChevronDown
-                size={18}
-                className={`${styles.arrowIcon} ${isOpen ? styles.arrowRotate : ""}`}
-              />
-            </div>
-
-            {isOpen && (
-              <div className={styles.reasonMenu}>
-                {reasons.map((reason) => (
-                  <div
-                    key={reason}
-                    className={styles.menuItem}
-                    onClick={() => {
-                      setSelectedReason(reason);
-                      setIsOpen(false);
-                    }}
-                  >
-                    {reason}
-                  </div>
-                ))}
+            <div className={styles.fieldGroup}>
+              <label>Reason for Contact</label>
+              <div
+                className={`${styles.selectRow} ${isOpen ? styles.selectRowActive : ""}`}
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                <MessageCircle className={styles.blue} size={19} />
+                <span className={formData.reason ? styles.selectedText : ""}>
+                  {formData.reason || "Select a reason"}
+                </span>
+                <ChevronDown
+                  size={18}
+                  className={`${styles.arrowIcon} ${isOpen ? styles.arrowRotate : ""}`}
+                />
               </div>
-            )}
+
+              {isOpen && (
+                <div className={styles.reasonMenu}>
+                  {reasons.map((reason) => (
+                    <div
+                      key={reason}
+                      className={styles.menuItem}
+                      onClick={() => {
+                        handleInputChange("reason", reason);
+                        setIsOpen(false);
+                      }}
+                    >
+                      {reason}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className={styles.fieldGroup}>
             <label>Message</label>
             <div className={styles.messageBox}>
-              <Paperclip size={19} />
-              <span>Tell us how we can help you...</span>
+              <Paperclip size={19} className={styles.messageIcon} />
+              <textarea
+                className={styles.textareaInput}
+                placeholder="Tell us how we can help you..."
+                value={formData.message}
+                onChange={(e) => handleInputChange("message", e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
 
-          <button type="button" className={styles.sendButton}>
+          <button type="submit" className={styles.sendButton}>
             <Send size={20} />
             Send Message
           </button>
@@ -195,17 +231,24 @@ export default function Contact() {
   );
 }
 
-function Field({ label, icon, placeholder }) {
+function Field({ label, icon, placeholder, type = "text", value, onChange }) {
   return (
     <div className={styles.fieldGroup}>
       <label>{label}</label>
       <div className={styles.inputRow}>
         {icon}
-        <span>{placeholder}</span>
+        <input
+          type={type}
+          className={styles.realInput}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
       </div>
     </div>
   );
 }
+
 function InfoCard({ icon, title, text, color, bg }) {
   return (
     <div className={styles.infoCard}>
@@ -219,6 +262,7 @@ function InfoCard({ icon, title, text, color, bg }) {
     </div>
   );
 }
+
 function PublicHeader() {
   return (
     <header className={styles.header}>
