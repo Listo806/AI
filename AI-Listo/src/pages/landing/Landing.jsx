@@ -1961,13 +1961,13 @@ export default function Landing() {
                 <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href="/signup">{tr.createAccount}</a>
+                    <a href="/start-trial">{tr.getStarted}</a>
+                  </li>
+                  <li>
+                    <a href="/start-trial">{tr.createAccount}</a>
                   </li>
                   <li>
                     <a href="/signin">{tr.login}</a>
-                  </li>
-                  <li>
-                    <a href="/crm">{tr.dashboard}</a>
                   </li>
                   <li>
                     <a href="/setup-guide">{tr.setupGuide}</a>

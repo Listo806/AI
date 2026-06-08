@@ -1879,11 +1879,21 @@
 
 
 .footer-final{background:#fff;border-top:1px solid #eee;padding:130px 30px 40px}
-.footer-final .footer-grid{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:40px;margin-bottom:60px;text-align: left;}
+.footer-final .footer-grid{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:40px;text-align: left;}
 #cortexa-ai-crm-landing .footer-final .footer-brand h2{font-size:24px;margin-bottom:16px}
 #cortexa-ai-crm-landing .footer-final .footer-brand p{color:#666;margin-bottom:20px;line-height:1.6}
 .footer-final .btn-primary{display:inline-block;background:#2563eb;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none}
-.footer-final .footer-tags{margin-top:20px;display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:#666;flex-direction: column;}
+.footer-final .footer-tags {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  font-size: 13px;
+  color: #666;
+}
+#cortexa-ai-crm-landing .footer-final{
+    padding: 130px 30px 30px;
+}
 #cortexa-ai-crm-landing .footer-final .footer-col h3{font-size:14px;margin-bottom:15px}
 .footer-final .footer-col ul{list-style:none;padding:0;margin:0}
 .footer-final .footer-col li{margin-bottom:10px}

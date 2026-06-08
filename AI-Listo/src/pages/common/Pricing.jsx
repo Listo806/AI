@@ -272,7 +272,7 @@ export default function PricingPage() {
             <div className="footer-col">
               <h3>Product</h3>
               <ul>
-                <li><HashLink smooth to="/#features">Features</HashLink></li>
+                <li><HashLink smooth to="/features">Features</HashLink></li>
                 <li>
                   <a href="/pricing">Pricing</a>
                 </li>
