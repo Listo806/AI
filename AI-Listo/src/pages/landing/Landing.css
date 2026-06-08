@@ -379,7 +379,6 @@
   transform: translateX(-50%);
 }
 
-/* LINE NGANG */
 #cortexa-ai-crm-landing .cx-grid4::after {
   content: "";
   position: absolute;
@@ -391,15 +390,12 @@
   transform: translateY(-50%);
 }   
  #cortexa-ai-crm-landing .cx-card {
-     /*background: #fff;
-     border: 1px solid var(--line);
-     border-radius: 24px;
-     box-shadow: var(--shadow);*/
      padding: 24px;
      display: grid;
      gap: 18px;
      min-height: 280px;
      grid-template: inherit;
+     text-align: left;
  }
 
  #cortexa-ai-crm-landing .cx-card h3 {
@@ -496,7 +492,21 @@
      font-size: 18px;
      margin-bottom: 8px;
  }
+ #cortexa-ai-crm-landing .cx-title-1 {
+  color: #1d4ed8;
+}
 
+ #cortexa-ai-crm-landing .cx-title-2 {
+  color: #0d9488;
+}
+
+ #cortexa-ai-crm-landing .cx-title-3 {
+  color: #4f46e5;
+}
+
+ #cortexa-ai-crm-landing .cx-title-4 {
+  color: #9333ea;
+}
  #cortexa-ai-crm-landing .cx-trust-item p {
      color: var(--muted);
      font-size: 15px;

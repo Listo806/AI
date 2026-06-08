@@ -136,12 +136,12 @@ export default function Landing() {
           desc: "Monitor conversion rates, response times, and activity across your business. Know what’s working and where to improve instantly.",
         },
         {
-          eyebrow: "AI Auto Reply",
+          eyebrow: "AI Follow up",
           title: "Automate your follow-ups",
           desc: "Never miss a lead. Send instant, personalized replies across your channels and nurture opportunities automatically.",
         },
         {
-          eyebrow: "AI Setter",
+          eyebrow: "AI Appoitment Setter",
           title: "Close deals faster with AI",
           desc: "AI qualifies leads, books appointments, and moves opportunities forward while your team focuses on closing.",
         },
@@ -277,7 +277,7 @@ export default function Landing() {
 
       aiCrmBadge: "AI-Powered CRM",
       aiCrmTitle1: "Meet Your",
-      aiCrmTitleHighlight: "AI CRM",
+      aiCrmTitleHighlight: "AI OS",
       aiCrmSub:
         "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
       aiCrmSupport:
@@ -306,8 +306,7 @@ export default function Landing() {
         "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
-      heroCheck7:
-        "Multi-chanel outreach via calls, texts, Whatsapp & more",
+      heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
       heroCheck8: "Automated follow-ups and appointment booking run 24/7",
       heroCheck9:
         "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
@@ -390,6 +389,55 @@ export default function Landing() {
       topHighlight: "AI Agents",
       topLine3: "that capture, follow up, and close your leads automatically.",
       pricing: "Pricing",
+
+      finalTitle: "Start Growing With AI Today",
+      finalDesc:
+        "Capture more leads, automate follow-ups, and close more deals with AI-powered automation.",
+      reinforcement: "No credit card required",
+
+      footerDescription:
+        "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
+
+      startFreeTrial: "Start Free Trial",
+      startYourFreeTrial: "Start Your Free Trial →",
+
+      tagAiPowered: "✨ AI-Powered",
+      tagSecure: "🛡 Secure",
+      tagAutomation: "⚡ Automation",
+      tagInsights: "📊 Insights",
+
+      product: "Product",
+      features: "Features",
+      aiAssistant: "AI Assistant",
+      automations: "Automations",
+      integrations: "Integrations",
+      analytics: "Analytics",
+      pricing: "Pricing",
+
+      getStarted: "Get Started",
+      createAccount: "Create Account",
+      login: "Login",
+      dashboard: "Dashboard",
+      setupGuide: "Setup Guide",
+
+      connect: "Connect",
+      connectApps: "Connect Your Apps",
+      importCrm: "Import Your CRM",
+      importCsv: "Import CSV / Excel",
+      zapierAutomation: "Zapier & Automations",
+      apiWebhooks: "API & Webhooks",
+
+      support: "Support",
+      support247: "24/7 Support",
+      helpCenter: "Help Center",
+      contactUs: "Contact Us",
+      aboutUs: "About Us",
+
+      legal: "Legal",
+      terms: "Terms & Conditions",
+      privacyPolicy: "Privacy Policy",
+      refundPolicy: "Refund Policy",
+      cancellationPolicy: "Cancellation Policy",
     },
 
     es: {
@@ -441,12 +489,12 @@ export default function Landing() {
           desc: "Monitorea conversiones, respuestas y actividad de tu negocio.",
         },
         {
-          eyebrow: "Respuesta automática con IA",
+          eyebrow: "Seguimiento con IA",
           title: "Automatiza seguimientos",
           desc: "Nunca pierdas un lead. Responde automáticamente en todos tus canales.",
         },
         {
-          eyebrow: "Configurador de IA",
+          eyebrow: "Agendador de citas con IA",
           title: "Cierra más rápido con IA",
           desc: "La IA califica leads, agenda citas y avanza oportunidades.",
         },
@@ -593,7 +641,7 @@ export default function Landing() {
 
       aiCrmBadge: "CRM con IA",
       aiCrmTitle1: "Conoce tu",
-      aiCrmTitleHighlight: "CRM con IA",
+      aiCrmTitleHighlight: "OS con IA",
       aiCrmSub:
         "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
       aiCrmSupport:
@@ -712,6 +760,55 @@ export default function Landing() {
       topLine3:
         "que capturan, dan seguimiento y cierran tus leads automáticamente.",
       pricing: "Precios",
+
+      finalTitle: "Empieza a crecer con IA hoy",
+      finalDesc:
+        "Capta más clientes potenciales, automatiza seguimientos y cierra más negocios con automatización impulsada por IA.",
+      reinforcement: "No se requiere tarjeta de crédito",
+
+      footerDescription:
+        "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
+
+      startFreeTrial: "Comenzar prueba gratuita",
+      startYourFreeTrial: "Comienza tu prueba gratuita →",
+
+      tagAiPowered: "✨ Impulsado por IA",
+      tagSecure: "🛡 Seguro",
+      tagAutomation: "⚡ Automatización",
+      tagInsights: "📊 Análisis",
+
+      product: "Producto",
+      features: "Funciones",
+      aiAssistant: "Asistente IA",
+      automations: "Automatizaciones",
+      integrations: "Integraciones",
+      analytics: "Analítica",
+      pricing: "Precios",
+
+      getStarted: "Comenzar",
+      createAccount: "Crear cuenta",
+      login: "Iniciar sesión",
+      dashboard: "Panel",
+      setupGuide: "Guía de configuración",
+
+      connect: "Conectar",
+      connectApps: "Conecta tus aplicaciones",
+      importCrm: "Importa tu CRM",
+      importCsv: "Importar CSV / Excel",
+      zapierAutomation: "Zapier y automatizaciones",
+      apiWebhooks: "API y Webhooks",
+
+      support: "Soporte",
+      support247: "Soporte 24/7",
+      helpCenter: "Centro de ayuda",
+      contactUs: "Contáctanos",
+      aboutUs: "Sobre nosotros",
+
+      legal: "Legal",
+      terms: "Términos y condiciones",
+      privacyPolicy: "Política de privacidad",
+      refundPolicy: "Política de reembolso",
+      cancellationPolicy: "Política de cancelación",
     },
 
     pt: {
@@ -756,12 +853,12 @@ export default function Landing() {
           desc: "Monitore conversões, respostas e atividades do negócio.",
         },
         {
-          eyebrow: "Resposta Automática com IA",
+          eyebrow: "Acompanhamento com IA",
           title: "Automação de follow-ups",
           desc: "Nunca perca leads. Respostas automáticas em todos canais.",
         },
         {
-          eyebrow: "Agendador de IA",
+          eyebrow: "Agendador de compromissos com IA",
           title: "Feche mais rápido com IA",
           desc: "IA qualifica leads e agenda reuniões automaticamente.",
         },
@@ -901,7 +998,7 @@ export default function Landing() {
 
       aiCrmBadge: "CRM com IA",
       aiCrmTitle1: "Conheça seu",
-      aiCrmTitleHighlight: "CRM com IA",
+      aiCrmTitleHighlight: "OS com IA",
       aiCrmSub:
         "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
       aiCrmSupport:
@@ -1021,6 +1118,55 @@ export default function Landing() {
       topLine3:
         "que capturam, fazem follow-up e fecham seus leads automaticamente.",
       pricing: "Preços",
+
+      finalTitle: "Comece a crescer com IA hoje",
+      finalDesc:
+        "Capture mais leads, automatize acompanhamentos e feche mais negócios com automação impulsionada por IA.",
+      reinforcement: "Não é necessário cartão de crédito",
+
+      footerDescription:
+        "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",
+
+      startFreeTrial: "Iniciar teste gratuito",
+      startYourFreeTrial: "Comece seu teste gratuito →",
+
+      tagAiPowered: "✨ Com tecnologia de IA",
+      tagSecure: "🛡 Seguro",
+      tagAutomation: "⚡ Automação",
+      tagInsights: "📊 Insights",
+
+      product: "Produto",
+      features: "Recursos",
+      aiAssistant: "Assistente de IA",
+      automations: "Automações",
+      integrations: "Integrações",
+      analytics: "Análises",
+      pricing: "Preços",
+
+      getStarted: "Começar",
+      createAccount: "Criar conta",
+      login: "Entrar",
+      dashboard: "Painel",
+      setupGuide: "Guia de configuração",
+
+      connect: "Conectar",
+      connectApps: "Conecte seus aplicativos",
+      importCrm: "Importe seu CRM",
+      importCsv: "Importar CSV / Excel",
+      zapierAutomation: "Zapier e Automações",
+      apiWebhooks: "API e Webhooks",
+
+      support: "Suporte",
+      support247: "Suporte 24/7",
+      helpCenter: "Central de ajuda",
+      contactUs: "Fale conosco",
+      aboutUs: "Sobre nós",
+
+      legal: "Jurídico",
+      terms: "Termos e Condições",
+      privacyPolicy: "Política de Privacidade",
+      refundPolicy: "Política de Reembolso",
+      cancellationPolicy: "Política de Cancelamento",
     },
   };
 
@@ -1044,7 +1190,7 @@ export default function Landing() {
 
   const currentSec4 =
     lang === "es" ? sec4ImgES : lang === "pt" ? sec4ImgPT : sec4Img;
-  
+
   const currentSec5 =
     lang === "es" ? sec5ImgES : lang === "pt" ? sec5ImgPT : sec5Img;
 
@@ -1191,13 +1337,16 @@ export default function Landing() {
           <div className="hero-left">
             <div className="hero-left-in">
               <div className="hero-dead-wrap">
-                <span className="hero-head1 hero-head">AI POWERED</span><br/>
+                <span className="hero-head1 hero-head">AI POWERED</span>
+                <br />
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
                 <br />
-                {tr.heroTitleLine3}<span> 24/7 </span>{tr.heroTitleLine4}
+                {tr.heroTitleLine3}
+                <span> 24/7 </span>
+                {tr.heroTitleLine4}
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>
@@ -1662,17 +1811,17 @@ export default function Landing() {
       </section>
       {/* FEATURES */}
       <section id="automation" className="cx-section pt-50">
-        
         <div className="land-container">
           <div className="cx-center cx-grid-intro">
             <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
           </div>
-          <img src={currentSec5} alt="" />
-          {/*<div className="cx-grid4">
+          <div className="cx-grid4">
             {[feaImg1, feaImg2, feaImg3, feaImg4].map((img, i) => (
               <div className="cx-card" key={i}>
                 <div>
-                  <span className="cx-eyebrow">{tr.cards[i].eyebrow}</span>
+                  <span className={`cx-eyebrow cx-title-${i + 1}`}>
+                    {tr.cards[i].eyebrow}
+                  </span>
                   <h3>{tr.cards[i].title}</h3>
                   <p>{tr.cards[i].desc}</p>
                 </div>
@@ -1681,7 +1830,7 @@ export default function Landing() {
                 </div>
               </div>
             ))}
-          </div>*/}
+          </div>
         </div>
       </section>
       <section id="ai-assistant" className="cx-hero pt-50">
@@ -1755,231 +1904,129 @@ export default function Landing() {
           <div className="container">
             <div className="footer-location">
               <CountriesCitiesSection />
-              {/*<div className="section">
-                <div className="cities-grid">
-                  <div className="country-block">
-                    <h4 className="country-name">Brazil</h4>
-                    <div className="cities">
-                      <Link to="/brazil/sao-paulo">São Paulo</Link> ·
-                      <Link to="/brazil/rio-de-janeiro">Rio de Janeiro</Link> ·
-                      <Link to="/brazil/brasilia">Brasília</Link> ·
-                      <Link to="/brazil/salvador">Salvador</Link> ·
-                      <Link to="/brazil/fortaleza">Fortaleza</Link> ·
-                      <Link to="/brazil/curitiba">Curitiba</Link> ·
-                      <Link to="/brazil/belo-horizonte">Belo Horizonte</Link> ·
-                      <Link to="/brazil/recife">Recife</Link>
-                    </div>
-                  </div>
-
-                  <div className="country-block">
-                    <h4 className="country-name">Mexico</h4>
-                    <div className="cities">
-                      <Link to="/mexico/mexico-city">Mexico City</Link> ·
-                      <Link to="/mexico/guadalajara">Guadalajara</Link> ·
-                      <Link to="/mexico/monterrey">Monterrey</Link> ·
-                      <Link to="/mexico/cancun">Cancún</Link> ·
-                      <Link to="/mexico/tulum">Tulum</Link> ·
-                      <Link to="/mexico/playa-del-carmen">
-                        Playa del Carmen
-                      </Link>{" "}
-                      ·<Link to="/mexico/puebla">Puebla</Link> ·
-                      <Link to="/mexico/merida">Mérida</Link>
-                    </div>
-                  </div>
-                  <div className="country-block">
-                    <h4 className="country-name">Argentina</h4>
-                    <div className="cities">
-                      <Link to="/argentina/buenos-aires">Buenos Aires</Link> ·
-                      <Link to="/argentina/cordoba">Córdoba</Link> ·
-                      <Link to="/argentina/rosario">Rosario</Link> ·
-                      <Link to="/argentina/mendoza">Mendoza</Link> ·
-                      <Link to="/argentina/salta">Salta</Link> ·
-                      <Link to="/argentina/mar-del-plata">Mar del Plata</Link> ·
-                      <Link to="/argentina/la-plata">La Plata</Link> ·
-                      <Link to="/argentina/bariloche">Bariloche</Link>
-                    </div>
-                  </div>
-
-                  <div className="country-block">
-                    <h4 className="country-name">Chile</h4>
-                    <div className="cities">
-                      <Link to="/chile/santiago">Santiago</Link> ·
-                      <Link to="/chile/valparaiso">Valparaíso</Link> ·
-                      <Link to="/chile/vina-del-mar">Viña del Mar</Link> ·
-                      <Link to="/chile/concepcion">Concepción</Link> ·
-                      <Link to="/chile/antofagasta">Antofagasta</Link> ·
-                      <Link to="/chile/la-serena">La Serena</Link> ·
-                      <Link to="/chile/pucon">Pucón</Link> ·
-                      <Link to="/chile/temuco">Temuco</Link>
-                    </div>
-                  </div>
-
-                  <div className="country-block">
-                    <h4 className="country-name">Colombia</h4>
-                    <div className="cities">
-                      <Link to="/colombia/bogota">Bogotá</Link> ·
-                      <Link to="/colombia/medellin">Medellín</Link> ·
-                      <Link to="/colombia/cali">Cali</Link> ·
-                      <Link to="/colombia/cartagena">Cartagena</Link> ·
-                      <Link to="/colombia/barranquilla">Barranquilla</Link> ·
-                      <Link to="/colombia/santa-marta">Santa Marta</Link> ·
-                      <Link to="/colombia/pereira">Pereira</Link> ·
-                      <Link to="/colombia/manizales">Manizales</Link>
-                    </div>
-                  </div>
-
-                  <div className="country-block">
-                    <h4 className="country-name">Peru</h4>
-                    <div className="cities">
-                      <Link to="/peru/lima">Lima</Link> ·
-                      <Link to="/peru/cusco">Cusco</Link> ·
-                      <Link to="/peru/arequipa">Arequipa</Link> ·
-                      <Link to="/peru/trujillo">Trujillo</Link> ·
-                      <Link to="/peru/piura">Piura</Link> ·
-                      <Link to="/peru/chiclayo">Chiclayo</Link> ·
-                      <Link to="/peru/ica">Ica</Link> ·
-                      <Link to="/peru/huancayo">Huancayo</Link>
-                    </div>
-                  </div>
-
-                  <div className="country-block">
-                    <h4 className="country-name">Ecuador</h4>
-                    <div className="cities">
-                      <Link to="/ecuador/quito">Quito</Link> ·
-                      <Link to="/ecuador/guayaquil">Guayaquil</Link> ·
-                      <Link to="/ecuador/cuenca">Cuenca</Link> ·
-                      <Link to="/ecuador/manta">Manta</Link> ·
-                      <Link to="/ecuador/ambato">Ambato</Link> ·
-                      <Link to="/ecuador/loja">Loja</Link> ·
-                      <Link to="/ecuador/portoviejo">Portoviejo</Link> ·
-                      <Link to="/ecuador/santo-domingo">Santo Domingo</Link>
-                    </div>
-                  </div>
-                </div>
-              </div>*/}
             </div>
+
             <div className="footer-grid">
               <div className="footer-brand">
                 <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
-                <p>
-                  The AI-powered CRM that helps you capture leads, automate
-                  follow-ups, and close more deals — faster.
-                </p>
+
+                <p>{tr.footerDescription}</p>
+
                 <a href="/trial" className="btn-primary">
-                  Start Your Free Trial →
+                  {tr.startYourFreeTrial}
                 </a>
 
                 <div className="footer-tags">
-                  <span>✨ AI-Powered</span>
-                  <span>🛡 Secure</span>
-                  <span>⚡ Automation</span>
-                  <span>📊 Insights</span>
+                  <span>{tr.tagAiPowered}</span>
+                  <span>{tr.tagSecure}</span>
+                  <span>{tr.tagAutomation}</span>
+                  <span>{tr.tagInsights}</span>
                 </div>
               </div>
 
               <div className="footer-col">
-                <h3>Product</h3>
+                <h3>{tr.product}</h3>
                 <ul>
                   <li>
                     <HashLink smooth to="/#features">
-                      Features
+                      {tr.features}
                     </HashLink>
                   </li>
                   <li>
                     <HashLink smooth to="/#ai-assistant">
-                      AI Assistant
+                      {tr.aiAssistant}
                     </HashLink>
                   </li>
                   <li>
                     <HashLink smooth to="/#automation">
-                      Automations
+                      {tr.automations}
                     </HashLink>
                   </li>
                   <li>
-                    <a href="/integrations">Integrations</a>
+                    <a href="/integrations">{tr.integrations}</a>
                   </li>
                   <li>
                     <HashLink smooth to="/#analytics">
-                      Analytics
+                      {tr.analytics}
                     </HashLink>
                   </li>
                   <li>
-                    <a href="/pricing">Pricing</a>
+                    <a href="/pricing">{tr.pricing}</a>
                   </li>
                 </ul>
               </div>
 
               <div className="footer-col">
-                <h3>Get Started</h3>
+                <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href="/signup">Create Account</a>
+                    <a href="/signup">{tr.createAccount}</a>
                   </li>
                   <li>
-                    <a href="/signin">Login</a>
+                    <a href="/signin">{tr.login}</a>
                   </li>
                   <li>
-                    <a href="/crm">Dashboard</a>
+                    <a href="/crm">{tr.dashboard}</a>
                   </li>
                   <li>
-                    <a href="/setup-guide">Setup Guide</a>
+                    <a href="/setup-guide">{tr.setupGuide}</a>
                   </li>
                 </ul>
               </div>
 
               <div className="footer-col">
-                <h3>Connect</h3>
+                <h3>{tr.connect}</h3>
                 <ul>
                   <li>
-                    <a href="/integrations">Connect Your Apps</a>
+                    <a href="/integrations">{tr.connectApps}</a>
                   </li>
                   <li>
-                    <a href="/help/import-crm">Import Your CRM</a>
+                    <a href="/help/import-crm">{tr.importCrm}</a>
                   </li>
                   <li>
-                    <a href="/help/import-csv">Import CSV / Excel</a>
+                    <a href="/help/import-csv">{tr.importCsv}</a>
                   </li>
                   <li>
-                    <a href="/help/zapier">Zapier & Automations</a>
+                    <a href="/help/zapier">{tr.zapierAutomation}</a>
                   </li>
                   <li>
-                    <a href="/help/api">API & Webhooks</a>
+                    <a href="/help/api">{tr.apiWebhooks}</a>
                   </li>
                 </ul>
               </div>
 
               <div className="footer-col">
-                <h3>Support</h3>
+                <h3>{tr.support}</h3>
                 <ul>
                   <li>
-                    <a href="/support">24-7 Support</a>
+                    <a href="/support">{tr.support247}</a>
                   </li>
                   <li>
-                    <a href="/help">Help Center</a>
+                    <a href="/help">{tr.helpCenter}</a>
                   </li>
                   <li>
-                    <a href="/contact">Contact Us</a>
+                    <a href="/contact">{tr.contactUs}</a>
                   </li>
                   <li>
-                    <a href="/about">About Us</a>
+                    <a href="/about">{tr.aboutUs}</a>
                   </li>
                 </ul>
               </div>
 
               <div className="footer-col">
-                <h3>Legal</h3>
+                <h3>{tr.legal}</h3>
                 <ul>
                   <li>
-                    <a href="/terms">Terms & Conditions</a>
+                    <a href="/terms">{tr.terms}</a>
                   </li>
                   <li>
-                    <a href="/privacy-policy">Privacy Policy</a>
+                    <a href="/privacy-policy">{tr.privacyPolicy}</a>
                   </li>
                   <li>
-                    <a href="/refund-policy">Refund Policy</a>
+                    <a href="/refund-policy">{tr.refundPolicy}</a>
                   </li>
                   <li>
-                    <a href="/cancellation">Cancellation Policy</a>
+                    <a href="/cancellation">{tr.cancellationPolicy}</a>
                   </li>
                 </ul>
               </div>

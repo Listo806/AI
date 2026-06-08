@@ -57,20 +57,12 @@ export default function Contact() {
 
   return (
     <main className={styles.page}>
-      <PublicHeader />
-
+      
       <section className={styles.hero}>
         <div className={styles.badge}>
           <Mail size={18} />
           CONTACT CORTEXA
         </div>
-        <h1 className={styles.title}>
-          Get in touch with the <span>CORTEXA</span> team.
-        </h1>
-        <p className={styles.subtitle}>
-          Send us your question and we’ll route it to the right team as quickly
-          as possible.
-        </p>
       </section>
 
       <section className={styles.contactGrid}>
