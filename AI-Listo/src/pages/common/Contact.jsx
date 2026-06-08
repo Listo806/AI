@@ -159,14 +159,14 @@ export default function Contact() {
 
         <aside className={styles.sideColumn}>
           <InfoCard
-            icon={<Mail size={34} />}
+            icon={<Mail size={24} />}
             title="Support Email"
             text="support@cortexacrm.com"
             color="#2563EB"
             bg="#EEF5FF"
           />
           <InfoCard
-            icon={<Clock size={34} />}
+            icon={<Clock size={24} />}
             title="Response Time"
             text="Usually within 24 hours"
             color="#6D5BFF"
@@ -175,7 +175,7 @@ export default function Contact() {
           <div className={styles.helpCard}>
             <div className={styles.helpCardHead}>
               <div className={styles.helpIcon}>
-                <Headphones size={34} />
+                <Headphones size={24} />
               </div>
               <h3>What can we help with?</h3>
             </div>
