@@ -1,182 +1,231 @@
 import React, { useState } from "react";
+import styles from "./Help.module.css";
 import {
   Search,
-  ArrowRight,
-  LayoutDashboard,
-  Users,
+  Rocket,
   MessageCircle,
-  Workflow,
-  Home,
-  Brain,
-  Zap,
-  Plug,
-  UserPlus,
+  CloudUpload,
+  GitBranch,
   CreditCard,
-  Mail,
-  Bot,
-  ChevronLeft,
-  UploadCloud,
+  Lock,
+  Users,
+  Home,
+  Layers,
+  Users2,
+  FileText,
+  Video,
+  Bell,
+  ArrowRight,
+  ChevronRight,
+  BookOpen,
 } from "lucide-react";
-import "./Common.css";
 
-const helpTopics = [
-  {
-    id: "dashboard",
-    title: "Dashboard & Analytics",
-    icon: LayoutDashboard,
-    description: "Understand your metrics, funnels, revenue, and performance.",
-    tags: ["Metrics", "Revenue", "Reports"],
-    steps: [
-      "Open the Dashboard from the sidebar.",
-      "Review leads and revenue.",
-      "Check funnel and analytics.",
-    ],
-  },
-  {
-    id: "leads",
-    title: "Leads & Contacts",
-    icon: Users,
-    description: "Manage leads and customer data.",
-    tags: ["Leads", "CRM"],
-    steps: [
-      "Open Leads section.",
-      "View lead details.",
-      "Update lead status.",
-    ],
-  },
-];
+export default function HelpCenter() {
+  const [searchQuery, setSearchQuery] = useState("");
 
-export default function HelpCenterPage() {
-  const [query, setQuery] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState(null);
+  // 6 Chips định hướng nhanh ở trên cùng
+  const quickChips = [
+    { label: "Getting Started", icon: Rocket, color: "#2563EB" },
+    { label: "WhatsApp Setup", icon: MessageCircle, color: "#059669" },
+    { label: "Import Leads", icon: CloudUpload, color: "#7C3AED" },
+    { label: "Pipeline & Deals", icon: GitBranch, color: "#EA580C" },
+    { label: "Billing", icon: CreditCard, color: "#2563EB" },
+    { label: "Login Issues", icon: Lock, color: "#DC2626" },
+  ];
 
-  const filteredTopics = helpTopics.filter((topic) =>
-    `${topic.title} ${topic.description} ${topic.tags.join(" ")}`
-      .toLowerCase()
-      .includes(query.toLowerCase())
-  );
+  const helpCards = [
+    {
+      title: "Getting Started",
+      text: "Set up your workspace and get your agent fast.",
+      icon: Rocket,
+      articles: "9 articles",
+      color: "#2563EB",
+      bg: "#EFF6FF",
+    },
+    {
+      title: "WhatsApp Setup",
+      text: "Connect WhatsApp and automate conversations.",
+      icon: MessageCircle,
+      articles: "6 articles",
+      color: "#059669",
+      bg: "#EAFBF2",
+    },
+    {
+      title: "Leads & Contacts",
+      text: "Manage leads, contacts, and follow-ups.",
+      icon: Users,
+      articles: "12 articles",
+      color: "#7C3AED",
+      bg: "#F5F3FF",
+    },
+    {
+      title: "Listings & Properties",
+      text: "Create, edit, and manage your listings.",
+      icon: Home,
+      articles: "10 articles",
+      color: "#2563EB",
+      bg: "#EFF6FF",
+    },
+    {
+      title: "Pipeline & Deals",
+      text: "Track inquiries and manage opportunities.",
+      icon: GitBranch,
+      articles: "14 articles",
+      color: "#EA580C",
+      bg: "#FFF7ED",
+    },
+    {
+      title: "Apps & Integrations",
+      text: "Connect tools, websites, and automation.",
+      icon: Layers,
+      articles: "8 articles",
+      color: "#7C3AED",
+      bg: "#F5F3FF",
+    },
+    {
+      title: "Team & Seats",
+      text: "Invite team members and manage access.",
+      icon: Users2,
+      articles: "7 articles",
+      color: "#F97316",
+      bg: "#FFF3EA",
+    },
+    {
+      title: "Billing & Plans",
+      text: "View plans, subscriptions, and payment management.",
+      icon: CreditCard,
+      articles: "6 articles",
+      color: "#059669",
+      bg: "#EAFBF2",
+    },
+  ];
 
-  const TopicIcon = selectedTopic?.icon;
+  const handleSearch = (e) => {
+    if (e) e.preventDefault();
+    console.log("Searching for:", searchQuery);
+  };
 
   return (
-    <main className="help-page">
-
-      {/* HERO */}
-      <section className="help-hero">
-        <div className="sub_container center">
-          <p className="label">Cortexa Help Center</p>
-          <h1>Get help with every part of your CRM.</h1>
-          <p className="sub">
-            Step-by-step guidance for everything.
-          </p>
-
-          <div className="search-box">
-            <Search size={18} />
+    <main className={styles.supportPage}>
+      <section className={styles.supportHero}>
+        <div className={styles.supportBadge}>
+          <BookOpen size={16} />
+          CORTEXA OS HELP CENTER
+        </div>
+        
+        <div className={styles.supportAiBox}>
+          <form className={styles.supportAskBox} onSubmit={handleSearch}>
+            <Search className={styles.aiChatIcon} size={20} />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search help topics..."
+              type="text"
+              className={styles.aiInput}
+              placeholder="Search guides, tutorials, setup steps, and workflows..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+          </form>
         </div>
       </section>
 
-      {/* CONTENT */}
-      <section className="help-content">
-        <div className="sub_container">
-
-          {!selectedTopic ? (
-            <>
-              <div className="help-header">
-                <div>
-                  <h2>What do you need help with?</h2>
-                  <p>Select a topic below</p>
+      {/* Quick Chips Section */}
+      <section className={styles.supportIssueSection}>
+        <div className={styles.supportChipGrid}>
+          {quickChips.map((chip, index) => {
+            const Icon = chip.icon;
+            return (
+              <button key={index} className={styles.supportIssueChip}>
+                <div style={{ color: chip.color, display: "flex", alignItems: "center" }}>
+                  <Icon size={18} />
                 </div>
-
-                <a className="btn" href="/contact">
-                  Contact Support <ArrowRight size={16} />
-                </a>
-              </div>
-
-              <div className="grid">
-                {filteredTopics.map((topic) => {
-                  const Icon = topic.icon;
-
-                  return (
-                    <button
-                      key={topic.id}
-                      className="card"
-                      onClick={() => setSelectedTopic(topic)}
-                    >
-                      <div className="icon">
-                        <Icon size={22} />
-                      </div>
-
-                      <h3>{topic.title}</h3>
-                      <p>{topic.description}</p>
-
-                      <div className="tags">
-                        {topic.tags.map((tag) => (
-                          <span key={tag}>{tag}</span>
-                        ))}
-                      </div>
-
-                      <div className="view">
-                        View instructions <ArrowRight size={14} />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <div className="detail">
-
-              <button
-                className="back"
-                onClick={() => setSelectedTopic(null)}
-              >
-                <ChevronLeft size={16} /> Back
+                {chip.label}
               </button>
-
-              <div className="detail-box">
-
-                <div className="big-icon">
-                  {TopicIcon && <TopicIcon size={28} />}
-                </div>
-
-                <h2>{selectedTopic.title}</h2>
-                <p>{selectedTopic.description}</p>
-
-                <div className="steps">
-                  {selectedTopic.steps.map((step, i) => (
-                    <div className="step" key={i}>
-                      <div className="num">{i + 1}</div>
-                      <p>{step}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="actions">
-                  <a href="/contact" className="ai-box">
-                    <Bot size={18} />
-                    Ask AI Support
-                  </a>
-
-                  <a href="mailto:support@cortexa.ai" className="mail-box">
-                    <Mail size={18} />
-                    Email Support
-                  </a>
-                </div>
-
-              </div>
-
-            </div>
-          )}
-
+            );
+          })}
         </div>
       </section>
 
+      {/* Main Grid Section (8 Cards) */}
+      <section className={styles.supportHelpSection}>
+        <div className={styles.supportGridStyle}>
+          {helpCards.map((card, index) => {
+            const Icon = card.icon;
+            return (
+              <div key={index} className={styles.helpCardItem}>
+                <div className={styles.cardMainContent}>
+                  <div
+                    className={styles.supportCardIcon}
+                    style={{ background: card.bg, color: card.color }}
+                  >
+                    <Icon size={26} />
+                  </div>
+                  <div>
+                    <h3>{card.title}</h3>
+                    <p>{card.text}</p>
+                  </div>
+                </div>
+                
+                <div className={styles.cardFooterBar}>
+                  <a href="#guides" className={styles.viewGuidesLink}>
+                    View guides <ArrowRight size={14} />
+                  </a>
+                  <span className={styles.articleCountText}>{card.articles}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Bottom Bar Section */}
+      <section className={styles.supportBottomBar}>
+        <BottomAction
+          icon={<FileText size={24} />}
+          title="Popular Articles"
+          text="Browse top guides and frequently read articles."
+          iconBg="#EEF5FF"
+          iconColor="#2563EB"
+        />
+
+        <BottomAction
+          icon={<Video size={24} />}
+          title="Video Tutorials"
+          text="Watch step-by-step videos and product walkthroughs."
+          iconBg="#F1EDFF"
+          iconColor="#6D5BFF"
+        />
+
+        <BottomAction
+          icon={<Bell size={24} />}
+          title="Need Instant Help?"
+          text="Open 24/7 AI Support for quick answers anytime."
+          iconBg="#EAFBF2"
+          iconColor="#059669"
+          isAiLink={true}
+        />
+      </section>
     </main>
+  );
+}
+
+function BottomAction({ icon, title, text, iconBg, iconColor, isAiLink }) {
+  return (
+    <div className={styles.bottomAction}>
+      <div className={styles.bottomIcon} style={{ background: iconBg, color: iconColor }}>
+        {icon}
+      </div>
+
+      <div className={styles.bottomActionTextWrap}>
+        <h3>{title}</h3>
+        <p>{text}</p>
+      </div>
+
+      {isAiLink ? (
+        <a href="#ai-support" className={styles.openAiSupportLink}>
+          Open AI Support <ArrowRight size={14} />
+        </a>
+      ) : (
+        <ChevronRight size={20} className={styles.arrowRightIcon} />
+      )}
+    </div>
   );
 }
