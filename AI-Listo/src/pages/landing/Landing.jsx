@@ -1186,7 +1186,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <section className="hero mt-30-">
+      <section className="hero mt-30">
         <div className="hero-container">
           <div className="hero-left">
             <div className="hero-left-in">
