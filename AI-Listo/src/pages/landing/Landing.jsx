@@ -16,6 +16,12 @@ import {
   ChartColumn,
   XCircle, Clock, EyeOff, Flame, Users, HelpCircle, 
   GitMerge, Cpu, Target, TrendingUp, UserCheck, MessagesSquare,
+  Eye, ChartNoAxesColumn, MessageSquareMore, Rocket,
+  FileText,  
+  GitFork,  
+  PieChart, 
+  ShieldCheck, 
+  MoveRight
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
@@ -56,11 +62,6 @@ import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
 import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
 
-import beitem1 from "../../assets/cortexa/beitem1.png";
-import beitem2 from "../../assets/cortexa/beitem2.png";
-import beitem3 from "../../assets/cortexa/beitem3.png";
-import beitem4 from "../../assets/cortexa/beitem4.png";
-
 import testimonialsImg from "../../assets/cortexa/testimonials.png";
 import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
 import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
@@ -83,6 +84,12 @@ const IconRenderer = ({ name, className }) => {
   };
   return icons[name] || null;
 };
+const trustIcons = [
+  <Target className="cx-icon" stroke="url(#icon-gradient)" />,
+  <Eye className="cx-icon" stroke="url(#icon-gradient)" />,
+  <TrendingUp  className="cx-icon" stroke="url(#icon-gradient)" />,
+  <Zap className="cx-icon" stroke="url(#icon-gradient)" />        
+];
 export default function Landing() {
   const [lang, setLang] = useState("en");
   const [langOpen, setLangOpen] = useState(false);
@@ -174,10 +181,10 @@ export default function Landing() {
 
       trustTitle: "Built to operate with confidence",
       trust: [
-        "Secure workflows",
-        "Live performance visibility",
-        "Scalable system",
-        "AI-driven efficiency",
+        "Generate More Qualified Leads.",
+        "See Every Deal Before It Slips.",
+        "Forecast Revenue Before Month-End.",
+        "Automate Follow-Ups That Close.",
       ],
 
       faqTitle: "FAQs",
@@ -253,15 +260,14 @@ export default function Landing() {
       beTitle: "What This Actually Does For You",
       besubTitle:
         "Automation handles the work. Communication never stops. Every lead keeps moving forward — without you chasing it.",
-      beitem1: "Work Happens Automatically",
-      beitem2: "Conversations Stay Active",
-      beitem3: "Clarity Without Guesswork",
-      beitem4: "More Deals, Less Effort",
-      beitemtext1:
-        "Follow-ups, tracking, and organization run in the background.",
-      beitemtext2: "Leads get responses, reminders, and engagement 24/7.",
-      beitemtext3: "You always know who to focus on and what to do next.",
-      beitemtext4: "Less manual work, faster movement, better outcomes.",
+      beitem1: "Work Moves Automatically",
+      beitem2: "Conversations Never Go Cold",
+      beitem3: "Know Exactly What To Do Next",
+      beitem4: "More Deals. Less Chasing.",
+      beitemtext1: "Follow-ups, tracking, and organization run in the background.",
+      beitemtext2: "Leads stay active with reminders, replies, and re-engagement.",
+      beitemtext3: "See who needs attention and where your next move is.",
+      beitemtext4: "Less manual work. Faster movement. Better outcomes.",
       bebottom: "Everything keeps moving — even when you’re not.",
       stripLabel: "Ready to grow?",
       stripTitle: "Start closing more deals — with AI working for you 24/7.",
@@ -532,10 +538,10 @@ export default function Landing() {
 
       trustTitle: "Construido para operar con confianza",
       trust: [
-        "Flujos seguros",
-        "Visibilidad en tiempo real",
-        "Sistema escalable",
-        "Eficiencia con IA",
+        "Genera más leads calificados.",
+        "Ve cada oportunidad antes de que se escape.",
+        "Pronostica los ingresos antes de fin de mes.",
+        "Automatiza los seguimientos que convierten."
       ],
 
       faqTitle: "Preguntas frecuentes",
@@ -616,18 +622,15 @@ export default function Landing() {
       beTitle: "Lo que esto realmente hace por ti",
       besubTitle:
         "La automatización hace el trabajo. La comunicación nunca se detiene. Cada lead sigue avanzando — sin que tengas que perseguirlo.",
-      beitem1: "El trabajo sucede automáticamente",
-      beitem2: "Las conversaciones se mantienen activas",
-      beitem3: "Claridad sin suposiciones",
-      beitem4: "Más ventas, menos esfuerzo",
+      beitem1: "El trabajo avanza automáticamente",
+      beitem2: "Las conversaciones nunca se enfrían",
+      beitem3: "Sabe exactamente qué hacer después",
+      beitem4: "Más negocios. Menos seguimiento manual.",
 
-      beitemtext1:
-        "Los seguimientos, el control y la organización funcionan en segundo plano.",
-      beitemtext2:
-        "Los leads reciben respuestas, recordatorios e interacción 24/7.",
-      beitemtext3: "Siempre sabes en quién enfocarte y qué hacer después.",
-      beitemtext4:
-        "Menos trabajo manual, mayor velocidad y mejores resultados.",
+      beitemtext1: "Los seguimientos, el control y la organización funcionan en segundo plano.",
+      beitemtext2: "Los leads se mantienen activos con recordatorios, respuestas y reactivaciones.",
+      beitemtext3: "Ve quién necesita atención y cuál debe ser tu próximo paso.",
+      beitemtext4: "Menos trabajo manual. Más rapidez. Mejores resultados.",
       bebottom: "Todo sigue avanzando — incluso cuando tú no estás.",
 
       stripLabel: "¿Listo para crecer?",
@@ -903,10 +906,10 @@ export default function Landing() {
 
       trustTitle: "Construído para operar com confiança",
       trust: [
-        "Fluxos seguros",
-        "Visibilidade em tempo real",
-        "Sistema escalável",
-        "Eficiência com IA",
+        "Gere mais leads qualificados.",
+        "Veja cada oportunidade antes que ela escape.",
+        "Preveja a receita antes do fim do mês.",
+        "Automatize acompanhamentos que fecham negócios."
       ],
 
       faqTitle: "Perguntas frequentes",
@@ -982,16 +985,15 @@ export default function Landing() {
       beTitle: "O que isso realmente faz por você",
       besubTitle:
         "A automação faz o trabalho. A comunicação nunca para. Cada lead continua avançando — sem que você precise correr atrás.",
-      beitem1: "O trabalho acontece automaticamente",
-      beitem2: "As conversas continuam ativas",
-      beitem3: "Clareza sem achismos",
-      beitem4: "Mais vendas, menos esforço",
-      beitemtext1:
-        "Follow-ups, controle e organização funcionam em segundo plano.",
-      beitemtext2: "Os leads recebem respostas, lembretes e interação 24/7.",
-      beitemtext3: "Você sempre sabe em quem focar e o que fazer em seguida.",
-      beitemtext4:
-        "Menos trabalho manual, mais velocidade e melhores resultados.",
+      beitem1: "O trabalho avança automaticamente",
+      beitem2: "As conversas nunca esfriam",
+      beitem3: "Saiba exatamente o que fazer a seguir",
+      beitem4: "Mais negócios. Menos trabalho de acompanhamento.",
+
+      beitemtext1: "Acompanhamentos, rastreamento e organização funcionam em segundo plano.",
+      beitemtext2: "Os leads permanecem ativos com lembretes, respostas e reengajamento.",
+      beitemtext3: "Veja quem precisa de atenção e qual deve ser o seu próximo passo.",
+      beitemtext4: "Menos trabalho manual. Mais agilidade. Melhores resultados.",
       bebottom: "Tudo continua avançando — mesmo quando você não está.",
       stripLabel: "Pronto para crescer?",
       stripTitle:
@@ -1518,15 +1520,14 @@ export default function Landing() {
         <img src={currentSec2} alt="" />
       </section>
       <section className="benefits-section pt-50">
+        
         <div className="benefits-container">
           <h2 className="cx-title-lg">{tr.beTitle}</h2>
-
-          <p className="benefits-sub">{tr.besubTitle}</p>
-
+          
           <div className="benefits-grid">
             <div className="benefits-item">
               <div className="benefits-icon">
-                <img src={beitem1} />
+                <Zap size={28} strokeWidth={1.8} className="icon-blue-purple" />
               </div>
               <h3>{tr.beitem1}</h3>
               <p>{tr.beitemtext1}</p>
@@ -1534,7 +1535,7 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <img src={beitem2} />
+                <MessageSquareMore size={28} strokeWidth={1.8} className="icon-blue-purple" />
               </div>
               <h3>{tr.beitem2}</h3>
               <p>{tr.beitemtext2}</p>
@@ -1542,7 +1543,7 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <img src={beitem3} />
+                <Target size={28} strokeWidth={1.8} className="icon-blue-purple" />
               </div>
               <h3>{tr.beitem3}</h3>
               <p>{tr.beitemtext3}</p>
@@ -1550,14 +1551,13 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <img src={beitem4} />
+                <Rocket size={28} strokeWidth={1.8} className="icon-blue-purple" />
               </div>
               <h3>{tr.beitem4}</h3>
               <p>{tr.beitemtext4}</p>
             </div>
           </div>
 
-          <p className="benefits-bottom">{tr.bebottom}</p>
         </div>
       </section>
       <section id="whatsapp" className="cx-hero pt-50">
@@ -1665,47 +1665,85 @@ export default function Landing() {
       <section className="dominant section-light pt-50 mb-100">
         <div className="container center">
           <h2 className="heading-dark">{tr.dominantHowTitle}</h2>
-
           <p className="subline-dark">{tr.dominantHowSubtitle}</p>
 
           <div className="flow">
-            <div className="step">
-              <span>01</span>
-              <h3>{tr.dominantStep1Title}</h3>
-              <p>{tr.dominantStep1Desc}</p>
+            <div className="step-card">
+              <div className="step-header">
+                <span className="step-number">01</span>
+                <div className="step-icon">
+                  <FileText size={34} strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="step-body">
+                <h3>{tr.dominantStep1Title}</h3>
+                <p>{tr.dominantStep1Desc}</p>
+              </div>
             </div>
 
-            <div className="arrow">→</div>
-            <div className="step">
-              <span>02</span>
-              <h3>{tr.dominantStep2Title}</h3>
-              <p>{tr.dominantStep2Desc}</p>
+            <div className="flow-arrow-container">
+              <div className="arrow-line"></div>
+              <div className="arrow-head"></div>
             </div>
 
-            <div className="arrow">→</div>
-            <div className="step">
-              <span>03</span>
-              <h3>{tr.dominantStep3Title}</h3>
-              <p>{tr.dominantStep3Desc}</p>
+            <div className="step-card">
+              <div className="step-header">
+                <span className="step-number">02</span>
+                <div className="step-icon">
+                  <Brain size={34} strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="step-body">
+                <h3>{tr.dominantStep2Title}</h3>
+                <p>{tr.dominantStep2Desc}</p>
+              </div>
+            </div>
+
+            <div className="flow-arrow-container">
+              <div className="arrow-line"></div>
+              <div className="arrow-head"></div>
+            </div>
+
+            <div className="step-card">
+              <div className="step-header">
+                <span className="step-number">03</span>
+                <div className="step-icon">
+                  <GitFork size={34} strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="step-body">
+                <h3>{tr.dominantStep3Title}</h3>
+                <p>{tr.dominantStep3Desc}</p>
+              </div>
             </div>
           </div>
 
           <div className="grid-3 mt">
-            <div>
+            <div className="bottom-item">
+              <div className="bottom-icon icon-circle-blue">
+                <TrendingUp size={32} strokeWidth={1.5} />
+              </div>
               <h3>{tr.dominantBottom1Title}</h3>
               <p>{tr.dominantBottom1Desc}</p>
             </div>
 
-            <div>
+            <div className="bottom-item">
+              <div className="bottom-icon icon-circle-purple">
+                <PieChart size={32} strokeWidth={1.5} />
+              </div>
               <h3>{tr.dominantBottom2Title}</h3>
               <p>{tr.dominantBottom2Desc}</p>
             </div>
 
-            <div>
+            <div className="bottom-item">
+              <div className="bottom-icon icon-circle-darkpurple">
+                <ShieldCheck size={32} strokeWidth={1.5} />
+              </div>
               <h3>{tr.dominantBottom3Title}</h3>
               <p>{tr.dominantBottom3Desc}</p>
             </div>
           </div>
+
           <p className="final-line">{tr.dominantFinal}</p>
         </div>
       </section>
@@ -1887,11 +1925,25 @@ export default function Landing() {
       </section>
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50">
+        <svg width="0" height="0" style={{ position: 'absolute', opacity: 0 }}>
+          <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2563eb" /> 
+            <stop offset="100%" stopColor="#9333ea" />
+          </linearGradient>
+        </svg>
         <div className="land-container">
           <h2 className="cx-title-md">{tr.trustTitle}</h2>
+          
+          <div className="cx-divider">
+            <span className="cx-star">✦</span>
+          </div>
+
           <div className="cx-trust-grid">
             {tr.trust.map((t, i) => (
               <div className="cx-trust-item" key={i}>
+                <div className="cx-icon-wrapper">
+                  {trustIcons[i]}
+                </div>
                 <h4>{t}</h4>
               </div>
             ))}
