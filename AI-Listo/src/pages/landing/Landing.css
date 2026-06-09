@@ -222,59 +222,77 @@
  #cortexa-ai-crm-landing .cx-comp-grid {
      margin-top: 40px;
      display: grid;
-     grid-template-columns: 1fr 1fr;
-     gap: 36px;
-     max-width: 940px;
-     margin-left: auto;
-     margin-right: auto;
+     grid-template-columns: 1fr 4fr 1fr;
+     gap: 6px;
+     margin-left: 30px;
+     margin-right: 30px;
  }
 
- #cortexa-ai-crm-landing .cx-comp-col {
-     border-top: 1px solid var(--line);
-     padding-top: 18px;
+ #cortexa-ai-crm-landing .without, #cortexa-ai-crm-landing .with {
+     padding: 10px;
+     margin-top:10px;
  }
 
  #cortexa-ai-crm-landing .cx-comp-col h4 {
-     font-size: 24px;
+     font-size: 19px;
      margin-bottom: 18px;
      letter-spacing: -0.03em;
+    display: flex;
+    gap:6px;
+    align-items: center;
  }
-
+#cortexa-ai-crm-landing .without h4 svg, #cortexa-ai-crm-landing .without h4 span{
+    color: #ef4444;
+    text-transform: uppercase;
+}
+#cortexa-ai-crm-landing .with h4 svg, #cortexa-ai-crm-landing .with h4 span{
+    color: #059669;
+    text-transform: uppercase;
+}
  #cortexa-ai-crm-landing .cx-list {
      list-style: none;
      padding: 0;
      margin: 0;
      display: grid;
-     gap: 14px;
  }
 
  #cortexa-ai-crm-landing .cx-list li {
      color: var(--muted);
-     font-size: 16px;
+     font-size: 12px;
      line-height: 1.55;
-     padding-left: 28px;
      position: relative;
+    text-align: left;
  }
+#cortexa-ai-crm-landing .without {
+    background-color: #fef2f2;
+    border: 1px solid #e2e1e1;
+    border-radius:10px;
+}
+#cortexa-ai-crm-landing .with {
+    background-color: #f0fdf4;
+    border: 1px solid #e2e1e1;
+    border-radius:10px;
+}
+#cortexa-ai-crm-landing .cx-comp-col p{
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    text-align: left;
+}
+#cortexa-ai-crm-landing .without .cx-list li svg{
+    color: #ef4444;
+    min-width: 20px;
+}
 
+#cortexa-ai-crm-landing .with .cx-list li svg{
+    color: #059669;
+    min-width: 20px;
+}
  #cortexa-ai-crm-landing .cx-list li::before {
      position: absolute;
      left: 0;
      top: 0;
      font-weight: 800;
- }
-
- #cortexa-ai-crm-landing .cx-list.neg li::before {
-     content: "×";
-     color: #ef4444;
-     font-size: 20px;
-     line-height: 1;
- }
-
- #cortexa-ai-crm-landing .cx-list.pos li::before {
-     content: "✓";
-     color: var(--blue);
-     font-size: 18px;
-     line-height: 1.1;
  }
 
  #cortexa-ai-crm-landing .cx-stack-wrap {
@@ -2080,8 +2098,36 @@
   font-weight: 500;
   color: #4A5568; 
 }
-
-
+@media (min-width: 1025px) {
+    #cortexa-ai-crm-landing .without{
+        position: absolute;
+        max-width: 243px;
+        left: 43px;
+    }
+     #cortexa-ai-crm-landing .with {
+        position: absolute;
+        max-width: 243px;
+        right: 43px;
+    }
+    #cortexa-ai-crm-landing .cx-list li {
+        font-size: 10px;
+    }
+}
+@media (min-width: 1200px) {
+    #cortexa-ai-crm-landing .cx-list li {
+        font-size: 12px;
+    }
+    #cortexa-ai-crm-landing .without{
+        position: absolute;
+        max-width: 243px;
+        left: 71px;
+    }
+     #cortexa-ai-crm-landing .with {
+        position: absolute;
+        max-width: 243px;
+        right: 71px;
+    }
+}
 @media (max-width: 400px) {
   #cortexa-ai-crm-landing .social-badge-container {
     padding: 8px 14px;
@@ -2098,6 +2144,13 @@
 }
 
 @media (max-width: 1024px) {
+    #cortexa-ai-crm-landing .without, #cortexa-ai-crm-landing .with {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+    #cortexa-ai-crm-landing .cx-comp-grid {
+        grid-template-columns: 1fr;
+    }
     #cortexa-ai-crm-landing .check-item {
         margin-bottom: 0;
     }

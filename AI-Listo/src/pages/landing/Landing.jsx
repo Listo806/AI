@@ -14,6 +14,8 @@ import {
   MessageCircleCheck,
   ShieldX,
   ChartColumn,
+  XCircle, Clock, EyeOff, Flame, Users, HelpCircle, 
+  GitMerge, Cpu, Target, TrendingUp, UserCheck, MessagesSquare,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
@@ -62,7 +64,25 @@ import beitem4 from "../../assets/cortexa/beitem4.png";
 import testimonialsImg from "../../assets/cortexa/testimonials.png";
 import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
 import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
+import landingDashImg from "../../assets/cortexa/landingDash.png";
 
+const IconRenderer = ({ name, className }) => {
+  const icons = {
+    MessagesSquare: <MessagesSquare className={className} />,
+    Clock: <Clock className={className} />,
+    EyeOff: <EyeOff className={className} />,
+    Flame: <Flame className={className} />,
+    Users: <Users className={className} />,
+    HelpCircle: <HelpCircle className={className} />,
+    GitMerge: <GitMerge className={className} />,
+    Cpu: <Cpu className={className} />,
+    Target: <Target className={className} />,
+    TrendingUp: <TrendingUp className={className} />,
+    UserCheck: <UserCheck className={className} />,
+    CheckCircle: <CheckCircle className={className} />
+  };
+  return icons[name] || null;
+};
 export default function Landing() {
   const [lang, setLang] = useState("en");
   const [langOpen, setLangOpen] = useState(false);
@@ -102,21 +122,26 @@ export default function Landing() {
 
       dashboardTitle: "Dashboards you work from, not just look at",
 
-      without: "Without CORTEXA",
-      with: "With CORTEXA",
-
+      without: "Without",
+      with: "With",
+      withoutsub: "Your bussiness feels scattered.",
+      withsub: "Your bussiness run from one command center.",
       withoutList: [
-        "Leads scattered across apps and spreadsheets",
-        "Slow manual follow-ups and missed messages",
-        "No real-time visibility into your pipeline",
-        "Hard to know what your team is doing",
+        { icon: "MessagesSquare", text: "Leads spread across WhatsApp, calls, forms, and social messages" },
+        { icon: "Clock", text: "Follow-ups depend on memory or manual reminders" },
+        { icon: "EyeOff", text: "Pipeline visibility is unclear" },
+        { icon: "Flame", text: "Hot opportunities get missed" },
+        { icon: "Users", text: "Team performance is hard to measure" },
+        { icon: "HelpCircle", text: "Revenue forecasting feels like guessing" }
       ],
 
       withList: [
-        "Everything in one powerful dashboard",
-        "Instant WhatsApp replies and AI automation",
-        "Live pipeline updates and performance tracking",
-        "Know exactly what’s happening and what to do next",
+        { icon: "GitMerge", text: "One command center for leads, deals, messages, and tasks" },
+        { icon: "Cpu", text: "AI follow-ups and reminders keep opportunities moving" },
+        { icon: "Target", text: "Pipeline visibility shows what is active, stuck, or ready to close" },
+        { icon: "TrendingUp", text: "Revenue forecasting helps you see what's coming" },
+        { icon: "UserCheck", text: "Team performance is visible in real time" },
+        { icon: "CheckCircle", text: "Every agent knows what to do next" }
       ],
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
@@ -455,21 +480,26 @@ export default function Landing() {
 
       dashboardTitle: "Paneles que usas, no solo miras",
 
-      without: "Sin CORTEXA",
-      with: "Con CORTEXA",
-
+      without: "Sin",
+      with: "Con",
+      withoutsub: "Tu negocio se siente disperso.",
+      withsub: "Tu negocio funciona desde un único centro de control.",
       withoutList: [
-        "Leads dispersos en apps y hojas de cálculo",
-        "Seguimientos manuales lentos y mensajes perdidos",
-        "Sin visibilidad en tiempo real del pipeline",
-        "Difícil saber qué hace tu equipo",
+        { icon: "MessagesSquare", text: "Los leads están dispersos entre WhatsApp, llamadas, formularios y mensajes en redes sociales" },
+        { icon: "Clock", text: "Los seguimientos dependen de la memoria o de recordatorios manuales" },
+        { icon: "EyeOff", text: "La visibilidad del pipeline no es clara" },
+        { icon: "Flame", text: "Se pierden oportunidades valiosas" },
+        { icon: "Users", text: "Es difícil medir el rendimiento del equipo" },
+        { icon: "HelpCircle", text: "La previsión de ingresos parece una adivinanza" }
       ],
 
       withList: [
-        "Todo en un panel potente",
-        "Respuestas instantáneas por WhatsApp y automatización IA",
-        "Actualizaciones en vivo del pipeline",
-        "Saber exactamente qué pasa y qué hacer",
+        { icon: "GitMerge", text: "Un único centro de control para leads, negocios, mensajes y tareas" },
+        { icon: "Cpu", text: "Los seguimientos y recordatorios con IA mantienen las oportunidades en movimiento" },
+        { icon: "Target", text: "La visibilidad del pipeline muestra qué está activo, bloqueado o listo para cerrarse" },
+        { icon: "TrendingUp", text: "La previsión de ingresos te ayuda a ver lo que viene" },
+        { icon: "UserCheck", text: "El rendimiento del equipo es visible en tiempo real" },
+        { icon: "CheckCircle", text: "Cada agente sabe cuál es el siguiente paso" }
       ],
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
@@ -824,19 +854,26 @@ export default function Landing() {
       trial: "Teste grátis",
       login: "Entrar",
       dashboardTitle: "Painéis para trabalhar, não apenas visualizar",
-      without: "Sem CORTEXA",
-      with: "Com CORTEXA",
+      without: "Sem",
+      with: "Com",
+      withoutsub: "Seu negócio parece desorganizado.",
+      withsub: "Seu negócio funciona a partir de um único centro de comando.",
       withoutList: [
-        "Leads espalhados em apps e planilhas",
-        "Follow-ups manuais lentos e mensagens perdidas",
-        "Sem visão em tempo real do pipeline",
-        "Difícil saber o que o time faz",
+        { icon: "MessagesSquare", text: "Os leads ficam espalhados entre WhatsApp, chamadas, formulários e mensagens nas redes sociais" },
+        { icon: "Clock", text: "Os acompanhamentos dependem da memória ou de lembretes manuais" },
+        { icon: "EyeOff", text: "A visibilidade do pipeline não é clara" },
+        { icon: "Flame", text: "Oportunidades valiosas acabam sendo perdidas" },
+        { icon: "Users", text: "É difícil medir o desempenho da equipe" },
+        { icon: "HelpCircle", text: "A previsão de receita parece um jogo de adivinhação" }
       ],
+
       withList: [
-        "Tudo em um painel poderoso",
-        "Respostas instantâneas no WhatsApp com IA",
-        "Atualizações em tempo real do pipeline",
-        "Saber exatamente o que está acontecendo",
+        { icon: "GitMerge", text: "Um único centro de comando para leads, negócios, mensagens e tarefas" },
+        { icon: "Cpu", text: "Acompanhamentos e lembretes com IA mantêm as oportunidades avançando" },
+        { icon: "Target", text: "A visibilidade do pipeline mostra o que está ativo, parado ou pronto para fechar" },
+        { icon: "TrendingUp", text: "A previsão de receita ajuda você a enxergar o que está por vir" },
+        { icon: "UserCheck", text: "O desempenho da equipe é visível em tempo real" },
+        { icon: "CheckCircle", text: "Cada agente sabe exatamente o próximo passo" }
       ],
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
@@ -1447,21 +1484,33 @@ export default function Landing() {
 
         <div className="cx-comp-grid">
           <div className="cx-comp-col">
-            <h4>{tr.without}</h4>
-            <ul className="cx-list neg">
-              {tr.withoutList.map((i, idx) => (
-                <li key={idx}>{i}</li>
-              ))}
-            </ul>
+            <div className="without">
+              <h4><XCircle /><span>{tr.without}</span> CORTEXA</h4>
+              <p>{tr.withoutsub}</p>
+              <ul className="cx-list neg">
+                {tr.withoutList.map((item, idx) => (
+                  <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
+                    <IconRenderer name={item.icon} className="icon-neg" style={{ color: '#ef4444', flexShrink: 0, marginTop: '3px' }} />
+                    <span>{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>    
           </div>
-
+          <img src={landingDashImg} alt="landing Dashboard" className="landingDash" />    
           <div className="cx-comp-col">
-            <h4>{tr.with}</h4>
-            <ul className="cx-list pos">
-              {tr.withList.map((i, idx) => (
-                <li key={idx}>{i}</li>
-              ))}
-            </ul>
+            <div className="with">
+              <h4><CheckCircle /><span>{tr.with}</span> CORTEXA</h4>
+              <p>{tr.withsub}</p>
+              <ul className="cx-list pos">
+                {tr.withList.map((item, idx) => (
+                  <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
+                    <IconRenderer name={item.icon} className="icon-pos" style={{ color: '#22c55e', flexShrink: 0, marginTop: '3px' }} />
+                    <span>{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
