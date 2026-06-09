@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 
-export default function CountriesCitiesSection() {
-  
+export default function ExploreOurMarkets() {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
@@ -13,202 +12,247 @@ export default function CountriesCitiesSection() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isMobile = windowWidth < 640;   
-  const isTablet = windowWidth < 1024;   
-  const isNotebook = windowWidth < 1280;  
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth < 1024;
 
-  let gridColumns = "repeat(7, 1fr)";
-  if (isMobile) gridColumns = "repeat(1, 1fr)";
-  else if (isTablet) gridColumns = "repeat(3, 1fr)";
-  else if (isNotebook) gridColumns = "repeat(4, 1fr)";
-
-  const countries = [
+  const latinAmericaCountries = [
     {
       country: "Brazil",
       flagCode: "br",
-      cities: [
-        { name: "São Paulo", href: "/brazil/sao-paulo" },
-        { name: "Rio de Janeiro", href: "/brazil/rio-de-janeiro" },
-        { name: "Brasília", href: "/brazil/brasilia" },
-        { name: "Belo Horizonte", href: "/brazil/belo-horizonte" },
-        { name: "Curitiba", href: "/brazil/curitiba" },
-      ],
+      cities: ["São Paulo", "Rio de Janeiro", "Brasília", "Belo Horizonte", "Salvador"],
     },
     {
       country: "Mexico",
       flagCode: "mx",
-      cities: [
-        { name: "Mexico City", href: "/mexico/mexico-city" },
-        { name: "Guadalajara", href: "/mexico/guadalajara" },
-        { name: "Monterrey", href: "/mexico/monterrey" },
-        { name: "Cancún", href: "/mexico/cancun" },
-        { name: "Puebla", href: "/mexico/puebla" },
-      ],
-    },
-    {
-      country: "Colombia",
-      flagCode: "co",
-      cities: [
-        { name: "Bogotá", href: "/colombia/bogota" },
-        { name: "Medellín", href: "/colombia/medellin" },
-        { name: "Cali", href: "/colombia/cali" },
-        { name: "Cartagena", href: "/colombia/cartagena" },
-        { name: "Barranquilla", href: "/colombia/barranquilla" },
-      ],
+      cities: ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana"],
     },
     {
       country: "Argentina",
       flagCode: "ar",
-      cities: [
-        { name: "Buenos Aires", href: "/argentina/buenos-aires" },
-        { name: "Córdoba", href: "/argentina/cordoba" },
-        { name: "Rosario", href: "/argentina/rosario" },
-        { name: "Mendoza", href: "/argentina/mendoza" },
-        { name: "La Plata", href: "/argentina/la-plata" },
-      ],
+      cities: ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "La Plata"],
     },
     {
       country: "Chile",
       flagCode: "cl",
-      cities: [
-        { name: "Santiago", href: "/chile/santiago" },
-        { name: "Valparaíso", href: "/chile/valparaiso" },
-        { name: "Concepción", href: "/chile/concepcion" },
-        { name: "Viña del Mar", href: "/chile/vina-del-mar" },
-        { name: "La Serena", href: "/chile/la-serena" },
-      ],
+      cities: ["Santiago", "Valparaíso", "Concepción", "La Serena", "Antofagasta"],
+    },
+    {
+      country: "Colombia",
+      flagCode: "co",
+      cities: ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena"],
     },
     {
       country: "Peru",
       flagCode: "pe",
-      cities: [
-        { name: "Lima", href: "/peru/lima" },
-        { name: "Arequipa", href: "/peru/arequipa" },
-        { name: "Trujillo", href: "/peru/trujillo" },
-        { name: "Cusco", href: "/peru/cusco" },
-        { name: "Piura", href: "/peru/piura" },
-      ],
+      cities: ["Lima", "Arequipa", "Trujillo", "Cusco", "Piura"],
     },
     {
       country: "Ecuador",
       flagCode: "ec",
-      cities: [
-        { name: "Quito", href: "/ecuador/quito" },
-        { name: "Guayaquil", href: "/ecuador/guayaquil" },
-        { name: "Cuenca", href: "/ecuador/cuenca" },
-        { name: "Manta", href: "/ecuador/manta" },
-        { name: "Samborondón", href: "/ecuador/samborondon" },
-      ],
+      cities: ["Quito", "Guayaquil", "Cuenca", "Manta", "Ambato"],
     },
   ];
 
+  const europeUsCountries = [
+    {
+      country: "United Kingdom",
+      flagCode: "gb",
+      cities: ["London", "Manchester", "Birmingham", "Liverpool", "Leeds"],
+    },
+    {
+      country: "Spain",
+      flagCode: "es",
+      cities: ["Madrid", "Barcelona", "Valencia", "Sevilla", "Málaga"],
+    },
+    {
+      country: "Portugal",
+      flagCode: "pt",
+      cities: ["Lisbon", "Porto", "Braga", "Faro", "Coimbra"],
+    },
+    {
+      country: "United States",
+      flagCode: "us",
+      isUS: true, 
+      col1: ["New York City", "Boston", "Miami", "Orlando", "Los Angeles"],
+      col2: ["San Francisco", "San Diego", "Chicago", "Dallas", "Houston", "Austin"],
+    },
+  ];
+
+  const renderCityLinks = (cities, countrySlug) => (
+    <div style={styles.cityList}>
+      {cities.map((cityName) => (
+        <a
+          key={cityName}
+          href={`/${countrySlug}/${cityName.toLowerCase().replace(/ /g, "-")}`}
+          style={styles.cityLink}
+        >
+          <MapPin size={15} style={styles.pinIcon} />
+          <span style={styles.cityName}>{cityName}</span>
+        </a>
+      ))}
+    </div>
+  );
+
   return (
-    <div style={styles.inner}>
-      <h2 style={styles.title}>BROWSE CITIES</h2>
+    <div style={styles.container}>
+      <h1 style={styles.mainTitle}>Explore Our Markets</h1>
 
-      <div style={{ ...styles.grid, gridTemplateColumns: gridColumns }}>
-        {countries.map((item, index) => {
-          const hideBorder = isTablet || index === countries.length - 1;
-
-          return (
-            <div
-              key={item.country}
-              style={{
-                ...styles.countryColumn,
-                borderRight: hideBorder ? "none" : "1px solid #DDE3EF",
-                borderBottom: isTablet ? "1px solid #DDE3EF" : "none", 
-              }}
-            >
-              <div style={styles.countryHeader}>
-                <img
-                  src={`https://flagcdn.com/w40/${item.flagCode}.png`}
-                  alt={`${item.country} flag`}
-                  style={styles.flagImg}
-                />
-                <h3 style={styles.countryName}>{item.country}</h3>
+      {/* --- SECTION 1: LATIN AMERICA --- */}
+      <div style={styles.regionSection}>
+        <h2 style={styles.regionTitle}>Latin America</h2>
+        <div style={{ 
+          ...styles.gridContainer, 
+          gridTemplateColumns: isMobile ? "repeat(1, 1fr)" : isTablet ? "repeat(3, 1fr)" : "repeat(7, 1fr)" 
+        }}>
+          {latinAmericaCountries.map((item, index) => {
+            const isLast = index === latinAmericaCountries.length - 1;
+            return (
+              <div 
+                key={item.country} 
+                style={{ 
+                  ...styles.countryColumn, 
+                  borderRight: !isLast && !isTablet && !isMobile ? "1px solid #E2E8F0" : "none" 
+                }}
+              >
+                <div style={styles.countryHeader}>
+                  <img src={`https://flagcdn.com/w40/${item.flagCode}.png`} alt="" style={styles.flagImg} />
+                  <span style={styles.countryName}>{item.country}</span>
+                </div>
+                {renderCityLinks(item.cities, item.country.toLowerCase())}
               </div>
+            );
+          })}
+        </div>
+      </div>
 
-              <div style={styles.cityList}>
-                {item.cities.map((city) => (
-                  <a key={city.name} href={city.href} style={styles.cityLink}>
-                    <span>{city.name}</span>
-                    <ChevronRight size={18} strokeWidth={2} />
-                  </a>
-                ))}
+      {/* --- SECTION 2: EUROPE & UNITED STATES --- */}
+      <div style={styles.regionSection}>
+        <h2 style={styles.regionTitle}>Europe & United States</h2>
+        <div style={{ 
+          ...styles.gridContainer, 
+          gridTemplateColumns: isMobile ? "repeat(1, 1fr)" : isTablet ? "repeat(2, 1fr)" : "1fr 1fr 1fr 2fr"
+        }}>
+          {europeUsCountries.map((item, index) => {
+            const isLast = index === europeUsCountries.length - 1;
+            
+            return (
+              <div 
+                key={item.country} 
+                style={{ 
+                  ...styles.countryColumn, 
+                  borderRight: !isLast && !isTablet && !isMobile ? "1px solid #E2E8F0" : "none" 
+                }}
+              >
+                <div style={styles.countryHeader}>
+                  <img src={`https://flagcdn.com/w40/${item.flagCode}.png`} alt="" style={styles.flagImg} />
+                  <span style={styles.countryName}>{item.country}</span>
+                </div>
+
+                {item.isUS ? (
+                  <div style={styles.usColumnsWrapper}>
+                    {renderCityLinks(item.col1, "united-states")}
+                    {renderCityLinks(item.col2, "united-states")}
+                  </div>
+                ) : (
+                  renderCityLinks(item.cities, item.country.toLowerCase().replace(/ /g, "-"))
+                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  inner: {
-    padding: "40px 20px",
-    maxWidth: "100%",
-    overflowX: "hidden",
+  container: {
+    padding: "20px 40px",
+    maxWidth: "1360px",
+    margin: "0 auto",
+    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    backgroundColor: "#ffffff",
   },
 
-  title: {
-    margin: "0 0 36px",
-    fontSize: "20px",
-    lineHeight: 1,
-    fontWeight: 800,
-    letterSpacing: "-0.3px",
+  mainTitle: {
+    fontSize: "44px",
+    fontWeight: "700",
     color: "#08142B",
+    textAlign: "center",
+    marginBottom: "60px",
+    letterSpacing: "-1px",
   },
 
-  grid: {
+  regionSection: {
+    marginBottom: "55px",
+  },
+
+  regionTitle: {
+    fontSize: "22px",
+    fontWeight: "700",
+    color: "#08142B",
+    marginBottom: "35px",
+  },
+
+  gridContainer: {
     display: "grid",
-    gap: "30px 0px",
+    gap: "30px 0px", 
     alignItems: "start",
   },
 
   countryColumn: {
-    padding: "10px 20px 25px 20px",
+    padding: "0 15px 0 20px", 
   },
 
   countryHeader: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    marginBottom: "24px",
+    marginBottom: "22px",
   },
 
   flagImg: {
     width: "24px",
-    height: "24px",
+    height: "16px",
     objectFit: "cover",
-    borderRadius: "50%",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+    borderRadius: "2px",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
   },
 
   countryName: {
-    margin: 0,
-    fontSize: "15px",
-    lineHeight: 1,
-    fontWeight: 600,
-    letterSpacing: "-0.7px",
+    fontSize: "16px",
+    fontWeight: "700",
     color: "#08142B",
   },
 
   cityList: {
     display: "flex",
     flexDirection: "column",
-    gap: "20px",
+    gap: "18px",
+    flex: 1,
+  },
+
+  usColumnsWrapper: {
+    display: "flex",
+    gap: "30px", 
   },
 
   cityLink: {
-    display: "inline-flex",
+    display: "flex",
     alignItems: "center",
-    gap: "8px",
-    color: "#0052E8",
+    gap: "10px",
     textDecoration: "none",
+    color: "#2D3748",
+  },
+
+  pinIcon: {
+    color: "#A0AEC0", 
+    flexShrink: 0,
+  },
+
+  cityName: {
     fontSize: "15px",
-    lineHeight: 1,
-    fontWeight: 500,
-    letterSpacing: "-0.5px",
+    fontWeight: "400",
+    color: "#4A5568",
   },
 };

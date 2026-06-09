@@ -571,9 +571,7 @@
      box-shadow: 0 25px 60px rgba(124, 58, 237, 0.22);
      overflow: hidden;
  }
-#cortexa-ai-crm-landing .cx-final-box .cx-logo-img{
-    height: 60px;
-}
+
 #cortexa-ai-crm-landing .final-reinforcement{
     display: flex;
     align-items: center;
@@ -584,7 +582,7 @@
      color: rgba(255, 255, 255, .88);
      margin-left: auto;
      margin-right: auto;
-     margin-top:0;
+     margin-top:10px;
  }
 
  #cortexa-ai-crm-landing .cx-final-shot {
@@ -1704,14 +1702,14 @@
     width: 50%;
 }
 .hero-left-in{
-    padding-left: 7%;
+    padding-left: 8%;
     padding-top: 10px;
 }
 #cortexa-ai-crm-landing .hero-right{
     align-items: flex-start;
 }
 #cortexa-ai-crm-landing .hero-right .hero-image img{
-    width: 83%;
+    width: 85%;
     float: right;
 }
 .mt-30{
@@ -1898,7 +1896,7 @@
 .footer-final .footer-col ul{list-style:none;padding:0;margin:0}
 .footer-final .footer-col li{margin-bottom:10px}
 .footer-final .footer-col a{text-decoration:none;color:#666}
-.footer-final .footer-location{display:grid;grid-template-columns:1fr;gap:40px;border-top:1px solid #eee;padding-top:40px;margin-bottom:60px}
+.footer-final .footer-location{display:grid;grid-template-columns:1fr;gap:40px;border-top:1px solid #eee;padding-top:0px;padding-bottom:0px;margin-bottom:0px}
 .footer-final .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .footer-final .footer-location a{text-decoration:none;color:#666}
 .footer-final .footer-newsletter{border-top:1px solid #eee;padding-top:40px;text-align:center;max-width:500px;margin:auto}

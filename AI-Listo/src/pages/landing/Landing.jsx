@@ -390,9 +390,9 @@ export default function Landing() {
       topLine3: "that capture, follow up, and close your leads automatically.",
       pricing: "Pricing",
 
-      finalTitle: "Start Growing With AI Today",
+      finalTitle: "Automate Your Entire Workflow",
       finalDesc:
-        "Capture more leads, automate follow-ups, and close more deals with AI-powered automation.",
+        "CORTEXA captures leads, automates follow-ups, updates your pipeline, and keeps your team moving — so you can focus on closing deals",
       reinforcement: "No credit card required",
 
       footerDescription:
@@ -546,9 +546,9 @@ export default function Landing() {
       ],
 
       finalTitle:
-        "Automatiza tus procesos con agentes de IA impulsados por CORTEXA OS",
+        "Automatiza todo tu flujo de trabajo",
       finalDesc:
-        "Captura leads, realiza seguimientos al instante y haz avanzar cada oportunidad automáticamente dentro de un sistema operativo inteligente.",
+        "CORTEXA capta clientes potenciales, automatiza los seguimientos, actualiza tu pipeline y mantiene a tu equipo en movimiento, para que puedas concentrarte en cerrar más negocios.",
       footer: {
         desc: "El CRM con IA que ayuda a los equipos a cerrar más ventas más rápido.",
         btn: "Empieza tu prueba gratuita →",
@@ -761,9 +761,9 @@ export default function Landing() {
         "que capturan, dan seguimiento y cierran tus leads automáticamente.",
       pricing: "Precios",
 
-      finalTitle: "Empieza a crecer con IA hoy",
+      finalTitle: "Automatize todo o seu fluxo de trabalho",
       finalDesc:
-        "Capta más clientes potenciales, automatiza seguimientos y cierra más negocios con automatización impulsada por IA.",
+        "A CORTEXA captura leads, automatiza acompanhamentos, atualiza seu pipeline e mantém sua equipe em movimento, para que você possa se concentrar em fechar mais negócios",
       reinforcement: "No se requiere tarjeta de crédito",
 
       footerDescription:
@@ -1888,11 +1888,6 @@ export default function Landing() {
             <Zap size={22} />
             Start free trial
           </a>
-          <p className="final-reinforcement">
-            {" "}
-            <CheckCircle size={17} />
-            {tr.reinforcement}
-          </p>
           <div className="cx-final-shot">
             <img src={trialmobileImg} className="desktop-none" />
           </div>
@@ -1967,7 +1962,7 @@ export default function Landing() {
                     <a href="/start-trial">{tr.createAccount}</a>
                   </li>
                   <li>
-                    <a href="/signin">{tr.login}</a>
+                    <a href="/sign-in">{tr.login}</a>
                   </li>
                   <li>
                     <a href="/setup-guide">{tr.setupGuide}</a>
