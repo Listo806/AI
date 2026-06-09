@@ -5,15 +5,14 @@ import {
   Timer,
   Puzzle,
   Crosshair,
-  Building2,
   Zap,
   BarChart3,
   Users,
-  Bot,
 } from "lucide-react";
 import aboutTopImg from "../../assets/cortexa/about_top.png";
 import aboutBottomImg from "../../assets/cortexa/about_bottom.png";
 import aboutCenterImg from "../../assets/cortexa/about_center.png";
+
 export default function About() {
   const problemCards = [
     {
@@ -63,24 +62,29 @@ export default function About() {
         <div className={styles.aboutHeroText}>
           <div className={styles.aboutBadge}>ABOUT CORTEXA</div>
           <h1>
-            The intelligence layer behind modern <span>real estate operations.</span>
+            The intelligence layer behind <br />modern <span>real estate operations.</span>
           </h1>
           <p>
-            CORTEXA unifies leads, listings, conversations, automations, analytics,
-            and team workflows into one AI operating system built for real estate professionals.
+            CORTEXA was built to unify leads, listings, conversations, automations, analytics, and team workflows into one intelligent operating system for real estate professionals.
+          </p>
+          <p>
+            Our mission is simple: bring modern AI and connected systems into a fragmented industry to make daily work simpler, faster, and more effective.
           </p>
         </div>
 
-        <img src={aboutTopImg} className={styles.aboutTop} />
+        <img src={aboutTopImg} alt="AI Command Center" className={styles.aboutTop} />
       </section>
 
       {/* Problem Section */}
       <section className={styles.aboutProblemSection}>
         <h2>
-          Real estate doesn’t have a lead problem. <br />
-          It has an <span>operations problem.</span>
+          Why CORTEXA exists
         </h2>
-        <p>Leads come from many channels but are rarely connected in one system.</p>
+        <p>
+          Real estate doesn’t just have a lead problem — it has an <strong>operations problem.</strong><br />
+          Leads, listings, inboxes, calendars, teams, and follow-up tools often live in separate places. <br />
+          That fragmentation creates delays, missed opportunities, and unnecessary complexity.
+        </p>
 
         <div className={styles.aboutProblemGrid}>
           {problemCards.map((card) => {
@@ -88,11 +92,11 @@ export default function About() {
             return (
               <div key={card.title} className={styles.aboutProblemCard}>
                 <div className={styles.problemCardIconWrap}>
-                  <Icon size={42} />
+                  <Icon size={32} />
                 </div>
                 <div>
-                  <h3>{card.title}</h3>
-                  <p>{card.text}</p>
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
                 </div>
               </div>
             );
@@ -103,32 +107,29 @@ export default function About() {
       {/* Connect Section */}
       <section className={styles.aboutConnectSection}>
         <div className={styles.aboutConnectText}>
-          <span>HOW CORTEXA CONNECTS EVERYTHING</span>
-          <h2>One operating system for your entire real estate workflow.</h2>
+          <h2>How CORTEXA connects the business</h2>
           <p>
-            CORTEXA connects your channels, syncs your data, and turns scattered
-            activity into coordinated action.
+            CORTEXA brings every part of your workflow into one connected system. <br />
+            Information flows in, intelligence does the work, and actions flow out — automatically.
           </p>
         </div>
 
-        <img src={aboutCenterImg} className={styles.aboutCenter} />
+        <img src={aboutCenterImg} alt="Cortexa Integration Map" className={styles.aboutCenter} />
       </section>
 
       {/* What CORTEXA Does Section */}
       <section className={styles.aboutWhatSection}>
-       
+        <h2>What CORTEXA helps teams do</h2>
         <div className={styles.aboutWhatGrid}>
           {featureCards.map((card) => {
             const Icon = card.icon;
             return (
               <div key={card.title} className={styles.aboutWhatCard}>
                 <div className={styles.aboutWhatIcon}>
-                  <Icon size={32} />
+                  <Icon size={28} />
                 </div>
-                <div>
-                  <h3>{card.title}</h3>
-                  <p>{card.text}</p>
-                </div>
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
               </div>
             );
           })}
@@ -139,37 +140,17 @@ export default function About() {
       <section className={styles.aboutFinalSection}>
         <div className={styles.finalSectionText}>
           <h2>
-            Built for real estate professionals. Designed to make the entire business{" "}
-            <span>think and move as one.</span>
+            Built for real estate professionals. <br />
+            Designed to make the entire business <span>think and move as one.</span>
           </h2>
           <p>
-            We believe technology should simplify the complex, not add to it.
-            CORTEXA brings clarity, speed, and intelligence to every part of your
-            real estate business.
+            We believe technology should simplify the complex, not add to it. <br />
+            CORTEXA connects AI, data, communications, and workflow systems so you can spend less time managing tools and more time helping clients and closing deals.
           </p>
         </div>
 
-        <img src={aboutBottomImg} className={styles.aboutBottom} />
+        <img src={aboutBottomImg} alt="Real Estate Core Visual" className={styles.aboutBottom} />
       </section>
     </main>
-  );
-}
-
-function MiniMetric({ label, value }) {
-  return (
-    <div className={styles.aboutMiniMetric}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>+17% vs last week</small>
-    </div>
-  );
-}
-
-function MiniBox({ title, value }) {
-  return (
-    <div className={styles.aboutMiniBox}>
-      <span>{title}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }
