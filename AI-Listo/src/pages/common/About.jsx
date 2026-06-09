@@ -128,8 +128,10 @@ export default function About() {
                 <div className={styles.aboutWhatIcon}>
                   <Icon size={28} />
                 </div>
+                <div>
                 <h3>{card.title}</h3>
                 <p>{card.text}</p>
+                </div>
               </div>
             );
           })}
