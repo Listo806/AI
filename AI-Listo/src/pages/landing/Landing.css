@@ -2731,8 +2731,15 @@
         font-size: 10px;
     }
 }
+@media (min-width: 1100px) {
+    #cortexa-ai-crm-landing .hero-right .hero-image img{
+        width: 100%;
+    }
+    #cortexa-ai-crm-landing .social-badge-container {
+        margin-top: 22px;
+    }
+}
 @media (min-width: 1200px) {
-    
     #cortexa-ai-crm-landing .cx-list li {
         font-size: 12px;
     }
