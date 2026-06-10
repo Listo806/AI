@@ -2057,7 +2057,7 @@ export default function Landing() {
                 <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href="/start-trial">{tr.getStarted}</a>
+                    <a href="/trial">{tr.getStarted}</a>
                   </li>
                   <li>
                     <a href="/sign-in">{tr.login}</a>
