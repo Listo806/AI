@@ -26,6 +26,7 @@ import {
 import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
 
+import footlogo from "../../assets/cortexa/p-flogo.png";
 import CountriesCitiesSection from "./CountriesCitiesSection";
 import herorightImg from "../../assets/cortexa/hero_right.png";
 import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
@@ -2002,9 +2003,9 @@ export default function Landing() {
               <CountriesCitiesSection />
             </div>
 
-            <div className="footer-grid">
+            <div className="footer-grid footer-landing">
               <div className="footer-brand">
-                <img src={headlogoImg} alt="Cortexa" className="cx-logo-img" />
+                <img src={footlogo} alt="Cortexa" className="landing-logo" />
 
                 <p>{tr.footerDescription}</p>
 
@@ -2034,8 +2035,7 @@ export default function Landing() {
                     </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/features#automations
-">
+                    <HashLink smooth to="/features#automations">
                       {tr.automations}
                     </HashLink>
                   </li>
@@ -2058,9 +2058,6 @@ export default function Landing() {
                 <ul>
                   <li>
                     <a href="/start-trial">{tr.getStarted}</a>
-                  </li>
-                  <li>
-                    <a href="/start-trial">{tr.createAccount}</a>
                   </li>
                   <li>
                     <a href="/sign-in">{tr.login}</a>

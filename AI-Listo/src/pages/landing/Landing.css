@@ -2350,27 +2350,37 @@
 
 
 
-.footer-final{background:#fff;border-top:1px solid #eee;padding:130px 30px 40px}
-.footer-final .footer-grid{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:40px;text-align: left;}
+.footer-final{background:#fff;border-top:1px solid #eee;}
+.footer-final .footer-grid{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:40px;text-align: left;padding: 30px; }
 #cortexa-ai-crm-landing .footer-final .footer-brand h2{font-size:24px;margin-bottom:16px}
 #cortexa-ai-crm-landing .footer-final .footer-brand p{color:#666;margin-bottom:20px;line-height:1.6}
 .footer-final .btn-primary{display:inline-block;background:#2563eb;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none}
 .footer-final .footer-tags {
   margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
   gap: 10px;
   font-size: 13px;
   color: #666;
 }
-#cortexa-ai-crm-landing .footer-final{
-    padding: 130px 30px 30px;
+.footer-landing{
+    background:#000d22;
+    color: #fff;
+}
+#cortexa-ai-crm-landing .footer-final .footer-landing p, .footer-landing .footer-tags, #cortexa-ai-crm-landing .footer-landing .footer-col a{
+    color: #fff;
+}
+.footer-landing .footer-tags{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+}
+.landing-logo{
+  width: auto;
 }
 #cortexa-ai-crm-landing .footer-final .footer-col h3{font-size:14px;margin-bottom:15px}
 .footer-final .footer-col ul{list-style:none;padding:0;margin:0}
 .footer-final .footer-col li{margin-bottom:10px}
 .footer-final .footer-col a{text-decoration:none;color:#666}
-.footer-final .footer-location{display:grid;grid-template-columns:1fr;gap:40px;border-top:1px solid #eee;padding-top:0px;padding-bottom:0px;margin-bottom:0px}
+.footer-final .footer-location{display:grid;grid-template-columns:1fr;gap:40px;margin-bottom:0px;padding:130px 50px 0 50px}
 .footer-final .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .footer-final .footer-location a{text-decoration:none;color:#666}
 .footer-final .footer-newsletter{border-top:1px solid #eee;padding-top:40px;text-align:center;max-width:500px;margin:auto}
