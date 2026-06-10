@@ -72,7 +72,7 @@
      font-weight: 700;
  }
 #cortexa-ai-crm-landing #trial .cx-title-lg{
-    font-size: 38px;
+    font-size: 48px;
     max-width: 735px;
     margin: 0 auto;
 }
@@ -102,7 +102,10 @@
      margin-top: 30px;
      align-items: center;
  }
-
+#cortexa-ai-crm-landing .cx-final .cx-btn{
+    margin-top:15px;
+    padding: 11px 41px;
+}
  #cortexa-ai-crm-landing .cx-btn {
      display: inline-flex;
      align-items: center;
