@@ -2187,7 +2187,9 @@
 #cortexa-ai-crm-landing .hero-right{
     align-items: flex-start;
 }
-
+#cortexa-ai-crm-landing .hero-right .hero-image img{
+    width: 90%;
+}
 .mt-30{
     margin-top: 30px;
 }
@@ -2734,7 +2736,7 @@
         width: 100%;
     }
     #cortexa-ai-crm-landing .social-badge-container {
-        margin-top: 22px;
+        margin-top: 6%;
     }
 }
 @media (min-width: 1200px) {
