@@ -1654,7 +1654,6 @@
 .hero-container {
   display: grid;
     grid-template-columns: 1fr 1.5fr;
-  align-items: center;
 }
 
 #cortexa-ai-crm-landing .hero-title {
@@ -2516,7 +2515,7 @@
   background-color: #ffffff;
   padding: 8px 18px;
   border-radius: 12px;
-  margin-top: 7px;
+  margin-top: 15px;
 }
 #cortexa-ai-crm-landing .hero{
   margin-top:10px;
