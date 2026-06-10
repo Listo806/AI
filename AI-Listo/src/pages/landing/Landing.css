@@ -222,12 +222,9 @@
 
  #cortexa-ai-crm-landing .cx-comp-grid {
      margin-top: 40px;
-     display: grid;
-     grid-template-columns: 1fr 4fr 1fr;
-     gap: 6px;
-     margin-left: 30px;
-     margin-right: 30px;
- }
+     margin-left: 10%;
+     margin-right: 10%;
+}
 
  #cortexa-ai-crm-landing .without, #cortexa-ai-crm-landing .with {
      padding: 10px;

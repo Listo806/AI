@@ -416,7 +416,7 @@ export default function Landing() {
         "Your entire operation — connected, automated, and optimized in one intelligent system.",
       smartCTA: "Turn your business into an automated machine",
 
-      topLine1: "Meet Your AI CRM.",
+      topLine1: "Meet Your AI OS. ",
       topLine2: "Powered by",
       topHighlight: "AI Agents",
       topLine3: "that capture, follow up, and close your leads automatically.",
@@ -788,7 +788,7 @@ export default function Landing() {
         "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
       smartCTA: "Convierte tu negocio en una máquina automatizada",
 
-      topLine1: "Conoce tu CRM con IA.",
+      topLine1: "Conoce tu OS con IA.",
       topLine2: "Impulsado por",
       topHighlight: "Agentes de IA",
       topLine3:
@@ -1152,7 +1152,7 @@ export default function Landing() {
         "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
       smartCTA: "Transforme seu negócio em uma máquina automatizada",
 
-      topLine1: "Conheça o seu CRM com IA.",
+      topLine1: "Conheça o seu OS com IA.",
       topLine2: "Impulsionado por",
       topHighlight: "Agentes de IA",
       topLine3:
@@ -1485,7 +1485,7 @@ export default function Landing() {
         <h2 className="cx-title-md">{tr.dashboardTitle}</h2>
 
         <div className="cx-comp-grid">
-          <div className="cx-comp-col">
+          {/*<div className="cx-comp-col">
             <div className="without">
               <h4><XCircle /><span>{tr.without}</span> CORTEXA</h4>
               <p>{tr.withoutsub}</p>
@@ -1498,9 +1498,9 @@ export default function Landing() {
                 ))}
               </ul>
             </div>    
-          </div>
+          </div>*/}
           <img src={landingDashImg} alt="landing Dashboard" className="landingDash" />    
-          <div className="cx-comp-col">
+          {/*<div className="cx-comp-col">
             <div className="with">
               <h4><CheckCircle /><span>{tr.with}</span> CORTEXA</h4>
               <p>{tr.withsub}</p>
@@ -1513,7 +1513,7 @@ export default function Landing() {
                 ))}
               </ul>
             </div>
-          </div>
+          </div>*/}
         </div>
       </section>
       <section id="analytics" className="cx-hero pt-50">
