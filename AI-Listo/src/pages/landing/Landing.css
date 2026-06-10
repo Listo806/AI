@@ -2184,7 +2184,6 @@
 }
 #cortexa-ai-crm-landing .hero-right .hero-image img{
     width: 85%;
-    float: right;
 }
 .mt-30{
     margin-top: 30px;
@@ -2728,6 +2727,7 @@
     }
 }
 @media (min-width: 1200px) {
+    
     #cortexa-ai-crm-landing .cx-list li {
         font-size: 12px;
     }
@@ -2740,6 +2740,13 @@
         position: absolute;
         max-width: 243px;
         right: 71px;
+    }
+}
+@media (min-width: 1366px) {
+    #cortexa-ai-crm-landing .hero-right .hero-image img{
+        height: calc(100vh - 168px);
+        width: calc(100vw - 600px);
+        float: right;
     }
 }
 @media (max-width: 400px) {

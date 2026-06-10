@@ -21,7 +21,7 @@ import {
   GitFork,  
   PieChart, 
   ShieldCheck, 
-  MoveRight
+  MoveRight, LockKeyhole,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./Landing.css";
@@ -346,7 +346,7 @@ export default function Landing() {
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
-      heroUnlock: "— Unlock potential today!",
+      heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
       heroTag3: "Smart Nurturing That Converts",
@@ -714,7 +714,7 @@ export default function Landing() {
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza tu prueba gratuita",
-      heroUnlock: "— ¡Desbloquea tu potencial hoy!",
+      heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
       heroTag3: "Nutrición inteligente que convierte",
@@ -1079,7 +1079,7 @@ export default function Landing() {
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
-      heroUnlock: "— Desbloqueie seu potencial hoje!",
+      heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
       heroTag3: "Nutrição inteligente que converte",
@@ -1384,7 +1384,6 @@ export default function Landing() {
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
                 <br />
-                {tr.heroTitleLine3}
                 <span> 24/7 </span>
                 {tr.heroTitleLine4}
               </h1>
@@ -1396,7 +1395,7 @@ export default function Landing() {
                   <Zap size={21} />
                   {tr.heroCTA}
                 </a>
-                <p className="next-btn">{tr.heroUnlock}</p>
+                <p className="next-btn"><LockKeyhole size={16} /> {tr.heroUnlock}</p>
               </div>
 
               <div className="hero-checks">
