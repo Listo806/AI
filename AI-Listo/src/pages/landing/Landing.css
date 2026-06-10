@@ -1653,7 +1653,7 @@
 
 .hero-container {
   display: grid;
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: 1fr 1.5fr;
 }
 
 #cortexa-ai-crm-landing .hero-title {
@@ -2749,8 +2749,8 @@
 }
 @media (min-width: 1366px) {
     #cortexa-ai-crm-landing .hero-right .hero-image img{
-        height: calc(100vh - 168px);
-        width: calc(100vw - 574px);
+        height: calc(100vh - 166px);
+        width: calc(100vw - 555px);
         float: right;
     }
 }
