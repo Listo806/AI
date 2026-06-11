@@ -613,7 +613,7 @@ export default function LandingMobile() {
       {/* HEADER */}
 
       <header className="m-header">
-        <img src={headlogoImg} alt="CORTEXA" className="m-logo" />
+        <a href="/"><img src={headlogoImg} alt="CORTEXA" className="m-logo" /></a>
         <div className="m-header-right">
           <div className="m-lang-wrapper">
             <button

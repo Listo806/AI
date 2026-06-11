@@ -1279,7 +1279,7 @@ export default function Landing() {
       <header className="cx-header">
         <div className="cx-header-inner">
           <div className="cx-left">
-            <img src={headlogoImg} className="cx-logo-img" />
+            <a href="/"><img src={headlogoImg} className="cx-logo-img" /></a>
           </div>
 
           <nav className="cx-nav">
