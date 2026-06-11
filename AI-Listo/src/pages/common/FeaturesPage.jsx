@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowRight,
   CheckCircle,
@@ -15,13 +15,30 @@ import {
   ArrowUpRight,
   ShieldCheck,
   TrendingUp,
+  Menu, X,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import headlogoImg from "../../assets/cortexa/headlogo.png"; 
-
+import headlogoM from "../../assets/cortexa/headlogotran.png";
 import styles from "./FeaturesPage.module.css"; 
 
 export default function FeaturesPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth <= 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   const footerProductLinks = [
     { label: "Features", href: "/features" },
     { label: "AI Assistant", href: "/features#ai-assistant" },
@@ -78,34 +95,76 @@ export default function FeaturesPage() {
   return (
     <div className={styles.page}>
       {/* ================= PUBLIC NAVIGATION HEADER ================= */}
-      <header className={styles.header}>
-        <a href="/" className={styles.logoWrap}>
-          <img src={headlogoImg} className="cx-logo-img" alt="CORTEXA Logo" />
-        </a>
-
-        <nav className={styles.nav}>
-          <HashLink smooth to="/features" className={`${styles.navLink} ${styles.activeNav}`}>
-            Features
-          </HashLink>
-          <HashLink smooth to="/features#ai-assistant" className={styles.navLink}>
-            AI Assistant
-          </HashLink>
-          <HashLink smooth to="/features#automations" className={styles.navLink}>
-            Automations
-          </HashLink>
-          <a href="/integrations" className={styles.navLink}>
-            Integrations
+      {isMobile ? (
+        <header className={styles.mHeader}>
+          <div className={styles.mLogoBlock}>
+            <a href="/"><img src={headlogoM} alt="Cortexa" className="cx-logo-img" /></a>
+          </div>
+          
+          <div className={styles.mHeaderRight}>
+            <button className={styles.mMenuBtn} onClick={() => setMenuOpen(true)}>
+              <Menu size={26} color="#ffffff" />
+            </button>
+          </div>
+        </header>
+      ) : (
+        /* Desktop Header  */
+        <header className={styles.header}>
+          <a href="/" className={styles.logoWrap}>
+            <img src={headlogoImg} className="cx-logo-img" alt="CORTEXA Logo" />
           </a>
-          <HashLink smooth to="/features#analytics" className={styles.navLink}>
-            Analytics
-          </HashLink>
-        </nav>
 
-        <div className={styles.headerActions}>
-          <a href="/login" className={styles.loginBtn}>Log In</a>
-          <a href="/start-trial" className={styles.primaryBtn}>Start Free Trial</a>
+          <nav className={styles.nav}>
+            <HashLink smooth to="/features" className={`${styles.navLink} ${styles.activeNav}`}>
+              Features
+            </HashLink>
+            <HashLink smooth to="/features#ai-assistant" className={styles.navLink}>
+              AI Assistant
+            </HashLink>
+            <HashLink smooth to="/features#automations" className={styles.navLink}>
+              Automations
+            </HashLink>
+            <a href="/integrations" className={styles.navLink}>
+              Integrations
+            </a>
+            <HashLink smooth to="/features#analytics" className={styles.navLink}>
+              Analytics
+            </HashLink>
+          </nav>
+
+          <div className={styles.headerActions}>
+            <a href="/login" className={styles.loginBtn}>Log In</a>
+            <a href="/start-trial" className={styles.primaryBtn}>Start Free Trial</a>
+          </div>
+        </header>
+      )}
+
+      {/* ================= MOBILE NAVIGATION DRAWER ================= */}
+      {isMobile && (
+        <div className={`${styles.mDrawer} ${menuOpen ? styles.open : ""}`}>
+          <div className={styles.mDrawerTop}>
+            <div className={styles.mLogoBlock}>
+              <a href="/"><img src={headlogoM} alt="Cortexa" className="cx-logo-img" /></a>
+            </div>
+            <button className={styles.mClose} onClick={() => setMenuOpen(false)}>
+              <X size={24} color="#ffffff" />
+            </button>
+          </div>
+          
+          <div className={styles.mDrawerNav} onClick={() => setMenuOpen(false)}>
+            <HashLink className={styles.navMenu} smooth to="/features">Features</HashLink>
+            <HashLink className={styles.navMenu} smooth to="/features#ai-assistant">AI Assistant</HashLink>
+            <HashLink className={styles.navMenu} smooth to="/features#automations">AI Automation</HashLink>
+            <a href="/integrations" className={styles.navMenu}>Integrations</a>
+            <HashLink className={styles.navMenu} smooth to="/features#analytics">Analytics</HashLink>
+          </div>
+          
+          <div className={styles.mDrawerActions}>
+            <a className={styles.mDrawerLoginBtn} href="/login">Log in</a>
+            <a href="/start-trial" className={styles.mDrawerTrialBtn}>Start Free Trial</a>
+          </div>
         </div>
-      </header>
+      )}
 
       <main>
         {/* ================= 1. HERO SECTION ================= */}

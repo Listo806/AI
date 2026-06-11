@@ -1,8 +1,10 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import "./Common.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+import { Menu, X, } from "lucide-react";
 import headlogo from "../../assets/cortexa/pheadlogo.png";
+import headlogoM from "../../assets/cortexa/headlogotran.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 
 import messImg from "../../assets/cortexa/mess.png";
@@ -24,6 +26,22 @@ import social3 from "../../assets/cortexa/social3.png";
 import social4 from "../../assets/cortexa/social4.png";
 import { Check, Users } from "lucide-react";
 export default function PricingPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth <= 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   const featureSections = [
     {
       icon: saleImg,
@@ -126,29 +144,65 @@ export default function PricingPage() {
 
   return (
     <div className="pricing-page">
-      <header className="header">
-        <div className="container header-inner">
-          <div className="logo">
-            <img src={headlogo} alt="Cortexa" className="cx-logo-img" />
+      {isMobile ? (
+        <header className="m-header">
+          <div className="m-logo-block">
+            <a href="/"><img src={headlogoM} alt="Cortexa" className="cx-logo-img" /></a>
           </div>
+          
+          <div className="m-header-right">
 
-          <nav className="nav">
-            <HashLink smooth to="/#features">Features</HashLink>
-            <a href="/pricing" className="active">
-              Pricing
-            </a>
+            <button className="m-menu-btn" onClick={() => setMenuOpen(true)}>
+              <Menu size={26} color="#ffffff" />
+            </button>
+          </div>
+        </header>
+      ) : (
+        
+        <header className="header">
+          <div className="container header-inner">
+            <div className="logo">
+              <a href="/"><img src={headlogo} alt="Cortexa" className="cx-logo-img" /></a>
+            </div>
+            <nav className="nav">
+              <HashLink smooth to="/features">Features</HashLink>
+              <a href="/pricing" className="active">Pricing</a>
+              <a href="/about">About Us</a>
+              <a href="/contact">Contact</a>
+            </nav>
+            <div className="actions">
+              <a href="/login">Log in</a>
+              <a href="/trial" className="trial">Start Free Trial</a>
+            </div>
+          </div>
+        </header>
+      )}
+
+      {/* ================= MOBILE NAVIGATION DRAWER (SCROLLABLE LANDSCAPE) ================= */}
+      {isMobile && (
+        <div className={`m-drawer ${menuOpen ? "open" : ""}`}>
+          <div className="m-drawer-top">
+            <div className="m-logo-block">
+              <img src={headlogoM} alt="Cortexa" className="cx-logo-img" />
+            </div>
+            <button className="m-close" onClick={() => setMenuOpen(false)}>
+              <X size={24} color="#ffffff" />
+            </button>
+          </div>
+          
+          <div className="m-drawer-nav" onClick={() => setMenuOpen(false)}>
+            <HashLink className="nav-menu" smooth to="/features">Features</HashLink>
+            <a href="/pricing" className="active">Pricing</a>
             <a href="/about">About Us</a>
             <a href="/contact">Contact</a>
-          </nav>
-
-          <div className="actions">
-            <a href="/login">Log in</a>
-            <a href="/trial" className="trial">
-              Start Free Trial
-            </a>
+          </div>
+          
+          <div className="m-drawer-actions">
+            <a className="m-login-btn" href="/login">Log in</a>
+            <a href="/trial" className="m-trial-btn">Start Free Trial</a>
           </div>
         </div>
-      </header>
+      )}
 
       <main className="main">
         <section className="container hero">
@@ -234,8 +288,10 @@ export default function PricingPage() {
                   <div className="icon">
                     <img src={item.icon} alt="Cortexa" />
                   </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
+                  <div className="content-wrap">
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                  </div>
                 </div>
               ))}
 

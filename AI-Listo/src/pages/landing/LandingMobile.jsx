@@ -1609,7 +1609,7 @@ export default function LandingMobile() {
               <div className="m-cities-dropdown">
                 <div className="m-cities-grid">
                   {["London", "Manchester", "Birmingham", "Liverpool", "Leeds"].map(c => (
-                    <a key={c} href={`/united-kingdom/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk">📍 {c}</a>
+                    <a key={c} href={`/united-kingdom/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk"><MapPin size={15} /> {c}</a>
                   ))}
                 </div>
               </div>
@@ -1627,7 +1627,7 @@ export default function LandingMobile() {
               <div className="m-cities-dropdown">
                 <div className="m-cities-grid">
                   {["Lisbon", "Porto", "Braga", "Faro", "Coimbra"].map(c => (
-                    <a key={c} href={`/portugal/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk">📍 {c}</a>
+                    <a key={c} href={`/portugal/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk"><MapPin size={15} /> {c}</a>
                   ))}
                 </div>
               </div>
@@ -1645,7 +1645,7 @@ export default function LandingMobile() {
               <div className="m-cities-dropdown">
                 <div className="m-cities-grid">
                   {["Madrid", "Barcelona", "Valencia", "Sevilla", "Málaga"].map(c => (
-                    <a key={c} href={`/spain/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk">📍 {c}</a>
+                    <a key={c} href={`/spain/${c.toLowerCase().replace(/ /g, "-")}`} className="m-city-lnk"><MapPin size={15} /> {c}</a>
                   ))}
                 </div>
               </div>
