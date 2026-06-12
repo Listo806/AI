@@ -9,7 +9,9 @@ import headlogoImg from "../../assets/cortexa/headlogotran.png";
 import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
 import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
 export default function LandingMobile() {
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem("cortexa_lang") || "en";
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
   const [langOpen, setLangOpen] = useState(false);
@@ -599,7 +601,11 @@ export default function LandingMobile() {
       termsOfService: "Termos de Serviço",
     },
   };
-
+  const handleLangChange = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem("cortexa_lang", newLang);
+    setLangOpen(false);
+  };
   const tr = t[lang];
   const avatars = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
@@ -647,33 +653,16 @@ export default function LandingMobile() {
 
             {langOpen && (
               <div className="m-lang-dropdown">
-                <button
-                  onClick={() => {
-                    setLang("en");
-                    setLangOpen(false);
-                  }}
-                >
-                  English
-                </button>
-
-                <button
-                  onClick={() => {
-                    setLang("es");
-                    setLangOpen(false);
-                  }}
-                >
-                  Español
-                </button>
-
-                <button
-                  onClick={() => {
-                    setLang("pt");
-                    setLangOpen(false);
-                  }}
-                >
-                  Português
-                </button>
-              </div>
+                  <button type="button" onClick={() => handleLangChange("en")}>
+                    English
+                  </button>
+                  <button type="button" onClick={() => handleLangChange("es")}>
+                    Español
+                  </button>
+                  <button type="button" onClick={() => handleLangChange("pt")}>
+                    Português
+                  </button>
+                </div>
             )}
           </div>
 

@@ -72,7 +72,9 @@ const t = {
 };
 
 export default function StartTrial() {
-  const [lang, setLang] = useState("en"); 
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem("cortexa_lang") || "en";
+  });
   const [langOpen, setLangOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isMobile, setIsMobile] = useState(
@@ -143,7 +145,11 @@ export default function StartTrial() {
       setLoading(false);
     }
   };
-
+  const handleLangChange = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem("cortexa_lang", newLang);
+    setLangOpen(false);
+  };
   const tr = t[lang];
   const Icon = isMobile ? Sparkle : Check;
   return (
@@ -192,33 +198,13 @@ export default function StartTrial() {
 
                   {langOpen && (
                     <div className="m-lang-dropdown">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLang("en");
-                          setLangOpen(false);
-                        }}
-                      >
+                      <button type="button" onClick={() => handleLangChange("en")}>
                         English
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLang("es");
-                          setLangOpen(false);
-                        }}
-                      >
+                      <button type="button" onClick={() => handleLangChange("es")}>
                         Español
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLang("pt");
-                          setLangOpen(false);
-                        }}
-                      >
+                      <button type="button" onClick={() => handleLangChange("pt")}>
                         Português
                       </button>
                     </div>

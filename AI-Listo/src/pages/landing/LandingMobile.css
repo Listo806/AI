@@ -150,9 +150,10 @@
     text-decoration: none;
     color: white;
     gap:10px;
+}
+.mobile-landing .m-login-btn {
     padding: 0;
 }
-
 .m-hero {
     padding: 10px 20px 40px !important;
     margin-top: 100px;

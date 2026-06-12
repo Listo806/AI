@@ -1382,7 +1382,7 @@
     width: 100%;
     box-sizing: border-box;
     z-index: 999; 
-    background-color: rgba(6, 8, 20, 0.92); 
+    background-color: #060814; 
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -1524,6 +1524,12 @@
 
 
 @media (max-width: 1024px) {
+  .mobile.trial-page .trial-desc {
+    line-height: 1.5;
+  }
+  .mobile.trial-page .trial-container{
+    grid-template-columns: 1fr;
+  }
   .mobile.trial-page .trial-check-icon{
     color: #fff;
     border:0;
@@ -1543,6 +1549,8 @@
   }
   .mobile.trial-page .trial-card{
     border: 0;
+    padding-left: 0;
+    padding-right: 0;
   }
   .mobile.trial-page .trial-desc, .mobile.trial-page .trial-features li, .mobile.trial-page .trial-footer-text p{
     color: #94a3b8;
