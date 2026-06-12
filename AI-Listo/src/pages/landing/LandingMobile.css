@@ -1777,12 +1777,6 @@
     transform: scale(0.95);
 }
 @media (max-width: 435px) {
-    .m-header{
-        height: 72px; 
-    }
-    .m-logo {
-        height: 60px;
-    }
     .m-title {
         font-size: 36px;
     }
