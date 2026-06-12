@@ -456,15 +456,11 @@ body.crm-dark .crm-nav-link.active {
   .crm-nav-link {
     width: auto;
     height: auto;
-    padding: 10px 12px;
+    padding: 10px;
     justify-content: flex-start;
     margin: 0;
   }
-  
-  .crm-nav-icon {
-    margin-right: 12px;
-  }
-  
+
   .crm-nav-label {
     display: block;
     font-size: 14px;
@@ -810,6 +806,15 @@ body.crm-dark .crm-main::after {
 
 /* Mobile: Compact Logo - Hide text, show only icon */
 @media (max-width: 768px) {
+  .crm-content{
+    margin-top:30px;
+  }
+  body .crm-header{
+    background:#fff;
+  }
+  body.crm-dark .crm-header{
+    background:#0b0f19;
+  }
   .brand {
     gap: 6px; /* Reduced gap */
     min-width: auto;
@@ -2055,9 +2060,11 @@ body.crm-dark .crm-error {
   }
 
   .crm-sidebar {
-    width: 165px; /* Updated to match new sidebar width */
+    width: 205px; /* Updated to match new sidebar width */
   }
-
+  .crm-sidebar .cx-logo-img-{
+    padding: 10px;
+  }
   .crm-stats-grid {
     grid-template-columns: 1fr;
     gap: 13px; /* Reduced from 20px by ~35% */
