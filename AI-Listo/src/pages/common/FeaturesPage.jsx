@@ -20,7 +20,6 @@ import headlogoImg from "../../assets/cortexa/headlogo.png";
 import headlogoM from "../../assets/cortexa/headlogotran.png";
 import styles from "./FeaturesPage.module.css"; 
 
-// ================= MẢNG ĐA NGÔN NGỮ ĐƯỢC TÍCH HỢP =================
 const t = {
   en: {
     nav: { features: "Features", aiAssistant: "AI Assistant", automations: "Automations", integrations: "Integrations", analytics: "Analytics", login: "Log In", trial: "Start Free Trial" },
@@ -102,7 +101,6 @@ export default function FeaturesPage() {
     setLangOpen(false);
   };
 
-  // Lấy bộ từ khóa tương ứng với ngôn ngữ hiện tại
   const cur = t[lang] || t.en;
 
   const footerProductLinks = [
@@ -113,7 +111,6 @@ export default function FeaturesPage() {
     { label: cur.footer.col1_items[4], href: "/features#analytics" },
   ];
 
-  // Map thêm icon, color, bg vào mảng đã được dịch từ đối tượng `t`
   const coreFeaturesIcons = [
     { icon: Target, color: "#2563EB", bg: "#EEF4FF" },
     { icon: MessageSquare, color: "#059669", bg: "#EAFBF2" },
@@ -219,7 +216,7 @@ export default function FeaturesPage() {
           </nav>
 
           <div className={styles.headerActions}>
-            <a href="/login" className={styles.loginBtn}>{cur.nav.login}</a>
+            <a href="/sign-in" className={styles.loginBtn}>{cur.nav.login}</a>
             <div className="lang-wrapper">
               <div
                 className="lang-toggle"
@@ -292,7 +289,7 @@ export default function FeaturesPage() {
           
           <div className={styles.mDrawerActions}>
             <a href="/trial" className={styles.mDrawerTrialBtn}>{cur.nav.trial}</a>
-            <a className={styles.mDrawerLoginBtn} href="/login">{cur.nav.login}</a>
+            <a className={styles.mDrawerLoginBtn} href="/sign-in">{cur.nav.login}</a>
           </div>
         </div>
       )}

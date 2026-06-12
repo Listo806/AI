@@ -589,7 +589,7 @@ export default function PricingPage() {
               <a href="/contact">{tr.nav.contact}</a>
             </nav>
             <div className="actions">
-              <a href="/login">{tr.nav.login}</a>
+              <a href="/sign-in">{tr.nav.login}</a>
               <div className="lang-wrapper">
                 <div
                   className="lang-toggle"
@@ -669,7 +669,7 @@ export default function PricingPage() {
             <a href="/trial" className="m-trial-btn">
               {tr.nav.trial}
             </a>
-            <a className="m-login-btn" href="/login">
+            <a className="m-login-btn" href="/sign-in">
               {tr.nav.login}
             </a>
           </div>
@@ -868,7 +868,7 @@ export default function PricingPage() {
               <h3>{tr.footer.col5}</h3>
               <ul>
                 <li>
-                  <a href="/login">{tr.footer.col5_items[0]}</a>
+                  <a href="/sign-in">{tr.footer.col5_items[0]}</a>
                 </li>
                 <li>
                   <a href="/trial" className="btn-primary">

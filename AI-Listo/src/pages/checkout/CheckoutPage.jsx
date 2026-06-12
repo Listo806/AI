@@ -54,7 +54,7 @@ export default function CheckoutPage() {
 
   const [loadingScreen, setLoadingScreen] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [acceptedBilling, setAcceptedBilling] = useState(false); // Lưu trạng thái checkbox
+  const [acceptedBilling, setAcceptedBilling] = useState(false);
 
   const user = {
     name: localStorage.getItem("name") || "",
@@ -77,9 +77,8 @@ export default function CheckoutPage() {
     return () => clearTimeout(timer);
   }, [user.userId, navigate]);
 
-  // HÀM XỬ LÝ KHI NGƯỜI DÙNG CHỦ ĐỘNG BẤM NÚT
   const handleCheckout = async () => {
-    // Kiểm tra xem người dùng đã tích chọn checkbox chưa
+
     if (!acceptedBilling) {
       alert(tr.billingAlert);
       return;
