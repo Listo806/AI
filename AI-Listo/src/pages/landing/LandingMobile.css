@@ -1777,6 +1777,9 @@
     transform: scale(0.95);
 }
 @media (max-width: 435px) {
+    .m-menu-btn {
+        width: 37px;
+    }
     .m-title {
         font-size: 36px;
     }
@@ -1789,4 +1792,13 @@
         width: 100%;
         max-width: 100%;
     }
+}
+@media (max-width: 360px) {
+    .m-header {
+        height: 72px;
+    }
+    .m-logo {
+        height: 64px;
+    }
+    
 }
