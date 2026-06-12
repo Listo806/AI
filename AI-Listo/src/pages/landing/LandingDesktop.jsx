@@ -92,13 +92,16 @@ const trustIcons = [
   <Zap className="cx-icon" stroke="url(#icon-gradient)" />        
 ];
 export default function Landing() {
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem("cortexa_lang") || "en";
+  });
   const [langOpen, setLangOpen] = useState(false);
   const [activeFAQ, setActiveFAQ] = useState(0);
   const { isAuthenticated } = useAuth();
 
-  const switchLang = (l) => {
-    setLang(l);
+  const handleLangChange = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem("cortexa_lang", newLang);
     setLangOpen(false);
   };
 
@@ -1346,13 +1349,13 @@ export default function Landing() {
               </div>
               {langOpen && (
                 <div className="lang-dropdown">
-                  <div className="lang-item" onClick={() => switchLang("en")}>
+                  <div className="lang-item" onClick={() => handleLangChange("en")}>
                     English
                   </div>
-                  <div className="lang-item" onClick={() => switchLang("es")}>
+                  <div className="lang-item" onClick={() => handleLangChange("es")}>
                     Español
                   </div>
-                  <div className="lang-item" onClick={() => switchLang("pt")}>
+                  <div className="lang-item" onClick={() => handleLangChange("pt")}>
                     Português
                   </div>
                 </div>
