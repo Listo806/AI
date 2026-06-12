@@ -314,7 +314,7 @@
 .m-header-right {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 0!important;
 }
 
 .m-lang-wrapper {
