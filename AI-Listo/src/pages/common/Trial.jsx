@@ -82,7 +82,7 @@ export default function StartTrial() {
               </div>
               <span className="trial-logo-text">CORTEXA</span>
               <span className="trial-logo-divider">|</span>
-              <span className="trial-logo-badge">AI CRM</span>
+              <span className="trial-logo-badge">AI OS</span>
             </div>
           </div>
 

@@ -37,6 +37,7 @@
     background: transparent;
     color: white;
     cursor: pointer;
+    justify-content: right;
 }
 
 .m-overlay {
@@ -76,7 +77,7 @@
 }
 
 .m-drawer-logo {
-    height: 67px;
+    height: 62px;
 }
 
 .m-drawer-nav {
@@ -144,28 +145,12 @@
 }
 
 .m-login-btn {
-    height: 52px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 14px;
     text-decoration: none;
     color: white;
-    border: 1px solid rgba(255, 255, 255, .12);
-}
-
-.m-trial-btn {
-    height: 56px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    color: white;
-    font-weight: 700;
-    background: linear-gradient(135deg,
-            #7c4dff,
-            #5b3df5);
+    gap:10px;
+    padding: 0;
 }
 
 .m-hero {
@@ -329,7 +314,7 @@
 .m-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0;
 }
 
 .m-lang-wrapper {
@@ -1313,6 +1298,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  text-align: left;
 }
 
 .m-faq-question-row h3 {
@@ -1790,10 +1776,15 @@
     background-color: #5b60dc;
     transform: scale(0.95);
 }
-@media (max-width: 390px) {
-
+@media (max-width: 435px) {
+    .m-header{
+        height: 72px; 
+    }
+    .m-logo {
+        height: 60px;
+    }
     .m-title {
-        font-size: 42px;
+        font-size: 36px;
     }
 
     .m-description {

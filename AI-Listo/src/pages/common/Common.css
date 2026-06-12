@@ -1615,7 +1615,18 @@
         font-size: 36px;
     }
 }
-
+@media (max-width: 435px) {
+  .pricing-page .hero h1 {
+      font-size: 36px;
+  }
+  .pricing-page .content{
+    padding: 0;
+  }
+  .pricing-page .bottom-section {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 
 
 

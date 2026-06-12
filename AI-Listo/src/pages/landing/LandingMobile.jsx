@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Play, ArrowRight, Zap, Globe, MapPin, ArrowUp } from "lucide-react";
+import { Menu, X, Play, ArrowRight, Zap, Globe, MapPin, ArrowUp, LogIn } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
 import "./LandingMobile.css";
@@ -718,21 +718,19 @@ export default function LandingMobile() {
           })}
 
           <a href="/pricing">{tr.pricing}</a>
-        </div>
-
-        <div className="m-drawer-actions">
-          <a href="/trial" className="m-trial-btn">
-            {tr.trial}
-          </a>  
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
-              Dashboard
+              <LogIn /> Dashboard
             </Link>
           ) : (
             <Link to="/sign-in" className="m-login-btn">
-              {tr.login}
+              <LogIn /> {tr.login}
             </Link>
           )}
+        </div>
+
+        <div className="m-drawer-actions">
+          
         </div>
       </div>
 
