@@ -1066,15 +1066,21 @@ body .next-action-card svg {
 }
 
 @media (max-width: 1024px) {
-  .dashboard-page .dashboard-chart-row.grid-3-col, .dashboard-logs-row.grid-3-col, .dashboard-footer-grid.grid-5-col{
+
+  .dashboard-page .dashboard-chart-row.grid-3-col,
+  .dashboard-logs-row.grid-3-col,
+  .dashboard-footer-grid.grid-5-col {
     grid-template-columns: repeat(1, 1fr);
   }
-  .dashboard-page .ai-avatar-glow{
+
+  .dashboard-page .ai-avatar-glow {
     min-width: 70px;
   }
+
   .dashboard-page .kpi-mini-card .kpi-helper-txt {
     text-align: center;
-}
+  }
+
   .dashboard-page .kpi-row-grid.grid-6-col {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1223,7 +1229,8 @@ body .next-action-card svg {
   .dashboard-page .kpi-row-grid.grid-6-col {
     grid-template-columns: repeat(1, 1fr);
   }
-  .dashboard-page .kpi-row-grid .kpi-main-row{
+
+  .dashboard-page .kpi-row-grid .kpi-main-row {
     justify-content: center;
   }
 }
