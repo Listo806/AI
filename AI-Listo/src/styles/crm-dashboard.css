@@ -962,7 +962,7 @@ body.crm-dark .crm-main::after {
   display: none; /* Hidden on mobile */
   width: 27px;
   height: 27px;
-  background: #fff;
+  background: none;
   border: 0;
   border-radius: 8px;
   color: var(--text);
