@@ -26,7 +26,6 @@ import social3 from "../../assets/cortexa/social3.png";
 import social4 from "../../assets/cortexa/social4.png";
 import { Check, Users } from "lucide-react";
 
-// ================= MẢNG ĐA NGÔN NGỮ ĐƯỢC TÍCH HỢP =================
 const t = {
   en: {
     nav: {
