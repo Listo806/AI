@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check,
@@ -7,14 +7,89 @@ import {
   Phone,
   LockKeyhole,
   Eye,
+  EyeOff,
   ShieldAlert,
   ChevronRight,
+  Sparkle,
 } from "lucide-react";
 import "./Common.css";
 import trial from "../../assets/cortexa/trial-right.png";
 import trialogo from "../../assets/cortexa/trial-logo.png";
+import headlogoM from "../../assets/cortexa/headlogotran.png";
+
+const t = {
+  en: {
+    title: "Start Getting AI-Powered Leads — 24/7",
+    desc: "CORTEXA is an AI-powered CRM built for real estate agents and teams. Capture, qualify, and close leads automatically — without manual follow-up.",
+    f1: "Capture and qualify leads automatically — no missed opportunities",
+    f2: "AI follows up instantly via text, WhatsApp, and more",
+    f3: "Smart pipelines track every deal in real time",
+    f4: "Access your full dashboard immediately after activation",
+    placeholders: {
+      name: "Full Name",
+      email: "Work Email",
+      phone: "Phone Number (Required)",
+      password: "Password"
+    },
+    btnNormal: "Continue to Secure Checkout",
+    btnLoading: "Creating Account...",
+    footerNote: "You will be redirected to secure checkout to activate your account with a one-time setup fee."
+  },
+  es: {
+    title: "Comience a Obtener Leads con IA — 24/7",
+    desc: "CORTEXA es un CRM potenciado por IA diseñado para agentes y equipos inmobiliarios. Capture, califique y cierre leads automáticamente, sin seguimiento manual.",
+    f1: "Capture y califique leads automáticamente — sin oportunidades perdidas",
+    f2: "La IA realiza el seguimiento instantáneo por mensaje, WhatsApp y más",
+    f3: "Pipelines inteligentes rastrean cada trato en tiempo real",
+    f4: "Acceda a su panel completo inmediatamente después de la activación",
+    placeholders: {
+      name: "Nombre Completo",
+      email: "Correo Electrónico de Trabajo",
+      phone: "Número de Teléfono (Obligatorio)",
+      password: "Contraseña"
+    },
+    btnNormal: "Continuar al Pago Seguro",
+    btnLoading: "Creando Cuenta...",
+    footerNote: "Será redirigido al pago seguro para activar su cuenta con una tarifa de configuración de pago único."
+  },
+  pt: {
+    title: "Comece a Receber Leads com IA — 24/7",
+    desc: "CORTEXA é um CRM alimentado por IA desenvolvido para corretores e equipes imobiliárias. Capture, qualifique e feche leads automaticamente — sem acompanhamento manual.",
+    f1: "Capture e qualifique leads automaticamente — sem oportunidades perdidas",
+    f2: "A IA faz o acompanhamento instantâneo via SMS, WhatsApp e muito mais",
+    f3: "Pipelines inteligentes rastreiam cada negociação em tempo real",
+    f4: "Acesse seu painel completo imediatamente após a ativação",
+    placeholders: {
+      name: "Nome Completo",
+      email: "E-mail de Trabalho",
+      phone: "Número de Telefone (Obrigatório)",
+      password: "Senha"
+    },
+    btnNormal: "Continuar para o Pagamento Seguro",
+    btnLoading: "Criando Conta...",
+    footerNote: "Você será redirecionado para o pagamento seguro para ativar sua conta com uma taxa de configuração de pagamento único."
+  }
+};
 
 export default function StartTrial() {
+  const [lang, setLang] = useState("en"); 
+  const [langOpen, setLangOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 1024 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -69,55 +144,130 @@ export default function StartTrial() {
     }
   };
 
+  const tr = t[lang];
+  const Icon = isMobile ? Sparkle : Check;
   return (
-    <div className="trial-page">
+    <div className={isMobile ? "trial-page mobile" : "trial-page"}>
       <div className="trial-container">
         <div className="trial-left-column">
-          <div className="trial-header">
-            <div className="trial-logo-area">
-              <div className="trial-logo-box">
-                <span className="trial-logo-inner-c">
-                  <img src={trialogo} alt="CORTEXA" />
-                </span>
+          {isMobile ? (
+            <header className="m-header">
+              <div className="m-logo-block">
+                <a href="/">
+                  <img src={headlogoM} alt="Cortexa" className="cx-logo-img" />
+                </a>
               </div>
-              <span className="trial-logo-text">CORTEXA</span>
-              <span className="trial-logo-divider">|</span>
-              <span className="trial-logo-badge">AI OS</span>
+              
+              <div className="m-header-right">
+                <div className="m-lang-wrapper">
+                  <button
+                    type="button"
+                    className="m-lang-btn"
+                    onClick={() => setLangOpen(!langOpen)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", textTransform: "uppercase" }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="100%"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="img-local"
+                    >
+                      <path
+                        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M2 12H22M12 2C9.43223 4.69615 8 8.27674 8 12C8 15.7233 9.43223 19.3038 12 22C14.5678 19.3038 16 15.7233 16 12C16 8.27674 14.5678 4.69615 12 2Z"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {langOpen && (
+                    <div className="m-lang-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("en");
+                          setLangOpen(false);
+                        }}
+                      >
+                        English
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("es");
+                          setLangOpen(false);
+                        }}
+                      >
+                        Español
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("pt");
+                          setLangOpen(false);
+                        }}
+                      >
+                        Português
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </header>
+          ) : (
+            <div className="trial-header">
+              <div className="trial-logo-area">
+                <div className="trial-logo-box">
+                  <span className="trial-logo-inner-c">
+                    <img src={trialogo} alt="CORTEXA" />
+                  </span>
+                </div>
+                <span className="trial-logo-text">CORTEXA</span>
+                <span className="trial-logo-divider">|</span>
+                <span className="trial-logo-badge">AI OS</span>
+              </div>
             </div>
-          </div>
+          )}
 
-          <h1 className="trial-title">Start Getting AI-Powered Leads — 24/7</h1>
-
-          <p className="trial-desc">
-            CORTEXA is an AI-powered CRM built for real estate agents and teams.
-            Capture, qualify, and close leads automatically — without manual
-            follow-up.
-          </p>
+          <h1 className="trial-title">{tr.title}</h1>
+          <p className="trial-desc">{tr.desc}</p>
 
           <ul className="trial-features">
             <li>
               <span className="trial-check-icon">
-                <Check size={13} strokeWidth={3} />
+                <Icon size={13} strokeWidth={3} />
               </span>
-              Capture and qualify leads automatically — no missed opportunities
+              {tr.f1}
             </li>
             <li>
               <span className="trial-check-icon">
-                <Check size={13} strokeWidth={3} />
+                <Icon size={13} strokeWidth={3} />
               </span>
-              AI follows up instantly via text, WhatsApp, and more
+              {tr.f2}
             </li>
             <li>
               <span className="trial-check-icon">
-                <Check size={13} strokeWidth={3} />
+                <Icon size={13} strokeWidth={3} />
               </span>
-              Smart pipelines track every deal in real time
+              {tr.f3}
             </li>
             <li>
               <span className="trial-check-icon">
-                <Check size={13} strokeWidth={3} />
+                <Icon size={13} strokeWidth={3} />
               </span>
-              Access your full dashboard immediately after activation
+              {tr.f4}
             </li>
           </ul>
 
@@ -130,7 +280,7 @@ export default function StartTrial() {
                 <input
                   type="text"
                   name="name"
-                  placeholder="Full Name"
+                  placeholder={tr.placeholders.name}
                   required
                   value={form.name}
                   onChange={handleChange}
@@ -144,7 +294,7 @@ export default function StartTrial() {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Work Email"
+                  placeholder={tr.placeholders.email}
                   required
                   value={form.email}
                   onChange={handleChange}
@@ -158,7 +308,7 @@ export default function StartTrial() {
                 <input
                   type="tel"
                   name="phone"
-                  placeholder="Phone Number (Required)"
+                  placeholder={tr.placeholders.phone}
                   required
                   value={form.phone}
                   onChange={handleChange}
@@ -170,17 +320,22 @@ export default function StartTrial() {
                   <LockKeyhole size={18} />
                 </span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Password"
+                  placeholder={tr.placeholders.password}
                   required
                   minLength="6"
                   value={form.password}
                   onChange={handleChange}
                 />
-                <span className="trial-password-toggle">
-                  <Eye size={18} />
-                </span>
+                <button
+                  type="button"
+                  className="trial-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
 
               <button
@@ -191,9 +346,7 @@ export default function StartTrial() {
                 <span className="trial-btn-lock">
                   <LockKeyhole size={16} />
                 </span>
-                {loading
-                  ? "Creating Account..."
-                  : "Continue to Secure Checkout"}
+                {loading ? tr.btnLoading : tr.btnNormal}
                 <span className="trial-btn-arrow">
                   <ChevronRight size={18} />
                 </span>
@@ -203,18 +356,16 @@ export default function StartTrial() {
                 <span className="trial-shield-icon">
                   <ShieldAlert size={20} />
                 </span>
-                <p>
-                  You will be redirected to secure checkout to activate your
-                  account with a one-time setup fee.
-                </p>
+                <p>{tr.footerNote}</p>
               </div>
             </form>
           </div>
         </div>
-
-        <div className="trial-right-column">
-          <img src={trial} alt="Trial" />
-        </div>
+        {!isMobile && (  
+          <div className="trial-right-column">
+            <img src={trial} alt="Trial" />
+          </div>
+        )}
       </div>
     </div>
   );
