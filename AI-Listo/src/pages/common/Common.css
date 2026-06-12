@@ -808,6 +808,7 @@
   align-items: flex-start;
   font-weight: 400;
   text-align: left;
+  margin-top: 65px !important;
 }
 .pricing-page .fillcheck svg{
   fill: transparent;
