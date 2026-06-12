@@ -41,7 +41,7 @@ const t = {
       desc: "One platform. Everything you need to capture, engage, and close more deals. Built for modern agents and teams who want results.",
     },
     sidebar: {
-      title: "Enterprise",
+      title: "CORTEXA AIOS",
       getStarted: "Get started",
       setupFee: "One-time setup fee",
       btn: "Start My Free Trial",
@@ -86,7 +86,7 @@ const t = {
       desc: "Una plataforma. Todo lo que necesitas para captar, interactuar y cerrar más acuerdos. Creado para agentes y equipos modernos que buscan resultados.",
     },
     sidebar: {
-      title: "Enterprise",
+      title: "CORTEXA AIOS",
       getStarted: "Comenzar",
       setupFee: "Tarifa de configuración única",
       btn: "Iniciar Mi Prueba Gratis",
@@ -140,7 +140,7 @@ const t = {
       desc: "Uma plataforma. Tudo o que você precisa para capturar, engajar e fechar mais negócios. Desenvolvido para corretores e equipes modernas que querem resultados.",
     },
     sidebar: {
-      title: "Enterprise",
+      title: "CORTEXA AIOS",
       getStarted: "Começar",
       setupFee: "Taxa única de configuração",
       btn: "Iniciar Meu Teste Grátis",
@@ -712,7 +712,7 @@ export default function PricingPage() {
               <div className="price-box">
                 <div>
                   <span>{tr.sidebar.getStarted}</span>
-                  <strong>$97</strong>
+                  <strong>$67</strong>
                 </div>
                 <p>{tr.sidebar.setupFee}</p>
               </div>
@@ -721,9 +721,6 @@ export default function PricingPage() {
                 {tr.sidebar.btn}
               </a>
 
-              <p className="fill">
-                <Users size={18} /> {tr.sidebar.users}
-              </p>
               <p className="fill fillcheck">
                 <Check size={18} /> {tr.sidebar.addTeam}
               </p>
