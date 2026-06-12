@@ -642,7 +642,7 @@ export default function LandingMobile() {
                   strokeLinejoin="round"
                 />
               </svg>{" "}
-              {lang.toUpperCase()}
+              
             </button>
 
             {langOpen && (
@@ -721,6 +721,9 @@ export default function LandingMobile() {
         </div>
 
         <div className="m-drawer-actions">
+          <a href="/trial" className="m-trial-btn">
+            {tr.trial}
+          </a>  
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
               Dashboard
@@ -730,9 +733,6 @@ export default function LandingMobile() {
               {tr.login}
             </Link>
           )}
-          <a href="/trial" className="m-trial-btn">
-            {tr.trial}
-          </a>
         </div>
       </div>
 

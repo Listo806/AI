@@ -198,8 +198,8 @@ export default function PricingPage() {
           </div>
           
           <div className="m-drawer-actions">
-            <a className="m-login-btn" href="/login">Log in</a>
             <a href="/trial" className="m-trial-btn">Start Free Trial</a>
+            <a className="m-login-btn" href="/login">Log in</a>
           </div>
         </div>
       )}

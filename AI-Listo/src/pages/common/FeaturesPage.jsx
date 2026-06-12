@@ -160,8 +160,8 @@ export default function FeaturesPage() {
           </div>
           
           <div className={styles.mDrawerActions}>
-            <a className={styles.mDrawerLoginBtn} href="/login">Log in</a>
             <a href="/start-trial" className={styles.mDrawerTrialBtn}>Start Free Trial</a>
+            <a className={styles.mDrawerLoginBtn} href="/login">Log in</a>
           </div>
         </div>
       )}
