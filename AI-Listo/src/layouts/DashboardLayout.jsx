@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
@@ -73,25 +73,34 @@ export default function DashboardLayout() {
     return saved ? JSON.parse(saved) : false;
   });
 
+  // Sử dụng useRef để lưu kích thước màn hình trước đó, tránh chạy lại logic khi người dùng bấm nút thủ công
+  const lastLayoutTypeRef = useRef(""); 
+
+  // Tự động kiểm tra cấu hình theme mặc định dựa trên thiết bị (chỉ kích hoạt khi thay đổi kích thước/thiết bị)
   useEffect(() => {
     if (typeof toggleTheme !== "function") return;
 
     const handleThemeResponsive = () => {
-      const isMobileOrTablet = window.innerWidth < 1025;
+      const width = window.innerWidth;
+      const currentLayoutType = width < 1025 ? "mobile-tablet" : "desktop";
 
-      if (isMobileOrTablet) {
-        // mobile, tablet ->  Dark Theme 
-        if (!isDark) {
-          toggleTheme();
-        }
-      } else {
-        //  desktop (>= 1025px) ->  Light Theme 
-        if (isDark) {
-          toggleTheme(); 
+      // Chỉ thay đổi theme tự động nếu chuyển giao diện thiết bị (ví dụ: từ Desktop co màn hình lại thành Mobile)
+      if (lastLayoutTypeRef.current !== currentLayoutType) {
+        lastLayoutTypeRef.current = currentLayoutType; // Lưu trạng thái hiện tại lại
+
+        if (currentLayoutType === "mobile-tablet") {
+          if (!isDark) {
+            toggleTheme(); // Bắt buộc là Dark khi vào mobile/tablet lần đầu
+          }
+        } else {
+          if (isDark) {
+            toggleTheme(); // Bắt buộc là Light khi vào desktop lần đầu
+          }
         }
       }
     };
 
+    // Khởi chạy kiểm tra ngay lần mount đầu tiên
     handleThemeResponsive();
 
     window.addEventListener("resize", handleThemeResponsive);
