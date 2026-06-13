@@ -45,7 +45,6 @@ body {
 }
 .crm-content{
     padding-bottom:0;
-    height: calc(100vh - 30px);
     background: #fff !important;
     overflow: visible;
 }

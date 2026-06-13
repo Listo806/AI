@@ -53,6 +53,7 @@ body {
   overflow-x: hidden;
   z-index: 999;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+  border-right: 1px solid #f2f3f5;
 }
 
 .desktop-text {
@@ -153,6 +154,7 @@ body {
   .crm-sidebar {
     transform: translateX(-100%);
     width: 205px;
+    border-right: 0;
   }
 
   .crm-sidebar.open {
@@ -603,7 +605,7 @@ body.crm-dark .crm-nav-link.active {
 
 .crm-main {
   flex: 1;
-  margin-left: 200px;
+  margin-left: 195px;
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
@@ -1564,73 +1566,80 @@ body.crm-dark .crm-error {
   opacity: 0.5;
   cursor: not-allowed;
 }
-.crm-header-center .m-logo, .crm-sidebar .logo-dark{
+
+.crm-header-center .m-logo,
+.crm-sidebar .logo-dark {
   display: none;
 }
+
 .crm-dark .crm-sidebar .logo-light {
   display: none;
 }
+
 .crm-dark .crm-sidebar .logo-dark {
-    display: block;
-    width: 97%;
-  }
+  display: block;
+  width: 97%;
+}
+
+.crm-dark .dashboard-page .ai-command-banner {
+  border: 1px solid #16468e;
+}
+
+.crm-dark .queue-item-row,
+.crm-dark .list-tbl-row {
+  border-top: 1px solid #171d28;
+}
+
+.crm-dark .bg-light-blue,
+.crm-dark .bg-light-purple,
+.crm-dark .bg-light-green,
+.crm-dark .bg-light-orange,
+.crm-dark .prob-badge,
+.crm-dark .shortcut-btn.green-btn,
+.crm-dark .black-btn {
+  background-color: rgba(37, 99, 235, 0.08);
+}
+
+.crm-dark .dashboard-page .drawer-body .control-btn,
+.crm-dark .header-actions .control-btn,
+.crm-dark .kpi-mini-card,
+.crm-dark .content-card,
+.crm-dark .pill-toggles button,
+.crm-dark .white-btn {
+  background: #0b141d;
+  border: 1px solid #171d28;
+}
+
+.crm-dark .crm-content,
+body.crm-dark .leads-page,
+.crm-dark .cortexa-bottom-nav,
+.crm-dark .crm-sidebar,
+.mobile-filter-drawer {
+  background: var(--bg) !important;
+}
+
+.crm-dark .heading_page h1,
+.drawer-header h3,
+.crm-dark .dashboard-page .drawer-body .control-btn,
+.crm-dark .drawer-close,
+.crm-dark .header-actions .control-btn,
+.crm-dark .sub_head,
+.crm-dark .kpi-mini-card,
+.crm-dark .kpi-mini-card .kpi-lbl,
+.crm-dark .kpi-mini-card .kpi-main-val,
+.crm-dark .kpi-sub-val,
+.crm-dark .card-top-header h3,
+.crm-dark .card-top-header h5,
+.crm-dark .table-list-half,
+.crm-dark .queue-list-wrapper,
+.crm-dark .white-btn svg,
+.crm-dark .risk-alerts-list,
+.crm-dark .content-card {
+  color: var(--text);
+}
+
 @media (max-width: 1024px) {
-  .crm-dark .dashboard-page .ai-command-banner {
-    border: 1px solid #16468e;
-  }
 
-  .crm-dark .queue-item-row,
-  .crm-dark .list-tbl-row {
-    border-top: 1px solid #171d28;
-  }
-
-  .crm-dark .bg-light-blue,
-  .crm-dark .bg-light-purple,
-  .crm-dark .bg-light-green,
-  .crm-dark .bg-light-orange,
-  .crm-dark .prob-badge,
-  .crm-dark .shortcut-btn.green-btn,
-  .crm-dark .black-btn {
-    background-color: rgba(37, 99, 235, 0.08);
-  }
-
-  .crm-dark .dashboard-page .drawer-body .control-btn,
-  .crm-dark .header-actions .control-btn,
-  .crm-dark .kpi-mini-card,
-  .crm-dark .content-card,
-  .crm-dark .pill-toggles button,
-  .crm-dark .white-btn {
-    background: #0b141d;
-    border: 1px solid #171d28;
-  }
-
-  .crm-dark .crm-content,
-  body.crm-dark .leads-page,
-  .crm-dark .cortexa-bottom-nav,
-  .crm-dark .crm-sidebar,
-  .mobile-filter-drawer {
-    background: var(--bg) !important;
-  }
-
-  .crm-dark .heading_page h1,
-  .drawer-header h3,
-  .crm-dark .dashboard-page .drawer-body .control-btn,
-  .crm-dark .drawer-close,
-  .crm-dark .header-actions .control-btn,
-  .crm-dark .sub_head,
-  .crm-dark .kpi-mini-card,
-  .crm-dark .kpi-mini-card .kpi-lbl,
-  .crm-dark .kpi-mini-card .kpi-main-val,
-  .crm-dark .kpi-sub-val,
-  .crm-dark .card-top-header h3,
-  .crm-dark .card-top-header h5,
-  .crm-dark .table-list-half,
-  .crm-dark .queue-list-wrapper,
-  .crm-dark .white-btn svg,
-  .crm-dark .risk-alerts-list,
-  .crm-dark .content-card {
-    color: var(--text);
-  }
 
   .logo-light {
     height: 67px;
