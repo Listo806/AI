@@ -295,11 +295,6 @@ export default function CortexaDashboard() {
                 <span>Filters</span>
               </div>
 
-              <div className="notification-icon">
-                <Bell size={18} />
-                <span className="notif-badge">8</span>
-              </div>
-
               <button className="btn-export">
                 <Download size={15} />
                 Export

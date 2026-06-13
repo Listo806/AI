@@ -1,5 +1,3 @@
-/* AI CRM Dashboard Styles */
-
 :root {
   --bg: #ffffff;
   --text: #0f172a;
@@ -22,7 +20,8 @@ body.crm-dark {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   max-width: 100vw;
 }
@@ -33,15 +32,13 @@ body {
   color: var(--text);
 }
 
-/* Root Layout */
 .crm-root {
   display: flex;
   min-height: 100vh;
 }
 
-/* Sidebar - Desktop: Icons + Labels visible */
 .crm-sidebar {
-  width: 195px; /* Reduced from 240px by ~17% for tighter, enterprise feel */
+  width: 195px;
   background: #fff;
   color: var(--text);
   padding: 0;
@@ -49,19 +46,19 @@ body {
   flex-direction: column;
   position: fixed;
   height: 100vh;
-  height: 100dvh; /* mobile toolbars — use dynamic viewport when supported */
+  height: 100dvh;
   max-height: 100vh;
   max-height: 100dvh;
-  overflow: hidden; /* scroll only .crm-nav so footer/header stay fixed */
+  overflow: hidden;
   overflow-x: hidden;
   z-index: 999;
   transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
-  border-right: 1px solid #f2f3f5;
 }
 
-.desktop-text{
+.desktop-text {
   display: initial;
 }
+
 .ai-usage-card {
   border-radius: 16px;
   padding: 5px;
@@ -92,9 +89,11 @@ body {
   overflow: visible;
   filter: drop-shadow(0px 4px 8px rgba(109, 124, 255, 0.2));
 }
+
 .ai-usage-card.collapsed {
   display: none;
 }
+
 .ai-usage-stats {
   display: flex;
   flex-direction: column;
@@ -112,7 +111,7 @@ body {
 
 .ai-usage-progress-bg {
   height: 6px;
-  background: #e5e7eb; 
+  background: #e5e7eb;
   border-radius: 10px;
   width: 100%;
   overflow: hidden;
@@ -134,43 +133,39 @@ body {
   border-color: rgba(109, 124, 255, 0.2);
   box-shadow: 0 4px 15px rgba(109, 124, 255, 0.05);
 }
-/* Desktop: Sidebar always visible with labels */
-@media (min-width: 769px) {
+
+@media (min-width: 1025px) {
   .crm-sidebar {
     transform: translateX(0);
     width: 195px;
   }
 
-  /* Collapsed state - icon-only */
   .crm-sidebar.collapsed {
-    width: 60px; /* Reduced proportionally from 72px */
+    width: 60px;
   }
 }
 
-/* Mobile: Sidebar hidden by default, shown when open */
-@media (max-width: 768px) {
-  .desktop-text{
+@media (max-width: 1024px) {
+  .desktop-text {
     display: none;
   }
 
   .crm-sidebar {
     transform: translateX(-100%);
-    width: 165px; /* Reduced from 240px for tighter feel */
+    width: 205px;
   }
-  
+
   .crm-sidebar.open {
     transform: translateX(0);
   }
 }
 
-/* Sidebar Header - Logo and Brand */
 .crm-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 0px; /* Reduced from 12px for tighter spacing */
-  padding: 10px 10px 4px; /* Slightly more breathing room */
+  gap: 0px;
+  padding: 10px 10px 4px;
   flex-shrink: 0;
-  /* border-bottom: 1px solid rgba(255, 255, 255, 0.1); */
   transition: padding 0.3s ease-in-out;
   position: relative;
 }
@@ -194,32 +189,32 @@ body {
   flex-direction: column;
   gap: 4px;
   flex: 1 1 auto;
-  min-height: 0; /* required so flex child can shrink and scroll */
+  min-height: 0;
   padding: 0px 8px 8px;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
-.crm-nav-fix-label{
-    color:#7d839c;
-    font-size: 12px;
-    font-weight: 500;
+
+.crm-nav-fix-label {
+  color: #7d839c;
+  font-size: 12px;
+  font-weight: 500;
 }
-/* Blank spacer items between sidebar groups */
+
 .crm-nav-spacer {
   height: 14px;
   flex-shrink: 0;
   min-height: 14px;
 }
 
-/* Powered by — pinned to bottom */
 .crm-sidebar-powered {
   margin-top: auto;
   flex-shrink: 0;
   padding: 14px 10px 18px;
   text-align: center;
-  background: var(--bg); /* solid edge when nav scrolls above */
+  background: var(--bg);
 }
 
 .crm-sidebar-powered-sep {
@@ -296,17 +291,16 @@ body {
   opacity: 0.9;
 }
 
-/* Desktop: Icons + Labels always visible */
 .crm-nav-link {
   color: var(--text-muted);
   text-decoration: none;
-  padding: 8px 10px; /* Reduced from 10px 12px for tighter spacing */
+  padding: 8px 10px;
   border-radius: 8px;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px; /* Reduced from 12px - icons closer to text */
+  gap: 8px;
   width: 100%;
   margin: 0;
   padding-right: 0;
@@ -326,7 +320,6 @@ body {
   fill: none;
 }
 
-/* WhatsApp icon image styling */
 .crm-nav-icon img {
   width: 100%;
   height: 100%;
@@ -334,7 +327,6 @@ body {
   display: block;
 }
 
-/* Lucide icon styling for sidebar */
 .crm-nav-link i[data-lucide] {
   width: 20px;
   height: 20px;
@@ -343,14 +335,12 @@ body {
   stroke-width: 2;
 }
 
-/* Lucide icon styling for KPI cards */
 .dashboard-kpi-card i[data-lucide] {
   width: 22px;
   height: 22px;
   stroke-width: 2;
 }
 
-/* General Lucide icon styling */
 i[data-lucide] {
   display: inline-block;
   vertical-align: middle;
@@ -358,46 +348,43 @@ i[data-lucide] {
 }
 
 .crm-nav-label {
-  display: block; /* Visible when expanded */
+  display: block;
   white-space: nowrap;
   overflow: hidden;
   transition: opacity 0.2s ease-in-out;
   font-size: 12px;
   font-weight: 400;
 }
-.crm-nav-addon{
-    text-transform: uppercase;
-    font-size: 7px;
-    border: 1px solid #916fd8;
-    padding: 3px 1px;
-    color: #916fd8;
-    font-weight: 600;
-    border-radius: 4px;
+
+.crm-nav-addon {
+  text-transform: uppercase;
+  font-size: 7px;
+  border: 1px solid #916fd8;
+  padding: 3px 1px;
+  color: #916fd8;
+  font-weight: 600;
+  border-radius: 4px;
 }
-/* Hide labels when collapsed */
-@media (min-width: 769px) {
+
+@media (min-width: 1025px) {
   .crm-sidebar.collapsed .crm-nav-label {
     display: none;
   }
 
-  /* Center icons when collapsed */
   .crm-sidebar.collapsed .crm-nav-link {
     justify-content: center;
-    padding: 8px; /* Reduced from 10px */
+    padding: 8px;
   }
 
-  /* Hide sidebar brand when collapsed */
   .crm-sidebar.collapsed .crm-sidebar-brand {
     display: none;
   }
 
-  /* Center header when collapsed (toggle button will be centered) */
   .crm-sidebar.collapsed .crm-sidebar-header {
     justify-content: center;
-    padding: 12px 8px; /* Reduced from 16px 8px */
+    padding: 12px 8px;
   }
 
-  /* Hide user details when collapsed */
   .crm-sidebar.collapsed .crm-user-details {
     display: none;
   }
@@ -406,12 +393,10 @@ i[data-lucide] {
     display: none;
   }
 
-  /* Center user avatar when collapsed */
   .crm-sidebar.collapsed .crm-user-info {
     justify-content: center;
   }
 
-  /* Tooltip on hover when collapsed */
   .crm-sidebar.collapsed .crm-nav-link {
     position: relative;
   }
@@ -451,8 +436,7 @@ body.crm-dark .crm-nav-link.active {
   color: #60a5fa;
 }
 
-/* Show labels on mobile */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .crm-nav-link {
     width: auto;
     height: auto;
@@ -465,63 +449,19 @@ body.crm-dark .crm-nav-link.active {
     display: block;
     font-size: 14px;
   }
-  
+
   .crm-nav-link:hover .crm-nav-label {
     position: static;
     background: transparent;
     padding: 0;
     box-shadow: none;
   }
-  
+
   .crm-nav-link:hover .crm-nav-label::before {
     display: none;
   }
 }
 
-/* Buy/Rent Navigation Links - REMOVED: Not used in CRM sidebar
-   CRM Properties page now uses internal filter tabs instead of navigation links
-   These styles were for marketplace-style navigation which is not appropriate for CRM
-   
-.crm-nav-buy-rent {
-  display: flex;
-  gap: 8px;
-  margin: 8px 0;
-  padding: 0 12px;
-}
-
-.crm-nav-link-buy,
-.crm-nav-link-rent {
-  flex: 1;
-  text-align: center;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 6px;
-}
-
-.crm-nav-link-buy {
-  background: rgba(59, 130, 246, 0.1);
-  color: #60a5fa;
-}
-
-.crm-nav-link-buy:hover,
-.crm-nav-link-buy.active {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-}
-
-.crm-nav-link-rent {
-  background: rgba(34, 197, 94, 0.1);
-  color: #4ade80;
-}
-
-.crm-nav-link-rent:hover,
-.crm-nav-link-rent.active {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-}
-*/
-
-/* Homepage Search Bar */
 .crm-search-bar {
   background: var(--card);
   border-radius: 12px;
@@ -563,8 +503,7 @@ body.crm-dark .crm-nav-link.active {
   min-width: 80px;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .crm-search-container {
     flex-direction: column;
   }
@@ -595,7 +534,6 @@ body.crm-dark .crm-nav-link.active {
   }
 }
 
-/* Sidebar Footer - Account Info & Logout */
 .crm-sidebar-footer {
   margin-top: auto;
   border-top: 1px solid var(--border);
@@ -663,24 +601,21 @@ body.crm-dark .crm-nav-link.active {
   color: #fff;
 }
 
-/* Main Content */
 .crm-main {
   flex: 1;
-  margin-left: 200px; /* Desktop: account for sidebar with labels (expanded) - updated from 240px */
+  margin-left: 200px;
   min-height: 100vh;
   transition: margin-left 0.3s ease-in-out;
   position: relative;
   background: var(--bg);
 }
 
-/* Adjust main content when sidebar is collapsed */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .crm-root.sidebar-collapsed .crm-main {
-    margin-left: 60px; /* Collapsed sidebar width - updated from 72px */
+    margin-left: 60px;
   }
 }
 
-/* Background image with overlay for better readability */
 .crm-main::before {
   content: '';
   position: absolute;
@@ -696,7 +631,6 @@ body.crm-dark .crm-nav-link.active {
   pointer-events: none;
 }
 
-/* Alternative: Gradient overlay for better contrast */
 .crm-main::after {
   content: '';
   position: absolute;
@@ -704,42 +638,31 @@ body.crm-dark .crm-nav-link.active {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(248, 250, 252, 0.85) 0%,
-    rgba(248, 250, 252, 0.92) 50%,
-    rgba(248, 250, 252, 0.95) 100%
-  );
+  background: linear-gradient(to bottom,
+      rgba(248, 250, 252, 0.85) 0%,
+      rgba(248, 250, 252, 0.92) 50%,
+      rgba(248, 250, 252, 0.95) 100%);
   z-index: 1;
   pointer-events: none;
 }
 
-/* Dark mode: hide decorative overlay, use solid background */
 body.crm-dark .crm-main::before,
 body.crm-dark .crm-main::after {
   display: none;
 }
 
-/* Mobile: No margin for sidebar */
-@media (max-width: 768px) {
-  .crm-main {
-    margin-left: 0;
-  }
-}
-
 .crm-header {
   background: transparent;
   padding: 0px 12px;
-  /* border-bottom: 1px solid var(--border); */
   position: sticky;
   top: 0;
-  z-index: 100; /* Above background overlay */
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 30px; /* Reduced height */
-  box-shadow: none; /* No heavy shadows */
-  margin-left: 0; /* Header starts after sidebar - sidebar is fixed */
+  min-height: 30px;
+  box-shadow: none;
+  margin-left: 0;
 }
 
 .crm-header-left {
@@ -749,7 +672,7 @@ body.crm-dark .crm-main::after {
   position: relative;
   z-index: 1;
   flex: 1;
-  min-width: 0; /* Allow flex item to shrink */
+  min-width: 0;
 }
 
 .crm-header-image {
@@ -760,7 +683,6 @@ body.crm-dark .crm-main::after {
   display: block;
 }
 
-/* Brand Logo Styles */
 .brand {
   display: flex;
   align-items: center;
@@ -769,8 +691,8 @@ body.crm-dark .crm-main::after {
   cursor: pointer;
   transition: opacity 0.2s;
   text-decoration: none;
-  min-width: 0; /* Allow shrinking */
-  overflow: hidden; /* Prevent overflow */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .brand:hover {
@@ -804,53 +726,52 @@ body.crm-dark .crm-main::after {
   font-weight: 600;
 }
 
-/* Mobile: Compact Logo - Hide text, show only icon */
-@media (max-width: 768px) {
-  .crm-content{
-    margin-top:30px;
+@media (max-width: 1024px) {
+  .crm-content {
+    margin-top: 30px;
   }
-  body .crm-header{
-    background:#fff;
+
+  body .crm-header {
+    background: #fff;
   }
-  body.crm-dark .crm-header{
-    background:#0b0f19;
+
+  body.crm-dark .crm-header {
+    background: #0b0f19;
   }
+
   .brand {
-    gap: 6px; /* Reduced gap */
+    gap: 6px;
     min-width: auto;
   }
 
   .brand .powered {
-    /* display: none;  */
     font-size: 10px;
   }
 
   .brand .text {
-    /* display: none;  */
     font-size: 14px;
   }
 
   .brand .icon {
-    height: 24px; /* Slightly smaller icon on mobile */
+    height: 24px;
   }
 
   .crm-header-left {
-    gap: 12px; /* Reduced gap on mobile */
-    flex: 0 0 auto; /* Don't take all space */
-    max-width: calc(100% - 120px); /* Reserve space for right panel */
+    gap: 12px;
+    flex: 0 0 auto;
+    max-width: calc(100% - 120px);
   }
 
   .crm-header-right {
-    gap: 8px; /* Reduced gap on mobile */
+    gap: 8px;
   }
 
   .crm-header {
-    padding: 10px 12px; /* Reduced padding on mobile */
-    min-height: 48px; /* Slightly reduced height */
+    padding: 10px 12px;
+    min-height: 48px;
   }
 }
 
-/* Unified Sidebar Toggle Button - Header (works for both mobile and desktop) */
 .crm-sidebar-toggle-header {
   display: flex;
   align-items: center;
@@ -867,7 +788,6 @@ body.crm-dark .crm-main::after {
   flex-shrink: 0;
   margin-right: 12px;
   position: relative;
-  /* Better touch target for mobile */
   min-width: 32px;
   min-height: 32px;
   margin-left: -24px;
@@ -906,7 +826,6 @@ body.crm-dark .crm-main::after {
   transform: rotate(90deg);
 }
 
-/* Add tooltip on hover for better UX */
 .crm-sidebar-toggle-header::after {
   content: attr(aria-label);
   position: absolute;
@@ -929,37 +848,32 @@ body.crm-dark .crm-main::after {
   opacity: 1;
 }
 
-/* Hide header toggle on desktop - use sidebar toggle instead */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .crm-sidebar-toggle-header {
     display: none;
   }
 }
 
-/* Mobile adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .crm-sidebar-toggle-header {
     width: 32px;
     height: 32px;
     margin-left: 0px;
     margin-right: 8px;
-    /* Larger touch target on mobile */
   }
-  
+
   .crm-sidebar-toggle-header i[data-lucide] {
     width: 24px;
     height: 24px;
   }
-  
-  /* Hide tooltip on mobile (touch devices) */
+
   .crm-sidebar-toggle-header::after {
     display: none;
   }
 }
 
-/* Desktop Sidebar Toggle - Inside Sidebar (left of logo when expanded, centered when collapsed) */
 .crm-sidebar-toggle-inside {
-  display: none; /* Hidden on mobile */
+  display: none;
   width: 27px;
   height: 27px;
   background: none;
@@ -972,16 +886,16 @@ body.crm-dark .crm-main::after {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* margin-right: 8px; */
   position: relative;
   position: absolute;
   right: 10px;
   top: 10px;
 }
+
 .sidebar-collapsed .crm-sidebar-toggle-inside {
-    position: relative;
-    top: 0;
-    right: 3px;
+  position: relative;
+  top: 0;
+  right: 3px;
 }
 
 .crm-sidebar-toggle-inside:hover {
@@ -1008,13 +922,11 @@ body.crm-dark .crm-main::after {
   transform: rotate(90deg);
 }
 
-/* Desktop: Show sidebar toggle inside sidebar */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .crm-sidebar-toggle-inside {
     display: flex;
   }
 
-  /* When collapsed, center the toggle button and hide logo */
   .crm-sidebar.collapsed .crm-sidebar-toggle-inside {
     margin-right: 0;
   }
@@ -1028,9 +940,8 @@ body.crm-dark .crm-main::after {
   }
 }
 
-/* Desktop Sidebar Toggle - Outside Sidebar (in header when collapsed) */
 .crm-sidebar-toggle-outside {
-  display: none; /* Hidden by default */
+  display: none;
   width: 32px;
   height: 32px;
   background: transparent;
@@ -1053,16 +964,14 @@ body.crm-dark .crm-main::after {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Show outside toggle on desktop when sidebar is collapsed */
-@media (min-width: 769px) {
+@media (min-width: 1025px) {
   .crm-sidebar-toggle-outside {
     display: flex;
   }
 }
 
-/* Mobile Menu Toggle (Hamburger) */
 .crm-mobile-menu-toggle {
-  display: none; /* Hidden on desktop */
+  display: none;
   flex-direction: column;
   justify-content: space-around;
   width: 24px;
@@ -1074,8 +983,7 @@ body.crm-dark .crm-main::after {
   z-index: 1001;
 }
 
-/* Show hamburger on mobile */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .crm-mobile-menu-toggle {
     display: flex;
   }
@@ -1093,7 +1001,6 @@ body.crm-dark .crm-main::after {
   background: #3b82f6;
 }
 
-/* Sidebar Overlay */
 .crm-sidebar-overlay {
   display: none;
   position: fixed;
@@ -1101,20 +1008,18 @@ body.crm-dark .crm-main::after {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6); /* Darker, more translucent backdrop */
-  z-index: 998; /* Below sidebar (999) but above content */
-  backdrop-filter: blur(2px); /* Slight blur for modern feel */
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 998;
+  backdrop-filter: blur(2px);
   transition: opacity 0.3s ease-in-out;
-  cursor: pointer; /* Indicate it's clickable to close */
+  cursor: pointer;
 }
 
-/* Show overlay on mobile when sidebar is open */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .crm-sidebar-overlay {
     display: block;
   }
 
-  /* Lock body scroll when sidebar is open - handled by JavaScript */
   body.sidebar-open {
     overflow: hidden !important;
     position: fixed;
@@ -1122,7 +1027,6 @@ body.crm-dark .crm-main::after {
     height: 100%;
   }
 
-  /* Prevent interaction with dashboard content when sidebar is open */
   body.sidebar-open .crm-main {
     pointer-events: none;
     user-select: none;
@@ -1138,16 +1042,19 @@ body.crm-dark .crm-main::after {
   gap: 12px;
   position: relative;
   z-index: 1;
-  flex-shrink: 0; /* Prevent shrinking - always show fully */
+  flex-shrink: 0;
 }
-.language-selector{
-    margin:0;
+
+.language-selector {
+  margin: 0;
 }
-.language-selector-trigger{
-    border:0;
-    padding: 6px;
-    gap: 2px;
+
+.language-selector-trigger {
+  border: 0;
+  padding: 6px;
+  gap: 2px;
 }
+
 .crm-account-dropdown {
   position: relative;
 }
@@ -1262,7 +1169,6 @@ body.crm-dark .crm-main::after {
   color: var(--text);
 }
 
-/* Theme toggle - pill slider inside profile dropdown */
 .crm-theme-toggle-wrap {
   display: flex;
   align-items: center;
@@ -1350,13 +1256,11 @@ body.crm-dark .crm-theme-toggle .crm-theme-option.active {
   color: var(--text);
 }
 
-/* Page titles - theme-aware (pages using inline styles without color inherit this) */
 .crm-content h1,
 .crm-content h2 {
   color: var(--text);
 }
 
-/* Error Message */
 .crm-error {
   padding: 16px;
   background: #fee2e2;
@@ -1371,20 +1275,19 @@ body.crm-dark .crm-error {
   border-color: rgba(185, 28, 28, 0.4);
 }
 
-/* Stats Grid - HIGHEST EMPHASIS (Dashboard KPIs) */
 .crm-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px; /* Increased spacing for prominence */
-  margin-bottom: 40px; /* More space after KPIs */
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
 .crm-stat-card {
   background: var(--card);
   padding: 24px;
-  border-radius: 12px; /* More rounded */
-  border: 2px solid var(--border); /* Stronger border */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06); /* Stronger shadow */
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 1;
   transition: all 0.2s;
@@ -1400,26 +1303,25 @@ body.crm-dark .crm-error {
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 10px;
-  font-weight: 600; /* Bolder */
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .crm-stat-value {
-  font-size: 36px; /* Larger */
-  font-weight: 700; /* Bolder */
+  font-size: 36px;
+  font-weight: 700;
   color: var(--text);
   line-height: 1.1;
 }
 
-/* Section - SECONDARY EMPHASIS */
 .crm-section {
   background: var(--card);
   border-radius: 12px;
   border: 1px solid var(--border);
   padding: 24px;
-  margin-bottom: 24px; /* Clear spacing between sections */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04); /* Subtle shadow */
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   position: relative;
   z-index: 1;
 }
@@ -1429,12 +1331,11 @@ body.crm-dark .crm-error {
 }
 
 .crm-section-title {
-  font-size: 18px; /* Slightly smaller than KPIs */
+  font-size: 18px;
   font-weight: 600;
   color: var(--text);
 }
 
-/* Add bottom border to headers in card sections */
 .crm-section h2 {
   border-bottom: 1px solid var(--border);
   padding-bottom: 12px;
@@ -1449,7 +1350,6 @@ body.crm-dark .crm-error {
   color: var(--text-muted);
 }
 
-/* Handle header wrapper divs (like in Leads Over Time section) */
 .crm-section-header-wrapper {
   border-bottom: 1px solid var(--border);
   padding-bottom: 16px !important;
@@ -1462,7 +1362,6 @@ body.crm-dark .crm-error {
   margin-bottom: 0 !important;
 }
 
-/* List */
 .crm-list {
   list-style: none;
   display: flex;
@@ -1551,7 +1450,6 @@ body.crm-dark .crm-error {
   color: var(--text-muted);
 }
 
-/* Loading State */
 .crm-loading {
   display: flex;
   flex-direction: column;
@@ -1570,12 +1468,12 @@ body.crm-dark .crm-error {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
 }
 
-/* Empty State */
 .crm-empty-state {
   text-align: center;
   padding: 48px 24px;
@@ -1598,7 +1496,6 @@ body.crm-dark .crm-error {
   color: var(--text-muted);
 }
 
-/* Buttons */
 .crm-btn {
   padding: 10px 20px;
   border-radius: 6px;
@@ -1668,19 +1565,66 @@ body.crm-dark .crm-error {
   cursor: not-allowed;
 }
 
-/* Touch targets: min 44px for mobile (Contact Agent, Send Message, etc.) */
 @media (max-width: 1024px) {
-  .crm-btn {
+  .crm-dark .dashboard-page .ai-command-banner{
+    border: 1px solid #16468e;
+  }
+  .crm-dark .queue-item-row, .crm-dark .list-tbl-row {
+    border-top: 1px solid #171d28;
+  }
+  .crm-dark .bg-light-blue, .crm-dark .bg-light-purple, .crm-dark .bg-light-green, .crm-dark .bg-light-orange, .crm-dark .prob-badge,
+  .crm-dark .shortcut-btn.green-btn, .crm-dark .black-btn{
+    background-color: rgba(37, 99, 235, 0.08);
+  }
+  .crm-dark .dashboard-page .drawer-body .control-btn, .crm-dark .header-actions .control-btn, .crm-dark .kpi-mini-card,
+  .crm-dark .content-card, .crm-dark .pill-toggles button, .crm-dark .white-btn {
+    background:#0b141d;
+    border: 1px solid #171d28;
+  }
+  .crm-dark .crm-content,
+  body.crm-dark .leads-page,
+  .crm-dark .cortexa-bottom-nav, .crm-dark .crm-sidebar, .mobile-filter-drawer {
+    background: var(--bg) !important;
+  }
+
+  .crm-dark .heading_page h1, .drawer-header h3, .crm-dark .dashboard-page .drawer-body .control-btn , .crm-dark .drawer-close,
+  .crm-dark .header-actions .control-btn, .crm-dark .sub_head, .crm-dark .kpi-mini-card, .crm-dark .kpi-mini-card .kpi-lbl,
+  .crm-dark .kpi-mini-card .kpi-main-val, .crm-dark .kpi-sub-val, .crm-dark .card-top-header h3, .crm-dark .card-top-header h5,
+  .crm-dark .table-list-half, .crm-dark .queue-list-wrapper, .crm-dark .white-btn svg, .crm-dark .risk-alerts-list,
+  .crm-dark .content-card{
+    color: var(--text);
+  }
+
+  .logo-light {
+    height: 67px;
+  }
+
+  .logo-dark {
+    display: none;
+  }
+  .crm-header-center .m-logo {
+    height: 55px;
+  }
+  .crm-dark .logo-light {
+    display: none;
+  }
+
+  .crm-dark .logo-dark {
+    display: block;
+    width: 97%;
+  }
+
+  crm-btn {
     min-height: 44px;
     min-width: 44px;
     padding: 12px 20px;
   }
+
   .crm-form-actions .crm-btn {
     min-height: 44px;
   }
 }
 
-/* Property Action Buttons */
 .crm-property-actions {
   margin-top: 16px;
   padding-top: 16px;
@@ -1702,7 +1646,6 @@ body.crm-dark .crm-error {
   font-weight: 500;
 }
 
-/* Danger Zone */
 .crm-danger-zone {
   margin-top: 48px;
   padding-top: 32px;
@@ -1734,7 +1677,6 @@ body.crm-dark .crm-error {
   gap: 12px;
 }
 
-/* Form Elements */
 .crm-form {
   background: var(--card);
   border-radius: 8px;
@@ -1820,7 +1762,6 @@ body.crm-dark .crm-error {
   border-top: 1px solid var(--border);
 }
 
-/* Filters */
 .crm-filters {
   background: var(--card);
   border-radius: 8px;
@@ -1846,7 +1787,6 @@ body.crm-dark .crm-error {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Dashboard Layout */
 .dashboard-layout {
   display: grid;
   grid-template-columns: 1fr;
@@ -1857,25 +1797,23 @@ body.crm-dark .crm-error {
 .dashboard-main-section {
   display: flex;
   flex-direction: column;
-  gap: 32px; /* Increased spacing for better hierarchy */
+  gap: 32px;
 }
 
-/* Dashboard KPI Row - HIGHEST EMPHASIS */
 .dashboard-kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 24px; /* Increased spacing for prominence */
-  margin-bottom: 32px; /* More space after KPIs */
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
-/* Dashboard KPI Card - Highest Visual Weight */
 .dashboard-kpi-card {
   background: var(--card) !important;
-  border: 2px solid var(--border) !important; /* Stronger border */
-  border-left: 4px solid #3b82f6 !important; /* Accent border */
-  border-radius: 12px !important; /* More rounded */
-  padding: 20px !important; /* More padding */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06) !important; /* Stronger shadow */
+  border: 2px solid var(--border) !important;
+  border-left: 4px solid #3b82f6 !important;
+  border-radius: 12px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06) !important;
   transition: all 0.2s;
   position: relative;
 }
@@ -1908,27 +1846,24 @@ body.crm-dark .crm-error {
   width: 100%;
 }
 
-/* Dashboard Charts Row - SECONDARY EMPHASIS */
 .dashboard-charts-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px; /* Moderate spacing */
-  margin-bottom: 24px; /* Clear spacing */
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .dashboard-fourth-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px; /* Moderate spacing */
-  margin-bottom: 24px; /* Clear spacing */
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-/* Action Signal Grid */
 .dashboard-action-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  /* margin-top: 24px; */
 }
 
 .dashboard-action-card {
@@ -1940,7 +1875,6 @@ body.crm-dark .crm-error {
   border-color: currentColor;
 }
 
-/* Dashboard uses global theme vars */
 .dashboard-content-dark {
   background: var(--bg) !important;
   color: var(--text);
@@ -1970,19 +1904,16 @@ body.crm-dark .crm-error {
   background: transparent !important;
 }
 
-/* Hide background overlay on dashboard page */
 .crm-main:has(.dashboard-content-dark)::before,
 .crm-main:has(.dashboard-content-dark)::after {
   display: none;
 }
 
-/* Hide background overlay on dashboard page */
 .crm-main:has(.dashboard-page-dark)::before,
 .crm-main:has(.dashboard-page-dark)::after {
   display: none;
 }
 
-/* Dashboard page uses theme vars */
 .dashboard-page-dark .crm-section {
   background: var(--card);
   border: 1px solid var(--border);
@@ -2008,9 +1939,8 @@ body.crm-dark .crm-error {
   gap: 0;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  /* Prevent horizontal overflow on mobile */
+@media (max-width: 1024px) {
+
   body {
     overflow-x: hidden;
     width: 100%;
@@ -2022,7 +1952,7 @@ body.crm-dark .crm-error {
   }
 
   .crm-content {
-    padding: 13px; /* Reduced from 16px by ~19% */
+    padding: 13px;
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
@@ -2034,18 +1964,17 @@ body.crm-dark .crm-error {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    margin-bottom: 60px;
   }
 
-  /* Ensure all sections are constrained */
   .crm-section {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 13px; /* Reduced from 16px by ~19% */
-    margin-bottom: 16px; /* Reduced from 24px by ~33% to prevent endless scrolling */
+    padding: 13px;
+    margin-bottom: 16px;
   }
 
-  /* WhatsApp chat layout - stack on mobile */
   .whatsapp-chat-layout {
     flex-direction: column !important;
     height: 600px !important;
@@ -2059,32 +1988,30 @@ body.crm-dark .crm-error {
     border-bottom: 1px solid #e5e7eb !important;
   }
 
-  .crm-sidebar {
-    width: 205px; /* Updated to match new sidebar width */
-  }
-  .crm-sidebar .cx-logo-img-{
+  .crm-sidebar .cx-logo-img- {
     padding: 10px;
   }
+
   .crm-stats-grid {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 20px by ~35% */
-    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+    gap: 13px;
+    margin-bottom: 20px;
   }
 
   .crm-stat-card {
-    padding: 19px; /* Reduced from 24px by ~21% */
+    padding: 19px;
   }
 
   .crm-form-row {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 16px by ~19% */
+    gap: 13px;
   }
 
   .crm-form-actions {
     flex-direction: column;
-    gap: 10px; /* Reduced from 12px by ~17% */
-    margin-top: 20px; /* Reduced from 32px by ~38% */
-    padding-top: 19px; /* Reduced from 24px by ~21% */
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 19px;
   }
 
   .crm-form-actions .crm-btn {
@@ -2092,65 +2019,62 @@ body.crm-dark .crm-error {
   }
 
   .crm-form {
-    padding: 19px; /* Reduced from 24px by ~21% */
+    padding: 19px;
   }
 
   .crm-form-section {
-    margin-bottom: 20px; /* Reduced from 32px by ~38% */
+    margin-bottom: 20px;
   }
 
-  /* Dashboard Layout - Mobile */
   .dashboard-layout {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 16px by ~19% */
+    gap: 13px;
   }
 
   .dashboard-main-section {
-    gap: 13px; /* Reduced from 24px by ~46% */
+    gap: 13px;
   }
 
   .dashboard-kpi-row {
     grid-template-columns: repeat(1, 1fr);
-    gap: 16px; /* Maintain prominence on mobile */
-    margin-bottom: 24px; /* Maintain spacing for hierarchy */
+    gap: 16px;
+    margin-bottom: 24px;
   }
 
   .dashboard-kpi-card {
-    padding: 18px !important; /* Keep good padding */
-    border-width: 2px !important; /* Maintain strong border */
+    padding: 18px !important;
+    border-width: 2px !important;
   }
 
   .dashboard-charts-row {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 16px by ~19% */
-    margin-bottom: 0; /* Remove bottom margin */
+    gap: 13px;
+    margin-bottom: 0;
   }
 
   .dashboard-fourth-row {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 16px by ~19% */
+    gap: 13px;
   }
 
   .dashboard-action-grid {
     grid-template-columns: 1fr;
-    gap: 13px; /* Reduced from 16px by ~19% */
+    gap: 13px;
   }
 
-  /* Ensure KPI cards stack properly on mobile */
-  .dashboard-kpi-row > div {
+  .dashboard-kpi-row>div {
     width: 100%;
   }
 
-  /* Second row - mobile */
   .dashboard-second-row-body {
     display: flex !important;
     flex-direction: column !important;
-    gap: 24px !important; /* Clear separation between chart and funnel on mobile */
+    gap: 24px !important;
     align-items: stretch !important;
   }
 
   .dashboard-ladder-column {
-    order: 2 !important; /* Show ladder after graph on mobile */
+    order: 2 !important;
     padding-top: 0 !important;
     margin-top: 0 !important;
     width: 100% !important;
@@ -2158,13 +2082,12 @@ body.crm-dark .crm-error {
   }
 
   .dashboard-graph-column {
-    order: 1 !important; /* Show graph first on mobile */
+    order: 1 !important;
     width: 100% !important;
     margin-bottom: 0 !important;
     flex-shrink: 0 !important;
   }
 
-  /* Chart container - fixed height and proper containment on mobile */
   .dashboard-performance-chart-container {
     height: 380px !important;
     min-height: 380px !important;
@@ -2175,7 +2098,6 @@ body.crm-dark .crm-error {
     box-sizing: border-box !important;
   }
 
-  /* ResponsiveContainer inside chart - ensure it respects container height */
   .dashboard-performance-chart-container .recharts-responsive-container {
     height: 100% !important;
     max-height: 100% !important;
@@ -2183,73 +2105,67 @@ body.crm-dark .crm-error {
     position: relative !important;
   }
 
-  /* Chart inner wrapper - ensure proper height calculation */
-  .dashboard-performance-chart-container > div:last-child {
+  .dashboard-performance-chart-container>div:last-child {
     height: calc(100% - 40px) !important;
     max-height: calc(100% - 40px) !important;
     overflow: hidden !important;
     position: relative !important;
   }
 
-  /* Ensure section containing chart and funnel has proper spacing */
   .dashboard-second-row .crm-section {
     margin-bottom: 24px !important;
     overflow: visible !important;
   }
 
-  /* Additional mobile containment - ensure chart doesn't overflow */
   .dashboard-graph-column .dashboard-performance-chart-container {
     contain: layout style paint !important;
   }
 
-  /* Ensure funnel column has proper top margin to start after chart */
   .dashboard-ladder-column {
     margin-top: 0 !important;
     padding-top: 0 !important;
   }
 
-  /* Reduce section header spacing */
   .crm-section-header {
-    margin-bottom: 13px; /* Reduced from 20px by ~35% */
+    margin-bottom: 13px;
   }
 
   .crm-section-title {
-    font-size: 18px; /* Slightly reduced for better mobile fit */
+    font-size: 18px;
   }
 
-  /* Reduce list item spacing */
   .crm-list {
-    gap: 10px; /* Reduced from 12px by ~17% */
+    gap: 10px;
   }
 
   .crm-list-item {
-    padding: 13px; /* Reduced from 16px by ~19% */
+    padding: 13px;
   }
 
-  /* Reduce empty state padding */
   .crm-empty-state {
-    padding: 38px 19px; /* Reduced from 48px 24px by ~21% */
+    padding: 38px 19px;
   }
 
-  /* Reduce header padding */
   .crm-header {
-    padding: 10px 12px; /* Reduced padding on mobile */
-    min-height: 48px; /* Slightly reduced height */
-    gap: 8px; /* Ensure gap between left and right */
+    padding: 0 12px;
+    min-height: 48px;
+    gap: 8px;
   }
 
   .crm-header-avatar {
-    width: 22px; /* Slightly smaller on mobile */
+    width: 22px;
     height: 22px;
-    font-size: 12px; /* Smaller font */
+    font-size: 12px;
   }
 
   .crm-account-dropdown {
-    flex-shrink: 0; /* Never shrink */
+    flex-shrink: 0;
+  }
+  .btn-run-analysis{
+    padding: 15px 8px;
   }
 }
 
-/* Tablet Responsive */
 @media (min-width: 769px) and (max-width: 1024px) {
   .dashboard-layout {
     grid-template-columns: 1fr 280px;
@@ -2271,13 +2187,11 @@ body.crm-dark .crm-error {
     gap: 20px;
   }
 
-  /* Second row - tablet */
   .dashboard-second-row-body {
     grid-template-columns: 280px 1fr;
     gap: 20px;
   }
 
-  /* WhatsApp Page - Mobile First */
   .whatsapp-status-cards {
     flex-direction: column;
     width: 100%;
@@ -2317,21 +2231,19 @@ body.crm-dark .crm-error {
     flex-direction: column;
   }
 
-  /* Fix WhatsApp messaging panel on mobile */
   .whatsapp-messaging-panel .crm-section {
     width: 100%;
     max-width: 100%;
-    padding: 13px; /* Reduced from 16px by ~19% */
+    padding: 13px;
     box-sizing: border-box;
   }
 
-  .whatsapp-messaging-panel > div {
+  .whatsapp-messaging-panel>div {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
   }
 
-  /* Fix input container overflow */
   .whatsapp-messaging-panel input {
     min-width: 0;
     width: 100%;
@@ -2339,27 +2251,23 @@ body.crm-dark .crm-error {
     box-sizing: border-box;
   }
 
-  /* Ensure all WhatsApp sections are constrained */
   .whatsapp-status-cards .crm-section,
   .whatsapp-secondary-content .crm-section {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 13px; /* Reduced from 16px by ~19% */
+    padding: 13px;
   }
 
-  /* Fix flex containers that might overflow */
-  .whatsapp-status-cards .crm-section > div[style*="display: flex"] {
+  .whatsapp-status-cards .crm-section>div[style*="display: flex"] {
     flex-wrap: wrap;
   }
 
-  /* Ensure status badges don't cause overflow */
   .whatsapp-status-cards .crm-section h2 {
     word-break: break-word;
     overflow-wrap: break-word;
   }
 
-  /* Instagram Page - Mobile First */
   .instagram-status-cards {
     flex-direction: column;
   }
@@ -2376,7 +2284,6 @@ body.crm-dark .crm-error {
     order: 2;
   }
 
-  /* Integrations Page - Mobile First */
   .integrations-grid {
     flex-direction: column;
   }
@@ -2384,14 +2291,13 @@ body.crm-dark .crm-error {
   .integration-connect-btn {
     width: 100%;
     min-height: 48px;
-    padding: 11px 16px; /* Reduced from 14px 20px by ~21-20% */
+    padding: 11px 16px;
     font-size: 16px;
   }
 }
 
-/* Desktop Adaptations (>=1024px) - Adapt FROM mobile */
 @media (min-width: 1024px) {
-  /* WhatsApp Page - Desktop */
+
   .whatsapp-status-cards {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -2412,7 +2318,6 @@ body.crm-dark .crm-error {
     order: 0;
   }
 
-  /* Instagram Page - Desktop */
   .instagram-status-cards {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -2433,10 +2338,64 @@ body.crm-dark .crm-error {
     order: 0;
   }
 
-  /* Integrations Page - Desktop */
   .integrations-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     flex-direction: row;
+  }
+}
+
+@media (min-width: 1025px) {
+  .cortexa-bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .cortexa-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 9999;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .cortexa-bottom-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #6b7280;
+    gap: 4px;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cortexa-bottom-nav .nav-item span {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .cortexa-bottom-nav .nav-item.active {
+    color: #2563eb;
+    background: #0c182a;
+    border-radius: 10px;
+  }
+
+  .cortexa-bottom-nav .nav-item:active {
+    opacity: 0.7;
   }
 }

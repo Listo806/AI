@@ -60,15 +60,6 @@
   cursor: pointer;
 }
 
-.notification-icon {
-  position: relative;
-  background: white;
-  border: 1px solid var(--border-subtle);
-  padding: 6px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 .notif-badge {
   position: absolute;
   top: -4px;
@@ -471,6 +462,7 @@ body .next-action-card svg {
   justify-content: space-between;
   align-items: baseline;
   flex-direction: column;
+  text-align: left;
 }
 
 .text-purple {
@@ -1213,6 +1205,8 @@ body .next-action-card svg {
   .dashboard-page .btn-export svg:last-child {
     display: none;
   }
+  
+
 }
 
 @media (max-width: 430px) {

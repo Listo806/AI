@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
+import headlogoImgDark from "../assets/cortexa/headlogotran.png";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
 const AI_CENTER_PATHS = [
   "/dashboard/ai-cortexa",
@@ -241,7 +242,8 @@ export default function Sidebar({
         className={`crm-sidebar ${isOpen ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}
       >
         {/* Logo and Site Name */}
-        <img src={headlogoImg} className="cx-logo-img-" />
+        <img src={headlogoImg} className="cx-logo-img- logo-light" />
+        <img src={headlogoImgDark} className="m-logo logo-dark" alt="CORTEXA" />
         <div className="crm-sidebar-header">
           {/* Desktop Toggle Button - Inside Sidebar (left of logo when expanded, centered when collapsed) */}
           <button
