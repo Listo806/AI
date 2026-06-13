@@ -9,6 +9,7 @@ import "../styles/crm-dashboard.css";
 import BottomNav from "../components/BottomNav";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
 import headlogoImg from "../assets/cortexa/headlogo.png";
+
 const initLucideIcons = () => {
   if (window.lucide) {
     window.lucide.createIcons();
@@ -73,11 +74,29 @@ export default function DashboardLayout() {
   });
 
   useEffect(() => {
-    const isMobile = window.innerWidth < 1025;
-    if (isMobile && !isDark && typeof toggleTheme === "function") {
-      toggleTheme();
-    }
-  }, []);
+    if (typeof toggleTheme !== "function") return;
+
+    const handleThemeResponsive = () => {
+      const isMobileOrTablet = window.innerWidth < 1025;
+
+      if (isMobileOrTablet) {
+        // mobile, tablet ->  Dark Theme 
+        if (!isDark) {
+          toggleTheme();
+        }
+      } else {
+        //  desktop (>= 1025px) ->  Light Theme 
+        if (isDark) {
+          toggleTheme(); 
+        }
+      }
+    };
+
+    handleThemeResponsive();
+
+    window.addEventListener("resize", handleThemeResponsive);
+    return () => window.removeEventListener("resize", handleThemeResponsive);
+  }, [isDark, toggleTheme]); 
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
