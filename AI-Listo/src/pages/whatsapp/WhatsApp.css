@@ -1318,7 +1318,7 @@
         width: 100%;
     }
 
-    .whatsapp-page .stat-metric-box:first-child {
+    .whatsapp-page .stat-metric-box:last-child {
         grid-column: span 3;
         justify-content: center;
     }
@@ -1347,6 +1347,25 @@
 
     .leads-page .search-box {
         min-width: 100px;
+    }
+}
+@media (min-width: 768px) and (max-width: 1024px){
+    #root .whatsapp-page .device-wrap{
+        display: grid;
+        grid-template-columns: 2.5fr 1fr;
+    }
+    .whatsapp-page .device-status-subpanel{
+        flex-direction: row;
+    }
+    #root .whatsapp-page .device-status-subpanel{
+        flex-direction: row;
+        align-items: center;
+    }
+    #root .whatsapp-page .qr-code-holder-box{
+        flex-direction: column;
+    }
+    .whatsapp-page .leads-layout {
+        grid-template-columns: 1fr 2fr;
     }
 }
 
@@ -1553,7 +1572,7 @@
         grid-template-columns: repeat(1, 1fr);
     }
 
-    .whatsapp-page .stat-metric-box:first-child {
+    .whatsapp-page .stat-metric-box:last-child {
         grid-column: span 1;
     }
 }

@@ -1586,26 +1586,46 @@ body.crm-dark .crm-error {
 }
 
 .crm-dark .queue-item-row,
-.crm-dark .list-tbl-row {
-  border-top: 1px solid #171d28;
+.crm-dark .list-tbl-row, .crm-dark #root .panel-mid-utilities-row {
+  border-top: 1px solid #171d28; 
 }
-
+.crm-dark .whatsapp-page .device-status-header-text{
+  border-bottom: 1px solid #171d28;
+}
+.crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child){
+  border-bottom: 1px solid #232a36;
+}
+.crm-dark .active-chat-card {
+  background-color: rgba(37, 99, 235, 0.08)!important;
+}
 .crm-dark .bg-light-blue,
 .crm-dark .bg-light-purple,
 .crm-dark .bg-light-green,
 .crm-dark .bg-light-orange,
 .crm-dark .prob-badge,
 .crm-dark .shortcut-btn.green-btn,
-.crm-dark .black-btn {
+.crm-dark .black-btn, .crm-dark .bg-light-amber, .crm-dark .bg-light-teal,
+.crm-dark .bg-light-indigo, .crm-dark .status-green-pill, .crm-dark .pill-tag-temp.hot,
+.crm-dark .pill-tag-temp.warm, .crm-dark .pill-tag-temp.cold, .crm-dark .hot-tag-pill,
+.crm-dark .ai-handling-badge, .crm-dark .bg-slate{
   background-color: rgba(37, 99, 235, 0.08);
 }
-
+.crm-dark .bg-light-blue-bubble, .crm-dark .white-action-btn{
+  background: #0f2141!important;
+  border: 1px solid #18386c!important;
+}
 .crm-dark .dashboard-page .drawer-body .control-btn,
 .crm-dark .header-actions .control-btn,
 .crm-dark .kpi-mini-card,
 .crm-dark .content-card,
 .crm-dark .pill-toggles button,
-.crm-dark .white-btn {
+.crm-dark .white-btn, .crm-dark #root .secondary-btn, .crm-dark #root .top-stats-row-grid,
+.crm-dark #root .stat-metric-box, .crm-dark #root .priority-bar-line-layout, .crm-dark #root .segment-line-item,
+.crm-dark #root .device-wrap, .crm-dark  #root .qr-code-holder-box, .crm-dark #root .filter-btn, .crm-dark #root .search-box,
+.crm-dark #root .conversations-inbox-column, .crm-dark #root .conversation-panel,
+.crm-dark #root .ai-summary, .crm-dark #root .message-bubble-body, .crm-dark #root .utility-chip-action-btn, 
+.crm-dark #root .utility-chip-arrow-nav-btn, .crm-dark #root .refresh-qr-link, .crm-dark .text-area-row,
+.crm-dark .ai-assist-spark-inline-btn, .crm-dark #root .insight-card, .crm-dark #root .secondary-btn {
   background: #0b141d;
   border: 1px solid #171d28;
 }
@@ -1614,7 +1634,7 @@ body.crm-dark .crm-error {
 body.crm-dark .leads-page,
 .crm-dark .cortexa-bottom-nav,
 .crm-dark .crm-sidebar,
-.mobile-filter-drawer {
+.crm-dark .mobile-filter-drawer, .crm-dark .panel-mid-utilities-row {
   background: var(--bg) !important;
 }
 
@@ -1634,7 +1654,9 @@ body.crm-dark .leads-page,
 .crm-dark .queue-list-wrapper,
 .crm-dark .white-btn svg,
 .crm-dark .risk-alerts-list,
-.crm-dark .content-card {
+.crm-dark .content-card, .crm-dark #root .secondary-btn, .crm-dark #root .device-status-header-text,
+.crm-dark #root .utility-chip-action-btn, .crm-dark #root .utility-chip-arrow-nav-btn,
+.crm-dark .rev-val, .crm-dark #root .timeline-title {
   color: var(--text);
 }
 

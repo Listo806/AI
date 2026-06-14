@@ -63,10 +63,10 @@ export default function WhatsAppPage() {
             Team: All
             <ChevronDown size={14} />
           </button>
-          <div className="notification-bell-container">
+          {/*<div className="notification-bell-container">
             <div className="bell-badge">12</div>
             <button className="icon-btn-clear">🔔</button>
-          </div>
+          </div>*/}
           <button className="primary-btn new-btn-custom">
             <Plus size={16} />
             New
