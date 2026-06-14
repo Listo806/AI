@@ -1585,56 +1585,134 @@ body.crm-dark .crm-error {
   border: 1px solid #16468e;
 }
 
-.crm-dark .queue-item-row,
-.crm-dark .list-tbl-row, .crm-dark #root .panel-mid-utilities-row {
-  border-top: 1px solid #171d28; 
+.crm-dark .filter-btn select {
+  background: transparent;
+  color: var(--text);
 }
-.crm-dark .whatsapp-page .device-status-header-text{
+
+.crm-dark .leads-page .item-line:not(:last-child):after {
+  width: 0;
+}
+
+.crm-dark .queue-item-row,
+.crm-dark .list-tbl-row,
+.crm-dark #root .panel-mid-utilities-row,
+.crm-dark #root .sidebar-footer {
+  border-top: 1px solid #171d28;
+}
+
+.crm-dark .whatsapp-page .device-status-header-text,
+.crm-dark #root .conversation-header {
   border-bottom: 1px solid #171d28;
 }
-.crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child){
+
+.crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child) {
   border-bottom: 1px solid #232a36;
 }
+
 .crm-dark .active-chat-card {
-  background-color: rgba(37, 99, 235, 0.08)!important;
+  background-color: rgba(37, 99, 235, 0.08) !important;
 }
+
+.crm-dark #root .lead-card {
+  border: 1px solid #171d28;
+}
+
 .crm-dark .bg-light-blue,
 .crm-dark .bg-light-purple,
 .crm-dark .bg-light-green,
 .crm-dark .bg-light-orange,
 .crm-dark .prob-badge,
 .crm-dark .shortcut-btn.green-btn,
-.crm-dark .black-btn, .crm-dark .bg-light-amber, .crm-dark .bg-light-teal,
-.crm-dark .bg-light-indigo, .crm-dark .status-green-pill, .crm-dark .pill-tag-temp.hot,
-.crm-dark .pill-tag-temp.warm, .crm-dark .pill-tag-temp.cold, .crm-dark .hot-tag-pill,
-.crm-dark .ai-handling-badge, .crm-dark .bg-slate{
+.crm-dark .black-btn,
+.crm-dark .bg-light-amber,
+.crm-dark .bg-light-teal,
+.crm-dark .bg-light-indigo,
+.crm-dark .status-green-pill,
+.crm-dark .pill-tag-temp.hot,
+.crm-dark .pill-tag-temp.warm,
+.crm-dark .pill-tag-temp.cold,
+.crm-dark .hot-tag-pill,
+.crm-dark .ai-handling-badge,
+.crm-dark .bg-slate,
+.crm-dark #root .blue,
+.crm-dark #root .green,
+.crm-dark #root .purple,
+.crm-dark #root .orange,
+.crm-dark #root .cyan,
+.crm-dark #root .pink,
+.crm-dark #root .red,
+.crm-dark #root .score-hot,
+.crm-dark .leads-page .lead-tags span,
+.crm-dark #root .hot-tag,
+.crm-dark #root .action-icon-circle,
+.crm-dark #root .leads-page .score-warm,
+.crm-dark #root .score-cool {
   background-color: rgba(37, 99, 235, 0.08);
 }
-.crm-dark .bg-light-blue-bubble, .crm-dark .white-action-btn{
-  background: #0f2141!important;
-  border: 1px solid #18386c!important;
+
+.crm-dark .bg-light-blue-bubble,
+.crm-dark .white-action-btn,
+.crm-dark #root .message.right {
+  background: #0f2141 !important;
+  border: 1px solid #18386c !important;
 }
+
 .crm-dark .dashboard-page .drawer-body .control-btn,
 .crm-dark .header-actions .control-btn,
 .crm-dark .kpi-mini-card,
 .crm-dark .content-card,
 .crm-dark .pill-toggles button,
-.crm-dark .white-btn, .crm-dark #root .secondary-btn, .crm-dark #root .top-stats-row-grid,
-.crm-dark #root .stat-metric-box, .crm-dark #root .priority-bar-line-layout, .crm-dark #root .segment-line-item,
-.crm-dark #root .device-wrap, .crm-dark  #root .qr-code-holder-box, .crm-dark #root .filter-btn, .crm-dark #root .search-box,
-.crm-dark #root .conversations-inbox-column, .crm-dark #root .conversation-panel,
-.crm-dark #root .ai-summary, .crm-dark #root .message-bubble-body, .crm-dark #root .utility-chip-action-btn, 
-.crm-dark #root .utility-chip-arrow-nav-btn, .crm-dark #root .refresh-qr-link, .crm-dark .text-area-row,
-.crm-dark .ai-assist-spark-inline-btn, .crm-dark #root .insight-card, .crm-dark #root .secondary-btn {
+.crm-dark .white-btn,
+.crm-dark #root .secondary-btn,
+.crm-dark #root .top-stats-row-grid,
+.crm-dark #root .stat-metric-box,
+.crm-dark #root .priority-bar-line-layout,
+.crm-dark #root .segment-line-item,
+.crm-dark #root .device-wrap,
+.crm-dark #root .qr-code-holder-box,
+.crm-dark #root .filter-btn,
+.crm-dark #root .search-box,
+.crm-dark #root .conversations-inbox-column,
+.crm-dark #root .conversation-panel,
+.crm-dark #root .ai-summary,
+.crm-dark #root .message-bubble-body,
+.crm-dark #root .utility-chip-action-btn,
+.crm-dark #root .utility-chip-arrow-nav-btn,
+.crm-dark #root .refresh-qr-link,
+.crm-dark .text-area-row,
+.crm-dark .ai-assist-spark-inline-btn,
+.crm-dark #root .insight-card,
+.crm-dark #root .secondary-btn,
+.crm-dark #root .primary-btn,
+.crm-dark #root .stats-card,
+.crm-dark #root .priority-bar,
+.crm-dark .leads-page .queue-btn,
+.crm-dark #root .lead-sidebar,
+.crm-dark #root .icon-btn,
+.crm-dark #root .score-badge,
+.crm-dark #root .view-profile-btn,
+.crm-dark #root .message.left,
+.crm-dark #root .chip-btn,
+.crm-dark #root .chat-input-box,
+.crm-dark #root .util-icon-btn,
+.crm-dark #root .quick-action-card-btn,
+.crm-dark #root .revenue-box {
   background: #0b141d;
   border: 1px solid #171d28;
+}
+
+.crm-dark #root .priority-item {
+  background: #0b141d;
+  border: 0;
 }
 
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
 .crm-dark .cortexa-bottom-nav,
 .crm-dark .crm-sidebar,
-.crm-dark .mobile-filter-drawer, .crm-dark .panel-mid-utilities-row {
+.crm-dark .mobile-filter-drawer,
+.crm-dark .panel-mid-utilities-row {
   background: var(--bg) !important;
 }
 
@@ -1654,9 +1732,22 @@ body.crm-dark .leads-page,
 .crm-dark .queue-list-wrapper,
 .crm-dark .white-btn svg,
 .crm-dark .risk-alerts-list,
-.crm-dark .content-card, .crm-dark #root .secondary-btn, .crm-dark #root .device-status-header-text,
-.crm-dark #root .utility-chip-action-btn, .crm-dark #root .utility-chip-arrow-nav-btn,
-.crm-dark .rev-val, .crm-dark #root .timeline-title {
+.crm-dark .content-card,
+.crm-dark #root .secondary-btn,
+.crm-dark #root .device-status-header-text,
+.crm-dark #root .utility-chip-action-btn,
+.crm-dark #root .utility-chip-arrow-nav-btn,
+.crm-dark .rev-val,
+.crm-dark #root .timeline-title,
+.crm-dark #root .filter-btn,
+.crm-dark #root .primary-btn,
+.crm-dark #root .icon-btn,
+.crm-dark .leads-page .tag-property,
+.crm-dark #root .chip-btn,
+.crm-dark #root .action-title,
+.crm-dark #root .insight-card h3,
+.crm-dark #root .automation-item-title,
+.crm-dark #root .automation-row-icon {
   color: var(--text);
 }
 
@@ -1678,9 +1769,11 @@ body.crm-dark .leads-page,
   .crm-header-center .m-logo {
     height: 55px;
   }
+
   .crm-header-center .logo-light {
     display: block;
   }
+
   .crm-dark .logo-light {
     display: none;
   }

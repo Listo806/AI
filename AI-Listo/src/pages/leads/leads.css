@@ -473,12 +473,14 @@ body .leads-page {
 .leads-page .message.left {
   background: #f1f5f9;
   border-bottom-left-radius: 8px;
+  display: block;
 }
 
 .leads-page .message.right {
   background: #dbeafe;
   margin-left: auto;
   border-bottom-right-radius: 8px;
+  display: block;
 }
 
 .leads-page .message span {
@@ -1550,7 +1552,7 @@ body .leads-page {
 
 @media (max-width: 640px) {
   .leads-page .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns:repeat(2, 1fr);
   }
 
   .leads-page .message {

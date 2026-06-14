@@ -28,6 +28,7 @@ import {
   ImageIcon,
   Mic,
   ArrowUpRight,
+  CheckCheck
 } from "lucide-react";
 
 export default function LeadsPage() {
@@ -498,7 +499,7 @@ export default function LeadsPage() {
                 Thanks for reaching out! Are you looking to buy, rent, or
                 invest?
               </p>
-              <span className="msg-status-right">10:33 AM ✔✔</span>
+              <span className="msg-status-right">10:33 AM <CheckCheck size={12} /></span>
               <div className="robot-badge-icon">🤖</div>
             </div>
 
@@ -512,7 +513,7 @@ export default function LeadsPage() {
                 Perfect! I found several matching homes. What budget range are
                 you comfortable with?
               </p>
-              <span className="msg-status-right">10:36 AM ✔✔</span>
+              <span className="msg-status-right">10:36 AM <CheckCheck size={12} /></span>
               <div className="robot-badge-icon">🤖</div>
             </div>
 
