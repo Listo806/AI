@@ -14,14 +14,31 @@ import {
   MessageCircleCheck,
   ShieldX,
   ChartColumn,
-  XCircle, Clock, EyeOff, Flame, Users, HelpCircle, 
-  GitMerge, Cpu, Target, TrendingUp, UserCheck, MessagesSquare,
-  Eye, ChartNoAxesColumn, MessageSquareMore, Rocket,
-  FileText,  
-  GitFork,  
-  PieChart, 
-  ShieldCheck, 
-  MoveRight, LockKeyhole, 
+  XCircle,
+  Clock,
+  EyeOff,
+  Flame,
+  Users,
+  HelpCircle,
+  GitMerge,
+  Cpu,
+  Target,
+  TrendingUp,
+  UserCheck,
+  MessagesSquare,
+  Eye,
+  ChartNoAxesColumn,
+  MessageSquareMore,
+  Rocket,
+  FileText,
+  GitFork,
+  PieChart,
+  ShieldCheck,
+  MoveRight,
+  LockKeyhole,
+  RotateCcw,
+  Clock4,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -68,6 +85,10 @@ import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
 import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
 import landingDashImg from "../../assets/cortexa/landingDash.png";
 
+import smart1Img from "../../assets/cortexa/smart1.png";
+import smart2Img from "../../assets/cortexa/smart2.png";
+import smart3Img from "../../assets/cortexa/smart3.png";
+
 const IconRenderer = ({ name, className }) => {
   const icons = {
     MessagesSquare: <MessagesSquare className={className} />,
@@ -81,15 +102,15 @@ const IconRenderer = ({ name, className }) => {
     Target: <Target className={className} />,
     TrendingUp: <TrendingUp className={className} />,
     UserCheck: <UserCheck className={className} />,
-    CheckCircle: <CheckCircle className={className} />
+    CheckCircle: <CheckCircle className={className} />,
   };
   return icons[name] || null;
 };
 const trustIcons = [
   <Target className="cx-icon" stroke="url(#icon-gradient)" />,
   <Eye className="cx-icon" stroke="url(#icon-gradient)" />,
-  <TrendingUp  className="cx-icon" stroke="url(#icon-gradient)" />,
-  <Zap className="cx-icon" stroke="url(#icon-gradient)" />        
+  <TrendingUp className="cx-icon" stroke="url(#icon-gradient)" />,
+  <Zap className="cx-icon" stroke="url(#icon-gradient)" />,
 ];
 export default function Landing() {
   const [lang, setLang] = useState(() => {
@@ -138,21 +159,39 @@ export default function Landing() {
       withoutsub: "Your bussiness feels scattered.",
       withsub: "Your bussiness run from one command center.",
       withoutList: [
-        { icon: "MessagesSquare", text: "Leads spread across WhatsApp, calls, forms, and social messages" },
-        { icon: "Clock", text: "Follow-ups depend on memory or manual reminders" },
+        {
+          icon: "MessagesSquare",
+          text: "Leads spread across WhatsApp, calls, forms, and social messages",
+        },
+        {
+          icon: "Clock",
+          text: "Follow-ups depend on memory or manual reminders",
+        },
         { icon: "EyeOff", text: "Pipeline visibility is unclear" },
         { icon: "Flame", text: "Hot opportunities get missed" },
         { icon: "Users", text: "Team performance is hard to measure" },
-        { icon: "HelpCircle", text: "Revenue forecasting feels like guessing" }
+        { icon: "HelpCircle", text: "Revenue forecasting feels like guessing" },
       ],
 
       withList: [
-        { icon: "GitMerge", text: "One command center for leads, deals, messages, and tasks" },
-        { icon: "Cpu", text: "AI follow-ups and reminders keep opportunities moving" },
-        { icon: "Target", text: "Pipeline visibility shows what is active, stuck, or ready to close" },
-        { icon: "TrendingUp", text: "Revenue forecasting helps you see what's coming" },
+        {
+          icon: "GitMerge",
+          text: "One command center for leads, deals, messages, and tasks",
+        },
+        {
+          icon: "Cpu",
+          text: "AI follow-ups and reminders keep opportunities moving",
+        },
+        {
+          icon: "Target",
+          text: "Pipeline visibility shows what is active, stuck, or ready to close",
+        },
+        {
+          icon: "TrendingUp",
+          text: "Revenue forecasting helps you see what's coming",
+        },
         { icon: "UserCheck", text: "Team performance is visible in real time" },
-        { icon: "CheckCircle", text: "Every agent knows what to do next" }
+        { icon: "CheckCircle", text: "Every agent knows what to do next" },
       ],
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
@@ -268,8 +307,10 @@ export default function Landing() {
       beitem2: "Conversations Never Go Cold",
       beitem3: "Know Exactly What To Do Next",
       beitem4: "More Deals. Less Chasing.",
-      beitemtext1: "Follow-ups, tracking, and organization run in the background.",
-      beitemtext2: "Leads stay active with reminders, replies, and re-engagement.",
+      beitemtext1:
+        "Follow-ups, tracking, and organization run in the background.",
+      beitemtext2:
+        "Leads stay active with reminders, replies, and re-engagement.",
       beitemtext3: "See who needs attention and where your next move is.",
       beitemtext4: "Less manual work. Faster movement. Better outcomes.",
       bebottom: "Everything keeps moving — even when you’re not.",
@@ -395,29 +436,41 @@ export default function Landing() {
       dominantFinal:
         "From first lead to closing — everything is handled inside one system.",
 
-      smartEyebrow: "Intelligent Integrations",
-      smartTitle:
-        "Turn your entire real estate business into an automated revenue machine",
+      smartBadge: "FROM LEAD TO REVENUE — AUTOMATICALLY",
+
+      smartTitle1: "Capture.",
+      smartTitle2: "Nurture.",
+      smartTitle3: "Close.",
+      smartTitle4: "Repeat.",
+
       smartSubtitle:
-        "Bring your listings, leads, messages, and funnels into one place. Cortexa connects everything, organizes everything, and uses AI to track, analyze, and move every deal forward — automatically.",
-      smartFlow: "Flow",
-      smartAutomated: "Automated",
-      smartOptimized: "Optimized",
-      smartFlow1Label: "Lead Capture & Follow-Up",
-      smartFlow1Title: "Ads → CRM → WhatsApp → AI",
-      smartFlow1Desc:
-        "Every lead is captured instantly, qualified, and followed up automatically — so you never miss another opportunity.",
-      smartFlow2Label: "Listings, Funnels & Automation",
-      smartFlow2Title: "Website + Listings → CRM → Smart Sequences",
-      smartFlow2Desc:
-        "Your properties, landing pages, and funnels feed into one system — triggering intelligent follow-ups until leads are ready to buy.",
-      smartFlow3Label: "Deals, Data & Analytics",
-      smartFlow3Title: "Pipeline → AI Tracking → Performance Insights",
-      smartFlow3Desc:
-        "Every deal is tracked, every action is analyzed, and your performance is organized into clear insights you can act on.",
-      smartBottom:
-        "Your entire operation — connected, automated, and optimized in one intelligent system.",
-      smartCTA: "Turn your business into an automated machine",
+        "CORTEXA connects your ads, website, WhatsApp, AI Agent, CRM, and analytics into one intelligent system that turns leads into closed deals.",
+
+      captureTitle: "CAPTURE",
+      captureDesc:
+        "Leads come in from everywhere. CORTEXA captures them instantly.",
+
+      convertTitle: "CONVERT",
+      convertDesc:
+        "AI qualifies, nurtures, and books appointments 24/7 on autopilot.",
+
+      closeTitle: "CLOSE",
+      closeDesc:
+        "Pipeline, team, and analytics give complete visibility to close more deals.",
+
+      smartBenefit1Title: "More Revenue",
+      smartBenefit1Text: "Capture more leads and close more deals.",
+      smartBenefit2Title: "Save Time",
+      smartBenefit2Text: "Automate follow-ups and appointments.",
+      smartBenefit3Title: "Empower Your Team",
+      smartBenefit3Text: "Everyone knows what to do and when to do it.",
+      smartBenefit4Title: "Data That Drives",
+      smartBenefit4Text: "Real-time analytics to grow your business.",
+      smartButton: "Turn Your Business Into An Automated Machine",
+      smartBlock1: "Instant capture, Zero leads lose.",
+      smartBlock2: "AI work 24/7. You close more.",
+      smartBlock3: "See everything. Close more.",
+      smartBottom: "More Leads. More Appointments. More Closings.",
 
       topLine1: "Meet Your AI OS. ",
       topLine2: "Powered by",
@@ -495,21 +548,48 @@ export default function Landing() {
       withoutsub: "Tu negocio se siente disperso.",
       withsub: "Tu negocio funciona desde un único centro de control.",
       withoutList: [
-        { icon: "MessagesSquare", text: "Los leads están dispersos entre WhatsApp, llamadas, formularios y mensajes en redes sociales" },
-        { icon: "Clock", text: "Los seguimientos dependen de la memoria o de recordatorios manuales" },
+        {
+          icon: "MessagesSquare",
+          text: "Los leads están dispersos entre WhatsApp, llamadas, formularios y mensajes en redes sociales",
+        },
+        {
+          icon: "Clock",
+          text: "Los seguimientos dependen de la memoria o de recordatorios manuales",
+        },
         { icon: "EyeOff", text: "La visibilidad del pipeline no es clara" },
         { icon: "Flame", text: "Se pierden oportunidades valiosas" },
         { icon: "Users", text: "Es difícil medir el rendimiento del equipo" },
-        { icon: "HelpCircle", text: "La previsión de ingresos parece una adivinanza" }
+        {
+          icon: "HelpCircle",
+          text: "La previsión de ingresos parece una adivinanza",
+        },
       ],
 
       withList: [
-        { icon: "GitMerge", text: "Un único centro de control para leads, negocios, mensajes y tareas" },
-        { icon: "Cpu", text: "Los seguimientos y recordatorios con IA mantienen las oportunidades en movimiento" },
-        { icon: "Target", text: "La visibilidad del pipeline muestra qué está activo, bloqueado o listo para cerrarse" },
-        { icon: "TrendingUp", text: "La previsión de ingresos te ayuda a ver lo que viene" },
-        { icon: "UserCheck", text: "El rendimiento del equipo es visible en tiempo real" },
-        { icon: "CheckCircle", text: "Cada agente sabe cuál es el siguiente paso" }
+        {
+          icon: "GitMerge",
+          text: "Un único centro de control para leads, negocios, mensajes y tareas",
+        },
+        {
+          icon: "Cpu",
+          text: "Los seguimientos y recordatorios con IA mantienen las oportunidades en movimiento",
+        },
+        {
+          icon: "Target",
+          text: "La visibilidad del pipeline muestra qué está activo, bloqueado o listo para cerrarse",
+        },
+        {
+          icon: "TrendingUp",
+          text: "La previsión de ingresos te ayuda a ver lo que viene",
+        },
+        {
+          icon: "UserCheck",
+          text: "El rendimiento del equipo es visible en tiempo real",
+        },
+        {
+          icon: "CheckCircle",
+          text: "Cada agente sabe cuál es el siguiente paso",
+        },
       ],
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
@@ -545,7 +625,7 @@ export default function Landing() {
         "Genera más leads calificados.",
         "Ve cada oportunidad antes de que se escape.",
         "Pronostica los ingresos antes de fin de mes.",
-        "Automatiza los seguimientos que convierten."
+        "Automatiza los seguimientos que convierten.",
       ],
 
       faqTitle: "Preguntas frecuentes",
@@ -585,8 +665,7 @@ export default function Landing() {
         },
       ],
 
-      finalTitle:
-        "Automatiza todo tu flujo de trabajo",
+      finalTitle: "Automatiza todo tu flujo de trabajo",
       finalDesc:
         "CORTEXA capta clientes potenciales, automatiza los seguimientos, actualiza tu pipeline y mantiene a tu equipo en movimiento, para que puedas concentrarte en cerrar más negocios.",
       footer: {
@@ -631,9 +710,12 @@ export default function Landing() {
       beitem3: "Sabe exactamente qué hacer después",
       beitem4: "Más negocios. Menos seguimiento manual.",
 
-      beitemtext1: "Los seguimientos, el control y la organización funcionan en segundo plano.",
-      beitemtext2: "Los leads se mantienen activos con recordatorios, respuestas y reactivaciones.",
-      beitemtext3: "Ve quién necesita atención y cuál debe ser tu próximo paso.",
+      beitemtext1:
+        "Los seguimientos, el control y la organización funcionan en segundo plano.",
+      beitemtext2:
+        "Los leads se mantienen activos con recordatorios, respuestas y reactivaciones.",
+      beitemtext3:
+        "Ve quién necesita atención y cuál debe ser tu próximo paso.",
       beitemtext4: "Menos trabajo manual. Más rapidez. Mejores resultados.",
       bebottom: "Todo sigue avanzando — incluso cuando tú no estás.",
 
@@ -765,31 +847,39 @@ export default function Landing() {
       dominantFinal:
         "Desde el primer lead hasta el cierre — todo se gestiona dentro de un solo sistema.",
 
-      smartEyebrow: "Integraciones Inteligentes",
-      smartTitle:
-        "Convierte todo tu negocio inmobiliario en una máquina de ingresos automatizada",
+      smartBadge: "DEL LEAD A LOS INGRESOS — AUTOMÁTICAMENTE",
+
+      smartTitle1: "Captura.",
+      smartTitle2: "Nutre.",
+      smartTitle3: "Cierra.",
+      smartTitle4: "Repite.",
+
       smartSubtitle:
-        "Lleva tus propiedades, leads, mensajes y embudos a un solo lugar. Cortexa conecta todo, organiza todo y utiliza IA para rastrear, analizar y avanzar cada oportunidad automáticamente.",
-      smartFlow: "Flujo",
-      smartAutomated: "Automatizado",
-      smartOptimized: "Optimizado",
-      smartFlow1Label: "Captación de Leads y Seguimiento",
-      smartFlow1Title: "Anuncios → CRM → WhatsApp → IA",
-      smartFlow1Desc:
-        "Cada lead se captura al instante, se califica y se sigue automáticamente — para que nunca pierdas otra oportunidad.",
-      smartFlow2Label: "Propiedades, Funnels y Automatización",
-      smartFlow2Title:
-        "Sitio Web + Propiedades → CRM → Secuencias Inteligentes",
-      smartFlow2Desc:
-        "Tus propiedades, páginas de aterrizaje y embudos se integran en un solo sistema — activando seguimientos inteligentes hasta que los leads estén listos para comprar.",
-      smartFlow3Label: "Ventas, Datos y Analítica",
-      smartFlow3Title:
-        "Pipeline → Seguimiento con IA → Insights de Rendimiento",
-      smartFlow3Desc:
-        "Cada operación se rastrea, cada acción se analiza y tu rendimiento se organiza en insights claros que puedes usar.",
-      smartBottom:
-        "Toda tu operación — conectada, automatizada y optimizada en un solo sistema inteligente.",
-      smartCTA: "Convierte tu negocio en una máquina automatizada",
+        "CORTEXA conecta anuncios, sitio web, WhatsApp, IA, CRM y analíticas en un solo sistema inteligente que convierte leads en ventas.",
+
+      captureTitle: "CAPTAR",
+      captureDesc:
+        "Los leads llegan desde todas partes. CORTEXA los captura al instante.",
+
+      convertTitle: "CONVERTIR",
+      convertDesc: "La IA califica, nutre y agenda citas automáticamente 24/7.",
+
+      closeTitle: "CERRAR",
+      closeDesc: "Pipeline, equipo y analíticas te ayudan a cerrar más ventas.",
+
+      smartBenefit1Title: "Más Ingresos",
+      smartBenefit1Text: "Capta más leads y cierra más negocios.",
+      smartBenefit2Title: "Ahorra Tiempo",
+      smartBenefit2Text: "Automatiza seguimientos y citas.",
+      smartBenefit3Title: "Impulsa Tu Equipo",
+      smartBenefit3Text: "Todos saben qué hacer y cuándo hacerlo.",
+      smartBenefit4Title: "Datos Que Impulsan",
+      smartBenefit4Text: "Analíticas en tiempo real para crecer.",
+      smartButton: "Convierte Tu Negocio En Una Máquina Automatizada",
+      smartBlock1: "Captura instantánea. Cero oportunidades perdidas.",
+      smartBlock2: "La IA trabaja 24/7. Tú cierras más ventas.",
+      smartBlock3: "Ve todo. Cierra más ventas.",
+      smartBottom: "Más oportunidades. Más citas. Más cierres.",
 
       topLine1: "Conoce tu OS con IA.",
       topLine2: "Impulsado por",
@@ -866,21 +956,48 @@ export default function Landing() {
       withoutsub: "Seu negócio parece desorganizado.",
       withsub: "Seu negócio funciona a partir de um único centro de comando.",
       withoutList: [
-        { icon: "MessagesSquare", text: "Os leads ficam espalhados entre WhatsApp, chamadas, formulários e mensagens nas redes sociais" },
-        { icon: "Clock", text: "Os acompanhamentos dependem da memória ou de lembretes manuais" },
+        {
+          icon: "MessagesSquare",
+          text: "Os leads ficam espalhados entre WhatsApp, chamadas, formulários e mensagens nas redes sociais",
+        },
+        {
+          icon: "Clock",
+          text: "Os acompanhamentos dependem da memória ou de lembretes manuais",
+        },
         { icon: "EyeOff", text: "A visibilidade do pipeline não é clara" },
         { icon: "Flame", text: "Oportunidades valiosas acabam sendo perdidas" },
         { icon: "Users", text: "É difícil medir o desempenho da equipe" },
-        { icon: "HelpCircle", text: "A previsão de receita parece um jogo de adivinhação" }
+        {
+          icon: "HelpCircle",
+          text: "A previsão de receita parece um jogo de adivinhação",
+        },
       ],
 
       withList: [
-        { icon: "GitMerge", text: "Um único centro de comando para leads, negócios, mensagens e tarefas" },
-        { icon: "Cpu", text: "Acompanhamentos e lembretes com IA mantêm as oportunidades avançando" },
-        { icon: "Target", text: "A visibilidade do pipeline mostra o que está ativo, parado ou pronto para fechar" },
-        { icon: "TrendingUp", text: "A previsão de receita ajuda você a enxergar o que está por vir" },
-        { icon: "UserCheck", text: "O desempenho da equipe é visível em tempo real" },
-        { icon: "CheckCircle", text: "Cada agente sabe exatamente o próximo passo" }
+        {
+          icon: "GitMerge",
+          text: "Um único centro de comando para leads, negócios, mensagens e tarefas",
+        },
+        {
+          icon: "Cpu",
+          text: "Acompanhamentos e lembretes com IA mantêm as oportunidades avançando",
+        },
+        {
+          icon: "Target",
+          text: "A visibilidade do pipeline mostra o que está ativo, parado ou pronto para fechar",
+        },
+        {
+          icon: "TrendingUp",
+          text: "A previsão de receita ajuda você a enxergar o que está por vir",
+        },
+        {
+          icon: "UserCheck",
+          text: "O desempenho da equipe é visível em tempo real",
+        },
+        {
+          icon: "CheckCircle",
+          text: "Cada agente sabe exatamente o próximo passo",
+        },
       ],
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
@@ -913,7 +1030,7 @@ export default function Landing() {
         "Gere mais leads qualificados.",
         "Veja cada oportunidade antes que ela escape.",
         "Preveja a receita antes do fim do mês.",
-        "Automatize acompanhamentos que fecham negócios."
+        "Automatize acompanhamentos que fecham negócios.",
       ],
 
       faqTitle: "Perguntas frequentes",
@@ -994,10 +1111,14 @@ export default function Landing() {
       beitem3: "Saiba exatamente o que fazer a seguir",
       beitem4: "Mais negócios. Menos trabalho de acompanhamento.",
 
-      beitemtext1: "Acompanhamentos, rastreamento e organização funcionam em segundo plano.",
-      beitemtext2: "Os leads permanecem ativos com lembretes, respostas e reengajamento.",
-      beitemtext3: "Veja quem precisa de atenção e qual deve ser o seu próximo passo.",
-      beitemtext4: "Menos trabalho manual. Mais agilidade. Melhores resultados.",
+      beitemtext1:
+        "Acompanhamentos, rastreamento e organização funcionam em segundo plano.",
+      beitemtext2:
+        "Os leads permanecem ativos com lembretes, respostas e reengajamento.",
+      beitemtext3:
+        "Veja quem precisa de atenção e qual deve ser o seu próximo passo.",
+      beitemtext4:
+        "Menos trabalho manual. Mais agilidade. Melhores resultados.",
       bebottom: "Tudo continua avançando — mesmo quando você não está.",
       stripLabel: "Pronto para crescer?",
       stripTitle:
@@ -1130,30 +1251,41 @@ export default function Landing() {
       dominantFinal:
         "Do primeiro lead ao fechamento — tudo é gerenciado dentro de um único sistema.",
 
-      smartEyebrow: "Integrações Inteligentes",
-      smartTitle:
-        "Transforme todo o seu negócio imobiliário em uma máquina de receita automatizada",
+      smartBadge: "DO LEAD À RECEITA — AUTOMATICAMENTE",
+
+      smartTitle1: "Capture.",
+      smartTitle2: "Nutra.",
+      smartTitle3: "Feche.",
+      smartTitle4: "Repita.",
+
       smartSubtitle:
-        "Traga seus imóveis, leads, mensagens e funis para um só lugar. O Cortexa conecta tudo, organiza tudo e usa IA para rastrear, analisar e impulsionar cada oportunidade automaticamente.",
-      smartFlow: "Fluxo",
-      smartAutomated: "Automatizado",
-      smartOptimized: "Otimizado",
-      smartFlow1Label: "Captação de Leads e Follow-up",
-      smartFlow1Title: "Anúncios → CRM → WhatsApp → IA",
-      smartFlow1Desc:
-        "Cada lead é capturado instantaneamente, qualificado e acompanhado automaticamente — para que você nunca perca outra oportunidade.",
-      smartFlow2Label: "Imóveis, Funis e Automação",
-      smartFlow2Title: "Website + Imóveis → CRM → Sequências Inteligentes",
-      smartFlow2Desc:
-        "Seus imóveis, páginas e funis alimentam um único sistema — ativando follow-ups inteligentes até que os leads estejam prontos para comprar.",
-      smartFlow3Label: "Vendas, Dados e Análises",
-      smartFlow3Title:
-        "Pipeline → Monitoramento com IA → Insights de Performance",
-      smartFlow3Desc:
-        "Cada negócio é monitorado, cada ação é analisada e sua performance é organizada em insights claros para tomada de decisão.",
-      smartBottom:
-        "Toda a sua operação — conectada, automatizada e otimizada em um único sistema inteligente.",
-      smartCTA: "Transforme seu negócio em uma máquina automatizada",
+        "A CORTEXA conecta anúncios, site, WhatsApp, IA, CRM e análises em um único sistema inteligente que transforma leads em vendas.",
+
+      captureTitle: "CAPTAR",
+      captureDesc:
+        "Os leads chegam de todos os lugares. A CORTEXA captura instantaneamente.",
+
+      convertTitle: "CONVERTER",
+      convertDesc:
+        "A IA qualifica, nutre e agenda compromissos automaticamente 24/7.",
+
+      closeTitle: "FECHAR",
+      closeDesc:
+        "Pipeline, equipe e análises ajudam você a fechar mais negócios.",
+
+      smartBenefit1Title: "Mais Receita",
+      smartBenefit1Text: "Capture mais leads e feche mais negócios.",
+      smartBenefit2Title: "Economize Tempo",
+      smartBenefit2Text: "Automatize follow-ups e agendamentos.",
+      smartBenefit3Title: "Fortaleça Sua Equipe",
+      smartBenefit3Text: "Todos sabem o que fazer e quando fazer.",
+      smartBenefit4Title: "Dados Que Impulsionam",
+      smartBenefit4Text: "Análises em tempo real para crescer.",
+      smartButton: "Transforme Seu Negócio Em Uma Máquina Automatizada",
+      smartBlock1: "Captura instantânea. Nenhum lead perdido.",
+      smartBlock2: "A IA trabalha 24/7. Você fecha mais negócios.",
+      smartBlock3: "Veja tudo. Feche mais negócios.",
+      smartBottom: "Mais leads. Mais agendamentos. Mais fechamentos.",
 
       topLine1: "Conheça o seu OS com IA.",
       topLine2: "Impulsionado por",
@@ -1282,7 +1414,9 @@ export default function Landing() {
       <header className="cx-header">
         <div className="cx-header-inner">
           <div className="cx-left">
-            <a href="/"><img src={headlogoImg} className="cx-logo-img" /></a>
+            <a href="/">
+              <img src={headlogoImg} className="cx-logo-img" />
+            </a>
           </div>
 
           <nav className="cx-nav">
@@ -1349,13 +1483,22 @@ export default function Landing() {
               </div>
               {langOpen && (
                 <div className="lang-dropdown">
-                  <div className="lang-item" onClick={() => handleLangChange("en")}>
+                  <div
+                    className="lang-item"
+                    onClick={() => handleLangChange("en")}
+                  >
                     English
                   </div>
-                  <div className="lang-item" onClick={() => handleLangChange("es")}>
+                  <div
+                    className="lang-item"
+                    onClick={() => handleLangChange("es")}
+                  >
                     Español
                   </div>
-                  <div className="lang-item" onClick={() => handleLangChange("pt")}>
+                  <div
+                    className="lang-item"
+                    onClick={() => handleLangChange("pt")}
+                  >
                     Português
                   </div>
                 </div>
@@ -1398,7 +1541,9 @@ export default function Landing() {
                   <Zap size={21} />
                   {tr.heroCTA}
                 </a>
-                <p className="next-btn"><LockKeyhole size={16} /> {tr.heroUnlock}</p>
+                <p className="next-btn">
+                  <LockKeyhole size={16} /> {tr.heroUnlock}
+                </p>
               </div>
 
               <div className="hero-checks">
@@ -1502,7 +1647,11 @@ export default function Landing() {
               </ul>
             </div>    
           </div>*/}
-          <img src={landingDashImg} alt="landing Dashboard" className="landingDash" />    
+          <img
+            src={landingDashImg}
+            alt="landing Dashboard"
+            className="landingDash"
+          />
           {/*<div className="cx-comp-col">
             <div className="with">
               <h4><CheckCircle /><span>{tr.with}</span> CORTEXA</h4>
@@ -1523,10 +1672,9 @@ export default function Landing() {
         <img src={currentSec2} alt="" />
       </section>
       <section className="benefits-section pt-50">
-        
         <div className="benefits-container">
           <h2 className="cx-title-lg">{tr.beTitle}</h2>
-          
+
           <div className="benefits-grid">
             <div className="benefits-item">
               <div className="benefits-icon">
@@ -1538,7 +1686,11 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <MessageSquareMore size={28} strokeWidth={1.8} className="icon-blue-purple" />
+                <MessageSquareMore
+                  size={28}
+                  strokeWidth={1.8}
+                  className="icon-blue-purple"
+                />
               </div>
               <h3>{tr.beitem2}</h3>
               <p>{tr.beitemtext2}</p>
@@ -1546,7 +1698,11 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <Target size={28} strokeWidth={1.8} className="icon-blue-purple" />
+                <Target
+                  size={28}
+                  strokeWidth={1.8}
+                  className="icon-blue-purple"
+                />
               </div>
               <h3>{tr.beitem3}</h3>
               <p>{tr.beitemtext3}</p>
@@ -1554,13 +1710,16 @@ export default function Landing() {
 
             <div className="benefits-item">
               <div className="benefits-icon">
-                <Rocket size={28} strokeWidth={1.8} className="icon-blue-purple" />
+                <Rocket
+                  size={28}
+                  strokeWidth={1.8}
+                  className="icon-blue-purple"
+                />
               </div>
               <h3>{tr.beitem4}</h3>
               <p>{tr.beitemtext4}</p>
             </div>
           </div>
-
         </div>
       </section>
       <section id="whatsapp" className="cx-hero pt-50">
@@ -1754,57 +1913,119 @@ export default function Landing() {
       <section className="smart">
         <div className="smart-container">
           <div className="smart-head">
-            <p className="smart-eyebrow">{tr.smartEyebrow}</p>
+            <span className="smart-badge">{tr.smartBadge}</span>
 
-            <h2 className="smart-title">{tr.smartTitle}</h2>
+            <h2>
+              {tr.smartTitle1} {tr.smartTitle2} {tr.smartTitle3}{" "}
+              <span>{tr.smartTitle4}</span>
+            </h2>
 
-            <p className="smart-sub">{tr.smartSubtitle}</p>
+            <p>{tr.smartSubtitle}</p>
           </div>
 
-          <div className="smart-flow">
-            <div className="smart-line"></div>
-
-            {flows.map((flow, index) => (
-              <div key={index} className="smart-item">
-                {index !== 0 && <div className="smart-divider"></div>}
-
-                <div className="smart-grid">
-                  <div className="smart-left">
-                    <p>{flow.label}</p>
-                  </div>
-
-                  <div className="smart-right">
-                    <h3>{flow.title}</h3>
-
-                    <div className="smart-arrow">
-                      <span>{tr.smartFlow}</span>
-                      <span>→</span>
-                      <span>{tr.smartAutomated}</span>
-                      <span>→</span>
-                      <span>{tr.smartOptimized}</span>
-                    </div>
-
-                    <p className="smart-desc">{flow.text}</p>
-                  </div>
-                </div>
-
-                {index !== flows.length - 1 && (
-                  <div className="smart-connector">
-                    <span>↓</span>
-                    <div className="line"></div>
-                  </div>
-                )}
+          <div className="smart-steps">
+            <div className="smart-step">
+              <div className="step-number">1</div>
+              <div className="step-right-wrap">
+                <h3>{tr.captureTitle}</h3>
+                <p>{tr.captureDesc}</p>
               </div>
-            ))}
+            </div>
+            <div class="flow-arrow-container">
+              <div class="arrow-line"></div>
+              <div class="arrow-head"></div>
+            </div>
+            <div className="smart-step">
+              <div className="step-number">2</div>
+              <div className="step-right-wrap">
+                <h3>{tr.convertTitle}</h3>
+                <p>{tr.convertDesc}</p>
+              </div>
+            </div>
+            <div class="flow-arrow-container">
+              <div class="arrow-line"></div>
+              <div class="arrow-head"></div>
+            </div>
+            <div className="smart-step">
+              <div className="step-number">3</div>
+              <div className="step-right-wrap">
+                <h3>{tr.closeTitle}</h3>
+                <p>{tr.closeDesc}</p>
+              </div>
+            </div>
           </div>
 
-          <div className="smart-bottom">
-            <p>{tr.smartBottom}</p>
+          <div className="smart-main-grid">
+            <div className="capture-card">
+              <img src={smart1Img} className="smart-img" />
+            </div>
+
+            <div className="convert-card">
+              <img src={smart2Img} className="smart-img" />
+            </div>
+
+            <div className="close-card">
+              <img src={smart3Img} className="smart-img" />
+            </div>
+          </div>
+          <div className="smart-block">
+            <div className="smart-block-card-wrap">
+              <div className="smart-block-card">
+                <Zap />
+                <p>{tr.smartBlock1}</p>
+              </div>
+            </div>
+            <div className="smart-block-card-wrap">
+              <div className="smart-block-card">
+                <Brain />
+                <p>{tr.smartBlock2}</p>
+              </div>
+            </div>
+            <div className="smart-block-card-wrap">
+              <div className="smart-block-card">
+                <Target />
+                <p>{tr.smartBlock2}</p>
+              </div>
+            </div>
+          </div>
+          <div className="smart-benefits">
+            <div>
+              <RotateCcw size={20} />
+              <div>
+                <h4>{tr.smartBenefit1Title}</h4>
+                <p>{tr.smartBenefit1Text}</p>
+              </div>
+            </div>
+
+            <div>
+              <Clock4 />
+              <div>
+                <h4>{tr.smartBenefit2Title}</h4>
+                <p>{tr.smartBenefit2Text}</p>
+              </div>
+            </div>
+
+            <div>
+              <Users />
+              <div>
+                <h4>{tr.smartBenefit3Title}</h4>
+                <p>{tr.smartBenefit3Text}</p>
+              </div>
+            </div>
+
+            <div>
+              <ChartNoAxesCombined />
+              <div>
+                <h4>{tr.smartBenefit4Title}</h4>
+                <p>{tr.smartBenefit4Text}</p>
+              </div>
+            </div>
           </div>
 
           <div className="smart-cta">
-            <a href="/trial">{tr.smartCTA} →</a>
+            <a href="/trial">{tr.smartButton} →</a>
           </div>
+          <p className="smart-bottom">{tr.smartBottom}</p>
         </div>
       </section>
 
@@ -1928,15 +2149,21 @@ export default function Landing() {
       </section>
       {/* TRUST */}
       <section className="cx-trust cx-center pt-50">
-        <svg width="0" height="0" style={{ position: 'absolute', opacity: 0 }}>
-          <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2563eb" /> 
+        <svg width="0" height="0" style={{ position: "absolute", opacity: 0 }}>
+          <linearGradient
+            id="icon-gradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
+            <stop offset="0%" stopColor="#2563eb" />
             <stop offset="100%" stopColor="#9333ea" />
           </linearGradient>
         </svg>
         <div className="land-container">
           <h2 className="cx-title-md">{tr.trustTitle}</h2>
-          
+
           <div className="cx-divider">
             <span className="cx-star">✦</span>
           </div>
@@ -1944,9 +2171,7 @@ export default function Landing() {
           <div className="cx-trust-grid">
             {tr.trust.map((t, i) => (
               <div className="cx-trust-item" key={i}>
-                <div className="cx-icon-wrapper">
-                  {trustIcons[i]}
-                </div>
+                <div className="cx-icon-wrapper">{trustIcons[i]}</div>
                 <h4>{t}</h4>
               </div>
             ))}
@@ -2074,19 +2299,29 @@ export default function Landing() {
                 <h3>{tr.connect}</h3>
                 <ul>
                   <li>
-                    <HashLink smooth to="/integrations#connect-apps">{tr.connectApps}</HashLink>
+                    <HashLink smooth to="/integrations#connect-apps">
+                      {tr.connectApps}
+                    </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#import-crm">{tr.importCrm}</HashLink>
+                    <HashLink smooth to="/integrations#import-crm">
+                      {tr.importCrm}
+                    </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#import-csv">{tr.importCsv}</HashLink>
+                    <HashLink smooth to="/integrations#import-csv">
+                      {tr.importCsv}
+                    </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#zapier-automations">{tr.zapierAutomation}</HashLink>
+                    <HashLink smooth to="/integrations#zapier-automations">
+                      {tr.zapierAutomation}
+                    </HashLink>
                   </li>
                   <li>
-                    <HashLink smooth to="/integrations#api-webhooks">{tr.apiWebhooks}</HashLink>
+                    <HashLink smooth to="/integrations#api-webhooks">
+                      {tr.apiWebhooks}
+                    </HashLink>
                   </li>
                 </ul>
               </div>
