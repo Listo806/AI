@@ -39,6 +39,11 @@ import {
   RotateCcw,
   Clock4,
   ChartNoAxesCombined,
+  User,
+  Bot,
+  Send,
+  Home,
+  Workflow,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -345,26 +350,76 @@ export default function Landing() {
       roiStat4Desc:
         "Most users recover their investment within the first month from deals that would have otherwise been lost.",
 
-      aiCrmBadge: "AI-Powered CRM",
-      aiCrmTitle1: "Meet Your",
-      aiCrmTitleHighlight: "AI OS",
-      aiCrmSub:
-        "Your 24/7 AI team that captures, follows up, and closes — while you focus on what matters.",
-      aiCrmSupport:
-        "Capture more leads. Close more deals. Never miss an opportunity.",
-      aiCrmF1Title: "Fills Your Pipeline",
-      aiCrmF1Desc: "AI finds, qualifies, and engages new leads for you.",
-      aiCrmF2Title: "Chats & Closes",
-      aiCrmF2Desc:
-        "AI handles conversations, answers questions, and closes deals.",
-      aiCrmF3Title: "Shows You the Money",
-      aiCrmF3Desc:
-        "Real-time insights, revenue tracking, and growth visibility.",
-      aiCrmF4Title: "Works 24/7",
-      aiCrmF4Desc:
-        "Always on. Always working. Never misses a lead or opportunity.",
-      aiCrmF5Title: "Keeps Customers Happy",
-      aiCrmF5Desc: "AI nurtures relationships and delivers instant support.",
+      aiosBadgeTitle: "Meet Your",
+      aiosBadgeHighlight: "AI OS",
+      aiosSubtitle:
+        "Your CRM, AI Agent, dashboards, follow-ups, and lead workflow — connected in one real estate AI operating system.",
+      aiosCards: [
+        {
+          title: "AI CRM",
+          desc: "Manage every lead, client, property, and deal in one place.",
+        },
+        {
+          title: "AI Agent",
+          desc: "Responds, qualifies, and follows up automatically 24/7.",
+        },
+        {
+          title: "Smart Dashboards",
+          desc: "See your leads, pipeline, tasks, team, and performance clearly.",
+        },
+        {
+          title: "Automated Follow-Up",
+          desc: "Keep every prospect moving without chasing manually.",
+        },
+        {
+          title: "Real Estate Workflow",
+          desc: "Built around listings, buyers, sellers, agents, and deals.",
+        },
+      ],
+      aiosCRMHeaders: ["Name", "Status", "Last Activity"],
+      aiosCRMRows: [
+        ["John Doe", "New", "2m ago"],
+        ["Sarah Smith", "Contacted", "15m ago"],
+        ["Mike Johnson", "Qualified", "1h ago"],
+        ["Emma Brown", "Proposal", "2h ago"],
+        ["David Wilson", "Closed", "1d ago"],
+      ],
+      aiosAgentGreeting: "Hi! I'm your AI Agent. How can I help today?",
+      aiosAgentReply: "I'm looking for a 3 bedroom house.",
+      aiosDashboardStats: {
+        leads: "Leads",
+        pipeline: "Pipeline",
+        deals: "Deals",
+      },
+      aiosFollowups: [
+        ["New Lead", "1 min"],
+        ["AI Follow-Up", "1 hour"],
+        ["Nurture Msg", "1 day"],
+        ["Convert to Client", "3 days"],
+      ],
+      aiosProperty: {
+        tag: "New Listing",
+        address: "123 Ocean View Dr.",
+        beds: "3",
+        baths: "2",
+        garage: "2",
+      },
+
+      howTitle: "How It Works",
+      howSteps: [
+        {
+          title: "Connect Your Leads",
+          desc: "Bring in leads from your website, ads, WhatsApp, forms, and campaigns.",
+        },
+        {
+          title: "AI Responds 24/7",
+          desc: "CORTEXA AI answers, qualifies, follows up, and keeps conversations moving.",
+        },
+        {
+          title: "You Close More Deals",
+          desc: "Your team works the hottest opportunities with better timing and less manual work.",
+        },
+      ],
 
       heroTitleLine1: "Get Instant Leads.",
       heroTitleLine2: "Close More Deals.",
@@ -392,43 +447,6 @@ export default function Landing() {
       heroTag5: "WhatsApp Integration Built-in",
       heroTag6: "Secure. Reliable. Built for Real Estate.",
       heroHead: "Real Estate Agents & Teams",
-
-      dominantTitleLine1: "A Real Estate Platform",
-      dominantTitleLine2: "Built for Real Estate",
-      dominantSubtitle:
-        "Everything you need is already here. Bring your workflow into one system built to handle your leads, listings, deals, analytics, and AI — all working together.",
-      dominantItem1Title: "Built for Your Business",
-      dominantItem1Desc:
-        "Manage listings, track leads, and move deals — all in one place.",
-      dominantItem2Title: "Everything Connected — Automatically",
-      dominantItem2Desc:
-        "Your pipeline, analytics, and AI all communicate together. Nothing is separate. Nothing is missing.",
-      dominantItem3Title: "Ready to Go",
-      dominantItem3Desc:
-        "No guessing what you need. No building systems. It’s already built for you.",
-      dominantPowerLine1: "Bring your workflow here —",
-      dominantPowerLine2: "and let the system run it the right way.",
-      dominantCTA: "Start Your Free Trial",
-      dominantHowTitle: "How It Works",
-      dominantHowSubtitle:
-        "Bring your workflow in — and the system takes over.",
-      dominantStep1Title: "Bring Your Workflow",
-      dominantStep1Desc:
-        "Import your leads, listings, and deals into the system.",
-      dominantStep2Title: "AI Activates",
-      dominantStep2Desc: "AI captures, responds, and follows up instantly.",
-      dominantStep3Title: "Pipeline Moves",
-      dominantStep3Desc: "Leads move through your pipeline automatically.",
-      dominantBottom1Title: "Deals Close",
-      dominantBottom1Desc: "Your system keeps momentum until deals are closed.",
-      dominantBottom2Title: "Analytics Track Everything",
-      dominantBottom2Desc:
-        "See exactly where your business stands in real time.",
-      dominantBottom3Title: "You Stay in Control",
-      dominantBottom3Desc:
-        "Clear visibility, better decisions, stronger performance.",
-      dominantFinal:
-        "From first lead to closing — everything is handled inside one system.",
 
       smartBadge: "FROM LEAD TO REVENUE — AUTOMATICALLY",
 
@@ -740,25 +758,76 @@ export default function Landing() {
       roiStat4Desc:
         "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
 
-      aiCrmBadge: "CRM con IA",
-      aiCrmTitle1: "Conoce tu",
-      aiCrmTitleHighlight: "OS con IA",
-      aiCrmSub:
-        "Tu equipo de IA 24/7 que captura, da seguimiento y cierra — mientras tú te enfocas en lo importante.",
-      aiCrmSupport:
-        "Captura más leads. Cierra más ventas. Nunca pierdas una oportunidad.",
-      aiCrmF1Title: "Llena tu pipeline",
-      aiCrmF1Desc: "La IA encuentra, califica y conecta nuevos leads por ti.",
-      aiCrmF2Title: "Chatea y cierra",
-      aiCrmF2Desc:
-        "La IA gestiona conversaciones, responde preguntas y cierra ventas.",
-      aiCrmF3Title: "Te muestra el dinero",
-      aiCrmF3Desc:
-        "Insights en tiempo real, seguimiento de ingresos y crecimiento.",
-      aiCrmF4Title: "Funciona 24/7",
-      aiCrmF4Desc: "Siempre activo. Nunca pierde un lead ni una oportunidad.",
-      aiCrmF5Title: "Clientes felices",
-      aiCrmF5Desc: "La IA cuida relaciones y ofrece soporte instantáneo.",
+      aiosBadgeTitle: "Conoce Tu",
+      aiosBadgeHighlight: "AI OS",
+      aiosSubtitle:
+        "Tu CRM, agente IA, paneles, seguimientos y flujo de trabajo conectados en un único sistema operativo inmobiliario.",
+      aiosCards: [
+        {
+          title: "CRM IA",
+          desc: "Gestiona clientes, propiedades y negocios en un solo lugar.",
+        },
+        {
+          title: "Agente IA",
+          desc: "Responde, califica y da seguimiento automáticamente.",
+        },
+        {
+          title: "Paneles Inteligentes",
+          desc: "Visualiza leads, pipeline, tareas y rendimiento.",
+        },
+        {
+          title: "Seguimiento Automático",
+          desc: "Mantén cada prospecto avanzando sin perseguirlo.",
+        },
+        {
+          title: "Flujo Inmobiliario",
+          desc: "Diseñado para propiedades, compradores y agentes.",
+        },
+      ],
+      aiosCRMHeaders: ["Nombre", "Estado", "Última Actividad"],
+      aiosCRMRows: [
+        ["John Doe", "Nuevo", "2 min"],
+        ["Sarah Smith", "Contactado", "15 min"],
+        ["Mike Johnson", "Calificado", "1 h"],
+        ["Emma Brown", "Propuesta", "2 h"],
+        ["David Wilson", "Cerrado", "1 día"],
+      ],
+      aiosAgentGreeting: "¡Hola! Soy tu Agente IA. ¿Cómo puedo ayudarte hoy?",
+      aiosAgentReply: "Estoy buscando una casa de 3 habitaciones.",
+      aiosDashboardStats: {
+        leads: "Leads",
+        pipeline: "Pipeline",
+        deals: "Negocios",
+      },
+      aiosFollowups: [
+        ["Nuevo Lead", "1 min"],
+        ["Seguimiento IA", "1 hora"],
+        ["Mensaje Nutrición", "1 día"],
+        ["Convertir Cliente", "3 días"],
+      ],
+      aiosProperty: {
+        tag: "Nueva Propiedad",
+        address: "123 Ocean View Dr.",
+        beds: "3",
+        baths: "2",
+        garage: "2",
+      },
+
+      howTitle: "Cómo Funciona",
+      howSteps: [
+        {
+          title: "Conecta Tus Leads",
+          desc: "Recibe leads desde tu sitio web, anuncios, WhatsApp, formularios y campañas.",
+        },
+        {
+          title: "La IA Responde 24/7",
+          desc: "La IA de CORTEXA responde, califica y realiza seguimientos automáticamente.",
+        },
+        {
+          title: "Cierras Más Negocios",
+          desc: "Tu equipo trabaja las mejores oportunidades con menos esfuerzo manual.",
+        },
+      ],
 
       heroTitleLine1: "Obtén clientes potenciales al instante.",
       heroTitleLine2: "Cierra más ventas.",
@@ -789,45 +858,6 @@ export default function Landing() {
       heroTag5: "Integración de WhatsApp incorporada",
       heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
       heroHead: "Agentes y equipos inmobiliarios",
-
-      dominantTitleLine1: "Una plataforma inmobiliaria",
-      dominantTitleLine2: "Diseñada para el sector inmobiliario",
-      dominantSubtitle:
-        "Todo lo que necesitas ya está aquí. Lleva tu flujo de trabajo a un solo sistema diseñado para gestionar tus leads, propiedades, negocios, analíticas e IA — todo funcionando en conjunto.",
-      dominantItem1Title: "Diseñado para tu negocio",
-      dominantItem1Desc:
-        "Gestiona propiedades, sigue leads y avanza operaciones — todo en un solo lugar.",
-      dominantItem2Title: "Todo conectado — automáticamente",
-      dominantItem2Desc:
-        "Tu pipeline, analíticas e IA trabajan juntos. Nada está separado. Nada falta.",
-      dominantItem3Title: "Listo para usar",
-      dominantItem3Desc:
-        "Sin adivinar qué necesitas. Sin construir sistemas. Ya está listo para ti.",
-      dominantPowerLine1: "Trae tu flujo de trabajo aquí —",
-      dominantPowerLine2: "y deja que el sistema lo ejecute correctamente.",
-      dominantCTA: "Comienza tu prueba gratuita",
-      dominantHowTitle: "Cómo funciona",
-      dominantHowSubtitle:
-        "Trae tu flujo de trabajo — y el sistema se encarga del resto.",
-      dominantStep1Title: "Trae tu flujo de trabajo",
-      dominantStep1Desc:
-        "Importa tus leads, propiedades y operaciones al sistema.",
-      dominantStep2Title: "La IA se activa",
-      dominantStep2Desc:
-        "La IA captura, responde y da seguimiento al instante.",
-      dominantStep3Title: "El pipeline avanza",
-      dominantStep3Desc: "Los leads avanzan automáticamente en tu pipeline.",
-      dominantBottom1Title: "Las ventas se cierran",
-      dominantBottom1Desc:
-        "Tu sistema mantiene el impulso hasta cerrar las operaciones.",
-      dominantBottom2Title: "Analíticas en tiempo real",
-      dominantBottom2Desc:
-        "Visualiza exactamente cómo está tu negocio en tiempo real.",
-      dominantBottom3Title: "Tú mantienes el control",
-      dominantBottom3Desc:
-        "Visibilidad clara, mejores decisiones y mayor rendimiento.",
-      dominantFinal:
-        "Desde el primer lead hasta el cierre — todo se gestiona dentro de un solo sistema.",
 
       smartBadge: "DEL LEAD A LOS INGRESOS — AUTOMÁTICAMENTE",
 
@@ -1132,26 +1162,77 @@ export default function Landing() {
       roiStat4Desc:
         "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
 
-      aiCrmBadge: "CRM com IA",
-      aiCrmTitle1: "Conheça seu",
-      aiCrmTitleHighlight: "OS com IA",
-      aiCrmSub:
-        "Sua equipe de IA 24/7 que captura, acompanha e fecha negócios — enquanto você foca no que importa.",
-      aiCrmSupport:
-        "Capture mais leads. Feche mais negócios. Nunca perca oportunidades.",
-      aiCrmF1Title: "Enche seu pipeline",
-      aiCrmF1Desc: "A IA encontra, qualifica e engaja novos leads para você.",
-      aiCrmF2Title: "Conversa e fecha",
-      aiCrmF2Desc:
-        "A IA gerencia conversas, responde dúvidas e fecha negócios.",
-      aiCrmF3Title: "Mostra o dinheiro",
-      aiCrmF3Desc:
-        "Insights em tempo real, acompanhamento de receita e crescimento.",
-      aiCrmF4Title: "Funciona 24/7",
-      aiCrmF4Desc: "Sempre ativo. Nunca perde leads ou oportunidades.",
-      aiCrmF5Title: "Clientes felizes",
-      aiCrmF5Desc:
-        "A IA cuida do relacionamento e oferece suporte instantâneo.",
+      aiosBadgeTitle: "Conheça Seu",
+      aiosBadgeHighlight: "AI OS",
+      aiosSubtitle:
+        "Seu CRM, Agente IA, dashboards, follow-ups e fluxo de trabalho conectados em um único sistema operacional imobiliário.",
+
+      aiosCards: [
+        {
+          title: "CRM IA",
+          desc: "Gerencie leads, clientes, imóveis e negócios em um só lugar.",
+        },
+        {
+          title: "Agente IA",
+          desc: "Responde, qualifica e acompanha automaticamente.",
+        },
+        {
+          title: "Dashboards Inteligentes",
+          desc: "Veja leads, pipeline, tarefas e desempenho claramente.",
+        },
+        {
+          title: "Follow-Up Automático",
+          desc: "Mantenha cada prospect avançando sem esforço manual.",
+        },
+        {
+          title: "Fluxo Imobiliário",
+          desc: "Criado para imóveis, compradores, vendedores e agentes.",
+        },
+      ],
+      aiosCRMHeaders: ["Nome", "Status", "Última Atividade"],
+      aiosCRMRows: [
+        ["John Doe", "Novo", "2 min"],
+        ["Sarah Smith", "Contatado", "15 min"],
+        ["Mike Johnson", "Qualificado", "1 h"],
+        ["Emma Brown", "Proposta", "2 h"],
+        ["David Wilson", "Fechado", "1 dia"],
+      ],
+      aiosAgentGreeting: "Olá! Sou seu Agente IA. Como posso ajudar hoje?",
+      aiosAgentReply: "Estou procurando uma casa com 3 quartos.",
+      aiosDashboardStats: {
+        leads: "Leads",
+        pipeline: "Pipeline",
+        deals: "Negócios",
+      },
+      aiosFollowups: [
+        ["Novo Lead", "1 min"],
+        ["Follow-Up IA", "1 hora"],
+        ["Mensagem Nutrição", "1 dia"],
+        ["Converter Cliente", "3 dias"],
+      ],
+      aiosProperty: {
+        tag: "Novo Imóvel",
+        address: "123 Ocean View Dr.",
+        beds: "3",
+        baths: "2",
+        garage: "2",
+      },
+
+      howTitle: "Como Funciona",
+      howSteps: [
+        {
+          title: "Conecte Seus Leads",
+          desc: "Receba leads do seu site, anúncios, WhatsApp, formulários e campanhas.",
+        },
+        {
+          title: "A IA Responde 24/7",
+          desc: "A IA da CORTEXA responde, qualifica e acompanha automaticamente.",
+        },
+        {
+          title: "Feche Mais Negócios",
+          desc: "Sua equipe trabalha as melhores oportunidades com menos esforço manual.",
+        },
+      ],
 
       heroTitleLine1: "Receba leads instantaneamente.",
       heroTitleLine2: "Feche mais negócios.",
@@ -1183,45 +1264,6 @@ export default function Landing() {
       heroTag5: "Integração nativa com WhatsApp",
       heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",
       heroHead: "Agentes e equipes imobiliárias",
-
-      dominantTitleLine1: "Uma plataforma imobiliária",
-      dominantTitleLine2: "Construída para o mercado imobiliário",
-      dominantSubtitle:
-        "Tudo o que você precisa já está aqui. Traga seu fluxo de trabalho para um único sistema criado para gerenciar seus leads, imóveis, negociações, análises e IA — tudo funcionando junto.",
-      dominantItem1Title: "Feito para o seu negócio",
-      dominantItem1Desc:
-        "Gerencie imóveis, acompanhe leads e avance negociações — tudo em um só lugar.",
-      dominantItem2Title: "Tudo conectado — automaticamente",
-      dominantItem2Desc:
-        "Seu pipeline, análises e IA trabalham juntos. Nada fica separado. Nada está faltando.",
-      dominantItem3Title: "Pronto para usar",
-      dominantItem3Desc:
-        "Sem precisar adivinhar o que você precisa. Sem construir sistemas. Já está pronto para você.",
-      dominantPowerLine1: "Traga seu fluxo de trabalho para cá —",
-      dominantPowerLine2: "e deixe o sistema rodar da forma correta.",
-      dominantCTA: "Comece seu teste gratuito",
-      dominantHowTitle: "Como funciona",
-      dominantHowSubtitle:
-        "Traga seu fluxo de trabalho — e o sistema assume a partir daí.",
-      dominantStep1Title: "Traga seu fluxo de trabalho",
-      dominantStep1Desc:
-        "Importe seus leads, imóveis e negociações para o sistema.",
-      dominantStep2Title: "A IA é ativada",
-      dominantStep2Desc:
-        "A IA captura, responde e faz follow-up instantaneamente.",
-      dominantStep3Title: "O pipeline avança",
-      dominantStep3Desc: "Os leads avançam automaticamente no seu pipeline.",
-      dominantBottom1Title: "Negócios são fechados",
-      dominantBottom1Desc:
-        "Seu sistema mantém o ritmo até fechar as negociações.",
-      dominantBottom2Title: "Análises em tempo real",
-      dominantBottom2Desc:
-        "Veja exatamente como está o seu negócio em tempo real.",
-      dominantBottom3Title: "Você mantém o controle",
-      dominantBottom3Desc:
-        "Visibilidade clara, melhores decisões e desempenho mais forte.",
-      dominantFinal:
-        "Do primeiro lead ao fechamento — tudo é gerenciado dentro de um único sistema.",
 
       smartBadge: "DO LEAD À RECEITA — AUTOMATICAMENTE",
 
@@ -1608,7 +1650,8 @@ export default function Landing() {
         <div className="cx-aios-header cx-center">
           <span className="cx-aios-badge">{tr.aiosBadge}</span>
           <h2 className="cx-aios-main-title">
-            {tr.aiosBadge1} <span className="highlight-purple">AIOS</span>. {tr.aiosTitle}
+            {tr.aiosBadge1} <span className="highlight-purple">AIOS</span>.{" "}
+            {tr.aiosTitle}
           </h2>
           <p className="cx-aios-lead-text">{tr.aiosDesc1}</p>
           <p className="cx-aios-sub-text">
@@ -1729,195 +1772,258 @@ export default function Landing() {
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="" />
       </section>
-      
+
       <section id="whatsapp" className="cx-hero pt-50">
         <img src={currentSec3} alt="" />
       </section>
 
-      <section className="ai-crm-section pt-20">
-        <div className="ai-crm-container">
-          <div className="ai-crm-badge">{tr.aiCrmBadge}</div>
+      <section className="aios-section ai-crm-section pt-20">
+        <div className="aios-container">
+          <div className="aios-header">
+            <h2>
+              {tr.aiosBadgeTitle} <span>{tr.aiosBadgeHighlight}</span>
+            </h2>
 
-          {/* Title */}
-          <h2 className="ai-crm-title">
-            {tr.aiCrmTitle1}{" "}
-            <span className="ai-crm-highlight">{tr.aiCrmTitleHighlight}</span>
-          </h2>
+            <p>{tr.aiosSubtitle}</p>
+          </div>
+          <div className="aios-grid">
+            <div className="aios-card">
+              <div className="aios-icon">
+                <User size={34} />
+              </div>
+              <h3>{tr.aiosCards[0].title}</h3>
+              <span />
+              <p>{tr.aiosCards[0].desc}</p>
 
-          {/* Sub */}
-          <p className="ai-crm-sub">{tr.aiCrmSub}</p>
+              <div className="aios-preview crm-preview">
+                <div className="crm-header">
+                  <User size={14} />
+                  <span>{tr.aiosCRMHeaders[0]}</span>
+                  <span>{tr.aiosCRMHeaders[1]}</span>
+                  <span>{tr.aiosCRMHeaders[2]}</span>
+                </div>
 
-          <p className="ai-crm-support">{tr.aiCrmSupport}</p>
-
-          {/* Grid */}
-          <div className="ai-crm-grid">
-            <div className="ai-crm-card">
-              <div className="ai-icon purple">⚡</div>
-              <h3>{tr.aiCrmF1Title}</h3>
-              <p>{tr.aiCrmF1Desc}</p>
+                {tr.aiosCRMRows.map((row, i) => (
+                  <div className="crm-row" key={i}>
+                    <User size={14} />
+                    <span>{row[0]}</span>
+                    <label>{row[1]}</label>
+                    <small>{row[2]}</small>
+                  </div>
+                ))}
+              </div>
             </div>
+            <div className="aios-card">
+              <div className="aios-icon">
+                <Bot size={34} />
+              </div>
+              <h3>{tr.aiosCards[1].title}</h3>
+              <span />
+              <p>{tr.aiosCards[1].desc}</p>
 
-            <div className="ai-crm-card">
-              <div className="ai-icon blue">💬</div>
-              <h3>{tr.aiCrmF2Title}</h3>
-              <p>{tr.aiCrmF2Desc}</p>
+              <div className="aios-preview chat-preview">
+                <div className="bubble left">{tr.aiosAgentGreeting}</div>
+                <div className="bubble left">{tr.aiosAgentReply}</div>
+                <div className="bubble left nonedot">
+                  <div className="crm-dot" />
+                  <div className="crm-dot" />
+                  <div className="crm-dot" />
+                </div>
+              </div>
             </div>
+            <div className="aios-card">
+              <div className="aios-icon">
+                <BarChart3 size={34} />
+              </div>
+              <h3>{tr.aiosCards[2].title}</h3>
+              <span />
+              <p>{tr.aiosCards[2].desc}</p>
 
-            <div className="ai-crm-card">
-              <div className="ai-icon green">💰</div>
-              <h3>{tr.aiCrmF3Title}</h3>
-              <p>{tr.aiCrmF3Desc}</p>
+              <div className="aios-preview dashboard-preview">
+                <div className="dashboard-stats">
+                  <div className="dashboard-stat">
+                    <span>{tr.aiosDashboardStats.leads}</span>
+                    <strong>2,450</strong>
+                    <small>+18%</small>
+                  </div>
+                  <div className="dashboard-stat">
+                    <span>{tr.aiosDashboardStats.pipeline}</span>
+                    <strong>$1.25M</strong>
+                    <small>+24%</small>
+                  </div>
+                  <div className="dashboard-stat">
+                    <span>{tr.aiosDashboardStats.deals}</span>
+                    <strong>156</strong>
+                    <small>+15%</small>
+                  </div>
+                </div>
+
+                <div className="dashboard-bottom">
+                  <div className="dashboard-line-chart">
+                    <svg viewBox="0 0 200 80" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient
+                          id="dashboardGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="#7a5cff"
+                            stopOpacity="0.35"
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="#7a5cff"
+                            stopOpacity="0"
+                          />
+                        </linearGradient>
+                      </defs>
+
+                      <path
+                        d="
+          M0 70
+          L20 58
+          L40 62
+          L60 45
+          L80 50
+          L100 28
+          L120 34
+          L140 18
+          L160 24
+          L180 4
+          L200 0
+          L200 80
+          L0 80
+          Z"
+                        fill="url(#dashboardGradient)"
+                      />
+
+                      <polyline
+                        points="
+          0,70
+          20,58
+          40,62
+          60,45
+          80,50
+          100,28
+          120,34
+          140,18
+          160,24
+          180,4
+          200,0"
+                        fill="none"
+                        stroke="#7a5cff"
+                        strokeWidth="3"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="dashboard-ring">
+                    <svg viewBox="0 0 120 120">
+                      <circle cx="60" cy="60" r="48" className="ring-bg" />
+
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="48"
+                        className="ring-progress"
+                      />
+                    </svg>
+
+                    <span>{tr.aiosDashboardScore}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+            <div className="aios-card">
+              <div className="aios-icon">
+                <Send size={34} />
+              </div>
+              <h3>{tr.aiosCards[3].title}</h3>
+              <span />
+              <p>{tr.aiosCards[3].desc}</p>
 
-            <div className="ai-crm-card">
-              <div className="ai-icon yellow">⏱</div>
-              <h3>{tr.aiCrmF4Title}</h3>
-              <p>{tr.aiCrmF4Desc}</p>
+              <div className="aios-preview follow-preview">
+                {tr.aiosFollowups.map((item, i) => (
+                  <div className="follow-row" key={i}>
+                    <span>
+                      <CheckCircle size={12} /> {item[0]}
+                    </span>
+                    <label>{item[1]}</label>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            <div className="ai-crm-card">
-              <div className="ai-icon pink">❤️</div>
-              <h3>{tr.aiCrmF5Title}</h3>
-              <p>{tr.aiCrmF5Desc}</p>
+            <div className="aios-card">
+              <div className="aios-icon">
+                <Home size={34} />
+              </div>
+              <h3>{tr.aiosCards[4].title}</h3>
+              <span />
+              <p>{tr.aiosCards[4].desc}</p>
+              <div className="aios-preview house-preview">
+                <div className="property-image">
+                  <div className="listing-tag">{tr.aiosProperty.tag}</div>
+                </div>
+                <div className="property-info">
+                  <h5>{tr.aiosProperty.address}</h5>
+                  <div className="info-wrap">
+                    <strong>$1,250,000</strong>
+                    <div className="property-meta">
+                      <span>🛏 {tr.aiosProperty.beds}</span>
+                      <span>🛁 {tr.aiosProperty.baths}</span>
+                      <span>🚗 {tr.aiosProperty.garage}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
-      <section className="dominant section-dark pt-50">
-        <div className="grid-bg"></div>
-        <div className="glow-line">
-          <div className="glow-bar"></div>
-        </div>
-
-        <div className="container center">
-          <h2 className="heading">
-            <span className="text-gradient-white">{tr.dominantTitleLine1}</span>
-            <br />
-            <span className="text-gradient-blue">{tr.dominantTitleLine2}</span>
-          </h2>
-
-          <p className="subline">{tr.dominantSubtitle}</p>
-        </div>
-
-        <div className="divider"></div>
-
-        <div className="container grid-3">
-          <div className="item">
-            <h3>{tr.dominantItem1Title}</h3>
-            <p>{tr.dominantItem1Desc}</p>
+      <section className="how-section">
+        <div className="how-container">
+          <h2 className="how-title">{tr.howTitle}</h2>
+          <div className="unline"></div>
+          <div className="how-grid">
+            <div className="how-card">
+              <div className="how-number">1</div>
+              <div className="how-icon">
+                <Workflow size={44} />
+              </div>
+              <div className="how-content">
+                <h3>{tr.howSteps[0].title}</h3>
+                <p>{tr.howSteps[0].desc}</p>
+              </div>
+            </div>
+            <div className="how-arrow">→</div>
+            <div className="how-card">
+              <div className="how-number">2</div>
+              <div className="how-icon">
+                <Bot size={44} />
+              </div>
+              <div className="how-content">
+                <h3>{tr.howSteps[1].title}</h3>
+                <p>{tr.howSteps[1].desc}</p>
+              </div>
+            </div>
+            <div className="how-arrow">→</div>
+            <div className="how-card">
+              <div className="how-number">3</div>
+              <div className="how-icon">
+                <TrendingUp size={44} />
+              </div>
+              <div className="how-content">
+                <h3>{tr.howSteps[2].title}</h3>
+                <p>{tr.howSteps[2].desc}</p>
+              </div>
+            </div>
           </div>
-
-          <div className="item highlight">
-            <h3>{tr.dominantItem2Title}</h3>
-            <p>{tr.dominantItem2Desc}</p>
-          </div>
-
-          <div className="item">
-            <h3>{tr.dominantItem3Title}</h3>
-            <p>{tr.dominantItem3Desc}</p>
-          </div>
-        </div>
-
-        <div className="divider"></div>
-
-        <div className="container center power">
-          <p>
-            {tr.dominantPowerLine1} <br />
-            {tr.dominantPowerLine2}
-          </p>
-          <a href="/trial" className="btn-gradient">
-            {tr.dominantCTA}
-          </a>
         </div>
       </section>
-
-      <section className="dominant section-light pt-50 mb-100">
-        <div className="container center">
-          <h2 className="heading-dark">{tr.dominantHowTitle}</h2>
-          <p className="subline-dark">{tr.dominantHowSubtitle}</p>
-
-          <div className="flow">
-            <div className="step-card">
-              <div className="step-header">
-                <span className="step-number">01</span>
-                <div className="step-icon">
-                  <FileText size={34} strokeWidth={1.5} />
-                </div>
-              </div>
-              <div className="step-body">
-                <h3>{tr.dominantStep1Title}</h3>
-                <p>{tr.dominantStep1Desc}</p>
-              </div>
-            </div>
-
-            <div className="flow-arrow-container">
-              <div className="arrow-line"></div>
-              <div className="arrow-head"></div>
-            </div>
-
-            <div className="step-card">
-              <div className="step-header">
-                <span className="step-number">02</span>
-                <div className="step-icon">
-                  <Brain size={34} strokeWidth={1.5} />
-                </div>
-              </div>
-              <div className="step-body">
-                <h3>{tr.dominantStep2Title}</h3>
-                <p>{tr.dominantStep2Desc}</p>
-              </div>
-            </div>
-
-            <div className="flow-arrow-container">
-              <div className="arrow-line"></div>
-              <div className="arrow-head"></div>
-            </div>
-
-            <div className="step-card">
-              <div className="step-header">
-                <span className="step-number">03</span>
-                <div className="step-icon">
-                  <GitFork size={34} strokeWidth={1.5} />
-                </div>
-              </div>
-              <div className="step-body">
-                <h3>{tr.dominantStep3Title}</h3>
-                <p>{tr.dominantStep3Desc}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid-3 mt">
-            <div className="bottom-item">
-              <div className="bottom-icon icon-circle-blue">
-                <TrendingUp size={32} strokeWidth={1.5} />
-              </div>
-              <h3>{tr.dominantBottom1Title}</h3>
-              <p>{tr.dominantBottom1Desc}</p>
-            </div>
-
-            <div className="bottom-item">
-              <div className="bottom-icon icon-circle-purple">
-                <PieChart size={32} strokeWidth={1.5} />
-              </div>
-              <h3>{tr.dominantBottom2Title}</h3>
-              <p>{tr.dominantBottom2Desc}</p>
-            </div>
-
-            <div className="bottom-item">
-              <div className="bottom-icon icon-circle-darkpurple">
-                <ShieldCheck size={32} strokeWidth={1.5} />
-              </div>
-              <h3>{tr.dominantBottom3Title}</h3>
-              <p>{tr.dominantBottom3Desc}</p>
-            </div>
-          </div>
-
-          <p className="final-line">{tr.dominantFinal}</p>
-        </div>
-      </section>
-
       <section className="smart">
         <div className="smart-container">
           <div className="smart-head">
