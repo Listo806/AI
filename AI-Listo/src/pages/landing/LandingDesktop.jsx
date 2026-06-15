@@ -83,7 +83,6 @@ import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
 import testimonialsImg from "../../assets/cortexa/testimonials.png";
 import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
 import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
-import landingDashImg from "../../assets/cortexa/landingDash.png";
 
 import smart1Img from "../../assets/cortexa/smart1.png";
 import smart2Img from "../../assets/cortexa/smart2.png";
@@ -152,47 +151,42 @@ export default function Landing() {
       trial: "Start Free Trial",
       login: "Log in",
 
-      dashboardTitle: "Dashboards you work from, not just look at",
-
-      without: "Without",
-      with: "With",
-      withoutsub: "Your bussiness feels scattered.",
-      withsub: "Your bussiness run from one command center.",
-      withoutList: [
-        {
-          icon: "MessagesSquare",
-          text: "Leads spread across WhatsApp, calls, forms, and social messages",
-        },
-        {
-          icon: "Clock",
-          text: "Follow-ups depend on memory or manual reminders",
-        },
-        { icon: "EyeOff", text: "Pipeline visibility is unclear" },
-        { icon: "Flame", text: "Hot opportunities get missed" },
-        { icon: "Users", text: "Team performance is hard to measure" },
-        { icon: "HelpCircle", text: "Revenue forecasting feels like guessing" },
-      ],
-
-      withList: [
-        {
-          icon: "GitMerge",
-          text: "One command center for leads, deals, messages, and tasks",
-        },
-        {
-          icon: "Cpu",
-          text: "AI follow-ups and reminders keep opportunities moving",
-        },
-        {
-          icon: "Target",
-          text: "Pipeline visibility shows what is active, stuck, or ready to close",
-        },
-        {
-          icon: "TrendingUp",
-          text: "Revenue forecasting helps you see what's coming",
-        },
-        { icon: "UserCheck", text: "Team performance is visible in real time" },
-        { icon: "CheckCircle", text: "Every agent knows what to do next" },
-      ],
+      aiosBadge: "ONE CONNECTED WORKSPACE",
+      aiosBadge1: "One",
+      aiosTitle: "Not a Stack of Add-Ons.",
+      aiosDesc1:
+        "Most platforms make real estate teams piece together separate products for AI, CRM, marketing, reporting, automation, communication, and data.",
+      aiosDesc2:
+        "CORTEXA AIOS brings it all into one connected workspace built specifically for real estate — so your team can capture leads, qualify prospects, automate follow-ups, manage pipelines, book appointments, track performance, and stay aligned without juggling multiple tools.",
+      aiosCol1Title: "EVERYTHING WORKS TOGETHER FROM DAY ONE.",
+      aiosCol2Title: "BUILT TO IMPROVE WHAT MATTERS.",
+      aiosLeftItem1: "Your AI Agent handles conversations 24/7.",
+      aiosLeftItem2:
+        "Your CRM keeps every lead, contact, property, and deal organized.",
+      aiosLeftItem3: "Your WhatsApp automation keeps follow-ups moving.",
+      aiosLeftItem4:
+        "Your pipeline shows exactly where every opportunity stands.",
+      aiosLeftItem5: "Your analytics show what's working.",
+      aiosLeftItem6:
+        "Your team workspace keeps agents, managers, and admins on the same page.",
+      aiosNoItem1: "No complicated product menu.",
+      aiosNoItem2: "No hidden module maze.",
+      aiosNoItem3: "No paying extra just to make the system complete.",
+      aiosFooterText:
+        "Just one AI-powered operating system built to help real estate teams respond faster, serve clients better, close more deals, and grow with confidence.",
+      aiosRightItem1: "Lead response speed",
+      aiosRightItem2: "Follow-up consistency",
+      aiosRightItem3: "Customer experience",
+      aiosRightItem4: "Appointment booking",
+      aiosRightItem5: "Pipeline visibility",
+      aiosRightItem6: "Team productivity",
+      aiosRightItem7: "Lead conversion",
+      aiosRightItem8: "Customer retention",
+      aiosRightItem9: "Revenue opportunities",
+      aiosStatNumber: "35-50%",
+      aiosStatLabel: "POTENTIAL PERFORMANCE IMPROVEMENT",
+      aiosStatDesc:
+        "Across response speed, follow-up consistency, productivity, and conversion opportunities when your team operates from one connected platform.",
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
       stripSubbk: "Join teams using CORTEXA...",
@@ -541,56 +535,44 @@ export default function Landing() {
       trial: "Prueba gratis",
       login: "Iniciar sesión",
 
-      dashboardTitle: "Paneles que usas, no solo miras",
-
-      without: "Sin",
-      with: "Con",
-      withoutsub: "Tu negocio se siente disperso.",
-      withsub: "Tu negocio funciona desde un único centro de control.",
-      withoutList: [
-        {
-          icon: "MessagesSquare",
-          text: "Los leads están dispersos entre WhatsApp, llamadas, formularios y mensajes en redes sociales",
-        },
-        {
-          icon: "Clock",
-          text: "Los seguimientos dependen de la memoria o de recordatorios manuales",
-        },
-        { icon: "EyeOff", text: "La visibilidad del pipeline no es clara" },
-        { icon: "Flame", text: "Se pierden oportunidades valiosas" },
-        { icon: "Users", text: "Es difícil medir el rendimiento del equipo" },
-        {
-          icon: "HelpCircle",
-          text: "La previsión de ingresos parece una adivinanza",
-        },
-      ],
-
-      withList: [
-        {
-          icon: "GitMerge",
-          text: "Un único centro de control para leads, negocios, mensajes y tareas",
-        },
-        {
-          icon: "Cpu",
-          text: "Los seguimientos y recordatorios con IA mantienen las oportunidades en movimiento",
-        },
-        {
-          icon: "Target",
-          text: "La visibilidad del pipeline muestra qué está activo, bloqueado o listo para cerrarse",
-        },
-        {
-          icon: "TrendingUp",
-          text: "La previsión de ingresos te ayuda a ver lo que viene",
-        },
-        {
-          icon: "UserCheck",
-          text: "El rendimiento del equipo es visible en tiempo real",
-        },
-        {
-          icon: "CheckCircle",
-          text: "Cada agente sabe cuál es el siguiente paso",
-        },
-      ],
+      aiosBadge: "UN ESPACIO DE TRABAJO CONECTADO",
+      aiosBadge1: "Uno",
+      aiosTitle: "No es una pila de herramientas.",
+      aiosDesc1:
+        "La mayoría de las plataformas obligan a los equipos inmobiliarios a combinar productos separados para IA, CRM, marketing, informes, automatización, comunicación y datos.",
+      aiosDesc2:
+        "CORTEXA AIOS lo reúne todo en un único espacio de trabajo conectado, diseñado específicamente para el sector inmobiliario, de modo que su equipo pueda captar clientes potenciales, calificar prospectos, automatizar seguimientos, gestionar embudos, programar citas, realizar un seguimiento del rendimiento y mantenerse alineado sin tener que compaginar múltiples herramientas.",
+      aiosCol1Title: "TODO FUNCIONA CONJUNTO DESDE EL PRIMER DÍA.",
+      aiosCol2Title: "CONSTRUIDO PARA MEJORAR LO QUE IMPORTA.",
+      aiosLeftItem1:
+        "Su Agente de IA maneja las conversaciones las 24 horas, los 7 días de la semana.",
+      aiosLeftItem2:
+        "Su CRM mantiene organizados cada cliente potencial, contacto, propiedad y trato.",
+      aiosLeftItem3:
+        "Su automatización de WhatsApp mantiene los seguimientos en movimiento.",
+      aiosLeftItem4:
+        "Su embudo de ventas muestra exactamente dónde se encuentra cada oportunidad.",
+      aiosLeftItem5: "Sus analíticas muestran lo que está funcionando.",
+      aiosLeftItem6:
+        "El espacio de trabajo de su equipo mantiene a los agentes, gerentes y administradores en la misma página.",
+      aiosNoItem1: "Sin menús de productos complicados.",
+      aiosNoItem2: "Sin laberintos de módulos ocultos.",
+      aiosNoItem3: "Sin pagar extra solo para completar el sistema.",
+      aiosFooterText:
+        "Solo un sistema operativo impulsado por IA diseñado para ayudar a los equipos inmobiliarios a responder más rápido, atender mejor a los clientes, cerrar más tratos y crecer con confianza.",
+      aiosRightItem1: "Velocidad de respuesta de leads",
+      aiosRightItem2: "Consistencia en el seguimiento",
+      aiosRightItem3: "Experiencia del cliente",
+      aiosRightItem4: "Reserva de citas",
+      aiosRightItem5: "Visibilidad del pipeline",
+      aiosRightItem6: "Productividad del equipo",
+      aiosRightItem7: "Conversión de leads",
+      aiosRightItem8: "Retención de clientes",
+      aiosRightItem9: "Oportunidades de ingresos",
+      aiosStatNumber: "35-50%",
+      aiosStatLabel: "MEJORA POTENCIAL DEL RENDIMIENTO",
+      aiosStatDesc:
+        "En velocidad de respuesta, consistencia de seguimiento, productividad y oportunidades de conversión cuando su equipo opera desde una plataforma conectada.",
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
       stripSubbk: "Únete a equipos que usan CORTEXA...",
@@ -950,55 +932,45 @@ export default function Landing() {
       ],
       trial: "Teste grátis",
       login: "Entrar",
-      dashboardTitle: "Painéis para trabalhar, não apenas visualizar",
-      without: "Sem",
-      with: "Com",
-      withoutsub: "Seu negócio parece desorganizado.",
-      withsub: "Seu negócio funciona a partir de um único centro de comando.",
-      withoutList: [
-        {
-          icon: "MessagesSquare",
-          text: "Os leads ficam espalhados entre WhatsApp, chamadas, formulários e mensagens nas redes sociais",
-        },
-        {
-          icon: "Clock",
-          text: "Os acompanhamentos dependem da memória ou de lembretes manuais",
-        },
-        { icon: "EyeOff", text: "A visibilidade do pipeline não é clara" },
-        { icon: "Flame", text: "Oportunidades valiosas acabam sendo perdidas" },
-        { icon: "Users", text: "É difícil medir o desempenho da equipe" },
-        {
-          icon: "HelpCircle",
-          text: "A previsão de receita parece um jogo de adivinhação",
-        },
-      ],
 
-      withList: [
-        {
-          icon: "GitMerge",
-          text: "Um único centro de comando para leads, negócios, mensagens e tarefas",
-        },
-        {
-          icon: "Cpu",
-          text: "Acompanhamentos e lembretes com IA mantêm as oportunidades avançando",
-        },
-        {
-          icon: "Target",
-          text: "A visibilidade do pipeline mostra o que está ativo, parado ou pronto para fechar",
-        },
-        {
-          icon: "TrendingUp",
-          text: "A previsão de receita ajuda você a enxergar o que está por vir",
-        },
-        {
-          icon: "UserCheck",
-          text: "O desempenho da equipe é visível em tempo real",
-        },
-        {
-          icon: "CheckCircle",
-          text: "Cada agente sabe exatamente o próximo passo",
-        },
-      ],
+      aiosBadge: "UM ESPAÇO DE TRABALHO CONECTADO",
+      aiosBadge1: "Um",
+      aiosTitle: "Não é uma pilha de ferramentas.",
+      aiosDesc1:
+        "A maioria das plataformas faz com que as equipes imobiliárias juntem produtos separados para IA, CRM, marketing, relatórios, automação, comunicação e dados.",
+      aiosDesc2:
+        "O CORTEXA AIOS traz tudo isso para um espaço de trabalho conectado, construído especificamente para o mercado imobiliário — para que sua equipe possa capturar leads, qualificar prospects, automatizar acompanhamentos, gerenciar pipelines, agendar compromissos, rastrear o desempenho e manter-se alinhada sem fazer malabarismos com várias ferramentas.",
+      aiosCol1Title: "TUDO FUNCIONA JUNTO DESDE O PRIMEIRO DIA.",
+      aiosCol2Title: "CONSTRUÍDO PARA MELHORAR O QUE IMPORTA.",
+      aiosLeftItem1: "Seu Agente de IA lida com conversas 24/7.",
+      aiosLeftItem2:
+        "Seu CRM mantém todos os leads, contatos, imóveis e negócios organizados.",
+      aiosLeftItem3:
+        "Sua automação de WhatsApp mantém os acompanhamentos em movimento.",
+      aiosLeftItem4:
+        "Seu pipeline mostra exatamente onde está cada oportunidade.",
+      aiosLeftItem5: "Suas análises mostram o que está funcionando.",
+      aiosLeftItem6:
+        "O espaço de trabalho da sua equipe mantém corretores, gerentes e administradores na mesma página.",
+      aiosNoItem1: "Sem menu de produtos complicado.",
+      aiosNoItem2: "Sem labirinto de módulos ocultos.",
+      aiosNoItem3: "Sem pagar extra apenas para deixar o sistema completo.",
+      aiosFooterText:
+        "Apenas um sistema operacional baseado em IA desenvolvido para ajudar as equipes imobiliárias a responder mais rápido, atender melhor os clientes, fechar mais negócios e crescer com confiança.",
+      aiosRightItem1: "Velocidade de resposta de leads",
+      aiosRightItem2: "Consistência no acompanhamento",
+      aiosRightItem3: "Experiência do cliente",
+      aiosRightItem4: "Agendamento de compromissos",
+      aiosRightItem5: "Visibilidade do pipeline",
+      aiosRightItem6: "Produtividade da equipe",
+      aiosRightItem7: "Conversão de leads",
+      aiosRightItem8: "Retenção de clientes",
+      aiosRightItem9: "Oportunidades de receita",
+      aiosStatNumber: "35-50%",
+      aiosStatLabel: "MELHORIA POTENCIAL DE DESEMPENHO",
+      aiosStatDesc:
+        "Em velocidade de resposta, consistência de acompanhamento, produtividade e oportunidades de conversão quando sua equipe opera a partir de uma única plataforma conectada.",
+
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
       featuresTitle: "Transforme dados em decisões",
@@ -1628,100 +1600,136 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* COMPARE */}
-      <section id="features" className="cx-comp cx-center pt-50">
-        <h2 className="cx-title-md">{tr.dashboardTitle}</h2>
+      {/* SECTION ONE CONNECTED WORKSPACE */}
+      <section
+        id="features"
+        className="cx-aios-workspace cx-comp cx-center pt-50"
+      >
+        <div className="cx-aios-header cx-center">
+          <span className="cx-aios-badge">{tr.aiosBadge}</span>
+          <h2 className="cx-aios-main-title">
+            {tr.aiosBadge1} <span className="highlight-purple">AIOS</span>. {tr.aiosTitle}
+          </h2>
+          <p className="cx-aios-lead-text">{tr.aiosDesc1}</p>
+          <p className="cx-aios-sub-text">
+            <strong>CORTEXA AIOS</strong>{" "}
+            {tr.aiosDesc2.replace("CORTEXA AIOS", "")}
+          </p>
+        </div>
 
-        <div className="cx-comp-grid">
-          {/*<div className="cx-comp-col">
-            <div className="without">
-              <h4><XCircle /><span>{tr.without}</span> CORTEXA</h4>
-              <p>{tr.withoutsub}</p>
-              <ul className="cx-list neg">
-                {tr.withoutList.map((item, idx) => (
-                  <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
-                    <IconRenderer name={item.icon} className="icon-neg" style={{ color: '#ef4444', flexShrink: 0, marginTop: '3px' }} />
-                    <span>{item.text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>    
-          </div>*/}
-          <img
-            src={landingDashImg}
-            alt="landing Dashboard"
-            className="landingDash"
-          />
-          {/*<div className="cx-comp-col">
-            <div className="with">
-              <h4><CheckCircle /><span>{tr.with}</span> CORTEXA</h4>
-              <p>{tr.withsub}</p>
-              <ul className="cx-list pos">
-                {tr.withList.map((item, idx) => (
-                  <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px', gap: '12px' }}>
-                    <IconRenderer name={item.icon} className="icon-pos" style={{ color: '#22c55e', flexShrink: 0, marginTop: '3px' }} />
-                    <span>{item.text}</span>
-                  </li>
-                ))}
-              </ul>
+        <div className="cx-aios-grid-container">
+          <div className="cx-aios-column cx-aios-left-col">
+            <h3 className="cx-column-title">{tr.aiosCol1Title}</h3>
+
+            <div className="cx-aios-list">
+              <div className="cx-aios-item">
+                <Brain className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>AI Agent</strong>{" "}
+                  {tr.aiosLeftItem1.replace("Your AI Agent", "")}
+                </p>
+              </div>
+              <div className="cx-aios-item">
+                <Users className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>CRM</strong>{" "}
+                  {tr.aiosLeftItem2.replace("Your CRM", "")}
+                </p>
+              </div>
+              <div className="cx-aios-item">
+                <MessagesSquare className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>WhatsApp automation</strong>{" "}
+                  {tr.aiosLeftItem3.replace("Your WhatsApp automation", "")}
+                </p>
+              </div>
+              <div className="cx-aios-item">
+                <GitMerge className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>pipeline</strong>{" "}
+                  {tr.aiosLeftItem4.replace("Your pipeline", "")}
+                </p>
+              </div>
+              <div className="cx-aios-item">
+                <PieChart className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>analytics</strong>{" "}
+                  {tr.aiosLeftItem5.replace("Your analytics", "")}
+                </p>
+              </div>
+              <div className="cx-aios-item">
+                <UserCheck className="cx-aios-icon-purple" size={20} />
+                <p>
+                  Your <strong>team workspace</strong>{" "}
+                  {tr.aiosLeftItem6.replace("Your team workspace", "")}
+                </p>
+              </div>
             </div>
-          </div>*/}
+
+            <div className="cx-aios-no-box">
+              <div className="cx-no-item">
+                <XCircle className="cx-no-icon" size={20} />
+                <span>{tr.aiosNoItem1}</span>
+              </div>
+              <div className="cx-no-item">
+                <XCircle className="cx-no-icon" size={20} />
+                <span>{tr.aiosNoItem2}</span>
+              </div>
+              <div className="cx-no-item">
+                <XCircle className="cx-no-icon" size={20} />
+                <span>{tr.aiosNoItem3}</span>
+              </div>
+            </div>
+
+            <p className="cx-aios-col-footer">
+              Just one{" "}
+              <span className="highlight-purple">
+                AI-powered operating system
+              </span>{" "}
+              {tr.aiosFooterText.replace(
+                "Just one AI-powered operating system",
+                "",
+              )}
+            </p>
+          </div>
+
+          <div className="cx-aios-column cx-aios-right-col">
+            <h3 className="cx-column-title">{tr.aiosCol2Title}</h3>
+
+            <div className="cx-split-right-container">
+              <div className="cx-check-list-vertical">
+                {[
+                  tr.aiosRightItem1,
+                  tr.aiosRightItem2,
+                  tr.aiosRightItem3,
+                  tr.aiosRightItem4,
+                  tr.aiosRightItem5,
+                  tr.aiosRightItem6,
+                  tr.aiosRightItem7,
+                  tr.aiosRightItem8,
+                  tr.aiosRightItem9,
+                ].map((text, idx) => (
+                  <div className="cx-check-item-row" key={idx}>
+                    <CheckCircle className="cx-check-icon-purple" size={18} />
+                    <span>{text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="cx-stat-box-display">
+                <div className="cx-stat-large-num">{tr.aiosStatNumber}</div>
+                <div className="cx-stat-badge-title">{tr.aiosStatLabel}</div>
+                <div className="cx-stat-divider-line"></div>
+                <p className="cx-stat-description-text">{tr.aiosStatDesc}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="" />
       </section>
-      <section className="benefits-section pt-50">
-        <div className="benefits-container">
-          <h2 className="cx-title-lg">{tr.beTitle}</h2>
-
-          <div className="benefits-grid">
-            <div className="benefits-item">
-              <div className="benefits-icon">
-                <Zap size={28} strokeWidth={1.8} className="icon-blue-purple" />
-              </div>
-              <h3>{tr.beitem1}</h3>
-              <p>{tr.beitemtext1}</p>
-            </div>
-
-            <div className="benefits-item">
-              <div className="benefits-icon">
-                <MessageSquareMore
-                  size={28}
-                  strokeWidth={1.8}
-                  className="icon-blue-purple"
-                />
-              </div>
-              <h3>{tr.beitem2}</h3>
-              <p>{tr.beitemtext2}</p>
-            </div>
-
-            <div className="benefits-item">
-              <div className="benefits-icon">
-                <Target
-                  size={28}
-                  strokeWidth={1.8}
-                  className="icon-blue-purple"
-                />
-              </div>
-              <h3>{tr.beitem3}</h3>
-              <p>{tr.beitemtext3}</p>
-            </div>
-
-            <div className="benefits-item">
-              <div className="benefits-icon">
-                <Rocket
-                  size={28}
-                  strokeWidth={1.8}
-                  className="icon-blue-purple"
-                />
-              </div>
-              <h3>{tr.beitem4}</h3>
-              <p>{tr.beitemtext4}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      
       <section id="whatsapp" className="cx-hero pt-50">
         <img src={currentSec3} alt="" />
       </section>
