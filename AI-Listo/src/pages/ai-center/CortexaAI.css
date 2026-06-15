@@ -371,6 +371,13 @@
     }
 }
 @media (max-width: 1024px) {
+  .ai-card-icon svg{
+    width: 30px;
+    height: 30px;
+  }
+  .ai-card-icon{
+    color: #b25ced;
+  }
   .ai-grid{
     grid-template-columns: repeat(3, 1fr);
   }

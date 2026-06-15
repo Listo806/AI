@@ -1733,12 +1733,13 @@ body.crm-dark .crm-error {
 .crm-dark #root textarea, .crm-dark #root button{
   background: #0b141d;
 }
-.crm-dark #root .priority-item, .crm-dark #root .ai-page {
+.crm-dark #root .priority-item {
   background: #0b141d;
   border: 0;
 }
-.crm-dark #root .crm-content{
-    margin-top: 63px;
+.crm-dark #root .ai-page {
+  background: #07081b;
+  border: 0;
 }
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
@@ -1789,7 +1790,8 @@ body.crm-dark .leads-page,
 .crm-dark #root .activity-log-description-text , .crm-dark #root .ai-step-title-text,
 .crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary,
 .crm-dark #root .properties-page .metric-info h2, .crm-dark #root .price-row h3, .crm-dark #root .agent-info div h5,
-.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select, .crm-dark #root button{
+.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select, .crm-dark #root button,
+.crm-dark #root .ai-message, .crm-dark #root textarea{
   color: var(--text);
 }
 .crm-dark .ai-bg-blur{
@@ -2607,8 +2609,8 @@ body.crm-dark .leads-page,
   }
 
   .cortexa-bottom-nav .nav-item.active {
-    color: #2563eb;
-    background: #0c182a;
+    color: #2563eb!important;
+    background: #0c182a!important;
     border-radius: 10px;
   }
 
