@@ -1637,7 +1637,25 @@
     flex-wrap: wrap;
   }
 }
+@media (max-width: 768px) {
 
+  .pipeline-page .ai-banner-action-buttons-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .pipeline-page .ai-action-primary-trigger-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .pipeline-page .ai-action-secondary-trigger-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+}
 @media (max-width: 430px) {
   .pipeline-page .ai-banner-action-buttons-group button {
     flex: unset;
@@ -1646,7 +1664,6 @@
 
   .pipeline-page .ai-banner-action-buttons-group {
     flex-direction: column;
-    width: 200px;
     gap: 8px;
 
   }

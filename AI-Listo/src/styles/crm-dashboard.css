@@ -1597,12 +1597,15 @@ body.crm-dark .crm-error {
 .crm-dark .queue-item-row,
 .crm-dark .list-tbl-row,
 .crm-dark #root .panel-mid-utilities-row,
-.crm-dark #root .sidebar-footer {
+.crm-dark #root .sidebar-footer, .crm-dark #root .timeline-footer,
+.crm-dark #root .deal-card-bottom-interactive-action-triggers, .crm-dark #root .metrics-grid .metric-card:nth-child(n+2),
+.crm-dark #root .agent-footer {
   border-top: 1px solid #171d28;
 }
 
 .crm-dark .whatsapp-page .device-status-header-text,
-.crm-dark #root .conversation-header {
+.crm-dark #root .conversation-header, .crm-dark #root .automation-health-row-item:not(:last-child),
+.crm-dark #root .inspector-ai-action-step-row-item:not(:last-child), .crm-dark #root .property-specs {
   border-bottom: 1px solid #171d28;
 }
 
@@ -1617,7 +1620,12 @@ body.crm-dark .crm-error {
 .crm-dark #root .lead-card {
   border: 1px solid #171d28;
 }
-
+.crm-dark .pipeline-page .text-slate-800{
+  color: #94a3b8;
+}
+.crm-dark #root .search-box input{
+  background: #0b141d;
+}
 .crm-dark .bg-light-blue,
 .crm-dark .bg-light-purple,
 .crm-dark .bg-light-green,
@@ -1647,7 +1655,12 @@ body.crm-dark .crm-error {
 .crm-dark #root .hot-tag,
 .crm-dark #root .action-icon-circle,
 .crm-dark #root .leads-page .score-warm,
-.crm-dark #root .score-cool {
+.crm-dark #root .score-cool, .crm-dark #root .ai-metric-pill-green, .crm-dark #root .ai-metric-pill-red, .crm-dark #root .ai-metric-pill-blue,
+.crm-dark #root .column-deals-counter-badge, .crm-dark #root .tag-hot, .crm-dark #root .deal-card-footer-action-trigger-btn,
+.crm-dark #root .deal-card-temperature-tag.tag-warm, .crm-dark #root .deal-card-temperature-tag.tag-won,
+.crm-dark #root .deal-card-temperature-tag.tag-lost, .crm-dark #root .risk-table-cell-severity-badge,
+.crm-dark #root .impact-high, .crm-dark #root .impact-medium, .crm-dark #root .listing-status-tag.active,
+.crm-dark #root .listing-status-tag.review {
   background-color: rgba(37, 99, 235, 0.08);
 }
 
@@ -1697,11 +1710,27 @@ body.crm-dark .crm-error {
 .crm-dark #root .chat-input-box,
 .crm-dark #root .util-icon-btn,
 .crm-dark #root .quick-action-card-btn,
-.crm-dark #root .revenue-box {
+.crm-dark #root .revenue-box, .crm-dark #root .global-search-input, .crm-dark #root .pipeline-stat-card-item,
+.crm-dark #root .ai-intelligence-insight-banner, .crm-dark #root .ai-metric-column-box ,
+.crm-dark #root .ai-action-secondary-trigger-btn, .crm-dark #root .kanban-stage-column-wrapper,
+.crm-dark #root .kanban-deal-card-item, .crm-dark #root .bottom-intelligence-card-panel,
+.crm-dark #root .risk-queue-table-rows-wrapper, .crm-dark #root .risk-table-cell-action-review-trigger-btn,
+.crm-dark #root .revenue-forecast-metrics-grid-quad, .crm-dark #root .selected-deal-bottom-drilldown-inspector-panel,
+.crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary, .crm-dark #root .metrics-grid,
+.crm-dark #root .filter-select, .crm-dark #root .view-toggle-group, .crm-dark #root .toggle-btn.active,
+.crm-dark #root .property-card, .crm-dark #root .ai-score-badge .score-number.high,
+.crm-dark #root .inventory-score-box, .crm-dark #root .btn-match-view {
   background: #0b141d;
   border: 1px solid #171d28;
 }
-
+.crm-dark #root .automation-health-list-rows-stack, .crm-dark #root .inspector-activity-logs-mini-stack,
+.crm-dark #root .inspector-ai-action-steps-rows-stack, .crm-dark #root .sidebar-section:not(:last-child),
+.crm-dark #root .sidebar-section{
+  border: 1px solid #171d28;
+}
+.crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after{
+  background: #171d28;
+}
 .crm-dark #root .priority-item {
   background: #0b141d;
   border: 0;
@@ -1747,7 +1776,16 @@ body.crm-dark .leads-page,
 .crm-dark #root .action-title,
 .crm-dark #root .insight-card h3,
 .crm-dark #root .automation-item-title,
-.crm-dark #root .automation-row-icon {
+.crm-dark #root .automation-row-icon, .crm-dark #root .stat-card-numeric-value,
+.crm-dark #root .ai-metric-box-value, .crm-dark #root .ai-action-secondary-trigger-btn,
+.crm-dark #root .column-stage-title-text, .crm-dark #root .deal-card-temperature-tag.tag-lost,
+.crm-dark #root .intelligence-card-main-title, .crm-dark #root .risk-table-cell-property-name,
+.crm-dark #root .risk-table-cell-deal-value, .crm-dark #root .forecast-quad-card-large-numeric,
+.crm-dark #root .automation-health-item-title-text,
+.crm-dark #root .activity-log-description-text , .crm-dark #root .ai-step-title-text,
+.crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary,
+.crm-dark #root .properties-page .metric-info h2, .crm-dark #root .price-row h3, .crm-dark #root .agent-info div h5,
+.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select{
   color: var(--text);
 }
 
