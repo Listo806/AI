@@ -20,6 +20,7 @@ import {
 
 import "./CortexaAI.css";
 import centerlogoImg from "../../assets/cortexa/cortexaAI.png";
+import centerlogoMImg from "../../assets/cortexa/mobile/ai-cortexa-m.png";
 
 export default function CortexaAI() {
   const { t } = useTranslation();
@@ -323,7 +324,8 @@ export default function CortexaAI() {
 
         <div className="ai-header">
           <h1>
-            <img src={centerlogoImg} className="cx-logo-img" alt="CORTEXA AI" />
+            <img src={centerlogoImg} className="cx-logo-img m-logo logo-light" alt="CORTEXA AI" />
+            <img src={centerlogoMImg} className="cx-logo-img m-logo logo-dark" alt="CORTEXA AI" />
           </h1>
         </div>
 

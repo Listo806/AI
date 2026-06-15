@@ -31,7 +31,7 @@ export default function BottomNav({ onToggleSidebar, currentTab, setCurrentTab }
 
       <button 
         className={`nav-item ${currentTab?.startsWith("/dashboard/ai") ? "active" : ""}`}
-        onClick={() => setCurrentTab("/dashboard/ai-center")}
+        onClick={() => setCurrentTab("/dashboard/ai-cortexa")}
       >
         <Bot size={20} />
         <span>AI</span>

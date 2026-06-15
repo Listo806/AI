@@ -1719,23 +1719,27 @@ body.crm-dark .crm-error {
 .crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary, .crm-dark #root .metrics-grid,
 .crm-dark #root .filter-select, .crm-dark #root .view-toggle-group, .crm-dark #root .toggle-btn.active,
 .crm-dark #root .property-card, .crm-dark #root .ai-score-badge .score-number.high,
-.crm-dark #root .inventory-score-box, .crm-dark #root .btn-match-view {
+.crm-dark #root .inventory-score-box, .crm-dark #root .btn-match-view, .crm-dark #root button.active,
+.crm-dark #root .ai-box {
   background: #0b141d;
   border: 1px solid #171d28;
 }
 .crm-dark #root .automation-health-list-rows-stack, .crm-dark #root .inspector-activity-logs-mini-stack,
 .crm-dark #root .inspector-ai-action-steps-rows-stack, .crm-dark #root .sidebar-section:not(:last-child),
-.crm-dark #root .sidebar-section{
+.crm-dark #root .sidebar-section, .crm-dark #root button{
   border: 1px solid #171d28;
 }
-.crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after{
-  background: #171d28;
+.crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
+.crm-dark #root textarea, .crm-dark #root button{
+  background: #0b141d;
 }
-.crm-dark #root .priority-item {
+.crm-dark #root .priority-item, .crm-dark #root .ai-page {
   background: #0b141d;
   border: 0;
 }
-
+.crm-dark #root .crm-content{
+    margin-top: 63px;
+}
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
 .crm-dark .cortexa-bottom-nav,
@@ -1785,10 +1789,15 @@ body.crm-dark .leads-page,
 .crm-dark #root .activity-log-description-text , .crm-dark #root .ai-step-title-text,
 .crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary,
 .crm-dark #root .properties-page .metric-info h2, .crm-dark #root .price-row h3, .crm-dark #root .agent-info div h5,
-.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select{
+.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select, .crm-dark #root button{
   color: var(--text);
 }
-
+.crm-dark .ai-bg-blur{
+  background: #000;
+}
+.crm-dark #root .send-btn{
+  background: #2563eb;
+}
 @media (max-width: 1024px) {
 
   .crm-header {
@@ -1821,7 +1830,7 @@ body.crm-dark .leads-page,
     width: 97%;
   }
 
-  crm-btn {
+  .crm-btn {
     min-height: 44px;
     min-width: 44px;
     padding: 12px 20px;

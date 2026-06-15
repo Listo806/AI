@@ -362,19 +362,6 @@
     background:#fff;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 @media (min-width: 1025px) {
     .ai-container{
         max-width: 68%;
@@ -382,4 +369,18 @@
     .ai-tabs, .ai-box{
         max-width: 78%;
     }
+}
+@media (max-width: 1024px) {
+  .ai-grid{
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .ai-bg-blur {
+    height: 100px;
+  }
+}
+@media (max-width: 768px) {
+  .ai-grid{
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
 }
