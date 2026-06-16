@@ -960,20 +960,32 @@ body .contacts-page .map svg{
         margin-top: 0;
     }
 }
-@media (max-width: 768px) {
-  .contacts-page .modal-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 1024px) {
+  .contacts-page .contacts-grid, .contacts-page .kpi-grid {
+      grid-template-columns: 1fr 1fr;
   }
+}
+@media (max-width: 768px) {
+  
 
   .contacts-page .form-group.full {
     grid-column: span 1;
   }
 
-  .contacts-page .contacts-grid {
-    grid-template-columns: 1fr;
-  }
+  
 
   .contacts-page .info-grid {
     grid-template-columns: 1fr;
   }
+}
+@media (max-width: 430px) {
+  .contacts-page .contacts-grid, .contacts-page .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .contacts-page .modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 390px) {
+
 }

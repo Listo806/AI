@@ -703,12 +703,14 @@ export default function CortexaAnalyticsDashboard() {
             <div className="insights-list-row">
               <div className="insight-item-box">
                 <div className="insight-icon-title">
-                  <div className="insight-icon-wrap green">
-                    <MessageCircle size={16} className="text-green-strong" />
+                  <div className="insight-left-wrap">
+                    <div className="insight-icon-wrap green">
+                      <MessageCircle size={16} className="text-green-strong" />
+                    </div>
+                    <div className="insight-icon-box-wrap">
+                      <h4>WhatsApp is outperforming of other sources</h4>
+                      <p>You're converting 2.4x higher than Instagram traffic.</p>
                   </div>
-                  <div className="insight-icon-box-wrap">
-                    <h4>WhatsApp is outperforming of other sources</h4>
-                    <p>You're converting 2.4x higher than Instagram traffic.</p>
                   </div>
                   <a href="#action" className="text-royal-blue">
                     Open WhatsApp Leads →
@@ -718,14 +720,16 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="insight-item-box">
                 <div className="insight-icon-title">
-                  <div className="insight-icon-wrap orange">
-                    <Target size={20} className="text-orange-strong" />
-                  </div>
-                  <div className="insight-icon-box-wrap">
-                    <h4>41% of showing are not converting</h4>
-                    <p>
-                      Follow up within 24 hours to increase your close rate.
-                    </p>
+                  <div className="insight-left-wrap">
+                    <div className="insight-icon-wrap orange">
+                      <Target size={20} className="text-orange-strong" />
+                    </div>
+                    <div className="insight-icon-box-wrap">
+                      <h4>41% of showing are not converting</h4>
+                      <p>
+                        Follow up within 24 hours to increase your close rate.
+                      </p>
+                    </div>
                   </div>
                   <a href="#action" className="text-royal-blue">
                     Reviewing Showings →
@@ -735,14 +739,16 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="insight-item-box">
                 <div className="insight-icon-title">
-                  <div className="insight-icon-wrap purple">
-                    <Zap size={20} className="text-purple-strong" />
-                  </div>
-                  <div className="insight-icon-box-wrap">
-                    <h4>AI follow up can boost appointments</h4>
-                    <p>
-                      Enable AI follow-up to re-engage cold leads automatically.
-                    </p>
+                  <div className="insight-left-wrap">
+                    <div className="insight-icon-wrap purple">
+                      <Zap size={20} className="text-purple-strong" />
+                    </div>
+                    <div className="insight-icon-box-wrap">
+                      <h4>AI follow up can boost appointments</h4>
+                      <p>
+                        Enable AI follow-up to re-engage cold leads automatically.
+                      </p>
+                    </div>
                   </div>
                   <a href="#action" className="text-royal-blue">
                     Open AI Automation →

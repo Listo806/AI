@@ -1173,7 +1173,12 @@
     grid-template-columns: 1fr;
   }
 }
-
+@media (max-width: 1024px) {
+  .generator-page .right-analytics-sidebar-panel{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
 @media (max-width: 900px) {
   .generator-page .metrics-summary-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1183,13 +1188,29 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .generator-page .lead-row-item-line {
-    grid-template-columns: 40px 1.5fr 1fr 1fr;
-    gap: 10px;
-  }
-
   .generator-page .lead-intent-interests-paragraph,
   .generator-page .suggested-action-next-step-block {
     display: none;
+  }
+}
+@media (max-width: 768px) {
+  .generator-page .lead-row-item-line{
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 430px) {
+  .generator-page .table-top-controls-bar{
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .generator-page .lead-row-item-line{
+    grid-template-columns: 1fr;
+  }
+  .generator-page .bulk-processing-footer-bar, .generator-page .bulk-action-buttons-cluster{
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .generator-page .right-analytics-sidebar-panel{
+    grid-template-columns: 1fr;
   }
 }

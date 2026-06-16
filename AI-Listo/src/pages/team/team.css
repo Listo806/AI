@@ -1967,6 +1967,7 @@ TEAM QUICK ACTIONS
   font-size: 12px;
   font-weight: 600;
   color: #111827;
+  text-align: left;
 }
 .team-workspace .team-quick-action-icon {
   width: 30px;
