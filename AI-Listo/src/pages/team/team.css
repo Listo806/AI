@@ -2458,6 +2458,9 @@ TEAM QUICK ACTIONS
 }
 
 @media (max-width: 640px) {
+  .team-filter-list {
+    flex-wrap: wrap;
+  }
   .team-workspace .team-stats-grid {
     grid-template-columns: 1fr;
   }

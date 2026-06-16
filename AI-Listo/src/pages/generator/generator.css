@@ -1180,6 +1180,9 @@
   }
 }
 @media (max-width: 900px) {
+  .generator-page .metric-mini-card:last-child{
+    grid-column: span 2;
+  }
   .generator-page .metrics-summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1199,6 +1202,9 @@
   }
 }
 @media (max-width: 430px) {
+  .generator-page .header-actions{
+    flex-wrap: wrap;
+  }
   .generator-page .table-top-controls-bar{
     display: grid;
     grid-template-columns: 1fr;

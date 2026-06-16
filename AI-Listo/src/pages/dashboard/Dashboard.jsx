@@ -750,10 +750,9 @@ export default function CortexaDashboard() {
             ))}
           </div>
         </div>
-      </section>
+      {/*</section>
 
-      {/* DATA LOGS AND TIMELINES */}
-      <section className="dashboard-logs-row grid-3-col">
+      <section className="dashboard-logs-row grid-3-col">*/}
         {/* Today's Revenue Risk */}
         <div className="content-card">
           <div className="card-top-header">

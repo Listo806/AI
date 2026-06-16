@@ -1597,13 +1597,16 @@ body.crm-dark .crm-error {
 .crm-dark .generator-page .lead-row-item-line>div:not(:last-child)::after{
   background: #edf0f52b;
 }
-.crm-dark #root .integration-btn.status-active{
+.crm-dark #root .integration-btn.status-active, .crm-dark #root .team-filter-btn.active{
   border: 1px solid #0022ff;
   color: #0022ff;
 }
 .crm-dark #root .integration-btn.status-not-connected{
   border: 1px solid #b25ced;
   color: #b25ced;
+}
+.crm-dark #root .integration-btn.status-connected{
+  border: 1px solid #166534;
 }
 .crm-dark .queue-item-row,
 .crm-dark .list-tbl-row,
@@ -1619,7 +1622,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .conversation-header, .crm-dark #root .automation-health-row-item:not(:last-child),
 .crm-dark #root .inspector-ai-action-step-row-item:not(:last-child), .crm-dark #root .property-specs,
 .crm-dark #root .contact-info-list, .crm-dark #root .team-performance-item:not(:last-child),
-.crm-dark #root .team-activity-item:not(:last-child) {
+.crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .dashboard-page .drawer-header {
   border-bottom: 1px solid #202733;
 }
 
@@ -1640,7 +1643,8 @@ body.crm-dark .crm-error {
 }
 .crm-dark #root .team-activity-message, .crm-dark #root .team-notification-title, .crm-dark #root .team-performance-label,
 .crm-dark #root .metric-mini-info>span, .crm-dark #root .source-box-icon-center,
-.crm-dark #root .source-checkbox-item-box span, .crm-dark #root .sources-disclaimer-notice-text{
+.crm-dark #root .source-checkbox-item-box span, .crm-dark #root .sources-disclaimer-notice-text,
+.crm-dark #root .metric-label{
   color: #bebcbc;
 }
 .crm-dark #root .search-box input{
@@ -1689,7 +1693,9 @@ body.crm-dark .crm-error {
 .crm-dark #root .listing-status-tag.review, .crm-dark #root .kpi-icon-container,
 .crm-dark #root .badge-status, .crm-dark #root .badge-ai-score, .crm-dark #root .team-role-badge, 
 .crm-dark #root .team-billing-status-badge.active, .crm-dark #root .integration-icon,
-.crm-dark #root .metric-mini-icon.star{
+.crm-dark #root .metric-mini-icon.star, .crm-dark #root .team-notification-icon,
+.crm-dark #root .integration-btn, .crm-dark #root .risk-count-badge, .crm-dark #root .status-pill, .crm-dark #root .tag-urgent,
+.crm-dark #root .floating-cash-badge-circle{
   background-color: rgba(37, 99, 235, 0.08)!important;
 }
 
@@ -1709,7 +1715,6 @@ body.crm-dark .crm-error {
 .crm-dark #root .secondary-btn,
 .crm-dark #root .top-stats-row-grid,
 .crm-dark #root .stat-metric-box,
-.crm-dark #root .priority-bar-line-layout,
 .crm-dark #root .segment-line-item,
 .crm-dark #root .device-wrap,
 .crm-dark #root .qr-code-holder-box,
@@ -1736,7 +1741,6 @@ body.crm-dark .crm-error {
 .crm-dark #root .view-profile-btn,
 .crm-dark #root .message.left,
 .crm-dark #root .chip-btn,
-.crm-dark #root .chat-input-box,
 .crm-dark #root .util-icon-btn,
 .crm-dark #root .quick-action-card-btn,
 .crm-dark #root .revenue-box, .crm-dark #root .global-search-input, .crm-dark #root .pipeline-stat-card-item,
@@ -1749,30 +1753,37 @@ body.crm-dark .crm-error {
 .crm-dark #root .filter-select, .crm-dark #root .view-toggle-group, .crm-dark #root .toggle-btn.active,
 .crm-dark #root .property-card, .crm-dark #root .ai-score-badge .score-number.high,
 .crm-dark #root .inventory-score-box, .crm-dark #root .btn-match-view, .crm-dark #root button.active,
-.crm-dark #root .ai-box, .crm-dark #root .date-picker-wrapper, .crm-dark #root select, .crm-dark #root .kpi-card-mini,
+.crm-dark #root .ai-box, .crm-dark #root .date-picker-wrapper, .crm-dark #root .kpi-card-mini,
 .crm-dark #root .dashboard-card, .crm-dark #root .wa-metric-card, .crm-dark #root .kpi-grid,
 .crm-dark #root .contact-card, .crm-dark #root .team-search-box, .crm-dark #root .team-billing-modern-card,
 .crm-dark #root .team-member-menu, .crm-dark #root .team-insight-box, .crm-dark #root .integration-card,
-.crm-dark #root .metric-mini-card, .crm-dark #root .config-section-container, .crm-dark #root input,
+.crm-dark #root .metric-mini-card, .crm-dark #root .config-section-container,
 .crm-dark #root .inner-process-card, .crm-dark #root .source-checkbox-item-box,
 .crm-dark #root .sidebar-analytics-card, .crm-dark #root .generator-page .results-table-container-card,
-.crm-dark #root .dropdown-filter-select-inline {
+.crm-dark #root .dropdown-filter-select-inline, .crm-dark #root .ai-card,
+.crm-dark #root .action-btn, .crm-dark #root .team-filter-btn, .crm-dark #root .team-ai-btn,
+.crm-dark #root .team-activity-view-btn, .crm-dark #root .team-quick-action-item,
+.crm-dark #root .btn-icon-text, .crm-dark #root .input-select-wrapper input,
+.crm-dark #root .btn-table-util-filter, .crm-dark #root .layout-view-toggle-buttons-group button,
+.crm-dark #root .analytics-page .control-select, .crm-dark #root .team-select-input,
+.crm-dark #root .input-select-wrapper select, .crm-dark #root .input-select-wrapper input{
   background: #0b141d;
   border: 1px solid #202733;
 }
 .crm-dark #root .automation-health-list-rows-stack, .crm-dark #root .inspector-activity-logs-mini-stack,
 .crm-dark #root .inspector-ai-action-steps-rows-stack, .crm-dark #root .sidebar-section:not(:last-child),
-.crm-dark #root .sidebar-section, .crm-dark #root button, .crm-dark #root .insights-card,
+.crm-dark #root .sidebar-section, .crm-dark #root .insights-card,
 .crm-dark #root .insight-item-box, .crm-dark #root .team-stats-grid, .crm-dark #root .team-card,
-.crm-dark #root .lead-row-item-line{
+.crm-dark #root .lead-row-item-line, .crm-dark #root .layout-view-toggle-buttons-group,
+.crm-dark #root .full-width-center-btn{
   border: 1px solid #202733;
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
-.crm-dark #root textarea, .crm-dark #root button, .crm-dark #root .team-stat-card
-{
+.crm-dark #root textarea, .crm-dark #root .team-stat-card, .crm-dark #root .circle-btn,
+.crm-dark #root .timeline-dot{
   background: #0b141d;
 }
-.crm-dark #root .priority-item {
+.crm-dark #root .priority-item, .crm-dark #root .priority-bar-line-layout {
   background: #0b141d;
   border: 0;
 }
@@ -1780,12 +1791,14 @@ body.crm-dark .crm-error {
   background: #07081b;
   border: 0;
 }
+.crm-dark #root .node-dot-style{
+  border: #0b141d !important;
+}
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
 .crm-dark .cortexa-bottom-nav,
 .crm-dark .crm-sidebar,
-.crm-dark .mobile-filter-drawer,
-.crm-dark .panel-mid-utilities-row {
+.crm-dark .mobile-filter-drawer {
   background: var(--bg) !important;
 }
 
@@ -1828,11 +1841,13 @@ body.crm-dark .leads-page,
 .crm-dark #root .activity-log-description-text , .crm-dark #root .ai-step-title-text,
 .crm-dark #root .command-center-run-review-cta-btn, .crm-dark #root .btn-secondary,
 .crm-dark #root h2, .crm-dark #root .agent-info div h5,
-.crm-dark #root h3, .crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select, .crm-dark #root button,
+.crm-dark #root h4 , .crm-dark #root .budget, .crm-dark #root .filter-select,
 .crm-dark #root .ai-message, .crm-dark #root textarea, .crm-dark #root select,
 .crm-dark #root .kpi-value, .crm-dark #root .stage-name, .crm-dark #root .total-number,
 .crm-dark #root .src-name, .crm-dark #root .info-value, .crm-dark #root .team-stat-value,
-.crm-dark #root .team-stat-mini strong, .crm-dark #root .team-quick-action-left span{
+.crm-dark #root .team-stat-mini strong, .crm-dark #root .team-quick-action-left span,
+.crm-dark #root .circle-btn, .crm-dark #root .action-btn.map, .crm-dark #root .team-filter-btn,
+.crm-dark #root .btn-clear-form, .crm-dark #root .active-chat-card .last-message-snippet{
   color: var(--text);
 }
 .crm-dark #root .btn-view-all{
@@ -1845,9 +1860,16 @@ body.crm-dark .leads-page,
 .crm-dark #root .send-btn{
   background: #2563eb;
 }
-.crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr{
+.crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr,
+.crm-dark #root .panel-mid-utilities-row{
   background: none;
 }
+.crm-dark #root .compact-btn.connection-blue-btn{
+    background: #2563eb;
+    color: white;
+    border: none;
+}
+
 @media (max-width: 1024px) {
 
   .crm-header {
