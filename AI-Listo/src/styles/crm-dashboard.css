@@ -1766,7 +1766,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .btn-icon-text, .crm-dark #root .input-select-wrapper input,
 .crm-dark #root .btn-table-util-filter, .crm-dark #root .layout-view-toggle-buttons-group button,
 .crm-dark #root .analytics-page .control-select, .crm-dark #root .team-select-input,
-.crm-dark #root .input-select-wrapper select, .crm-dark #root .input-select-wrapper input{
+.crm-dark #root .input-select-wrapper select, .crm-dark #root .input-select-wrapper input,
+.crm-dark #root .leads-page .chat-input-box{
   background: #0b141d;
   border: 1px solid #202733;
 }
