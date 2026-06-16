@@ -1568,15 +1568,15 @@ body.crm-dark .crm-error {
 }
 
 .crm-header-center .m-logo,
-.crm-sidebar .logo-dark {
+.crm-sidebar .logo-dark, .ai-header .logo-dark{
   display: none;
 }
 
-.crm-dark .crm-sidebar .logo-light {
+.crm-dark .crm-sidebar .logo-light, .crm-dark .ai-header .logo-light {
   display: none;
 }
 
-.crm-dark .crm-sidebar .logo-dark {
+.crm-dark .crm-sidebar .logo-dark, .crm-dark .ai-header .logo-dark {
   display: block;
   width: 97%;
 }
