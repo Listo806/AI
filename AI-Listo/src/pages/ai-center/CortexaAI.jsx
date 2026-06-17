@@ -326,6 +326,7 @@ export default function CortexaAI() {
           <h1>
             <img src={centerlogoImg} className="cx-logo-img m-logo logo-light" alt="CORTEXA AI" />
             <img src={centerlogoMImg} className="cx-logo-img m-logo logo-dark" alt="CORTEXA AI" />
+            <p className="cortexa_subtitle">{t("cortexa.subtitle")}</p>
           </h1>
         </div>
 

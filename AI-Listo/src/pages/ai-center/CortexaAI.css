@@ -3,7 +3,9 @@
   color: #111827;
   margin: -24px;
 }
-
+.cortexa_subtitle{
+  margin-bottom: 30px;
+}
 .ai-container {
   max-width: 95%;
   margin: 0 auto;
@@ -86,7 +88,7 @@
   color: #6b7280;
   border: 1px solid #e5e7eb;
 }
-.ai-tabs button.ask {
+.ai-tabs button {
   display: flex;
     align-items: center;
     gap: 5px;
@@ -371,6 +373,9 @@
     }
 }
 @media (max-width: 1024px) {
+  .ai-tabs button{
+    border-radius: 6px;
+  }
   .ai-card-icon svg{
     width: 30px;
     height: 30px;
@@ -384,10 +389,40 @@
   .ai-bg-blur {
     height: 100px;
   }
+  .ai-card::before{
+    border-top:0;
+    border-right: 0;
+  }
+  .ai-card h3 {
+    font-size: 15px;
+  }
+  .ai-card {
+    padding: 15px 10px;
+  }
+  .ai-card p {
+    font-size: 15px;
+    margin-top: 6px;
+  }
 }
 @media (max-width: 768px) {
   .ai-grid{
     grid-template-columns: repeat(2, 1fr);
   }
   
+}
+@media (max-width: 430px) {
+  .ai-tabs button{
+    padding: 10px 16px;
+    justify-content: center;
+  }
+  .ai-tabs {
+    display: grid;
+    gap: 5px;
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+  }
+  .ai-box {
+    max-width: 100%;
+    margin-top: 10px;
+  }
 }

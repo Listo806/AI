@@ -615,6 +615,7 @@
     }
   },
   "cortexa": {
+    "subtitle": "Tu Asistente Inmobiliario con IA",
     "ask": "Preguntar",
     "workflows": "Flujos de trabajo",
     "ai_placeholder": "¿Qué te gustaría que CORTEXA AI hiciera hoy?",

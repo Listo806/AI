@@ -1648,7 +1648,7 @@ body.crm-dark .crm-error {
   color: #bebcbc;
 }
 .crm-dark #root .search-box input{
-  background: #0b141d;
+  background: #06101d;
 }
 .crm-dark #root .team-stat-icon::before{
   background: none;
@@ -1767,8 +1767,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .btn-table-util-filter, .crm-dark #root .layout-view-toggle-buttons-group button,
 .crm-dark #root .analytics-page .control-select, .crm-dark #root .team-select-input,
 .crm-dark #root .input-select-wrapper select, .crm-dark #root .input-select-wrapper input,
-.crm-dark #root .leads-page .chat-input-box{
-  background: #0b141d;
+.crm-dark #root .leads-page .chat-input-box, .crm-dark #root .ai-tabs button{
+  background: #06101d;
   border: 1px solid #202733;
 }
 .crm-dark #root .automation-health-list-rows-stack, .crm-dark #root .inspector-activity-logs-mini-stack,
@@ -1776,16 +1776,16 @@ body.crm-dark .crm-error {
 .crm-dark #root .sidebar-section, .crm-dark #root .insights-card,
 .crm-dark #root .insight-item-box, .crm-dark #root .team-stats-grid, .crm-dark #root .team-card,
 .crm-dark #root .lead-row-item-line, .crm-dark #root .layout-view-toggle-buttons-group,
-.crm-dark #root .full-width-center-btn{
+.crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn{
   border: 1px solid #202733;
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
 .crm-dark #root textarea, .crm-dark #root .team-stat-card, .crm-dark #root .circle-btn,
 .crm-dark #root .timeline-dot{
-  background: #0b141d;
+  background: #06101d;
 }
 .crm-dark #root .priority-item, .crm-dark #root .priority-bar-line-layout {
-  background: #0b141d;
+  background: #06101d;
   border: 0;
 }
 .crm-dark #root .ai-page {
@@ -1793,7 +1793,7 @@ body.crm-dark .crm-error {
   border: 0;
 }
 .crm-dark #root .node-dot-style{
-  border: #0b141d !important;
+  border: #06101d !important;
 }
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
@@ -1848,7 +1848,8 @@ body.crm-dark .leads-page,
 .crm-dark #root .src-name, .crm-dark #root .info-value, .crm-dark #root .team-stat-value,
 .crm-dark #root .team-stat-mini strong, .crm-dark #root .team-quick-action-left span,
 .crm-dark #root .circle-btn, .crm-dark #root .action-btn.map, .crm-dark #root .team-filter-btn,
-.crm-dark #root .btn-clear-form, .crm-dark #root .active-chat-card .last-message-snippet{
+.crm-dark #root .btn-clear-form, .crm-dark #root .active-chat-card .last-message-snippet,
+.crm-dark #root .cortexa_subtitle, .crm-dark #root .ai-card h3{
   color: var(--text);
 }
 .crm-dark #root .btn-view-all{

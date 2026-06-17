@@ -632,6 +632,7 @@
     }
   },
   "cortexa": {
+    "subtitle": "Your AI Real Estate Assistant",
     "ask": "Ask",
     "workflows": "Workflows",
     "ai_placeholder": "What would you like CORTEXA AI to do today?",
