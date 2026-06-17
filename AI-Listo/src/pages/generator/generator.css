@@ -1155,23 +1155,11 @@
 }
 
 @media (max-width: 1300px) {
-  .generator-page .metrics-summary-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  .generator-page .inputs-form-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  
 }
 
 @media (max-width: 1200px) {
-  .generator-page .lower-split-dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .generator-page .process-management-row {
-    grid-template-columns: 1fr;
-  }
+ 
 }
 @media (max-width: 1024px) {
   .generator-page .right-analytics-sidebar-panel{

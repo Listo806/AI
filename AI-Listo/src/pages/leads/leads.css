@@ -1402,9 +1402,7 @@ body .leads-page {
 
 
 @media (max-width: 1300px) {
-  .leads-page .conversation-panel {
-    height: auto;
-  }
+  
 }
 
 @media (max-width: 1024px) {

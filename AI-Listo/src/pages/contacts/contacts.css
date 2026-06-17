@@ -340,7 +340,6 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap;
   width: 100%;
     justify-content: space-between;
 }
@@ -695,12 +694,13 @@ body .contacts-page .map svg{
 }
  
 @media (max-width: 1200px) {
-  .contacts-page .kpi-grid,
-  .contacts-page .contacts-grid {
-    grid-template-columns: 1fr;
+  
+}
+@media (max-width: 1100px) {
+  .contacts-page .filter-left, .contacts-page .filter-right {
+    flex-wrap: wrap;
   }
 }
-
 
 .contacts-page .modal-overlay {
   position: fixed;
@@ -1113,9 +1113,7 @@ body .contacts-page .map svg{
 }
 
 @media (min-width: 1400px) {
-  .contacts-page .contacts-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+  
 }
 
 .crm-sidebar-toggle-inside ~ .crm-content .contacts-page .contacts-grid {

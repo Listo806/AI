@@ -904,17 +904,7 @@ body .properties-page {
 }
 
 @media (max-width: 1300px) {
-  .properties-page .metrics-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .properties-page .metrics-grid .metric-card:nth-child(3) {
-    border-right: none;
-  }
-
-  .properties-page .metrics-grid .metric-card:nth-child(n+4) {
-    border-top: 1px solid #e2e8f0;
-  }
+  
 }
 
 @media (max-width: 1150px) {
