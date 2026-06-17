@@ -1932,6 +1932,9 @@ body.crm-dark .leads-page,
 .crm-dark #root .contacts-page .contact-menu .danger {
     color: #dc2626;
 }
+.crm-dark #root .analytics-page .bg-orange-light {
+    background-color: #bc772126;
+}
 .crm-dark #root .mobile-detail-page .detail-header{
   background: #0b0f19;
 }
