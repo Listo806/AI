@@ -1402,14 +1402,6 @@ body .leads-page {
 
 
 @media (max-width: 1300px) {
-  .leads-page .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .leads-page .leads-layout {
-    grid-template-columns: 1fr;
-  }
-
   .leads-page .conversation-panel {
     height: auto;
   }
