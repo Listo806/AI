@@ -22,6 +22,8 @@ import {
   CalendarDays,
   RefreshCw,
   ChevronRight,
+  ChevronLeft,
+  CheckCircle2,
 } from "lucide-react";
 
 import "./CortexaAI.css";
@@ -36,6 +38,8 @@ export default function CortexaAI() {
 
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [workflowView, setWorkflowView] = useState("list");
+  const [selectedWorkflow, setSelectedWorkflow] = useState(null);
 
   React.useEffect(() => {
     const SpeechRecognition =
@@ -316,6 +320,103 @@ export default function CortexaAI() {
       console.error(err);
     }
   };
+  const workflowTemplates = [
+    {
+      id: "lead",
+      icon: UserRound,
+      title: "Lead Qualification",
+      desc: "Score and qualify new leads instantly",
+      steps: "3 Steps",
+      active: true,
+      workflowSteps: [
+        {
+          title: "Extract Lead Information",
+          desc: "AI extracts key details from lead source",
+        },
+        {
+          title: "Score Lead",
+          desc: "AI scores lead based on engagement and fit",
+        },
+        {
+          title: "Classify Lead",
+          desc: "AI classifies lead as Hot, Warm, or Cold",
+        },
+      ],
+    },
+
+    {
+      id: "followup",
+      icon: Home,
+      title: "Follow-Up Sequence",
+      desc: "Build and send automated follow-ups",
+      steps: "4 Steps",
+      active: false,
+      workflowSteps: [
+        {
+          title: "Extract Lead Information",
+          desc: "AI extracts key details from lead source",
+        },
+        {
+          title: "Score Lead",
+          desc: "AI scores lead based on engagement and fit",
+        },
+        {
+          title: "Classify Lead",
+          desc: "AI classifies lead as Hot, Warm, or Cold",
+        },
+        {
+          title: "Classify Lead End",
+          desc: "AI classifies lead as Hot, Warm, or Cold",
+        },
+      ],
+    },
+
+    {
+      id: "listing",
+      icon: Mail,
+      title: "Property Listing Generator",
+      desc: "Create compelling property listings",
+      steps: "2 Steps",
+      active: true,
+      workflowSteps: [
+        {
+          title: "Extract Lead Information",
+          desc: "AI extracts key details from lead source",
+        },
+        {
+          title: "Score Lead",
+          desc: "AI scores lead based on engagement and fit",
+        },
+      ],
+    },
+
+    {
+      id: "market",
+      icon: TrendingUp,
+      title: "Market Analysis",
+      desc: "Analyze market trends and opportunities",
+      steps: "3 Steps",
+      workflowSteps: [],
+    },
+
+    {
+      id: "booking",
+      icon: RefreshCw,
+      title: "Appointment Booking",
+      desc: "Schedule and confirm appointments",
+      steps: "2 Steps",
+      workflowSteps: [],
+    },
+
+    {
+      id: "reengage",
+      icon: RefreshCw,
+      title: "Re-Engagement",
+      desc: "Re-engage cold leads with smart messages",
+      steps: "3 Steps",
+      workflowSteps: [],
+    },
+  ];
 
   return (
     <div className="ai-page">
@@ -337,23 +438,24 @@ export default function CortexaAI() {
             <p className="cortexa_subtitle">{t("cortexa.subtitle")}</p>
           </h1>
         </div>
+        {!(mode === "workflows" && workflowView === "detail") && (
+          <div className="ai-tabs">
+            <button
+              className={mode === "ask" ? "active ask" : ""}
+              onClick={() => setMode("ask")}
+            >
+              <Sparkles />
+              {t("cortexa.ask")}
+            </button>
 
-        <div className="ai-tabs">
-          <button
-            className={mode === "ask" ? "active ask" : ""}
-            onClick={() => setMode("ask")}
-          >
-            <Sparkles />
-            {t("cortexa.ask")}
-          </button>
-
-          <button
-            className={mode === "workflows" ? "active" : ""}
-            onClick={() => setMode("workflows")}
-          >
-            {t("cortexa.workflows")}
-          </button>
-        </div>
+            <button
+              className={mode === "workflows" ? "active" : ""}
+              onClick={() => setMode("workflows")}
+            >
+              {t("cortexa.workflows")}
+            </button>
+          </div>
+        )}
         {mode === "ask" && (
           <>
             <div className="ai-box for-ask">
@@ -552,78 +654,113 @@ export default function CortexaAI() {
         )}
         {mode === "workflows" && (
           <div className="ai-property for-workflow">
-            <div className="workflow-header">Popular Workflows</div>
+            {workflowView === "list" ? (
+              <>
+                <div className="workflow-header">Popular Workflows</div>
 
-            {[
-              {
-                icon: UserRound,
-                title: "Lead Qualification",
-                desc: "Score and qualify new leads instantly",
-                steps: "3 steps",
-              },
-              {
-                icon: Mail,
-                title: "Follow-Up Sequence",
-                desc: "Build and send automated follow-ups",
-                steps: "4 steps",
-              },
-              {
-                icon: Home,
-                title: "Property Listing Generator",
-                desc: "Create compelling property listings",
-                steps: "2 steps",
-              },
-              {
-                icon: TrendingUp,
-                title: "Market Analysis",
-                desc: "Analyze market trends and opportunities",
-                steps: "3 steps",
-              },
-              {
-                icon: CalendarDays,
-                title: "Appointment Booking",
-                desc: "Schedule and confirm appointments",
-                steps: "2 steps",
-              },
-              {
-                icon: RefreshCw,
-                title: "Re-Engagement",
-                desc: "Re-engage cold leads with smart messages",
-                steps: "3 steps",
-              },
-              {
-                icon: Sparkles,
-                title: "Create Custom Workflow",
-                desc: "Build your own AI workflow for any task",
-                steps: "",
-                isCustom: true,
-              },
-            ].map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={index}
-                  className={`workflow-card ${item.isCustom ? "custom" : ""}`}
-                >
-                  <div className="workflow-card-left">
+                {workflowTemplates.map((workflow) => (
+                  <div
+                    key={workflow.id}
+                    className="workflow-card"
+                    onClick={() => {
+                      setSelectedWorkflow(workflow);
+                      setWorkflowView("detail");
+                    }}
+                  >
                     <div className="workflow-icon">
-                      <Icon size={18} />
+                      <workflow.icon size={18} />
+                    </div>
+                    <div className="workflow-content">
+                      <h4>{workflow.title}</h4>
+
+                      <p>{workflow.desc}</p>
+
+                      <span>{workflow.steps}</span>
                     </div>
 
-                    <div className="workflow-content">
-                      <h4>{item.title}</h4>
+                    <ChevronRight size={18} />
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="workflow-detail-screen">
+                <button
+                  className="workflow-back-btn"
+                  onClick={() => setWorkflowView("list")}
+                >
+                  <ChevronLeft /> Workflow Templates
+                </button>
 
-                      <p>{item.desc}</p>
+                <div className="workflow-detail-card">
+                  <div className="workflow-detail-header">
+                    <div className="workflow-detail-icon">
+                      <UserRound size={22} />
+                    </div>
 
-                      {!!item.steps && <span>{item.steps}</span>}
+                    <div>
+                      <h3>{selectedWorkflow?.title}</h3>
+
+                      <p>{selectedWorkflow?.desc}</p>
                     </div>
                   </div>
 
-                  <ChevronRight size={18} className="workflow-arrow" />
+                  <div className="workflow-badges">
+                    <span>{selectedWorkflow?.steps}</span>
+
+                    <span className="active">Active</span>
+                  </div>
                 </div>
-              );
-            })}
+
+                <div className="workflow-steps-title">Workflow Steps</div>
+
+                <div className="workflow-steps">
+                  {selectedWorkflow?.workflowSteps?.map((step, index) => (
+                    <div key={index} className="workflow-step">
+                      <div className="workflow-step-left">
+                        <div className="step-number">{index + 1}</div>
+
+                        {index < selectedWorkflow.workflowSteps.length - 1 && (
+                          <div className="step-line" />
+                        )}
+                      </div>
+
+                      <div className="step-content">
+                        <strong>{step.title}</strong>
+
+                        <p>{step.desc}</p>
+                      </div>
+
+                      <CheckCircle2 size={18} className="step-check" />
+                    </div>
+                  ))}
+                </div>
+
+                <button className="run-workflow-btn">▶ Run Workflow</button>
+
+                <div className="more-templates-title">More Templates</div>
+
+                {workflowTemplates
+                  .filter((item) => item.id !== selectedWorkflow?.id)
+                  .map((workflow) => (
+                    <div
+                      key={workflow.id}
+                      className="workflow-card small"
+                      onClick={() => setSelectedWorkflow(workflow)}
+                    >
+                      <div className="workflow-icon">
+                        <workflow.icon size={18} />
+                      </div>
+                      <div className="workflow-content">
+                        <h4>{workflow.title}</h4>
+
+                        <span>{workflow.steps}</span>
+                      </div>
+
+                      <ChevronRight size={18} />
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         )}
       </div>
