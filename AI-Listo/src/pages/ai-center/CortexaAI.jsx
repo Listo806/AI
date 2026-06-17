@@ -16,6 +16,12 @@ import {
   Search,
   CalendarCheck,
   PenLine,
+  UserRound,
+  Mail,
+  TrendingUp,
+  CalendarDays,
+  RefreshCw,
+  ChevronRight,
 } from "lucide-react";
 
 import "./CortexaAI.css";
@@ -99,21 +105,17 @@ export default function CortexaAI() {
         return;
       }
 
-      const workspaceId =
-        user?.teamId || user?.workspaceId || null;
+      const workspaceId = user?.teamId || user?.workspaceId || null;
 
-      const res = await apiClient.request(
-        "/ai-center/agent",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            message: payload.message,
-            attachments: payload.attachments || [],
-            conversationId,
-            workspaceId,
-          }),
-        },
-      );
+      const res = await apiClient.request("/ai-center/agent", {
+        method: "POST",
+        body: JSON.stringify({
+          message: payload.message,
+          attachments: payload.attachments || [],
+          conversationId,
+          workspaceId,
+        }),
+      });
 
       setConversationId(res.conversationId);
 
@@ -136,9 +138,7 @@ export default function CortexaAI() {
         ...prev,
         {
           role: "assistant",
-          content:
-            err?.response?.data?.message ||
-            "AI request failed",
+          content: err?.response?.data?.message || "AI request failed",
         },
       ]);
     } finally {
@@ -324,8 +324,16 @@ export default function CortexaAI() {
 
         <div className="ai-header">
           <h1>
-            <img src={centerlogoImg} className="cx-logo-img m-logo logo-light" alt="CORTEXA AI" />
-            <img src={centerlogoMImg} className="cx-logo-img m-logo logo-dark" alt="CORTEXA AI" />
+            <img
+              src={centerlogoImg}
+              className="cx-logo-img m-logo logo-light"
+              alt="CORTEXA AI"
+            />
+            <img
+              src={centerlogoMImg}
+              className="cx-logo-img m-logo logo-dark"
+              alt="CORTEXA AI"
+            />
             <p className="cortexa_subtitle">{t("cortexa.subtitle")}</p>
           </h1>
         </div>
@@ -346,85 +354,90 @@ export default function CortexaAI() {
             {t("cortexa.workflows")}
           </button>
         </div>
+        {mode === "ask" && (
+          <>
+            <div className="ai-box for-ask">
+              <div className="ai-chat-results">
+                {messages.map((msg, index) => (
+                  <div key={index} className={`ai-message ${msg.role}`}>
+                    {msg.content && (
+                      <div className="ai-message-text">{msg.content}</div>
+                    )}
 
-        <div className="ai-box">
-          <div className="ai-chat-results">
-            {messages.map((msg, index) => (
-              <div key={index} className={`ai-message ${msg.role}`}>
-                {msg.content && (
-                  <div className="ai-message-text">{msg.content}</div>
-                )}
-
-                {msg.attachments?.length > 0 && (
-                  <div className="ai-message-files">
-                    {msg.attachments.map((file) => (
-                      <div key={file.id} className="ai-message-file">
-                        {file.type?.startsWith("image/") ? (
-                          <img
-                            src={file.url}
-                            alt={file.name}
-                            className="ai-upload-preview"
-                          />
-                        ) : (
-                          <a href={file.url} target="_blank" rel="noreferrer">
-                            {file.name}
-                          </a>
-                        )}
+                    {msg.attachments?.length > 0 && (
+                      <div className="ai-message-files">
+                        {msg.attachments.map((file) => (
+                          <div key={file.id} className="ai-message-file">
+                            {file.type?.startsWith("image/") ? (
+                              <img
+                                src={file.url}
+                                alt={file.name}
+                                className="ai-upload-preview"
+                              />
+                            ) : (
+                              <a
+                                href={file.url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {file.name}
+                              </a>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div className="ai-message assistant typing">
-                <div className="typing-dots">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </div>
-            )}
-          </div>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={t("cortexa.ai_placeholder")}
-          />
-          {attachedFiles.length > 0 && (
-            <div className="ai-attachments">
-              {attachedFiles.map((file) => (
-                <div key={file.id} className="ai-attachment-item">
-                  <div className="ai-attachment-left">
-                    <span className="ai-attachment-name">{file.name}</span>
-
-                    <span className="ai-attachment-size">
-                      {(file.size / 1024).toFixed(1)} KB
-                    </span>
-                    {file.uploading && (
-                      <span className="ai-attachment-uploading">
-                        Uploading...
-                      </span>
                     )}
                   </div>
+                ))}
 
-                  <button
-                    className="ai-attachment-remove"
-                    onClick={() => removeAttachment(file.id)}
-                  >
-                    ×
-                  </button>
+                {loading && (
+                  <div className="ai-message assistant typing">
+                    <div className="typing-dots">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={t("cortexa.ai_placeholder")}
+              />
+              {attachedFiles.length > 0 && (
+                <div className="ai-attachments">
+                  {attachedFiles.map((file) => (
+                    <div key={file.id} className="ai-attachment-item">
+                      <div className="ai-attachment-left">
+                        <span className="ai-attachment-name">{file.name}</span>
+
+                        <span className="ai-attachment-size">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </span>
+                        {file.uploading && (
+                          <span className="ai-attachment-uploading">
+                            Uploading...
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        className="ai-attachment-remove"
+                        onClick={() => removeAttachment(file.id)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            multiple
-            accept="
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                multiple
+                accept="
               image/*,
               .pdf,
               .doc,
@@ -434,107 +447,185 @@ export default function CortexaAI() {
               .csv,
               .txt
             "
-            onChange={handleFileSelect}
-          />
-          <div className="ai-actions-bar">
-            <div className="left">
-              <div className="upload-menu-wrapper">
-                <button
-                  className="circle-btn"
-                  onClick={() => setShowUploadMenu((v) => !v)}
-                >
-                  <Plus size={18} />
-                </button>
-
-                {showUploadMenu && (
-                  <div className="upload-menu">
+                onChange={handleFileSelect}
+              />
+              <div className="ai-actions-bar">
+                <div className="left">
+                  <div className="upload-menu-wrapper">
                     <button
-                      onClick={() => {
-                        fileInputRef.current?.click();
-                        setShowUploadMenu(false);
-                      }}
+                      className="circle-btn"
+                      onClick={() => setShowUploadMenu((v) => !v)}
                     >
-                      Upload File
+                      <Plus size={18} />
                     </button>
 
-                    <button
-                      onClick={() => {
-                        fileInputRef.current?.click();
-                        setShowUploadMenu(false);
-                      }}
-                    >
-                      Upload Image
-                    </button>
+                    {showUploadMenu && (
+                      <div className="upload-menu">
+                        <button
+                          onClick={() => {
+                            fileInputRef.current?.click();
+                            setShowUploadMenu(false);
+                          }}
+                        >
+                          Upload File
+                        </button>
 
-                    <button
-                      onClick={() => {
-                        fileInputRef.current?.click();
-                        setShowUploadMenu(false);
-                      }}
-                    >
-                      Attach Document
-                    </button>
+                        <button
+                          onClick={() => {
+                            fileInputRef.current?.click();
+                            setShowUploadMenu(false);
+                          }}
+                        >
+                          Upload Image
+                        </button>
 
-                    <button
-                      onClick={() => {
-                        fileInputRef.current?.click();
-                        setShowUploadMenu(false);
-                      }}
-                    >
-                      Import CSV / Leads
-                    </button>
+                        <button
+                          onClick={() => {
+                            fileInputRef.current?.click();
+                            setShowUploadMenu(false);
+                          }}
+                        >
+                          Attach Document
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            fileInputRef.current?.click();
+                            setShowUploadMenu(false);
+                          }}
+                        >
+                          Import CSV / Leads
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+
+                <div className="right">
+                  <button
+                    className={`circle-btn ${isListening ? "listening" : ""}`}
+                    onClick={handleMicClick}
+                  >
+                    <Mic size={18} />
+                  </button>
+
+                  <button
+                    className="send-btn"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                  >
+                    {uploading ? (
+                      "Uploading..."
+                    ) : loading ? (
+                      "Thinking..."
+                    ) : (
+                      <Send size={16} />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="right">
-              <button
-                className={`circle-btn ${isListening ? "listening" : ""}`}
-                onClick={handleMicClick}
-              >
-                <Mic size={18} />
-              </button>
+            <div className="ai-grid for-ask">
+              {aiActions.map((action) => {
+                const Icon = action.icon;
 
-              <button
-                className="send-btn"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {uploading ? (
-                  "Uploading..."
-                ) : loading ? (
-                  "Thinking..."
-                ) : (
-                  <Send size={16} />
-                )}
-              </button>
+                return (
+                  <button
+                    key={action.title}
+                    className="ai-card"
+                    onClick={() => handleActionClick(action.prompt)}
+                  >
+                    <div className="ai-card-icon">
+                      <Icon size={16} />
+                    </div>
+
+                    <div>
+                      <h3>{action.title}</h3>
+                      <p>{action.subtitle}</p>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
+          </>
+        )}
+        {mode === "workflows" && (
+          <div className="ai-property for-workflow">
+            <div className="workflow-header">Popular Workflows</div>
+
+            {[
+              {
+                icon: UserRound,
+                title: "Lead Qualification",
+                desc: "Score and qualify new leads instantly",
+                steps: "3 steps",
+              },
+              {
+                icon: Mail,
+                title: "Follow-Up Sequence",
+                desc: "Build and send automated follow-ups",
+                steps: "4 steps",
+              },
+              {
+                icon: Home,
+                title: "Property Listing Generator",
+                desc: "Create compelling property listings",
+                steps: "2 steps",
+              },
+              {
+                icon: TrendingUp,
+                title: "Market Analysis",
+                desc: "Analyze market trends and opportunities",
+                steps: "3 steps",
+              },
+              {
+                icon: CalendarDays,
+                title: "Appointment Booking",
+                desc: "Schedule and confirm appointments",
+                steps: "2 steps",
+              },
+              {
+                icon: RefreshCw,
+                title: "Re-Engagement",
+                desc: "Re-engage cold leads with smart messages",
+                steps: "3 steps",
+              },
+              {
+                icon: Sparkles,
+                title: "Create Custom Workflow",
+                desc: "Build your own AI workflow for any task",
+                steps: "",
+                isCustom: true,
+              },
+            ].map((item, index) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={index}
+                  className={`workflow-card ${item.isCustom ? "custom" : ""}`}
+                >
+                  <div className="workflow-card-left">
+                    <div className="workflow-icon">
+                      <Icon size={18} />
+                    </div>
+
+                    <div className="workflow-content">
+                      <h4>{item.title}</h4>
+
+                      <p>{item.desc}</p>
+
+                      {!!item.steps && <span>{item.steps}</span>}
+                    </div>
+                  </div>
+
+                  <ChevronRight size={18} className="workflow-arrow" />
+                </div>
+              );
+            })}
           </div>
-        </div>
-
-        <div className="ai-grid">
-          {aiActions.map((action) => {
-            const Icon = action.icon;
-
-            return (
-              <button
-                key={action.title}
-                className="ai-card"
-                onClick={() => handleActionClick(action.prompt)}
-              >
-                <div className="ai-card-icon">
-                  <Icon size={16} />
-                </div>
-
-                <div>
-                  <h3>{action.title}</h3>
-                  <p>{action.subtitle}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        )}
       </div>
     </div>
   );
