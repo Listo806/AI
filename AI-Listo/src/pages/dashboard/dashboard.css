@@ -1236,6 +1236,12 @@ body .next-action-card svg {
   .dashboard-page .ai-command-banner {
     display: flex;
   }
+  .dashboard-page .banner-action-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dashboard-page .banner-action-row .btn-followup-color {
+    grid-column: span 3;
+  }
 }
 
 @media (max-width: 390px) {

@@ -28,6 +28,13 @@ import {
   StickyNote,
   GitBranch,
   Building2,
+  ChevronLeft,
+  Calendar,
+  MessageSquare,
+  ChevronRight,
+  LayoutDashboard,
+  GitFork,
+  Menu
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
@@ -39,6 +46,8 @@ export default function ContactsRelationshipsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  const [selectedContact, setSelectedContact] = useState(null);
 
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -56,23 +65,17 @@ export default function ContactsRelationshipsPage() {
 
   useEffect(() => {
     const closeMenu = () => setOpenMenuId(null);
-
     window.addEventListener("click", closeMenu);
-
     return () => {
       window.removeEventListener("click", closeMenu);
     };
   }, []);
+
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const showToast = (message, type = "success") => {
     clearTimeout(toastTimer.current);
-
-    setToast({
-      message,
-      type,
-    });
-
+    setToast({ message, type });
     toastTimer.current = setTimeout(() => {
       setToast(null);
     }, 3000);
@@ -80,15 +83,12 @@ export default function ContactsRelationshipsPage() {
 
   const createContact = async (e) => {
     e.preventDefault();
-
     try {
       await apiClient.request("/contacts", {
         method: "POST",
         body: JSON.stringify(createForm),
       });
-
       setShowCreateModal(false);
-
       setCreateForm({
         name: "",
         type: "Buyer",
@@ -100,26 +100,22 @@ export default function ContactsRelationshipsPage() {
         source: "",
         notes: "",
       });
-
       fetchContacts();
       fetchStats();
-
       showToast("Contact created");
     } catch (err) {
       console.error(err);
       showToast("Failed to create contact", "error");
     }
   };
+
   const fetchContacts = async (query = "") => {
     try {
       setLoading(true);
-
       const response = await apiClient.request(`/contacts${query}`, {
         method: "GET",
       });
-
       const data = response?.data || response || [];
-
       setContacts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch contacts error:", err);
@@ -133,51 +129,14 @@ export default function ContactsRelationshipsPage() {
       const response = await apiClient.request("/contacts/stats", {
         method: "GET",
       });
-
       const data = response?.data || response || {};
-
       setStats([
-        {
-          label: "Total Contacts",
-          value: data.totalContacts || 0,
-          sub: "All relationships",
-          icon: Users,
-        },
-        {
-          label: "Active Buyers",
-          value: data.activeBuyers || 0,
-          sub: "Looking now",
-          icon: UserCheck,
-          variant: "buyers",
-        },
-        {
-          label: "Active Sellers",
-          value: data.activeSellers || 0,
-          sub: "Selling properties",
-          icon: Home,
-          variant: "sellers",
-        },
-        {
-          label: "Active Renters",
-          value: data.activeRenters || 0,
-          sub: "Rental demand",
-          icon: Handshake,
-          variant: "renters",
-        },
-        {
-          label: "Active Developers",
-          value: data.activeDevelopers || 0,
-          sub: "Developer network",
-          icon: Building2,
-          variant: "developers",
-        },
-        {
-          label: "AI score",
-          value: `${data.aiEngagement || 0}%`,
-          sub: "AI relationship score",
-          icon: Bot,
-          variant: "ai",
-        },
+        { label: "Total Contacts", value: data.totalContacts || 0, sub: "All relationships", icon: Users },
+        { label: "Active Buyers", value: data.activeBuyers || 0, sub: "Looking now", icon: UserCheck, variant: "buyers" },
+        { label: "Active Sellers", value: data.activeSellers || 0, sub: "Selling properties", icon: Home, variant: "sellers" },
+        { label: "Active Renters", value: data.activeRenters || 0, sub: "Rental demand", icon: Handshake, variant: "renters" },
+        { label: "Active Developers", value: data.activeDevelopers || 0, sub: "Developer network", icon: Building2, variant: "developers" },
+        { label: "AI score", value: `${data.aiEngagement || 0}%`, sub: "AI relationship score", icon: Bot, variant: "ai" },
       ]);
     } catch (err) {
       console.error("Fetch stats error:", err);
@@ -191,11 +150,9 @@ export default function ContactsRelationshipsPage() {
 
   useEffect(() => {
     const crmContent = document.querySelector(".crm-content");
-
     if (crmContent) {
       crmContent.classList.add("contacts-crm-content");
     }
-
     return () => {
       if (crmContent) {
         crmContent.classList.remove("contacts-crm-content");
@@ -205,14 +162,11 @@ export default function ContactsRelationshipsPage() {
 
   const handleSearch = (e) => {
     const value = e.target.value;
-
     setSearch(value);
-
     if (!value) {
       fetchContacts();
       return;
     }
-
     fetchContacts(`?search=${encodeURIComponent(value)}`);
   };
 
@@ -222,13 +176,9 @@ export default function ContactsRelationshipsPage() {
 
   const runAiReview = async () => {
     try {
-      await apiClient.request("/contacts/ai-review", {
-        method: "POST",
-      });
-
+      await apiClient.request("/contacts/ai-review", { method: "POST" });
       fetchContacts();
       fetchStats();
-
       showToast("AI review completed");
     } catch (err) {
       console.error(err);
@@ -238,12 +188,8 @@ export default function ContactsRelationshipsPage() {
 
   const loadAiInsights = async () => {
     try {
-      const response = await apiClient.request("/contacts/ai-insights", {
-        method: "GET",
-      });
-
+      const response = await apiClient.request("/contacts/ai-insights", { method: "GET" });
       const data = response?.data || response;
-
       showToast(data?.summary || "No insights");
     } catch (err) {
       console.error(err);
@@ -253,24 +199,157 @@ export default function ContactsRelationshipsPage() {
 
   const messageContact = async (contactId) => {
     const message = prompt("Enter message");
-
     if (!message) return;
-
     try {
       await apiClient.request(`/contacts/${contactId}/message`, {
         method: "POST",
-        body: JSON.stringify({
-          channel: "whatsapp",
-          message,
-        }),
+        body: JSON.stringify({ channel: "whatsapp", message }),
       });
-
       showToast("Message sent");
     } catch (err) {
       console.error(err);
       showToast(err?.message || "Failed to send message", "error");
     }
   };
+
+  if (selectedContact) {
+    return (
+      <div className="mobile-detail-page contacts-page">
+        <div className="detail-header">
+          <button className="back-btn" onClick={() => setSelectedContact(null)}>
+            <ChevronLeft size={20} />
+            <span>Back</span>
+          </button>
+          <h2>Contact Details</h2>
+          <button className="more-btn">
+            <MoreVertical size={20} />
+          </button>
+        </div>
+
+        <div className="detail-scroll-content">
+          <div className="contact-card detail-card-spec">
+            <div className="contact-top">
+              <div className="contact-user">
+                <div className="contact-avatar">
+                  {selectedContact.avatar || selectedContact.name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div className="contact-group-right">
+                  <div className="contact-name">{selectedContact.name}</div>
+                  <div className="contact-badges-row">
+                    <span className="badge-type">{selectedContact.type || "Buyer"}</span>
+                    <span className="badge-dot">•</span>
+                    <span className={`badge-status ${String(selectedContact.status).toLowerCase()}`}>
+                      {selectedContact.status || "Cold"}
+                    </span>
+                    <span className="badge-dot">•</span>
+                    <span className="badge-ai-score">AI {selectedContact.score || "25"}%</span>
+                  </div>
+                </div>
+              </div>
+              <span className="badge-status active abs-active-badge">Active</span>
+            </div>
+
+            <div className="contact-info-list no-border-bottom">
+              <div className="info-item">
+                <div className="info-label-group">
+                  <Mail size={16} /> <span>Email:</span>
+                </div>
+                <div className="info-value text-link">{selectedContact.email || "-"}</div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <Phone size={16} /> <span>Phone:</span>
+                </div>
+                <div className="info-value">{selectedContact.phone || "-"}</div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <UserPlus size={16} /> <span>Source:</span>
+                </div>
+                <div className="info-value">{selectedContact.source || "-"}</div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <Home size={16} /> <span>Interested:</span>
+                </div>
+                <div className="info-value emphasis">{selectedContact.interest || "-"}</div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <Calendar size={16} /> <span>Added:</span>
+                </div>
+                <div className="info-value">{selectedContact.addedDate || "May 18, 2025"}</div>
+              </div>
+
+              <div className="info-item alignment-top">
+                <div className="info-label-group">
+                  <StickyNote size={16} /> <span>Notes:</span>
+                </div>
+                <div className="info-value note-placeholder">{selectedContact.notes || "Add notes..."}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Khối AI Insights */}
+          <div className="detail-section-card purple-glow">
+            <div className="section-card-header">
+              <div className="section-card-title purple-text">
+                <Sparkles size={18} />
+                <span>AI Insights</span>
+              </div>
+              <button className="section-action-link" onClick={loadAiInsights}>View Insights</button>
+            </div>
+            <p className="section-card-body">
+              High potential buyer based on engagement and property views.
+            </p>
+          </div>
+
+          {/* Khối Conversation History */}
+          <div className="detail-section-card">
+            <div className="section-card-header">
+              <div className="section-card-title">
+                <MessageSquare size={18} />
+                <span>Conversation History</span>
+              </div>
+              <button className="section-action-link">View all</button>
+            </div>
+            <div className="history-item-clickable">
+              <div className="history-meta">May 18, 2025 at 10:24 AM</div>
+              <div className="history-brief">
+                <span>Initial contact added via web form.</span>
+                <ChevronRight size={16} />
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Actions Phía trên Bottom Nav */}
+          <div className="detail-action-bar-grid">
+            <button className="action-grid-btn" onClick={() => messageContact(selectedContact.id)}>
+              <Send size={18} />
+              <span>Message</span>
+            </button>
+            <button className="action-grid-btn">
+              <Phone size={18} />
+              <span>Call</span>
+            </button>
+            <button className="action-grid-btn">
+              <StickyNote size={18} />
+              <span>Notes</span>
+            </button>
+            <button className="action-grid-btn">
+              <MoreVertical size={18} />
+              <span>More</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -283,15 +362,12 @@ export default function ContactsRelationshipsPage() {
         AI-powered workspace.
       </p>
       <div className="contacts-page">
-        {/* MAIN */}
         <main className="main-content">
-          {/* CONTENT */}
           <div className="content-wrapper">
-            {/* KPI */}
+            {/* KPI GRID */}
             <div className="kpi-grid">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
-
                 return (
                   <KPIBox
                     key={index}
@@ -311,7 +387,6 @@ export default function ContactsRelationshipsPage() {
               <div className="filter-left">
                 <div className="search-box">
                   <Search size={18} />
-
                   <input
                     placeholder="Search contacts..."
                     value={search}
@@ -320,26 +395,11 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 {[
-                  {
-                    label: "All",
-                    query: "",
-                  },
-                  {
-                    label: "Buyers",
-                    query: "?type=Buyer",
-                  },
-                  {
-                    label: "Sellers",
-                    query: "?type=Seller",
-                  },
-                  {
-                    label: "Developers",
-                    query: "?type=Developers",
-                  },
-                  {
-                    label: "Renters",
-                    query: "?type=Renter",
-                  },
+                  { label: "All", query: "" },
+                  { label: "Buyers", query: "?type=Buyer" },
+                  { label: "Sellers", query: "?type=Seller" },
+                  { label: "Developers", query: "?type=Developers" },
+                  { label: "Renters", query: "?type=Renter" },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -349,65 +409,50 @@ export default function ContactsRelationshipsPage() {
                     {item.label}
                   </button>
                 ))}
-                <button
-                  className="action-btn insights"
-                  onClick={loadAiInsights}
-                >
+                <button className="action-btn insights" onClick={loadAiInsights}>
                   <Sparkles /> AI Insights
                 </button>
-
                 <button className="action-btn runai" onClick={runAiReview}>
                   <Bot /> Run AI Review
                 </button>
                 <button
                   className="action-btn map"
-                  onClick={() =>
-                    navigate("/dashboard/contacts/relationship-map")
-                  }
+                  onClick={() => navigate("/dashboard/contacts/relationship-map")}
                 >
                   <Handshake /> Relationship Map
                 </button>
-                <button
-                  className="primary-btn"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  <Plus size={18} />
-                  Add Contact
+                <button className="primary-btn" onClick={() => setShowCreateModal(true)}>
+                  <Plus size={18} /> Add Contact
                 </button>
               </div>
             </div>
 
-            {/* CONTACTS */}
             {/* CONTACTS GRID */}
             <div className="contacts-grid">
               {loading ? (
                 <div>Loading...</div>
               ) : (
                 contacts.map((contact) => (
-                  <div className="contact-card" key={contact.id}>
+                  <div 
+                    className="contact-card clickable-card" 
+                    key={contact.id}
+                    onClick={() => setSelectedContact(contact)} 
+                  >
                     <div className="contact-top">
                       <div className="contact-user">
                         <div className="contact-avatar">
-                          {contact.avatar ||
-                            contact.name?.charAt(0)?.toUpperCase()}
+                          {contact.avatar || contact.name?.charAt(0)?.toUpperCase()}
                         </div>
-
                         <div className="contact-group-right">
                           <div className="contact-name">{contact.name}</div>
                           <div className="contact-badges-row">
-                            <span className="badge-type">
-                              {contact.type || "Buyer"}
-                            </span>
+                            <span className="badge-type">{contact.type || "Buyer"}</span>
                             <span className="badge-dot">•</span>
-                            <span
-                              className={`badge-status ${String(contact.status).toLowerCase()}`}
-                            >
+                            <span className={`badge-status ${String(contact.status).toLowerCase()}`}>
                               {contact.status || "Cold"}
                             </span>
                             <span className="badge-dot">•</span>
-                            <span className="badge-ai-score">
-                              AI {contact.score || "25"}%
-                            </span>
+                            <span className="badge-ai-score">AI {contact.score || "25"}%</span>
                           </div>
                         </div>
                       </div>
@@ -415,46 +460,22 @@ export default function ContactsRelationshipsPage() {
                       <div
                         className="contact-action"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(
-                            openMenuId === contact.id ? null : contact.id,
-                          );
+                          e.stopPropagation(); 
+                          setOpenMenuId(openMenuId === contact.id ? null : contact.id);
                         }}
                       >
                         <MoreVertical size={18} />
-
                         {openMenuId === contact.id && (
-                          <div
-                            className="contact-menu"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button>
-                              <Edit3 size={15} /> Edit Contact
-                            </button>
-                            <button>
-                              <UserCog size={15} /> Assign Agent
-                            </button>
-                            <button>
-                              <StickyNote size={15} /> Change Status
-                            </button>
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/contacts/relationship-map?id=${contact.id}`,
-                                )
-                              }
-                            >
+                          <div className="contact-menu" onClick={(e) => e.stopPropagation()}>
+                            <button><Edit3 size={15} /> Edit Contact</button>
+                            <button><UserCog size={15} /> Assign Agent</button>
+                            <button><StickyNote size={15} /> Change Status</button>
+                            <button onClick={() => navigate(`/dashboard/contacts/relationship-map?id=${contact.id}`)}>
                               <GitBranch size={15} /> Open Relationship Map
                             </button>
-                            <button onClick={runAiReview}>
-                              <Bot size={15} /> Run AI Review
-                            </button>
-                            <button className="warning">
-                              <Archive size={15} /> Archive Contact
-                            </button>
-                            <button className="danger">
-                              <Trash2 size={15} /> Delete Contact
-                            </button>
+                            <button onClick={runAiReview}><Bot size={15} /> Run AI Review</button>
+                            <button className="warning"><Archive size={15} /> Archive Contact</button>
+                            <button className="danger"><Trash2 size={15} /> Delete Contact</button>
                           </div>
                         )}
                       </div>
@@ -463,69 +484,54 @@ export default function ContactsRelationshipsPage() {
                     <div className="contact-info-list">
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Mail size={16} />
-                          <span>Email:</span>
+                          <Mail size={16} /> <span>Email:</span>
                         </div>
-                        <div className="info-value text-link">
-                          {contact.email || "-"}
-                        </div>
+                        <div className="info-value text-link">{contact.email || "-"}</div>
                       </div>
-
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Phone size={16} />
-                          <span>Phone:</span>
+                          <Phone size={16} /> <span>Phone:</span>
                         </div>
                         <div className="info-value">{contact.phone || "-"}</div>
                       </div>
-
                       <div className="info-item">
                         <div className="info-label-group">
                           <UserPlus size={16} /> <span>Source:</span>
                         </div>
-                        <div className="info-value">
-                          {contact.source || "-"}
-                        </div>
+                        <div className="info-value">{contact.source || "-"}</div>
                       </div>
-
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Home size={16} />
-                          <span>Interested:</span>
+                          <Home size={16} /> <span>Interested:</span>
                         </div>
-                        <div className="info-value emphasis">
-                          {contact.interest || "-"}
-                        </div>
+                        <div className="info-value emphasis">{contact.interest || "-"}</div>
                       </div>
                     </div>
 
                     <div className="contact-actions-footer">
                       <button
                         className="footer-action-btn"
-                        onClick={() =>
-                          navigate(`/dashboard/contacts/${contact.id}`)
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/dashboard/contacts/${contact.id}`);
+                        }}
                       >
-                        <Eye size={16} />
-                        <span>View</span>
+                        <Eye size={16} /> <span>View</span>
                       </button>
-
                       <button
                         className="footer-action-btn"
-                        onClick={() => messageContact(contact.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          messageContact(contact.id);
+                        }}
                       >
-                        <Send size={16} />
-                        <span>Message</span>
+                        <Send size={16} /> <span>Message</span>
                       </button>
-
-                      <button className="footer-action-btn">
-                        <Phone size={16} />
-                        <span>Call</span>
+                      <button className="footer-action-btn" onClick={(e) => e.stopPropagation()}>
+                        <Phone size={16} /> <span>Call</span>
                       </button>
-
-                      <button className="footer-action-btn">
-                        <StickyNote size={16} />
-                        <span>Notes</span>
+                      <button className="footer-action-btn" onClick={(e) => e.stopPropagation()}>
+                        <StickyNote size={16} /> <span>Notes</span>
                       </button>
                     </div>
                   </div>
@@ -540,111 +546,39 @@ export default function ContactsRelationshipsPage() {
               <div className="contact-modal">
                 <div className="modal-header">
                   <h2>Add Contact</h2>
-
-                  <button
-                    className="icon-btn"
-                    onClick={() => setShowCreateModal(false)}
-                  >
-                    ✕
-                  </button>
+                  <button className="icon-btn" onClick={() => setShowCreateModal(false)}>✕</button>
                 </div>
-
                 <form onSubmit={createContact}>
                   <div className="modal-grid">
                     <div className="form-group">
                       <label>Name</label>
-
-                      <input
-                        type="text"
-                        required
-                        value={createForm.name}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            name: e.target.value,
-                          })
-                        }
-                      />
+                      <input type="text" required value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} />
                     </div>
-
                     <div className="form-group">
                       <label>Email</label>
-
-                      <input
-                        type="email"
-                        required
-                        value={createForm.email}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            email: e.target.value,
-                          })
-                        }
-                      />
+                      <input type="email" required value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} />
                     </div>
-
                     <div className="form-group">
                       <label>Phone</label>
-
-                      <input
-                        type="text"
-                        value={createForm.phone}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            phone: e.target.value,
-                          })
-                        }
-                      />
+                      <input type="text" value={createForm.phone} onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })} />
                     </div>
-
                     <div className="form-group">
                       <label>Type</label>
-
-                      <select
-                        value={createForm.type}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            type: e.target.value,
-                          })
-                        }
-                      >
+                      <select value={createForm.type} onChange={(e) => setCreateForm({ ...createForm, type: e.target.value })} >
                         <option>Buyer</option>
                         <option>Seller</option>
                         <option>Developers</option>
                         <option>Renter</option>
                       </select>
                     </div>
-
                     <div className="form-group full">
                       <label>Notes</label>
-
-                      <textarea
-                        rows="4"
-                        value={createForm.notes}
-                        onChange={(e) =>
-                          setCreateForm({
-                            ...createForm,
-                            notes: e.target.value,
-                          })
-                        }
-                      />
+                      <textarea rows="4" value={createForm.notes} onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} />
                     </div>
                   </div>
-
                   <div className="modal-actions">
-                    <button
-                      type="button"
-                      className="secondary-action"
-                      onClick={() => setShowCreateModal(false)}
-                    >
-                      Cancel
-                    </button>
-
-                    <button type="submit" className="primary-action">
-                      Create Contact
-                    </button>
+                    <button type="button" className="secondary-action" onClick={() => setShowCreateModal(false)}>Cancel</button>
+                    <button type="submit" className="primary-action">Create Contact</button>
                   </div>
                 </form>
               </div>
@@ -653,39 +587,12 @@ export default function ContactsRelationshipsPage() {
 
           {/* TOAST */}
           {toast && (
-            <div
-              style={{
-                position: "fixed",
-                top: 30,
-                right: 30,
-                background: toast.type === "success" ? "#16a34a" : "#dc2626",
-                color: "#fff",
-                padding: "14px 18px",
-                borderRadius: 14,
-                fontWeight: 600,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                zIndex: 9999,
-                minWidth: 280,
-              }}
-            >
+            <div style={{ position: "fixed", top: 30, right: 30, background: toast.type === "success" ? "#16a34a" : "#dc2626", color: "#fff", padding: "14px 18px", borderRadius: 14, fontWeight: 600, boxShadow: "0 10px 30px rgba(0,0,0,0.15)", zIndex: 9999, minWidth: 280 }}>
               {toast.message}
             </div>
           )}
         </main>
       </div>
-    </div>
-  );
-}
-
-function InfoBox({ icon: Icon, label, value }) {
-  return (
-    <div className="info-box">
-      <div className="info-label">
-        <Icon size={12} />
-        <span>{label}</span>
-      </div>
-
-      <div className="info-text">{value || "-"}</div>
     </div>
   );
 }
@@ -696,16 +603,11 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
       <div className="kpi-top">
         <div className="kpi-left">
           <div className="kpi-icon">{icon}</div>
-
           <div className="kpi-content">
             <div className="kpi-title">{title}</div>
-
             <div className="kpi-value-row">
               <div className="kpi-value">{value}</div>
-
-              <div className={`kpi-trend ${trend === "0%" ? "neutral" : ""}`}>
-                {trend}
-              </div>
+              <div className={`kpi-trend ${trend === "0%" ? "neutral" : ""}`}>{trend}</div>
             </div>
           </div>
         </div>
@@ -730,10 +632,7 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
             />
           </svg>
         </div>
-
-        <div className="kpi-bottom">
-          <span>Last 30 days</span>
-        </div>
+        <div className="kpi-bottom"><span>Last 30 days</span></div>
       </div>
     </div>
   );
