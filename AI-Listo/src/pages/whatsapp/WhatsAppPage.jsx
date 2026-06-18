@@ -33,6 +33,7 @@ import {
   Lock,
   Share2,
   Grid,
+  Layers,
 } from "lucide-react";
 
 export default function WhatsAppPage() {
@@ -252,42 +253,59 @@ export default function WhatsAppPage() {
       {/* SUB-FILTERS ROW */}
       <div className="filters-row drop-selectors-strip">
         <div className="filter-btn text-dropdown-btn">
-          <select>
-            <option>This Week</option>
-          </select>
+          <div className="filter-wrap">
+            <Calendar size={15} />
+            <select>
+              <option>This Week</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
         <div className="filter-btn text-dropdown-btn">
-          <select>
-            <option>All Accounts</option>
-          </select>
+          <div className="filter-wrap">
+            <Users size={15} />
+            <select>
+              <option>All Accounts</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
         <div className="filter-btn text-dropdown-btn">
-          <select>
-            <option>All Statuses</option>
-          </select>
+          <div className="filter-wrap">
+            <Layers size={15} />
+            <select>
+              <option>All Statuses</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
         <div className="filter-btn text-dropdown-btn">
-          <select>
-            <option>AI Handling</option>
-          </select>
+          <div className="filter-wrap">
+            <Bot size={15} />
+            <select>
+              <option>AI Handling</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
         <div className="filter-btn text-dropdown-btn">
-          <select>
-            <option>All Agents</option>
-          </select>
+          <div className="filter-wrap">
+            <Users size={15} />
+            <select>
+              <option>All Agents</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
-        <div className="search-box search-box-expanded">
-          <Search size={14} />
-          <input placeholder="Search conversations..." />
+        <div className="search-box-wrap">
+          <div className="search-box search-box-expanded">
+            <Search size={14} />
+            <input placeholder="Search conversations..." />
+          </div>
+          <button className="filter-btn icon-only-filter-btn">
+            <SlidersHorizontal size={14} />
+          </button>
         </div>
-        <button className="filter-btn icon-only-filter-btn">
-          <SlidersHorizontal size={14} />
-        </button>
       </div>
 
       {/* MAIN THREE-COLUMN WORKSPACE */}

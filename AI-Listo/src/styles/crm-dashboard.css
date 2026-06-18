@@ -1619,7 +1619,7 @@ body.crm-dark .crm-error {
 }
 
 .crm-dark .whatsapp-page .device-status-header-text,
-.crm-dark #root .conversation-header, .crm-dark #root .automation-health-row-item:not(:last-child),
+.crm-dark #root .automation-health-row-item:not(:last-child),
 .crm-dark #root .inspector-ai-action-step-row-item:not(:last-child), .crm-dark #root .property-specs,
 .crm-dark #root .contact-info-list, .crm-dark #root .team-performance-item:not(:last-child),
 .crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .dashboard-page .drawer-header {
@@ -1627,7 +1627,8 @@ body.crm-dark .crm-error {
 }
 
 .crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
-.crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr {
+.crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr,
+.crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child) {
   border-bottom: 1px solid #232a36;
 }
 
@@ -1655,7 +1656,6 @@ body.crm-dark .crm-error {
 .crm-dark .bg-light-purple,
 .crm-dark .bg-light-green,
 .crm-dark .bg-light-orange,
-.crm-dark .prob-badge,
 .crm-dark .shortcut-btn.green-btn,
 .crm-dark .black-btn,
 .crm-dark .bg-light-amber,
@@ -1689,14 +1689,14 @@ body.crm-dark .crm-error {
 .crm-dark #root .badge-status, .crm-dark #root .badge-ai-score, .crm-dark #root .team-role-badge, 
 .crm-dark #root .team-billing-status-badge.active, .crm-dark #root .integration-icon,
 .crm-dark #root .metric-mini-icon.star, .crm-dark #root .team-notification-icon,
-.crm-dark #root .integration-btn, .crm-dark #root .risk-count-badge, .crm-dark #root .status-pill, .crm-dark #root .tag-urgent,
+.crm-dark #root .integration-btn, .crm-dark #root .status-pill, .crm-dark #root .tag-urgent,
 .crm-dark #root .floating-cash-badge-circle{
   background-color: rgba(37, 99, 235, 0.08)!important;
 }
-.crm-dark #root .bg-green-light{
+.crm-dark #root .bg-green-light, .crm-dark #root .segment-line-item.text-green{
   background-color: #4dd37624 !important;
 }
-.crm-dark #root .bg-blue-light{
+.crm-dark #root .bg-blue-light, .crm-dark #root .segment-line-item.text-blue{
   background-color: #3179d629 !important;
 }
 .crm-dark #root .bg-cyan-light{
@@ -1705,11 +1705,15 @@ body.crm-dark .crm-error {
 .crm-dark #root .bg-pink-light{
   background-color: #d64d981f !important;
 }
-.crm-dark #root .bg-pink-light{
+.crm-dark #root .bg-pink-light, .crm-dark #root .segment-line-item.text-orange{
   background-color: #c07a231a !important;
 }
-.crm-dark #root .bg-red-light{
+.crm-dark #root .bg-red-light, .crm-dark .prob-badge, .crm-dark #root .risk-count-badge,
+.crm-dark #root .segment-line-item.text-red{
   background-color: #dd46461f !important;
+}
+.crm-dark #root .segment-line-item.text-purple{
+  background-color: #7c3aed21;
 }
 .crm-dark .bg-light-blue-bubble,
 .crm-dark .white-action-btn,
@@ -1725,9 +1729,7 @@ body.crm-dark .crm-error {
 .crm-dark .pill-toggles button,
 .crm-dark .white-btn,
 .crm-dark #root .secondary-btn,
-.crm-dark #root .top-stats-row-grid,
 .crm-dark #root .stat-metric-box,
-.crm-dark #root .segment-line-item,
 .crm-dark #root .device-wrap,
 .crm-dark #root .qr-code-holder-box,
 .crm-dark #root .filter-btn,
@@ -1802,7 +1804,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .timeline-dot, .crm-dark #root .step-number{
   background: #101827f2;
 }
-.crm-dark #root .priority-item, .crm-dark #root .priority-bar-line-layout
+.crm-dark #root .priority-item
  {
   background: #101827f2;
   border: 0;
@@ -1817,6 +1819,11 @@ body.crm-dark .crm-error {
 }
 .crm-dark #root .node-dot-style{
   border: #101827f2 !important;
+}
+
+.crm-dark #root .top-stats-row-grid{
+  background: none;
+  border: 0;
 }
 .crm-dark .crm-content,
 body.crm-dark .leads-page,
@@ -1901,13 +1908,18 @@ body.crm-dark .leads-page,
 .crm-dark #root .panel-mid-utilities-row{
   background: none;
 }
-.crm-dark #root .compact-btn.connection-blue-btn{
-    background: #2563eb;
-    color: white;
-    border: none;
+.crm-dark #root .compact-btn.connection-blue-btn, .crm-dark #root .pill-toggles button.active{
+  background: #2563eb;
+  color: white;
+  border: none;
 }
-.crm-dark #root .workflow-card span{
+.crm-dark #root .workflow-card span, .crm-dark #root .segment-line-item, 
+.crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card),
+.crm-dark #root .whatsapp-page .sidebar-footer{
   border:0;
+}
+.crm-dark #root .whatsapp-page .active-chat-card {
+    border: 1px solid #2563eb;
 }
 .crm-dark #root .workflow-step:not(:last-child)::after{
   background: rgba(255,255,255,.05);

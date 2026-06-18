@@ -93,7 +93,7 @@
   border-radius: 16px;
   padding: 24px;
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   gap: 20px;
   margin-bottom: 16px;
   position: relative;
@@ -281,7 +281,7 @@ body .next-action-card svg {
   background-color: var(--bg-card);
   border-radius: 12px;
   border: 1px solid var(--border-light);
-  padding: 16px;
+  padding: 14px;
 }
 
 .subtle-border {
@@ -488,6 +488,7 @@ body .next-action-card svg {
   font-size: 13px;
   font-weight: 700;
   margin: 0;
+  text-align: left;
 }
 
 .card-text-link {
@@ -541,15 +542,17 @@ body .next-action-card svg {
 
 .list-tbl-header {
   display: grid;
-  grid-template-columns: 1.3fr 1.3fr 0.7fr 1fr;
+  grid-template-columns: 1.3fr 1.2fr 0.4fr 1fr;
   font-size: 10px;
   font-weight: 600;
   text-align: left;
 }
-
+.list-tbl-header span:last-child{
+  text-align: center;
+}
 .list-tbl-row {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr 1fr;
+  grid-template-columns: 1.3fr 0.8fr 0.9fr;
   font-size: 11px;
   align-items: center;
   border-top: 1px solid var(--border-light);
@@ -560,6 +563,7 @@ body .next-action-card svg {
   display: flex;
   align-items: center;
   gap: 6px;
+  text-align: left;
 }
 
 .color-dot {
@@ -579,7 +583,7 @@ body .next-action-card svg {
   display: grid;
   justify-content: space-between;
   align-items: center;
-  grid-template-columns: 1.3fr 1.3fr 0.7fr 1fr;
+  grid-template-columns: 1.3fr 1.2fr 0.4fr 1fr;
   border-top: 1px solid var(--border-light);
   padding-top: 3px;
 }
@@ -587,7 +591,7 @@ body .next-action-card svg {
 .lead-meta-profile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mini-avatar {
@@ -597,9 +601,10 @@ body .next-action-card svg {
 }
 
 .meta-name h4 {
-  font-size: 12px;
+  font-size: 11px;
   margin: 0;
   font-weight: 600;
+  text-align: left;
 }
 
 .meta-name span {
@@ -608,7 +613,7 @@ body .next-action-card svg {
 }
 
 .meta-intent {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-align: left;
 }
@@ -918,6 +923,7 @@ body .next-action-card svg {
   font-size: 11px;
   margin: 0 0 14px 0;
   line-height: 1.4;
+  text-align: left;
 }
 
 .dark-card-counter-row {
@@ -1236,11 +1242,8 @@ body .next-action-card svg {
   .dashboard-page .ai-command-banner {
     display: flex;
   }
-  .dashboard-page .banner-action-row {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .dashboard-page .banner-action-row .btn-followup-color {
-    grid-column: span 3;
+  .ai-command-banner {
+    padding: 12px !important;
   }
 }
 

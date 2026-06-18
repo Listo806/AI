@@ -290,16 +290,21 @@ export default function CortexaDashboard() {
         <div className="header-actions">
           {isMobile ? (
             <>
-              <div className="control-btn" onClick={() => setShowFilters(true)}>
-                <SlidersHorizontal size={15} />
-                <span>Filters</span>
+              <div className="control-btn">
+                <Calendar size={15} />
+                <span>This Week</span>
+                <ChevronDown size={14} />
               </div>
 
-              <button className="btn-export">
-                <Download size={15} />
-                Export
+              <div className="control-btn">
+                <Users size={15} />
+                <span>All Teams</span>
                 <ChevronDown size={14} />
-              </button>
+              </div>   
+              <div className="control-btn" onClick={() => setShowFilters(true)}>
+                <SlidersHorizontal size={15} />
+                <span></span>
+              </div>
             </>
           ) : (
             <>
@@ -371,17 +376,7 @@ export default function CortexaDashboard() {
             </div>
 
             <div className="drawer-body">
-              <div className="control-btn">
-                <Calendar size={15} />
-                <span>This Week</span>
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Teams</span>
-                <ChevronDown size={14} />
-              </div>
-
+              
               <div className="control-btn">
                 <Layers size={15} />
                 <span>All Sources</span>
@@ -399,6 +394,11 @@ export default function CortexaDashboard() {
                 <span>All Stages</span>
                 <ChevronDown size={14} />
               </div>
+              <button className="btn-export">
+                <Download size={15} />
+                Export
+                <ChevronDown size={14} />
+              </button>
             </div>
           </div>
         </>
