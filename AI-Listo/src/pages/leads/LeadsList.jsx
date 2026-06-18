@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./leads.css";
 
 import {
@@ -28,10 +28,27 @@ import {
   ImageIcon,
   Mic,
   ArrowUpRight,
-  CheckCheck
+  CheckCheck,
+  Layers,
 } from "lucide-react";
 
 export default function LeadsPage() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const [showFilters, setShowFilters] = useState(false);
   const stats = [
     {
       title: "Total Leads",
@@ -111,81 +128,173 @@ export default function LeadsPage() {
         <Users className="header-icon" size={20} />
         <h1>Leads & Conversations</h1>
       </div>
-      <p className="sub_head">Manage leads, AI conversations, and deal activity in real time.</p>
+      <p className="sub_head">
+        Manage leads, AI conversations, and deal activity in real time.
+      </p>
       <div className="leads-header">
         <div className="header-actions">
-          <button className="secondary-btn">
-            <Calendar size={16} />
-            May 12 - May 18
-            <ChevronDown size={15} />
-          </button>
+          {isMobile ? (
+            <>
+              <button className="secondary-btn">
+                <Calendar size={16} />
+                May 12 - May 18
+                <ChevronDown size={15} />
+              </button>
 
-          <button className="secondary-btn">
-            <Download size={16} />
-            Export
-          </button>
+              <button className="secondary-btn ai-btn">
+                <Sparkles size={16} />
+                AI View
+              </button>
 
-          <button className="secondary-btn ai-btn">
-            <Sparkles size={16} />
-            AI View
-          </button>
+              <button className="primary-btn">
+                <Plus size={17} />
+                New Lead
+              </button>
+              <div className="control-btn" onClick={() => setShowFilters(true)}>
+                <SlidersHorizontal size={15} />
+                <span></span>
+              </div>
+            </>
+          ) : (
+            <>
+              <button className="secondary-btn">
+                <Calendar size={16} />
+                May 12 - May 18
+                <ChevronDown size={15} />
+              </button>
 
-          <button className="primary-btn">
-            <Plus size={17} />
-            New Lead
-          </button>
+              <button className="secondary-btn">
+                <Download size={16} />
+                Export
+              </button>
+
+              <button className="secondary-btn ai-btn">
+                <Sparkles size={16} />
+                AI View
+              </button>
+
+              <button className="primary-btn">
+                <Plus size={17} />
+                New Lead
+              </button>
+            </>
+          )}
         </div>
       </div>
+      {isMobile && showFilters && (
+        <>
+          <div
+            className="filter-overlay"
+            onClick={() => setShowFilters(false)}
+          />
 
+          <div className="mobile-filter-drawer">
+            <div className="drawer-header">
+              <h3>Filters</h3>
+
+              <button
+                className="drawer-close"
+                onClick={() => setShowFilters(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="drawer-body">
+              <div className="filter-btn">
+                <Layers size={15} />
+                <select>
+                  <option>All Sources</option>
+                </select>
+                <ChevronDown size={15} />
+              </div>
+              <div className="filter-btn">
+                <Clock3 size={15} />
+                <select>
+                  <option>All Temperatures</option>
+                </select>
+                <ChevronDown size={15} />
+              </div>
+              <div className="filter-btn">
+                <Bot size={15} />
+                <select>
+                  <option>All AI Scores</option>
+                </select>
+                <ChevronDown size={15} />
+              </div>
+              <div className="filter-btn">
+                <Layers size={15} />
+                <select>
+                  <option>All Stages</option>
+                </select>
+                <ChevronDown size={15} />
+              </div>
+              <div className="filter-btn">
+                <Users size={15} />
+                <select>
+                  <option>All Agents</option>
+                </select>
+                <ChevronDown size={15} />
+              </div>
+              <button className="btn-export">
+                <Download size={15} />
+                Export
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
       {/* FILTERS */}
+      {!isMobile && (
+        <div className="filters-row">
+          <div className="filter-btn">
+            <select>
+              <option>All Sources</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
+          <div className="filter-btn">
+            <select>
+              <option>All Temperatures</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
+          <div className="filter-btn">
+            <select>
+              <option>All AI Scores</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
+          <div className="filter-btn">
+            <select>
+              <option>All Stages</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
+          <div className="filter-btn">
+            <select>
+              <option>All Agents</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
+          <div className="search-box">
+            <Search size={16} />
+            <input placeholder="Search leads..." />
+          </div>
 
-      <div className="filters-row">
-        <div className="filter-btn">
-          <select>
-            <option>All Sources</option>
-          </select>
-          <ChevronDown size={15} />
+          <button className="filter-btn">
+            <SlidersHorizontal size={16} />
+            Filters
+          </button>
+          <div className="filter-btn">
+            <select>
+              <option>Bulk Actions</option>
+            </select>
+            <ChevronDown size={15} />
+          </div>
         </div>
-        <div className="filter-btn">
-          <select>
-            <option>All Temperatures</option>
-          </select>
-          <ChevronDown size={15} />
-        </div>
-        <div className="filter-btn">
-          <select>
-            <option>All AI Scores</option>
-          </select>
-          <ChevronDown size={15} />
-        </div>
-        <div className="filter-btn">
-          <select>
-            <option>All Stages</option>
-          </select>
-          <ChevronDown size={15} />
-        </div>
-        <div className="filter-btn">
-          <select>
-            <option>All Agents</option>
-          </select>
-          <ChevronDown size={15} />
-        </div>
-        <div className="search-box">
-          <Search size={16} />
-          <input placeholder="Search leads..." />
-        </div>
-
-        <button className="filter-btn">
-          <SlidersHorizontal size={16} />
-          Filters
-        </button>
-        <div className="filter-btn">
-          <select>
-            <option>Bulk Actions</option>
-          </select>
-          <ChevronDown size={15} />
-        </div>
-      </div>
+      )}
 
       {/* STATS */}
 
@@ -218,7 +327,7 @@ export default function LeadsPage() {
               {" "}
               <Flame size={18} />
             </div>
-            <div>
+            <div className="priority-wrap">
               <strong>12</strong>
               <span>Urgent Leads</span>
             </div>
@@ -229,7 +338,7 @@ export default function LeadsPage() {
             <div className="orange icon">
               <Clock3 size={18} />
             </div>
-            <div>
+            <div className="priority-wrap">
               <strong>8</strong>
               <span>Need Follow-Up</span>
             </div>
@@ -240,7 +349,7 @@ export default function LeadsPage() {
             <div className="blue icon">
               <Phone size={18} />
             </div>
-            <div>
+            <div className="priority-wrap">
               <strong>5</strong>
               <span>Ready To Call</span>
             </div>
@@ -251,7 +360,7 @@ export default function LeadsPage() {
             <div className="green icon">
               <MessageCircle size={18} />
             </div>
-            <div>
+            <div className="priority-wrap">
               <strong>14</strong>
               <span>Pending Replies</span>
             </div>
@@ -262,7 +371,7 @@ export default function LeadsPage() {
             <div className="purple icon">
               <MessageCircle size={18} />
             </div>
-            <div>
+            <div className="priority-wrap">
               <strong>23</strong>
               <span>AI Qualifield Today</span>
             </div>
@@ -499,7 +608,9 @@ export default function LeadsPage() {
                 Thanks for reaching out! Are you looking to buy, rent, or
                 invest?
               </p>
-              <span className="msg-status-right">10:33 AM <CheckCheck size={12} /></span>
+              <span className="msg-status-right">
+                10:33 AM <CheckCheck size={12} />
+              </span>
               <div className="robot-badge-icon">🤖</div>
             </div>
 
@@ -513,7 +624,9 @@ export default function LeadsPage() {
                 Perfect! I found several matching homes. What budget range are
                 you comfortable with?
               </p>
-              <span className="msg-status-right">10:36 AM <CheckCheck size={12} /></span>
+              <span className="msg-status-right">
+                10:36 AM <CheckCheck size={12} />
+              </span>
               <div className="robot-badge-icon">🤖</div>
             </div>
 

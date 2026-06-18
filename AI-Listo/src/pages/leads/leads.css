@@ -1447,6 +1447,92 @@ body .leads-page {
   .leads-page .item-line:nth-child(4):after {
     width: 0;
   }
+  .leads-page .filter-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    z-index: 999;
+  }
+
+  .leads-page .mobile-filter-drawer {
+    position: fixed;
+    right: 0;
+    top: 52px;
+    width: 210px;
+    max-width: 85%;
+    height: 100vh;
+    background: #fff;
+    z-index: 999999999999999;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, .12);
+
+    display: flex;
+    flex-direction: column;
+
+    animation: slideDrawer .25s ease;
+  }
+
+  @keyframes slideDrawer {
+    from {
+      transform: translateX(100%);
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .leads-page .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .leads-page .drawer-close {
+    border: none;
+    background: none;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .leads-page .drawer-body {
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .leads-page .drawer-body .control-btn {
+    width: 100%;
+  }
+
+  .leads-page .drawer-body .control-btn:not(:first-child) {
+    justify-content: space-between;
+  }
+  .control-btn{
+    padding: 10px 12px;
+  }
+  .leads-page .action-desc{
+    display: none;
+  }
+  .leads-page button.quick-action-card-btn{
+    flex-direction: column;
+  }
+  .leads-page .suggested-chips-scroll,
+  .leads-page .conversation-actions {
+    flex-wrap: wrap;
+  }
+  .leads-page .leads-layout {
+    grid-template-columns: 300px 1fr;
+  }
+  .leads-page .insights-panel {
+    display: grid;
+    grid-column: span 2;
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1476,17 +1562,32 @@ body .leads-page {
 @media (max-width: 767px) {
   .leads-page .priority-bar {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 0;
     padding: 12px;
     width: 100%;
   }
 
   .leads-page .priority-bar>.item-line:first-child {
-    grid-column: span 2;
+    grid-column: span 1;
     margin-bottom: 2px;
   }
-
+  .priority-wrap{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .priority-wrap strong{
+    order: 2;
+    text-align: right;
+  }
+  .priority-wrap span{
+    order: 1;
+  }
+  
+  .leads-page .item-line:not(:last-child) .priority-item{
+    border-bottom: 1px solid #f3f4f6;
+  }
   .leads-page .priority-title h3 {
     font-size: 1.15rem;
   }
@@ -1494,17 +1595,19 @@ body .leads-page {
   .leads-page .priority-title p {
     font-size: 0.85rem;
   }
-
+  .leads-page .item-line:not(:last-child):after{
+    width: 0;
+  }
   .leads-page .priority-item {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 10px;
     background: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #f3f4f6;
   }
-
+  .leads-page .item-line{
+    padding: 0;
+  }
   .leads-page .priority-item strong {
     font-size: 1.2rem;
     display: block;
@@ -1526,7 +1629,9 @@ body .leads-page {
     border-radius: 50%;
     flex-shrink: 0;
   }
-
+  .leads-page .lead-card-financials {
+    align-items: end;
+  }
   .leads-page .queue-btn {
     width: 100%;
     height: 100%;
@@ -1538,6 +1643,13 @@ body .leads-page {
     padding: 10px;
     border-radius: 8px;
   }
+  .leads-page .insights-panel {
+    grid-column: span 1;
+    grid-template-columns: 1fr;
+  }
+  .leads-page .leads-layout{
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1547,11 +1659,6 @@ body .leads-page {
 
   .leads-page .message {
     max-width: 90%;
-  }
-
-  .leads-page .suggested-chips-scroll,
-  .leads-page .conversation-actions {
-    flex-wrap: wrap;
   }
 
   .leads-page .conversation-actions {
@@ -1567,10 +1674,32 @@ body .leads-page {
   .leads-page .stats-card {
     justify-content: center;
   }
+  
+  body .leads-page .primary-btn, body .leads-page .secondary-btn{ 
+    padding: 0px 8px;
+    gap: 3px;
+  }
+  .header-actions .control-btn{ 
+    padding: 10px 6px;
+    gap: 3px;
+  }
+  .leads-page .header-actions {
+    justify-content: space-between;
+    width: 100%;
+    gap: 5px;
+  }
+  
 }
 
 @media (max-width: 390px) {
   .leads-page .quick-actions-grid {
     grid-template-columns: repeat(1, 1fr);
+  }
+  .leads-page .header-actions {
+    gap: 4px;
+  }
+  body .leads-page .primary-btn, body .leads-page .secondary-btn {
+      padding: 0px 4px;
+      font-size: 12px;
   }
 }

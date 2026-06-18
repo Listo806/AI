@@ -1622,13 +1622,15 @@ body.crm-dark .crm-error {
 .crm-dark #root .automation-health-row-item:not(:last-child),
 .crm-dark #root .inspector-ai-action-step-row-item:not(:last-child), .crm-dark #root .property-specs,
 .crm-dark #root .contact-info-list, .crm-dark #root .team-performance-item:not(:last-child),
-.crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .dashboard-page .drawer-header {
+.crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .drawer-header {
   border-bottom: 1px solid #202733;
 }
 
 .crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
 .crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr,
-.crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child) {
+.crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
+.crm-dark #root .leads-page .item-line:not(:nth-last-child(-n+2)) .priority-item
+ {
   border-bottom: 1px solid #232a36;
 }
 
@@ -1693,27 +1695,28 @@ body.crm-dark .crm-error {
   background-color: rgba(37, 99, 235, 0.08)!important;
 }
 .crm-dark #root .bg-green-light, .crm-dark #root .segment-line-item.text-green,
-.crm-dark #root .floating-cash-badge-circle{
+.crm-dark #root .floating-cash-badge-circle, .crm-dark #root .leads-page .green{
   background-color: #4dd37624 !important;
 }
-.crm-dark #root .bg-blue-light, .crm-dark #root .segment-line-item.text-blue{
+.crm-dark #root .bg-blue-light, .crm-dark #root .segment-line-item.text-blue, .crm-dark #root .leads-page .blue{
   background-color: #3179d629 !important;
 }
-.crm-dark #root .bg-cyan-light{
+.crm-dark #root .bg-cyan-light, .crm-dark #root .leads-page .cyan{
   background-color: #24959c2e !important;
 }
-.crm-dark #root .bg-pink-light{
+.crm-dark #root .bg-pink-light, .crm-dark #root .leads-page .pink{
   background-color: #d64d981f !important;
 }
-.crm-dark #root .bg-pink-light, .crm-dark #root .segment-line-item.text-orange{
+.crm-dark #root .bg-pink-light, .crm-dark #root .segment-line-item.text-orange,
+.crm-dark #root .leads-page .orange{
   background-color: #c07a231a !important;
 }
 .crm-dark #root .bg-red-light, .crm-dark .prob-badge, .crm-dark #root .risk-count-badge,
-.crm-dark #root .segment-line-item.text-red{
+.crm-dark #root .segment-line-item.text-red, .crm-dark #root .leads-page .priority-item .red{
   background-color: #dd46461f !important;
 }
-.crm-dark #root .segment-line-item.text-purple{
-  background-color: #7c3aed21;
+.crm-dark #root .segment-line-item.text-purple, .crm-dark #root .leads-page .purple{
+  background-color: #7c3aed21 !important;
 }
 .crm-dark .bg-light-blue-bubble,
 .crm-dark .white-action-btn,
@@ -1887,7 +1890,8 @@ body.crm-dark .leads-page,
 .crm-dark #root .workflow-card h4, .crm-dark #root .workflow-back-btn, .crm-dark #root .workflow-steps-title,
 .crm-dark #root .workflow-detail-card h3, .crm-dark #root .step-content strong,
 .crm-dark #root .dashboard-page .banner-btn.text-dark, .crm-dark .contacts-page .secondary-action,
-.crm-dark #root .contact-name, .crm-dark #root .contact-menu button, .crm-dark .mobile-detail-page .detail-header h2{
+.crm-dark #root .contact-name, .crm-dark #root .contact-menu button, .crm-dark .mobile-detail-page .detail-header h2,
+.crm-dark .leads-page .priority-item span, .crm-dark .leads-page .revenue-val-dark{
   color: var(--text);
 }
 .crm-dark #root .team-activity-message, .crm-dark #root .team-notification-title, .crm-dark #root .team-performance-label,
@@ -1896,7 +1900,8 @@ body.crm-dark .leads-page,
 .crm-dark #root .metric-label, .crm-dark #root .workflow-badges span,
 .crm-dark #root .metric-title, .crm-dark .font-semibold, .crm-dark #root .contacts-page .info-item,
 .crm-dark #root .contacts-page .footer-action-btn, .crm-dark #root .action-grid-btn,
-.crm-dark .recommendation-instruction-text{
+.crm-dark .recommendation-instruction-text, .crm-dark #root .leads-page .lead-message,
+.crm-dark #root .leads-page .budget-range{
   color: #bebcbc;
 }
 .crm-dark #root .btn-view-all{
@@ -1920,10 +1925,11 @@ body.crm-dark .leads-page,
 }
 .crm-dark #root .workflow-card span, .crm-dark #root .segment-line-item, 
 .crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card),
-.crm-dark #root .whatsapp-page .sidebar-footer, .crm-dark #root .whatsapp-page .timeline-footer{
+.crm-dark #root .whatsapp-page .sidebar-footer, .crm-dark #root .whatsapp-page .timeline-footer,
+.crm-dark .leads-page .conversation-header{
   border:0;
 }
-.crm-dark #root .whatsapp-page .active-chat-card {
+.crm-dark #root .whatsapp-page .active-chat-card, .crm-dark #root .leads-page .lead-card.active {
     border: 1px solid #2563eb;
 }
 .crm-dark #root .workflow-step:not(:last-child)::after{
@@ -1954,6 +1960,9 @@ body.crm-dark .leads-page,
 }
 .crm-dark #root .mobile-detail-page .detail-header{
   background: #0b0f19;
+}
+.crm-dark .leads-page .switch::after {
+    background: #000;
 }
 @media (max-width: 1024px) {
 
