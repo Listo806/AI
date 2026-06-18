@@ -1911,7 +1911,7 @@ body.crm-dark .leads-page,
 .crm-dark .ai-bg-blur{
   background: #000;
 }
-.crm-dark #root .send-btn, .crm-dark #root .filter-left .primary-btn{
+.crm-dark #root .send-btn, .crm-dark #root .filter-left .primary-btn, .crm-dark #root .leads-header .primary-btn{
   background: #2563eb;
 }
 .crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr,
