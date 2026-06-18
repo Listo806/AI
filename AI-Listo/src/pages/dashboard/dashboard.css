@@ -1249,10 +1249,13 @@ body .next-action-card svg {
 
 @media (max-width: 390px) {
   .dashboard-page .kpi-row-grid.grid-6-col {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
-
-  .dashboard-page .kpi-row-grid .kpi-main-row {
-    justify-content: center;
+  .dashboard-page .kpi-mini-card {
+    padding: 12px 6px;
+  }
+  
+  .dashboard-page .kpi-mini-card .kpi-helper-txt {
+    white-space: break-spaces;
   }
 }

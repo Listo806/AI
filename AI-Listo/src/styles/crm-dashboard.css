@@ -1821,7 +1821,7 @@ body.crm-dark .crm-error {
   border: #101827f2 !important;
 }
 
-.crm-dark #root .top-stats-row-grid{
+.crm-dark #root .top-stats-row-grid, .crm-dark #root .whatsapp-page .chat-input-box {
   background: none;
   border: 0;
 }
