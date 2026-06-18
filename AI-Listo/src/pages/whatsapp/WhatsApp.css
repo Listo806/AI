@@ -1692,10 +1692,10 @@
 }
 
 @media (max-width: 390px) {
-    .whatsapp-page .top-stats-row-grid {
-        grid-template-columns: repeat(1, 1fr);
+    .whatsapp-page .stat-metric-box {
+        padding: 12px 3px;
     }
-    .whatsapp-page .stat-metric-box:last-child {
-        grid-column: span 1;
+    .whatsapp-page .stat-metric-box {
+        gap: 4px;
     }
 }
