@@ -1665,7 +1665,8 @@
     }
     .chat-input-right{
         width: 100%;
-        justify-content: space-around;
+        justify-content: end;
+        gap: 10px;
     }
     .whatsapp-page .chat-card-score-strip, .whatsapp-page .last-message-snippet{
         margin-left: 36px;
@@ -1677,6 +1678,16 @@
     .whatsapp-page .conversation-header {
         align-items: unset;
         flex-direction: column;
+    }
+    .whatsapp-page .chat-input-box {
+        padding: 0;
+    }
+    .utility-chip-arrow-nav-btn{
+        display: none;
+    }
+    .whatsapp-page .panel-mid-utilities-row{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
     }
 }
 
