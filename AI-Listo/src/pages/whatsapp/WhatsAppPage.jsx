@@ -35,7 +35,7 @@ import {
   Grid,
   Layers,
 } from "lucide-react";
-
+import qrImg from "../../assets/cortexa/qr.png";
 export default function WhatsAppPage() {
   return (
     <div className="leads-page whatsapp-page">
@@ -244,7 +244,7 @@ export default function WhatsAppPage() {
 
           {/* QR CODE PLUG */}
           <div className="qr-code-holder-box">
-            <div className="dummy-qr-graphic">🔳</div>
+            <div className="dummy-qr-graphic"><img src={qrImg} alt="Cortexa" className="qrcode" /></div>
             <button className="refresh-qr-link">Refresh QR</button>
           </div>
         </div>

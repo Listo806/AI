@@ -1499,8 +1499,7 @@
     }
 
     .whatsapp-page .dummy-qr-graphic {
-        font-size: 2rem;
-        line-height: 1;
+        line-height: 0.6;
     }
 
     .whatsapp-page .refresh-qr-link {

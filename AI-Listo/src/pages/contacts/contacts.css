@@ -1112,12 +1112,13 @@ body .contacts-page .map svg{
   color: #ffffff;
 }
 
-@media (min-width: 1400px) {
-  
-}
-
 .crm-sidebar-toggle-inside ~ .crm-content .contacts-page .contacts-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.contacts-page .filter-left >div:last-child{
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 @media (min-width: 1200px) {
     .contacts-page .main-content {
@@ -1125,6 +1126,12 @@ body .contacts-page .map svg{
     }
 }
 @media (max-width: 1024px) {
+  .contacts-page .filter-btn, .contacts-page .action-btn, .contacts-page .primary-btn {
+    padding: 0 4%;
+  }
+  .contacts-page .filter-left >div:last-child{
+    width: 100%;
+  }
   .contacts-page .kpi-grid{
     background: none;
     border: 0;
@@ -1145,35 +1152,31 @@ body .contacts-page .map svg{
   }
 }
 @media (max-width: 768px) {
-  
+  .contacts-page .filter-btn, .contacts-page .action-btn, .contacts-page .primary-btn {
+    padding: 0 3%;
+  }
 
   .contacts-page .form-group.full {
     grid-column: span 1;
   }
-
   
-
   .contacts-page .info-grid {
     grid-template-columns: 1fr;
   }
 }
 @media (max-width: 430px) {
+  .contacts-page .filter-btn, .contacts-page .action-btn, .contacts-page .primary-btn {
+    padding: 0 10px;
+  }
   .contacts-page .search-box{
     width: 100%;
   }
-  .contacts-page .filter-left .runai, .contacts-page .filter-left .insights{
-    width: 49%;
+  .contacts-page .filter-left .runai, .contacts-page .filter-left .insights,
+  .contacts-page .filter-left .map, .contacts-page .filter-left .primary-btn:last-child{
     gap: 10px;
-  }
-  .contacts-page .filter-left .map{
-    width: 100%;
-    gap: 10px;
-  }
-  .contacts-page .filter-left .primary-btn:last-child{
-    width: 100%;
     justify-content: center;
-    gap: 10px;
   }
+  
   .contacts-page .contacts-grid {
     grid-template-columns: 1fr;
   }
@@ -1186,6 +1189,20 @@ body .contacts-page .map svg{
   .contacts-page .filter-btn {
     padding: 0 15px;
   }
+  .contacts-page .filter-left >div:last-child{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    order: -1;
+  }
+  
+}
+@media (max-width: 415px) {
+  .contacts-page .filter-btn {
+    padding: 0 13px;
+  }
+  
+  
 }
 @media (max-width: 390px) {
   .contacts-page .kpi-grid {
@@ -1195,7 +1212,6 @@ body .contacts-page .map svg{
     padding: 0 9px;
   }
   .contacts-page .filter-left .runai, .contacts-page .filter-left .insights{
-    width: 48%;
     gap: 10px;
   }
 }
