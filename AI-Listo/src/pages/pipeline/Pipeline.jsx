@@ -51,7 +51,6 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
- 
   const stats = [
     {
       title: "Total Deals",
@@ -302,7 +301,10 @@ export default function PipelinePage() {
         <Users className="header-icon" size={20} />
         <h1>Pipeline & Deals</h1>
       </div>
-      <p className="sub_head">Tract opportunities, AI deal flow, revenue risk, and close probability in real time.</p>
+      <p className="sub_head">
+        Tract opportunities, AI deal flow, revenue risk, and close probability
+        in real time.
+      </p>
       <header className="pipeline-page-header">
         <div className="header-global-actions">
           <div className="header-search-input-wrapper">
@@ -313,7 +315,7 @@ export default function PipelinePage() {
               className="global-search-input"
             />
           </div>
-          <button className="secondary-btn">
+          <button className="secondary-btn filter-btn">
             <SlidersHorizontal size={15} /> Filters
           </button>
           <button className="secondary-btn active-view-btn">
@@ -332,55 +334,67 @@ export default function PipelinePage() {
       <section className="pipeline-horizontal-filters">
         {/* 1. Date Filter */}
         <div className="secondary-btn dropdown-filter">
-          <Calendar size={15} />
-          <select defaultValue="may12-may18">
-            <option value="may12-may18">May 12 – May 18, 2025</option>
-          </select>
+          <div>
+            <Calendar size={15} />
+            <select defaultValue="may12-may18">
+              <option value="may12-may18">May 12 – May 18, 2025</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
 
         {/* 2. Sources Filter */}
         <div className="secondary-btn dropdown-filter">
-          <Layers size={15} />
-          <select defaultValue="">
-            <option value="">All Sources</option>
-          </select>
+          <div>
+            <Layers size={15} />
+            <select defaultValue="">
+              <option value="">All Sources</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
 
         {/* 3. Stages Filter */}
         <div className="secondary-btn dropdown-filter">
-          <GitFork size={15} />
-          <select defaultValue="">
-            <option value="">All Stages</option>
-          </select>
+          <div>
+            <GitFork size={15} />
+            <select defaultValue="">
+              <option value="">All Stages</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
 
         {/* 4. Priorities Filter */}
         <div className="secondary-btn dropdown-filter">
-          <AlertCircle size={15} />
-          <select defaultValue="">
-            <option value="">All Priorities</option>
-          </select>
+          <div>
+            <AlertCircle size={15} />
+            <select defaultValue="">
+              <option value="">All Priorities</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
 
         {/* 5. AI Scores Filter */}
         <div className="secondary-btn dropdown-filter">
-          <Sparkles size={15} />
-          <select defaultValue="">
-            <option value="">All AI Scores</option>
-          </select>
+          <div>
+            <Sparkles size={15} />
+            <select defaultValue="">
+              <option value="">All AI Scores</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
 
         {/* 6. Agents Filter */}
         <div className="secondary-btn dropdown-filter">
-          <UserCheck size={15} />
-          <select defaultValue="">
-            <option value="">All Agents</option>
-          </select>
+          <div>
+            <UserCheck size={15} />
+            <select defaultValue="">
+              <option value="">All Agents</option>
+            </select>
+          </div>
           <ChevronDown size={14} />
         </div>
       </section>
@@ -424,7 +438,6 @@ export default function PipelinePage() {
         </div>
 
         <div className="ai-banner-metrics-container">
-        
           <div className="ai-metric-column-box">
             <span className="ai-metric-box-label">AI Confidence</span>
             <div className="ai-metric-content-wrapper">
@@ -432,7 +445,7 @@ export default function PipelinePage() {
                 <strong className="ai-metric-box-value">92%</strong>
                 <span className="ai-metric-pill-green">High</span>
               </div>
-           
+
               <div className="ai-mini-chart-inline">
                 <ResponsiveContainer width="100%" height={24}>
                   <LineChart data={confidenceData}>
@@ -457,7 +470,7 @@ export default function PipelinePage() {
                 <strong className="ai-metric-box-value">$310K</strong>
                 <span className="ai-metric-pill-red">High</span>
               </div>
-              
+
               <div className="ai-mini-chart-inline">
                 <ResponsiveContainer width="100%" height={24}>
                   <LineChart data={riskData}>
@@ -482,7 +495,7 @@ export default function PipelinePage() {
                 <strong className="ai-metric-box-value">$1.1M</strong>
                 <span className="ai-metric-pill-blue">This Month</span>
               </div>
-              
+
               <div className="ai-mini-chart-inline">
                 <ResponsiveContainer width="100%" height={24}>
                   <LineChart data={closingData}>
@@ -518,21 +531,19 @@ export default function PipelinePage() {
       <section className="pipeline-kanban-board-scrollable-container">
         {columns.map((col) => (
           <div className="kanban-stage-column-wrapper" key={col.id}>
-            
             <div className="kanban-column-header-details">
-              
               <div className="flex justify-between items-center w-full">
                 <div className="flex items-center gap-2">
                   <span className={`column-status-dot dot-${col.id}`}></span>
                   <h3 className="column-stage-title-text">{col.title}</h3>
                 </div>
-               
+
                 <button className="deal-card-context-menu-trigger">
                   <MoreVertical size={14} />
                 </button>
               </div>
             </div>
-           
+
             <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
               <span className="column-deals-counter-badge">
                 {col.count} deals
@@ -542,7 +553,7 @@ export default function PipelinePage() {
                 {col.amount}
               </span>
             </div>
-            
+
             <div className="kanban-column-ai-insight-strip">
               <span>AI Insight: {col.insight}</span>
             </div>
@@ -551,7 +562,6 @@ export default function PipelinePage() {
               {col.deals.map((deal, dIdx) => (
                 <div className="kanban-deal-card-item" key={dIdx}>
                   <div className="deal-card-header-top-row">
-                    
                     <div
                       className={`deal-card-avatar-circle ${deal.avatarClass}`}
                     >
@@ -561,7 +571,7 @@ export default function PipelinePage() {
                     <div className="deal-card-lead-identity">
                       <div className="flex justify-between items-start w-full">
                         <h4 className="deal-card-client-name">{deal.name}</h4>
-                        
+
                         <span
                           className={`deal-card-temperature-tag tag-${deal.tag.toLowerCase()}`}
                         >
@@ -604,7 +614,7 @@ export default function PipelinePage() {
                     <span className="next-action-description-text">
                       <Clock3 size={11} /> {deal.action}
                     </span>
-                     {/*{deal.nextStep && (
+                    {/*{deal.nextStep && (
                       <div className="deal-card-extended-next-step-strip">
                        <span className="extended-step-label">Next Step:</span>
                         <span className="extended-step-desc">
@@ -635,188 +645,260 @@ export default function PipelinePage() {
 
       {/* SPLIT BOTTOM INTELLIGENCE GRID */}
       <section className="pipeline-bottom-split-intelligence-grid">
-      
-      {/* PANEL 1: AI DEAL RISK QUEUE */}
-      <div className="bottom-intelligence-card-panel">
-        <div className="intelligence-card-header-row">
-          <div className="flex items-center gap-2">
-           
-            <AlertTriangle size={18} className="intelligence-header-icon" />
-            <h3 className="intelligence-card-main-title">AI Deal Risk Queue</h3>
-            <span className="intelligence-card-sub-header-counter">
-              4 at-risk deals need attention
+        {/* PANEL 1: AI DEAL RISK QUEUE */}
+        <div className="bottom-intelligence-card-panel">
+          <div className="intelligence-card-header-row">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} className="intelligence-header-icon" />
+              <h3 className="intelligence-card-main-title">
+                AI Deal Risk Queue
+              </h3>
+              <span className="intelligence-card-sub-header-counter">
+                4 at-risk deals need attention
+              </span>
+            </div>
+            <button className="intelligence-view-all-navigation-link">
+              View All <ArrowRight size={14} />
+            </button>
+          </div>
+
+          <div className="risk-queue-table-rows-wrapper">
+            {[
+              {
+                name: "Luxury Penthouse",
+                val: "$910K",
+                reason: "Stale for 8 days",
+                status: "High",
+              },
+              {
+                name: "Beachfront Condo",
+                val: "$320K",
+                reason: "No response",
+                status: "High",
+              },
+              {
+                name: "Golf Course Condo",
+                val: "$675K",
+                reason: "Funding delay",
+                status: "Medium",
+              },
+              {
+                name: "Downtown Apartment",
+                val: "$185K",
+                reason: "Unanswered calls",
+                status: "Medium",
+              },
+            ].map((row, rIdx) => (
+              <div className="risk-queue-table-row-item" key={rIdx}>
+                <span className="risk-table-cell-property-name">
+                  {row.name}
+                </span>
+                <strong className="risk-table-cell-deal-value">
+                  {row.val}
+                </strong>
+                <span className="risk-table-cell-risk-reason-desc">
+                  {row.reason}
+                </span>
+                <span
+                  className={`risk-table-cell-severity-badge status-${row.status.toLowerCase()}`}
+                >
+                  {row.status}
+                </span>
+                <button className="risk-table-cell-action-review-trigger-btn">
+                  Review
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* PANEL 2: REVENUE FORECAST */}
+        <div className="bottom-intelligence-card-panel">
+          <div className="intelligence-card-header-row">
+            <div className="flex items-center gap-2">
+              <LineChartIcon size={18} className="intelligence-header-icon" />
+              <h3 className="intelligence-card-main-title">Revenue Forecast</h3>
+            </div>
+            <button className="secondary-btn compact-dropdown-trigger">
+              This Month <ChevronDown size={14} />
+            </button>
+          </div>
+
+          <div className="revenue-forecast-metrics-grid-quad">
+            <div className="revenue-forecast-metric-quad-card">
+              <span className="forecast-quad-card-label">
+                Forecasted Revenue
+              </span>
+              <strong className="forecast-quad-card-large-numeric">
+                $1.1M
+              </strong>
+              <span className="forecast-quad-card-trend-subtext text-green">
+                ↑ 14% vs last month
+              </span>
+            </div>
+            <div className="revenue-forecast-metric-quad-card">
+              <span className="forecast-quad-card-label">
+                Forecasted Closings
+              </span>
+              <strong className="forecast-quad-card-large-numeric">12</strong>
+              <span className="forecast-quad-card-trend-subtext text-green">
+                ↑ 20% vs last month
+              </span>
+            </div>
+            <div className="revenue-forecast-metric-quad-card">
+              <span className="forecast-quad-card-label">
+                Pipeline Velocity
+              </span>
+              <strong className="forecast-quad-card-large-numeric">
+                1.42x
+              </strong>
+              <span className="forecast-quad-card-trend-subtext text-green">
+                ↑ 18% vs last week
+              </span>
+            </div>
+            <div className="revenue-forecast-metric-quad-card">
+              <span className="forecast-quad-card-label">Close Confidence</span>
+              <strong className="forecast-quad-card-large-numeric">87%</strong>
+              <span className="forecast-quad-card-trend-subtext text-green">
+                High Confidence
+              </span>
+            </div>
+          </div>
+
+          <p className="revenue-forecast-footer-explanatory-text">
+            AI predicts $1.1M in revenue with 87% confidence based on current
+            pipeline health, deal velocity, and engagement signals.
+          </p>
+        </div>
+
+        {/* PANEL 3: AUTOMATION HEALTH */}
+        <div className="bottom-intelligence-card-panel">
+          <div className="intelligence-card-header-row">
+            <div className="flex items-center gap-2">
+              <Settings size={18} className="intelligence-header-icon" />
+              <h3 className="intelligence-card-main-title">
+                Automation Health
+              </h3>
+            </div>
+            <span className="automation-global-status-indicator-pill">
+              <span className="live-status-dot-green"></span> All Systems
+              Operational
             </span>
           </div>
-          <button className="intelligence-view-all-navigation-link">
-            View All <ArrowRight size={14} />
-          </button>
-        </div>
 
-        <div className="risk-queue-table-rows-wrapper">
-          {[
-            { name: "Luxury Penthouse", val: "$910K", reason: "Stale for 8 days", status: "High" },
-            { name: "Beachfront Condo", val: "$320K", reason: "No response", status: "High" },
-            { name: "Golf Course Condo", val: "$675K", reason: "Funding delay", status: "Medium" },
-            { name: "Downtown Apartment", val: "$185K", reason: "Unanswered calls", status: "Medium" },
-          ].map((row, rIdx) => (
-            <div className="risk-queue-table-row-item" key={rIdx}>
-              <span className="risk-table-cell-property-name">{row.name}</span>
-              <strong className="risk-table-cell-deal-value">{row.val}</strong>
-              <span className="risk-table-cell-risk-reason-desc">{row.reason}</span>
-              <span className={`risk-table-cell-severity-badge status-${row.status.toLowerCase()}`}>
-                {row.status}
-              </span>
-              <button className="risk-table-cell-action-review-trigger-btn">Review</button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* PANEL 2: REVENUE FORECAST */}
-      <div className="bottom-intelligence-card-panel">
-        <div className="intelligence-card-header-row">
-          <div className="flex items-center gap-2">
-            
-            <LineChartIcon size={18} className="intelligence-header-icon" />
-            <h3 className="intelligence-card-main-title">Revenue Forecast</h3>
-          </div>
-          <button className="secondary-btn compact-dropdown-trigger">
-            This Month <ChevronDown size={14} />
-          </button>
-        </div>
-
-        <div className="revenue-forecast-metrics-grid-quad">
-          <div className="revenue-forecast-metric-quad-card">
-            <span className="forecast-quad-card-label">Forecasted Revenue</span>
-            <strong className="forecast-quad-card-large-numeric">$1.1M</strong>
-            <span className="forecast-quad-card-trend-subtext text-green">↑ 14% vs last month</span>
-          </div>
-          <div className="revenue-forecast-metric-quad-card">
-            <span className="forecast-quad-card-label">Forecasted Closings</span>
-            <strong className="forecast-quad-card-large-numeric">12</strong>
-            <span className="forecast-quad-card-trend-subtext text-green">↑ 20% vs last month</span>
-          </div>
-          <div className="revenue-forecast-metric-quad-card">
-            <span className="forecast-quad-card-label">Pipeline Velocity</span>
-            <strong className="forecast-quad-card-large-numeric">1.42x</strong>
-            <span className="forecast-quad-card-trend-subtext text-green">↑ 18% vs last week</span>
-          </div>
-          <div className="revenue-forecast-metric-quad-card">
-            <span className="forecast-quad-card-label">Close Confidence</span>
-            <strong className="forecast-quad-card-large-numeric">87%</strong>
-            <span className="forecast-quad-card-trend-subtext text-green">High Confidence</span>
-          </div>
-        </div>
-
-        <p className="revenue-forecast-footer-explanatory-text">
-          AI predicts $1.1M in revenue with 87% confidence based on current pipeline health, deal velocity, and engagement signals.
-        </p>
-      </div>
-
-      {/* PANEL 3: AUTOMATION HEALTH */}
-      <div className="bottom-intelligence-card-panel">
-        <div className="intelligence-card-header-row">
-          <div className="flex items-center gap-2">
-            
-            <Settings size={18} className="intelligence-header-icon" />
-            <h3 className="intelligence-card-main-title">Automation Health</h3>
-          </div>
-          <span className="automation-global-status-indicator-pill">
-            <span className="live-status-dot-green"></span> All Systems Operational
-          </span>
-        </div>
-
-        <div className="automation-health-list-rows-stack">
-          {[
-            { title: "AI Score Refresh", state: "Active" },
-            { title: "Auto Prioritization", state: "Active" },
-            { title: "Follow-Up Tasks", state: "Active" },
-            { title: "Pipeline Sync", state: "Active" },
-            { title: "Risk Detection", state: "Active" },
-          ].map((item, iIdx) => (
-            <div className="automation-health-row-item" key={iIdx}>
-              <div className="flex items-center gap-2">
-                <CheckSquare size={14} className="automation-item-check-icon" />
-                <span className="automation-health-item-title-text">{item.title}</span>
+          <div className="automation-health-list-rows-stack">
+            {[
+              { title: "AI Score Refresh", state: "Active" },
+              { title: "Auto Prioritization", state: "Active" },
+              { title: "Follow-Up Tasks", state: "Active" },
+              { title: "Pipeline Sync", state: "Active" },
+              { title: "Risk Detection", state: "Active" },
+            ].map((item, iIdx) => (
+              <div className="automation-health-row-item" key={iIdx}>
+                <div className="flex items-center gap-2">
+                  <CheckSquare
+                    size={14}
+                    className="automation-item-check-icon"
+                  />
+                  <span className="automation-health-item-title-text">
+                    {item.title}
+                  </span>
+                </div>
+                <span className="automation-health-item-status-active-badge">
+                  {item.state}
+                </span>
               </div>
-              <span className="automation-health-item-status-active-badge">{item.state}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-
-    </section>
+      </section>
 
       {/* SELECTED DEAL BOTTOM DRILLDOWN VIEW CARD */}
       <section className="selected-deal-bottom-drilldown-inspector-panel">
         <div className="inspector-panel-grid-layout">
-          <div className="inspector-left-identity-column">
-            <span className="inspector-section-small-overhead-label">
-              Selected Deal
-            </span>
-            <div className="flex items-start gap-3 mt-2">
-              <div className="inspector-deal-avatar-circle avatar-purple">
-                M
+          <div className="select-deal">
+            <div className="inspector-left-identity-column">
+              <span className="inspector-section-small-overhead-label">
+                Selected Deal
+              </span>
+              <div className="flex items-start gap-3 mt-2">
+                <div className="inspector-deal-avatar-circle avatar-purple">
+                  M
+                </div>
+                <div className="inspector-deal-wrap">
+                  <h4 className="inspector-deal-client-name">
+                    Makoto Kawamoto
+                  </h4>
+                  <span className="inspector-deal-property-title">
+                    Luxury Penthouse
+                  </span>
+                  <div className="flex items-center gap-2 mt-2">
+                    <strong className="inspector-deal-financial-value">
+                      $910,000
+                    </strong>
+                    <span className="deal-card-temperature-tag tag-hot">
+                      Hot
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="inspector-deal-wrap">
-                <h4 className="inspector-deal-client-name">Makoto Kawamoto</h4>
-                <span className="inspector-deal-property-title">
-                  Luxury Penthouse
-                </span>
-                <div className="flex items-center gap-2 mt-2">
-                  <strong className="inspector-deal-financial-value">
-                    $910,000
+            </div>
+
+            <div className="inspector-center-metrics-column">
+              <div className="inspector-metric-box-card">
+                <span className="inspector-metric-card-label">AI Score</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <strong className="inspector-metric-card-large-value">
+                    84%
                   </strong>
-                  <span className="deal-card-temperature-tag tag-hot">Hot</span>
+                </div>
+                <div className="inspector-metric-horizontal-progress-bar-bg">
+                  <div
+                    className="inspector-metric-horizontal-progress-fill"
+                    style={{ width: "84%" }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="inspector-metric-box-card">
+                <span className="inspector-metric-card-label">Risk</span>
+                <strong className="inspector-metric-card-large-value text-red mt-1 tag-hot">
+                  High
+                </strong>
+              </div>
+
+              <div className="inspector-metric-box-card">
+                <span className="inspector-metric-card-label">Stage</span>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="column-status-dot dot-proposal"></span>
+                  <strong className="inspector-metric-card-standard-text tag-purple">
+                    Proposal
+                  </strong>
+                </div>
+              </div>
+
+              <div className="ofmobile inspector-metric-box-card">
+                <span className="inspector-metric-card-label">Next Action</span>
+                <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
+                  <Calendar size={14} /> <span>Follow up</span>
+                </div>
+                <span className="inspector-metric-card-sub-timestamp">
+                  <Clock3 size={11} /> 45 min ago
+                </span>
+              </div>
+            </div>
+            <div className="mobile inspector-metric-box-card">
+              <span className="inspector-metric-card-label">Next Action</span>
+              <div className="follow-up-right">
+                <span className="inspector-metric-card-sub-timestamp">
+                  <Clock3 size={11} /> 45 min ago
+                </span>
+                <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
+                  <Calendar size={14} /> <span>Follow up</span>
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="inspector-center-metrics-column">
-            <div className="inspector-metric-box-card">
-              <span className="inspector-metric-card-label">AI Score</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <strong className="inspector-metric-card-large-value">
-                  84%
-                </strong>
-              </div>
-              <div className="inspector-metric-horizontal-progress-bar-bg">
-                <div
-                  className="inspector-metric-horizontal-progress-fill"
-                  style={{ width: "84%" }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="inspector-metric-box-card">
-              <span className="inspector-metric-card-label">Risk</span>
-              <strong className="inspector-metric-card-large-value text-red mt-1 tag-hot">
-                High
-              </strong>
-            </div>
-
-            <div className="inspector-metric-box-card">
-              <span className="inspector-metric-card-label">Stage</span>
-              <div className="flex items-center gap-2 mt-2">
-                <span className="column-status-dot dot-proposal"></span>
-                <strong className="inspector-metric-card-standard-text tag-purple">
-                  Proposal
-                </strong>
-              </div>
-            </div>
-
-            <div className="inspector-metric-box-card">
-              <span className="inspector-metric-card-label">Next Action</span>
-              <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
-                <Calendar size={14} /> <span>Follow up</span>
-              </div>
-              <span className="inspector-metric-card-sub-timestamp">
-                <Clock3 size={11} /> 45 min ago
-              </span>
-            </div>
-          </div>
-
           <div className="inspector-deal-activity-log-column">
             <div className="flex justify-between items-center mb-2">
               <span className="inspector-section-small-overhead-label">
