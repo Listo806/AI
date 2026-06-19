@@ -1201,17 +1201,22 @@ body .contacts-page .map svg{
   .contacts-page .filter-btn {
     padding: 0 13px;
   }
-  
-  
+  .contacts-page .kpi-value {
+    font-size: 22px;
+  }
+  .contacts-page .kpi-icon {
+    width: 40px;
+    height: 40px;
+  }
 }
 @media (max-width: 390px) {
-  .contacts-page .kpi-grid {
-    grid-template-columns: 1fr;
-  }
   .contacts-page .filter-btn {
     padding: 0 9px;
   }
   .contacts-page .filter-left .runai, .contacts-page .filter-left .insights{
     gap: 10px;
+  }
+  .contacts-page .kpi-box {
+    padding: 10px 12px;
   }
 }
