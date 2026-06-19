@@ -192,7 +192,9 @@ export default function PropertiesPage() {
         <p className="next_head">Command Center</p>
         <Sparkles size={16} color="#2563eb" />
       </div>
-      <p className="sub_head">Manage, analyze and optimize your property listing with AI intelligence</p>
+      <p className="sub_head">
+        Manage, analyze and optimize your property listing with AI intelligence
+      </p>
       <div className="page-header">
         <div className="header-actions">
           <button className="btn btn-secondary">
@@ -231,7 +233,7 @@ export default function PropertiesPage() {
           <input placeholder="Search properties, addresses, MLS ID..." />
         </div>
 
-        <div className="filter-select-wrapper">
+        <div className="filter-select-wrapper search-date">
           <select className="filter-select" defaultValue="may">
             <option value="may">May 1, 2024 - May 31, 2024</option>
           </select>
@@ -291,7 +293,7 @@ export default function PropertiesPage() {
           <Search size={14} />
           Search
         </button>
-        <button className="btn btn-secondary" style={{ height: "38px" }}>
+        <button className="btn btn-secondary export" style={{ height: "38px" }}>
           <Download size={15} className="blue" /> Export
         </button>
 
@@ -418,44 +420,45 @@ export default function PropertiesPage() {
             </div>
 
             <div className="health-chart-wrapper">
-              <div className="donut-chart-mock">
-                <div className="chart-center">
-                  <h4>248</h4>
-                  <span>Total</span>
+              <div className="chart-wrap">
+                <div className="donut-chart-mock">
+                  <div className="chart-center">
+                    <h4>248</h4>
+                    <span>Total</span>
+                  </div>
+                </div>
+
+                <div className="chart-legend">
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <CheckCircle2 size={14} color="#16a34a" />
+                      <span>Active</span>
+                    </div>
+                    <span className="legend-value">186 (75%)</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <Clock3 size={14} color="#ea580c" />
+                      <span>Under Review</span>
+                    </div>
+                    <span className="legend-value">32 (13%)</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <FileText size={14} color="#64748b" />
+                      <span>Draft</span>
+                    </div>
+                    <span className="legend-value">18 (7%)</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <AlertCircle size={14} color="#dc2626" />
+                      <span>Inactive</span>
+                    </div>
+                    <span className="legend-value">12 (5%)</span>
+                  </div>
                 </div>
               </div>
-
-              <div className="chart-legend">
-                <div className="legend-item">
-                  <div className="legend-label">
-                    <CheckCircle2 size={14} color="#16a34a" />
-                    <span>Active</span>
-                  </div>
-                  <span className="legend-value">186 (75%)</span>
-                </div>
-                <div className="legend-item">
-                  <div className="legend-label">
-                    <Clock3 size={14} color="#ea580c" />
-                    <span>Under Review</span>
-                  </div>
-                  <span className="legend-value">32 (13%)</span>
-                </div>
-                <div className="legend-item">
-                  <div className="legend-label">
-                    <FileText size={14} color="#64748b" />
-                    <span>Draft</span>
-                  </div>
-                  <span className="legend-value">18 (7%)</span>
-                </div>
-                <div className="legend-item">
-                  <div className="legend-label">
-                    <AlertCircle size={14} color="#dc2626" />
-                    <span>Inactive</span>
-                  </div>
-                  <span className="legend-value">12 (5%)</span>
-                </div>
-              </div>
-
               <div className="inventory-score-box">
                 <div className="score-info">
                   <h5>Inventory Score</h5>

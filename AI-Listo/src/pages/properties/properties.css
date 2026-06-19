@@ -198,7 +198,7 @@ body .properties-page {
 }
 
 .properties-page .search-box.price {
-  min-width: 192px;
+  min-width: 126px;
   margin: 0;
 }
 
@@ -248,7 +248,7 @@ body .properties-page {
 }
 
 .properties-page .toggle-btn {
-  height: 36px;
+  height: 38px;
   padding: 0 12px;
   border: none;
   background: transparent;
@@ -314,23 +314,23 @@ body .properties-page {
   color: white;
 }
 
-.properties-page .badge-status.hot {
-  background: #dc2626;
+body #root .properties-page .badge-status.hot {
+  background: #dc2626!important;
 }
 
-.properties-page .badge-status.ai-optimized {
-  background: #2563eb;
+body #root .properties-page .badge-status.ai-optimized {
+  background: #2563eb!important;
 }
 
-.properties-page .badge-status.under-review {
-  background: #ea580c;
+body #root .properties-page .badge-status.under-review {
+  background: #ea580c!important;
 }
 
-.properties-page .badge-status.active {
-  background: #16a34a;
+body #root .properties-page .badge-status.active {
+  background: #16a34a!important;
 }
 
-.properties-page .card-actions-trigger {
+body #root .properties-page .card-actions-trigger {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -487,6 +487,7 @@ body .properties-page {
 .properties-page .listing-status-tag.review {
   background: #fff7ed;
   color: #ea580c;
+  text-align: center;
 }
 
 .properties-page .sidebar-panel {
@@ -612,6 +613,7 @@ body .properties-page {
 .properties-page .legend-value {
   font-weight: 600;
   color: #1e293b;
+  text-align: right;
 }
 
 .properties-page .inventory-score-box {
@@ -745,7 +747,7 @@ body .properties-page {
 .properties-page .health-chart-wrapper {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 14px;
   margin-bottom: 20px;
 }
 
@@ -784,11 +786,6 @@ body .properties-page {
   align-items: center;
   gap: 8px;
   color: #475569;
-}
-
-.properties-page .legend-value {
-  font-weight: 600;
-  color: #1e293b;
 }
 
 .properties-page .score-info .score-display {
@@ -902,7 +899,10 @@ body .properties-page {
 .blue {
   color: #2563eb;
 }
-
+.chart-wrap{
+  display: flex;
+  gap: 14px;
+}
 @media (max-width: 1300px) {
   
 }
@@ -919,14 +919,31 @@ body .properties-page {
 
 @media (max-width: 1024px) {
   .properties-page .sidebar-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+  .properties-page .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap:8px;
+  }
+  .properties-page .metrics-grid .metric-card {
+    border-radius: 10px;
+    justify-content: center;
+  }
+  .properties-page .filter-select-wrapper select {
+    min-width: 184px;
+  }
+  .properties-page .health-chart-wrapper {
+    align-items: normal;
+    flex-direction: column;
+    justify-content: space-between;
+ }
+ .properties-page .sidebar-section {
+    padding: 10px;
   }
 }
 
 @media (max-width: 768px) {
-  .properties-page .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  
 
   .properties-page .metrics-grid .metric-card:nth-child(even) {
     border-right: none;
@@ -948,6 +965,22 @@ body .properties-page {
 }
 
 @media (max-width: 480px) {
+  .properties-page .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap:8px;
+  }
+  .properties-page .sidebar-panel {
+        grid-template-columns: 1fr;
+    }
+  .crm-dark #root .properties-page .header-actions .btn-secondary svg{
+    stroke: #fff;
+  }
+  .properties-page .header-actions .btn-primary {
+    background: #7b0bface;
+  }
+  .crm-dark #root .properties-page .header-actions .btn-secondary:first-child{
+    background: #2563eb;
+  }
   .properties-page .metric-card:not(:last-child)::after {
     width: 0;
   }
@@ -955,11 +988,9 @@ body .properties-page {
   .properties-page .header-actions .btn {
     width: 100%;
     justify-content: center;
-  }
-
-  .properties-page .header-actions {
+    height: 100%;
     flex-direction: column;
-    width: 80%;
+    padding: 10px;
   }
 
   .properties-page .page-header {
@@ -971,22 +1002,106 @@ body .properties-page {
   }
 
   .properties-page .properties-grid {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
-  .properties-page .metrics-grid .metric-card {
-    border-right: none !important;
+  .properties-page .filter-select-wrapper.search-date, .properties-page .filter-select-wrapper.search-date select{ 
+    width: 100%;
+  }
+  .properties-page .next_head {
+    font-size: 11px;
+  }
+  .properties-page .filter-select-wrapper, .properties-page .filters-row .btn-primary{
+    width: 32%;
+  }
+  .properties-page .filter-select-wrapper select{
+    min-width: 100%;
+  }
+  .properties-page .filters-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .properties-page .search-box.price{
+    width: 32%;
+  }
+  .search-box.price{
+    max-width: unset;
+  }
+  .properties-page .filters-row .export{
+    width: 49%;
     justify-content: center;
+  }
+  .properties-page .view-toggle-group{
+    width: 49%;
+    border: 0!important;
+    background: none!important;
+    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .properties-page .view-toggle-group button{
+    border: 1px solid #202733;
+    border-radius: 8px;
+  }
+  
+  .properties-page .btn-match-view {
+    padding: 0 8px;
+  }
+  .properties-page .card-body {
+    padding: 10px 7px;
+  }
+  .properties-page .lead-left-content {
+    gap: 8px;
+  }
+  .properties-page .lead-details h4 {
+    font-size: 12px;
+  }
+  .properties-page .lead-right-meta .budget {
+    font-size: 11px;
+  }
+}
+@media (max-width: 420px) {
+  .properties-page .filter-select-wrapper, .properties-page .filters-row .btn-primary, .properties-page .search-box.price {
+    width: 31%;
+    min-width: 31%;
+  }
+  .properties-page .filters-row .btn-secondary.export {
+      width: 48%;
   }
 
 }
-
 @media (max-width: 390px) {
   
   .properties-page .metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
   .next_head {
     display: none;
+  }
+  .properties-page .filter-select-wrapper, .properties-page .filters-row .btn-primary, .properties-page .filters-row .btn-secondary{
+    width: 31%;
+    min-width: 31%;
+  }
+  .properties-page .search-box.price {
+    width: 30%;
+    min-width: 30%;
+  }
+  .properties-page .filters-row .btn {
+    padding: 0 7px;
+    border-radius: 8px;
+  }
+
+  .properties-page .metric-card {
+    padding: 16px;
+  }
+  .properties-page .header-actions .btn {
+    padding: 10px 7px;
+  }
+  .properties-page .header-actions {
+    gap: 7px;
   }
 }
