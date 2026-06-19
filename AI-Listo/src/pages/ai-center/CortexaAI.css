@@ -751,10 +751,66 @@
     height: 30px;
   }
 
-  .ai-card-icon {
+  body #root .ai-card .ai-card-icon {
+    margin: 0;
+    width: 53px;
+    height: 53px;
+    background: none !important;
+  }
+  .ai-card-icon.purple{
+    border: 1px solid #8636dae6;
+  }
+  .ai-card-icon.purple svg{
     color: #b25ced;
   }
-
+  .ai-card-icon.green{
+    border: 1px solid #046625e6;
+  }
+  .ai-card-icon.green svg{
+    color: #2bce62e6;
+  }
+  .ai-card-icon.orange{
+    border: 1px solid #703310e6;
+  }
+  .ai-card-icon.orange svg{
+    color: #d36b0ae6;
+  }
+  .ai-card-icon.blue{
+    border: 1px solid #090797e6;
+  }
+  .ai-card-icon.plight{
+    border: 1px solid #960b40e6;
+  }
+  .ai-card-icon.plight svg{
+    color: #882b69e6;
+  }
+  .ai-card-icon.glight{
+    border: 1px solid #116852e6;
+  }
+  .ai-card-icon.glight svg{
+    color: #0db4c0e6;
+  }
+   .ai-card-icon.pink{
+    border: 1px solid #9b147ee6;
+  }
+  .ai-card-icon.blight{
+    border: 1px solid #3c108de6;
+  }
+  .ai-card-icon.blight svg{
+    color: #6b25dbe6;
+  }
+  .ai-card-icon.cyan{
+    border: 1px solid #32502bec;
+  }
+  .ai-card-icon.cyan svg{
+    color: #4ff84f86;
+  }
+  .ai-card-icon.red{
+    border: 1px solid #721111ec;
+  }
+  .ai-card-icon.red svg{
+    color: #f0380a86;
+  }
   .ai-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -774,6 +830,10 @@
 
   .ai-card {
     padding: 15px 10px;
+    flex-direction: row;
+    text-align: left;
+    gap: 10px;
+    align-items: center;
   }
 
   .ai-card p {
@@ -800,6 +860,30 @@
 }
 
 @media (max-width: 430px) {
+  .ai-grid {
+    margin-top: 10px;
+  }
+  .ai-container {
+    padding: 40px 16px;
+  }
+  .ai-card {
+    gap: 6px;
+  }
+  .ai-card h3, .ai-card p {
+    font-size: 13px;
+  }
+  .ai-grid {
+    gap: 7px;
+  }
+  body #root .ai-card .ai-card-icon {
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+  }
+  .ai-card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
   .ai-tabs button {
     padding: 10px 16px;
     justify-content: center;

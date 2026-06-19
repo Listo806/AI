@@ -237,60 +237,70 @@ export default function CortexaAI() {
       subtitle: t("cortexa.auto_reply_subtitle"),
       icon: MessageCircle,
       prompt: t("cortexa.auto_reply_prompt"),
+      color: 'purple',
     },
     {
       title: t("cortexa.qualify_leads"),
       subtitle: t("cortexa.qualify_leads_subtitle"),
       icon: UserCheck,
       prompt: t("cortexa.qualify_leads_prompt"),
+      color: 'green',
     },
     {
       title: t("cortexa.create_follow_up"),
       subtitle: t("cortexa.create_follow_up_subtitle"),
       icon: Repeat,
       prompt: t("cortexa.create_follow_up_prompt"),
+      color: 'orange',
     },
     {
       title: t("cortexa.write_property_listing"),
       subtitle: t("cortexa.write_property_listing_subtitle"),
       icon: Home,
       prompt: t("cortexa.write_property_listing_prompt"),
+      color: 'blue',
     },
     {
       title: t("cortexa.generate_ad_copy"),
       subtitle: t("cortexa.generate_ad_copy_subtitle"),
       icon: Megaphone,
       prompt: t("cortexa.generate_ad_copy_prompt"),
+      color: 'plight',
     },
     {
       title: t("cortexa.analyze_pipeline"),
       subtitle: t("cortexa.analyze_pipeline_subtitle"),
       icon: BarChart3,
       prompt: t("cortexa.analyze_pipeline_prompt"),
+      color: 'glight',
     },
     {
       title: t("cortexa.find_cold_leads"),
       subtitle: t("cortexa.find_cold_leads_subtitle"),
       icon: Search,
       prompt: t("cortexa.find_cold_leads_prompt"),
+      color: 'pink',
     },
     {
       title: t("cortexa.book_appointment"),
       subtitle: t("cortexa.book_appointment_subtitle"),
       icon: CalendarCheck,
       prompt: t("cortexa.book_appointment_prompt"),
+      color: 'blight',
     },
     {
       title: t("cortexa.write_whatsapp_message"),
       subtitle: t("cortexa.write_whatsapp_message_subtitle"),
       icon: PenLine,
       prompt: t("cortexa.write_whatsapp_message_prompt"),
+      color: 'cyan',
     },
     {
       title: t("cortexa.summarize_leads"),
       subtitle: t("cortexa.summarize_leads_subtitle"),
       icon: Sparkles,
       prompt: t("cortexa.summarize_leads_prompt"),
+      color: 'red',
     },
   ];
 
@@ -638,7 +648,7 @@ export default function CortexaAI() {
                     className="ai-card"
                     onClick={() => handleActionClick(action.prompt)}
                   >
-                    <div className="ai-card-icon">
+                    <div className={`ai-card-icon ${action.color}`}>
                       <Icon size={16} />
                     </div>
 
