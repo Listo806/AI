@@ -358,7 +358,7 @@ export default function LeadGeneratorPage() {
       {/* LOWER GRID LAYOUT */}
       <div className="lower-split-dashboard-grid">
         {/* LEFT COLUMN: PROCESS & DATAGRID */}
-        <div>
+        <div className="right-analytics">
           {/* 2 & 3: PROCESS & PIPELINE ROW */}
           <div className="process-management-row">
             {/* 2. SOURCE FOCUS */}
@@ -549,59 +549,60 @@ export default function LeadGeneratorPage() {
                   className={`lead-row-item-line ${selectedLeads.includes(lead.id) ? "row-selected-active" : ""}`}
                   key={lead.id}
                 >
-                  {/* Column 1: Checkbox */}
-                  <div>
-                    <input
-                      type="checkbox"
-                      className="row-selection-checkbox-input"
-                      checked={selectedLeads.includes(lead.id)}
-                      onChange={() => toggleLeadSelection(lead.id)}
-                    />
-                  </div>
+                  <div className="lead-profil-wrap">
+                    {/* Column 1: Checkbox */}
 
-                  {/* Column 2: Profile Identity */}
-                  <div className="lead-profile-identity-block">
-                    <img
-                      src={lead.avatar}
-                      alt={lead.name}
-                      className="lead-photo-avatar-circle"
-                    />
-                    <div className="lead-text-details-stack">
-                      <h4>
-                        {lead.name}{" "}
-                        {lead.badge && (
-                          <span className="badge-new-arrival">
-                            {lead.badge}
-                          </span>
-                        )}
-                      </h4>
-                      <p>{lead.email}</p>
-                      <div className="lead-communications-link-row">
-                        <Phone size={14} />
-                        {lead.phone}
-                        <span className="whatsapp-icon-inline-svg">●</span>
+                    {/* Column 2: Profile Identity */}
+                    <div className="lead-profile-identity-block">
+                      <div>
+                        <input
+                          type="checkbox"
+                          className="row-selection-checkbox-input"
+                          checked={selectedLeads.includes(lead.id)}
+                          onChange={() => toggleLeadSelection(lead.id)}
+                        />
+                      </div>
+                      <img
+                        src={lead.avatar}
+                        alt={lead.name}
+                        className="lead-photo-avatar-circle"
+                      />
+                      <div className="lead-text-details-stack">
+                        <h4>
+                          {lead.name}{" "}
+                          {lead.badge && (
+                            <span className="badge-new-arrival">
+                              {lead.badge}
+                            </span>
+                          )}
+                        </h4>
+                        <p>{lead.email}</p>
+                        <div className="lead-communications-link-row">
+                          <Phone size={14} />
+                          {lead.phone}
+                          <span className="whatsapp-icon-inline-svg">●</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Column 3: Custom Blue Agent Terminology */}
+                    <div className="text-center">
+                      <span className="agent-role-label-text">{lead.role}</span>
+                      <div style={{ marginTop: "4px" }}>
+                        <span
+                          className={`temperature-badge-pill ${lead.temp.toLowerCase()}`}
+                        >
+                          {lead.temp}
+                        </span>
+                      </div>
+                      <div className="ai-score-percentage-capsule">
+                        <span>AI Score</span>
+                        <div className="ai-score-ring-mini mid-green">
+                          {lead.aiScore}
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Column 3: Custom Blue Agent Terminology */}
-                  <div className="text-center">
-                    <span className="agent-role-label-text">{lead.role}</span>
-                    <div style={{ marginTop: "4px" }}>
-                      <span
-                        className={`temperature-badge-pill ${lead.temp.toLowerCase()}`}
-                      >
-                        {lead.temp}
-                      </span>
-                    </div>
-                    <div className="ai-score-percentage-capsule">
-                      <span>AI Score</span>
-                      <div className="ai-score-ring-mini mid-green">
-                        {lead.aiScore}
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Column 5: Interests & Budget */}
                   <div className="lead-intent-interests-paragraph">
                     <span style={{ color: "#64748b", fontSize: "11px" }}>
@@ -675,78 +676,80 @@ export default function LeadGeneratorPage() {
           {/* AI Score Insights Card */}
           <div className="sidebar-analytics-card">
             <h3 className="sidebar-card-headline-title">AI Score Insights</h3>
-            <div className="ai-score-donut-chart-graphic-box">
-              <svg
-                width="100"
-                height="100"
-                className="donut-svg-canvas-wrapper"
-                viewBox="0 0 42 42"
-              >
-                {/* Hot - 10/32 -> 31.25% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.91549430918954"
-                  fill="transparent"
-                  className="donut-segment hot-green-segment"
-                  strokeDasharray="31.25 68.75"
-                  strokeDashoffset="0"
-                />
+            <div className="ai-score-donut-chart-wrap">
+              <div className="ai-score-donut-chart-graphic-box">
+                <svg
+                  width="100"
+                  height="100"
+                  className="donut-svg-canvas-wrapper"
+                  viewBox="0 0 42 42"
+                >
+                  {/* Hot - 10/32 -> 31.25% */}
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    className="donut-segment hot-green-segment"
+                    strokeDasharray="31.25 68.75"
+                    strokeDashoffset="0"
+                  />
 
-                {/* Warm - 17/32 -> 53.125% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.91549430918954"
-                  fill="transparent"
-                  className="donut-segment warm-orange-segment"
-                  strokeDasharray="53.125 46.875"
-                  strokeDashoffset="-31.25"
-                />
+                  {/* Warm - 17/32 -> 53.125% */}
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    className="donut-segment warm-orange-segment"
+                    strokeDasharray="53.125 46.875"
+                    strokeDashoffset="-31.25"
+                  />
 
-                {/* Cold - 5/32 -> 15.625% */}
-                <circle
-                  cx="21"
-                  cy="21"
-                  r="15.91549430918954"
-                  fill="transparent"
-                  className="donut-segment cold-red-segment"
-                  strokeDasharray="15.625 84.375"
-                  strokeDashoffset="-84.375"
-                />
-              </svg>
-              <div className="donut-center-absolute-labels-stack">
-                <h3>32</h3>
-                <p>
-                  Qualified
-                  <br /> Leads
-                </p>
-              </div>
-            </div>
-
-            <div className="analytics-color-legend-list">
-              <div className="legend-row-item-align">
-                <div className="legend-label-left-side">
-                  <div className="legend-color-dot-indicator hot-red"></div>
-                  <span>Hot (70-100)</span>
+                  {/* Cold - 5/32 -> 15.625% */}
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.91549430918954"
+                    fill="transparent"
+                    className="donut-segment cold-red-segment"
+                    strokeDasharray="15.625 84.375"
+                    strokeDashoffset="-84.375"
+                  />
+                </svg>
+                <div className="donut-center-absolute-labels-stack">
+                  <h3>32</h3>
+                  <p>
+                    Qualified
+                    <br /> Leads
+                  </p>
                 </div>
-                <span className="legend-count-value-number">10</span>
               </div>
 
-              <div className="legend-row-item-align">
-                <div className="legend-label-left-side">
-                  <div className="legend-color-dot-indicator warm-orange"></div>
-                  <span>Warm (40-69)</span>
+              <div className="analytics-color-legend-list">
+                <div className="legend-row-item-align">
+                  <div className="legend-label-left-side">
+                    <div className="legend-color-dot-indicator hot-red"></div>
+                    <span>Hot (70-100)</span>
+                  </div>
+                  <span className="legend-count-value-number">10</span>
                 </div>
-                <span className="legend-count-value-number">17</span>
-              </div>
 
-              <div className="legend-row-item-align">
-                <div className="legend-label-left-side">
-                  <div className="legend-color-dot-indicator cold-blue"></div>
-                  <span>Cold (0-39)</span>
+                <div className="legend-row-item-align">
+                  <div className="legend-label-left-side">
+                    <div className="legend-color-dot-indicator warm-orange"></div>
+                    <span>Warm (40-69)</span>
+                  </div>
+                  <span className="legend-count-value-number">17</span>
                 </div>
-                <span className="legend-count-value-number">5</span>
+
+                <div className="legend-row-item-align">
+                  <div className="legend-label-left-side">
+                    <div className="legend-color-dot-indicator cold-blue"></div>
+                    <span>Cold (0-39)</span>
+                  </div>
+                  <span className="legend-count-value-number">5</span>
+                </div>
               </div>
             </div>
           </div>

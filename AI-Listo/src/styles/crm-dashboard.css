@@ -1614,7 +1614,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .sidebar-footer, .crm-dark #root .timeline-footer,
 .crm-dark #root .deal-card-bottom-interactive-action-triggers, .crm-dark #root .metrics-grid .metric-card:nth-child(n+2),
 .crm-dark #root .agent-footer, .crm-dark #root .contact-info-list,
-.crm-dark #root .team-activity-footer, .crm-dark #root .bulk-processing-footer-bar {
+.crm-dark #root .team-activity-footer, .crm-dark #root .bulk-processing-footer-bar,
+.crm-dark .generator-page .sidebar-action-view-all-link-btn {
   border-top: 1px solid #202733;
 }
 .crm-dark .pipeline-page .ai-banner-metrics-container{
@@ -1628,7 +1629,9 @@ body.crm-dark .crm-error {
 .crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .drawer-header {
   border-bottom: 1px solid #202733;
 }
-
+.crm-dark .generator-page .lead-profile-identity-block{
+  border-right: 1px solid #202733;
+}
 .crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
 .crm-dark #root .team-member-card, .crm-dark #root .team-full-table tr,
 .crm-dark #root .whatsapp-page .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
@@ -1794,7 +1797,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .contact-menu, .crm-dark #root .mobile-detail-page .detail-card-spec,
 .crm-dark #root .detail-section-card, .crm-dark #root .action-grid-btn,
 .crm-dark .select-deal, .crm-dark .inspector-deal-activity-log-column, .crm-dark .inspector-ai-next-steps-actions-column,
-.crm-dark .pipeline-page .revenue-forecast-metric-quad-card, .crm-dark #root .properties-page .metrics-grid .metric-card{
+.crm-dark .pipeline-page .revenue-forecast-metric-quad-card, .crm-dark #root .properties-page .metrics-grid .metric-card,
+.crm-dark .generator-page .channel-chip.active-blue{
   background: #101827f2;
   border: 1px solid #202733;
 }
@@ -1805,7 +1809,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .lead-row-item-line, .crm-dark #root .layout-view-toggle-buttons-group,
 .crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn,
 .crm-dark .contacts-page .form-group textarea,
-.crm-dark .whatsapp-page .full-timeline-btn{
+.crm-dark .whatsapp-page .full-timeline-btn, .crm-dark .generator-page .channels-chips-group
+{
   border: 1px solid #202733;
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
@@ -1901,7 +1906,11 @@ body.crm-dark .leads-page,
 .crm-dark #root .contact-name, .crm-dark #root .contact-menu button, .crm-dark .mobile-detail-page .detail-header h2,
 .crm-dark .leads-page .priority-item span, .crm-dark .leads-page .revenue-val-dark,
 .crm-dark .pipeline-page .ai-banner-header-title, .crm-dark .pipeline-page .inspector-metric-card-large-value,
-.crm-dark .properties-page .price-row h3{
+.crm-dark .properties-page .price-row h3,
+.crm-dark #root .btn-icon-text, .crm-dark .generator-page .lead-intent-interests-paragraph,
+.crm-dark .generator-page .lead-origin-source-routing-block div,
+.crm-dark .generator-page .donut-center-absolute-labels-stack h3,
+.crm-dark .generator-page .legend-count-value-number, .crm-dark .generator-page .city-leads-count-metric-num{
   color: var(--text);
 }
 .crm-dark #root .team-activity-message, .crm-dark #root .team-notification-title, .crm-dark #root .team-performance-label,
@@ -1917,7 +1926,9 @@ body.crm-dark .leads-page,
 .crm-dark .pipeline-page .inspector-metric-card-label, .crm-dark .properties-page .section-header h3,
 .crm-dark .properties-page .property-address, .crm-dark .properties-page .spec-item,
 .crm-dark .properties-page .financial-item span, .crm-dark .properties-page .legend-value,
-.crm-dark .properties-page .legend-label{
+.crm-dark .properties-page .legend-label, .crm-dark .legend-label-left-side span,
+.crm-dark .generator-page .city-name-left-group, .crm-dark .generator-page .legend-label-left-side,
+.crm-dark .generator-page .pipeline-step-caption-text, .crm-dark .generator-page .btn-table-util-filter{
   color: #bebcbc;
 }
 .crm-dark #root .btn-view-all{
