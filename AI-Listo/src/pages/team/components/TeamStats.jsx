@@ -3,9 +3,10 @@ import { buildStatsCards } from '../utils/teamConstants';
 export default function TeamStats({
   stats = {},
 }) {
-  const cards =
-    buildStatsCards(stats);
+  
+  const cards = buildStatsCards(stats);
 
+  
   return (
     <div className="team-stats-wrap">
      <div className="team-stats-grid">

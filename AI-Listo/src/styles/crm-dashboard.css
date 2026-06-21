@@ -1597,9 +1597,13 @@ body.crm-dark .crm-error {
 .crm-dark .generator-page .lead-row-item-line>div:not(:last-child)::after{
   background: #edf0f52b;
 }
-.crm-dark #root .integration-btn.status-active, .crm-dark #root .team-filter-btn.active{
+.crm-dark #root .integration-btn.status-active{
   border: 1px solid #0022ff;
   color: #0022ff;
+}
+.crm-dark #root .team-filter-btn.active{
+  background: #0022ff;
+  color: #fff;
 }
 .crm-dark #root .integration-btn.status-not-connected{
   border: 1px solid #b25ced;
@@ -1615,7 +1619,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .deal-card-bottom-interactive-action-triggers, .crm-dark #root .metrics-grid .metric-card:nth-child(n+2),
 .crm-dark #root .agent-footer, .crm-dark #root .contact-info-list,
 .crm-dark #root .team-activity-footer, .crm-dark #root .bulk-processing-footer-bar,
-.crm-dark .generator-page .sidebar-action-view-all-link-btn {
+.crm-dark .generator-page .sidebar-action-view-all-link-btn,
+.crm-dark .team-workspace .team-billing-stat-row:last-child {
   border-top: 1px solid #202733;
 }
 .crm-dark .pipeline-page .ai-banner-metrics-container{
@@ -1629,7 +1634,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .team-activity-item:not(:last-child), .crm-dark #root .drawer-header {
   border-bottom: 1px solid #202733;
 }
-.crm-dark .generator-page .lead-profile-identity-block{
+.crm-dark .generator-page .lead-profile-identity-block, .crm-dark .apps-page .sidebar,
+.crm-dark .crm-sidebar{
   border-right: 1px solid #202733;
 }
 .crm-dark .conversations-inbox-column .lead-card:not(.active-chat-card):not(:last-child),
@@ -1657,9 +1663,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .team-stat-icon::before{
   background: none;
 }
-.crm-dark #root .team-stat-icon{
-  background: rgba(37, 99, 235, 0.08);
-}
+
 .crm-dark .bg-light-blue,
 .crm-dark .bg-light-purple,
 .crm-dark .bg-light-green,
@@ -1798,26 +1802,68 @@ body.crm-dark .crm-error {
 .crm-dark #root .detail-section-card, .crm-dark #root .action-grid-btn,
 .crm-dark .select-deal, .crm-dark .inspector-deal-activity-log-column, .crm-dark .inspector-ai-next-steps-actions-column,
 .crm-dark .pipeline-page .revenue-forecast-metric-quad-card, .crm-dark #root .properties-page .metrics-grid .metric-card,
-.crm-dark .generator-page .channel-chip.active-blue{
+.crm-dark .generator-page .channel-chip.active-blue, .crm-dark #root .team-stat-card,
+.crm-dark .team-workspace .m-user-card, .crm-dark .team-workspace .team-card{
   background: #101827f2;
   border: 1px solid #202733;
 }
 .crm-dark #root .automation-health-list-rows-stack,
 .crm-dark #root .sidebar-section:not(:last-child),
 .crm-dark #root .sidebar-section, .crm-dark #root .insights-card,
-.crm-dark #root .insight-item-box, .crm-dark #root .team-stats-grid, .crm-dark #root .team-card,
+.crm-dark #root .insight-item-box,, .crm-dark #root .team-card,
 .crm-dark #root .lead-row-item-line, .crm-dark #root .layout-view-toggle-buttons-group,
 .crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn,
 .crm-dark .contacts-page .form-group textarea,
-.crm-dark .whatsapp-page .full-timeline-btn, .crm-dark .generator-page .channels-chips-group
-{
+.crm-dark .whatsapp-page .full-timeline-btn, .crm-dark .generator-page .channels-chips-group,
+.crm-dark .team-workspace .team-card{
   border: 1px solid #202733;
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
-.crm-dark #root textarea, .crm-dark #root .team-stat-card, .crm-dark #root .circle-btn,
+.crm-dark #root textarea, .crm-dark #root .circle-btn,
 .crm-dark #root .timeline-dot, .crm-dark #root .step-number,
 .crm-dark .properties-page .donut-chart-mock::after{
   background: #101827f2;
+}
+.crm-dark .team-workspace .team-stat-icon{
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 16px 32px rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.16);
+}
+.crm-dark .team-workspace .team-stat-card:nth-child(2) .team-stat-icon
+{
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 10px 25px rgba(34, 197, 94, 0.12);
+  background: rgba(34, 197, 94, 0.12);
+}
+.crm-dark .team-workspace .team-stat-card:nth-child(3) .team-stat-icon {
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 10px 25px rgba(139, 92, 246, 0.12);
+}
+.crm-dark .team-workspace .team-stat-card:nth-child(4) .team-stat-icon{
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 10px 25px rgba(22, 163, 74, 0.12);
+  background: rgba(22, 142, 163, 0.24);
+}
+.crm-dark .team-workspace .team-stat-card:nth-child(5) .team-stat-icon{
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 10px 25px rgba(249, 115, 22, 0.12);
+  background: rgba(249, 115, 22, 0.12);
+}
+.crm-dark .team-workspace .team-stat-card:nth-child(6) .team-stat-icon{
+  box-shadow: inset 0 0 0 rgba(255, 255, 255, 0.9), 0 10px 25px rgba(168, 85, 247, 0.12);
+  background: rgba(168, 85, 247, 0.12);
+}
+.crm-dark .team-workspace .team-insight-icon.warning {
+    background: #fad74f1f;
+}
+.crm-dark .team-workspace .team-performance-item:nth-child(1) .team-performance-icon{
+    background: linear-gradient(135deg, #fef3c717 0%, #efc51f2e 100%);
+}
+.crm-dark .team-workspace .team-performance-item:nth-child(2) .team-performance-icon {
+    background: linear-gradient(135deg, #f3e8ff15 0%, #8524ec61 100%);
+}
+.crm-dark .team-workspace .team-performance-item:nth-child(3) .team-performance-icon {
+    background: linear-gradient(135deg, #fee2e215 0%, #f311112a 100%);
+    color: #dc2626;
+}
+.crm-dark .team-workspace .team-performance-icon{
+  box-shadow: none;
 }
 .crm-dark .security-check-line svg{
   fill: #101827f2;
@@ -1910,7 +1956,9 @@ body.crm-dark .leads-page,
 .crm-dark #root .btn-icon-text, .crm-dark .generator-page .lead-intent-interests-paragraph,
 .crm-dark .generator-page .lead-origin-source-routing-block div,
 .crm-dark .generator-page .donut-center-absolute-labels-stack h3,
-.crm-dark .generator-page .legend-count-value-number, .crm-dark .generator-page .city-leads-count-metric-num{
+.crm-dark .generator-page .legend-count-value-number, .crm-dark .generator-page .city-leads-count-metric-num,
+.crm-dark .apps-page .category-btn.active, .crm-dark .team-workspace .team-stat-label,
+.crm-dark .team-workspace .team-billing-modern-title, .crm-dark .team-workspace .team-card-title{
   color: var(--text);
 }
 .crm-dark #root .team-activity-message, .crm-dark #root .team-notification-title, .crm-dark #root .team-performance-label,
@@ -1928,7 +1976,9 @@ body.crm-dark .leads-page,
 .crm-dark .properties-page .financial-item span, .crm-dark .properties-page .legend-value,
 .crm-dark .properties-page .legend-label, .crm-dark .legend-label-left-side span,
 .crm-dark .generator-page .city-name-left-group, .crm-dark .generator-page .legend-label-left-side,
-.crm-dark .generator-page .pipeline-step-caption-text, .crm-dark .generator-page .btn-table-util-filter{
+.crm-dark .generator-page .pipeline-step-caption-text, .crm-dark .generator-page .btn-table-util-filter,
+.crm-dark .team-workspace .team-billing-stat-row,
+.crm-dark .team-workspace .team-insight-title{
   color: #bebcbc;
 }
 .crm-dark #root .btn-view-all{
@@ -1955,7 +2005,8 @@ body.crm-dark .leads-page,
 .crm-dark #root .whatsapp-page .sidebar-footer, .crm-dark #root .whatsapp-page .timeline-footer,
 .crm-dark .leads-page .conversation-header, .crm-dark #root .inspector-activity-logs-mini-stack,
 .crm-dark #root .inspector-ai-action-steps-rows-stack,
-.crm-dark .properties-page .metrics-grid .metric-card:nth-child(n+2){
+.crm-dark .properties-page .metrics-grid .metric-card:nth-child(n+2),
+.crm-dark #root .team-stats-grid{
   border:0;
 }
 .crm-dark #root .whatsapp-page .active-chat-card, .crm-dark #root .leads-page .lead-card.active {
@@ -2001,6 +2052,9 @@ body.crm-dark .leads-page,
 }
 .crm-dark .select-deal, .crm-dark .inspector-deal-activity-log-column, .crm-dark .inspector-ai-next-steps-actions-column{
   border-radius: 10px;
+}
+.crm-dark .team-workspace .team-billing-mini-btn{
+  background: none;
 }
 @media (max-width: 1024px) {
 

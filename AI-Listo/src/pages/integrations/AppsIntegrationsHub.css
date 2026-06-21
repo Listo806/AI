@@ -334,8 +334,11 @@ body {
     gap: 10px
   }
 
-  .main-content {
-    padding: 24px;
+  .apps-page .main-content {
+    padding: 10px;
+  }
+  .apps-page .sidebar{
+    border-right: 0;
   }
 }
 @media (max-width: 430px) {

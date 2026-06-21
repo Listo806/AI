@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   MoreVertical,
@@ -7,6 +7,7 @@ import {
   Briefcase,
   Sparkles,
   Plus,
+  Eye, Send, UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROLE_STYLES } from "../utils/teamConstants";
@@ -14,6 +15,96 @@ import { ROLE_STYLES } from "../utils/teamConstants";
 export default function TeamMembersTable({ members, onRemove, onInvite }) {
   const [openMenu, setOpenMenu] = useState(null);
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= 900 : false,
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div className="mobile-cards-container">
+        {members?.map((user, index) => (
+          <div key={user.id || index} className="m-user-card">
+            
+            <div className="m-card-top">
+              
+              <div className="m-user-header">
+                <div className="m-avatar-wrap">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.name} className="m-avatar" />
+                  ) : (
+                    <div className="m-avatar-placeholder">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="m-user-info">
+                  <div className="m-user-title-row">
+                    <span className="m-user-name">{user.name || user.email}</span>
+                    {user.role && <span className="m-tag m-tag-role">{user.role}</span>}
+                    {user.status && <span className="m-tag m-tag-status">{user.status}</span>}
+                  </div>
+                  
+                  {(user.type || user.temperature || user.aiMatch) && (
+                    <div className="m-tags-row">
+                      {user.type && <span className="m-sub-tag">{user.type}</span>}
+                      {user.temperature && <span className="m-sub-tag m-cold">{user.temperature}</span>}
+                      {user.aiMatch && <span className="m-sub-tag m-ai-score">{user.aiMatch}</span>}
+                    </div>
+                  )}
+                </div>
+
+                <div className="m-active-status">Active</div>
+              </div>
+
+              <div className="m-stats-grid">
+                <div className="m-stat-item">
+                  <span className="m-stat-val">{user.leadsCount ?? 0}</span>
+                  <span className="m-stat-lbl">Leads</span>
+                </div>
+                <div className="m-stat-item">
+                  <span className="m-stat-val">${user.pipeline ?? 0}</span>
+                  <span className="m-stat-lbl">Pipeline</span>
+                </div>
+                <div className="m-stat-item">
+                  <span className="m-stat-val">{user.aiScore ?? 0}%</span>
+                  <span className="m-stat-lbl">AI Score</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="m-card-actions">
+              <button className="m-action-btn">
+                <Eye size={18} />
+                <span>View</span>
+              </button>
+              <button className="m-action-btn">
+                <Send size={16} />
+                <span>Message</span>
+              </button>
+              <button className="m-action-btn">
+                <UserPlus size={18} />
+                <span>Assign Leads</span>
+              </button>
+            </div>
+
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className="team-card">
       {/* HEADER */}
