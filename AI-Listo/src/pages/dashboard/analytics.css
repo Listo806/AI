@@ -1177,11 +1177,25 @@
   
 }
 @media (max-width: 720px) {
-  .analytics-page .header-controls {
-    justify-content: center;
-  }
   .analytics-page .btn-secondary{
     padding: 8px 24px;
+  }
+   .analytics-page .header-controls .select-wrapper, .analytics-page .header-controls .btn-primary{
+    justify-content: center;
+  }
+  .analytics-page .date-picker-wrapper, .analytics-page .header-controls .btn-secondary{
+    justify-content: center;
+  }
+  .analytics-page .date-picker-wrapper{
+    order: 0;
+  }
+  .analytics-page .btn-secondary{
+    order: 1;
+  }
+  .analytics-page .header-controls {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    justify-content: space-between;
   }
 }
 @media (max-width: 430px) {
@@ -1191,16 +1205,7 @@
   .analytics-page .kpi-grid-row1 {
     grid-template-columns: repeat(2, 1fr);
   }
-  .analytics-page .header-controls .btn-primary{
-    width: 100%;
-    justify-content: center;
-  }
-  .analytics-page .header-controls .date-picker-wrapper{
-    width: 60%;
-    justify-content: center;
-  }
-  .analytics-page .header-controls .select-wrapper{
-  }
+ 
 }
 @media (max-width: 390px) {
   .analytics-page .header-controls .select-wrapper{
