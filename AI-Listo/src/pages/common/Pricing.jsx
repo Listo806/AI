@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Common.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
@@ -25,9 +25,14 @@ import {
   TrendingUp,
   Crosshair,
   Gem,
+  RefreshCw,
+  User,
+  Settings,
+  CheckCircle,
+  CheckCircle2, HelpCircle,
 } from "lucide-react";
 
-import headlogo from "../../assets/cortexa/pheadlogo.png";
+import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 import headlogoM from "../../assets/cortexa/headlogotran.png";
 import social1 from "../../assets/cortexa/social1.png";
@@ -45,30 +50,7 @@ const t = {
       login: "Log in",
       trial: "Start Free Trial",
     },
-    hero: {
-      title: "The smarter way to run your real estate business.",
-      desc: "One platform. Everything you need to capture, engage, and close more deals. Built for modern agents and teams who want results.",
-    },
-    badge: {
-      title: "Clear Monthly Pricing.",
-      title1: "No Games. No Surprises.",
-      desc: "We believe in transparency. What you see is what you pay. No fine print. No overages. Just one powerful platform built to help you close more deals.",
-    },
-    sidebar: {
-      getStarted: "Start today for",
-      setupFee: "ONE-TIME SETUP FEE",
-      btn: "Start My Free Trial",
-      addTeam: "Add team members anytime",
-    },
-    bottom: {
-      tagline: "THE ONLY AI CRM BUILT 100% FOR REAL ESTATE.",
-      title1: "One software. Every tool.",
-      title2: "Everything real estate agents need to succeed.",
-      finalLine1: "Built for real estate.",
-      finalLine2: "Made to scale.",
-      finalLine3: "Designed to win.",
-      finalTitle: "That’s the power of Cortexa.",
-    },
+
     footer: {
       desc: "The AI-powered Real Estate CRM. Close more deals — Automatically.",
       col1: "Product",
@@ -82,6 +64,150 @@ const t = {
       col5: "Get Started",
       col5_items: ["Login", "Start Free Trial"],
     },
+
+    pricingLabel: "PRICING PLANS",
+    pricingMainTitlePre: "All-In-One Real Estate CRM. ",
+    pricingMainTitlePost: "Simple Pricing. Maximum Results.",
+    pricingSubText: "Your tools should support your growth, not drain it. CORTEXA AIOS gives you the essential system to capture leads, follow up, book appointments, and manage revenue without adding thousands in upfront costs.",
+    pricingAlertBold: "Keep more capital in your business.",
+    pricingAlertText: " Start with the system you need, without enterprise-level setup fees, confusing add-ons, or software costs that eat into your monthly gains.",
+    pricingFeatures: {
+      ai: {
+        title: "AI-Powered Everything",
+        desc: "Your 24/7 AI Assistant handles conversations, follow-ups, appointments and more."
+      },
+      automate: {
+        title: "Automate. Follow Up. Close More.",
+        desc: "Never miss a lead again. Instant responses and smart follow-ups convert more leads into clients."
+      },
+      conversion: {
+        value: "3X",
+        title: "Increase in Lead Conversion Rate",
+        desc: "CORTEXA AIOS customers see up to 3X more leads converted into deals."
+      },
+      realestate: {
+        title: "Built for Real Estate",
+        desc: "Purpose-built for real estate professionals. From lead to close, all in one place."
+      }
+    },
+
+    plansBadgePopular: "MOST POPULAR",
+    plansBtnTrial: "Start My Free Trial",
+    plansPerMonth: "/month",
+    plansData: {
+      solo: {
+        name: "Solo",
+        users: "1 user",
+        desc: "Perfect for solo agents.",
+        price: "$197",
+        features: ["1 user included", "All features included", "AI Agent Automation", "24/7 Support"]
+      },
+      team: {
+        name: "Team",
+        users: "3 users",
+        desc: "Great for small teams.",
+        price: "$347",
+        features: ["3 users included", "All features included", "AI Agent Automation", "24/7 Support"]
+      },
+      growth: {
+        name: "Growth",
+        users: "5 users",
+        desc: "Built for growing teams.",
+        price: "$497",
+        features: ["5 users included", "All features included", "AI Agent Automation", "24/7 Support"]
+      }
+    },
+    plansFooter: {
+      setup: {
+        value: "$97",
+        title: "One-Time Setup Fee",
+        desc: "Get fully set up and ready to grow."
+      },
+      user: {
+        value: "$97",
+        title: "Per Additional User",
+        desc: "Add team members anytime."
+      },
+      contract: {
+        title: "No Long-Term Contracts Cancel Anytime",
+        desc: "Flexibility you can count on."
+      }
+    },
+
+    compareTitle: "See Exactly What You Get",
+    compareSubtitle: "Other platforms charge extra for the tools and features you actually need.",
+    compareThFeature: "WHAT YOU GET",
+    compareThOther: "OTHER PLATFORMS\nBig Plans + Add-ons + Seats",
+    compareThCost: "TYPICAL ADD-ON COST\n(Additional)",
+    compareThCortexa: "CORTEXA AIOS\nEverything Included",
+    compareIncluded: "Included",
+    compareUnlimitedAiTitle: "Unlimited AI usage.",
+    compareUnlimitedAiDesc: "No credit system.\nNo surprise AI bills.",
+    compareNoPenaltiesTitle: "No contact-based penalties.",
+    compareNoPenaltiesDesc: "Grow your database\nwithout restrictions.",
+    compareOneTimeSetup: "ONE-TIME SETUP FEE\nTypical for big plans",
+    compareSetupSetup: "$97\nOne-time setup",
+    compareEstimatedCost: "ESTIMATED MONTHLY COST\nFor most businesses",
+    compareEstimatedOther: "$2,500 – $7,500+",
+    compareEstimatedOther1: "$2,500 – $5,000+ /month\nAnd it still may not include everything.",
+    compareEstimatedCortexa: "$197 /month\nEverything included",
+
+    compareRows: [
+      { f: "CRM & Contact Management", o: "Included in higher plans", c: "-" },
+      { f: "Leads & Pipeline Management", o: "Included, but tiered", c: "-" },
+      { f: "Email & SMS Campaigns", o: "Included, but tiered by plan", c: "$50 – $150 /mo" },
+      { f: "Marketing Automation", o: "Included, but limited in lower plans", c: "$100 – $300 /mo" },
+      { f: "AI Agent (24/7)", o: "Add-on or higher tier only", c: "$300 – $1,000 /mo" },
+      { f: "WhatsApp Automation", o: "Usually integration or add-on", c: "$50 – $150 /mo" },
+      { f: "Appointment Booking", o: "Add-on or higher tier only", c: "$50 – $115 /mo" },
+      { f: "Web Forms & Landing Pages", o: "Limited in lower plans", c: "$50 – $75 /mo" },
+      { f: "Reporting & Analytics", o: "Advanced reporting in higher tiers", c: "$100 – $250 /mo" },
+      { f: "Sales Automation", o: "Sales automation in higher tiers", c: "$75 – $200 /mo" },
+      { f: "Tasks & Reminders", o: "Included, but limited", c: "$25 – $75 /mo" },
+      { f: "Team Collaboration", o: "Seat-based, higher cost", c: "$25 – $75 /user/mo" },
+      { f: "Document & File Management", o: "Often limited storage", c: "$25 – $100 /mo" },
+      { f: "Workflow Automation", o: "Advanced workflows in higher tiers", c: "$100 – $250 /mo" },
+      { f: "Industry-Specific Setup", o: "Custom work or expensive add-on", c: "$500 – $2,500+ (one-time)" },
+      { f: "Onboarding & Training", o: "Often add-on or paid service", c: "$500 – $2,000+ (one-time)" },
+      { f: "Integration (Popular Apps)", o: "Many require paid integrations", c: "$50 – $300 /mo" },
+      { f: "Lead Generation (Done For You)", o: "Separate add-on or external service", c: "$197 – $1,000+ /mo" },
+      { f: "AI Usage & Credits", o: "AI credits, usage limits, and overage charges", c: "$197 – $1,000+ /mo\n(varies by usage)", badge: "NEW" },
+      { f: "Marketing Contact Fees", o: "Charged as your contact database grows", c: "$225 – $180+ /mo\n(varies by contact volume)", badge: "NEW" },
+      { f: "Transactional Emails", o: "Often sold as a separate add-on service", c: "$600+ /mo", badge: "NEW" },
+      { f: "Custom Fields & Properties", o: "Additional limits require expansion packs or upgrades", c: "$70 – $220+ /mo", badge: "NEW" },
+      { f: "Advanced Reporting & Dashboards", o: "Reporting limits often require higher plans or add-ons", c: "$200+ /mo", badge: "NEW" },
+      { f: "Team & User Growth Limits", o: "Expansion packs required as teams grow", c: "$200+ /mo", badge: "NEW" }
+    ],
+
+    vsCompOtherTitle: "WITH OTHER PLATFORMS",
+    vsCompOther1: "High monthly cost with multiple add-ons",
+    vsCompOther2: "$2,500 - $7,500+ setup fee for big plans",
+    vsCompOther3: "Complex setup and long onboarding",
+    vsCompOther4: "Pay more as you add seats, features, and tools",
+    vsCompOther5: "By the time you get going, you're down $10,000+",
+    vsCompOtherTotalTitle: "Typical Total Investment to Get Started",
+    vsCompOtherTotalVal: "$10,000+",
+    vsCompOtherTotalSub: "(Setup + First Month)",
+    vsCompOtherTotalNote: "And it still may not include everything.",
+
+    vsCompVs: "VS.",
+
+    vsCompCortexaTitle: "WITH CORTEXA AIOS",
+    vsCompCortexa1: "One system with everything you need",
+    vsCompCortexa2: "$97 one-time setup fee",
+    vsCompCortexa3: "$197/month - everything included",
+    vsCompCortexa4: "Add agents (users) for $97/month",
+    vsCompCortexa5: "Start today and start making revenue",
+    vsCompCortexaTotalTitle: "Total Investment to Get Started",
+    vsCompCortexaTotalVal: "$294",
+    vsCompCortexaTotalSub: "(Setup + First Month for 1 Agent)",
+
+    vsCompBottomHeader: "More Leads. More Appointments. More Closings.",
+    vsCompBottomSub: "Up to 3X Increase in Lead Conversion Rate.",
+    vsCompBottomFeat1: "No hidden fees",
+    vsCompBottomFeat2: "Cancel anytime",
+    vsCompBottomFeat3: "Built for real estate",
+    vsCompBottomBtn: "Start My Free Trial",
   },
   es: {
     nav: {
@@ -92,30 +218,7 @@ const t = {
       login: "Iniciar sesión",
       trial: "Prueba Gratis",
     },
-    hero: {
-      title: "La forma más inteligente de gestionar tu negocio inmobiliario.",
-      desc: "Una plataforma. Todo lo que necesitas para captar, interactuar y cerrar más acuerdos. Creado para agentes y equipos modernos que buscan resultados.",
-    },
-    badge: {
-      title: "Precios mensuales claros.",
-      title1: "Sin juegos. Sin sorpresas.",
-      desc: "Creemos en la transparencia. Lo que ves es lo que pagas. Sin letra pequeña. Sin excesos. Solo una plataforma poderosa creada para ayudarte a cerrar más acuerdos.",
-    },
-    sidebar: {
-      getStarted: "Comienza hoy por",
-      setupFee: "TARIFA DE CONFIGURACIÓN ÚNICA",
-      btn: "Iniciar Mi Prueba Gratis",
-      addTeam: "Añade miembros en cualquier momento",
-    },
-    bottom: {
-      tagline: "EL ÚNICO CRM DE IA CREADO 100% PARA BIENES RAÍCES.",
-      title1: "Un software. Todas las herramientas.",
-      title2: "Todo lo que los agentes inmobiliarios necesitan para triunfar.",
-      finalLine1: "Creado para bienes raíces.",
-      finalLine2: "Hecho para escalar.",
-      finalLine3: "Diseñado para ganar.",
-      finalTitle: "Ese es el poder de Cortexa.",
-    },
+    
     footer: {
       desc: "El CRM inmobiliario potenciado por IA. Cierra más tratos — Automáticamente.",
       col1: "Producto",
@@ -133,6 +236,150 @@ const t = {
       col5: "Comenzar",
       col5_items: ["Login", "Prueba Gratis"],
     },
+
+    pricingLabel: "PLANES DE PRECIOS",
+    pricingMainTitlePre: "CRM Inmobiliario Todo en Uno. ",
+    pricingMainTitlePost: "Precios Simples. Máximos Resultados.",
+    pricingSubText: "Sus herramientas deben apoyar su crecimiento, no agotarlo. CORTEXA AIOS le brinda el sistema esencial para capturar prospectos, hacer seguimiento, programar citas y administrar los ingresos sin agregar miles en costos iniciales.",
+    pricingAlertBold: "Mantenga más capital en su negocio.",
+    pricingAlertText: " Comience con el sistema que necesita, sin tarifas de configuración a nivel de gran empresa, complementos confusos o costos de software que reduzcan sus ganancias mensuales.",
+    pricingFeatures: {
+      ai: {
+        title: "Todo Impulsado por IA",
+        desc: "Su asistente de IA disponible las 24 horas, los 7 días de la semana, se encarga de las conversaciones, los seguimientos, las citas y más."
+      },
+      automate: {
+        title: "Automatice. Siga de cerca. Cierre más.",
+        desc: "No vuelva a perder un prospecto. Las respuestas instantáneas y los seguimientos inteligentes convierten más prospectos en clientes."
+      },
+      conversion: {
+        value: "3X",
+        title: "Aumento en la Tasa de Conversión",
+        desc: "Los clientes de CORTEXA AIOS experimentan hasta 3 veces más prospectos convertidos en acuerdos comerciales."
+      },
+      realestate: {
+        title: "Creado para Bienes Raíces",
+        desc: "Diseñado especialmente para profesionales inmobiliarios. Desde el prospecto hasta el cierre, todo en un solo lugar."
+      }
+    },
+
+    plansBadgePopular: "MÁS POPULAR",
+    plansBtnTrial: "Iniciar Mi Prueba Gratuita",
+    plansPerMonth: "/mes",   
+    plansData: {
+      solo: {
+        name: "Solo",
+        users: "1 usuario",
+        desc: "Perfecto para agentes independientes.",
+        price: "$197",
+        features: ["1 usuario incluido", "Todas las funciones incluidas", "Automatización con Agente de IA", "Soporte 24/7"]
+      },
+      team: {
+        name: "Team",
+        users: "3 usuarios",
+        desc: "Ideal para equipos pequeños.",
+        price: "$347",
+        features: ["3 usuarios incluidos", "Todas las funciones incluidas", "Automatización con Agente de IA", "Soporte 24/7"]
+      },
+      growth: {
+        name: "Growth",
+        users: "5 usuarios",
+        desc: "Creado para equipos en crecimiento.",
+        price: "$497",
+        features: ["5 usuarios incluidos", "Todas las funciones incluidas", "Automatización con Agente de IA", "Soporte 24/7"]
+      }
+    },
+    plansFooter: {
+      setup: {
+        value: "$97",
+        title: "Tarifa de Configuración Única",
+        desc: "Regístrese por completo y prepárese para crecer."
+      },
+      user: {
+        value: "$97",
+        title: "Por Usuario Adicional",
+        desc: "Añada miembros al equipo en cualquier momento."
+      },
+      contract: {
+        title: "Sin Contratos a Largo Plazo Cancele en Cualquier Momento",
+        desc: "Flexibilidad con la que puede contar."
+      }
+    },
+
+    compareTitle: "Vea Exactamente Lo Que Recibe",
+    compareSubtitle: "Otras plataformas cobran un extra por las herramientas y funciones que realmente necesita.",
+    compareThFeature: "LO QUE RECIBE",
+    compareThOther: "OTRAS PLATAFORMAS\nPlanes Grandes + Complementos + Cupos",
+    compareThCost: "COSTO HABITUAL\n(Adicional)",
+    compareThCortexa: "CORTEXA AIOS\nTodo Incluido",
+    compareIncluded: "Incluido",
+    compareUnlimitedAiTitle: "Uso ilimitado de IA.",
+    compareUnlimitedAiDesc: "Sin sistema de créditos.\nSin sorpresas en facturas de IA.",
+    compareNoPenaltiesTitle: "Sin penalizaciones por contactos.",
+    compareNoPenaltiesDesc: "Haga crecer su base de datos\nsin restricciones.",
+    compareOneTimeSetup: "TARIFA DE CONFIGURACIÓN ÚNICA\nHabitual en planes grandes",
+    compareSetupSetup: "$97\nConfiguración única",
+    compareEstimatedCost: "COSTO MENSUAL ESTIMADO\nPara la mayoría de empresas",
+    compareEstimatedOther: "$2,500 – $7,500+",
+    compareEstimatedOther1: "$2,500 – $5,000+ /mes\nY aún así podría no incluir todo.",
+    compareEstimatedCortexa: "$197 /mes\nTodo incluido",
+
+    compareRows: [
+      { f: "Gestión de CRM y Contactos", o: "Incluido en planes superiores", c: "-" },
+      { f: "Gestión de Prospectos y Embudos", o: "Incluido, pero por niveles", c: "-" },
+      { f: "Campañas de Email y SMS", o: "Incluido, pero por niveles según plan", c: "$50 – $150 /mes" },
+      { f: "Automatización de Marketing", o: "Incluido, pero limitado en planes inferiores", c: "$100 – $300 /mes" },
+      { f: "Agente de IA (24/7)", o: "Solo complemento o nivel superior", c: "$300 – $1,000 /mes" },
+      { f: "Automatización de WhatsApp", o: "Normalmente integración o complemento", c: "$50 – $150 /mes" },
+      { f: "Reserva de Citas", o: "Solo complemento o nivel superior", c: "$50 – $115 /mes" },
+      { f: "Formularios Web y Landing Pages", o: "Limitado en planes inferiores", c: "$50 – $75 /mes" },
+      { f: "Informes y Analítica", o: "Informes avanzados en niveles superiores", c: "$100 – $250 /mes" },
+      { f: "Automatización de Ventas", o: "Automatización en niveles superiores", c: "$75 – $200 /mes" },
+      { f: "Tareas y Recordatorios", o: "Incluido, pero limitado", c: "$25 – $75 /mes" },
+      { f: "Colaboración en Equipo", o: "Por usuario, mayor costo", c: "$25 – $75 /usuario/mes" },
+      { f: "Gestión de Documentos y Archivos", o: "A menudo almacenamiento limitado", c: "$25 – $100 /mes" },
+      { f: "Automatización de Flujos", o: "Flujos avanzados en niveles superiores", c: "$100 – $250 /mes" },
+      { f: "Configuración Específica", o: "Trabajo personalizado o complemento costoso", c: "$500 – $2,500+ (único)" },
+      { f: "Onboarding y Capacitación", o: "A menudo servicio de pago", c: "$500 – $2,000+ (único)" },
+      { f: "Integración (Apps Populares)", o: "Muchas requieren integraciones de pago", c: "$50 – $300 /mes" },
+      { f: "Generación de Prospectos", o: "Complemento separado o servicio externo", c: "$197 – $1,000+ /mes" },
+      { f: "Créditos y Uso de IA", o: "Límites de uso y cargos por exceso", c: "$197 – $1,000+ /mes\n(varía según el uso)", badge: "NUEVO" },
+      { f: "Tarifas por Contactos", o: "Se cobra a medida que crece la base de datos", c: "$225 – $180+ /mes\n(varía según el volumen)", badge: "NUEVO" },
+      { f: "Correos Transaccionales", o: "A menudo vendido por separado", c: "$600+ /mes", badge: "NUEVO" },
+      { f: "Campos Personalizados", o: "Límites adicionales requieren paquetes de expansión", c: "$70 – $220+ /mes", badge: "NUEVO" },
+      { f: "Informes Avanzados", o: "Límites de informes requieren planes superiores", c: "$200+ /mes", badge: "NUEVO" },
+      { f: "Límites de Crecimiento de Equipo", o: "Paquetes de expansión al crecer el equipo", c: "$200+ /mes", badge: "NUEVO" }
+    ],
+
+    vsCompOtherTitle: "CON OTRAS PLATAFORMAS",
+    vsCompOther1: "Alto costo mensual con múltiples complementos",
+    vsCompOther2: "Tarifa de configuración de $2,500 - $7,500+ para planes grandes",
+    vsCompOther3: "Configuración compleja y larga capacitación inicial",
+    vsCompOther4: "Pague más a medida que agrega usuarios, funciones y herramientas",
+    vsCompOther5: "Para cuando empiece a funcionar, ya habrá gastado $10,000+",
+    vsCompOtherTotalTitle: "Inversión Total Típica para Comenzar",
+    vsCompOtherTotalVal: "$10,000+",
+    vsCompOtherTotalSub: "(Configuración + Primer Mes)",
+    vsCompOtherTotalNote: "Y es posible que aún no incluya todo.",
+
+    vsCompVs: "VS.",
+
+    vsCompCortexaTitle: "CON CORTEXA AIOS",
+    vsCompCortexa1: "Un sistema con todo lo que necesita",
+    vsCompCortexa2: "Tarifa de configuración única de $97",
+    vsCompCortexa3: "$197/mes - todo incluido",
+    vsCompCortexa4: "Agregue agentes (usuarios) por $97/mes",
+    vsCompCortexa5: "Comience hoy mismo y comience a generar ingresos",
+    vsCompCortexaTotalTitle: "Inversión Total para Comenzar",
+    vsCompCortexaTotalVal: "$294",
+    vsCompCortexaTotalSub: "(Configuración + Primer Mes para 1 Agente)",
+
+    vsCompBottomHeader: "Más Prospectos. Más Citas. Más Cierres.",
+    vsCompBottomSub: "Hasta 3X de Incremento en la Tasa de Conversión de Leads.",
+    vsCompBottomFeat1: "Sin tarifas ocultas",
+    vsCompBottomFeat2: "Cancele en cualquier momento",
+    vsCompBottomFeat3: "Diseñado para el sector inmobiliario",
+    vsCompBottomBtn: "Iniciar Mi Prueba Gratuita",
   },
   pt: {
     nav: {
@@ -143,30 +390,7 @@ const t = {
       login: "Entrar",
       trial: "Teste Grátis",
     },
-    hero: {
-      title: "A maneira mais inteligente de gerir seu negócio imobiliário.",
-      desc: "Uma plataforma. Tudo o que você precisa para capturar, engajar e fechar mais negócios. Desenvolvido para corretores e equipes modernas que querem resultados.",
-    },
-    badge: {
-      title: "Preços Mensais Claros.",
-      title1: "Sem Jogos. Sem Surpresas.",
-      desc: "Acreditamos em transparência. O que você vê é o que você paga. Sem letras miúdas. Sem excessos. Apenas uma plataforma poderosa construída para ajudar você a fechar mais negócios.",
-    },
-    sidebar: {
-      getStarted: "Comece hoje por",
-      setupFee: "TAXA ÚNICA DE CONFIGURAÇÃO",
-      btn: "Iniciar Meu Teste Grátis",
-      addTeam: "Adicione membros a qualquer momento",
-    },
-    bottom: {
-      tagline: "O ÚNICO CRM COM IA DESENVOLVIDO 100% PARA O SETOR IMOBILIÁRIO.",
-      title1: "Um software. Todas as ferramentas.",
-      title2: "Tudo o que os corretores precisam para vencer.",
-      finalLine1: "Feito para o setor imobiliário.",
-      finalLine2: "Criado para escalar.",
-      finalLine3: "Desenhado para vencer.",
-      finalTitle: "Esse é o poder do Cortexa.",
-    },
+    
     footer: {
       desc: "O CRM Imobiliário alimentado por IA. Feche mais negócios — Automaticamente.",
       col1: "Produto",
@@ -184,6 +408,150 @@ const t = {
       col5: "Começar",
       col5_items: ["Login", "Teste Grátis"],
     },
+
+    pricingLabel: "PLANOS DE PREÇOS",
+    pricingMainTitlePre: "CRM Imobiliário Tudo-Em-Um. ",
+    pricingMainTitlePost: "Preços Simples. Resultados Máximos.",
+    pricingSubText: "Suas ferramentas devem apoiar o seu crescimento, não esgotá-lo. O CORTEXA AIOS oferece o sistema essencial para capturar leads, fazer acompanhamento, agendar reuniões e gerenciar receitas sem adicionar milhares em custos iniciais.",  
+    pricingAlertBold: "Mantenha mais capital na sua empresa.",
+    pricingAlertText: " Comece com o sistema que você precisa, sem taxas de configuração de nível empresarial, complementos confusos ou custos de software que corroam seus ganhos mensais.",
+    pricingFeatures: {
+      ai: {
+        title: "Tudo Impulsionado por IA",
+        desc: "Seu Assistente de IA 24/7 gerencia conversas, acompanhamentos, agendamentos e muito mais."
+      },
+      automate: {
+        title: "Automatize. Acompanhe. Feche Mais.",
+        desc: "Nunca mais perca um lead. Respostas instantâneas e acompanhamentos inteligentes convertem mais leads em clientes."
+      },
+      conversion: {
+        value: "3X",
+        title: "Aumento na Taxa de Conversão de Leads",
+        desc: "Os clientes do CORTEXA AIOS veem até 3X mais leads convertidos em negócios fechados."
+      },
+      realestate: {
+        title: "Feito para o Setor Imobiliário",
+        desc: "Desenvolvido especificamente para profissionais do mercado imobiliário. Do lead ao fechamento, tudo em um só lugar."
+      }
+    },
+
+    plansBadgePopular: "MAIS POPULAR",
+    plansBtnTrial: "Iniciar Meu Teste Gratuito",
+    plansPerMonth: "/mês",  
+    plansData: {
+      solo: {
+        name: "Solo",
+        users: "1 usuário",
+        desc: "Perfeito para corretores autônomos.",
+        price: "$197",
+        features: ["1 usuário incluso", "Todos os recursos inclusos", "Automação com Agente de IA", "Suporte 24/7"]
+      },
+      team: {
+        name: "Team",
+        users: "3 usuários",
+        desc: "Excelente para equipes pequenas.",
+        price: "$347",
+        features: ["3 usuários inclusos", "Todos os recursos inclusos", "Automação com Agente de IA", "Suporte 24/7"]
+      },
+      growth: {
+        name: "Growth",
+        users: "5 usuários",
+        desc: "Desenvolvido para equipes em crescimento.",
+        price: "$497",
+        features: ["5 usuários inclusos", "Todos os recursos inclusos", "Automação com Agente de IA", "Suporte 24/7"]
+      }
+    },
+    plansFooter: {
+      setup: {
+        value: "$97",
+        title: "Taxa Única de Configuração",
+        desc: "Fique totalmente configurado e pronto para crescer."
+      },
+      user: {
+        value: "$97",
+        title: "Por Usuário Adicional",
+        desc: "Adicione membros à equipe a qualquer momento."
+      },
+      contract: {
+        title: "Sem Contratos de Longo Prazo Cancele a Qualquer Momento",
+        desc: "Flexibilidade com a que você pode contar."
+      }
+    },
+
+    compareTitle: "Veja Exatamente O Que Você Recebe",
+    compareSubtitle: "Outras plataformas cobram extra pelas ferramentas e recursos que você realmente precisa.",
+    compareThFeature: "O QUE VOCÊ RECEBE",
+    compareThOther: "OUTRAS PLATAFORMAS\nPlanos Grandes + Complementos + Usuários",
+    compareThCost: "CUSTO TRADICIONAL\n(Adicional)",
+    compareThCortexa: "CORTEXA AIOS\nTudo Incluso",
+    compareIncluded: "Incluso",
+    compareUnlimitedAiTitle: "Uso ilimitado de IA.",
+    compareUnlimitedAiDesc: "Sem sistema de créditos.\nSem surpresas nas faturas de IA.",
+    compareNoPenaltiesTitle: "Sem penalidades por contatos.",
+    compareNoPenaltiesDesc: "Aumente seu banco de dados\nsem restrições.",
+    compareOneTimeSetup: "TAXA ÚNICA DE CONFIGURAÇÃO\nTradicional em planos grandes",
+    compareSetupSetup: "$97\nTaxa única",
+    compareEstimatedCost: "CUSTO MENSAL ESTIMADO\nPara a maioria das empresas",
+    compareEstimatedOther: "$2.500 – $7.500+",
+    compareEstimatedOther1: "$2.500 – $5.000+ /mês\nE ainda assim pode não incluir tudo.",
+    compareEstimatedCortexa: "$197 /mês\nTudo incluso",
+
+    compareRows: [
+      { f: "CRM e Gestão de Contatos", o: "Incluso em planos superiores", c: "-" },
+      { f: "Gestão de Leads e Funis", o: "Incluso, mas por níveis", c: "-" },
+      { f: "Campanhas de E-mail e SMS", o: "Incluso, mas por nível de plano", c: "$50 – $150 /mês" },
+      { f: "Automação de Marketing", o: "Incluso, mas limitado em planos baixos", c: "$100 – $300 /mês" },
+      { f: "Agente de IA (24/7)", o: "Apenas complemento ou nível superior", c: "$300 – $1.000 /mês" },
+      { f: "Automação de WhatsApp", o: "Geralmente integração ou complemento", c: "$50 – $150 /mês" },
+      { f: "Agendamento de Reuniões", o: "Apenas complemento ou nível superior", c: "$50 – $115 /mês" },
+      { f: "Formulários Web e Landing Pages", o: "Limitado em planos inferiores", c: "$50 – $75 /mês" },
+      { f: "Relatórios e Análises", o: "Relatórios avançados em níveis superiores", c: "$100 – $250 /mês" },
+      { f: "Automação de Vendas", o: "Automação em níveis superiores", c: "$75 – $200 /mês" },
+      { f: "Tarefas e Lembretes", o: "Incluso, mas limitado", c: "$25 – $75 /mês" },
+      { f: "Colaboração em Equipe", o: "Por usuário, custo maior", c: "$25 – $75 /usuário/mês" },
+      { f: "Gestão de Documentos e Arquivos", o: "Geralmente armazenamento limitado", c: "$25 – $100 /mês" },
+      { f: "Automação de Fluxos", o: "Fluxos avançados em níveis superiores", c: "$100 – $250 /mês" },
+      { f: "Configuração Específica", o: "Trabalho personalizado ou complemento caro", c: "$500 – $2.500+ (único)" },
+      { f: "Onboarding e Treinamento", o: "Geralmente serviço adicional pago", c: "$500 – $2.000+ (único)" },
+      { f: "Integração (Apps Populares)", o: "Muitos exigem integrações pagas", c: "$50 – $300 /mês" },
+      { f: "Geração de Leads", o: "Complemento separado ou serviço externo", c: "$197 – $1.000+ /mês" },
+      { f: "Créditos e Uso de IA", o: "Créditos de IA e cobranças por excesso", c: "$197 – $1.000+ /mês\n(varia por uso)", badge: "NOVO" },
+      { f: "Taxas por Contatos de Marketing", o: "Cobrado conforme o banco de dados cresce", c: "$225 – $180+ /mês\n(varia por volume)", badge: "NOVO" },
+      { f: "E-mails Transacionais", o: "Geralmente vendido como serviço separado", c: "$600+ /mês", badge: "NOVO" },
+      { f: "Campos Personalizados", o: "Limites extras exigem pacotes de expansão", c: "$70 – $220+ /mês", badge: "NOVO" },
+      { f: "Painéis e Relatórios Avançados", o: "Limites exigem planos superiores", c: "$200+ /mês", badge: "NOVO" },
+      { f: "Limites de Crescimento de Equipe", o: "Pacotes de expansão necessários", c: "$200+ /mês", badge: "NOVO" }
+    ],
+
+    vsCompOtherTitle: "COM OUTRAS PLATAFORMAS",
+    vsCompOther1: "Alto custo mensal com múltiplos add-ons",
+    vsCompOther2: "Taxa de configuração de $2.500 - $7.500+ para grandes planos",
+    vsCompOther3: "Configuração complexa e integração demorada",
+    vsCompOther4: "Pague mais conforme adiciona usuários, recursos e ferramentas",
+    vsCompOther5: "No momento em que você começar, já terá gasto $10.000+",
+    vsCompOtherTotalTitle: "Investimento Total Típico para Começar",
+    vsCompOtherTotalVal: "$10.000+",
+    vsCompOtherTotalSub: "(Configuração + Primeiro Mês)",
+    vsCompOtherTotalNote: "E ainda pode não incluir tudo.",
+
+    vsCompVs: "VS.",
+
+    vsCompCortexaTitle: "COM CORTEXA AIOS",
+    vsCompCortexa1: "Um sistema com tudo o que você precisa",
+    vsCompCortexa2: "Taxa de configuração única de $97",
+    vsCompCortexa3: "$197/mês - tudo incluso",
+    vsCompCortexa4: "Adicione agentes (usuários) por $97/mês",
+    vsCompCortexa5: "Comece hoje e comece a faturar",
+    vsCompCortexaTotalTitle: "Investimento Total para Começar",
+    vsCompCortexaTotalVal: "$294",
+    vsCompCortexaTotalSub: "(Configuração + Primeiro Mês para 1 Agente)",
+
+    vsCompBottomHeader: "Mais Leads. Mais Agendamentos. Mais Fechamentos.",
+    vsCompBottomSub: "Aumento de até 3X na Taxa de Conversão de Leads.",
+    vsCompBottomFeat1: "Sem taxas ocultas",
+    vsCompBottomFeat2: "Cancele a qualquer momento",
+    vsCompBottomFeat3: "Feito para o mercado imobiliário",
+    vsCompBottomBtn: "Iniciar Meu Teste Grátis",
   },
 };
 
@@ -212,244 +580,14 @@ export default function PricingPage() {
 
   const tr = t[lang];
 
-  const horizontalGridFeatures = {
-    en: [
-      {
-        id: 1,
-        text: "No confusing AI credit systems",
-        icon: <Layers size={34} color="#0022ff" />,
-      },
-      {
-        id: 2,
-        text: "No surprise usage fees",
-        icon: <Activity size={34} color="#0022ff" />,
-      },
-      {
-        id: 3,
-        text: "No hidden fees",
-        icon: <CircleDollarSign size={34} color="#0022ff" />,
-      },
-      {
-        id: 4,
-        text: "Add team members anytime",
-        icon: <UserPlus size={34} color="#0022ff" />,
-      },
-      {
-        id: 5,
-        text: "One-time setup fee",
-        icon: <Wrench size={34} color="#0022ff" />,
-      },
-      {
-        id: 6,
-        text: "Built for real estate",
-        icon: <Building2 size={34} color="#0022ff" />,
-      },
-    ],
-    es: [
-      {
-        id: 1,
-        text: "Sin sistemas confusos de créditos de IA",
-        icon: <Layers size={34} color="#0022ff" />,
-      },
-      {
-        id: 2,
-        text: "Sin tarifas sorpresivas por uso",
-        icon: <Activity size={34} color="#0022ff" />,
-      },
-      {
-        id: 3,
-        text: "Sin tarifas ocultas",
-        icon: <CircleDollarSign size={34} color="#0022ff" />,
-      },
-      {
-        id: 4,
-        text: "Añade miembros en cualquier momento",
-        icon: <UserPlus size={34} color="#0022ff" />,
-      },
-      {
-        id: 5,
-        text: "Tarifa de configuración única",
-        icon: <Wrench size={34} color="#0022ff" />,
-      },
-      {
-        id: 6,
-        text: "Creado para bienes raíces",
-        icon: <Building2 size={34} color="#0022ff" />,
-      },
-    ],
-    pt: [
-      {
-        id: 1,
-        text: "Sem sistemas confusos de créditos de IA",
-        icon: <Layers size={34} color="#0022ff" />,
-      },
-      {
-        id: 2,
-        text: "Sem taxas surpresa de uso",
-        icon: <Activity size={34} color="#0022ff" />,
-      },
-      {
-        id: 3,
-        text: "Sem taxas ocultas",
-        icon: <CircleDollarSign size={34} color="#0022ff" />,
-      },
-      {
-        id: 4,
-        text: "Adicione membros a qualquer momento",
-        icon: <UserPlus size={34} color="#0022ff" />,
-      },
-      {
-        id: 5,
-        text: "Taxa única de configuração",
-        icon: <Wrench size={34} color="#0022ff" />,
-      },
-      {
-        id: 6,
-        text: "Feito para o setor imobiliário",
-        icon: <Building2 size={34} color="#0022ff" />,
-      },
-    ],
+  const renderNewLineText = (text) => {
+    return text.split('\n').map((str, index) => (
+      <React.Fragment key={index}>
+        {str}
+        {index < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
   };
-
-  const featureSections = {
-    en: [
-      {
-        icon: <Bot size={38} color="#0022ff" />,
-        title: "AI AGENT",
-        desc: "Your 24/7 AI Assistant",
-        items: [
-          "Handles conversations 24/7",
-          "Instant WhatsApp replies",
-          "Qualifies leads automatically",
-          "Books appointments",
-          "Nurtures cold & warm leads",
-          "Automatic follow-ups",
-        ],
-      },
-      {
-        icon: <MessageSquare size={38} color="#0022ff" />,
-        title: "WHATSAPP INBOX",
-        desc: "All conversations in one place",
-        items: [
-          "WhatsApp (primary channel)",
-          "Instagram DMs",
-          "Unified inbox",
-          "Cross-channel sync",
-          "Real-time notifications",
-          "Full conversation history per lead",
-        ],
-      },
-      {
-        icon: <GitFork size={38} color="#0022ff" />,
-        title: "LEADS & PIPELINE",
-        desc: "From new lead to closed deal",
-        items: [
-          "Capture & score leads",
-          "Organize & qualify leads",
-          "Smart pipeline updates",
-          "Deal stages",
-          "Task & activity tracking",
-          "Funnel tracking (lead → deal → close)",
-        ],
-      },
-      {
-        icon: <Home size={38} color="#0022ff" />,
-        title: "PROPERTIES",
-        desc: "Manage listings & performance",
-        items: [
-          "Add & manage properties",
-          "Property details & media",
-          "Buyer-property matching",
-          "Listing performance",
-          "Property activity timeline",
-          "AI-generated property descriptions",
-        ],
-      },
-      {
-        icon: <Users size={44} color="#0022ff" />,
-        title: "TEAM AIOS",
-        desc: "Everything your team needs in one workspace",
-        items: [
-          "Team workspace dashboard",
-          "Shared calendar",
-          "Team chat",
-          "Files & documents",
-          "Notes & knowledge base",
-          "Team collaboration",
-        ],
-      },
-      {
-        icon: <ShieldAlert size={38} color="#0022ff" />,
-        title: "TEAM MANAGEMENT",
-        desc: "Empower your team to perform",
-        items: [
-          "Permissions & roles",
-          "AI team insights",
-          "Performance reporting",
-          "Real-time collaboration",
-          "Team analytics",
-          "Activity tracking",
-        ],
-      },
-      {
-        icon: <Zap size={38} color="#0022ff" />,
-        title: "FOLLOW-UP AUTOMATION",
-        desc: "Nurture leads. Stay top of mind. Close more deals.",
-        items: [
-          "Automatic lead follow-ups",
-          "Cold lead nurturing",
-          "Warm lead reminders",
-          "Appointment reminders",
-          "Re-engagement campaigns",
-          "Never miss a lead again",
-        ],
-      },
-      {
-        icon: <BarChart3 size={38} color="#0022ff" />,
-        title: "ANALYTICS",
-        desc: "Track what matters. Grow faster.",
-        items: [
-          "Lead & deal performance",
-          "Conversion analytics",
-          "Ad spend, CPA & ROI",
-          "Revenue reports",
-          "Real-time dashboards",
-          "AI business insights",
-        ],
-      },
-    ],
-  };
-
-  const powerItems = {
-    en: [
-      {
-        icon: <Target size={34} color="#b25ced" />,
-        title: "Capture more leads",
-        text: "AI finds, engages, and qualifies the right leads automatically.",
-      },
-      {
-        icon: <Zap size={34} color="#b25ced" />,
-        title: "Convert more deals",
-        text: "Smart follow-ups, insights, and automation close more deals for you.",
-      },
-      {
-        icon: <TrendingUp size={34} color="#b25ced" />,
-        title: "Operate with clarity",
-        text: "Real-time dashboards and analytics so you always know what’s working.",
-      },
-      {
-        icon: <Crosshair size={34} color="#b25ced" />,
-        title: "Scale effortlessly",
-        text: "AI handles the heavy lifting so you can focus on growing your business.",
-      },
-    ],
-  };
-
-  const currentHorizontalFeatures =
-    horizontalGridFeatures[lang] || horizontalGridFeatures.en;
-  const currentFeatures = featureSections.en;
-  const currentPowerItems = powerItems.en;
-
   return (
     <div className="pricing-page">
       {isMobile ? (
@@ -630,110 +768,378 @@ export default function PricingPage() {
         </div>
       )}
       <main className="main-content">
-        <section className="hero-section">
-          <h1>{tr.hero.title}</h1>
-          <p className="hero-subtitle">{tr.hero.desc}</p>
+        <section className="cx-pricing cx-center">
+          <div className="cx-pricing-header">
+            <span className="cx-pricing-tag">{tr.pricingLabel}</span>
+            <h2 className="cx-pricing-title">
+              {tr.pricingMainTitlePre}
+              <span className="cx-pricing-title-blue">{tr.pricingMainTitlePost}</span>
+            </h2>
+            <p className="cx-pricing-subtitle">{tr.pricingSubText}</p>
+          </div>
+
+          <div className="cx-pricing-alert-bar">
+            <p className="cx-pricing-alert-text">
+              <span className="cx-pricing-alert-bold">{tr.pricingAlertBold}</span>
+              {tr.pricingAlertText}
+            </p>
+          </div>
+
+          <div className="cx-pricing-grid">
+            <div className="cx-pricing-card">
+              <div className="cx-pricing-icon-wrapper">
+                <Bot size={44} strokeWidth={2} />
+              </div>
+              <h3 className="cx-pricing-card-title">{tr.pricingFeatures.ai.title}</h3>
+              <p className="cx-pricing-card-desc">{tr.pricingFeatures.ai.desc}</p>
+            </div>
+
+            <div className="cx-pricing-card">
+              <div className="cx-pricing-icon-wrapper">
+                <RefreshCw size={44} strokeWidth={2} />
+              </div>
+              <h3 className="cx-pricing-card-title">{tr.pricingFeatures.automate.title}</h3>
+              <p className="cx-pricing-card-desc">{tr.pricingFeatures.automate.desc}</p>
+            </div>
+
+            <div className="cx-pricing-card">
+              <div className="cx-pricing-stat-wrapper">
+                <div className="cx-pricing-icon-inline">
+                  <BarChart3 size={44} strokeWidth={2} />
+                </div>
+                <span className="cx-pricing-stat-value">{tr.pricingFeatures.conversion.value}</span>
+              </div>
+              <h3 className="cx-pricing-card-title">{tr.pricingFeatures.conversion.title}</h3>
+              <p className="cx-pricing-card-desc">{tr.pricingFeatures.conversion.desc}</p>
+            </div>
+
+            <div className="cx-pricing-card">
+              <div className="cx-pricing-icon-wrapper">
+                <Building2 size={44} strokeWidth={2} />
+              </div>
+              <h3 className="cx-pricing-card-title">{tr.pricingFeatures.realestate.title}</h3>
+              <p className="cx-pricing-card-desc">{tr.pricingFeatures.realestate.desc}</p>
+            </div>
+          </div>
         </section>
 
-        <div className="pricing-box-container">
-          <div className="pricing-box-inner">
-            <div className="clear-pricing-badge">
-              <ShieldCheck className="shield-icon" size={44} color="#0022ff" />
-              <div className="badge-text-wrap">
-                <h4>
-                  {tr.badge.title} <br />
-                  <span>{tr.badge.title1}</span>
-                </h4>
-                <p>{tr.badge.desc}</p>
+        <div className="cx-plans-container">
+          <div className="cx-plans-grid">
+            
+            <div className="cx-plans-card">
+              <div className="cx-plans-card-header">
+                <div className="cx-plans-icon-box">
+                  <User size={54} strokeWidth={1.8} />
+                </div>
+                <div className="cx-plans-meta">
+                  <h3 className="cx-plans-name">{tr.plansData.solo.name}</h3>
+                  <span className="cx-plans-users">{tr.plansData.solo.users}</span>
+                  <p className="cx-plans-desc">{tr.plansData.solo.desc}</p>
+                </div>
+              </div>
+              <div className="cx-plans-price-block">
+                <span className="cx-plans-amount">{tr.plansData.solo.price}</span>
+                <span className="cx-plans-period">{tr.plansPerMonth}</span>
+              </div>
+              <ul className="cx-plans-features">
+                {tr.plansData.solo.features.map((feat, i) => (
+                  <li key={i} className="cx-plans-feature-item">
+                    <CheckCircle className="cx-check-icon-purple" size={18} /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+            </div>
+
+            <div className="cx-plans-card cx-plans-popular">
+              <div className="cx-plans-badge">{tr.plansBadgePopular}</div>
+              <div className="cx-plans-card-header">
+                <div className="cx-plans-icon-box">
+                  <Users size={54} strokeWidth={1.8} />
+                </div>
+                <div className="cx-plans-meta">
+                  <h3 className="cx-plans-name">{tr.plansData.team.name}</h3>
+                  <span className=" cx-plans-users">{tr.plansData.team.users}</span>
+                  <p className="cx-plans-desc">{tr.plansData.team.desc}</p>
+                </div>
+              </div>
+              <div className="cx-plans-price-block">
+                <span className="cx-plans-amount">{tr.plansData.team.price}</span>
+                <span className="cx-plans-period">{tr.plansPerMonth}</span>
+              </div>
+              <ul className="cx-plans-features">
+                {tr.plansData.team.features.map((feat, i) => (
+                  <li key={i} className="cx-plans-feature-item">
+                    <CheckCircle className="cx-check-icon-purple" size={18} /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+            </div>
+
+            <div className="cx-plans-card">
+              <div className="cx-plans-card-header">
+                <div className="cx-plans-icon-box">
+                  <BarChart3 size={54} strokeWidth={1.8} />
+                </div>
+                <div className="cx-plans-meta">
+                  <h3 className="cx-plans-name">{tr.plansData.growth.name}</h3>
+                  <span className="cx-plans-users">{tr.plansData.growth.users}</span>
+                  <p className="cx-plans-desc">{tr.plansData.growth.desc}</p>
+                </div>
+              </div>
+              <div className="cx-plans-price-block">
+                <span className="cx-plans-amount">{tr.plansData.growth.price}</span>
+                <span className="cx-plans-period">{tr.plansPerMonth}</span>
+              </div>
+              <ul className="cx-plans-features">
+                {tr.plansData.growth.features.map((feat, i) => (
+                  <li key={i} className="cx-plans-feature-item">
+                    <CheckCircle className="cx-check-icon-purple" size={18} /> {feat}
+                  </li>
+                ))}
+              </ul>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+            </div>
+
+          </div>
+
+          <div className="cx-plans-footer-grid">
+            <div className="cx-plans-footer-card">
+              <div className="cx-plans-footer-icon-box">
+                <Settings size={42} strokeWidth={2} />
+              </div>
+              <div className="cx-plans-footer-info">
+                <div className="cx-plans-footer-value">{tr.plansFooter.setup.value}</div>
+                <h4 className="cx-plans-footer-title">{tr.plansFooter.setup.title}</h4>
+                <p className="cx-plans-footer-desc">{tr.plansFooter.setup.desc}</p>
               </div>
             </div>
 
-            <div className="pricing-features-grid">
-              {currentHorizontalFeatures.map((feat) => (
-                <div key={feat.id} className="p-feat-item">
-                  <div className="p-feat-icon">{feat.icon}</div>
-                  <span className="p-feat-text">{feat.text}</span>
-                </div>
-              ))}
+            <div className="cx-plans-footer-card">
+              <div className="cx-plans-footer-icon-box">
+                <UserPlus size={42} strokeWidth={2} />
+              </div>
+              <div className="cx-plans-footer-info">
+                <div className="cx-plans-footer-value">{tr.plansFooter.user.value}</div>
+                <h4 className="cx-plans-footer-title">{tr.plansFooter.user.title}</h4>
+                <p className="cx-plans-footer-desc">{tr.plansFooter.user.desc}</p>
+              </div>
             </div>
 
-            <div className="pricing-box-right">
-              <div>
-                <span className="start-today-text">
-                  {tr.sidebar.getStarted}
-                </span>
-                <strong className="big-price">$67</strong>
-                <p className="setup-fee-label">{tr.sidebar.setupFee}</p>
+            <div className="cx-plans-footer-card">
+              <div className="cx-plans-footer-icon-box">
+                <ShieldCheck size={42} strokeWidth={2} />
               </div>
-              <div>
-                <a href="/trial" className="start-free-trial-btn">
-                  {tr.sidebar.btn}
-                </a>
-                <div className="add-team-anytime-sub">
-                  <UserPlus size={14} color="#4a5568" />
-                  <span>{tr.sidebar.addTeam}</span>
-                </div>
+              <div className="cx-plans-footer-info">
+                <h4 className=" cx-plans-footer-title-large">{tr.plansFooter.contract.title}</h4>
+                <p className="cx-plans-footer-desc">{tr.plansFooter.contract.desc}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="features-detailed-grid">
-          {currentFeatures.map((section, idx) => (
-            <div key={idx} className="detailed-feature-card">
-              <div className="card-header-block">
-                <div className="card-icon-img">{section.icon}</div>
-                <div className="card-heading-wrap">
-                  <h3>{section.title}</h3>
-                  <p className="card-sub-desc">{section.desc}</p>
-                </div>
-              </div>
-              <ul className="card-feature-list">
-                {section.items.map((item, itemIdx) => (
-                  <li key={itemIdx}>
-                    <span className="blue-check">✓</span>
-                    {item}
-                  </li>
-                ))}
+        <section className="cx-compare-container">
+          <div className="cx-compare-header">
+            <h2 className="cx-compare-title">{tr.compareTitle}</h2>
+            <p className="cx-compare-subtitle">{tr.compareSubtitle}</p>
+          </div>
+
+          <div className="cx-compare-table-wrapper">
+            <table className="cx-compare-table">
+              <thead>
+                <tr>
+                  <th className="cx-th-feature">{tr.compareThFeature}</th>
+                  <th className="cx-th-other">{renderNewLineText(tr.compareThOther)}</th>
+                  <th className="cx-th-cost">{renderNewLineText(tr.compareThCost)}</th>
+                  <th className="cx-th-cortexa">{renderNewLineText(tr.compareThCortexa)}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tr.compareRows.map((row, idx) => {
+                  const isSpecialRow = idx >= 18;
+                  return (
+                    <tr key={idx} className={isSpecialRow ? 'cx-row-special' : ''}>
+                      <td className="cx-td-feature">
+                        <div className="cx-feature-cell">
+                          {isSpecialRow ? (
+                            <span className="cx-icon-close">✓</span>
+                          ) : (
+                            <HelpCircle size={16} className="cx-icon-help" />
+                          )}
+                          <span className="cx-feature-text">
+                            {row.f}
+                            {row.badge && (
+                              <span className="cx-compare-badge">{row.badge}</span>
+                            )}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="cx-td-other">{row.o}</td>
+                      <td className="cx-td-cost">{renderNewLineText(row.c)}</td>
+                      <td className="cx-td-cortexa">
+                        {idx === 18 ? (
+                          <div className="cx-cortexa-info-cell">
+                            <span className="cx-cortexa-info-title">{tr.compareUnlimitedAiTitle}</span>
+                            <span className="cx-cortexa-info-desc">{renderNewLineText(tr.compareUnlimitedAiDesc)}</span>
+                          </div>
+                        ) : idx === 19 ? (
+                          <div className="cx-cortexa-info-cell">
+                            <span className="cx-cortexa-info-title">{tr.compareNoPenaltiesTitle}</span>
+                            <span className="cx-cortexa-info-desc">{renderNewLineText(tr.compareNoPenaltiesDesc)}</span>
+                          </div>
+                        ) : (
+                          <div className="cx-cortexa-included-box">
+                            <CheckCircle2 size={18} className="cx-icon-check" />
+                            <span className="cx-included-text">{tr.compareIncluded}</span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                
+                <tr className="cx-row-summary">
+                  <td className="cx-td-feature cx-summary-title">
+                    {renderNewLineText(tr.compareOneTimeSetup)}
+                  </td>
+                  <td className="cx-td-other font-bold">{renderNewLineText(tr.compareEstimatedOther.split('\n')[0])}</td>
+                  <td className="cx-td-cost">-</td>
+                  <td className="cx-td-cortexa cx-summary-cortexa-highlight">
+                    {renderNewLineText(tr.compareSetupSetup)}
+                  </td>
+                </tr>
+
+                <tr className="cx-row-summary">
+                  <td className="cx-td-feature cx-summary-title">
+                    {renderNewLineText(tr.compareEstimatedCost)}
+                  </td>
+                  <td className="cx-td-other cx-summary-other-cost">
+                    {renderNewLineText(tr.compareEstimatedOther1)}
+                  </td>
+                  <td className="cx-td-cost">-</td>
+                  <td className="cx-td-cortexa cx-summary-cortexa-main-highlight">
+                    {renderNewLineText(tr.compareEstimatedCortexa)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="cx-comparison-container">
+          {/* Top Split Comparison Cards */}
+          <div className="cx-split-comparison">
+            
+            {/* Left Side: Other Platforms */}
+            <div className="cx-comp-side-card cx-side-other">
+              <h3 className="cx-comp-side-title">{tr.vsCompOtherTitle}</h3>
+              <ul className="cx-comp-list">
+                <li>
+                  <div className="cx-circle-icon-x"><X size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompOther1}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-x"><X size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompOther2}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-x"><X size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompOther3}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-x"><X size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompOther4}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-x"><X size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompOther5}</span>
+                </li>
               </ul>
-            </div>
-          ))}
-        </div>
 
-        <div className="bottom-dark-section">
-          <div className="dark-section-inner">
-            <div className="dark-left-column">
-              <p className="dark-tagline">{tr.bottom.tagline}</p>
-              <h2>
-                {tr.bottom.title1}
-                <br />
-                <span className="purple-gradient-text">{tr.bottom.title2}</span>
-              </h2>
+              <div className="cx-investment-inner-box cx-inner-box-other">
+                <p className="cx-inner-box-label">{tr.vsCompOtherTotalTitle}</p>
+                <p className="cx-inner-box-value">{tr.vsCompOtherTotalVal}</p>
+                <p className="cx-inner-box-sub">{tr.vsCompOtherTotalSub}</p>
+                <p className="cx-inner-box-note">{tr.vsCompOtherTotalNote}</p>
+              </div>
             </div>
 
-            <div className="dark-features-grid">
-              {currentPowerItems.map((item, idx) => (
-                <div key={idx} className="dark-power-item">
-                  <div className="dark-power-icon-circle">{item.icon}</div>
-                  <div className="dark-power-content">
-                    <h4>{item.title}</h4>
-                    <p>{item.text}</p>
+            {/* Middle VS Badge */}
+            <div className="cx-comp-vs-badge">
+              <span>{tr.vsCompVs}</span>
+            </div>
+
+            {/* Right Side: Cortexa AIOS */}
+            <div className="cx-comp-side-card cx-side-cortexa">
+              <h3 className="cx-comp-side-title">{tr.vsCompCortexaTitle}</h3>
+              <ul className="cx-comp-list">
+                <li>
+                  <div className="cx-circle-icon-check"><Check size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompCortexa1}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-check"><Check size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompCortexa2}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-check"><Check size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompCortexa3}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-check"><Check size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompCortexa4}</span>
+                </li>
+                <li>
+                  <div className="cx-circle-icon-check"><Check size={12} strokeWidth={3} /></div>
+                  <span>{tr.vsCompCortexa5}</span>
+                </li>
+              </ul>
+
+              <div className="cx-investment-inner-box cx-inner-box-cortexa">
+                <p className="cx-inner-box-label">{tr.vsCompCortexaTotalTitle}</p>
+                <p className="cx-inner-box-value">{tr.vsCompCortexaTotalVal}</p>
+                <p className="cx-inner-box-sub">{tr.vsCompCortexaTotalSub}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Conversion Banner */}
+          <div className="cx-conversion-footer-banner">
+            <div className="cx-footer-left-content">
+              <div className="cx-footer-bar-icon-container">
+                <BarChart3 size={24} className="cx-bar-icon" />
+              </div>
+              <div className="cx-footer-text-block">
+                <h4 className="cx-footer-header-text">{tr.vsCompBottomHeader}</h4>
+                <p className="cx-footer-sub-text">{tr.vsCompBottomSub}</p>
+                <div className="cx-footer-ticks-row">
+                  <div className="cx-tick-item">
+                    <div className="cx-mini-tick"><Check size={10} strokeWidth={3} /></div>
+                    <span>{tr.vsCompBottomFeat1}</span>
+                  </div>
+                  <div className="cx-tick-item">
+                    <div className="cx-mini-tick"><Check size={10} strokeWidth={3} /></div>
+                    <span>{tr.vsCompBottomFeat2}</span>
+                  </div>
+                  <div className="cx-tick-item">
+                    <div className="cx-mini-tick"><Check size={10} strokeWidth={3} /></div>
+                    <span>{tr.vsCompBottomFeat3}</span>
                   </div>
                 </div>
-              ))}
-
-              <div className="dark-power-item final-branding-box">
-                <div className="dark-power-icon-circle">
-                  <Gem size={34} color="#b25ced" />
-                </div>
-                <div className="branding-text-lines">
-                  <p>{tr.bottom.finalLine1}</p>
-                  <p>{tr.bottom.finalLine2}</p>
-                  <p>{tr.bottom.finalLine3}</p>
-                  <h3>{tr.bottom.finalTitle}</h3>
-                </div>
               </div>
             </div>
+
+            <a href="/trial" className="cx-footer-cta-button">
+              <Zap size={16} fill="currentColor" className="cx-btn-bolt-icon" />
+              {tr.vsCompBottomBtn}
+            </a>
           </div>
         </div>
       </main>
