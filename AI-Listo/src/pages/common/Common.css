@@ -1790,7 +1790,6 @@
 
 .pricing-page .cx-row-summary td {
   padding: 20px;
-  border-bottom: none;
   background-color: #ffffff;
 }
 
@@ -2107,7 +2106,6 @@
   margin-top: -1px;
 }
 
-/* Responsive Rules */
 @media (max-width: 992px) {
   .pricing-page .cx-split-comparison {
     flex-direction: column;
@@ -2163,11 +2161,7 @@
     grid-template-columns: repeat(1, 1fr);
     gap: 40px;
   }
-  .pricing-page .cx-plans-card {
-    max-width: 500px;
-    margin: 0 auto;
-    width: 100%;
-  }
+ 
   .pricing-page .cx-plans-footer-grid {
     grid-template-columns: repeat(1, 1fr);
   }
@@ -2191,19 +2185,9 @@
     display: none;
   }
 
-  .pricing-page .cx-pricing-card {
-    border-bottom: 1px solid rgba(229, 231, 235, 0.7);
-  }
-
-  .pricing-page .cx-pricing-card:nth-last-child(-n+2) {
-    border-bottom: none;
-  }
 }
 
 @media (max-width: 640px) {
-  .pricing-page .cx-pricing-grid {
-    grid-template-columns: repeat(1, 1fr);
-  }
 
   .pricing-page .cx-pricing-card::after {
     display: none;
@@ -2211,10 +2195,6 @@
 
   .pricing-page .cx-pricing-card {
     border-bottom: 1px solid rgba(229, 231, 235, 0.7);
-  }
-
-  .pricing-page .cx-pricing-card:last-child {
-    border-bottom: none;
   }
 
   .pricing-page .cx-pricing-title {
@@ -2425,7 +2405,9 @@
   background-color: #5c61df;
   transform: scale(0.95);
 }
-
+.cx-footer-ticks-row.mobile{
+  display: none;
+}
 @media (max-width: 1024px) {
  
   .pricing-page .badge-text-wrap h4{
@@ -2517,21 +2499,93 @@
   }
 }
 
-@media (min-width: 1024px) {
-  
-}
-
-@media (min-width: 1025px) {
-  
-}
-
 @media (max-width: 1024px) {
   .pricing-page .content {
     grid-template-columns: 1fr;
   }
-
- 
-  
+  .pricing-page .cx-pricing-title, .pricing-page .cx-pricing-card-title,
+  .pricing-page .cx-plans-amount, .pricing-page .cx-plans-name,
+  .pricing-page .cx-compare-title, .pricing-page .cx-feature-text,
+  .pricing-page .cx-compare-table td, .pricing-page .cx-compare-table .cx-summary-cortexa-highlight,
+  .pricing-page .cx-compare-table .cx-summary-cortexa-main-highlight,
+  .pricing-page .cx-side-other .cx-comp-side-title{
+    color: #fff;
+  }
+  .pricing-page .cx-pricing-subtitle, .pricing-page .cx-pricing-alert-text,
+  .pricing-page .cx-pricing-card-desc, .pricing-page .cx-plans-users,
+  .pricing-page .cx-plans-desc, .pricing-page .cx-plans-feature-item,
+  .pricing-page .cx-plans-footer-title, .pricing-page .cx-compare-subtitle{
+    color: #e4e2e2;
+  }
+  .pricing-page .cx-pricing-grid{
+    background: none;
+    border: 0;
+    gap: 10px;
+    overflow: unset;
+  }
+  .pricing-page .cx-pricing-card:not(:last-child)::after{
+    width: 0;
+  }
+  .pricing-page .cx-pricing-card{
+    border: 1px solid #041d71eb;
+    border-radius: 10px;
+  }
+  .pricing-page .cx-pricing-title-blue{
+    background: linear-gradient(90deg, #0b63ff, #a73fdb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .pricing-page .cx-plans-card{
+    background: none;
+    border: 1px solid #003bff;
+  }
+  .pricing-page .cx-plans-popular {
+    border: 2px solid #003bff;
+  }
+  .pricing-page .cx-plans-footer-grid{
+    background: none;
+    border: 1px solid #e5e7eb;
+  }
+  .pricing-page .cx-compare-table, .pricing-page .cx-td-cortexa, .pricing-page .cx-row-summary td,
+  .pricing-page .cx-compare-table .cx-summary-cortexa-highlight,
+  .pricing-page .cx-compare-table .cx-summary-cortexa-main-highlight,
+  .pricing-page .cx-inner-box-other, .pricing-page .cx-inner-box-cortexa{
+    background: none;
+  }
+  .pricing-page .cx-row-summary td, .pricing-page .cx-compare-table td{
+    border-bottom: 1px solid #f3f4f66e;
+  }
+  .pricing-page .cx-compare-table td:not(:last-child){
+    border-right: 1px solid #f3f4f66e;
+  }
+  .pricing-page .cx-side-other, .pricing-page .cx-conversion-footer-banner{
+    border: 1px solid #e5e7eb45;
+    background: none;
+  }
+  .pricing-page .cx-side-cortexa{
+    border: 2px solid #003bff;
+    background: #003cff12;
+  }
+  .pricing-page .cx-comp-list li, .pricing-page .cx-inner-box-other .cx-inner-box-label,
+  .pricing-page .cx-inner-box-other .cx-inner-box-value, .pricing-page .cx-inner-box-sub,
+  .pricing-page .cx-inner-box-note, .pricing-page .cx-inner-box-cortexa .cx-inner-box-label,
+  .pricing-page .cx-inner-box-cortexa .cx-inner-box-sub, .pricing-page .cx-footer-header-text,
+  .pricing-page .cx-tick-item{
+    color: #fff;
+  }
+  .pricing-page .main-content {
+    padding: 10px 12px 10px;
+  }
+  .pricing-page .cx-plans-btn, .pricing-page .cx-footer-cta-button{
+    background: linear-gradient(100deg, #0b63ff, #7b42ff);
+  }
+  .cx-footer-ticks-row.desktop{
+    display: none;
+  }
+  .cx-footer-ticks-row.mobile{
+    display: flex;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2541,10 +2595,20 @@
   }
 }
 
-@media (max-width: 600px) {
-  
+@media (max-width: 667px) {
+  .pricing-page .cx-footer-left-content {
+    flex-direction: row;
+    text-align: left;
+    align-items: flex-start;
+  }
   .trial-page .trial-logo-text {
     font-size: 36px;
+  }
+  .cx-footer-ticks-row.mobile {
+    align-items: flex-start;
+  }
+  .pricing-page .cx-footer-sub-text {
+    margin: 0;
   }
 }
 
