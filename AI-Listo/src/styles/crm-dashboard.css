@@ -1789,7 +1789,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .sidebar-analytics-card, .crm-dark #root .generator-page .results-table-container-card,
 .crm-dark #root .dropdown-filter-select-inline, .crm-dark #root .ai-card,
 .crm-dark #root .action-btn, .crm-dark #root .team-filter-btn, .crm-dark #root .team-ai-btn,
-.crm-dark #root .team-activity-view-btn, .crm-dark #root .team-quick-action-item,
+.crm-dark #root .team-quick-action-item,
 .crm-dark #root .btn-icon-text, .crm-dark #root .input-select-wrapper input,
 .crm-dark #root .btn-table-util-filter, .crm-dark #root .layout-view-toggle-buttons-group button,
 .crm-dark #root .analytics-page .control-select, .crm-dark #root .team-select-input,
@@ -1868,8 +1868,8 @@ body.crm-dark .crm-error {
 .crm-dark .security-check-line svg{
   fill: #101827f2;
 }
-.crm-dark #root .priority-item
- {
+.crm-dark #root .priority-item,
+.crm-dark #root .team-activity-view-btn {
   background: #101827f2;
   border: 0;
 }
