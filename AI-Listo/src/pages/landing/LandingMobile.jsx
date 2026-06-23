@@ -10,6 +10,17 @@ import {
   MapPin,
   ArrowUp,
   LogIn,
+  Bot,
+  MessageCircle,
+  LayoutDashboard,
+  GitMerge,
+  Link2,
+  UserCheck,
+  Users,
+  Home,
+  XCircle,
+  CheckCircle2,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
@@ -18,6 +29,7 @@ import "./LandingMobile.css";
 import headlogoImg from "../../assets/cortexa/headlogotran.png";
 import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
 import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
+import featurechart from "../../assets/cortexa/mobile/featurechart.png";
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
     return localStorage.getItem("cortexa_lang") || "en";
@@ -247,6 +259,58 @@ export default function LandingMobile() {
       fCancel: "Cancellation Policy",
       copyright: "© 2026 Cortexa AI. All rights reserved.",
       termsOfService: "Terms of Service",
+
+      heroTitlePre: "Built to ",
+      heroTitleActive: "Grow Revenue",
+      heroTitlePost: " — Not Manage Software.",
+      heroSubPre: "We bring it all into ",
+      heroSubActive: "one connected workspace.",
+      nodeAgent: "AI AGENT",
+      nodeWhatsapp: "WHATSAPP",
+      nodeDashboard: "DASHBOARD",
+      nodePipeline: "PIPELINE",
+      nodeHybrid: "HYBRID CONNECTS",
+      nodeLeads: "LEADS",
+      nodeContacts: "CONTACTS",
+      nodeProperties: "PROPERTIES",
+      stat1Title: "INCREASE IN LEAD CONVERSIONS",
+      stat1Desc:
+        "Our customers see up to 3X more leads converted into deals — by running their entire business in one connected workspace.",
+      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      leftCost1: "High setup fees",
+      leftCost2: "Add-ons and upgrades you pay for separately",
+      leftCost3: "Multiple disconnected tools",
+      leftCost4: "Complex onboarding that slows your team down",
+      leftCost5: "Hidden costs that add up over time",
+      vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
+      rightBenefit1: "Simple setup fee",
+      rightBenefit2: "Everything included. No add-ons.",
+      rightBenefit3: "One connected workspace",
+      rightBenefit4: "Faster implementation",
+      rightBenefit5: "Transparent pricing. No surprises.",
+      stat2Title: "LESS EXPENSIVE TO IMPLEMENT",
+
+      titlePre: "Reporting that ",
+      titleActive: "actually ",
+      titleActive1: "works.",
+      subtitle: "In-app. Live. Actionable.",
+      card1Title: "Live Performance",
+      card1Right: "Live Performance Dashboards",
+      card2Title: "Customer Report",
+      card2Right: "Custom Reports in Seconds",
+      card3Title: "Analytics Overview",
+      card3Right: "Visual Insights That Drive Action",
+      card4Title: "Pipeline Overview",
+      card4Right: "Team & Pipeline Visibility",
+      thCustomer: "Customer",
+      thDeals: "Deals",
+      thRevenue: "Revenue",
+      thStage: "Stage",
+      stageNew: "New Lead",
+      stageContacted: "Contacted",
+      stageQualified: "Qualified",
+      stageProposal: "Proposal",
+      stageClosed: "Closed Won",
     },
 
     es: {
@@ -447,6 +511,58 @@ export default function LandingMobile() {
       fCancel: "Política de Cancelación",
       copyright: "© 2026 Cortexa AI. Todos los derechos reservados.",
       termsOfService: "Términos de Servicio",
+
+      heroTitlePre: "Creado para ",
+      heroTitleActive: "Aumentar Ingresos",
+      heroTitlePost: " — No para Administrar Software.",
+      heroSubPre: "Lo traemos todo en ",
+      heroSubActive: "un espacio de trabajo conectado.",
+      nodeAgent: "AGENTE DE IA",
+      nodeWhatsapp: "WHATSAPP",
+      nodeDashboard: "PANEL",
+      nodePipeline: "PIPELINE",
+      nodeHybrid: "CONEXIONES HÍBRIDAS",
+      nodeLeads: "CLIENTES POTENCIALES",
+      nodeContacts: "CONTACTOS",
+      nodeProperties: "PROPIEDADES",
+      stat1Title: "INCREMENTO EN CONVERSIÓN DE LEADS",
+      stat1Desc:
+        "Nuestros clientes ven hasta 3X más leads convertidos en acuerdos al ejecutar todo su negocio en un solo espacio de trabajo conectado.",
+      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      leftCost1: "Altas tarifas de configuración",
+      leftCost2: "Complementos y actualizaciones que pagas por separado",
+      leftCost3: "Múltiples herramientas desconectadas",
+      leftCost4: "Onboarding complejo que frena a tu equipo",
+      leftCost5: "Costos ocultos que se acumulan con el tiempo",
+      vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
+      rightBenefit1: "Tarifa de configuración simple",
+      rightBenefit2: "Todo incluido. Sin complementos.",
+      rightBenefit3: "Un espacio de trabajo conectado",
+      rightBenefit4: "Implementación más rápida",
+      rightBenefit5: "Precios transparentes. Sin sorpresas.",
+      stat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
+
+      titlePre: "Informes que ",
+      titleActive: "realmente ",
+      titleActive1: "funcionan.",
+      subtitle: "En la aplicación. En vivo. Accionable.",
+      card1Title: "Rendimiento en Vivo",
+      card1Right: "Paneles de Rendimiento en Vivo",
+      card2Title: "Informe de Clientes",
+      card2Right: "Informes Personalizados en Segundos",
+      card3Title: "Resumen Analítico",
+      card3Right: "Información Visual que Impulsa la Acción",
+      card4Title: "Resumen de Pipeline",
+      card4Right: "Visibilidad del Equipo y Pipeline",
+      thCustomer: "Cliente",
+      thDeals: "Tratos",
+      thRevenue: "Ingresos",
+      thStage: "Etapa",
+      stageNew: "Nuevo Lead",
+      stageContacted: "Contactado",
+      stageQualified: "Calificado",
+      stageProposal: "Propuesta",
+      stageClosed: "Cerrado Ganado",
     },
 
     pt: {
@@ -648,6 +764,58 @@ export default function LandingMobile() {
       fCancel: "Política de Cancelamento",
       copyright: "© 2026 Cortexa AI. Todos os direitos reservados.",
       termsOfService: "Termos de Serviço",
+
+      heroTitlePre: "Feito para ",
+      heroTitleActive: "Aumentar a Receita",
+      heroTitlePost: " — Não para Gerenciar Software.",
+      heroSubPre: "Nós trazemos tudo para ",
+      heroSubActive: "um espaço de trabalho conectado.",
+      nodeAgent: "AGENTE DE IA",
+      nodeWhatsapp: "WHATSAPP",
+      nodeDashboard: "PAINEL",
+      nodePipeline: "PIPELINE",
+      nodeHybrid: "CONEXÕES HÍBRIDAS",
+      nodeLeads: "LEADS",
+      nodeContacts: "CONTATOS",
+      nodeProperties: "PROPRIEDADES",
+      stat1Title: "AUMENTO NA CONVERSÃO DE LEADS",
+      stat1Desc:
+        "Nossos clientes veem até 3X mais leads convertidos em negócios ao gerenciar toda a sua empresa em um único espaço de trabalho conectado.",
+      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      leftCost1: "Altas taxas de configuração",
+      leftCost2: "Adicionais e atualizações pagos separadamente",
+      leftCost3: "Múltiplas ferramentas desconectadas",
+      leftCost4: "Integração complexa que desacelera sua equipe",
+      leftCost5: "Custos ocultos que se acumulam com el tempo",
+      vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
+      rightBenefit1: "Taxa de configuração simples",
+      rightBenefit2: "Tudo incluído. Sem adicionais.",
+      rightBenefit3: "Um espaço de trabalho conectado",
+      rightBenefit4: "Implementação mais rápida",
+      rightBenefit5: "Preços transparentes. Sem surpresas.",
+      stat2Title: "MAIS BARATO PARA IMPLEMENTAR",
+
+      titlePre: "Relatórios que ",
+      titleActive: "realmente ",
+      titleActive1: "funcionam.",
+      subtitle: "No aplicativo. Ao vivo. Prático.",
+      card1Title: "Desempenho ao Vivo",
+      card1Right: "Painéis de Desempenho ao Vivo",
+      card2Title: "Relatório de Clientes",
+      card2Right: "Relatórios Personalizados em Segundos",
+      card3Title: "Visão Geral Analítica",
+      card3Right: "Insights Visuais que Impulsionam a Ação",
+      card4Title: "Visão Geral do Pipeline",
+      card4Right: "Visibilidade da Equipe e Pipeline",
+      thCustomer: "Cliente",
+      thDeals: "Negócios",
+      thRevenue: "Receita",
+      thStage: "Etapa",
+      stageNew: "Novo Lead",
+      stageContacted: "Contatado",
+      stageQualified: "Qualificado",
+      stageProposal: "Proposta",
+      stageClosed: "Ganho Fechado",
     },
   };
   const handleLangChange = (newLang) => {
@@ -840,21 +1008,136 @@ export default function LandingMobile() {
 
       <section className="m-stats">
         <div className="m-stat-card">
-          <h3>+312%</h3>
-          <span>ROI</span>
+          <h3>$80M+</h3>
+          <span>Pipeline Value</span>
         </div>
 
         <div className="m-stat-card">
-          <h3>$2.4M+</h3>
-          <span>Revenue</span>
+          <h3>500K+</h3>
+          <span>Leads Captured</span>
         </div>
 
         <div className="m-stat-card">
-          <h3>10K+</h3>
-          <span>Agents</span>
+          <h3>24/7</h3>
+          <span>AI Agent</span>
         </div>
       </section>
+      <section className="features">
+        <div className="cx-mob-container">
+          <div className="cx-mob-header">
+            <h2 className="cx-mob-title">
+              {tr.heroTitlePre}
+              <span className="cx-mob-blue-light">{tr.heroTitleActive}</span>
+              {tr.heroTitlePost}
+            </h2>
+            <p className="cx-mob-subtitle">
+              {tr.heroSubPre}
+              <span className="cx-mob-blue-bright">{tr.heroSubActive}</span>
+            </p>
+          </div>
 
+          <div className="cx-mob-flow-chart">
+            <img src={featurechart} alt="features chart" />
+          </div>
+
+          <div className="cx-mob-stat-block">
+            <div className="cx-mob-stat-hero">
+              <TrendingUp size={46} className="cx-mob-trend-icon" />
+              <h3>3X</h3>
+            </div>
+            <h4>{tr.stat1Title}</h4>
+            <p>{tr.stat1Desc}</p>
+          </div>
+
+          <div className="cx-mob-list-section">
+            <div className="cx-mob-list-heading heading-red">
+              <XCircle size={20} />
+              <h5>{tr.vsTitleLeft}</h5>
+            </div>
+            <ul className="cx-mob-ul">
+              <li>
+                <div className="cx-mob-li-left">
+                  <XCircle size={14} className="icon-red" />
+                  <span>{tr.leftCost1}</span>
+                </div>
+                <strong className="cx-val-red">$2,500 - $7,500+</strong>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <XCircle size={14} className="icon-red" />
+                  <span>{tr.leftCost2}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <XCircle size={14} className="icon-red" />
+                  <span>{tr.leftCost3}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <XCircle size={14} className="icon-red" />
+                  <span>{tr.leftCost4}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <XCircle size={14} className="icon-red" />
+                  <span>{tr.leftCost5}</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div className="line"></div>
+          <div className="cx-mob-list-section">
+            <div className="cx-mob-list-heading heading-blue">
+              <CheckCircle2 size={20} />
+              <h5>{tr.vsTitleRight}</h5>
+            </div>
+            <ul className="cx-mob-ul blue">
+              <li>
+                <div className="cx-mob-li-left">
+                  <CheckCircle2 size={14} className="icon-blue" />
+                  <span>{tr.rightBenefit1}</span>
+                </div>
+                <strong className="cx-val-blue">$97</strong>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <CheckCircle2 size={14} className="icon-blue" />
+                  <span>{tr.rightBenefit2}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <CheckCircle2 size={14} className="icon-blue" />
+                  <span>{tr.rightBenefit3}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <CheckCircle2 size={14} className="icon-blue" />
+                  <span>{tr.rightBenefit4}</span>
+                </div>
+              </li>
+              <li>
+                <div className="cx-mob-li-left">
+                  <CheckCircle2 size={14} className="icon-blue" />
+                  <span>{tr.rightBenefit5}</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="cx-mob-stat-block-bottom">
+            <div className="cx-mob-stat-hero">
+              <TrendingUp size={36} className="cx-mob-trend-icon" />
+              <h3>20X</h3>
+            </div>
+            <h4>{tr.stat2Title}</h4>
+          </div>
+        </div>
+      </section>
       {/* BENEFITS SECTION */}
       <section className="m-benefits" id="features">
         <div className="m-benefits-header">
@@ -1400,6 +1683,263 @@ export default function LandingMobile() {
             <span className="m-text-phase">{tr.flowText3}</span>
             <span className="m-text-arrow">→</span>
             <span className="m-text-phase">{tr.flowText4}</span>
+          </div>
+        </div>
+      </section>
+      <section className="reporting">
+        <div className="cx-rep-container">
+          <div className="cx-rep-header">
+            <h2 className="cx-rep-title">
+              {tr.titlePre}
+              <span className="cx-rep-purple">{tr.titleActive}</span>
+              {tr.titleActive1}
+            </h2>
+            <p className="cx-rep-subtitle">{tr.subtitle}</p>
+          </div>
+
+          <div className="cx-rep-grid">
+            <div className="cx-rep-row">
+              <div className="cx-rep-card">
+                <div className="cx-card-inside">
+                  <span className="cx-card-label">{tr.card1Title}</span>
+                  <div className="cx-mock-chart-line">
+                    <div className="cx-chart-y-axis">
+                      <span>100K</span>
+                      <span>75K</span>
+                      <span>50K</span>
+                      <span>25K</span>
+                      <span>0</span>
+                    </div>
+                    <div className="cx-line-graphic-container">
+                      <svg viewBox="0 0 300 100" className="cx-svg-line">
+                        <path
+                          d="M10,80 L70,55 L130,48 L190,70 L250,42 L280,35 L320,15"
+                          fill="none"
+                          stroke="#4f46e5"
+                          strokeWidth="2"
+                        />
+                        <circle cx="10" cy="80" r="3" fill="#4f46e5" />
+                        <circle cx="70" cy="55" r="3" fill="#4f46e5" />
+                        <circle cx="130" cy="48" r="3" fill="#4f46e5" />
+                        <circle cx="190" cy="70" r="3" fill="#4f46e5" />
+                        <circle cx="250" cy="42" r="3" fill="#4f46e5" />
+                        <circle cx="280" cy="35" r="3" fill="#4f46e5" />
+                      </svg>
+                    </div>
+                    <div className="cx-chart-x-axis">
+                      <span>Jan 1</span>
+                      <span>Jan 8</span>
+                      <span>Jan 15</span>
+                      <span>Jan 22</span>
+                      <span>Jan 29</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="cx-rep-text-side">
+                <h3>{tr.card1Right}</h3>
+              </div>
+            </div>
+
+            <div className="cx-rep-row">
+              <div className="cx-rep-card">
+                <div className="cx-card-inside">
+                  <span className="cx-card-label">{tr.card2Title}</span>
+                  <table className="cx-rep-table">
+                    <thead>
+                      <tr>
+                        <th className="text-left">{tr.thCustomer}</th>
+                        <th className="text-center">{tr.thDeals}</th>
+                        <th className="text-right">{tr.thRevenue}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="text-left font-grey">Brookstone</td>
+                        <td className="text-center">8</td>
+                        <td className="text-right">$24,600</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey">Riverside</td>
+                        <td className="text-center">6</td>
+                        <td className="text-right">$18,350</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey">Summit</td>
+                        <td className="text-center">4</td>
+                        <td className="text-right">$12,960</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey">Westview</td>
+                        <td className="text-center">3</td>
+                        <td className="text-right">$9,420</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="cx-rep-text-side">
+                <h3>{tr.card2Right}</h3>
+              </div>
+            </div>
+
+            <div className="cx-rep-row">
+              <div className="cx-rep-card">
+                <div className="cx-card-inside">
+                  <span className="cx-card-label">{tr.card3Title}</span>
+                  <div className="cx-mock-chart-bar">
+                    <div className="cx-chart-y-axis">
+                      <span>100K</span>
+                      <span>75K</span>
+                      <span>50K</span>
+                      <span>25K</span>
+                      <span>0</span>
+                    </div>
+                    <div className="cx-bar-graphic-container">
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "35%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "25%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "30%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill filled-blue"
+                          style={{ height: "60%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "40%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill filled-purple"
+                          style={{ height: "80%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "75%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "32%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill filled-purple"
+                          style={{ height: "85%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "45%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill filled-blue-bright"
+                          style={{ height: "90%" }}
+                        ></div>
+                      </div>
+                      <div className="cx-bar-col">
+                        <div
+                          className="cx-bar-fill"
+                          style={{ height: "55%" }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="cx-chart-x-axis padding-left-bars">
+                      <span>Jan</span>
+                      <span>Feb</span>
+                      <span>Mar</span>
+                      <span>Apr</span>
+                      <span>May</span>
+                      <span>Jun</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="cx-rep-text-side">
+                <h3>{tr.card3Right}</h3>
+              </div>
+            </div>
+
+            <div className="cx-rep-row">
+              <div className="cx-rep-card">
+                <div className="cx-card-inside">
+                  <span className="cx-card-label">{tr.card4Title}</span>
+                  <table className="cx-rep-table-pipeline">
+                    <thead>
+                      <tr>
+                        <th className="text-left">{tr.thStage}</th>
+                        <th className="text-right">{tr.thDeals}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="text-left font-grey flex-cell">
+                          <CheckCircle2 size={14} className="cx-pipe-check" />
+                          <span>{tr.stageNew}</span>
+                        </td>
+                        <td className="text-right font-bold">320</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey flex-cell">
+                          <CheckCircle2 size={14} className="cx-pipe-check" />
+                          <span>{tr.stageContacted}</span>
+                        </td>
+                        <td className="text-right font-bold">210</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey flex-cell">
+                          <CheckCircle2 size={14} className="cx-pipe-check" />
+                          <span>{tr.stageQualified}</span>
+                        </td>
+                        <td className="text-right font-bold">150</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey flex-cell">
+                          <CheckCircle2 size={14} className="cx-pipe-check" />
+                          <span>{tr.stageProposal}</span>
+                        </td>
+                        <td className="text-right font-bold">96</td>
+                      </tr>
+                      <tr>
+                        <td className="text-left font-grey flex-cell">
+                          <CheckCircle2 size={14} className="cx-pipe-check" />
+                          <span>{tr.stageClosed}</span>
+                        </td>
+                        <td className="text-right font-bold">54</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="cx-rep-text-side">
+                <h3>{tr.card4Right}</h3>
+              </div>
+            </div>
           </div>
         </div>
       </section>
