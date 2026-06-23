@@ -55,7 +55,7 @@ export default function LandingMobile() {
       heroTitle2: "Close More Deals.",
       heroTitle3: "24/7 with AI.",
       heroDesc:
-        "All-in-one AI platform that captures more leads, follows up instantly, closes more deals, and grows revenue on autopilot.",
+        "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
       login: "Log in",
       trial: "Start Free Trial",
       nav: [
@@ -255,7 +255,7 @@ export default function LandingMobile() {
       heroTitle2: "Cierra Más Ventas.",
       heroTitle3: "24/7 con IA.",
       heroDesc:
-        "Plataforma todo en uno que captura más leads, responde al instante y aumenta tus ingresos automáticamente.",
+        "Plataforma de IA todo en uno que te ayuda a captar más clientes potenciales, dar seguimiento al instante, cerrar más ventas y aumentar los ingresos en piloto automático.",
       login: "Iniciar sesión",
       trial: "Prueba Gratis",
       nav: [
@@ -455,7 +455,7 @@ export default function LandingMobile() {
       heroTitle2: "Mais Negócios.",
       heroTitle3: "24/7 com IA.",
       heroDesc:
-        "Plataforma completa que captura leads, responde instantaneamente e aumenta sua receita no piloto automático.",
+        "Plataforma de IA tudo-em-um que ajuda você a captar mais leads, fazer o acompanhamento instantaneamente, fechar mais negócios e aumentar a receita no piloto automático.",
       login: "Entrar",
       trial: "Teste Grátis",
       nav: [
