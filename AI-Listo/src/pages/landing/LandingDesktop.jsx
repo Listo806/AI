@@ -52,6 +52,7 @@ import {
   Contact2,
   Users2,
   Puzzle,
+  CheckCircle2,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -102,6 +103,7 @@ import smart2Img from "../../assets/cortexa/smart2.png";
 import smart3Img from "../../assets/cortexa/smart3.png";
 
 import x3xImg from "../../assets/cortexa/3x.png";
+import featurechartImg from "../../assets/cortexa/feature-chart.jpg";
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -166,70 +168,6 @@ export default function Landing() {
       trial: "Start Free Trial",
       login: "Log in",
 
-      aiosBadge: "AI CONNECTED WORKSPACE",
-      aiosBadge1: "One",
-      aiosTitle: "Built to Grow Revenue — Not Manage Software.",
-      aiosDesc1:
-        "Most platforms make real estate teams piece together separate products for AI, CRM, marketing, reporting, automation, communication, and data.",
-      aiosDesc2:
-        "CORTEXA AIOS brings it all into one connected workspace built specifically for real estate — so your team can capture leads, qualify prospects, automate follow-ups, manage pipelines, book appointments, track performance, and stay aligned without juggling multiple tools.",
-      aiosDesc1Bold: "Keep more capital in your business.",
-      aiosDesc1Normal:
-        " Start with the system you need, without enterprise-level setup fees, confusing add-ons, or software costs that eat into your monthly gains.",
-      aiosCol1Title: "EVERYTHING WORKS TOGETHER FROM DAY ONE.",
-      aiosCol2Title: "BUILT TO IMPROVE WHAT MATTERS.",
-      aiosLeftItem1: "Your AI Agent handles conversations 24/7.",
-      aiosLeftItem2:
-        "Your CRM keeps every lead, contact, property, and deal organized.",
-      aiosLeftItem3: "Your WhatsApp automation keeps follow-ups moving.",
-      aiosLeftItem4:
-        "Your pipeline shows exactly where every opportunity stands.",
-      aiosLeftItem5: "Your analytics show what's working.",
-      aiosLeftItem6:
-        "Your team workspace keeps agents, managers, and admins on the same page.",
-      aiosNoItem1: "No complicated product menu.",
-      aiosNoItem2: "No hidden module maze.",
-      aiosNoItem3: "No paying extra just to make the system complete.",
-      aiosFooterText:
-        "Just one AI-powered operating system built to help real estate teams respond faster, serve clients better, close more deals, and grow with confidence.",
-      aiosRightItem1: "Lead response speed",
-      aiosRightItem2: "Follow-up consistency",
-      aiosRightItem3: "Customer experience",
-      aiosRightItem4: "Appointment booking",
-      aiosRightItem5: "Pipeline visibility",
-      aiosRightItem6: "Team productivity",
-      aiosRightItem7: "Lead conversion",
-      aiosRightItem8: "Customer retention",
-      aiosRightItem9: "Revenue opportunities",
-      aiosStatLabel: "INCREASE IN ",
-      aiosStatLabel1: "LEAD CONVERSION",
-      aiosStatDesc: "CORTEXA AIOS customers see up to ",
-      aiosStatDesc1:
-        " more leads converted into deals — by running their entire business in one connected workspace.",
-      leftTitleThe: "THE  ",
-      leftTitlePre: "HIDDEN COST OF ",
-      leftTitleHighlight: "“ALL-IN-ONE”",
-      leftTitlePost: " PLATFORMS",
-      leftItem1: "Low entry price gets you in — then the real costs start.",
-      leftItem2:
-        "Typical setup fees range from $2,500 – $7,500 before you're even up and running.",
-      leftItem3: "Essential features are locked behind add-ons and upgrades.",
-      leftItem4: "Extra fees for seats, integrations, reporting, and support.",
-      leftItem5: "Complex onboarding that slows your team down.",
-      leftBoxLabel: "Typical Investment to Get Started",
-      leftBoxSub: "(Setup Fees)",
-      rightTitle: "THE CORTEXA AIOS ADVANTAGE",
-      rightItem1: "One connected workspace. Everything included.",
-      rightItem2: "Zero surprise fees. Zero add-on traps.",
-      rightItem3: "Simple, transparent, and built for real estate.",
-      rightItem4: "Launch faster. Adopt easier. Grow sooner.",
-      rightItem51: "Up to ",
-      rightItem52: "20X less expensive ",
-      rightItem53: "to implement than traditional platforms.",
-      rightBoxLabel: "UP TO",
-      rightBoxValue: "20X",
-      rightBoxSub: "LESS EXPENSIVE TO IMPLEMENT",
-
       stripTitlebk: "Your CRM shouldn’t slow you down.",
       stripSubbk: "Join teams using CORTEXA...",
 
@@ -260,12 +198,12 @@ export default function Landing() {
 
       trustSectionTitlePre: "Everything You Need. ",
       trustSectionTitlePost: "Built to Grow Revenue.",
-      trustSectionSub: "One connected platform. Every feature works together to help you capture more leads, close more deals, and ",
+      trustSectionSub:
+        "One connected platform. Every feature works together to help you capture more leads, close more deals, and ",
       trustSectionSub1: "increase your lead conversion up to 3X ",
       trustSectionSub2: "— while ",
       trustSectionSub3: " keeping more capital in your business.",
 
-      
       trustFeatures: {
         dashboard: {
           title: "Dashboard",
@@ -673,6 +611,67 @@ export default function Landing() {
       privacyPolicy: "Privacy Policy",
       refundPolicy: "Refund Policy",
       cancellationPolicy: "Cancellation Policy",
+
+      heroTitlePre: "Built to ",
+      heroTitleActive: "Grow Revenue",
+      heroTitlePost: " — Not Manage Software.",
+      heroDescPre:
+        "Most platforms piece together separate tools for AI, CRM, marketing, reporting, automation, communication, and data — ",
+      heroDescActive: "We bring it all into one connected workspace",
+      heroDescPost:
+        " so your team can capture leads, qualify prospects, automate follow-ups, manage pipelines, book appointments, track performance, and close more deals.",
+      nodeLeadsTitle: "LEADS",
+      nodeLeadsSub: "Capture & Qualify",
+      nodeContactsTitle: "CONTACTS",
+      nodeContactsSub: "Organize & Manage",
+      nodePropertiesTitle: "PROPERTIES",
+      nodePropertiesSub: "Manage Listings",
+      nodeWhatsappTitle: "WHATSAPP",
+      nodeWhatsappSub: "Automation",
+      nodeDashboardTitle: "DASHBOARD",
+      nodeAgentTitle: "AI AGENT",
+      nodeAgentSub: "Conversations 24/7",
+      nodeHybridTitle: "HYBRID CONNECTS",
+      nodeHybridSub: "All Channels",
+      nodePipelineTitle: "PIPELINE",
+      nodePipelineSub: "Manage Deals",
+      nodeAppointmentsTitle: "APPOINTMENTS",
+      nodeAppointmentsSub: "Book & Schedule",
+      nodeTasksTitle: "TASKS",
+      nodeTasksSub: "Track & Follow Up",
+      nodeDocumentsTitle: "DOCUMENTS",
+      nodeDocumentsSub: "Store & Share",
+      nodeAnalyticsTitle: "ANALYTICS",
+      nodeAnalyticsSub: "Reports & Insights",
+      nodeTeamTitle: "TEAM WORKSPACE",
+      nodeTeamSub: "Collaborate & Assign",
+      nodeAutomationsTitle: "AUTOMATIONS",
+      nodeAutomationsSub: "Workflows & Triggers",
+      nodeCommunicationTitle: "COMMUNICATION",
+      nodeCommunicationSub: "Email, SMS, Calls",
+      nodeIntegrationsTitle: "INTEGRATIONS",
+      nodeIntegrationsSub: "Connect Your Tools",
+      rightStat1Up: "UP TO",
+      rightStat1Main: "3X",
+      rightStat1Title: "INCREASE IN LEAD CONVERSIONS",
+      rightStat1Desc:
+        "Our customers see up to 3X more leads converted into deals — by running their entire business in one connected workspace.",
+      rightStat2Up: "UP TO",
+      rightStat2Main: "20X",
+      rightStat2Title: "LESS EXPENSIVE TO IMPLEMENT",
+      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
+      vsText: "VS.",
+      leftCost1: "High setup fees",
+      leftCost2: "Add-ons and upgrades you pay for separately",
+      leftCost3: "Multiple disconnected tools",
+      leftCost4: "Complex onboarding that slows your team down",
+      leftCost5: "Hidden costs that add up over time",
+      rightBenefit1: "Simple setup fee",
+      rightBenefit2: "Everything included. No add-ons.",
+      rightBenefit3: "One connected workspace",
+      rightBenefit4: "Faster implementation",
+      rightBenefit5: "Transparent pricing. No surprises.",
     },
 
     es: {
@@ -687,76 +686,6 @@ export default function Landing() {
       ],
       trial: "Prueba gratis",
       login: "Iniciar sesión",
-
-      aiosBadge: "AI ESPACIO DE TRABAJO CONECTADO",
-      aiosBadge1: "Uno",
-      aiosTitle:
-        "Diseñado para aumentar los ingresos, no para gestionar software.",
-      aiosDesc1:
-        "La mayoría de las plataformas obligan a los equipos inmobiliarios a combinar productos separados para IA, CRM, marketing, informes, automatización, comunicación y datos.",
-      aiosDesc2:
-        "CORTEXA AIOS lo reúne todo en un único espacio de trabajo conectado, diseñado específicamente para el sector inmobiliario, de modo que su equipo pueda captar clientes potenciales, calificar prospectos, automatizar seguimientos, gestionar embudos, programar citas, realizar un seguimiento del rendimiento y mantenerse alineado sin tener que compaginar múltiples herramientas.",
-      aiosDesc1Bold: "Mantenga más capital en su negocio.",
-      aiosDesc1Normal:
-        " Comience con el sistema que necesita, sin tarifas de configuración a nivel empresarial, complementos confusos o costos de software que reduzcan sus ganancias mensuales.",
-      aiosCol1Title: "TODO FUNCIONA CONJUNTO DESDE EL PRIMER DÍA.",
-      aiosCol2Title: "CONSTRUIDO PARA MEJORAR LO QUE IMPORTA.",
-      aiosLeftItem1:
-        "Su Agente de IA maneja las conversaciones las 24 horas, los 7 días de la semana.",
-      aiosLeftItem2:
-        "Su CRM mantiene organizados cada cliente potencial, contacto, propiedad y trato.",
-      aiosLeftItem3:
-        "Su automatización de WhatsApp mantiene los seguimientos en movimiento.",
-      aiosLeftItem4:
-        "Su embudo de ventas muestra exactamente dónde se encuentra cada oportunidad.",
-      aiosLeftItem5: "Sus analíticas muestran lo que está funcionando.",
-      aiosLeftItem6:
-        "El espacio de trabajo de su equipo mantiene a los agentes, gerentes y administradores en la misma página.",
-      aiosNoItem1: "Sin menús de productos complicados.",
-      aiosNoItem2: "Sin laberintos de módulos ocultos.",
-      aiosNoItem3: "Sin pagar extra solo para completar el sistema.",
-      aiosFooterText:
-        "Solo un sistema operativo impulsado por IA diseñado para ayudar a los equipos inmobiliarios a responder más rápido, atender mejor a los clientes, cerrar más tratos y crecer con confianza.",
-      aiosRightItem1: "Velocidad de respuesta de leads",
-      aiosRightItem2: "Consistencia en el seguimiento",
-      aiosRightItem3: "Experiencia del cliente",
-      aiosRightItem4: "Reserva de citas",
-      aiosRightItem5: "Visibilidad del pipeline",
-      aiosRightItem6: "Productividad del equipo",
-      aiosRightItem7: "Conversión de leads",
-      aiosRightItem8: "Retención de clientes",
-      aiosRightItem9: "Oportunidades de ingresos",
-      aiosStatLabel: "AUMENTO EN LA",
-      aiosStatLabel1: "CONVERSIÓN DE LEADS",
-      aiosStatDesc: "Los clientes de CORTEXA AIOS ven hasta ",
-      aiosStatDesc1:
-        " clientes potenciales convertidos en acuerdos, al gestionar todo su negocio en un único espacio de trabajo conectado.",
-      leftTitleThe: "EL ",
-      leftTitlePre: "COSTO OCULTO DE ",
-      leftTitleHighlight: "“TODO EN UNO”",
-      leftTitlePost: "",
-      leftItem1:
-        "El bajo precio de entrada lo atrae — luego comienzan los costos reales.",
-      leftItem2:
-        "Las tarifas de configuración típicas oscilan entre $2,500 y $7,500 antes de comenzar a operar.",
-      leftItem3:
-        "Las funciones esenciales están bloqueadas detrás de complementos y actualizaciones.",
-      leftItem4:
-        "Tarifas adicionales por usuarios, integraciones, informes y soporte.",
-      leftItem5: "Proceso de incorporación complejo que frena a su equipo.",
-      leftBoxLabel: "Inversión Típica para Comenzar",
-      leftBoxSub: "(Tarifas de Configuración)",
-      rightTitle: "LA VENTAJA DE CORTEXA AIOS",
-      rightItem1: "Un espacio de trabajo conectado. Todo incluido.",
-      rightItem2: "Cero tarifas sorpresa. Cero trampas de complementos.",
-      rightItem3: "Simple, transparente y diseñado para bienes raíces.",
-      rightItem4: "Lamber más rápido. Adoptar más fácil. Crecer antes.",
-      rightItem51: "Hasta ",
-      rightItem52: "20 veces más económico ",
-      rightItem53: "de implementar que las plataformas tradicionales.",
-      rightBoxLabel: "HASTA",
-      rightBoxValue: "20X",
-      rightBoxSub: "MENOS COSTOSO DE IMPLEMENTAR",
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
       stripSubbk: "Únete a equipos que usan CORTEXA...",
@@ -788,7 +717,8 @@ export default function Landing() {
 
       trustSectionTitlePre: "Todo lo que necesitas. ",
       trustSectionTitlePost: "Creado para aumentar los ingresos.",
-      trustSectionSub: "Una plataforma conectada. Todas las funciones trabajan juntas para ayudarte a captar más leads, cerrar más negocios y ",
+      trustSectionSub:
+        "Una plataforma conectada. Todas las funciones trabajan juntas para ayudarte a captar más leads, cerrar más negocios y ",
       trustSectionSub1: "aumentar la conversión de leads hasta 3 veces ",
       trustSectionSub2: "— mientras ",
       trustSectionSub3: "mantienes más capital dentro de tu empresa.",
@@ -887,10 +817,11 @@ export default function Landing() {
       },
 
       trustFooterBold: "UNA PLATAFORMA. RESULTADOS REALES. ",
-      trustFooterText: "Todo lo que necesitas en un solo sistema para captar más leads, cerrar más negocios y ",
+      trustFooterText:
+        "Todo lo que necesitas en un solo sistema para captar más leads, cerrar más negocios y ",
 
       faqTitle: "Preguntas frecuentes",
-      
+
       faq: [
         {
           q: "¿Qué hace exactamente CORTEXA?",
@@ -1208,6 +1139,67 @@ export default function Landing() {
       privacyPolicy: "Política de privacidad",
       refundPolicy: "Política de reembolso",
       cancellationPolicy: "Política de cancelación",
+
+      heroTitlePre: "Creado para ",
+      heroTitleActive: "Aumentar Ingresos",
+      heroTitlePost: " — No para Administrar Software.",
+      heroDescPre:
+        "La mayoría de las plataformas combinan herramientas separadas para IA, CRM, marketing, informes, automatización, comunicación y datos — ",
+      heroDescActive: "Lo traemos todo en un espacio de trabajo conectado",
+      heroDescPost:
+        " para que su equipo pueda captar leads, calificar prospectos, automatizar seguimientos, gestionar pipelines, programar citas, realizar un seguimiento del rendimiento y cerrar más tratos.",
+      nodeLeadsTitle: "CLIENTES POTENCIALES",
+      nodeLeadsSub: "Capturar y Calificar",
+      nodeContactsTitle: "CONTACTOS",
+      nodeContactsSub: "Organizar y Gestionar",
+      nodePropertiesTitle: "PROPIEDADES",
+      nodePropertiesSub: "Gestionar Listados",
+      nodeWhatsappTitle: "WHATSAPP",
+      nodeWhatsappSub: "Automatización",
+      nodeDashboardTitle: "PANEL",
+      nodeAgentTitle: "AGENTE DE IA",
+      nodeAgentSub: "Conversaciones 24/7",
+      nodeHybridTitle: "CONEXIONES HÍBRIDAS",
+      nodeHybridSub: "Todos los Canales",
+      nodePipelineTitle: "PIPELINE",
+      nodePipelineSub: "Gestionar Tratos",
+      nodeAppointmentsTitle: "CITAS",
+      nodeAppointmentsSub: "Reservar y Programar",
+      nodeTasksTitle: "TAREAS",
+      nodeTasksSub: "Seguimiento",
+      nodeDocumentsTitle: "DOCUMENTOS",
+      nodeDocumentsSub: "Guardar y Compartir",
+      nodeAnalyticsTitle: "ANALÍTICA",
+      nodeAnalyticsSub: "Informes y Métricas",
+      nodeTeamTitle: "ESPACIO DE EQUIPO",
+      nodeTeamSub: "Colaborar y Asignar",
+      nodeAutomationsTitle: "AUTOMATIZACIONES",
+      nodeAutomationsSub: "Flujos y Disparadores",
+      nodeCommunicationTitle: "COMUNICACIÓN",
+      nodeCommunicationSub: "Email, SMS, Llamadas",
+      nodeIntegrationsTitle: "INTEGRACIONES",
+      nodeIntegrationsSub: "Conecta tus Herramientas",
+      rightStat1Up: "HASTA",
+      rightStat1Main: "3X",
+      rightStat1Title: "INCREMENTO EN CONVERSIÓN DE LEADS",
+      rightStat1Desc:
+        "Nuestros clientes ven hasta 3X más leads convertidos en acuerdos al ejecutar todo su negocio en un solo espacio de trabajo conectado.",
+      rightStat2Up: "HASTA",
+      rightStat2Main: "20X",
+      rightStat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
+      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
+      vsText: "VS.",
+      leftCost1: "Altas tarifas de configuración",
+      leftCost2: "Complementos y actualizaciones que pagas por separado",
+      leftCost3: "Múltiples herramientas desconectadas",
+      leftCost4: "Onboarding complejo que frena a tu equipo",
+      leftCost5: "Costos ocultos que se acumulan con el tiempo",
+      rightBenefit1: "Tarifa de configuración simple",
+      rightBenefit2: "Todo incluido. Sin complementos.",
+      rightBenefit3: "Un espacio de trabajo conectado",
+      rightBenefit4: "Implementación más rápida",
+      rightBenefit5: "Precios transparentes. Sin sorpresas.",
     },
 
     pt: {
@@ -1222,74 +1214,6 @@ export default function Landing() {
       ],
       trial: "Teste grátis",
       login: "Entrar",
-
-      aiosBadge: "AI ESPAÇO DE TRABALHO CONECTADO",
-      aiosBadge1: "Um",
-      aiosTitle: "Criado para aumentar a receita, não para gerenciar software.",
-      aiosDesc1:
-        "A maioria das plataformas faz com que as equipes imobiliárias juntem produtos separados para IA, CRM, marketing, relatórios, automação, comunicação e dados.",
-      aiosDesc2:
-        "O CORTEXA AIOS traz tudo isso para um espaço de trabalho conectado, construído especificamente para o mercado imobiliário — para que sua equipe possa capturar leads, qualificar prospects, automatizar acompanhamentos, gerenciar pipelines, agendar compromissos, rastrear o desempenho e manter-se alinhada sem fazer malabarismos com várias ferramentas.",
-      aiosDesc1Bold: "Mantenha mais capital no seu negócio.",
-      aiosDesc1Normal:
-        " Comece com o sistema que você precisa, sem taxas de configuração de nível empresarial, complementos confusos ou custos de software que consomem seus ganhos mensais.",
-      aiosCol1Title: "TUDO FUNCIONA JUNTO DESDE O PRIMEIRO DIA.",
-      aiosCol2Title: "CONSTRUÍDO PARA MELHORAR O QUE IMPORTA.",
-      aiosLeftItem1: "Seu Agente de IA lida com conversas 24/7.",
-      aiosLeftItem2:
-        "Seu CRM mantém todos os leads, contatos, imóveis e negócios organizados.",
-      aiosLeftItem3:
-        "Sua automação de WhatsApp mantém os acompanhamentos em movimento.",
-      aiosLeftItem4:
-        "Seu pipeline mostra exatamente onde está cada oportunidade.",
-      aiosLeftItem5: "Suas análises mostram o que está funcionando.",
-      aiosLeftItem6:
-        "O espaço de trabalho da sua equipe mantém corretores, gerentes e administradores na mesma página.",
-      aiosNoItem1: "Sem menu de produtos complicado.",
-      aiosNoItem2: "Sem labirinto de módulos ocultos.",
-      aiosNoItem3: "Sem pagar extra apenas para deixar o sistema completo.",
-      aiosFooterText:
-        "Apenas um sistema operacional baseado em IA desenvolvido para ajudar as equipes imobiliárias a responder mais rápido, atender melhor os clientes, fechar mais negócios e crescer com confiança.",
-      aiosRightItem1: "Velocidade de resposta de leads",
-      aiosRightItem2: "Consistência no acompanhamento",
-      aiosRightItem3: "Experiência do cliente",
-      aiosRightItem4: "Agendamento de compromissos",
-      aiosRightItem5: "Visibilidade do pipeline",
-      aiosRightItem6: "Produtividade da equipe",
-      aiosRightItem7: "Conversão de leads",
-      aiosRightItem8: "Retenção de clientes",
-      aiosRightItem9: "Oportunidades de receita",
-      aiosStatLabel: "AUMENTO NA",
-      aiosStatLabel1: "CONVERSÃO DE LEADS",
-      aiosStatDesc: "Os clientes da CORTEXA AIOS veem até ",
-      aiosStatDesc1:
-        " leads convertidos em negócios — ao gerenciar toda a sua empresa em um único espaço de trabalho conectado.",
-      leftTitleThe: "O ",
-      leftTitlePre: "CUSTO OCULTO DE ",
-      leftTitleHighlight: "“TUDO EM UM”",
-      leftTitlePost: "",
-      leftItem1:
-        "O preço baixo de entrada atrai você — depois começam os custos reais.",
-      leftItem2:
-        "As taxas de configuração típicas variam de $2,500 a $7,500 antes mesmo de você começar a operar.",
-      leftItem3:
-        "Recursos essenciais estão bloqueados atrás de complementos e atualizações.",
-      leftItem4:
-        "Taxas extras por usuários, integrações, relatórios e suporte.",
-      leftItem5: "Integração complexa que desacelera sua equipe.",
-      leftBoxLabel: "Investimento Típico para Começar",
-      leftBoxSub: "(Taxas de Configuração)",
-      rightTitle: "A VANTAGEM CORTEXA AIOS",
-      rightItem1: "Um espaço de trabalho conectado. Tudo incluído.",
-      rightItem2: "Zero taxas surpresa. Zero armadilhas de complementos.",
-      rightItem3: "Simples, transparente e feito para o mercado imobiliário.",
-      rightItem4: "Lançamento rápido. Adoção fácil. Crescimento breve.",
-      rightItem51: "Até ",
-      rightItem52: "20 vezes mais econômico ",
-      rightItem53: "para implementar do que plataformas tradicionais.",
-      rightBoxLabel: "ATÉ",
-      rightBoxValue: "20X",
-      rightBoxSub: "MENOS CARO PARA IMPLEMENTAR",
 
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
@@ -1319,7 +1243,8 @@ export default function Landing() {
 
       trustSectionTitlePre: "Tudo o que você precisa. ",
       trustSectionTitlePost: "Feito para Aumentar a Receita.",
-      trustSectionSub: "Uma plataforma conectada. Todos os recursos trabalham juntos para ajudar você a captar mais leads, fechar mais negócios e ",
+      trustSectionSub:
+        "Uma plataforma conectada. Todos os recursos trabalham juntos para ajudar você a captar mais leads, fechar mais negócios e ",
       trustSectionSub1: "aumentar a conversão de leads em até 3 vezes ",
       trustSectionSub2: "— enquanto ",
       trustSectionSub3: "mantém mais capital dentro da sua empresa.",
@@ -1418,7 +1343,8 @@ export default function Landing() {
       },
 
       trustFooterBold: "UMA PLATAFORMA. RESULTADOS REAIS. ",
-      trustFooterText: "Tudo o que você precisa em um único sistema para captar mais leads, fechar mais negócios e ",
+      trustFooterText:
+        "Tudo o que você precisa em um único sistema para captar mais leads, fechar mais negócios e ",
 
       faqTitle: "Perguntas frequentes",
       faq: [
@@ -1740,6 +1666,67 @@ export default function Landing() {
       privacyPolicy: "Política de Privacidade",
       refundPolicy: "Política de Reembolso",
       cancellationPolicy: "Política de Cancelamento",
+
+      heroTitlePre: "Feito para ",
+      heroTitleActive: "Aumentar a Receita",
+      heroTitlePost: " — Não para Gerenciar Software.",
+      heroDescPre:
+        "A maioria das plataformas reúne ferramentas separadas para IA, CRM, marketing, relatórios, automação, comunicação e dados — ",
+      heroDescActive: "Nós trazemos tudo para um espaço de trabalho conectado",
+      heroDescPost:
+        " para que sua equipe possa capturar leads, qualificar prospects, automatizar acompanhamentos, gerenciar pipelines, agendar compromissos, acompanhar o desempenho e fechar mais negócios.",
+      nodeLeadsTitle: "LEADS",
+      nodeLeadsSub: "Capturar e Qualificar",
+      nodeContactsTitle: "CONTATOS",
+      nodeContactsSub: "Organizar e Gerenciar",
+      nodePropertiesTitle: "PROPRIEDADES",
+      nodePropertiesSub: "Gerenciar Anúncios",
+      nodeWhatsappTitle: "WHATSAPP",
+      nodeWhatsappSub: "Automação",
+      nodeDashboardTitle: "PAINEL",
+      nodeAgentTitle: "AGENTE DE IA",
+      nodeAgentSub: "Conversas 24/7",
+      nodeHybridTitle: "CONEXÕES HÍBRIDAS",
+      nodeHybridSub: "Todos os Canais",
+      nodePipelineTitle: "PIPELINE",
+      nodePipelineSub: "Gerenciar Negócios",
+      nodeAppointmentsTitle: "COMPROMISSOS",
+      nodeAppointmentsSub: "Reservar e Agendar",
+      nodeTasksTitle: "TAREFAS",
+      nodeTasksSub: "Acompanhamento",
+      nodeDocumentsTitle: "DOCUMENTOS",
+      nodeDocumentsSub: "Armazenar e Compartilhar",
+      nodeAnalyticsTitle: "ANÁLISE",
+      nodeAnalyticsSub: "Relatórios e Insights",
+      nodeTeamTitle: "ESPAÇO DA EQUIPE",
+      nodeTeamSub: "Colaborar e Atribuir",
+      nodeAutomationsTitle: "AUTOMAÇÕES",
+      nodeAutomationsSub: "Fluxos e Gatilhos",
+      nodeCommunicationTitle: "COMUNICAÇÃO",
+      nodeCommunicationSub: "E-mail, SMS, Chamadas",
+      nodeIntegrationsTitle: "INTEGRAÇÕES",
+      nodeIntegrationsSub: "Conecte Suas Ferramentas",
+      rightStat1Up: "ATÉ",
+      rightStat1Main: "3X",
+      rightStat1Title: "AUMENTO NA CONVERSÃO DE LEADS",
+      rightStat1Desc:
+        "Nossos clientes veem até 3X mais leads convertidos em negócios ao gerenciar toda a sua empresa em um único espaço de trabalho conectado.",
+      rightStat2Up: "ATÉ",
+      rightStat2Main: "20X",
+      rightStat2Title: "MAIS BARATO PARA IMPLEMENTAR",
+      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
+      vsText: "VS.",
+      leftCost1: "Altas taxas de configuração",
+      leftCost2: "Adicionais e atualizações pagos separadamente",
+      leftCost3: "Múltiplas ferramentas desconectadas",
+      leftCost4: "Integração complexa que desacelera sua equipe",
+      leftCost5: "Custos ocultos que se acumulam com o tempo",
+      rightBenefit1: "Taxa de configuração simples",
+      rightBenefit2: "Tudo incluído. Sem adicionais.",
+      rightBenefit3: "Um espaço de trabalho conectado",
+      rightBenefit4: "Implementação mais rápida",
+      rightBenefit5: "Preços transparentes. Sem surpresas.",
     },
   };
 
@@ -2042,220 +2029,150 @@ export default function Landing() {
         id="features"
         className="cx-aios-workspace cx-comp cx-center pt-50"
       >
-        <div className="cx-aios-header cx-center">
-          <span className="cx-aios-badge">{tr.aiosBadge}</span>
-          <h2 className="cx-aios-main-title">
-            {tr.aiosBadge1} <span className="highlight-purple">AIOS</span>.{" "}
-            {tr.aiosTitle}
+        <div className="cx-feat-header">
+          <h2 className="cx-feat-main-title">
+            {tr.heroTitlePre}
+            <span className="cx-feat-blue-text">{tr.heroTitleActive}</span>
+            {tr.heroTitlePost}
           </h2>
-          <p className="cx-aios-lead-text">{tr.aiosDesc1}</p>
-          <p className="cx-aios-sub-text">
-            <strong>CORTEXA AIOS</strong>{" "}
-            {tr.aiosDesc2.replace("CORTEXA AIOS", "")}
+          <p className="cx-feat-sub-title">
+            {tr.heroDescPre}
+            <span className="cx-feat-blue-dark-text">{tr.heroDescActive}</span>
+            {tr.heroDescPost}
           </p>
-          <div className="cx-aios-banner-container">
-            <div className="cx-aios-icon-wrapper">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="cx-aios-icon"
-              >
-                <path d="M16 6.5c0-.6-.3-1.2-.8-1.5l.8-1.7c.1-.3 0-.7-.3-.8s-.7 0-.8.3l-.7 1.5c-.7-.3-1.5-.3-2.2 0l-.7-1.5c-.1-.3-.5-.4-.8-.3s-.4.5-.3.8l.8 1.7c-.5.3-.8.9-.8 1.5 0 .4.2.8.5 1.1C8.3 8.3 6 10.4 6 13.5c0 3.6 2.7 5.5 6 5.5s6-1.9 6-5.5c0-3.1-2.3-5.2-4.9-6.4.3-.3.5-.7.5-1.1zm-4 8.5c-.8 0-1.5-.5-1.5-1.2s.6-1.2 1.4-1.3v-1c-.5 0-.9.2-1.1.5-.2.2-.5.3-.7.1s-.3-.5-.1-.7c.4-.5 1-.8 1.9-.9V10c0-.4.3-.7.7-.7s.7.3.7.7v.5c.8.1 1.4.6 1.4 1.3s-.6 1.2-1.4 1.3v1.1c.6 0 1-.2 1.3-.6.2-.2.5-.3.7-.1.2.2.3.5.1.7-.5.6-1.2.9-2.1.9V15c0 .4-.3.7-.7.7s-.7-.3-.7-.7zm0-3.5c-.3 0-.5.1-.5.3s.2.3.5.3V11.5zm0 2.3v.6c.3 0 .5-.1.5-.3s-.2-.3-.5-.3z" />
-              </svg>
-            </div>
-
-            <p className="cx-aios-lead-text">
-              <span className="cx-aios-bold-text">{tr.aiosDesc1Bold}</span>
-              {tr.aiosDesc1Normal}
-            </p>
-          </div>
         </div>
 
-        <div className="cx-aios-grid-container">
-          <div className="cx-aios-column cx-aios-left-col">
-            <h3 className="cx-column-title">{tr.aiosCol1Title}</h3>
-
-            <div className="cx-aios-list">
-              <div className="cx-aios-item">
-                <Brain className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>AI Agent</strong>{" "}
-                  {tr.aiosLeftItem1.replace("Your AI Agent", "")}
-                </p>
-              </div>
-              <div className="cx-aios-item">
-                <Users className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>CRM</strong>{" "}
-                  {tr.aiosLeftItem2.replace("Your CRM", "")}
-                </p>
-              </div>
-              <div className="cx-aios-item">
-                <MessagesSquare className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>WhatsApp automation</strong>{" "}
-                  {tr.aiosLeftItem3.replace("Your WhatsApp automation", "")}
-                </p>
-              </div>
-              <div className="cx-aios-item">
-                <GitMerge className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>pipeline</strong>{" "}
-                  {tr.aiosLeftItem4.replace("Your pipeline", "")}
-                </p>
-              </div>
-              <div className="cx-aios-item">
-                <PieChart className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>analytics</strong>{" "}
-                  {tr.aiosLeftItem5.replace("Your analytics", "")}
-                </p>
-              </div>
-              <div className="cx-aios-item">
-                <UserCheck className="cx-aios-icon-purple" size={20} />
-                <p>
-                  Your <strong>team workspace</strong>{" "}
-                  {tr.aiosLeftItem6.replace("Your team workspace", "")}
-                </p>
-              </div>
-            </div>
-
-            <div className="cx-aios-no-box">
-              <div className="cx-no-item">
-                <XCircle className="cx-no-icon" size={20} />
-                <span>{tr.aiosNoItem1}</span>
-              </div>
-              <div className="cx-no-item">
-                <XCircle className="cx-no-icon" size={20} />
-                <span>{tr.aiosNoItem2}</span>
-              </div>
-              <div className="cx-no-item">
-                <XCircle className="cx-no-icon" size={20} />
-                <span>{tr.aiosNoItem3}</span>
-              </div>
-            </div>
-
-            <p className="cx-aios-col-footer">
-              Just one{" "}
-              <span className="highlight-purple">
-                AI-powered operating system
-              </span>{" "}
-              {tr.aiosFooterText.replace(
-                "Just one AI-powered operating system",
-                "",
-              )}
-            </p>
+        <div className="cx-feat-main-grid">
+          <div className="cx-feat-diagram-area">
+            <img src={featurechartImg} alt="diagram" />
           </div>
 
-          <div className="cx-aios-column cx-aios-right-col">
-            <h3 className="cx-column-title">{tr.aiosCol2Title}</h3>
-
-            <div className="cx-split-right-container">
-              <div className="cx-check-list-vertical">
-                {[
-                  tr.aiosRightItem1,
-                  tr.aiosRightItem2,
-                  tr.aiosRightItem3,
-                  tr.aiosRightItem4,
-                  tr.aiosRightItem5,
-                  tr.aiosRightItem6,
-                  tr.aiosRightItem7,
-                  tr.aiosRightItem8,
-                  tr.aiosRightItem9,
-                ].map((text, idx) => (
-                  <div className="cx-check-item-row" key={idx}>
-                    <CheckCircle className="cx-check-icon-purple" size={18} />
-                    <span>{text}</span>
+          <div className="cx-feat-stats-sidebar">
+            <div className="cx-sidebar-stat-block-top">
+              <span className="cx-stat-up-tag">{tr.rightStat1Up}</span>
+              <img src={x3xImg} alt="iamge" />
+              <h4 className="cx-stat-title-label">{tr.rightStat1Title}</h4>
+              <div className="cx-stat-blue-bar"></div>
+              <p className="cx-stat-description-text">{tr.rightStat1Desc}</p>
+            </div>
+          </div>
+        </div>
+        <div className="cx-feat-wrap">
+          <div className="cx-feat-comparison-table">
+            <div className="cx-comp-col-left">
+              <div className="cx-comp-title-row">
+                <XCircle className="cx-comp-header-icon icon-red" size={24} />
+                <h5>{tr.vsTitleLeft}</h5>
+              </div>
+              <ul className="cx-comp-list">
+                <li>
+                  <div className="cx-list-item-content">
+                    <XCircle className="cx-li-icon icon-red-small" size={18} />
+                    <span>{tr.leftCost1}</span>
                   </div>
-                ))}
-              </div>
-
-              <div className="cx-stat-box-display">
-                <div className="cx-stat-large-num">
-                  <img src={x3xImg} className="cx-img" />
-                </div>
-                <div className="cx-stat-badge-title">
-                  {tr.aiosStatLabel}
-                  <br />
-                  {tr.aiosStatLabel1}
-                </div>
-                <div className="cx-stat-divider-line"></div>
-                <p className="cx-stat-description-text">
-                  {tr.aiosStatDesc}
-                  <strong>3X</strong> {tr.aiosStatDesc1}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="cx-vs-container">
-          <div className="cx-vs-card cx-vs-left">
-            <h2 className="cx-vs-title-red">
-              <span className="cx-vs-quote">{tr.leftTitleThe}</span>
-              {tr.leftTitlePre}
-              <span className="cx-vs-quote">{tr.leftTitleHighlight}</span>
-              {tr.leftTitlePost}
-            </h2>
-            <div className="cx-vs-wrap">
-              <ul className="cx-vs-list">
-                <li className="cx-vs-item-red">{tr.leftItem1}</li>
-                <li className="cx-vs-item-red">{tr.leftItem2}</li>
-                <li className="cx-vs-item-red">{tr.leftItem3}</li>
-                <li className="cx-vs-item-red">{tr.leftItem4}</li>
-                <li className="cx-vs-item-red">{tr.leftItem5}</li>
-              </ul>
-
-              <div className="cx-vs-box-red">
-                <div className="cx-vs-alert-icon">
-                  <TriangleAlert size="24" />
-                </div>
-                <div className="cx-vs-box-label">{tr.leftBoxLabel}</div>
-                <div className="cx-vs-box-value-red">$2,500 – $7,500+</div>
-                <div className="cx-vs-box-sub">{tr.leftBoxSub}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="cx-vs-badge">VS.</div>
-
-          <div className="cx-vs-card cx-vs-right">
-            <h2 className="cx-vs-title-blue">{tr.rightTitle}</h2>
-            <div className="cx-vs-wrap">
-              <ul className="cx-vs-list">
-                <li className="cx-vs-item-blue">{tr.rightItem1}</li>
-                <li className="cx-vs-item-blue">{tr.rightItem2}</li>
-                <li className="cx-vs-item-blue">{tr.rightItem3}</li>
-                <li className="cx-vs-item-blue">{tr.rightItem4}</li>
-                <li className="cx-vs-item-blue">
-                  {tr.rightItem51}
-                  <strong>{tr.rightItem52}</strong>
-                  {tr.rightItem53}
+                  <strong className="cx-cost-high">$2,500 - $7,500+</strong>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <XCircle className="cx-li-icon icon-red-small" size={18} />
+                    <span>{tr.leftCost2}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <XCircle className="cx-li-icon icon-red-small" size={18} />
+                    <span>{tr.leftCost3}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <XCircle className="cx-li-icon icon-red-small" size={18} />
+                    <span>{tr.leftCost4}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <XCircle className="cx-li-icon icon-red-small" size={18} />
+                    <span>{tr.leftCost5}</span>
+                  </div>
                 </li>
               </ul>
+            </div>
 
-              <div className="cx-vs-box-blue">
-                <div className="cx-vs-trend-icon">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.281-2.284 5.94"
-                    />
-                  </svg>
-                </div>
-                <div className="cx-vs-box-right-text">
-                  <div className="cx-vs-box-label-blue">{tr.rightBoxLabel}</div>
-                  <div className="cx-vs-box-value-blue">{tr.rightBoxValue}</div>
-                  <div className="cx-vs-box-sub-blue">{tr.rightBoxSub}</div>
-                </div>
+            <div className="cx-comp-vs-circle-wrapper">
+              <div className="cx-comp-vertical-line"></div>
+              <div className="cx-comp-vs-circle">
+                <span>{tr.vsText}</span>
               </div>
+            </div>
+
+            <div className="cx-comp-col-right">
+              <div className="cx-comp-title-row">
+                <CheckCircle2
+                  className="cx-comp-header-icon icon-blue"
+                  size={24}
+                />
+                <h5>{tr.vsTitleRight}</h5>
+              </div>
+              <ul className="cx-comp-list">
+                <li>
+                  <div className="cx-list-item-content">
+                    <CheckCircle2
+                      className="cx-li-icon icon-blue-small"
+                      size={18}
+                    />
+                    <span>{tr.rightBenefit1}</span>
+                  </div>
+                  <strong className="cx-cost-low">$97</strong>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <CheckCircle2
+                      className="cx-li-icon icon-blue-small"
+                      size={18}
+                    />
+                    <span>{tr.rightBenefit2}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <CheckCircle2
+                      className="cx-li-icon icon-blue-small"
+                      size={18}
+                    />
+                    <span>{tr.rightBenefit3}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <CheckCircle2
+                      className="cx-li-icon icon-blue-small"
+                      size={18}
+                    />
+                    <span>{tr.rightBenefit4}</span>
+                  </div>
+                </li>
+                <li>
+                  <div className="cx-list-item-content">
+                    <CheckCircle2
+                      className="cx-li-icon icon-blue-small"
+                      size={18}
+                    />
+                    <span>{tr.rightBenefit5}</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="cx-feat-stats-sidebar">
+            <div className="cx-sidebar-stat-block-bottom">
+              <span className="cx-stat-up-tag">{tr.rightStat2Up}</span>
+              <div className="cx-stat-inline-row">
+                <TrendingUp className="cx-stat-inline-icon" size={92} />
+                <h3 className="cx-stat-giant-num">{tr.rightStat2Main}</h3>
+              </div>
+              <h4 className="cx-stat-title-label">{tr.rightStat2Title}</h4>
+              <div className="cx-stat-blue-bar-short"></div>
             </div>
           </div>
         </div>
