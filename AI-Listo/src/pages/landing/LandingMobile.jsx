@@ -31,6 +31,7 @@ import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
 import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
 import featurechart from "../../assets/cortexa/mobile/featurechart.png";
 import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
+import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
 
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
@@ -323,6 +324,10 @@ export default function LandingMobile() {
 
       powerbadge: "INTEGRATION",
       powertitle: "Connect your apps",
+
+      workspacelang1: "Team",
+      workspacelang2: "Revenue",
+      workspacelang3: "Workspace",
     },
 
     es: {
@@ -585,6 +590,10 @@ export default function LandingMobile() {
 
       powerbadge: "INTEGRACIÓN",
       powertitle: "Conecta tus aplicaciones",
+
+      workspacelang1: "Equipo",
+      workspacelang2: "Ingresos",
+      workspacelang3: "Espacio de trabajo",
     },
 
     pt: {
@@ -848,6 +857,10 @@ export default function LandingMobile() {
 
       powerbadge: "INTEGRAÇÃO",
       powertitle: "Conecte seus aplicativos",
+
+      workspacelang1: "Equipe",
+      workspacelang2: "Receita",
+      workspacelang3: "Espaço de trabalho",
     },
   };
   const handleLangChange = (newLang) => {
@@ -1990,7 +2003,18 @@ export default function LandingMobile() {
           </div>
         </div>
       </section>
-
+      <section id="m-workspace">
+        <div className="aios-container">
+           <div className="team-left">
+          <h2 className="team-title">
+            {tr.workspacelang1}<br />
+            <span className="purple">{tr.workspacelang2}</span><br />
+            {tr.workspacelang3}<br />
+          </h2>
+        </div>
+        <img src={workspaceImg} alt="workspace" />         
+        </div>
+      </section>        
       {/* AI APPOINTMENT SETTER SECTION */}
       <section className="m-appointment-setter" id="ai-assistant">
         <div className="m-setter-header">
@@ -2345,7 +2369,7 @@ export default function LandingMobile() {
               </svg>
               <div className="trial-wrap">
                 <span>{tr.finalCtaBtn}</span>
-                <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}</p>
+                <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
