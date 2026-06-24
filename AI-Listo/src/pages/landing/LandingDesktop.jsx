@@ -62,6 +62,7 @@ import CountriesCitiesSection from "./CountriesCitiesSection";
 import herorightImg from "../../assets/cortexa/hero_right.png";
 import trialmobileImg from "../../assets/cortexa/img_desktop_none.png";
 import headlogotranImg from "../../assets/cortexa/headlogotran.png";
+import logotranImg from "../../assets/cortexa/logotran.png";
 import headlogoImg from "../../assets/cortexa/headlogo.png";
 import logoImg from "../../assets/cortexa/logo.png";
 import heroImg from "../../assets/cortexa/Cortexa Hero 1.png";
@@ -2886,7 +2887,7 @@ export default function Landing() {
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
         <div className="cx-final-box">
-          <img src={headlogotranImg} className="cx-logo-img" />
+          <img src={logotranImg} className="cx-logo-img" />
           <h2 className="cx-title-lg" style={{ color: "#fff" }}>
             {tr.finalTitle}
           </h2>
