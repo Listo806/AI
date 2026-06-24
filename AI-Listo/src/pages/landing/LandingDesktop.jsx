@@ -52,7 +52,7 @@ import {
   Contact2,
   Users2,
   Puzzle,
-  CheckCircle2,
+  CheckCircle2, Link2, Check, Grid, ChevronRight,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -104,6 +104,8 @@ import smart3Img from "../../assets/cortexa/smart3.png";
 
 import x3xImg from "../../assets/cortexa/3x.png";
 import featurechartImg from "../../assets/cortexa/feature-chart.jpg";
+import powerfulImg from "../../assets/cortexa/powerful.png";
+import workspaceImg from "../../assets/cortexa/workspace.png";
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -672,6 +674,23 @@ export default function Landing() {
       rightBenefit3: "One connected workspace",
       rightBenefit4: "Faster implementation",
       rightBenefit5: "Transparent pricing. No surprises.",
+
+      badge: "Powerful Integrations",
+      titlePre: "Works with ",
+      titleActive: "tools you already use",
+      subtitlePre: "Bring your leads, messages, calendars, tasks, files, and workflows ",
+      subtitlePost: "into Cortexa and let AI handle the busy work.",
+      feature1: "Sync in minutes",
+      feature2: "Automate workflows",
+      feature3: "Save time every day",
+      feature4: "Keep your team aligned",
+      footerTextPre: "Connect your apps, import your data, and automate your workflow inside Cortexa.",
+      footerTextPost: "Manage everything from one place in Apps & Integrations.",
+      btnText: "See Integrations",
+
+      workspacelang1: "Team",
+      workspacelang2: "Revenue",
+      workspacelang3: "Workspace",
     },
 
     es: {
@@ -1200,6 +1219,23 @@ export default function Landing() {
       rightBenefit3: "Un espacio de trabajo conectado",
       rightBenefit4: "Implementación más rápida",
       rightBenefit5: "Precios transparentes. Sin sorpresas.",
+
+      badge: "Integraciones Potentes",
+      titlePre: "Funciona con las ",
+      titleActive: "herramientas que ya usas",
+      subtitlePre: "Lleva tus leads, mensajes, calendarios, tareas, archivos y flujos de trabajo ",
+      subtitlePost: "a Cortexa y deja que la IA se encargue del trabajo pesado.",
+      feature1: "Sincroniza en minutos",
+      feature2: "Automatiza flujos de trabajo",
+      feature3: "Ahorra tiempo cada día",
+      feature4: "Mantén a tu equipo alineado",
+      footerTextPre: "Conecta tus apps, importa tus datos y automatiza tu flujo de trabajo dentro de Cortexa.",
+      footerTextPost: "Gestiona todo desde un solo lugar en Apps e Integraciones.",
+      btnText: "Ver Integraciones",
+
+      workspacelang1: "Equipo",
+      workspacelang2: "Ingresos",
+      workspacelang3: "Espacio de trabajo",
     },
 
     pt: {
@@ -1727,6 +1763,23 @@ export default function Landing() {
       rightBenefit3: "Um espaço de trabalho conectado",
       rightBenefit4: "Implementação mais rápida",
       rightBenefit5: "Preços transparentes. Sem surpresas.",
+
+      badge: "Integrações Poderosas",
+      titlePre: "Funciona com as ",
+      titleActive: "ferramentas que você já usa",
+      subtitlePre: "Traga seus leads, mensagens, calendários, tarefas, arquivos e fluxos de trabalho ",
+      subtitlePost: "para o Cortexa e deixe a IA cuidar do trabalho pesado.",
+      feature1: "Sincronize em minutos",
+      feature2: "Automatize fluxos de trabalho",
+      feature3: "Economize tempo todos os dias",
+      feature4: "Mantenha sua equipe alinhada",
+      footerTextPre: "Conecte seus apps, importe seus dados e automatize seu fluxo de trabalho dentro do Cortexa.",
+      footerTextPost: "Gerencie tudo em um só lugar em Apps e Integrações.",
+      btnText: "Ver Integrações",
+
+      workspacelang1: "Equipe",
+      workspacelang2: "Receita",
+      workspacelang3: "Espaço de trabalho",
     },
   };
 
@@ -1799,6 +1852,7 @@ export default function Landing() {
     { key: "workspace", Icon: Users2 },
     { key: "apps", Icon: Puzzle },
   ];
+
   return (
     <div id="cortexa-ai-crm-landing">
       <div className="hero-text">
@@ -2180,7 +2234,18 @@ export default function Landing() {
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="" />
       </section>
-
+      <section id="workspace">
+        <div className="aios-container">
+           <div className="team-left">
+          <h2 className="team-title">
+            {tr.workspacelang1}<br />
+            <span className="purple">{tr.workspacelang2}</span><br />
+            {tr.workspacelang3}<br />
+          </h2>
+        </div>
+        <img src={workspaceImg} alt="workspace" />         
+        </div>
+      </section>              
       <section id="whatsapp" className="cx-hero pt-50">
         <img src={currentSec3} alt="" />
       </section>
@@ -2432,6 +2497,66 @@ export default function Landing() {
           </div>
         </div>
       </section>
+      <section className="powerful">
+        <div className="cx-pwr-container">
+          
+          <div className="cx-pwr-badge-box">
+            <div className="cx-pwr-badge">
+              <Link2 size={14} />
+              <span>{tr.badge}</span>
+            </div>
+          </div>
+
+          <h2 className="cx-pwr-title">
+            {tr.titlePre}<span>{tr.titleActive}</span>
+          </h2>
+
+          <p className="cx-pwr-subtitle">
+            {tr.subtitlePre}<strong>{tr.subtitlePost}</strong>
+          </p>
+
+          <div className="cx-pwr-features-line">
+            <div className="cx-pwr-f-item">
+              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <span>{tr.feature1}</span>
+            </div>
+            <div className="cx-pwr-f-divider"></div>
+            <div className="cx-pwr-f-item">
+              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <span>{tr.feature2}</span>
+            </div>
+            <div className="cx-pwr-f-divider"></div>
+            <div className="cx-pwr-f-item">
+              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <span>{tr.feature3}</span>
+            </div>
+            <div className="cx-pwr-f-divider"></div>
+            <div className="cx-pwr-f-item">
+              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <span>{tr.feature4}</span>
+            </div>
+          </div>
+          <img src={powerfulImg} alt="diagram" />       
+          
+          <div className="cx-pwr-footer-banner">
+            <div className="cx-pwr-footer-left">
+              <div className="cx-pwr-grid-icon-box">
+                <Grid size={20} />
+              </div>
+              <p className="cx-pwr-footer-text">
+                <strong>{tr.footerTextPre}</strong><br />
+                <span>{tr.footerTextPost}</span>
+              </p>
+            </div>
+            <button className="cx-pwr-footer-btn">
+              <span>{tr.btnText}</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+        </div>
+      </section>
+  
       <section className="smart">
         <div className="smart-container">
           <div className="smart-head">
@@ -2923,3 +3048,4 @@ export default function Landing() {
     </div>
   );
 }
+

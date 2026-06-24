@@ -20,7 +20,7 @@ import {
   Home,
   XCircle,
   CheckCircle2,
-  TrendingUp,
+  TrendingUp, CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
@@ -30,6 +30,8 @@ import headlogoImg from "../../assets/cortexa/headlogotran.png";
 import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
 import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
 import featurechart from "../../assets/cortexa/mobile/featurechart.png";
+import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
+
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
     return localStorage.getItem("cortexa_lang") || "en";
@@ -62,7 +64,8 @@ export default function LandingMobile() {
 
   const t = {
     en: {
-      badge: "AI-POWERED OS & AUTOMATIONS",
+      badge: "AI-POWERED",
+      badge1: "REAL ESTATE AGENTS & TEAMS",
       heroTitle1: "Get Instant Leads.",
       heroTitle2: "Close More Deals.",
       heroTitle3: "24/7 with AI.",
@@ -216,6 +219,7 @@ export default function LandingMobile() {
         "Join 10,000+ real estate professionals who are growing with CORTEXA.",
       finalCtaBtn: "Start Your Free Trial",
       finalCtaSubBtn: "No credit card required",
+      finalCtaSubBtn1: "Unlock potential today",
 
       marketsSubtitle: "EXPLORE OUR MARKETS",
       marketsTitle1: "We're helping agents",
@@ -311,10 +315,19 @@ export default function LandingMobile() {
       stageQualified: "Qualified",
       stageProposal: "Proposal",
       stageClosed: "Closed Won",
+
+      heroCheck6: "Your AI Agent finds, captures, and qualifies leads automatically",
+      heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
+      heroCheck8: "Automated follow-ups and appointment booking run 24/7",
+      heroCheck9: "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
+
+      powerbadge: "INTEGRATION",
+      powertitle: "Connect your apps",
     },
 
     es: {
-      badge: "OS Y AUTOMATIZACIÓN CON IA",
+      badge: "IMPULSADO POR IA",
+      badge1: "AGENTES Y EQUIPOS INMOBILIARIOS",
       heroTitle1: "Obtén Más Leads.",
       heroTitle2: "Cierra Más Ventas.",
       heroTitle3: "24/7 con IA.",
@@ -468,6 +481,7 @@ export default function LandingMobile() {
         "Únete a más de 10,000 profesionales inmobiliarios que están creciendo con CORTEXA.",
       finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "No se requiere tarjeta de crédito",
+      finalCtaSubBtn1: "Desbloquea tu potencial hoy",
 
       marketsSubtitle: "EXPLORA NUESTROS MERCADOS",
       marketsTitle1: "Ayudamos a los agentes a",
@@ -563,10 +577,19 @@ export default function LandingMobile() {
       stageQualified: "Calificado",
       stageProposal: "Propuesta",
       stageClosed: "Cerrado Ganado",
+
+      heroCheck6: "Tu agente de IA encuentra, captura y califica leads automáticamente.",
+      heroCheck7: "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
+      heroCheck8: "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
+      heroCheck9: "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
+
+      powerbadge: "INTEGRACIÓN",
+      powertitle: "Conecta tus aplicaciones",
     },
 
     pt: {
-      badge: "OS E AUTOMAÇÕES COM IA",
+      badge: "POTENCIALIZADO POR IA",
+      badge1: "CORRETORES E EQUIPES IMOBILIÁRIAS",
       heroTitle1: "Mais Leads.",
       heroTitle2: "Mais Negócios.",
       heroTitle3: "24/7 com IA.",
@@ -721,6 +744,7 @@ export default function LandingMobile() {
         "Junte-se a mais de 10.000 profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
       finalCtaBtn: "Inicie Seu Teste Grátis",
       finalCtaSubBtn: "Não é necessário cartão de crédito",
+      finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
 
       marketsSubtitle: "EXPLORE NOSSOS MERCADOS",
       marketsTitle1: "Ajudamos corretores a",
@@ -816,6 +840,14 @@ export default function LandingMobile() {
       stageQualified: "Qualificado",
       stageProposal: "Proposta",
       stageClosed: "Ganho Fechado",
+
+      heroCheck6: "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
+      heroCheck7: "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
+      heroCheck8: "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
+      heroCheck9: "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
+
+      powerbadge: "INTEGRAÇÃO",
+      powertitle: "Conecte seus aplicativos",
     },
   };
   const handleLangChange = (newLang) => {
@@ -948,7 +980,7 @@ export default function LandingMobile() {
       {/* HERO */}
 
       <section className="m-hero">
-        <div className="m-badge">{tr.badge}</div>
+        <div className="m-badge">{tr.badge}<br/>{tr.badge1}</div>
         <h1 className="m-title">
           {tr.heroTitle1}
           <br />
@@ -960,15 +992,30 @@ export default function LandingMobile() {
           <a href="/trial" className="m-primary-btn">
             <Zap size={18} />
             <div className="trial-wrap">
-              <span>{tr.trial}</span>
-              <p className="m-bottom-subtext">{tr.finalCtaSubBtn}</p>
+              <span>{tr.ctaButtonText}</span>
+              <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
             </div>
             <ArrowRight size={18} />
           </a>
-          <button className="m-secondary-btn">
+          {/*<button className="m-secondary-btn">
             <Play size={18} />
             {tr.watchDemo}
-          </button>
+          </button>*/}
+          <div className="hero-checks">
+            {[
+              tr.heroCheck6,
+              tr.heroCheck7,
+              tr.heroCheck8,
+              tr.heroCheck9,
+            ].map((item, index) => (
+              <div className="check-item" key={index}>
+                <span className="check">
+                  <CheckCircle size={18} />
+                </span>
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="m-trust">
@@ -2110,7 +2157,24 @@ export default function LandingMobile() {
           </a>
         </div>
       </section>
+      <section className="m-powerful">
+        <div className="cx-mp-wrapper">
+          
+          <div className="cx-mp-badge-container">
+            <div className="cx-mp-badge-outline">
+              <div className="cx-mp-icon-circle">
+                <Link2 size={12} />
+              </div>
+              <span className="cx-mp-badge-text">{tr.powerbadge}</span>
+            </div>
+          </div>
 
+          <h2 className="cx-mp-heading">
+            {tr.powertitle}
+          </h2>
+          <img src={powerfulM} alt="powerful" />  
+        </div>
+      </section>      
       {/* TESTIMONIALS SECTION */}
       <section className="m-testimonials" id="testimonials">
         <div className="m-testimonials-header">
@@ -2281,7 +2345,7 @@ export default function LandingMobile() {
               </svg>
               <div className="trial-wrap">
                 <span>{tr.finalCtaBtn}</span>
-                <p className="m-bottom-subtext">{tr.finalCtaSubBtn}</p>
+                <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}</p>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -2299,7 +2363,6 @@ export default function LandingMobile() {
                 <path d="m12 5 7 7-7 7" />
               </svg>
             </a>
-            <p className="m-bottom-subtext">{tr.finalCtaSubBtn}</p>
           </div>
 
           <div className="m-bottom-preview-container">
