@@ -107,6 +107,8 @@ import x3xImg from "../../assets/cortexa/3x.png";
 import featurechartImg from "../../assets/cortexa/feature-chart.jpg";
 import powerfulImg from "../../assets/cortexa/powerful.png";
 import workspaceImg from "../../assets/cortexa/workspace.png";
+import workspaceImgES from "../../assets/cortexa/workspaceES.png";
+import workspaceImgPT from "../../assets/cortexa/workspacePT.png";
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -429,7 +431,7 @@ export default function Landing() {
       aiosBadgeTitle: "Meet Your",
       aiosBadgeHighlight: "AI OS",
       aiosSubtitle:
-        "Your CRM, AI Agent, dashboards, follow-ups, and lead workflow — connected in one real estate AI operating system.",
+        "AI system built for real estate teams — captures more leads, follows up automatically, manages deals, and helps your team close more, all in one place.",
       aiosCards: [
         {
           title: "AI CRM",
@@ -973,7 +975,7 @@ export default function Landing() {
       aiosBadgeTitle: "Conoce Tu",
       aiosBadgeHighlight: "AI OS",
       aiosSubtitle:
-        "Tu CRM, agente IA, paneles, seguimientos y flujo de trabajo conectados en un único sistema operativo inmobiliario.",
+        "Sistema de IA diseñado para equipos inmobiliarios: captura más clientes potenciales, realiza seguimientos automáticamente, gestiona operaciones y ayuda a tu equipo a cerrar más negocios, todo en un solo lugar.",
       aiosCards: [
         {
           title: "CRM IA",
@@ -1513,7 +1515,7 @@ export default function Landing() {
       aiosBadgeTitle: "Conheça Seu",
       aiosBadgeHighlight: "AI OS",
       aiosSubtitle:
-        "Seu CRM, Agente IA, dashboards, follow-ups e fluxo de trabalho conectados em um único sistema operacional imobiliário.",
+        "Sistema de IA desenvolvido para equipes imobiliárias — captura mais leads, faz acompanhamento automático, gerencia negociações e ajuda sua equipe a fechar mais negócios, tudo em um só lugar.",
 
       aiosCards: [
         {
@@ -1810,7 +1812,9 @@ export default function Landing() {
 
   const currentaiSetterImg =
     lang === "es" ? aiSetterImgES : lang === "pt" ? aiSetterImgPT : aiSetterImg;
-
+  workspaceImg  
+  const workspace =
+    lang === "es" ? workspaceImgES : lang === "pt" ? workspaceImgPT : workspaceImg;
   const currenttestimonialsImg =
     lang === "es"
       ? testimonialsImgES
@@ -2237,14 +2241,7 @@ export default function Landing() {
       </section>
       <section id="workspace">
         <div className="aios-container">
-           <div className="team-left">
-          <h2 className="team-title">
-            {tr.workspacelang1}<br />
-            <span className="purple">{tr.workspacelang2}</span><br />
-            {tr.workspacelang3}<br />
-          </h2>
-        </div>
-        <img src={workspaceImg} alt="workspace" />         
+        <img src={workspace} alt="workspace" />         
         </div>
       </section>              
       <section id="whatsapp" className="cx-hero pt-50">

@@ -2387,6 +2387,7 @@ body .m-header {
 }
 #m-workspace .team-left{
   text-align: left;
+  padding: 10px;
 }
 @media (max-width: 435px) {
     .m-menu-btn {

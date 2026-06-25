@@ -32,6 +32,8 @@ import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
 import featurechart from "../../assets/cortexa/mobile/featurechart.png";
 import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
 import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
+import workspaceImgES from "../../assets/cortexa/mobile/workspaceESM.png";
+import workspaceImgPT from "../../assets/cortexa/mobile/workspacePTM.png";
 
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
@@ -869,6 +871,9 @@ export default function LandingMobile() {
     setLangOpen(false);
   };
   const tr = t[lang];
+  const workspace =
+    lang === "es" ? workspaceImgES : lang === "pt" ? workspaceImgPT : workspaceImg;
+
   const avatars = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
@@ -2005,14 +2010,7 @@ export default function LandingMobile() {
       </section>
       <section id="m-workspace">
         <div className="aios-container">
-           <div className="team-left">
-          <h2 className="team-title">
-            {tr.workspacelang1}<br />
-            <span className="purple">{tr.workspacelang2}</span><br />
-            {tr.workspacelang3}<br />
-          </h2>
-        </div>
-        <img src={workspaceImg} alt="workspace" />         
+        <img src={workspace} alt="workspace" />         
         </div>
       </section>        
       {/* AI APPOINTMENT SETTER SECTION */}

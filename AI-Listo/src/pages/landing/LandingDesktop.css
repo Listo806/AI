@@ -3210,7 +3210,7 @@
    margin: 12px auto;
    color: #556070;
    line-height: 1.6;
-   max-width: 500px;
+   max-width: 600px;
  }
 
  .aios-grid {
@@ -3889,9 +3889,7 @@
   max-width: 1200px;
   align-items: center;
 }
-#workspace .aios-container img{
-  width: 82%;
-}
+
 #workspace .team-title{
   font-size: 48px;
   font-weight: 700;
