@@ -153,7 +153,7 @@ export default function Contact() {
           <InfoCard
             icon={<Mail size={24} />}
             title="Support Email"
-            text="support@cortexacrm.com"
+            text="support@cortexaaicrm.com"
             color="#2563EB"
             bg="#EEF5FF"
           />
@@ -188,7 +188,7 @@ export default function Contact() {
           </div>
           <div>
             <h3>Support Email</h3>
-            <p className={styles.blue}>support@cortexacrm.com</p>
+            <p className={styles.blue}>support@cortexaaicrm.com</p>
           </div>
           <ChevronRight size={24} />
         </div>
