@@ -448,13 +448,22 @@ export default function ContactsRelationshipsPage() {
       });
 
       const updatedContact = updated?.data || updated;
-
+      const selectedMember = teamMembers.find(
+        (member) => String(member.userId || member.id) === String(assignTo)
+      );
       setContacts((prev) =>
         prev.map((item) =>
           item.id === assignContact.id
-            ? { ...item, ...updatedContact, assignedTo: assignTo || null }
-            : item,
-        ),
+            ? {
+                ...item,
+                ...updatedContact,
+                assignedTo: assignTo || null,
+                assignedAgentName:
+                  selectedMember?.name || selectedMember?.fullName || null,
+                assignedAgentEmail: selectedMember?.email || null,
+              }
+            : item
+        )
       );
 
       setShowAssignModal(false);
@@ -544,6 +553,17 @@ export default function ContactsRelationshipsPage() {
                 </div>
                 <div className="info-value emphasis">
                   {selectedContact.interest || "-"}
+                </div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <UserCog size={16} /> <span>Agent:</span>
+                </div>
+                <div className="info-value">
+                  {selectedContact.assignedAgentName ||
+                    selectedContact.assignedAgentEmail ||
+                    "Unassigned"}
                 </div>
               </div>
 

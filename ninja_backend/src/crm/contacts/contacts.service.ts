@@ -15,6 +15,7 @@ export class ContactsService {
   constructor(private readonly db: DatabaseService) {}
 
   private baseSelectColumns = `
+  LEFT JOIN users au ON au.id = c.assigned_to
   c.id,
   c.team_id AS "teamId",
   c.created_by AS "createdBy",
@@ -35,6 +36,8 @@ export class ContactsService {
   c.source,
   c.notes,
   c.assigned_to AS "assignedTo",
+  au.name AS "assignedAgentName",
+  au.email AS "assignedAgentEmail",
   c.created_at AS "createdAt",
   c.updated_at AS "updatedAt"
 `;
