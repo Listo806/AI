@@ -670,11 +670,6 @@ body .contacts-page .map svg{
   transition: 0.2s;
 }
 
-.contacts-page .secondary-action:hover,
-.contacts-page .primary-action:hover {
-  background: #f5f7fb;
-}
-
 .contacts-page .primary-action {
   color: #2563ff;
 }
@@ -942,6 +937,10 @@ body .contacts-page .map svg{
   background: #f3f4f6;
   color: #6b7280;
 }
+.contacts-page .badge-status.archived {
+  background: #f4ecff;
+  color: #8b1355;
+}
 .kpi-chart_wrap{
     display: flex;
     align-items: end;
@@ -1119,6 +1118,41 @@ body .contacts-page .map svg{
   display: flex;
   gap: 8px;
   justify-content: center;
+}
+.status-menu-group {
+  position: relative;
+}
+
+.status-submenu {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 100%;
+  min-width: 120px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
+  z-index: 20;
+}
+
+.status-menu-group:hover .status-submenu {
+  display: block;
+}
+
+.status-submenu button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.status-submenu button:hover {
+  background: #f3f4f6;
 }
 @media (min-width: 1200px) {
     .contacts-page .main-content {

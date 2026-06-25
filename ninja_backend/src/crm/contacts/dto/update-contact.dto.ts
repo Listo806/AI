@@ -55,4 +55,8 @@ export class UpdateContactDto {
   @IsOptional()
   @IsDateString()
   lastContactAt?: string;
+
+  @IsOptional()
+  @IsUUID()
+  assignedTo?: string;
 }

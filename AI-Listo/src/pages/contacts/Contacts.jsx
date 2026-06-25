@@ -46,8 +46,15 @@ export default function ContactsRelationshipsPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState(null);
 
   const [selectedContact, setSelectedContact] = useState(null);
+
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignContact, setAssignContact] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [assignTo, setAssignTo] = useState("");
 
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -108,7 +115,85 @@ export default function ContactsRelationshipsPage() {
       showToast("Failed to create contact", "error");
     }
   };
+  const openEditContact = (contact) => {
+    setEditForm({
+      id: contact.id,
+      name: contact.name || "",
+      type: contact.type || "Buyer",
+      email: contact.email || "",
+      phone: contact.phone || "",
+      interest: contact.interest || "",
+      status: contact.status || "Cold",
+      source: contact.source || "",
+      notes: contact.notes || "",
+    });
 
+    setSelectedContact(null);
+    setOpenMenuId(null);
+    setShowEditModal(true);
+  };
+
+  const updateContact = async (e) => {
+    e.preventDefault();
+
+    const contactId = editForm.id;
+
+    const clean = (value) => {
+      if (value === undefined || value === null) return undefined;
+      const trimmed = String(value).trim();
+      return trimmed === "" ? undefined : trimmed;
+    };
+
+    const payload = {
+      name: clean(editForm.name),
+      type: clean(editForm.type),
+      email: clean(editForm.email),
+      phone: clean(editForm.phone),
+      interest: clean(editForm.interest),
+      status: clean(editForm.status),
+      source: clean(editForm.source),
+      notes: clean(editForm.notes),
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) {
+        delete payload[key];
+      }
+    });
+
+    try {
+      console.log("UPDATE PAYLOAD:", payload);
+      const updated = await apiClient.request(`/contacts/${contactId}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      const updatedContact = updated?.data || updated;
+
+      setContacts((prev) =>
+        prev.map((item) =>
+          item.id === contactId
+            ? {
+                ...item,
+                ...updatedContact,
+                avatar:
+                  updatedContact.name?.charAt(0)?.toUpperCase() ||
+                  item.avatar ||
+                  "?",
+              }
+            : item,
+        ),
+      );
+
+      setShowEditModal(false);
+      setEditForm(null);
+      fetchStats();
+      showToast("Contact updated");
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to update contact", "error");
+    }
+  };
   const fetchContacts = async (query = "") => {
     try {
       setLoading(true);
@@ -248,7 +333,139 @@ export default function ContactsRelationshipsPage() {
       showToast(err?.message || "Failed to send message", "error");
     }
   };
+  const deleteContact = async (contactId) => {
+    const ok = window.confirm("Delete this contact?");
+    if (!ok) return;
 
+    try {
+      await apiClient.request(`/contacts/${contactId}`, {
+        method: "DELETE",
+      });
+
+      setContacts((prev) => prev.filter((item) => item.id !== contactId));
+      fetchStats();
+      showToast("Contact deleted");
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to delete contact", "error");
+    }
+  };
+
+  const changeContactStatus = async (contactId, status) => {
+    try {
+      const updated = await apiClient.request(`/contacts/${contactId}`, {
+        method: "PUT",
+        body: JSON.stringify({ status }),
+      });
+
+      const updatedContact = updated?.data || updated;
+
+      setContacts((prev) =>
+        prev.map((item) =>
+          item.id === contactId ? { ...item, ...updatedContact, status } : item,
+        ),
+      );
+
+      setOpenMenuId(null);
+      fetchStats();
+      showToast(`Status changed to ${status}`);
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to change status", "error");
+    }
+  };
+
+  const archiveContact = async (contactId) => {
+    const ok = window.confirm("Archive this contact?");
+    if (!ok) return;
+
+    try {
+      const updated = await apiClient.request(`/contacts/${contactId}`, {
+        method: "PUT",
+        body: JSON.stringify({ status: "Archived" }),
+      });
+
+      const updatedContact = updated?.data || updated;
+
+      setContacts((prev) =>
+        prev.map((item) =>
+          item.id === contactId
+            ? { ...item, ...updatedContact, status: "Archived" }
+            : item,
+        ),
+      );
+
+      setOpenMenuId(null);
+      fetchStats();
+      showToast("Contact archived");
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to archive contact", "error");
+    }
+  };
+
+  const openAssignAgent = async (contact) => {
+    try {
+      setAssignContact(contact);
+      setAssignTo(contact.assignedTo || "");
+      setOpenMenuId(null);
+
+      const teams = await apiClient.request("/teams", { method: "GET" });
+      const teamList = teams?.data || teams || [];
+      const teamId = teamList?.[0]?.id;
+
+      if (!teamId) {
+        showToast("No team found", "error");
+        return;
+      }
+
+      const membersRes = await apiClient.request(`/teams/${teamId}/members`, {
+        method: "GET",
+      });
+
+      const membersData = membersRes?.data || membersRes || [];
+      const members = Array.isArray(membersData)
+        ? membersData
+        : membersData.members || [];
+
+      setTeamMembers(members);
+      setShowAssignModal(true);
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to load team members", "error");
+    }
+  };
+
+  const assignAgent = async (e) => {
+    e.preventDefault();
+
+    try {
+      const updated = await apiClient.request(`/contacts/${assignContact.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          assignedTo: assignTo || null,
+        }),
+      });
+
+      const updatedContact = updated?.data || updated;
+
+      setContacts((prev) =>
+        prev.map((item) =>
+          item.id === assignContact.id
+            ? { ...item, ...updatedContact, assignedTo: assignTo || null }
+            : item,
+        ),
+      );
+
+      setShowAssignModal(false);
+      setAssignContact(null);
+      setAssignTo("");
+      showToast("Agent assigned");
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to assign agent", "error");
+    }
+  };
   if (selectedContact) {
     return (
       <div className="mobile-detail-page contacts-page">
@@ -458,7 +675,7 @@ export default function ContactsRelationshipsPage() {
                   { label: "All", query: "" },
                   { label: "Buyers", query: "?type=Buyer" },
                   { label: "Sellers", query: "?type=Seller" },
-                  { label: "Developers", query: "?type=Developers" },
+                  { label: "Developers", query: "?type=Developer" },
                   { label: "Renters", query: "?type=Renter" },
                 ].map((item) => (
                   <button
@@ -549,15 +766,32 @@ export default function ContactsRelationshipsPage() {
                             className="contact-menu"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button>
+                            <button onClick={() => openEditContact(contact)}>
                               <Edit3 size={15} /> Edit Contact
                             </button>
-                            <button>
+                            <button onClick={() => openAssignAgent(contact)}>
                               <UserCog size={15} /> Assign Agent
                             </button>
-                            <button>
-                              <StickyNote size={15} /> Change Status
-                            </button>
+                            <div className="status-menu-group">
+                              <button>
+                                <StickyNote size={15} /> Change Status
+                              </button>
+
+                              <div className="status-submenu">
+                                {["Cold", "Warm", "Hot", "Active"].map(
+                                  (status) => (
+                                    <button
+                                      key={status}
+                                      onClick={() =>
+                                        changeContactStatus(contact.id, status)
+                                      }
+                                    >
+                                      {status}
+                                    </button>
+                                  ),
+                                )}
+                              </div>
+                            </div>
                             <button
                               onClick={() =>
                                 navigate(
@@ -570,10 +804,16 @@ export default function ContactsRelationshipsPage() {
                             <button onClick={runAiReview}>
                               <Bot size={15} /> Run AI Review
                             </button>
-                            <button className="warning">
+                            <button
+                              className="warning"
+                              onClick={() => archiveContact(contact.id)}
+                            >
                               <Archive size={15} /> Archive Contact
                             </button>
-                            <button className="danger">
+                            <button
+                              className="danger"
+                              onClick={() => deleteContact(contact.id)}
+                            >
                               <Trash2 size={15} /> Delete Contact
                             </button>
                           </div>
@@ -715,7 +955,7 @@ export default function ContactsRelationshipsPage() {
                       >
                         <option>Buyer</option>
                         <option>Seller</option>
-                        <option>Developers</option>
+                        <option>Developer</option>
                         <option>Renter</option>
                       </select>
                     </div>
@@ -750,6 +990,208 @@ export default function ContactsRelationshipsPage() {
             </div>
           )}
 
+          {showEditModal && editForm && (
+            <div className="modal-overlay">
+              <div className="contact-modal">
+                <div className="modal-header">
+                  <h2>Edit Contact</h2>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditForm(null);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={updateContact}>
+                  <div className="modal-grid">
+                    <div className="form-group">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.name}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, name: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, email: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Phone</label>
+                      <input
+                        type="text"
+                        value={editForm.phone}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, phone: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Type</label>
+                      <select
+                        value={editForm.type}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, type: e.target.value })
+                        }
+                      >
+                        <option>Buyer</option>
+                        <option>Seller</option>
+                        <option>Developer</option>
+                        <option>Renter</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Status</label>
+                      <select
+                        value={editForm.status}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, status: e.target.value })
+                        }
+                      >
+                        <option>Cold</option>
+                        <option>Warm</option>
+                        <option>Hot</option>
+                        <option>Active</option>
+                        <option>Archived</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Source</label>
+                      <input
+                        type="text"
+                        value={editForm.source}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, source: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group full">
+                      <label>Interest</label>
+                      <input
+                        type="text"
+                        value={editForm.interest}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, interest: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div className="form-group full">
+                      <label>Notes</label>
+                      <textarea
+                        rows="4"
+                        value={editForm.notes}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, notes: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditForm(null);
+                      }}
+                    >
+                      Cancel
+                    </button>
+
+                    <button type="submit" className="primary-action">
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {showAssignModal && assignContact && (
+            <div className="modal-overlay">
+              <div className="contact-modal">
+                <div className="modal-header">
+                  <h2>Assign Agent</h2>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setShowAssignModal(false);
+                      setAssignContact(null);
+                      setAssignTo("");
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={assignAgent}>
+                  <div className="modal-grid">
+                    <div className="form-group full">
+                      <label>Contact</label>
+                      <input value={assignContact.name || ""} disabled />
+                    </div>
+
+                    <div className="form-group full">
+                      <label>Agent</label>
+                      <select
+                        value={assignTo}
+                        onChange={(e) => setAssignTo(e.target.value)}
+                      >
+                        <option value="">Unassigned</option>
+                        {teamMembers.map((member) => (
+                          <option
+                            key={member.userId || member.id}
+                            value={member.userId || member.id}
+                          >
+                            {member.name || member.email || "Team Member"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={() => {
+                        setShowAssignModal(false);
+                        setAssignContact(null);
+                        setAssignTo("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+
+                    <button type="submit" className="primary-action">
+                      Assign Agent
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
           {/* TOAST */}
           {toast && (
             <div

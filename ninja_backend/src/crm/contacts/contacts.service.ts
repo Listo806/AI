@@ -34,7 +34,7 @@ export class ContactsService {
   c.status,
   c.source,
   c.notes,
-
+  c.assigned_to AS "assignedTo",
   c.created_at AS "createdAt",
   c.updated_at AS "updatedAt"
 `;
@@ -59,7 +59,7 @@ export class ContactsService {
   status,
   source,
   notes,
-
+  assigned_to AS "assignedTo",
   created_at AS "createdAt",
   updated_at AS "updatedAt"
 `;
@@ -535,6 +535,11 @@ export class ContactsService {
     if (dto.lastContactAt !== undefined) {
       updates.push(`last_contact_at = $${paramIndex++}`);
       values.push(dto.lastContactAt || null);
+    }
+
+    if (dto.assignedTo !== undefined) {
+      updates.push(`assigned_to = $${paramIndex++}`);
+      values.push(dto.assignedTo || null);
     }
     if (updates.length === 0) return this.findOne(id, userId, userTeamId, role);
     updates.push(`updated_at = NOW()`);
