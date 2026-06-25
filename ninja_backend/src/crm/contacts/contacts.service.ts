@@ -144,14 +144,21 @@ export class ContactsService {
   }
 
   async getStats(userId: string, userTeamId: string | null, role: string) {
-    const accessible = await this.getAccessibleTeamIds(
-      userId,
-      userTeamId,
-      role,
-    );
+  const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
 
-    const { rows } = await this.db.query(
-      `
+  if (!accessible.length) {
+    return {
+      totalContacts: 0,
+      activeBuyers: 0,
+      activeSellers: 0,
+      activeRenters: 0,
+      activeDevelopers: 0,
+      aiEngagement: 0,
+    };
+  }
+
+  const { rows } = await this.db.query(
+    `
     SELECT
       COUNT(*)::int AS "totalContacts",
 
@@ -164,19 +171,22 @@ export class ContactsService {
       )::int AS "activeSellers",
 
       COUNT(*) FILTER (
-        WHERE status = 'Hot'
-      )::int AS "conversations",
+        WHERE type = 'Renter'
+      )::int AS "activeRenters",
+
+      COUNT(*) FILTER (
+        WHERE type IN ('Developer', 'Developer')
+      )::int AS "activeDevelopers",
 
       COALESCE(AVG(score), 0)::int AS "aiEngagement"
-
     FROM contacts
     WHERE team_id = ANY($1)
     `,
-      [accessible],
-    );
+    [accessible],
+  );
 
-    return rows[0];
-  }
+  return rows[0];
+}
 
   async getAiInsights(userId: string, userTeamId: string | null, role: string) {
     const accessible = await this.getAccessibleTeamIds(
