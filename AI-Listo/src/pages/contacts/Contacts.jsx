@@ -665,9 +665,14 @@ export default function ContactsRelationshipsPage() {
                     {formatActivityDate(activity.createdAt)}
                   </div>
                   <div className="history-brief">
-                    <span>{activity.description}</span>
+                    <span>{activity.title}</span>
                     <ChevronRight size={16} />
                   </div>
+                  {activity.sub && (
+                    <div className="history-meta">
+                      {activity.sub}
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

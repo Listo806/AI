@@ -318,12 +318,10 @@ export class ContactsService {
     await this.createActivity(
       id,
       userId,
+      contact.teamId,
       "message",
       `${body.channel || "Message"} message sent`,
-      {
-        channel: body.channel,
-        message: body.message,
-      },
+      body.message || null,
     );
 
     return {
@@ -537,9 +535,10 @@ export class ContactsService {
       await this.createActivity(
         id,
         userId,
-        "status_changed",
+        teamId,
+        'status_changed',
         `Status changed to ${dto.status}`,
-        { status: dto.status },
+        null,
       );
     }
 
@@ -569,9 +568,10 @@ export class ContactsService {
       await this.createActivity(
         id,
         userId,
-        "assigned",
-        dto.assignedTo ? "Agent assigned" : "Agent unassigned",
-        { assignedTo: dto.assignedTo || null },
+        teamId,
+        'assigned',
+        dto.assignedTo ? 'Agent assigned' : 'Agent unassigned',
+        null,
       );
     }
     if (updates.length === 0) return this.findOne(id, userId, userTeamId, role);
@@ -603,22 +603,24 @@ export class ContactsService {
   async createActivity(
     contactId: string,
     userId: string,
+    teamId: string,
     type: string,
-    description: string,
-    metadata: Record<string, any> = {},
+    title: string,
+    sub?: string,
   ) {
     await this.db.query(
       `
     INSERT INTO contact_activities (
       contact_id,
       user_id,
+      team_id,
       type,
-      description,
-      metadata
+      title,
+      sub
     )
-    VALUES ($1, $2, $3, $4, $5)
+    VALUES ($1, $2, $3, $4, $5, $6)
     `,
-      [contactId, userId, type, description, metadata],
+      [contactId, userId, teamId, type, title, sub || null],
     );
   }
 
@@ -631,11 +633,11 @@ export class ContactsService {
       ca.id,
       ca.contact_id AS "contactId",
       ca.user_id AS "userId",
+      ca.team_id AS "teamId",
       ca.type,
-      ca.description,
-      ca.metadata,
+      ca.title,
+      ca.sub,
       ca.created_at AS "createdAt",
-      u.name AS "userName",
       u.email AS "userEmail"
     FROM contact_activities ca
     LEFT JOIN users u ON u.id = ca.user_id
@@ -649,28 +651,42 @@ export class ContactsService {
   }
 
   async addActivity(contactId: string, user: any, dto: any) {
-    await this.findOne(contactId, user.id, user.teamId, user.role);
+    const contact = await this.findOne(
+      contactId,
+      user.id,
+      user.teamId,
+      user.role,
+    );
 
     const { rows } = await this.db.query(
       `
     INSERT INTO contact_activities (
       contact_id,
       user_id,
+      team_id,
       type,
-      description,
-      metadata
+      title,
+      sub
     )
-    VALUES ($1, $2, $3, $4, $5)
+    VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING
       id,
       contact_id AS "contactId",
       user_id AS "userId",
+      team_id AS "teamId",
       type,
-      description,
-      metadata,
+      title,
+      sub,
       created_at AS "createdAt"
     `,
-      [contactId, user.id, dto.type, dto.description, dto.metadata || {}],
+      [
+        contactId,
+        user.id,
+        contact.teamId,
+        dto.type || "note",
+        dto.title || dto.description || "Activity",
+        dto.sub || null,
+      ],
     );
 
     return rows[0];
