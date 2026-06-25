@@ -8,7 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
-} from '@nestjs/common';
+} from "@nestjs/common";
 
 import {
   ApiTags,
@@ -18,21 +18,22 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
-} from '@nestjs/swagger';
+} from "@nestjs/swagger";
 
-import { ContactsService } from './contacts.service';
-import { CreateContactDto } from './dto/create-contact.dto';
-import { UpdateContactDto } from './dto/update-contact.dto';
+import { ContactsService } from "./contacts.service";
+import { CreateContactDto } from "./dto/create-contact.dto";
+import { UpdateContactDto } from "./dto/update-contact.dto";
+import { CreateContactActivityDto } from "./dto/create-contact-activity.dto";
 
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { VaRestrictionGuard } from '../../auth/guards/va-restriction.guard';
-import { CrmAccessGuard } from '../../subscriptions/guards/crm-access.guard';
+import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { VaRestrictionGuard } from "../../auth/guards/va-restriction.guard";
+import { CrmAccessGuard } from "../../subscriptions/guards/crm-access.guard";
 
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
-@ApiTags('contacts')
-@ApiBearerAuth('JWT-auth')
-@Controller('contacts')
+@ApiTags("contacts")
+@ApiBearerAuth("JWT-auth")
+@Controller("contacts")
 @UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
@@ -41,12 +42,12 @@ export class ContactsController {
   // STATS
   // ======================================================
 
-  @Get('stats')
+  @Get("stats")
   async getStats(@CurrentUser() user: any) {
     return this.contactsService.getStats(
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -54,12 +55,12 @@ export class ContactsController {
   // AI INSIGHTS
   // ======================================================
 
-  @Get('ai-insights')
+  @Get("ai-insights")
   async getAiInsights(@CurrentUser() user: any) {
     return this.contactsService.getAiInsights(
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -67,12 +68,12 @@ export class ContactsController {
   // AI REVIEW
   // ======================================================
 
-  @Post('ai-review')
+  @Post("ai-review")
   async runAiReview(@CurrentUser() user: any) {
     return this.contactsService.runAiReview(
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -80,12 +81,12 @@ export class ContactsController {
   // ACTIVITY
   // ======================================================
 
-  @Get('activity')
+  @Get("activity")
   async getActivity(@CurrentUser() user: any) {
     return this.contactsService.getActivity(
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -94,15 +95,12 @@ export class ContactsController {
   // ======================================================
 
   @Post()
-  async create(
-    @Body() dto: CreateContactDto,
-    @CurrentUser() user: any,
-  ) {
+  async create(@Body() dto: CreateContactDto, @CurrentUser() user: any) {
     return this.contactsService.create(
       dto,
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -114,17 +112,17 @@ export class ContactsController {
   async findAll(
     @CurrentUser() user: any,
 
-    @Query('search') search?: string,
-    @Query('type') type?: string,
-    @Query('status') status?: string,
+    @Query("search") search?: string,
+    @Query("type") type?: string,
+    @Query("status") status?: string,
 
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
   ) {
     return this.contactsService.findAll(
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
       {
         search,
         type,
@@ -139,16 +137,13 @@ export class ContactsController {
   // SINGLE
   // ======================================================
 
-  @Get(':id')
-  async findOne(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  @Get(":id")
+  async findOne(@Param("id") id: string, @CurrentUser() user: any) {
     return this.contactsService.findOne(
       id,
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -156,9 +151,9 @@ export class ContactsController {
   // UPDATE
   // ======================================================
 
-  @Put(':id')
+  @Put(":id")
   async update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() dto: UpdateContactDto,
     @CurrentUser() user: any,
   ) {
@@ -167,7 +162,7 @@ export class ContactsController {
       dto,
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -175,9 +170,9 @@ export class ContactsController {
   // MESSAGE
   // ======================================================
 
-  @Post(':id/message')
+  @Post(":id/message")
   async messageContact(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body()
     body: {
       channel: string;
@@ -190,7 +185,7 @@ export class ContactsController {
       body,
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
   }
 
@@ -198,20 +193,31 @@ export class ContactsController {
   // DELETE
   // ======================================================
 
-  @Delete(':id')
-  async remove(
-    @Param('id') id: string,
-    @CurrentUser() user: any,
-  ) {
+  @Delete(":id")
+  async remove(@Param("id") id: string, @CurrentUser() user: any) {
     await this.contactsService.remove(
       id,
       user.id,
       user.teamId ?? null,
-      user.role ?? 'owner',
+      user.role ?? "owner",
     );
 
     return {
       success: true,
     };
+  }
+
+  @Get(":id/activities")
+  getActivities(@Param("id") id: string, @Req() req) {
+    return this.contactsService.getActivities(id, req.user);
+  }
+
+  @Post(":id/activities")
+  createActivity(
+    @Param("id") id: string,
+    @Body() dto: CreateContactActivityDto,
+    @Req() req,
+  ) {
+    return this.contactsService.addActivity(id, req.user, dto);
   }
 }

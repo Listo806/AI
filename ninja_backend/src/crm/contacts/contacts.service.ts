@@ -148,21 +148,25 @@ export class ContactsService {
   }
 
   async getStats(userId: string, userTeamId: string | null, role: string) {
-  const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(
+      userId,
+      userTeamId,
+      role,
+    );
 
-  if (!accessible.length) {
-    return {
-      totalContacts: 0,
-      activeBuyers: 0,
-      activeSellers: 0,
-      activeRenters: 0,
-      activeDevelopers: 0,
-      aiEngagement: 0,
-    };
-  }
+    if (!accessible.length) {
+      return {
+        totalContacts: 0,
+        activeBuyers: 0,
+        activeSellers: 0,
+        activeRenters: 0,
+        activeDevelopers: 0,
+        aiEngagement: 0,
+      };
+    }
 
-  const { rows } = await this.db.query(
-    `
+    const { rows } = await this.db.query(
+      `
     SELECT
       COUNT(*)::int AS "totalContacts",
 
@@ -186,11 +190,11 @@ export class ContactsService {
     FROM contacts
     WHERE team_id = ANY($1)
     `,
-    [accessible],
-  );
+      [accessible],
+    );
 
-  return rows[0];
-}
+    return rows[0];
+  }
 
   async getAiInsights(userId: string, userTeamId: string | null, role: string) {
     const accessible = await this.getAccessibleTeamIds(
@@ -310,6 +314,16 @@ export class ContactsService {
     VALUES ($1, $2, $3, $4, $5, $6)
     `,
       [id, userId, contact.teamId, "message", "Message sent", body.message],
+    );
+    await this.createActivity(
+      id,
+      userId,
+      "message",
+      `${body.channel || "Message"} message sent`,
+      {
+        channel: body.channel,
+        message: body.message,
+      },
     );
 
     return {
@@ -520,6 +534,13 @@ export class ContactsService {
     if (dto.status !== undefined) {
       updates.push(`status = $${paramIndex++}`);
       values.push(dto.status || null);
+      await this.createActivity(
+        id,
+        userId,
+        "status_changed",
+        `Status changed to ${dto.status}`,
+        { status: dto.status },
+      );
     }
 
     if (dto.score !== undefined) {
@@ -545,6 +566,13 @@ export class ContactsService {
     if (dto.assignedTo !== undefined) {
       updates.push(`assigned_to = $${paramIndex++}`);
       values.push(dto.assignedTo || null);
+      await this.createActivity(
+        id,
+        userId,
+        "assigned",
+        dto.assignedTo ? "Agent assigned" : "Agent unassigned",
+        { assignedTo: dto.assignedTo || null },
+      );
     }
     if (updates.length === 0) return this.findOne(id, userId, userTeamId, role);
     updates.push(`updated_at = NOW()`);
@@ -570,5 +598,81 @@ export class ContactsService {
       id,
       contact.teamId,
     ]);
+  }
+
+  async createActivity(
+    contactId: string,
+    userId: string,
+    type: string,
+    description: string,
+    metadata: Record<string, any> = {},
+  ) {
+    await this.db.query(
+      `
+    INSERT INTO contact_activities (
+      contact_id,
+      user_id,
+      type,
+      description,
+      metadata
+    )
+    VALUES ($1, $2, $3, $4, $5)
+    `,
+      [contactId, userId, type, description, metadata],
+    );
+  }
+
+  async getActivities(contactId: string, user: any) {
+    await this.findOne(contactId, user.id, user.teamId, user.role);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      ca.id,
+      ca.contact_id AS "contactId",
+      ca.user_id AS "userId",
+      ca.type,
+      ca.description,
+      ca.metadata,
+      ca.created_at AS "createdAt",
+      u.name AS "userName",
+      u.email AS "userEmail"
+    FROM contact_activities ca
+    LEFT JOIN users u ON u.id = ca.user_id
+    WHERE ca.contact_id = $1
+    ORDER BY ca.created_at DESC
+    `,
+      [contactId],
+    );
+
+    return rows;
+  }
+
+  async addActivity(contactId: string, user: any, dto: any) {
+    await this.findOne(contactId, user.id, user.teamId, user.role);
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO contact_activities (
+      contact_id,
+      user_id,
+      type,
+      description,
+      metadata
+    )
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING
+      id,
+      contact_id AS "contactId",
+      user_id AS "userId",
+      type,
+      description,
+      metadata,
+      created_at AS "createdAt"
+    `,
+      [contactId, user.id, dto.type, dto.description, dto.metadata || {}],
+    );
+
+    return rows[0];
   }
 }

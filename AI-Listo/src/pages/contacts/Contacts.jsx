@@ -56,6 +56,9 @@ export default function ContactsRelationshipsPage() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [assignTo, setAssignTo] = useState("");
 
+  const [activities, setActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+
   const [createForm, setCreateForm] = useState({
     name: "",
     type: "Buyer",
@@ -95,6 +98,7 @@ export default function ContactsRelationshipsPage() {
         method: "POST",
         body: JSON.stringify(createForm),
       });
+
       setShowCreateModal(false);
       setCreateForm({
         name: "",
@@ -449,7 +453,7 @@ export default function ContactsRelationshipsPage() {
 
       const updatedContact = updated?.data || updated;
       const selectedMember = teamMembers.find(
-        (member) => String(member.userId || member.id) === String(assignTo)
+        (member) => String(member.userId || member.id) === String(assignTo),
       );
       setContacts((prev) =>
         prev.map((item) =>
@@ -462,8 +466,8 @@ export default function ContactsRelationshipsPage() {
                   selectedMember?.name || selectedMember?.fullName || null,
                 assignedAgentEmail: selectedMember?.email || null,
               }
-            : item
-        )
+            : item,
+        ),
       );
 
       setShowAssignModal(false);
@@ -475,6 +479,42 @@ export default function ContactsRelationshipsPage() {
       showToast(err?.message || "Failed to assign agent", "error");
     }
   };
+
+  const formatActivityDate = (value) => {
+    if (!value) return "";
+    return new Date(value).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const fetchActivities = async (contactId) => {
+    try {
+      setActivitiesLoading(true);
+
+      const response = await apiClient.request(
+        `/contacts/${contactId}/activities`,
+        { method: "GET" },
+      );
+
+      const data = response?.data || response || [];
+      setActivities(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch activities error:", err);
+      setActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  const openContactDetail = (contact) => {
+    setSelectedContact(contact);
+    fetchActivities(contact.id);
+  };
+
   if (selectedContact) {
     return (
       <div className="mobile-detail-page contacts-page">
@@ -603,7 +643,7 @@ export default function ContactsRelationshipsPage() {
             </p>
           </div>
 
-          {/* Khối Conversation History */}
+          {/* Conversation History */}
           <div className="detail-section-card">
             <div className="section-card-header">
               <div className="section-card-title">
@@ -612,16 +652,33 @@ export default function ContactsRelationshipsPage() {
               </div>
               <button className="section-action-link">View all</button>
             </div>
-            <div className="history-item-clickable">
-              <div className="history-meta">May 18, 2025 at 10:24 AM</div>
-              <div className="history-brief">
-                <span>Initial contact added via web form.</span>
-                <ChevronRight size={16} />
+            {activitiesLoading ? (
+              <div className="history-item-clickable">
+                <div className="history-brief">
+                  <span>Loading activities...</span>
+                </div>
               </div>
-            </div>
+            ) : activities.length ? (
+              activities.map((activity) => (
+                <div key={activity.id} className="history-item-clickable">
+                  <div className="history-meta">
+                    {formatActivityDate(activity.createdAt)}
+                  </div>
+                  <div className="history-brief">
+                    <span>{activity.description}</span>
+                    <ChevronRight size={16} />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="history-item-clickable">
+                <div className="history-brief">
+                  <span>No activity yet.</span>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Grid Actions Phía trên Bottom Nav */}
           <div className="detail-action-bar-grid">
             <button
               className="action-grid-btn"
@@ -743,7 +800,7 @@ export default function ContactsRelationshipsPage() {
                   <div
                     className="contact-card clickable-card"
                     key={contact.id}
-                    onClick={() => setSelectedContact(contact)}
+                    onClick={() => openContactDetail(contact)}
                   >
                     <div className="contact-top">
                       <div className="contact-user">
@@ -879,7 +936,7 @@ export default function ContactsRelationshipsPage() {
                         className="footer-action-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/dashboard/contacts/${contact.id}`);
+                          openContactDetail(contact);
                         }}
                       >
                         <Eye size={16} /> <span>View</span>
