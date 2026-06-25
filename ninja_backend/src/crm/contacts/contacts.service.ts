@@ -15,7 +15,7 @@ export class ContactsService {
   constructor(private readonly db: DatabaseService) {}
 
   private baseSelectColumns = `
-  LEFT JOIN users au ON au.id = c.assigned_to
+  
   c.id,
   c.team_id AS "teamId",
   c.created_by AS "createdBy",
@@ -131,6 +131,7 @@ export class ContactsService {
     SELECT
       ${this.baseSelectColumns}
     FROM contacts c
+    LEFT JOIN users au ON au.id = c.assigned_to
     WHERE ${where.join(" AND ")}
     ORDER BY c.created_at DESC
     LIMIT $${limitParam}
@@ -385,6 +386,7 @@ export class ContactsService {
   SELECT
     ${this.baseSelectColumns}
   FROM contacts c
+  LEFT JOIN users au ON au.id = c.assigned_to
   WHERE c.id = $1
     AND c.team_id IN (${placeholders})
   `,
