@@ -382,6 +382,10 @@ export class LeadsService {
       updates.push(`status = $${paramCount++}`);
       values.push(updateLeadDto.status);
     }
+    if ((updateLeadDto as any).priority !== undefined) {
+      updates.push(`priority = $${paramCount++}`);
+      values.push((updateLeadDto as any).priority || null);
+    }
     if (updateLeadDto.assignedTo !== undefined) {
       updates.push(`assigned_to = $${paramCount++}`);
       values.push(updateLeadDto.assignedTo || null);
@@ -412,7 +416,7 @@ export class LeadsService {
 
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(", ")} WHERE id = $${paramCount}
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, instagram_id as "instagramId", created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
     );
@@ -455,6 +459,20 @@ export class LeadsService {
           });
         }
       }
+    }
+    if ((updateLeadDto as any).priority !== undefined) {
+      await this.createEvent({
+        eventType: "lead.priority_changed",
+        entityType: "lead",
+        entityId: updatedLead.id,
+        userId,
+        teamId,
+        metadata: {
+          title: "Priority updated",
+          sub: `Changed to ${(updateLeadDto as any).priority}`,
+          priority: (updateLeadDto as any).priority,
+        },
+      });
     }
 
     // Log assignment if assignedTo was updated
@@ -758,6 +776,45 @@ export class LeadsService {
       ["lead", lead.id],
     );
 
-    return rows;
+    return rows.map((event) => {
+      const metadata = event.metadata || {};
+
+      if (metadata.title || metadata.sub) {
+        return event;
+      }
+
+      if (event.eventType === "lead.status_changed") {
+        return {
+          ...event,
+          metadata: {
+            ...metadata,
+            title: "Status updated",
+            sub: metadata.newStatus
+              ? `Changed from ${metadata.oldStatus || "unknown"} to ${metadata.newStatus}`
+              : "Status changed",
+          },
+        };
+      }
+
+      if (event.eventType === "lead.updated") {
+        return {
+          ...event,
+          metadata: {
+            ...metadata,
+            title: "Lead updated",
+            sub: "Lead information was updated",
+          },
+        };
+      }
+
+      return {
+        ...event,
+        metadata: {
+          ...metadata,
+          title: event.eventType?.replaceAll("_", " ") || "Lead activity",
+          sub: "Lead updated",
+        },
+      };
+    });
   }
 }
