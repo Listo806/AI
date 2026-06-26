@@ -59,6 +59,10 @@ export default function ContactsRelationshipsPage() {
   const [activities, setActivities] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteContact, setNoteContact] = useState(null);
+  const [noteText, setNoteText] = useState("");
+
   const [createForm, setCreateForm] = useState({
     name: "",
     type: "Buyer",
@@ -515,6 +519,47 @@ export default function ContactsRelationshipsPage() {
     fetchActivities(contact.id);
   };
 
+  const openNoteModal = (contact) => {
+    setNoteContact(contact);
+    setNoteText("");
+    setShowNoteModal(true);
+  };
+
+  const addContactNote = async (e) => {
+    e.preventDefault();
+
+    if (!noteText.trim()) {
+      showToast("Please enter a note", "error");
+      return;
+    }
+
+    try {
+      const activity = await apiClient.request(
+        `/contacts/${noteContact.id}/activities`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            type: "note",
+            title: "Note added",
+            sub: noteText.trim(),
+          }),
+        },
+      );
+
+      if (selectedContact?.id === noteContact.id) {
+        setActivities((prev) => [activity?.data || activity, ...prev]);
+      }
+
+      setShowNoteModal(false);
+      setNoteContact(null);
+      setNoteText("");
+      showToast("Note added");
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to add note", "error");
+    }
+  };
+
   if (selectedContact) {
     return (
       <div className="mobile-detail-page contacts-page">
@@ -669,9 +714,7 @@ export default function ContactsRelationshipsPage() {
                     <ChevronRight size={16} />
                   </div>
                   {activity.sub && (
-                    <div className="history-meta">
-                      {activity.sub}
-                    </div>
+                    <div className="history-meta">{activity.sub}</div>
                   )}
                 </div>
               ))
@@ -696,7 +739,10 @@ export default function ContactsRelationshipsPage() {
               <Phone size={18} />
               <span>Call</span>
             </button>
-            <button className="action-grid-btn">
+            <button
+              className="action-grid-btn"
+              onClick={() => openNoteModal(selectedContact)}
+            >
               <StickyNote size={18} />
               <span>Notes</span>
             </button>
@@ -963,7 +1009,10 @@ export default function ContactsRelationshipsPage() {
                       </button>
                       <button
                         className="footer-action-btn"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openNoteModal(contact);
+                        }}
                       >
                         <StickyNote size={16} /> <span>Notes</span>
                       </button>
@@ -1268,6 +1317,64 @@ export default function ContactsRelationshipsPage() {
 
                     <button type="submit" className="primary-action">
                       Assign Agent
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {showNoteModal && noteContact && (
+            <div className="modal-overlay">
+              <div className="contact-modal">
+                <div className="modal-header">
+                  <h2>Add Note</h2>
+                  <button
+                    className="icon-btn"
+                    onClick={() => {
+                      setShowNoteModal(false);
+                      setNoteContact(null);
+                      setNoteText("");
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={addContactNote}>
+                  <div className="modal-grid">
+                    <div className="form-group full">
+                      <label>Contact</label>
+                      <input value={noteContact.name || ""} disabled />
+                    </div>
+
+                    <div className="form-group full">
+                      <label>Note</label>
+                      <textarea
+                        rows="5"
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Write a note about this contact..."
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="modal-actions">
+                    <button
+                      type="button"
+                      className="secondary-action"
+                      onClick={() => {
+                        setShowNoteModal(false);
+                        setNoteContact(null);
+                        setNoteText("");
+                      }}
+                    >
+                      Cancel
+                    </button>
+
+                    <button type="submit" className="primary-action">
+                      Save Note
                     </button>
                   </div>
                 </form>

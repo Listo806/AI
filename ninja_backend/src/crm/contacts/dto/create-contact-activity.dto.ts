@@ -1,13 +1,19 @@
-import { IsObject, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateContactActivityDto {
+  @IsOptional()
   @IsString()
-  type: string;
-
-  @IsString()
-  description: string;
+  type?: string;
 
   @IsOptional()
-  @IsObject()
-  metadata?: Record<string, any>;
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  sub?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
