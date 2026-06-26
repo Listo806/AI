@@ -714,20 +714,16 @@ export class LeadsService {
   async getLeadEvents(id: string, user: any) {
     const leadResult = await this.db.query(
       `
-    SELECT *
+    SELECT id, team_id, created_by
     FROM leads
     WHERE id = $1
-      AND (
-        created_by = $2
-        OR team_id = $3
-      )
     LIMIT 1
     `,
-      [id, user.id, user.teamId || null],
+      [id],
     );
 
     if (!leadResult.rows.length) {
-      throw new NotFoundException("Lead not found");
+      return [];
     }
 
     const lead = leadResult.rows[0];
@@ -741,15 +737,15 @@ export class LeadsService {
       entity_id AS "entityId",
       user_id AS "userId",
       team_id AS "teamId",
-      metadata,
+      COALESCE(metadata, '{}'::jsonb) AS metadata,
       created_at AS "createdAt"
     FROM events
-    WHERE entity_type = 'lead'
-      AND entity_id = $1
+    WHERE entity_type = $1
+      AND entity_id = $2
     ORDER BY created_at DESC
     LIMIT 50
     `,
-      [lead.id],
+      ["lead", lead.id],
     );
 
     return rows;

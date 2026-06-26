@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsEmail, IsEnum } from 'class-validator';
-import { LeadStatus } from '../entities/lead.entity';
+import { IsString, IsOptional, IsEmail, IsEnum } from "class-validator";
+import { LeadStatus } from "../entities/lead.entity";
 
 export class UpdateLeadDto {
   @IsOptional()
@@ -37,5 +37,9 @@ export class UpdateLeadDto {
   @IsOptional()
   @IsString()
   instagramId?: string;
-}
 
+  @IsOptional()
+  @IsString()
+  priority?: string;
+  
+}

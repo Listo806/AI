@@ -233,6 +233,15 @@ export default function LeadsPage() {
     fetchLeadEvents(lead.id);
   };
 
+  const escalateSelectedLead = async () => {
+    if (!selectedLead?.id) return;
+
+    await updateSelectedLead({
+      priority: "high",
+      status: "qualified",
+    });
+  };
+
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -809,9 +818,10 @@ export default function LeadsPage() {
                 desc: "Mark as urgent",
                 icon: <Flame size={14} color="#dc2626" />,
                 bgClass: "icon-bg-red",
+                onClick: escalateSelectedLead,
               },
             ].map((act, i) => (
-              <button key={i} className="quick-action-card-btn">
+              <button key={i} className="quick-action-card-btn"  onClick={act.onClick || (() => {})}>
                 <div className={`action-icon-circle ${act.bgClass}`}>
                   {act.icon}
                 </div>
