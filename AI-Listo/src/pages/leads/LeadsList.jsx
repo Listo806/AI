@@ -43,6 +43,12 @@ export default function LeadsPage() {
 
   const [leadEvents, setLeadEvents] = useState([]);
   const [leadEventsLoading, setLeadEventsLoading] = useState(false);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+  
+  const [fullLeadEvents, setFullLeadEvents] = useState([]);
+  const [fullTimelinePage, setFullTimelinePage] = useState(1);
+  const [fullTimelineHasMore, setFullTimelineHasMore] = useState(false);
+  const [fullTimelineLoading, setFullTimelineLoading] = useState(false);
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
@@ -221,12 +227,13 @@ export default function LeadsPage() {
     try {
       setLeadEventsLoading(true);
 
-      const response = await apiClient.request(`/leads/${leadId}/events`, {
-        method: "GET",
-      });
+      const response = await apiClient.request(
+        `/leads/${leadId}/events?limit=5&page=1`,
+        { method: "GET" },
+      );
 
-      const data = response?.data || response || [];
-      setLeadEvents(Array.isArray(data) ? data : []);
+      const data = response?.data || response || {};
+      setLeadEvents(Array.isArray(data.items) ? data.items : []);
     } catch (err) {
       console.error("Fetch lead events error:", err);
       setLeadEvents([]);
@@ -247,6 +254,41 @@ export default function LeadsPage() {
       priority: "high",
       status: "qualified",
     });
+  };
+
+  const fetchFullLeadEvents = async (page = 1, append = false) => {
+    if (!selectedLead?.id) return;
+
+    try {
+      setFullTimelineLoading(true);
+
+      const response = await apiClient.request(
+        `/leads/${selectedLead.id}/events?limit=20&page=${page}`,
+        { method: "GET" },
+      );
+
+      const data = response?.data || response || {};
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      setFullLeadEvents((prev) => (append ? [...prev, ...items] : items));
+      setFullTimelinePage(data.page || page);
+      setFullTimelineHasMore(Boolean(data.hasMore));
+    } catch (err) {
+      console.error("Fetch full timeline error:", err);
+    } finally {
+      setFullTimelineLoading(false);
+    }
+  };
+
+  const openFullTimeline = () => {
+    setShowTimelineModal(true);
+    setFullTimelinePage(1);
+    fetchFullLeadEvents(1, false);
+  };
+
+  const loadMoreFullTimeline = () => {
+    if (fullTimelineLoading || !fullTimelineHasMore) return;
+    fetchFullLeadEvents(fullTimelinePage + 1, true);
   };
 
   return (
@@ -1001,13 +1043,69 @@ export default function LeadsPage() {
             </div>
 
             <div className="timeline-footer">
-              <button className="full-timeline-btn">
+              <button className="full-timeline-btn" onClick={openFullTimeline}>
                 Full Timeline <ArrowRight size={12} />
               </button>
             </div>
           </div>
         </div>
       </div>
+      {showTimelineModal && (
+        <div className="lead-modal-overlay">
+          <div
+            className="lead-timeline-modal"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const nearBottom =
+                el.scrollTop + el.clientHeight >= el.scrollHeight - 40;
+
+              if (nearBottom) {
+                loadMoreFullTimeline();
+              }
+            }}
+          >
+            <div className="lead-modal-header">
+              <h3>Full Lead Timeline</h3>
+              <button onClick={() => setShowTimelineModal(false)}>✕</button>
+            </div>
+
+            <div className="timeline-container">
+              <div className="timeline-vertical-line"></div>
+
+              {fullLeadEvents.length ? (
+                fullLeadEvents.map((event) => (
+                  <div key={event.id} className="timeline-item">
+                    <div className="timeline-dot dot-blue"></div>
+                    <div className="timeline-content">
+                      <div className="timeline-content-top">
+                        <h5 className="timeline-title">
+                          {event.metadata?.title || "Lead activity"}
+                        </h5>
+                        <span className="timeline-time">
+                          {formatLeadEventDate(event.createdAt)}
+                        </span>
+                      </div>
+                      <p className="timeline-desc">
+                        {event.metadata?.sub || "Lead updated"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="timeline-desc">No timeline yet.</p>
+              )}
+
+              {fullTimelineLoading && (
+                <p className="timeline-desc">Loading more...</p>
+              )}
+
+              {!fullTimelineHasMore && fullLeadEvents.length > 0 && (
+                <p className="timeline-desc">End of timeline.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

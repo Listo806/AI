@@ -740,7 +740,10 @@ export class LeadsService {
     );
   }
 
-  async getLeadEvents(id: string, user: any) {
+  async getLeadEvents(id: string, user: any, limit = 5, page = 1) {
+    const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 50);
+    const safePage = Math.max(Number(page) || 1, 1);
+    const offset = (safePage - 1) * safeLimit;
     const leadResult = await this.db.query(
       `
     SELECT id, team_id, created_by
@@ -772,32 +775,43 @@ export class LeadsService {
     WHERE entity_type = $1
       AND entity_id = $2
     ORDER BY created_at DESC
-    LIMIT 50
+    LIMIT $3 OFFSET $4
     `,
-      ["lead", lead.id],
+      ["lead", lead.id, safeLimit, offset],
     );
 
-    return rows.map((event) => {
-      const metadata = event.metadata || {};
+    return {
+      items: rows.map((event) => {
+        const metadata = event.metadata || {};
 
-      if (metadata.title || metadata.sub) {
-        return event;
-      }
+        if (metadata.title || metadata.sub) return event;
 
-      if (event.eventType === "lead.status_changed") {
-        return {
-          ...event,
-          metadata: {
-            ...metadata,
-            title: "Status updated",
-            sub: metadata.newStatus
-              ? `Changed from ${metadata.oldStatus || "unknown"} to ${metadata.newStatus}`
-              : "Status changed",
-          },
-        };
-      }
+        if (event.eventType === "lead.status_changed") {
+          return {
+            ...event,
+            metadata: {
+              ...metadata,
+              title: "Status updated",
+              sub: metadata.newStatus
+                ? `Changed from ${metadata.oldStatus || "unknown"} to ${metadata.newStatus}`
+                : "Status changed",
+            },
+          };
+        }
 
-      if (event.eventType === "lead.updated") {
+        if (event.eventType === "lead.priority_changed") {
+          return {
+            ...event,
+            metadata: {
+              ...metadata,
+              title: "Priority updated",
+              sub: metadata.priority
+                ? `Changed to ${metadata.priority}`
+                : "Priority changed",
+            },
+          };
+        }
+
         return {
           ...event,
           metadata: {
@@ -806,16 +820,10 @@ export class LeadsService {
             sub: "Lead information was updated",
           },
         };
-      }
-
-      return {
-        ...event,
-        metadata: {
-          ...metadata,
-          title: event.eventType?.replaceAll("_", " ") || "Lead activity",
-          sub: "Lead updated",
-        },
-      };
-    });
+      }),
+      page: safePage,
+      limit: safeLimit,
+      hasMore: rows.length === safeLimit,
+    };
   }
 }

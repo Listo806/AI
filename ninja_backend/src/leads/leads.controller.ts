@@ -269,7 +269,17 @@ export class LeadsController {
   }
 
   @Get(":id/events")
-  getLeadEvents(@Param("id") id: string, @Req() req) {
-    return this.leadsService.getLeadEvents(id, req.user);
+  getLeadEvents(
+    @Param("id") id: string,
+    @Query("limit") limit = "5",
+    @Query("page") page = "1",
+    @Req() req,
+  ) {
+    return this.leadsService.getLeadEvents(
+      id,
+      req.user,
+      Number(limit),
+      Number(page),
+    );
   }
 }
