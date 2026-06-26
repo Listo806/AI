@@ -697,12 +697,12 @@ export class ContactsService {
 
     const existingLead = await this.db.query(
       `
-    SELECT id
+    SELECT id, name
     FROM leads
     WHERE contact_id = $1
     LIMIT 1
     `,
-      [id],
+      [contact.id],
     );
 
     if (existingLead.rows.length) {
@@ -716,31 +716,48 @@ export class ContactsService {
     const { rows } = await this.db.query(
       `
     INSERT INTO leads (
-      team_id,
-      user_id,
-      contact_id,
       name,
       email,
       phone,
-      source,
-      interest,
       status,
-      score
+      assigned_to,
+      created_by,
+      team_id,
+      notes,
+      source,
+      contact_id,
+      priority,
+      lead_metadata,
+      last_activity_at,
+      last_action_type,
+      last_action_at
     )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    VALUES (
+      $1, $2, $3, $4, $5,
+      $6, $7, $8, $9, $10,
+      $11, $12, NOW(), $13, NOW()
+    )
     RETURNING *
     `,
       [
-        contact.teamId,
-        user.id,
-        contact.id,
         contact.name,
         contact.email || null,
         contact.phone || null,
+        "new",
+        contact.assignedTo || null,
+        user.id,
+        contact.teamId || user.teamId || null,
+        contact.notes || null,
         contact.source || "Contact",
-        contact.interest || null,
-        "New",
-        contact.score || 25,
+        contact.id,
+        contact.score >= 80 ? "high" : contact.score >= 50 ? "medium" : "low",
+        {
+          convertedFrom: "contact",
+          contactType: contact.type || null,
+          interest: contact.interest || null,
+          score: contact.score || null,
+        },
+        "converted_to_lead",
       ],
     );
 
