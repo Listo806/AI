@@ -1,9 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { Lead, LeadStatus, CreateLeadDto, UpdateLeadDto } from './entities/lead.entity';
-import { EventLoggerService } from '../analytics/events/event-logger.service';
-import { LeadAIService } from './lead-ai.service';
-import { WebhooksService } from '../integrations/webhooks/webhooks.service';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import {
+  Lead,
+  LeadStatus,
+  CreateLeadDto,
+  UpdateLeadDto,
+} from "./entities/lead.entity";
+import { EventLoggerService } from "../analytics/events/event-logger.service";
+import { LeadAIService } from "./lead-ai.service";
+import { WebhooksService } from "../integrations/webhooks/webhooks.service";
 
 @Injectable()
 export class LeadsService {
@@ -27,7 +36,7 @@ export class LeadsService {
         `SELECT created_by as "createdBy", team_id as "teamId" FROM properties WHERE id = $1`,
         [createLeadDto.propertyId],
       );
-      
+
       if (propertyResult.rows.length > 0) {
         assignedTo = propertyResult.rows[0].createdBy;
         teamId = propertyResult.rows[0].teamId;
@@ -60,7 +69,7 @@ export class LeadsService {
         assignedTo || null, // Use property owner as created_by, or null for public leads
         teamId,
         createLeadDto.notes || null,
-        createLeadDto.source || 'public_contact_form',
+        createLeadDto.source || "public_contact_form",
       ],
     );
 
@@ -82,7 +91,7 @@ export class LeadsService {
 
     // Fire webhooks (async, never blocks)
     if (teamId) {
-      this.webhooksService.triggerWebhooks('lead.created', teamId, {
+      this.webhooksService.triggerWebhooks("lead.created", teamId, {
         id: lead.id,
         name: lead.name,
         email: lead.email,
@@ -99,7 +108,18 @@ export class LeadsService {
    * Create a contact record linked to a newly created lead (same name, email, phone, team).
    * Only call when lead has team_id (contacts.team_id is NOT NULL).
    */
-  private async createContactForLead(lead: { id: string; teamId: string | null; createdBy?: string | null; name: string; email?: string | null; phone?: string | null; notes?: string | null }, createdBy: string | null): Promise<void> {
+  private async createContactForLead(
+    lead: {
+      id: string;
+      teamId: string | null;
+      createdBy?: string | null;
+      name: string;
+      email?: string | null;
+      phone?: string | null;
+      notes?: string | null;
+    },
+    createdBy: string | null,
+  ): Promise<void> {
     if (!lead.teamId) return;
     try {
       await this.db.query(
@@ -108,7 +128,7 @@ export class LeadsService {
         [
           lead.teamId,
           createdBy ?? lead.createdBy ?? null,
-          lead.name?.trim() || 'Contact',
+          lead.name?.trim() || "Contact",
           lead.email?.trim() || null,
           lead.phone?.trim() || null,
           lead.id,
@@ -117,11 +137,15 @@ export class LeadsService {
       );
     } catch (err) {
       // Log but do not fail lead creation if contact insert fails (e.g. table missing)
-      console.warn('Failed to auto-create contact for lead:', lead.id, err);
+      console.warn("Failed to auto-create contact for lead:", lead.id, err);
     }
   }
 
-  async create(createLeadDto: CreateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
+  async create(
+    createLeadDto: CreateLeadDto,
+    userId: string,
+    teamId: string | null,
+  ): Promise<Lead> {
     const status = createLeadDto.status || LeadStatus.NEW;
 
     // Try to find buyer by email/phone (for buyer-lead linking)
@@ -170,7 +194,7 @@ export class LeadsService {
 
     // Fire webhooks (async, never blocks)
     if (teamId) {
-      this.webhooksService.triggerWebhooks('lead.created', teamId, {
+      this.webhooksService.triggerWebhooks("lead.created", teamId, {
         id: lead.id,
         name: lead.name,
         email: lead.email,
@@ -244,20 +268,24 @@ export class LeadsService {
        WHERE l.id = $1`,
       [id],
     );
-    
+
     if (rows.length === 0) {
       return null;
     }
 
     const lead = rows[0];
-    
+
     // Calculate AI metrics
     const context = {
       status: lead.status as LeadStatus,
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
       lastContactedAt: lead.lastContactedAt || null,
-      lastActivityAt: lead.lastActivityAt || lead.lastContactedAt || lead.updatedAt || lead.createdAt,
+      lastActivityAt:
+        lead.lastActivityAt ||
+        lead.lastContactedAt ||
+        lead.updatedAt ||
+        lead.createdAt,
       lastActionType: lead.lastActionType || null,
       lastActionAt: lead.lastActionAt || null,
       propertyPrice: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
@@ -289,15 +317,17 @@ export class LeadsService {
       lastActivityAt: lead.lastActivityAt || null,
       lastActionType: lead.lastActionType || null,
       lastActionAt: lead.lastActionAt || null,
-      property: lead.propertyIdFull ? {
-        id: lead.propertyIdFull,
-        title: lead.propertyTitle || 'Untitled Property',
-        address: lead.propertyAddress || null,
-        city: lead.propertyCity || null,
-        state: lead.propertyState || null,
-        price: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
-        type: lead.propertyType || null,
-      } : null,
+      property: lead.propertyIdFull
+        ? {
+            id: lead.propertyIdFull,
+            title: lead.propertyTitle || "Untitled Property",
+            address: lead.propertyAddress || null,
+            city: lead.propertyCity || null,
+            state: lead.propertyState || null,
+            price: lead.propertyPrice ? parseFloat(lead.propertyPrice) : null,
+            type: lead.propertyType || null,
+          }
+        : null,
       // AI fields
       aiScore: aiMetrics.aiScore,
       aiTier: aiMetrics.aiTier,
@@ -311,15 +341,22 @@ export class LeadsService {
     };
   }
 
-  async update(id: string, updateLeadDto: UpdateLeadDto, userId: string, teamId: string | null): Promise<Lead> {
+  async update(
+    id: string,
+    updateLeadDto: UpdateLeadDto,
+    userId: string,
+    teamId: string | null,
+  ): Promise<Lead> {
     const lead = await this.findById(id);
     if (!lead) {
-      throw new NotFoundException('Lead not found');
+      throw new NotFoundException("Lead not found");
     }
 
     // Check permissions: user must be creator or team member
     if (lead.createdBy !== userId && lead.teamId !== teamId) {
-      throw new ForbiddenException('You do not have permission to update this lead');
+      throw new ForbiddenException(
+        "You do not have permission to update this lead",
+      );
     }
 
     const oldStatus = lead.status;
@@ -374,7 +411,7 @@ export class LeadsService {
     values.push(id);
 
     const { rows } = await this.db.query(
-      `UPDATE leads SET ${updates.join(', ')} WHERE id = $${paramCount}
+      `UPDATE leads SET ${updates.join(", ")} WHERE id = $${paramCount}
        RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, instagram_id as "instagramId", created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
@@ -386,12 +423,21 @@ export class LeadsService {
     await this.eventLogger.logLeadUpdated(updatedLead.id, userId, teamId);
 
     // Log status change if status was updated
-    if (updateLeadDto.status !== undefined && updateLeadDto.status !== oldStatus) {
-      await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updateLeadDto.status);
+    if (
+      updateLeadDto.status !== undefined &&
+      updateLeadDto.status !== oldStatus
+    ) {
+      await this.eventLogger.logLeadStatusChanged(
+        updatedLead.id,
+        userId,
+        teamId,
+        oldStatus,
+        updateLeadDto.status,
+      );
 
       // Fire webhooks for status change (async, never blocks)
       if (teamId) {
-        this.webhooksService.triggerWebhooks('lead.status.changed', teamId, {
+        this.webhooksService.triggerWebhooks("lead.status.changed", teamId, {
           id: updatedLead.id,
           name: updatedLead.name,
           old_status: oldStatus,
@@ -400,7 +446,7 @@ export class LeadsService {
 
         // Fire additional webhook if lead was qualified
         if (updateLeadDto.status === LeadStatus.QUALIFIED) {
-          this.webhooksService.triggerWebhooks('lead.qualified', teamId, {
+          this.webhooksService.triggerWebhooks("lead.qualified", teamId, {
             id: updatedLead.id,
             name: updatedLead.name,
             email: updatedLead.email,
@@ -412,8 +458,16 @@ export class LeadsService {
     }
 
     // Log assignment if assignedTo was updated
-    if (updateLeadDto.assignedTo !== undefined && updateLeadDto.assignedTo !== oldAssignedTo) {
-      await this.eventLogger.logLeadAssigned(updatedLead.id, userId, teamId, updateLeadDto.assignedTo || '');
+    if (
+      updateLeadDto.assignedTo !== undefined &&
+      updateLeadDto.assignedTo !== oldAssignedTo
+    ) {
+      await this.eventLogger.logLeadAssigned(
+        updatedLead.id,
+        userId,
+        teamId,
+        updateLeadDto.assignedTo || "",
+      );
     }
 
     return updatedLead;
@@ -425,34 +479,36 @@ export class LeadsService {
    */
   async logContactAction(
     id: string,
-    actionType: 'call' | 'whatsapp' | 'email',
+    actionType: "call" | "whatsapp" | "email",
     userId: string,
     teamId: string | null,
   ): Promise<Lead> {
     const lead = await this.findById(id);
     if (!lead) {
-      throw new NotFoundException('Lead not found');
+      throw new NotFoundException("Lead not found");
     }
 
     // Check permissions
     if (lead.createdBy !== userId && lead.teamId !== teamId) {
-      throw new ForbiddenException('You do not have permission to update this lead');
+      throw new ForbiddenException(
+        "You do not have permission to update this lead",
+      );
     }
 
     const oldStatus = lead.status;
-    
+
     // Map actionType to database value
     const actionTypeMap = {
-      'call': 'call',
-      'whatsapp': 'whatsapp',
-      'email': 'email',
+      call: "call",
+      whatsapp: "whatsapp",
+      email: "email",
     };
     const dbActionType = actionTypeMap[actionType] || actionType;
-    
+
     // Update last_contacted_at, last_action_type, last_action_at, last_activity_at and status
     // Only update status to 'contacted' if it's currently 'new'
-    const statusUpdate = oldStatus === 'new' ? `status = 'contacted',` : '';
-    
+    const statusUpdate = oldStatus === "new" ? `status = 'contacted',` : "";
+
     const { rows } = await this.db.query(
       `UPDATE leads 
        SET last_contacted_at = NOW(), 
@@ -473,13 +529,19 @@ export class LeadsService {
 
     // Log events
     await this.eventLogger.logLeadUpdated(updatedLead.id, userId, teamId);
-    
-    if (oldStatus === 'new' && updatedLead.status === 'contacted') {
-      await this.eventLogger.logLeadStatusChanged(updatedLead.id, userId, teamId, oldStatus, updatedLead.status);
+
+    if (oldStatus === "new" && updatedLead.status === "contacted") {
+      await this.eventLogger.logLeadStatusChanged(
+        updatedLead.id,
+        userId,
+        teamId,
+        oldStatus,
+        updatedLead.status,
+      );
 
       // Fire webhook for status change (async, never blocks)
       if (teamId) {
-        this.webhooksService.triggerWebhooks('lead.status.changed', teamId, {
+        this.webhooksService.triggerWebhooks("lead.status.changed", teamId, {
           id: updatedLead.id,
           name: updatedLead.name,
           old_status: oldStatus,
@@ -492,23 +554,33 @@ export class LeadsService {
     return this.findById(id);
   }
 
-  async delete(id: string, userId: string, teamId: string | null): Promise<void> {
+  async delete(
+    id: string,
+    userId: string,
+    teamId: string | null,
+  ): Promise<void> {
     const lead = await this.findById(id);
     if (!lead) {
-      throw new NotFoundException('Lead not found');
+      throw new NotFoundException("Lead not found");
     }
 
     // Allow delete if user created the lead, or if lead belongs to user's team (team members can remove team leads)
     const isCreator = lead.createdBy === userId;
     const isSameTeam = teamId && lead.teamId === teamId;
     if (!isCreator && !isSameTeam) {
-      throw new ForbiddenException('You do not have permission to delete this lead');
+      throw new ForbiddenException(
+        "You do not have permission to delete this lead",
+      );
     }
 
-    await this.db.query('DELETE FROM leads WHERE id = $1', [id]);
+    await this.db.query("DELETE FROM leads WHERE id = $1", [id]);
   }
 
-  async findByStatus(status: LeadStatus, userId: string, teamId: string | null): Promise<Lead[]> {
+  async findByStatus(
+    status: LeadStatus,
+    userId: string,
+    teamId: string | null,
+  ): Promise<Lead[]> {
     let query: string;
     let params: any[];
 
@@ -531,5 +603,137 @@ export class LeadsService {
     const { rows } = await this.db.query(query, params);
     return rows;
   }
-}
 
+  async updateLead(id: string, body: any, user: any) {
+    const updates: string[] = [];
+    const values: any[] = [];
+    let index = 1;
+
+    const allowedFields = {
+      status: "status",
+      priority: "priority",
+      assignedTo: "assigned_to",
+      notes: "notes",
+      source: "source",
+    };
+
+    for (const [key, column] of Object.entries(allowedFields)) {
+      if (body[key] !== undefined) {
+        updates.push(`${column} = $${index++}`);
+        values.push(body[key] || null);
+      }
+    }
+
+    if (!updates.length) {
+      const existing = await this.db.query(
+        `SELECT * FROM leads WHERE id = $1`,
+        [id],
+      );
+      return existing.rows[0];
+    }
+
+    updates.push(`updated_at = NOW()`);
+    values.push(id);
+
+    const { rows } = await this.db.query(
+      `
+    UPDATE leads
+    SET ${updates.join(", ")}
+    WHERE id = $${index}
+    RETURNING *
+    `,
+      values,
+    );
+
+    const lead = rows[0];
+
+    if (body.status !== undefined) {
+      await this.createEvent({
+        eventType: "status_changed",
+        entityType: "lead",
+        entityId: id,
+        userId: user.id,
+        teamId: lead.team_id,
+        metadata: {
+          title: "Status updated",
+          sub: `Changed to ${body.status}`,
+          status: body.status,
+        },
+      });
+    }
+
+    if (body.priority !== undefined) {
+      await this.createEvent({
+        eventType: "priority_changed",
+        entityType: "lead",
+        entityId: id,
+        userId: user.id,
+        teamId: lead.team_id,
+        metadata: {
+          title: "Priority updated",
+          sub: `Changed to ${body.priority}`,
+          priority: body.priority,
+        },
+      });
+    }
+
+    return rows[0];
+  }
+
+  async createEvent(params: {
+    eventType: string;
+    entityType: string;
+    entityId: string;
+    userId: string;
+    teamId?: string | null;
+    metadata?: any;
+  }) {
+    await this.db.query(
+      `
+    INSERT INTO events (
+      event_type,
+      entity_type,
+      entity_id,
+      user_id,
+      team_id,
+      metadata
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    `,
+      [
+        params.eventType,
+        params.entityType,
+        params.entityId,
+        params.userId,
+        params.teamId || null,
+        params.metadata || {},
+      ],
+    );
+  }
+
+  async getLeadEvents(id: string, user: any) {
+    const lead = await this.findOne(id, user);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      id,
+      event_type AS "eventType",
+      entity_type AS "entityType",
+      entity_id AS "entityId",
+      user_id AS "userId",
+      team_id AS "teamId",
+      metadata,
+      created_at AS "createdAt"
+    FROM events
+    WHERE entity_type = 'lead'
+      AND entity_id = $1
+    ORDER BY created_at DESC
+    LIMIT 50
+    `,
+      [lead.id],
+    );
+
+    return rows;
+  }
+}

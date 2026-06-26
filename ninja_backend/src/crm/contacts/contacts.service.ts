@@ -771,6 +771,31 @@ export class ContactsService {
       "Converted to lead",
       `Lead: ${lead.name}`,
     );
+    await this.db.query(
+      `
+  INSERT INTO events (
+    event_type,
+    entity_type,
+    entity_id,
+    user_id,
+    team_id,
+    metadata
+  )
+  VALUES ($1, $2, $3, $4, $5, $6)
+  `,
+      [
+        "converted_from_contact",
+        "lead",
+        lead.id,
+        user.id,
+        lead.team_id,
+        {
+          title: "Converted from contact",
+          sub: `Contact: ${contact.name}`,
+          contactId: contact.id,
+        },
+      ],
+    );
 
     return {
       success: true,

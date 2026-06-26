@@ -358,7 +358,7 @@ body .leads-page {
 
 .leads-page .lead-meta span {
   color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .leads-page .lead-score {
@@ -422,6 +422,7 @@ body .leads-page {
 .leads-page .conversation-user p {
   color: #64748b;
   margin-top: 4px;
+  font-size: 11px;
 }
 
 .leads-page .conversation-actions {
@@ -1392,7 +1393,46 @@ body .leads-page {
   display: flex;
   gap: 5px;
 }
+.leads-page .lead-control-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
 
+.leads-page .lead-control-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.leads-page .lead-control-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.leads-page .lead-control-field select {
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 10px;
+  background: #fff;
+  color: #0f172a;
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  .leads-page .lead-control-row {
+    flex-direction: column;
+  }
+
+  .leads-page .lead-control-field {
+    width: 100%;
+  }
+}
 
 
 

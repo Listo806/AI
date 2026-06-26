@@ -40,6 +40,10 @@ export default function LeadsPage() {
   const [leadsData, setLeadsData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(false);
+
+  const [leadEvents, setLeadEvents] = useState([]);
+  const [leadEventsLoading, setLeadEventsLoading] = useState(false);
+
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -153,7 +157,12 @@ export default function LeadsPage() {
         ? list.find((item) => String(item.id) === String(leadId))
         : null;
 
-      setSelectedLead(matchedLead || list[0] || null);
+      const activeLead = matchedLead || list[0] || null;
+      setSelectedLead(activeLead);
+
+      if (activeLead?.id) {
+        fetchLeadEvents(activeLead.id);
+      }
     } catch (err) {
       console.error("Fetch leads error:", err);
       setLeadsData([]);
@@ -166,6 +175,63 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchLeads();
   }, [location.search]);
+
+  const updateSelectedLead = async (payload) => {
+    if (!selectedLead?.id) return;
+
+    try {
+      const response = await apiClient.request(`/leads/${selectedLead.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+
+      const updatedLead = response?.data || response;
+
+      setSelectedLead(updatedLead);
+
+      setLeadsData((prev) =>
+        prev.map((item) =>
+          item.id === selectedLead.id ? { ...item, ...updatedLead } : item,
+        ),
+      );
+      fetchLeadEvents(selectedLead.id);
+    } catch (err) {
+      console.error("Update lead error:", err);
+    }
+  };
+
+  const formatLeadEventDate = (value) => {
+    if (!value) return "";
+    return new Date(value).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const fetchLeadEvents = async (leadId) => {
+    try {
+      setLeadEventsLoading(true);
+
+      const response = await apiClient.request(`/leads/${leadId}/events`, {
+        method: "GET",
+      });
+
+      const data = response?.data || response || [];
+      setLeadEvents(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch lead events error:", err);
+      setLeadEvents([]);
+    } finally {
+      setLeadEventsLoading(false);
+    }
+  };
+
+  const selectLead = (lead) => {
+    setSelectedLead(lead);
+    fetchLeadEvents(lead.id);
+  };
 
   return (
     <div className="leads-page">
@@ -460,7 +526,7 @@ export default function LeadsPage() {
                   <div
                     key={lead.id}
                     className={`lead-card count-badge-container ${isActive ? "active" : ""}`}
-                    onClick={() => setSelectedLead(lead)}
+                    onClick={() => selectLead(lead)}
                   >
                     <div className="lead-card-top">
                       <div className="avatar-wrapper">
@@ -578,7 +644,39 @@ export default function LeadsPage() {
               </span>
             </div>
           </div>
+          <div className="lead-control-row">
+            <div className="lead-control-field">
+              <label>Status</label>
+              <select
+                value={selectedLead?.status || "new"}
+                onChange={(e) => updateSelectedLead({ status: e.target.value })}
+                disabled={!selectedLead}
+              >
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="qualified">Qualified</option>
+                <option value="showing">Showing</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="closed">Closed</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
 
+            <div className="lead-control-field">
+              <label>Priority</label>
+              <select
+                value={selectedLead?.priority || "low"}
+                onChange={(e) =>
+                  updateSelectedLead({ priority: e.target.value })
+                }
+                disabled={!selectedLead}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
           {/* AI SUMMARY */}
           <div className="ai-summary">
             <div className="summary-icon">
@@ -838,43 +936,43 @@ export default function LeadsPage() {
             <div className="timeline-container">
               <div className="timeline-vertical-line"></div>
 
-              {[
-                {
-                  title: "Lead Captured",
-                  desc: "Inbound message from WhatsApp",
-                  time: "May 12, 10:32 AM",
-                  class: "dot-green",
-                },
-                {
-                  title: "AI Assistant Engaged",
-                  desc: "Automated greeting & qualification",
-                  time: "May 12, 10:33 AM",
-                  class: "dot-blue",
-                },
-                {
-                  title: "Requirements Identified",
-                  desc: "3 beds, Quito, $180K-$250K budget",
-                  time: "May 12, 10:35 AM",
-                  class: "dot-purple",
-                },
-                {
-                  title: "Stage Updated to 'Hot'",
-                  desc: "Score triggered urgency escalation",
-                  time: "May 12, 10:36 AM",
-                  class: "dot-red",
-                },
-              ].map((step, idx) => (
-                <div key={idx} className="timeline-item">
-                  <div className={`timeline-dot ${step.class}`}></div>
+              {leadEventsLoading ? (
+                <div className="timeline-item">
+                  <div className="timeline-dot dot-blue"></div>
                   <div className="timeline-content">
-                    <div className="timeline-content-top">
-                      <h5 className="timeline-title">{step.title}</h5>
-                      <span className="timeline-time">{step.time}</span>
-                    </div>
-                    <p className="timeline-desc">{step.desc}</p>
+                    <p className="timeline-desc">Loading timeline...</p>
                   </div>
                 </div>
-              ))}
+              ) : leadEvents.length ? (
+                leadEvents.map((event) => (
+                  <div key={event.id} className="timeline-item">
+                    <div className="timeline-dot dot-blue"></div>
+                    <div className="timeline-content">
+                      <div className="timeline-content-top">
+                        <h5 className="timeline-title">
+                          {event.metadata?.title || event.eventType}
+                        </h5>
+                        <span className="timeline-time">
+                          {formatLeadEventDate(event.createdAt)}
+                        </span>
+                      </div>
+                      <p className="timeline-desc">
+                        {event.metadata?.sub || event.entityType}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="timeline-item">
+                  <div className="timeline-dot dot-green"></div>
+                  <div className="timeline-content">
+                    <div className="timeline-content-top">
+                      <h5 className="timeline-title">Lead created</h5>
+                    </div>
+                    <p className="timeline-desc">No event yet.</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="timeline-footer">
