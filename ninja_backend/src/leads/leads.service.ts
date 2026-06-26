@@ -609,30 +609,36 @@ export class LeadsService {
     const values: any[] = [];
     let index = 1;
 
-    const allowedFields = {
-      status: "status",
-      priority: "priority",
-      assignedTo: "assigned_to",
-      notes: "notes",
-      source: "source",
-    };
+    if (body.status !== undefined) {
+      updates.push(`status = $${index++}`);
+      values.push(body.status);
+    }
 
-    for (const [key, column] of Object.entries(allowedFields)) {
-      if (body[key] !== undefined) {
-        updates.push(`${column} = $${index++}`);
-        values.push(body[key] || null);
-      }
+    if (body.priority !== undefined) {
+      updates.push(`priority = $${index++}`);
+      values.push(body.priority);
+    }
+
+    if (body.assignedTo !== undefined) {
+      updates.push(`assigned_to = $${index++}`);
+      values.push(body.assignedTo || null);
+    }
+
+    if (body.notes !== undefined) {
+      updates.push(`notes = $${index++}`);
+      values.push(body.notes || null);
     }
 
     if (!updates.length) {
       const existing = await this.db.query(
-        `SELECT * FROM leads WHERE id = $1`,
+        `SELECT * FROM leads WHERE id = $1 LIMIT 1`,
         [id],
       );
-      return existing.rows[0];
+      return existing.rows[0] || null;
     }
 
     updates.push(`updated_at = NOW()`);
+
     values.push(id);
 
     const { rows } = await this.db.query(
@@ -646,6 +652,10 @@ export class LeadsService {
     );
 
     const lead = rows[0];
+
+    if (!lead) {
+      throw new NotFoundException("Lead not found");
+    }
 
     if (body.status !== undefined) {
       await this.createEvent({
@@ -677,7 +687,7 @@ export class LeadsService {
       });
     }
 
-    return rows[0];
+    return lead;
   }
 
   async createEvent(params: {

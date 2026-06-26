@@ -187,13 +187,20 @@ export default function LeadsPage() {
 
       const updatedLead = response?.data || response;
 
-      setSelectedLead(updatedLead);
+      const normalizedLead = {
+        ...selectedLead,
+        ...updatedLead,
+        ...payload,
+      };
+
+      setSelectedLead(normalizedLead);
 
       setLeadsData((prev) =>
         prev.map((item) =>
-          item.id === selectedLead.id ? { ...item, ...updatedLead } : item,
+          item.id === selectedLead.id ? { ...item, ...normalizedLead } : item,
         ),
       );
+
       fetchLeadEvents(selectedLead.id);
     } catch (err) {
       console.error("Update lead error:", err);
@@ -821,7 +828,11 @@ export default function LeadsPage() {
                 onClick: escalateSelectedLead,
               },
             ].map((act, i) => (
-              <button key={i} className="quick-action-card-btn"  onClick={act.onClick || (() => {})}>
+              <button
+                key={i}
+                className="quick-action-card-btn"
+                onClick={act.onClick || (() => {})}
+              >
                 <div className={`action-icon-circle ${act.bgClass}`}>
                   {act.icon}
                 </div>
@@ -960,14 +971,18 @@ export default function LeadsPage() {
                     <div className="timeline-content">
                       <div className="timeline-content-top">
                         <h5 className="timeline-title">
-                          {event.metadata?.title || event.eventType}
+                          {event.metadata?.title ||
+                            event.eventType?.replaceAll("_", " ") ||
+                            "Lead activity"}
                         </h5>
                         <span className="timeline-time">
                           {formatLeadEventDate(event.createdAt)}
                         </span>
                       </div>
                       <p className="timeline-desc">
-                        {event.metadata?.sub || event.entityType}
+                        {event.metadata?.sub ||
+                          event.metadata?.description ||
+                          "Lead updated"}
                       </p>
                     </div>
                   </div>
