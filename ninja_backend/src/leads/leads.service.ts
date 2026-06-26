@@ -213,14 +213,14 @@ export class LeadsService {
 
     // If user has a team, show all team leads, otherwise only their own
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1
                ORDER BY created_at DESC`;
       params = [teamId];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1
@@ -240,6 +240,7 @@ export class LeadsService {
         l.email, 
         l.phone, 
         l.status, 
+        l.priority,
         l.assigned_to as "assignedTo", 
         l.property_id as "propertyId", 
         l.buyer_id as "buyerId",
@@ -603,14 +604,14 @@ export class LeadsService {
     let params: any[];
 
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1 AND status = $2
                ORDER BY created_at DESC`;
       params = [teamId, status];
     } else {
-      query = `SELECT id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1 AND status = $2
