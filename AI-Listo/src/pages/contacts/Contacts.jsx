@@ -62,6 +62,7 @@ export default function ContactsRelationshipsPage() {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteContact, setNoteContact] = useState(null);
   const [noteText, setNoteText] = useState("");
+  const [showDetailMoreMenu, setShowDetailMoreMenu] = useState(false);
 
   const [createForm, setCreateForm] = useState({
     name: "",
@@ -136,7 +137,6 @@ export default function ContactsRelationshipsPage() {
       notes: contact.notes || "",
     });
 
-    setSelectedContact(null);
     setOpenMenuId(null);
     setShowEditModal(true);
   };
@@ -519,6 +519,11 @@ export default function ContactsRelationshipsPage() {
     fetchActivities(contact.id);
   };
 
+  const latestNote =
+    activities.find((item) => item.type === "note")?.sub ||
+    selectedContact?.notes ||
+    "Add notes...";
+
   const openNoteModal = (contact) => {
     setNoteContact(contact);
     setNoteText("");
@@ -560,19 +565,383 @@ export default function ContactsRelationshipsPage() {
     }
   };
 
+  const getLatestNote = () => {
+    const latest = activities.find((item) => item.type === "note");
+    return latest?.sub || selectedContact?.notes || "Add notes...";
+  };
+
+  const closeDetail = () => {
+    setSelectedContact(null);
+    setActivities([]);
+    setShowDetailMoreMenu(false);
+  };
+
+  const convertContactToLead = async (contact) => {
+    const ok = window.confirm(`Convert ${contact.name} to a lead?`);
+    if (!ok) return;
+
+    try {
+      const response = await apiClient.request(
+        `/contacts/${contact.id}/convert-to-lead`,
+        { method: "POST" },
+      );
+
+      const data = response?.data || response;
+
+      await fetchActivities(contact.id);
+
+      showToast(
+        data?.alreadyConverted
+          ? "This contact is already converted to a lead"
+          : "Contact converted to lead",
+      );
+
+      setOpenMenuId(null);
+      setShowDetailMoreMenu(false);
+    } catch (err) {
+      console.error(err);
+      showToast(err?.message || "Failed to convert contact", "error");
+    }
+  };
+  const Modals = () => (
+    <>
+      {showEditModal && editForm && (
+        <div className="modal-overlay">
+          <div className="contact-modal">
+            <div className="modal-header">
+              <h2>Edit Contact</h2>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditForm(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={updateContact}>
+              <div className="modal-grid">
+                <div className="form-group">
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.name}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, name: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, email: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="text"
+                    value={editForm.phone}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, phone: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Type</label>
+                  <select
+                    value={editForm.type}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, type: e.target.value })
+                    }
+                  >
+                    <option>Buyer</option>
+                    <option>Seller</option>
+                    <option>Developer</option>
+                    <option>Renter</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Status</label>
+                  <select
+                    value={editForm.status}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, status: e.target.value })
+                    }
+                  >
+                    <option>Cold</option>
+                    <option>Warm</option>
+                    <option>Hot</option>
+                    <option>Active</option>
+                    <option>Archived</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Source</label>
+                  <input
+                    type="text"
+                    value={editForm.source}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, source: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Interest</label>
+                  <input
+                    type="text"
+                    value={editForm.interest}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, interest: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="form-group full">
+                  <label>Notes</label>
+                  <textarea
+                    rows="4"
+                    value={editForm.notes}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, notes: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditForm(null);
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="primary-action">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAssignModal && assignContact && (
+        <div className="modal-overlay">
+          <div className="contact-modal">
+            <div className="modal-header">
+              <h2>Assign Agent</h2>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setAssignContact(null);
+                  setAssignTo("");
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={assignAgent}>
+              <div className="modal-grid">
+                <div className="form-group full">
+                  <label>Contact</label>
+                  <input value={assignContact.name || ""} disabled />
+                </div>
+
+                <div className="form-group full">
+                  <label>Agent</label>
+                  <select
+                    value={assignTo}
+                    onChange={(e) => setAssignTo(e.target.value)}
+                  >
+                    <option value="">Unassigned</option>
+                    {teamMembers.map((member) => (
+                      <option
+                        key={member.userId || member.id}
+                        value={member.userId || member.id}
+                      >
+                        {member.name || member.email || "Team Member"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => {
+                    setShowAssignModal(false);
+                    setAssignContact(null);
+                    setAssignTo("");
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="primary-action">
+                  Assign Agent
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showNoteModal && noteContact && (
+        <div className="modal-overlay">
+          <div className="contact-modal">
+            <div className="modal-header">
+              <h2>Add Note</h2>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  setShowNoteModal(false);
+                  setNoteContact(null);
+                  setNoteText("");
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={addContactNote}>
+              <div className="modal-grid">
+                <div className="form-group full">
+                  <label>Contact</label>
+                  <input value={noteContact.name || ""} disabled />
+                </div>
+
+                <div className="form-group full">
+                  <label>Note</label>
+                  <textarea
+                    rows="5"
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="Write a note about this contact..."
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => {
+                    setShowNoteModal(false);
+                    setNoteContact(null);
+                    setNoteText("");
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="primary-action">
+                  Save Note
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   if (selectedContact) {
     return (
       <div className="mobile-detail-page contacts-page">
         <div className="detail-header">
-          <button className="back-btn" onClick={() => setSelectedContact(null)}>
+          <button className="back-btn" onClick={closeDetail}>
             <ChevronLeft size={20} />
             <span>Back</span>
           </button>
           <h2>Contact Details</h2>
-          <button className="more-btn">
+          <button
+            className="more-btn"
+            onClick={() => setShowDetailMoreMenu((prev) => !prev)}
+          >
             <MoreVertical size={20} />
           </button>
         </div>
+        {showDetailMoreMenu && (
+          <div className="contact-menu detail-more-menu">
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                openEditContact(selectedContact);
+              }}
+            >
+              <Edit3 size={15} /> Edit Contact
+            </button>
+
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                openAssignAgent(selectedContact);
+              }}
+            >
+              <UserCog size={15} /> Assign Agent
+            </button>
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                convertContactToLead(selectedContact);
+              }}
+            >
+              <GitFork size={15} /> Convert to Lead
+            </button>
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                openNoteModal(selectedContact);
+              }}
+            >
+              <StickyNote size={15} /> Add Note
+            </button>
+
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                archiveContact(selectedContact.id);
+              }}
+              className="warning"
+            >
+              <Archive size={15} /> Archive Contact
+            </button>
+
+            <button
+              onClick={() => {
+                setShowDetailMoreMenu(false);
+                deleteContact(selectedContact.id);
+                setSelectedContact(null);
+              }}
+              className="danger"
+            >
+              <Trash2 size={15} /> Delete Contact
+            </button>
+          </div>
+        )}
 
         <div className="detail-scroll-content">
           <div className="contact-card detail-card-spec">
@@ -665,14 +1034,18 @@ export default function ContactsRelationshipsPage() {
                 <div className="info-label-group">
                   <StickyNote size={16} /> <span>Notes:</span>
                 </div>
-                <div className="info-value note-placeholder">
-                  {selectedContact.notes || "Add notes..."}
+                <div
+                  className="info-value note-placeholder"
+                  onClick={() => openNoteModal(selectedContact)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {getLatestNote()}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Khối AI Insights */}
+          {/* AI Insights */}
           <div className="detail-section-card purple-glow">
             <div className="section-card-header">
               <div className="section-card-title purple-text">
@@ -746,12 +1119,16 @@ export default function ContactsRelationshipsPage() {
               <StickyNote size={18} />
               <span>Notes</span>
             </button>
-            <button className="action-grid-btn">
+            <button
+              className="action-grid-btn"
+              onClick={() => setShowDetailMoreMenu((prev) => !prev)}
+            >
               <MoreVertical size={18} />
               <span>More</span>
             </button>
           </div>
         </div>
+        <Modals />
       </div>
     );
   }
@@ -899,6 +1276,11 @@ export default function ContactsRelationshipsPage() {
                             </button>
                             <button onClick={() => openAssignAgent(contact)}>
                               <UserCog size={15} /> Assign Agent
+                            </button>
+                            <button
+                              onClick={() => convertContactToLead(contact)}
+                            >
+                              <GitFork size={15} /> Convert to Lead
                             </button>
                             <div className="status-menu-group">
                               <button>
@@ -1120,267 +1502,7 @@ export default function ContactsRelationshipsPage() {
               </div>
             </div>
           )}
-
-          {showEditModal && editForm && (
-            <div className="modal-overlay">
-              <div className="contact-modal">
-                <div className="modal-header">
-                  <h2>Edit Contact</h2>
-                  <button
-                    className="icon-btn"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditForm(null);
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <form onSubmit={updateContact}>
-                  <div className="modal-grid">
-                    <div className="form-group">
-                      <label>Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={editForm.name}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, name: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Email</label>
-                      <input
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, email: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Phone</label>
-                      <input
-                        type="text"
-                        value={editForm.phone}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, phone: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Type</label>
-                      <select
-                        value={editForm.type}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, type: e.target.value })
-                        }
-                      >
-                        <option>Buyer</option>
-                        <option>Seller</option>
-                        <option>Developer</option>
-                        <option>Renter</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Status</label>
-                      <select
-                        value={editForm.status}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, status: e.target.value })
-                        }
-                      >
-                        <option>Cold</option>
-                        <option>Warm</option>
-                        <option>Hot</option>
-                        <option>Active</option>
-                        <option>Archived</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Source</label>
-                      <input
-                        type="text"
-                        value={editForm.source}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, source: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group full">
-                      <label>Interest</label>
-                      <input
-                        type="text"
-                        value={editForm.interest}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, interest: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="form-group full">
-                      <label>Notes</label>
-                      <textarea
-                        rows="4"
-                        value={editForm.notes}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, notes: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="modal-actions">
-                    <button
-                      type="button"
-                      className="secondary-action"
-                      onClick={() => {
-                        setShowEditModal(false);
-                        setEditForm(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-
-                    <button type="submit" className="primary-action">
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {showAssignModal && assignContact && (
-            <div className="modal-overlay">
-              <div className="contact-modal">
-                <div className="modal-header">
-                  <h2>Assign Agent</h2>
-                  <button
-                    className="icon-btn"
-                    onClick={() => {
-                      setShowAssignModal(false);
-                      setAssignContact(null);
-                      setAssignTo("");
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <form onSubmit={assignAgent}>
-                  <div className="modal-grid">
-                    <div className="form-group full">
-                      <label>Contact</label>
-                      <input value={assignContact.name || ""} disabled />
-                    </div>
-
-                    <div className="form-group full">
-                      <label>Agent</label>
-                      <select
-                        value={assignTo}
-                        onChange={(e) => setAssignTo(e.target.value)}
-                      >
-                        <option value="">Unassigned</option>
-                        {teamMembers.map((member) => (
-                          <option
-                            key={member.userId || member.id}
-                            value={member.userId || member.id}
-                          >
-                            {member.name || member.email || "Team Member"}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="modal-actions">
-                    <button
-                      type="button"
-                      className="secondary-action"
-                      onClick={() => {
-                        setShowAssignModal(false);
-                        setAssignContact(null);
-                        setAssignTo("");
-                      }}
-                    >
-                      Cancel
-                    </button>
-
-                    <button type="submit" className="primary-action">
-                      Assign Agent
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {showNoteModal && noteContact && (
-            <div className="modal-overlay">
-              <div className="contact-modal">
-                <div className="modal-header">
-                  <h2>Add Note</h2>
-                  <button
-                    className="icon-btn"
-                    onClick={() => {
-                      setShowNoteModal(false);
-                      setNoteContact(null);
-                      setNoteText("");
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <form onSubmit={addContactNote}>
-                  <div className="modal-grid">
-                    <div className="form-group full">
-                      <label>Contact</label>
-                      <input value={noteContact.name || ""} disabled />
-                    </div>
-
-                    <div className="form-group full">
-                      <label>Note</label>
-                      <textarea
-                        rows="5"
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="Write a note about this contact..."
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="modal-actions">
-                    <button
-                      type="button"
-                      className="secondary-action"
-                      onClick={() => {
-                        setShowNoteModal(false);
-                        setNoteContact(null);
-                        setNoteText("");
-                      }}
-                    >
-                      Cancel
-                    </button>
-
-                    <button type="submit" className="primary-action">
-                      Save Note
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+          <Modals />
           {/* TOAST */}
           {toast && (
             <div

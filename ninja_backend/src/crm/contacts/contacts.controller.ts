@@ -221,4 +221,9 @@ export class ContactsController {
   ) {
     return this.contactsService.addActivity(id, req.user, dto);
   }
+
+  @Post(":id/convert-to-lead")
+  convertToLead(@Param("id") id: string, @Req() req) {
+    return this.contactsService.convertToLead(id, req.user);
+  }
 }

@@ -536,7 +536,7 @@ export class ContactsService {
         id,
         userId,
         teamId,
-        'status_changed',
+        "status_changed",
         `Status changed to ${dto.status}`,
         null,
       );
@@ -569,8 +569,8 @@ export class ContactsService {
         id,
         userId,
         teamId,
-        'assigned',
-        dto.assignedTo ? 'Agent assigned' : 'Agent unassigned',
+        "assigned",
+        dto.assignedTo ? "Agent assigned" : "Agent unassigned",
         null,
       );
     }
@@ -690,5 +690,75 @@ export class ContactsService {
     );
 
     return rows[0];
+  }
+
+  async convertToLead(id: string, user: any) {
+    const contact = await this.findOne(id, user.id, user.teamId, user.role);
+
+    const existingLead = await this.db.query(
+      `
+    SELECT id
+    FROM leads
+    WHERE contact_id = $1
+    LIMIT 1
+    `,
+      [id],
+    );
+
+    if (existingLead.rows.length) {
+      return {
+        success: true,
+        alreadyConverted: true,
+        lead: existingLead.rows[0],
+      };
+    }
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO leads (
+      team_id,
+      user_id,
+      contact_id,
+      name,
+      email,
+      phone,
+      source,
+      interest,
+      status,
+      score
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    RETURNING *
+    `,
+      [
+        contact.teamId,
+        user.id,
+        contact.id,
+        contact.name,
+        contact.email || null,
+        contact.phone || null,
+        contact.source || "Contact",
+        contact.interest || null,
+        "New",
+        contact.score || 25,
+      ],
+    );
+
+    const lead = rows[0];
+
+    await this.createActivity(
+      contact.id,
+      user.id,
+      contact.teamId,
+      "converted_to_lead",
+      "Converted to lead",
+      `Lead: ${lead.name}`,
+    );
+
+    return {
+      success: true,
+      alreadyConverted: false,
+      lead,
+    };
   }
 }

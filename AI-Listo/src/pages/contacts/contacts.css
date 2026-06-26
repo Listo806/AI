@@ -1154,6 +1154,12 @@ body .contacts-page .map svg{
 .status-submenu button:hover {
   background: #f3f4f6;
 }
+.detail-more-menu {
+  position: absolute;
+  top: 64px;
+  right: 18px;
+  z-index: 50;
+}
 @media (min-width: 1200px) {
     .contacts-page .main-content {
         margin-top: 0;
