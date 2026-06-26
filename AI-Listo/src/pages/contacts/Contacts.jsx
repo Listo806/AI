@@ -587,6 +587,7 @@ export default function ContactsRelationshipsPage() {
       );
 
       const data = response?.data || response;
+      const leadId = data?.lead?.id;
 
       await fetchActivities(contact.id);
 
@@ -598,6 +599,12 @@ export default function ContactsRelationshipsPage() {
 
       setOpenMenuId(null);
       setShowDetailMoreMenu(false);
+
+      if (leadId) {
+        navigate(`/dashboard/leads?leadId=${leadId}`);
+      } else {
+        navigate("/dashboard/leads");
+      }
     } catch (err) {
       console.error(err);
       showToast(err?.message || "Failed to convert contact", "error");

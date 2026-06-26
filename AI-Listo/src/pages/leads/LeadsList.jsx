@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import apiClient from "../../api/apiClient";
 import "./leads.css";
 
 import {
@@ -33,6 +35,11 @@ import {
 } from "lucide-react";
 
 export default function LeadsPage() {
+  const location = useLocation();
+
+  const [leadsData, setLeadsData] = useState([]);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [leadsLoading, setLeadsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -94,33 +101,71 @@ export default function LeadsPage() {
     },
   ];
 
-  const leads = [
-    {
-      name: "WhatsApp Lead",
-      phone: "+593 988885817",
-      score: "92%",
-      status: "Hot",
-      active: true,
-    },
-    {
-      name: "Makoto Kawamoto",
-      phone: "+81 90 7788 5541",
-      score: "74%",
-      status: "Warm",
-    },
-    {
-      name: "Maria Fernanda",
-      phone: "+593 995552277",
-      score: "68%",
-      status: "Warm",
-    },
-    {
-      name: "Andres Lopez",
-      phone: "+593 983311122",
-      score: "55%",
-      status: "Cool",
-    },
-  ];
+  const getInitials = (name = "") => {
+    return (
+      name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((item) => item[0])
+        .join("")
+        .toUpperCase() || "L"
+    );
+  };
+
+  const getLeadScore = (lead) => {
+    return lead.aiScore || lead.score || 25;
+  };
+
+  const getLeadTemperature = (lead) => {
+    const score = Number(getLeadScore(lead));
+
+    if (score >= 80) return "Hot";
+    if (score >= 50) return "Warm";
+    return "Cool";
+  };
+
+  const getScoreClass = (lead) => {
+    const temp = getLeadTemperature(lead).toLowerCase();
+
+    if (temp === "hot") return "score-hot";
+    if (temp === "warm") return "score-warm";
+    return "score-cool";
+  };
+
+  const fetchLeads = async () => {
+    try {
+      setLeadsLoading(true);
+
+      const response = await apiClient.request("/leads", {
+        method: "GET",
+      });
+
+      const data = response?.data || response || [];
+      const list = Array.isArray(data) ? data : [];
+
+      setLeadsData(list);
+
+      const params = new URLSearchParams(location.search);
+      const leadId = params.get("leadId");
+
+      const matchedLead = leadId
+        ? list.find((item) => String(item.id) === String(leadId))
+        : null;
+
+      setSelectedLead(matchedLead || list[0] || null);
+    } catch (err) {
+      console.error("Fetch leads error:", err);
+      setLeadsData([]);
+      setSelectedLead(null);
+    } finally {
+      setLeadsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, [location.search]);
 
   return (
     <div className="leads-page">
@@ -401,145 +446,87 @@ export default function LeadsPage() {
           </div>
 
           <div className="lead-list">
-            {/* Lead 1: WhatsApp Lead (Active) */}
-            <div className="lead-card active count-badge-container">
-              <div className="lead-card-top">
-                <div className="avatar-wrapper">
-                  <div className="lead-avatar avatar-whatsapp">W</div>
-                  <div className="avatar-icon-badge">
-                    <MessageCircle size={12} color="#16a34a" fill="#16a34a" />
-                  </div>
-                </div>
-                <div className="lead-meta">
-                  <h4>WhatsApp Lead</h4>
-                  <span>+593 988885817</span>
-                </div>
-                <div className="lead-score">
-                  <strong>92%</strong>
-                  <p className="score-hot">Hot</p>
-                </div>
+            {leadsLoading ? (
+              <div className="lead-card">
+                <p className="lead-message">Loading leads...</p>
               </div>
-              <div className="lead-message-wrap">
-                <p className="lead-message">
-                  I'm interested in seeing available homes this week.
-                </p>
-                <div className="lead-card-financials">
-                  <span className="budget-range">$180K - $250K</span>
-                  <span className="timestamp">2m ago</span>
-                </div>
-              </div>
+            ) : leadsData.length ? (
+              leadsData.map((lead) => {
+                const isActive = selectedLead?.id === lead.id;
+                const temperature = getLeadTemperature(lead);
+                const score = getLeadScore(lead);
 
-              <div className="lead-tags">
-                <span className="tag-property">Modern Luxury Villa</span>
-                <span className="tag-status status-showing">Showing</span>
-              </div>
-              <div className="unread-count">3</div>
-            </div>
+                return (
+                  <div
+                    key={lead.id}
+                    className={`lead-card count-badge-container ${isActive ? "active" : ""}`}
+                    onClick={() => setSelectedLead(lead)}
+                  >
+                    <div className="lead-card-top">
+                      <div className="avatar-wrapper">
+                        <div className="lead-avatar avatar-whatsapp">
+                          {getInitials(lead.name)}
+                        </div>
+                        <div className="avatar-icon-badge">
+                          <MessageCircle
+                            size={12}
+                            color="#16a34a"
+                            fill="#16a34a"
+                          />
+                        </div>
+                      </div>
 
-            {/* Lead 2: Makoto Kawamoto */}
-            <div className="lead-card count-badge-container">
-              <div className="lead-card-top">
-                <div className="avatar-wrapper">
-                  <div className="lead-avatar avatar-purple">MK</div>
-                  <div className="avatar-icon-badge">
-                    <Search size={12} color="#2563eb" />
-                  </div>
-                </div>
-                <div className="lead-meta">
-                  <h4>Makoto Kawamoto</h4>
-                  <span>+81 90 7788 5541</span>
-                </div>
-                <div className="lead-score">
-                  <strong>74%</strong>
-                  <p className="score-warm">Warm</p>
-                </div>
-              </div>
-              <div className="lead-message-wrap">
-                <p className="lead-message">
-                  Can you send me more details about the apartment?
-                </p>
-                <div className="lead-card-financials">
-                  <span className="budget-range">$250K - $400K</span>
-                  <span className="timestamp">18m ago</span>
-                </div>
-              </div>
-              <div className="lead-tags">
-                <span className="tag-property">Downtown Apartment</span>
-                <span className="tag-status status-showing">Qualified</span>
-              </div>
-              <div className="unread-count">1</div>
-            </div>
+                      <div className="lead-meta">
+                        <h4>{lead.name || "Unnamed Lead"}</h4>
+                        <span>
+                          {lead.phone || lead.email || "No contact info"}
+                        </span>
+                      </div>
 
-            {/* Lead 3: Maria Fernanda */}
-            <div className="lead-card">
-              <div className="lead-card-top">
-                <div className="avatar-wrapper">
-                  <div className="lead-avatar avatar-pink">MF</div>
-                  <div className="avatar-icon-badge">
-                    <Users size={12} color="#1877f2" />
-                  </div>
-                </div>
-                <div className="lead-meta">
-                  <h4>Maria Fernanda</h4>
-                  <span>+593 995552277</span>
-                </div>
-                <div className="lead-score">
-                  <strong>68%</strong>
-                  <p className="score-warm">Warm</p>
-                </div>
-              </div>
-              <div className="lead-message-wrap">
-                <p className="lead-message">
-                  Do you have something near the beach?
-                </p>
-                <div className="lead-card-financials">
-                  <span className="budget-range">$150K - $200K</span>
-                  <span className="timestamp">2h ago</span>
-                </div>
-              </div>
-              <div className="lead-tags">
-                <span className="tag-property">Beach Condo</span>
-                <span className="tag-status status-showing">Qualified</span>
-              </div>
-            </div>
+                      <div className="lead-score">
+                        <strong>{score}%</strong>
+                        <p className={getScoreClass(lead)}>{temperature}</p>
+                      </div>
+                    </div>
 
-            {/* Lead 4: Andres Lopez */}
-            <div className="lead-card">
-              <div className="lead-card-top">
-                <div className="avatar-wrapper">
-                  <div className="lead-avatar avatar-blue">AL</div>
-                  <div className="avatar-icon-badge">
-                    <Bot size={12} color="#0077b5" />
+                    <div className="lead-message-wrap">
+                      <p className="lead-message">
+                        {lead.notes || lead.source || "New CRM lead"}
+                      </p>
+
+                      <div className="lead-card-financials">
+                        <span className="budget-range">
+                          {lead.source || "CRM"}
+                        </span>
+                        <span className="timestamp">
+                          {lead.status || "new"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="lead-tags">
+                      <span className="tag-property">
+                        {lead.propertyTitle || "No property linked"}
+                      </span>
+                      <span className="tag-status status-new">
+                        {lead.status || "new"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="lead-meta">
-                  <h4>Andres Lopez</h4>
-                  <span>+593 983311122</span>
-                </div>
-                <div className="lead-score">
-                  <strong>55%</strong>
-                  <p className="score-cool">Cool</p>
-                </div>
+                );
+              })
+            ) : (
+              <div className="lead-card">
+                <p className="lead-message">No leads found.</p>
               </div>
-              <div className="lead-message-wrap">
-                <p className="lead-message">
-                  Looking for investment opportunities.
-                </p>
-                <div className="lead-card-financials">
-                  <span className="budget-range">$300K+</span>
-                  <span className="timestamp">3h ago</span>
-                </div>
-              </div>
-              <div className="lead-tags">
-                <span className="tag-property">Investment Property</span>
-                <span className="tag-status status-new">New</span>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Footer of Sidebar */}
           <div className="sidebar-footer">
-            <span className="footer-counter">Showing 1-4 of 248 leads</span>
+            <span className="footer-counter">
+              Showing {leadsData.length} leads
+            </span>
             <button className="view-all-btn">
               View all leads <ArrowRight size={12} />
             </button>
@@ -550,13 +537,19 @@ export default function LeadsPage() {
         <div className="conversation-panel">
           <div className="conversation-header">
             <div className="conversation-user">
-              <div className="lead-avatar large avatar-whatsapp">W</div>
+              <div className="lead-avatar large avatar-whatsapp">
+                {getInitials(selectedLead?.name)}
+              </div>
               <div>
                 <h3 className="user-status-title">
-                  WhatsApp Lead <span className="status-online">● Online</span>
+                  {selectedLead?.name || "Select a lead"}{" "}
+                  <span className="status-online">● Online</span>
                 </h3>
                 <p className="user-sub-info">
-                  +593 988885817 • WhatsApp • Quito, Ecuador
+                  {selectedLead?.phone ||
+                    selectedLead?.email ||
+                    "No contact info"}{" "}
+                  • {selectedLead?.source || "CRM"}
                 </p>
               </div>
             </div>
@@ -573,10 +566,16 @@ export default function LeadsPage() {
               </button>
 
               <div className="score-badge">
-                <span className="score-value">92%</span>
+                <span className="score-value">
+                  {selectedLead ? `${getLeadScore(selectedLead)}%` : "--"}
+                </span>
                 <span className="score-label">Score</span>
               </div>
-              <span className="hot-tag text-tag-align">Hot Lead</span>
+              <span className="hot-tag text-tag-align">
+                {selectedLead
+                  ? `${getLeadTemperature(selectedLead)} Lead`
+                  : "No Lead"}
+              </span>
             </div>
           </div>
 
@@ -588,9 +587,10 @@ export default function LeadsPage() {
             <div className="summary-text-box">
               <h4>AI Lead Summary</h4>
               <p>
-                High intent lead looking for a 3-bedroom home in Quito. Budget
-                between <strong>$180K - $250K</strong>. Ready to see properties
-                this week. Best time to contact: 10AM - 2PM.
+                {selectedLead?.notes ||
+                  `Lead source: ${selectedLead?.source || "CRM"}. Status: ${
+                    selectedLead?.status || "new"
+                  }.`}
               </p>
             </div>
             <button className="view-profile-btn">View Profile</button>
