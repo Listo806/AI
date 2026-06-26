@@ -712,7 +712,25 @@ export class LeadsService {
   }
 
   async getLeadEvents(id: string, user: any) {
-    const lead = await this.findOne(id, user);
+    const leadResult = await this.db.query(
+      `
+    SELECT *
+    FROM leads
+    WHERE id = $1
+      AND (
+        created_by = $2
+        OR team_id = $3
+      )
+    LIMIT 1
+    `,
+      [id, user.id, user.teamId || null],
+    );
+
+    if (!leadResult.rows.length) {
+      throw new NotFoundException("Lead not found");
+    }
+
+    const lead = leadResult.rows[0];
 
     const { rows } = await this.db.query(
       `
