@@ -284,6 +284,8 @@ export class LeadsController {
   }
 
   @Post(":id/events")
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth("JWT-auth")
   createLeadEvent(
     @Param("id") id: string,
     @Body() body: any,

@@ -829,7 +829,7 @@ export class LeadsService {
   }
 
   async createLeadEvent(id: string, body: any, user: any) {
-    const userId = user?.id || user?.sub || user?.userId;
+    const userId = user.id;
 
     if (!userId) {
       throw new UnauthorizedException("User not found");
