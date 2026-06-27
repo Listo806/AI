@@ -844,6 +844,8 @@ export class LeadsService {
 
     const lead = leadResult.rows[0];
 
+    const metadata = body.metadata || {};
+
     const { rows } = await this.db.query(
       `
     INSERT INTO events (
@@ -854,7 +856,7 @@ export class LeadsService {
       team_id,
       metadata
     )
-    VALUES ($1, $2, $3, $4, $5, $6)
+    VALUES ($1, $2, $3, $4, $5, $6::jsonb)
     RETURNING
       id,
       event_type AS "eventType",
@@ -870,8 +872,8 @@ export class LeadsService {
         "lead",
         lead.id,
         user.id,
-        lead.team_id,
-        body.metadata || {},
+        lead.team_id || user.teamId || null,
+        JSON.stringify(metadata),
       ],
     );
 
