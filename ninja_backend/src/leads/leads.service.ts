@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import {
@@ -828,6 +829,12 @@ export class LeadsService {
   }
 
   async createLeadEvent(id: string, body: any, user: any) {
+    const userId = user?.id || user?.sub || user?.userId;
+
+    if (!userId) {
+      throw new UnauthorizedException("User not found");
+    }
+
     const leadResult = await this.db.query(
       `
     SELECT id, team_id, created_by
@@ -843,7 +850,6 @@ export class LeadsService {
     }
 
     const lead = leadResult.rows[0];
-
     const metadata = body.metadata || {};
 
     const { rows } = await this.db.query(
@@ -871,8 +877,8 @@ export class LeadsService {
         body.eventType || "lead.note",
         "lead",
         lead.id,
-        user.id,
-        lead.team_id || user.teamId || null,
+        userId,
+        lead.team_id || user?.teamId || null,
         JSON.stringify(metadata),
       ],
     );

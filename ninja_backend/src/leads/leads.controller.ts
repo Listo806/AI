@@ -284,7 +284,11 @@ export class LeadsController {
   }
 
   @Post(":id/events")
-  createLeadEvent(@Param("id") id: string, @Body() body: any, @Req() req) {
-    return this.leadsService.createLeadEvent(id, body, req.user);
+  createLeadEvent(
+    @Param("id") id: string,
+    @Body() body: any,
+    @CurrentUser() user: any,
+  ) {
+    return this.leadsService.createLeadEvent(id, body, user);
   }
 }
