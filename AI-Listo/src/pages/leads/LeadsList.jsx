@@ -44,11 +44,18 @@ export default function LeadsPage() {
   const [leadEvents, setLeadEvents] = useState([]);
   const [leadEventsLoading, setLeadEventsLoading] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
-  
+
   const [fullLeadEvents, setFullLeadEvents] = useState([]);
   const [fullTimelinePage, setFullTimelinePage] = useState(1);
   const [fullTimelineHasMore, setFullTimelineHasMore] = useState(false);
   const [fullTimelineLoading, setFullTimelineLoading] = useState(false);
+
+  const [showBookShowingModal, setShowBookShowingModal] = useState(false);
+  const [showingForm, setShowingForm] = useState({
+    date: "",
+    time: "",
+    note: "",
+  });
 
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
@@ -291,6 +298,55 @@ export default function LeadsPage() {
     fetchFullLeadEvents(fullTimelinePage + 1, true);
   };
 
+  const openBookShowing = () => {
+    if (!selectedLead?.id) return;
+
+    setShowingForm({
+      date: "",
+      time: "",
+      note: "",
+    });
+
+    setShowBookShowingModal(true);
+  };
+
+  const submitBookShowing = async (e) => {
+    e.preventDefault();
+
+    if (!selectedLead?.id) return;
+
+    if (!showingForm.date || !showingForm.time) {
+      return;
+    }
+
+    try {
+      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.showing_booked",
+          metadata: {
+            title: "Showing booked",
+            sub: `${showingForm.date} at ${showingForm.time}`,
+            date: showingForm.date,
+            time: showingForm.time,
+            note: showingForm.note,
+          },
+        }),
+      });
+
+      setShowBookShowingModal(false);
+      setShowingForm({
+        date: "",
+        time: "",
+        note: "",
+      });
+
+      fetchLeadEvents(selectedLead.id);
+      fetchFullLeadEvents(1, false);
+    } catch (err) {
+      console.error("Book showing error:", err);
+    }
+  };
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -855,6 +911,7 @@ export default function LeadsPage() {
                 desc: "Schedule appointment",
                 icon: <Calendar size={14} color="#2563eb" />,
                 bgClass: "icon-bg-blue",
+                onClick: openBookShowing,
               },
               {
                 title: "Send Properties",
@@ -1103,6 +1160,68 @@ export default function LeadsPage() {
                 <p className="timeline-desc">End of timeline.</p>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {showBookShowingModal && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>Book Showing</h3>
+              <button onClick={() => setShowBookShowingModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={submitBookShowing}>
+              <div className="lead-form-grid">
+                <div className="lead-form-field">
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={showingForm.date}
+                    onChange={(e) =>
+                      setShowingForm({ ...showingForm, date: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="lead-form-field">
+                  <label>Time</label>
+                  <input
+                    type="time"
+                    required
+                    value={showingForm.time}
+                    onChange={(e) =>
+                      setShowingForm({ ...showingForm, time: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="lead-form-field full">
+                  <label>Note</label>
+                  <textarea
+                    rows="4"
+                    value={showingForm.note}
+                    onChange={(e) =>
+                      setShowingForm({ ...showingForm, note: e.target.value })
+                    }
+                    placeholder="Add showing details..."
+                  />
+                </div>
+              </div>
+
+              <div className="lead-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowBookShowingModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit">Book Showing</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

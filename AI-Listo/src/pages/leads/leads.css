@@ -1459,6 +1459,65 @@ body .leads-page {
   border-radius: 10px;
   cursor: pointer;
 }
+.leads-page .lead-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.leads-page .lead-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leads-page .lead-form-field.full {
+  grid-column: span 2;
+}
+
+.leads-page .lead-form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.leads-page .lead-form-field input,
+.leads-page .lead-form-field textarea {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  outline: none;
+}
+
+.leads-page .lead-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.leads-page .lead-modal-actions button {
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.leads-page .lead-modal-actions button[type="submit"] {
+  background: #2563eb;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .leads-page .lead-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leads-page .lead-form-field.full {
+    grid-column: span 1;
+  }
+}
 @media (max-width: 640px) {
   .leads-page .lead-control-row {
     flex-direction: column;

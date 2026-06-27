@@ -826,4 +826,55 @@ export class LeadsService {
       hasMore: rows.length === safeLimit,
     };
   }
+
+  async createLeadEvent(id: string, body: any, user: any) {
+    const leadResult = await this.db.query(
+      `
+    SELECT id, team_id, created_by
+    FROM leads
+    WHERE id = $1
+    LIMIT 1
+    `,
+      [id],
+    );
+
+    if (!leadResult.rows.length) {
+      throw new NotFoundException("Lead not found");
+    }
+
+    const lead = leadResult.rows[0];
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO events (
+      event_type,
+      entity_type,
+      entity_id,
+      user_id,
+      team_id,
+      metadata
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING
+      id,
+      event_type AS "eventType",
+      entity_type AS "entityType",
+      entity_id AS "entityId",
+      user_id AS "userId",
+      team_id AS "teamId",
+      metadata,
+      created_at AS "createdAt"
+    `,
+      [
+        body.eventType || "lead.note",
+        "lead",
+        lead.id,
+        user.id,
+        lead.team_id,
+        body.metadata || {},
+      ],
+    );
+
+    return rows[0];
+  }
 }
