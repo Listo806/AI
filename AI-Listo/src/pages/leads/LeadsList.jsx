@@ -63,6 +63,7 @@ export default function LeadsPage() {
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showAutomationModal, setShowAutomationModal] = useState(false);
   const [leadStats, setLeadStats] = useState(null);
+  const [queueFilter, setQueueFilter] = useState(null);
   const [showingForm, setShowingForm] = useState({
     date: "",
     time: "",
@@ -87,7 +88,9 @@ export default function LeadsPage() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
+  const applyPriorityQueue = () => {
+    setQueueFilter("urgent");
+  };
   const [showFilters, setShowFilters] = useState(false);
   const fetchLeadStats = async () => {
     try {
@@ -612,6 +615,11 @@ export default function LeadsPage() {
       icon: <ArrowUpRight size={16} />,
     },
   ];
+  const visibleLeads =
+    queueFilter === "urgent"
+      ? leadsData.filter((lead) => lead.priority === "high")
+      : leadsData;
+
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -818,7 +826,7 @@ export default function LeadsPage() {
               <Flame size={18} />
             </div>
             <div className="priority-wrap">
-              <strong>12</strong>
+              <strong>{leadStats?.urgentLeads || 0}</strong>
               <span>Urgent Leads</span>
             </div>
           </div>
@@ -829,7 +837,7 @@ export default function LeadsPage() {
               <Clock3 size={18} />
             </div>
             <div className="priority-wrap">
-              <strong>8</strong>
+              <strong>{leadStats?.needFollowUp || 0}</strong>
               <span>Need Follow-Up</span>
             </div>
           </div>
@@ -840,7 +848,7 @@ export default function LeadsPage() {
               <Phone size={18} />
             </div>
             <div className="priority-wrap">
-              <strong>5</strong>
+              <strong>{leadStats?.readyToCall || 0}</strong>
               <span>Ready To Call</span>
             </div>
           </div>
@@ -851,7 +859,7 @@ export default function LeadsPage() {
               <MessageCircle size={18} />
             </div>
             <div className="priority-wrap">
-              <strong>14</strong>
+              <strong>{leadStats?.pendingReplies || 0}</strong>
               <span>Pending Replies</span>
             </div>
           </div>
@@ -862,13 +870,13 @@ export default function LeadsPage() {
               <MessageCircle size={18} />
             </div>
             <div className="priority-wrap">
-              <strong>23</strong>
+              <strong>{leadStats?.aiQualifiedToday || 0}</strong>
               <span>AI Qualifield Today</span>
             </div>
           </div>
         </div>
         <div className="item-line">
-          <button className="queue-btn">
+          <button className="queue-btn" onClick={applyPriorityQueue}>
             View Queue
             <ArrowRight size={15} />
           </button>
@@ -895,8 +903,8 @@ export default function LeadsPage() {
               <div className="lead-card">
                 <p className="lead-message">Loading leads...</p>
               </div>
-            ) : leadsData.length ? (
-              leadsData.map((lead) => {
+            ) : visibleLeads.length ? (
+              visibleLeads.map((lead) => {
                 const isActive = selectedLead?.id === lead.id;
                 const temperature = getLeadTemperature(lead);
                 const score = getLeadScore(lead);

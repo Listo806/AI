@@ -932,7 +932,6 @@ export class LeadsService {
   }
 
   async getLeadStats(userId: string, teamId: string | null) {
-
     const params = teamId ? [teamId] : [userId];
     const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
 
@@ -946,18 +945,46 @@ export class LeadsService {
     lead_counts AS (
       SELECT
         COUNT(*)::int AS total,
+
         COUNT(*) FILTER (
           WHERE created_at >= date_trunc('month', NOW())
         )::int AS new_this_month,
+
         COUNT(*) FILTER (
           WHERE status = 'qualified'
         )::int AS qualified,
+
         COUNT(*) FILTER (
           WHERE status = 'closed-won'
         )::int AS closed_won,
+
         COUNT(*) FILTER (
           WHERE status = 'closed-lost'
-        )::int AS closed_lost
+        )::int AS closed_lost,
+
+        COUNT(*) FILTER (
+          WHERE priority = 'high'
+        )::int AS urgent_leads,
+
+        COUNT(*) FILTER (
+          WHERE status = 'follow-up'
+        )::int AS need_follow_up,
+
+        COUNT(*) FILTER (
+          WHERE phone IS NOT NULL
+            AND phone <> ''
+            AND status IN ('qualified', 'contacted')
+        )::int AS ready_to_call,
+
+        COUNT(*) FILTER (
+          WHERE status IN ('contacted', 'follow-up')
+        )::int AS pending_replies,
+
+        COUNT(*) FILTER (
+          WHERE status = 'qualified'
+            AND created_at::date = CURRENT_DATE
+        )::int AS ai_qualified_today
+
       FROM scoped_leads
     ),
     event_counts AS (
@@ -965,17 +992,21 @@ export class LeadsService {
         COUNT(*) FILTER (
           WHERE e.event_type = 'lead.message_sent'
         )::int AS active_conversations,
+
         COUNT(*) FILTER (
           WHERE e.event_type = 'lead.message_sent'
             AND e.created_at::date = CURRENT_DATE
         )::int AS conversation_today,
+
         COUNT(*) FILTER (
           WHERE e.event_type = 'lead.showing_booked'
         )::int AS appointments,
+
         COUNT(*) FILTER (
           WHERE e.event_type = 'lead.showing_booked'
             AND e.created_at >= date_trunc('week', NOW())
         )::int AS appointment_this_week
+
       FROM events e
       INNER JOIN scoped_leads sl ON sl.id = e.entity_id
       WHERE e.entity_type = 'lead'
@@ -1004,7 +1035,14 @@ export class LeadsService {
       END AS "conversionRate",
 
       '2m' AS "avgResponse",
-      0 AS "responseImprove"
+      0 AS "responseImprove",
+
+      lc.urgent_leads AS "urgentLeads",
+      lc.need_follow_up AS "needFollowUp",
+      lc.ready_to_call AS "readyToCall",
+      lc.pending_replies AS "pendingReplies",
+      lc.ai_qualified_today AS "aiQualifiedToday"
+
     FROM lead_counts lc
     CROSS JOIN event_counts ec
     `,
