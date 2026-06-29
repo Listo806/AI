@@ -152,8 +152,21 @@ export class LeadsController {
     }
     return this.leadsService.findAll(user.id, user.teamId);
   }
+  @Get("dashboard")
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth("JWT-auth")
+  getDashboard(@Req() req: any, @Query("range") range = "30days") {
+    const user = req.user;
 
+    return this.leadsService.getDashboard(
+      user.id,
+      user.teamId || user.team_id || null,
+      range,
+    );
+  }
   @Get("stats")
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth("JWT-auth")
   getLeadStats(@Req() req: any, @Query("range") range = "all") {
     const user = req.user;
 
@@ -305,21 +318,5 @@ export class LeadsController {
     return this.leadsService.createLeadEvent(id, body, user);
   }
 
-  @Get("dashboard")
-  getDashboard(
-    @Req() req,
-
-    @Query("range")
-    range = "30days",
-  ) {
-    const user = req.user;
-
-    return this.leadsService.getDashboard(
-      user.id,
-
-      user.teamId || user.team_id || null,
-
-      range,
-    );
-  }
+  
 }
