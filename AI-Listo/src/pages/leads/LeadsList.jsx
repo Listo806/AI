@@ -50,6 +50,13 @@ export default function LeadsPage() {
   const [fullTimelineHasMore, setFullTimelineHasMore] = useState(false);
   const [fullTimelineLoading, setFullTimelineLoading] = useState(false);
 
+  const [showSendPropertiesModal, setShowSendPropertiesModal] = useState(false);
+  const [propertiesNote, setPropertiesNote] = useState("");
+  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
+  const [followUpMessage, setFollowUpMessage] = useState("");
+
+  const [chatMessage, setChatMessage] = useState("");
+
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showingForm, setShowingForm] = useState({
     date: "",
@@ -346,6 +353,132 @@ export default function LeadsPage() {
     } catch (err) {
       console.error("Book showing error:", err);
     }
+  };
+
+  const openSendProperties = () => {
+    if (!selectedLead?.id) return;
+    setPropertiesNote("");
+    setShowSendPropertiesModal(true);
+  };
+
+  const submitSendProperties = async (e) => {
+    e.preventDefault();
+
+    if (!selectedLead?.id) return;
+
+    try {
+      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.properties_sent",
+          metadata: {
+            title: "Properties sent",
+            sub: propertiesNote || "Matching properties sent to lead",
+            note: propertiesNote,
+          },
+        }),
+      });
+
+      setShowSendPropertiesModal(false);
+      setPropertiesNote("");
+      fetchLeadEvents(selectedLead.id);
+      fetchFullLeadEvents(1, false);
+    } catch (err) {
+      console.error("Send properties error:", err);
+    }
+  };
+
+  const openAiFollowUp = () => {
+    if (!selectedLead?.id) return;
+
+    setFollowUpMessage(
+      `Hi ${selectedLead.name || "there"}, just following up to see if you're still interested.`,
+    );
+
+    setShowFollowUpModal(true);
+  };
+
+  const submitAiFollowUp = async (e) => {
+    e.preventDefault();
+
+    if (!selectedLead?.id || !followUpMessage.trim()) return;
+
+    try {
+      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.ai_follow_up_sent",
+          metadata: {
+            title: "AI follow-up sent",
+            sub: followUpMessage.trim(),
+            message: followUpMessage.trim(),
+          },
+        }),
+      });
+
+      setShowFollowUpModal(false);
+      setFollowUpMessage("");
+      fetchLeadEvents(selectedLead.id);
+      fetchFullLeadEvents(1, false);
+    } catch (err) {
+      console.error("AI follow-up error:", err);
+    }
+  };
+
+  const sendLeadMessage = async () => {
+    if (!selectedLead?.id || !chatMessage.trim()) return;
+
+    try {
+      const message = chatMessage.trim();
+
+      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.message_sent",
+          metadata: {
+            title: "Message sent",
+            sub: message,
+            message,
+          },
+        }),
+      });
+
+      setChatMessage("");
+      fetchLeadEvents(selectedLead.id);
+      fetchFullLeadEvents(1, false);
+    } catch (err) {
+      console.error("Send lead message error:", err);
+    }
+  };
+
+  const leadMessages = leadEvents.filter(
+    (event) => event.eventType === "lead.message_sent",
+  );
+
+  const generateAiAssistMessage = () => {
+    if (!selectedLead) return;
+
+    const name = selectedLead.name || "there";
+    const source = selectedLead.source || "your inquiry";
+    const status = selectedLead.status || "new";
+
+    const message = `Hi ${name}, thanks for your interest. Based on ${source}, I can help you with matching properties and next steps. Are you available for a quick call or showing this week?`;
+
+    setChatMessage(message);
+  };
+
+  const applySuggestedReply = (type) => {
+    if (!selectedLead) return;
+
+    const name = selectedLead.name || "there";
+
+    const replies = {
+      properties: `Hi ${name}, I found a few properties that may match what you're looking for. Would you like me to send them over?`,
+      budget: `Hi ${name}, what budget range are you comfortable with so I can narrow down the best options?`,
+      viewing: `Hi ${name}, would you like to schedule a viewing this week? I can help arrange a convenient time.`,
+    };
+
+    setChatMessage(replies[type] || "");
   };
   return (
     <div className="leads-page">
@@ -810,39 +943,31 @@ export default function LeadsPage() {
 
           {/* CHAT BODY */}
           <div className="chat-body">
-            <div className="message left">
-              <p>Hi, I'm interested in a property in Quito.</p>
-              <span>10:32 AM</span>
-            </div>
+            {leadMessages.length ? (
+              leadMessages
+                .slice()
+                .reverse()
+                .map((event) => (
+                  <div
+                    key={event.id}
+                    className="message right robot-msg-container"
+                  >
+                    <p>{event.metadata?.message || event.metadata?.sub}</p>
+                    <span className="msg-status-right">
+                      {formatLeadEventDate(event.createdAt)}{" "}
+                      <CheckCheck size={12} />
+                    </span>
+                    <div className="robot-badge-icon">🤖</div>
+                  </div>
+                ))
+            ) : (
+              <div className="message left">
+                <p>No messages yet.</p>
+                <span>Start a conversation</span>
+              </div>
+            )}
 
-            <div className="message right robot-msg-container">
-              <p>
-                Thanks for reaching out! Are you looking to buy, rent, or
-                invest?
-              </p>
-              <span className="msg-status-right">
-                10:33 AM <CheckCheck size={12} />
-              </span>
-              <div className="robot-badge-icon">🤖</div>
-            </div>
-
-            <div className="message left">
-              <p>I'm looking to buy. I need at least 3 bedrooms.</p>
-              <span>10:35 AM</span>
-            </div>
-
-            <div className="message right robot-msg-container">
-              <p>
-                Perfect! I found several matching homes. What budget range are
-                you comfortable with?
-              </p>
-              <span className="msg-status-right">
-                10:36 AM <CheckCheck size={12} />
-              </span>
-              <div className="robot-badge-icon">🤖</div>
-            </div>
-
-            <div className="typing-indicator">Lead is typing...</div>
+            {chatMessage && <div className="typing-indicator">Typing...</div>}
           </div>
 
           {/* AI SUGGESTED REPLIES */}
@@ -852,12 +977,17 @@ export default function LeadsPage() {
             </div>
             <div className="suggested-chips-scroll">
               {[
-                "Send matching properties",
-                "Ask budget range",
-                "Suggest viewing time",
-              ].map((text, idx) => (
-                <button key={idx} className="chip-btn">
-                  {text}
+                { label: "Send matching properties", type: "properties" },
+                { label: "Ask budget range", type: "budget" },
+                { label: "Suggest viewing time", type: "viewing" },
+              ].map((item) => (
+                <button
+                  key={item.type}
+                  className="chip-btn"
+                  onClick={() => applySuggestedReply(item.type)}
+                  disabled={!selectedLead}
+                >
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -866,7 +996,17 @@ export default function LeadsPage() {
           {/* INPUT FORM */}
           <div className="chat-input-box">
             <div className="chat-input-top">
-              <input placeholder="Type a message or let AI assist..." />
+              <input
+                placeholder="Type a message or let AI assist..."
+                value={chatMessage}
+                onChange={(e) => setChatMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    sendLeadMessage();
+                  }
+                }}
+              />
             </div>
 
             <div className="chat-input-bottom">
@@ -886,11 +1026,19 @@ export default function LeadsPage() {
               </div>
 
               <div className="chat-action-buttons">
-                <button className="secondary-btn ai-btn assist-btn-custom">
+                <button
+                  className="secondary-btn ai-btn assist-btn-custom"
+                  onClick={generateAiAssistMessage}
+                  disabled={!selectedLead}
+                >
                   <Sparkles size={14} />
                   AI Assist
                 </button>
-                <button className="send-btn fixed-send-btn">
+                <button
+                  className="send-btn fixed-send-btn"
+                  onClick={sendLeadMessage}
+                  disabled={!chatMessage.trim()}
+                >
                   <Send size={16} fill="white" />
                 </button>
               </div>
@@ -905,6 +1053,7 @@ export default function LeadsPage() {
                 desc: "Send automated follow-up",
                 icon: <Send size={14} color="#22c55e" />,
                 bgClass: "icon-bg-green",
+                onClick: openAiFollowUp,
               },
               {
                 title: "Book Showing",
@@ -918,6 +1067,7 @@ export default function LeadsPage() {
                 desc: "Send matching homes",
                 icon: <Home size={14} color="#0284c7" />,
                 bgClass: "icon-bg-sky",
+                onClick: openSendProperties,
               },
               {
                 title: "Escalate Lead",
@@ -1220,6 +1370,80 @@ export default function LeadsPage() {
                 </button>
 
                 <button type="submit">Book Showing</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSendPropertiesModal && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>Send Properties</h3>
+              <button onClick={() => setShowSendPropertiesModal(false)}>
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={submitSendProperties}>
+              <div className="lead-form-grid">
+                <div className="lead-form-field full">
+                  <label>Note</label>
+                  <textarea
+                    rows="4"
+                    value={propertiesNote}
+                    onChange={(e) => setPropertiesNote(e.target.value)}
+                    placeholder="Example: Sent 3 matching homes in Quito..."
+                  />
+                </div>
+              </div>
+
+              <div className="lead-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowSendPropertiesModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit">Send Properties</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showFollowUpModal && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>AI Follow-Up</h3>
+              <button onClick={() => setShowFollowUpModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={submitAiFollowUp}>
+              <div className="lead-form-grid">
+                <div className="lead-form-field full">
+                  <label>Message</label>
+                  <textarea
+                    rows="5"
+                    value={followUpMessage}
+                    onChange={(e) => setFollowUpMessage(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="lead-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowFollowUpModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit">Send Follow-Up</button>
               </div>
             </form>
           </div>
