@@ -63,9 +63,11 @@ export default function LeadsPage() {
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showAutomationModal, setShowAutomationModal] = useState(false);
   const [leadStats, setLeadStats] = useState(null);
+  const [leadDashboard, setLeadDashboard] = useState(null);
   const [queueFilter, setQueueFilter] = useState(null);
   const [leadSearch, setLeadSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
+  const [aiView, setAiView] = useState(false);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -109,24 +111,14 @@ export default function LeadsPage() {
   }, []);
   const applyPriorityQueue = () => {
     setQueueFilter("urgent");
+    setAiView(false);
   };
   const [showFilters, setShowFilters] = useState(false);
-  const fetchLeadStats = async () => {
-    try {
-      const response = await apiClient.request("/leads/stats", {
-        method: "GET",
-      });
-
-      setLeadStats(response?.data || response);
-    } catch (err) {
-      console.error("Fetch lead stats error:", err);
-    }
-  };
   const stats = [
     {
       title: "Total Leads",
       value: leadStats?.total || 0,
-      change: `+${leadStats?.newThisMonth || 0} this month`,
+      change: leadStats?.rangeLabel || "All time",
       icon: <Users size={20} />,
       className: "blue",
     },
@@ -154,7 +146,7 @@ export default function LeadsPage() {
     {
       title: "Conversion Rate",
       value: `${leadStats?.conversionRate || 0}%`,
-      change: `${leadStats?.responseImprove || 0}%`,
+      change: "Closed won / total",
       icon: <TrendingUp size={20} />,
       className: "cyan",
     },
@@ -180,7 +172,31 @@ export default function LeadsPage() {
   };
 
   const getLeadScore = (lead) => {
-    return lead.aiScore || lead.score || 25;
+    if (!lead) return 0;
+
+    if (lead.aiScore !== undefined && lead.aiScore !== null) {
+      return Number(lead.aiScore);
+    }
+
+    if (lead.score !== undefined && lead.score !== null) {
+      return Number(lead.score);
+    }
+
+    let score = 20;
+
+    if (lead.priority === "high") score += 35;
+    if (lead.priority === "medium") score += 20;
+
+    if (lead.status === "qualified") score += 25;
+    if (lead.status === "follow-up") score += 15;
+    if (lead.status === "closed-won") score = 100;
+    if (lead.status === "closed-lost") score = 0;
+
+    if (lead.phone) score += 5;
+    if (lead.email) score += 5;
+    if (lead.dealValue) score += 10;
+
+    return Math.max(0, Math.min(100, score));
   };
 
   const getLeadTemperature = (lead) => {
@@ -198,47 +214,6 @@ export default function LeadsPage() {
     if (temp === "warm") return "score-warm";
     return "score-cool";
   };
-
-  const fetchLeads = async () => {
-    try {
-      setLeadsLoading(true);
-
-      const response = await apiClient.request("/leads", {
-        method: "GET",
-      });
-
-      const data = response?.data || response || [];
-      const list = Array.isArray(data) ? data : [];
-
-      setLeadsData(list);
-
-      const params = new URLSearchParams(location.search);
-      const leadId = params.get("leadId");
-
-      const matchedLead = leadId
-        ? list.find((item) => String(item.id) === String(leadId))
-        : null;
-
-      const activeLead = matchedLead || list[0] || null;
-      setSelectedLead(activeLead);
-
-      if (activeLead?.id) {
-        fetchLeadEvents(activeLead.id);
-        fetchLeadMessages(activeLead.id);
-      }
-    } catch (err) {
-      console.error("Fetch leads error:", err);
-      setLeadsData([]);
-      setSelectedLead(null);
-    } finally {
-      setLeadsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeads();
-    fetchLeadStats();
-  }, [location.search]);
 
   const updateSelectedLead = async (payload) => {
     if (!selectedLead?.id) return;
@@ -719,8 +694,7 @@ export default function LeadsPage() {
         notes: "",
       });
 
-      fetchLeads();
-      fetchLeadStats();
+      fetchDashboard();
     } catch (err) {
       console.error("Create lead error:", err);
     }
@@ -796,6 +770,7 @@ export default function LeadsPage() {
           agent: "all",
         });
         setDateRange("all");
+        setAiView(false);
         return;
       }
 
@@ -818,8 +793,7 @@ export default function LeadsPage() {
         ),
       );
 
-      fetchLeads();
-      fetchLeadStats();
+      fetchDashboard();
 
       if (selectedLead?.id) {
         fetchLeadEvents(selectedLead.id);
@@ -828,40 +802,16 @@ export default function LeadsPage() {
       console.error("Bulk action error:", err);
     }
   };
-  const matchesDateRange = (lead) => {
-    if (dateRange === "all") return true;
-
-    const createdAt = lead.createdAt ? new Date(lead.createdAt) : null;
-    if (!createdAt) return true;
-
-    const now = new Date();
-
-    if (dateRange === "today") {
-      return createdAt.toDateString() === now.toDateString();
-    }
-
-    if (dateRange === "7days") {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(now.getDate() - 7);
-      return createdAt >= sevenDaysAgo;
-    }
-
-    if (dateRange === "30days") {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-      return createdAt >= thirtyDaysAgo;
-    }
-
-    if (dateRange === "month") {
-      return (
-        createdAt.getMonth() === now.getMonth() &&
-        createdAt.getFullYear() === now.getFullYear()
-      );
-    }
-
-    return true;
+  const toggleAiView = () => {
+    setAiView((prev) => !prev);
+    setQueueFilter(null);
   };
   const visibleLeads = leadsData.filter((lead) => {
+    const matchesAiView = aiView
+      ? lead.priority === "high" ||
+        getLeadScore(lead) >= 70 ||
+        ["qualified", "follow-up"].includes(String(lead.status || ""))
+      : true;
     const matchesQueue =
       queueFilter === "urgent" ? lead.priority === "high" : true;
 
@@ -916,19 +866,48 @@ export default function LeadsPage() {
       matchesAiScore &&
       matchesStage &&
       matchesAgent &&
-      matchesDateRange(lead)
+      matchesAiView
     );
   });
   const fetchDashboard = async () => {
-    const dashboard = await apiClient.request(
-      `/leads/dashboard?range=${dateRange}`,
-    );
+    try {
+      setLeadsLoading(true);
 
-    console.log(dashboard);
+      const response = await apiClient.request(
+        `/leads/dashboard?range=${dateRange}`,
+        { method: "GET" },
+      );
+
+      const data = response?.data || response;
+
+      setLeadDashboard(data);
+      setLeadStats(data?.stats || null);
+      setLeadsData(Array.isArray(data?.leads) ? data.leads : []);
+
+      const list = Array.isArray(data?.leads) ? data.leads : [];
+      const params = new URLSearchParams(location.search);
+      const leadId = params.get("leadId");
+
+      const matchedLead = leadId
+        ? list.find((item) => String(item.id) === String(leadId))
+        : null;
+
+      const activeLead = matchedLead || list[0] || null;
+      setSelectedLead(activeLead);
+
+      if (activeLead?.id) {
+        fetchLeadEvents(activeLead.id);
+        fetchLeadMessages(activeLead.id);
+      }
+    } catch (err) {
+      console.error("Fetch dashboard error:", err);
+    } finally {
+      setLeadsLoading(false);
+    }
   };
   useEffect(() => {
     fetchDashboard();
-  }, [dateRange]);
+  }, [location.search, dateRange]);
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -957,9 +936,12 @@ export default function LeadsPage() {
                 <ChevronDown size={15} />
               </div>
 
-              <button className="secondary-btn ai-btn">
+              <button
+                className={`secondary-btn ai-btn ${aiView ? "active" : ""}`}
+                onClick={toggleAiView}
+              >
                 <Sparkles size={16} />
-                AI View
+                {aiView ? "AI View On" : "AI View"}
               </button>
 
               <button
@@ -996,9 +978,12 @@ export default function LeadsPage() {
                 Export
               </button>
 
-              <button className="secondary-btn ai-btn">
+              <button
+                className={`secondary-btn ai-btn ${aiView ? "active" : ""}`}
+                onClick={toggleAiView}
+              >
                 <Sparkles size={16} />
-                AI View
+                {aiView ? "AI View On" : "AI View"}
               </button>
 
               <button
@@ -1410,6 +1395,7 @@ export default function LeadsPage() {
                 setQueueFilter(null);
                 setLeadSearch("");
                 setDateRange("all");
+                setAiView(false);
                 setLeadFilters({
                   source: "all",
                   temperature: "all",

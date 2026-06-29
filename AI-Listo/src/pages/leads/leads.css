@@ -63,7 +63,7 @@ body .leads-page {
 .leads-page .secondary-btn,
 .leads-page .filter-btn {
   height: 46px;
-  padding: 0 10px;
+  padding: 0 6px;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
   display: flex;
@@ -71,7 +71,14 @@ body .leads-page {
   gap: 8px;
   font-weight: 500;
 }
-
+.leads-page .secondary-btn select{
+  border: 0;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0 6px;
+}
 .leads-page .primary-btn:hover {
   background: #1d4ed8;
 }
