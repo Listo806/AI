@@ -64,6 +64,15 @@ export default function LeadsPage() {
   const [showAutomationModal, setShowAutomationModal] = useState(false);
   const [leadStats, setLeadStats] = useState(null);
   const [queueFilter, setQueueFilter] = useState(null);
+  const [leadSearch, setLeadSearch] = useState("");
+  const [dateRange, setDateRange] = useState("all");
+  const [leadFilters, setLeadFilters] = useState({
+    source: "all",
+    temperature: "all",
+    aiScore: "all",
+    stage: "all",
+    agent: "all",
+  });
   const [showingForm, setShowingForm] = useState({
     date: "",
     time: "",
@@ -625,10 +634,6 @@ export default function LeadsPage() {
       icon: <ArrowUpRight size={16} />,
     },
   ];
-  const visibleLeads =
-    queueFilter === "urgent"
-      ? leadsData.filter((lead) => lead.priority === "high")
-      : leadsData;
 
   const getLeadIntelligence = () => {
     if (!selectedLead) {
@@ -720,6 +725,210 @@ export default function LeadsPage() {
       console.error("Create lead error:", err);
     }
   };
+  const exportLeadsCsv = () => {
+    const headers = [
+      "Name",
+      "Email",
+      "Phone",
+      "Status",
+      "Priority",
+      "Source",
+      "Deal Value",
+      "Deal Stage",
+    ];
+
+    const rows = visibleLeads.map((lead) => [
+      lead.name || "",
+      lead.email || "",
+      lead.phone || "",
+      lead.status || "",
+      lead.priority || "",
+      lead.source || "",
+      lead.dealValue || "",
+      lead.dealStage || "",
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "leads.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+  const updateLeadFilter = (key, value) => {
+    setLeadFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+
+    if (isMobile) {
+      setShowFilters(false);
+    }
+  };
+  const runBulkAction = async (action) => {
+    if (!action) return;
+
+    try {
+      if (action === "export") {
+        exportLeadsCsv();
+        return;
+      }
+
+      if (action === "clear") {
+        setQueueFilter(null);
+        setLeadSearch("");
+        setLeadFilters({
+          source: "all",
+          temperature: "all",
+          aiScore: "all",
+          stage: "all",
+          agent: "all",
+        });
+        setDateRange("all");
+        return;
+      }
+
+      const payloadMap = {
+        markQualified: { status: "qualified" },
+        priorityHigh: { priority: "high" },
+        followUp: { status: "follow-up" },
+      };
+
+      const payload = payloadMap[action];
+
+      if (!payload || !visibleLeads.length) return;
+
+      await Promise.all(
+        visibleLeads.map((lead) =>
+          apiClient.request(`/leads/${lead.id}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          }),
+        ),
+      );
+
+      fetchLeads();
+      fetchLeadStats();
+
+      if (selectedLead?.id) {
+        fetchLeadEvents(selectedLead.id);
+      }
+    } catch (err) {
+      console.error("Bulk action error:", err);
+    }
+  };
+  const matchesDateRange = (lead) => {
+    if (dateRange === "all") return true;
+
+    const createdAt = lead.createdAt ? new Date(lead.createdAt) : null;
+    if (!createdAt) return true;
+
+    const now = new Date();
+
+    if (dateRange === "today") {
+      return createdAt.toDateString() === now.toDateString();
+    }
+
+    if (dateRange === "7days") {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      return createdAt >= sevenDaysAgo;
+    }
+
+    if (dateRange === "30days") {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      return createdAt >= thirtyDaysAgo;
+    }
+
+    if (dateRange === "month") {
+      return (
+        createdAt.getMonth() === now.getMonth() &&
+        createdAt.getFullYear() === now.getFullYear()
+      );
+    }
+
+    return true;
+  };
+  const visibleLeads = leadsData.filter((lead) => {
+    const matchesQueue =
+      queueFilter === "urgent" ? lead.priority === "high" : true;
+
+    const keyword = leadSearch.trim().toLowerCase();
+
+    const matchesSearch = !keyword
+      ? true
+      : [
+          lead.name,
+          lead.email,
+          lead.phone,
+          lead.status,
+          lead.priority,
+          lead.source,
+          lead.dealStage,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(keyword));
+
+    const temperature = getLeadTemperature(lead).toLowerCase();
+    const score = Number(getLeadScore(lead));
+    const stage = String(lead.dealStage || "new").toLowerCase();
+    const source = String(lead.source || "crm").toLowerCase();
+
+    const matchesSource =
+      leadFilters.source === "all" ||
+      source === leadFilters.source.toLowerCase();
+
+    const matchesTemperature =
+      leadFilters.temperature === "all" ||
+      temperature === leadFilters.temperature.toLowerCase();
+
+    const matchesAiScore =
+      leadFilters.aiScore === "all" ||
+      (leadFilters.aiScore === "80+" && score >= 80) ||
+      (leadFilters.aiScore === "50-79" && score >= 50 && score < 80) ||
+      (leadFilters.aiScore === "0-49" && score < 50);
+
+    const matchesStage =
+      leadFilters.stage === "all" || stage === leadFilters.stage.toLowerCase();
+
+    const matchesAgent =
+      leadFilters.agent === "all" ||
+      String(lead.assignedTo || "").toLowerCase() ===
+        leadFilters.agent.toLowerCase();
+
+    return (
+      matchesQueue &&
+      matchesSearch &&
+      matchesSource &&
+      matchesTemperature &&
+      matchesAiScore &&
+      matchesStage &&
+      matchesAgent &&
+      matchesDateRange(lead)
+    );
+  });
+  const fetchDashboard = async () => {
+    const dashboard = await apiClient.request(
+      `/leads/dashboard?range=${dateRange}`,
+    );
+
+    console.log(dashboard);
+  };
+  useEffect(() => {
+    fetchDashboard();
+  }, [dateRange]);
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -733,11 +942,20 @@ export default function LeadsPage() {
         <div className="header-actions">
           {isMobile ? (
             <>
-              <button className="secondary-btn">
+              <div className="secondary-btn">
                 <Calendar size={16} />
-                May 12 - May 18
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="month">This Month</option>
+                </select>
                 <ChevronDown size={15} />
-              </button>
+              </div>
 
               <button className="secondary-btn ai-btn">
                 <Sparkles size={16} />
@@ -758,13 +976,22 @@ export default function LeadsPage() {
             </>
           ) : (
             <>
-              <button className="secondary-btn">
+              <div className="secondary-btn">
                 <Calendar size={16} />
-                May 12 - May 18
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="month">This Month</option>
+                </select>
                 <ChevronDown size={15} />
-              </button>
+              </div>
 
-              <button className="secondary-btn">
+              <button className="secondary-btn" onClick={exportLeadsCsv}>
                 <Download size={16} />
                 Export
               </button>
@@ -774,7 +1001,10 @@ export default function LeadsPage() {
                 AI View
               </button>
 
-              <button className="primary-btn" onClick={() => setShowCreateLeadModal(true)}>
+              <button
+                className="primary-btn"
+                onClick={() => setShowCreateLeadModal(true)}
+              >
                 <Plus size={17} />
                 New Lead
               </button>
@@ -804,40 +1034,79 @@ export default function LeadsPage() {
             <div className="drawer-body">
               <div className="filter-btn">
                 <Layers size={15} />
-                <select>
-                  <option>All Sources</option>
+                <select
+                  value={leadFilters.source}
+                  onChange={(e) => updateLeadFilter("source", e.target.value)}
+                >
+                  <option value="all">All Sources</option>
+                  <option value="crm">CRM</option>
+                  <option value="website">Website</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="instagram">Instagram</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
               <div className="filter-btn">
                 <Clock3 size={15} />
-                <select>
-                  <option>All Temperatures</option>
+                <select
+                  value={leadFilters.temperature}
+                  onChange={(e) =>
+                    updateLeadFilter("temperature", e.target.value)
+                  }
+                >
+                  <option value="all">All Temperatures</option>
+                  <option value="hot">Hot</option>
+                  <option value="warm">Warm</option>
+                  <option value="cool">Cool</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
               <div className="filter-btn">
                 <Bot size={15} />
-                <select>
-                  <option>All AI Scores</option>
+                <select
+                  value={leadFilters.aiScore}
+                  onChange={(e) => updateLeadFilter("aiScore", e.target.value)}
+                >
+                  <option value="all">All AI Scores</option>
+                  <option value="80+">80+</option>
+                  <option value="50-79">50 - 79</option>
+                  <option value="0-49">0 - 49</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
               <div className="filter-btn">
                 <Layers size={15} />
-                <select>
-                  <option>All Stages</option>
+                <select
+                  value={leadFilters.stage}
+                  onChange={(e) => updateLeadFilter("stage", e.target.value)}
+                >
+                  <option value="all">All Stages</option>
+                  <option value="new">New</option>
+                  <option value="discovery">Discovery</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="property-match">Property Match</option>
+                  <option value="showing">Showing</option>
+                  <option value="proposal">Proposal</option>
+                  <option value="negotiation">Negotiation</option>
+                  <option value="contract">Contract</option>
+                  <option value="closing">Closing</option>
+                  <option value="won">Won</option>
+                  <option value="lost">Lost</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
               <div className="filter-btn">
                 <Users size={15} />
-                <select>
-                  <option>All Agents</option>
+                <select
+                  value={leadFilters.agent}
+                  onChange={(e) => updateLeadFilter("agent", e.target.value)}
+                >
+                  <option value="all">All Agents</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportLeadsCsv}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -850,38 +1119,79 @@ export default function LeadsPage() {
       {!isMobile && (
         <div className="filters-row">
           <div className="filter-btn">
-            <select>
-              <option>All Sources</option>
+            <select
+              value={leadFilters.source}
+              onChange={(e) => updateLeadFilter("source", e.target.value)}
+            >
+              <option value="all">All Sources</option>
+              <option value="crm">CRM</option>
+              <option value="website">Website</option>
+              <option value="facebook">Facebook</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="instagram">Instagram</option>
             </select>
             <ChevronDown size={15} />
           </div>
           <div className="filter-btn">
-            <select>
-              <option>All Temperatures</option>
+            <select
+              value={leadFilters.temperature}
+              onChange={(e) => updateLeadFilter("temperature", e.target.value)}
+            >
+              <option value="all">All Temperatures</option>
+              <option value="hot">Hot</option>
+              <option value="warm">Warm</option>
+              <option value="cool">Cool</option>
             </select>
             <ChevronDown size={15} />
           </div>
           <div className="filter-btn">
-            <select>
-              <option>All AI Scores</option>
+            <select
+              value={leadFilters.aiScore}
+              onChange={(e) => updateLeadFilter("aiScore", e.target.value)}
+            >
+              <option value="all">All AI Scores</option>
+              <option value="80+">80+</option>
+              <option value="50-79">50 - 79</option>
+              <option value="0-49">0 - 49</option>
             </select>
             <ChevronDown size={15} />
           </div>
           <div className="filter-btn">
-            <select>
-              <option>All Stages</option>
+            <select
+              value={leadFilters.stage}
+              onChange={(e) => updateLeadFilter("stage", e.target.value)}
+            >
+              <option value="all">All Stages</option>
+              <option value="new">New</option>
+              <option value="discovery">Discovery</option>
+              <option value="qualified">Qualified</option>
+              <option value="property-match">Property Match</option>
+              <option value="showing">Showing</option>
+              <option value="proposal">Proposal</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="contract">Contract</option>
+              <option value="closing">Closing</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
             </select>
             <ChevronDown size={15} />
           </div>
           <div className="filter-btn">
-            <select>
-              <option>All Agents</option>
+            <select
+              value={leadFilters.agent}
+              onChange={(e) => updateLeadFilter("agent", e.target.value)}
+            >
+              <option value="all">All Agents</option>
             </select>
             <ChevronDown size={15} />
           </div>
           <div className="search-box">
             <Search size={16} />
-            <input placeholder="Search leads..." />
+            <input
+              placeholder="Search leads..."
+              value={leadSearch}
+              onChange={(e) => setLeadSearch(e.target.value)}
+            />
           </div>
 
           <button className="filter-btn">
@@ -889,8 +1199,19 @@ export default function LeadsPage() {
             Filters
           </button>
           <div className="filter-btn">
-            <select>
-              <option>Bulk Actions</option>
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                runBulkAction(e.target.value);
+                e.target.value = "";
+              }}
+            >
+              <option value="">Bulk Actions</option>
+              <option value="markQualified">Mark Qualified</option>
+              <option value="priorityHigh">Set Priority High</option>
+              <option value="followUp">Mark Follow-Up</option>
+              <option value="export">Export Visible</option>
+              <option value="clear">Clear Filters</option>
             </select>
             <ChevronDown size={15} />
           </div>
@@ -1083,7 +1404,21 @@ export default function LeadsPage() {
             <span className="footer-counter">
               Showing {leadsData.length} leads
             </span>
-            <button className="view-all-btn">
+            <button
+              className="view-all-btn"
+              onClick={() => {
+                setQueueFilter(null);
+                setLeadSearch("");
+                setDateRange("all");
+                setLeadFilters({
+                  source: "all",
+                  temperature: "all",
+                  aiScore: "all",
+                  stage: "all",
+                  agent: "all",
+                });
+              }}
+            >
               View all leads <ArrowRight size={12} />
             </button>
           </div>

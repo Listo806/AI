@@ -597,13 +597,17 @@ body .leads-page {
 .leads-page .switch.active::after {
   left: 23px;
 }
-
+.leads-page div.filter-btn {
+  padding: 0 5px;
+  gap:0;
+}
 .leads-page .filter-btn select {
   outline: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
   border: 0;
+  padding: 0 10px;
 }
 
 .leads-page .priority-item .red {

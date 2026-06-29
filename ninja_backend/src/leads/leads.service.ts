@@ -169,7 +169,7 @@ export class LeadsService {
         createLeadDto.email || null,
         createLeadDto.phone || null,
         status,
-        (createLeadDto as any).priority || 'low',
+        (createLeadDto as any).priority || "low",
         createLeadDto.assignedTo || null,
         createLeadDto.propertyId || null,
         buyerId,
@@ -931,8 +931,101 @@ export class LeadsService {
 
     return rows[0];
   }
+  private buildDateFilter(range = "all") {
+    switch (range) {
+      case "today":
+        return `
+        AND l.created_at >= CURRENT_DATE
+      `;
 
-  async getLeadStats(userId: string, teamId: string | null) {
+      case "7days":
+        return `
+        AND l.created_at >= NOW() - INTERVAL '7 days'
+      `;
+
+      case "30days":
+        return `
+        AND l.created_at >= NOW() - INTERVAL '30 days'
+      `;
+
+      case "month":
+        return `
+        AND DATE_TRUNC('month', l.created_at)
+            =
+            DATE_TRUNC('month', CURRENT_DATE)
+      `;
+
+      default:
+        return "";
+    }
+  }
+  async getDashboard(userId: string, teamId: string | null, range = "30days") {
+    const params = teamId ? [teamId] : [userId];
+
+    const teamWhere = teamId ? `l.team_id=$1` : `l.created_by=$1`;
+
+    const dateWhere = this.buildDateFilter(range);
+
+    const result = await this.db.query(
+      `
+SELECT
+
+l.*
+
+FROM leads l
+
+WHERE
+
+${teamWhere}
+
+${dateWhere}
+
+ORDER BY
+
+l.created_at DESC
+
+`,
+      params,
+    );
+
+    const leads = result.rows;
+
+    return {
+      stats: this.calculateDashboardStats(leads),
+
+      aiQueue: this.buildAiQueue(leads),
+
+      intelligence: this.buildLeadIntelligence(leads),
+
+      revenue: this.buildRevenue(leads),
+
+      leads,
+    };
+  }
+  private calculateDashboardStats(leads: any[]) {
+    const total = leads.length;
+
+    const qualified = leads.filter((l) => l.status === "qualified").length;
+
+    const appointments = leads.filter((l) => l.status === "showing").length;
+
+    const conversations = leads.filter((l) => l.last_activity_at).length;
+
+    const conversion = total === 0 ? 0 : Math.round((qualified * 100) / total);
+
+    return {
+      total,
+
+      qualified,
+
+      appointments,
+
+      conversations,
+
+      conversion,
+    };
+  }
+  async getLeadStats(userId: string, teamId: string | null, range = "all") {
     const params = teamId ? [teamId] : [userId];
     const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
 

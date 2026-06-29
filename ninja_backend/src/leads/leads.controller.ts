@@ -154,13 +154,13 @@ export class LeadsController {
   }
 
   @Get("stats")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
-  getLeadStats(@Req() req: any) {
+  getLeadStats(@Req() req: any, @Query("range") range = "all") {
     const user = req.user;
 
     return this.leadsService.getLeadStats(
       user.id,
       user.teamId || user.team_id || null,
+      range,
     );
   }
 
@@ -303,5 +303,23 @@ export class LeadsController {
     @CurrentUser() user: any,
   ) {
     return this.leadsService.createLeadEvent(id, body, user);
+  }
+
+  @Get("dashboard")
+  getDashboard(
+    @Req() req,
+
+    @Query("range")
+    range = "30days",
+  ) {
+    const user = req.user;
+
+    return this.leadsService.getDashboard(
+      user.id,
+
+      user.teamId || user.team_id || null,
+
+      range,
+    );
   }
 }
