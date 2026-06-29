@@ -154,9 +154,14 @@ export class LeadsController {
   }
 
   @Get("stats")
-  getLeadStats(@Req() req) {
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  getLeadStats(@Req() req: any) {
     const user = req.user;
-    return this.leadsService.getLeadStats(user.id, user.teamId || null);
+
+    return this.leadsService.getLeadStats(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
   }
 
   @Get(":id/email-thread")
