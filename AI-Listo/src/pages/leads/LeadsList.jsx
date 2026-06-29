@@ -69,6 +69,16 @@ export default function LeadsPage() {
     time: "",
     note: "",
   });
+  const [showCreateLeadModal, setShowCreateLeadModal] = useState(false);
+  const [createLeadForm, setCreateLeadForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    source: "",
+    status: "new",
+    priority: "low",
+    notes: "",
+  });
   const [leadProfileForm, setLeadProfileForm] = useState({
     status: "new",
     priority: "low",
@@ -620,6 +630,96 @@ export default function LeadsPage() {
       ? leadsData.filter((lead) => lead.priority === "high")
       : leadsData;
 
+  const getLeadIntelligence = () => {
+    if (!selectedLead) {
+      return {
+        score: 0,
+        sentiment: "-",
+        interestLevel: "-",
+        responseLikelihood: "-",
+        engagementScore: 0,
+        temperature: "No Lead",
+      };
+    }
+
+    const score = Number(getLeadScore(selectedLead));
+    const messageCount = leadMessages.length;
+    const hasShowing = leadEvents.some(
+      (event) => event.eventType === "lead.showing_booked",
+    );
+    const hasPropertiesSent = leadEvents.some(
+      (event) => event.eventType === "lead.properties_sent",
+    );
+
+    const engagementScore = Math.min(
+      100,
+      score +
+        messageCount * 5 +
+        (hasShowing ? 10 : 0) +
+        (hasPropertiesSent ? 5 : 0),
+    );
+
+    const sentiment =
+      score >= 80 || selectedLead.priority === "high"
+        ? "High Intent"
+        : score >= 50
+          ? "Interested"
+          : "Low Intent";
+
+    const interestLevel =
+      engagementScore >= 80
+        ? "Very High"
+        : engagementScore >= 60
+          ? "High"
+          : engagementScore >= 40
+            ? "Medium"
+            : "Low";
+
+    const responseLikelihood =
+      messageCount >= 3 || selectedLead.status === "contacted"
+        ? "Very High"
+        : messageCount >= 1
+          ? "High"
+          : "Medium";
+
+    return {
+      score,
+      sentiment,
+      interestLevel,
+      responseLikelihood,
+      engagementScore,
+      temperature: getLeadTemperature(selectedLead),
+    };
+  };
+
+  const leadIntelligence = getLeadIntelligence();
+
+  const createLead = async (e) => {
+    e.preventDefault();
+
+    try {
+      await apiClient.request("/leads", {
+        method: "POST",
+        body: JSON.stringify(createLeadForm),
+      });
+
+      setShowCreateLeadModal(false);
+      setCreateLeadForm({
+        name: "",
+        email: "",
+        phone: "",
+        source: "",
+        status: "new",
+        priority: "low",
+        notes: "",
+      });
+
+      fetchLeads();
+      fetchLeadStats();
+    } catch (err) {
+      console.error("Create lead error:", err);
+    }
+  };
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -644,7 +744,10 @@ export default function LeadsPage() {
                 AI View
               </button>
 
-              <button className="primary-btn">
+              <button
+                className="primary-btn"
+                onClick={() => setShowCreateLeadModal(true)}
+              >
                 <Plus size={17} />
                 New Lead
               </button>
@@ -671,7 +774,7 @@ export default function LeadsPage() {
                 AI View
               </button>
 
-              <button className="primary-btn">
+              <button className="primary-btn" onClick={() => setShowCreateLeadModal(true)}>
                 <Plus size={17} />
                 New Lead
               </button>
@@ -1249,12 +1352,14 @@ export default function LeadsPage() {
           <div className="insight-card">
             <div className="panel-header">
               <h3>Lead Intelligence</h3>
-              <span className="hot-tag">Hot Lead</span>
+              <span className="hot-tag">
+                {leadIntelligence.temperature} Lead
+              </span>
             </div>
             <div className="insight-wrap">
               <div className="score-circle">
                 <div>
-                  <h2>92%</h2>
+                  <h2>{leadIntelligence.score}%</h2>
                   <span>AI Score</span>
                 </div>
               </div>
@@ -1262,19 +1367,21 @@ export default function LeadsPage() {
               <div className="insight-list">
                 <div className="insight-row">
                   <span>Sentiment</span>
-                  <strong>High Intent</strong>
+                  <strong>{leadIntelligence.sentiment}</strong>
                 </div>
                 <div className="insight-row">
                   <span>Interest Level</span>
-                  <strong>Very High</strong>
+                  <strong>{leadIntelligence.interestLevel}</strong>
                 </div>
                 <div className="insight-row">
                   <span>Response Likelihood</span>
-                  <strong>Very High</strong>
+                  <strong>{leadIntelligence.responseLikelihood}</strong>
                 </div>
                 <div className="insight-row">
                   <span>Engagement Score</span>
-                  <strong className="dark-insight-text">85/100</strong>
+                  <strong className="dark-insight-text">
+                    {leadIntelligence.engagementScore}/100
+                  </strong>
                 </div>
               </div>
             </div>
@@ -1732,6 +1839,137 @@ export default function LeadsPage() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+      {showCreateLeadModal && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>New Lead</h3>
+              <button onClick={() => setShowCreateLeadModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={createLead}>
+              <div className="lead-form-grid">
+                <div className="lead-form-field">
+                  <label>Name</label>
+                  <input
+                    required
+                    value={createLeadForm.name}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="lead-form-field">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    value={createLeadForm.email}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        email: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="lead-form-field">
+                  <label>Phone</label>
+                  <input
+                    value={createLeadForm.phone}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="lead-form-field">
+                  <label>Source</label>
+                  <input
+                    value={createLeadForm.source}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        source: e.target.value,
+                      })
+                    }
+                    placeholder="Website, Facebook, WhatsApp..."
+                  />
+                </div>
+
+                <div className="lead-form-field form-group">
+                  <label>Status</label>
+                  <select
+                    value={createLeadForm.status}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="follow-up">Follow Up</option>
+                    <option value="closed-won">Closed Won</option>
+                    <option value="closed-lost">Closed Lost</option>
+                  </select>
+                </div>
+
+                <div className="lead-form-field form-group">
+                  <label>Priority</label>
+                  <select
+                    value={createLeadForm.priority}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        priority: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="lead-form-field full">
+                  <label>Notes</label>
+                  <textarea
+                    rows="4"
+                    value={createLeadForm.notes}
+                    onChange={(e) =>
+                      setCreateLeadForm({
+                        ...createLeadForm,
+                        notes: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="lead-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateLeadModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit">Create Lead</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

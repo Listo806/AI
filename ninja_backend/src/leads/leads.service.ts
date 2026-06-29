@@ -160,15 +160,16 @@ export class LeadsService {
     }
 
     const { rows } = await this.db.query(
-      `INSERT INTO leads (name, email, phone, status, assigned_to, property_id, buyer_id, created_by, team_id, notes, source, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      `INSERT INTO leads (name, email, phone, status, priority, assigned_to, property_id, buyer_id, created_by, team_id, notes, source, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+       RETURNING id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"`,
       [
         createLeadDto.name,
         createLeadDto.email || null,
         createLeadDto.phone || null,
         status,
+        (createLeadDto as any).priority || 'low',
         createLeadDto.assignedTo || null,
         createLeadDto.propertyId || null,
         buyerId,

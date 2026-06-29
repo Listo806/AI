@@ -1427,7 +1427,7 @@ body .leads-page {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
-  z-index: 9999;
+  z-index: 9999999999;
   display: flex;
   justify-content: center;
   align-items: center;
