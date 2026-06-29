@@ -1025,6 +1025,31 @@ l.created_at DESC
       conversion,
     };
   }
+  private buildAiQueue(leads: any[]) {
+    return leads.filter((l) => l.priority === "high").slice(0, 10);
+  }
+  private buildLeadIntelligence(leads: any[]) {
+    return {
+      hot: leads.filter((l) => l.priority === "high").length,
+
+      warm: leads.filter((l) => l.priority === "medium").length,
+
+      cold: leads.filter((l) => l.priority === "low").length,
+    };
+  }
+  private buildRevenue(leads: any[]) {
+    const value = leads.reduce(
+      (t, l) => t + Number(l.deal_value || 0),
+
+      0,
+    );
+
+    return {
+      pipelineValue: value,
+
+      averageDeal: leads.length ? Math.round(value / leads.length) : 0,
+    };
+  }
   async getLeadStats(userId: string, teamId: string | null, range = "all") {
     const params = teamId ? [teamId] : [userId];
     const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
