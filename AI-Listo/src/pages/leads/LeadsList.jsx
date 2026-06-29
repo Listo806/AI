@@ -54,8 +54,11 @@ export default function LeadsPage() {
   const [propertiesNote, setPropertiesNote] = useState("");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [followUpMessage, setFollowUpMessage] = useState("");
+  const [showLeadProfileModal, setShowLeadProfileModal] = useState(false);
 
   const [chatMessage, setChatMessage] = useState("");
+  const [leadMessages, setLeadMessages] = useState([]);
+  const [leadMessagesLoading, setLeadMessagesLoading] = useState(false);
 
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showingForm, setShowingForm] = useState({
@@ -63,7 +66,11 @@ export default function LeadsPage() {
     time: "",
     note: "",
   });
-
+  const [leadProfileForm, setLeadProfileForm] = useState({
+    status: "new",
+    priority: "low",
+    notes: "",
+  });
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -182,6 +189,7 @@ export default function LeadsPage() {
 
       if (activeLead?.id) {
         fetchLeadEvents(activeLead.id);
+        fetchLeadMessages(activeLead.id);
       }
     } catch (err) {
       console.error("Fetch leads error:", err);
@@ -259,6 +267,7 @@ export default function LeadsPage() {
   const selectLead = (lead) => {
     setSelectedLead(lead);
     fetchLeadEvents(lead.id);
+    fetchLeadMessages(lead.id);
   };
 
   const escalateSelectedLead = async () => {
@@ -445,15 +454,12 @@ export default function LeadsPage() {
 
       setChatMessage("");
       fetchLeadEvents(selectedLead.id);
+      fetchLeadMessages(selectedLead.id);
       fetchFullLeadEvents(1, false);
     } catch (err) {
       console.error("Send lead message error:", err);
     }
   };
-
-  const leadMessages = leadEvents.filter(
-    (event) => event.eventType === "lead.message_sent",
-  );
 
   const generateAiAssistMessage = () => {
     if (!selectedLead) return;
@@ -479,6 +485,67 @@ export default function LeadsPage() {
     };
 
     setChatMessage(replies[type] || "");
+  };
+  const openLeadProfile = () => {
+    if (!selectedLead) return;
+
+    setLeadProfileForm({
+      status: selectedLead.status || "new",
+      priority: selectedLead.priority || "low",
+      notes: selectedLead.notes || "",
+    });
+
+    setShowLeadProfileModal(true);
+  };
+  const saveLeadProfile = async (e) => {
+    e.preventDefault();
+
+    await updateSelectedLead({
+      status: leadProfileForm.status,
+      priority: leadProfileForm.priority,
+      notes: leadProfileForm.notes,
+    });
+
+    setShowLeadProfileModal(false);
+  };
+  const fetchLeadMessages = async (leadId) => {
+    try {
+      setLeadMessagesLoading(true);
+
+      const response = await apiClient.request(
+        `/leads/${leadId}/events?limit=50&page=1`,
+        { method: "GET" },
+      );
+
+      const data = response?.data || response || {};
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      setLeadMessages(
+        items.filter((event) => event.eventType === "lead.message_sent"),
+      );
+    } catch (err) {
+      console.error("Fetch lead messages error:", err);
+      setLeadMessages([]);
+    } finally {
+      setLeadMessagesLoading(false);
+    }
+  };
+  const getCloseProbability = (stage) => {
+    const map = {
+      new: 10,
+      discovery: 20,
+      qualified: 35,
+      "property-match": 45,
+      showing: 55,
+      proposal: 65,
+      negotiation: 78,
+      contract: 88,
+      closing: 95,
+      won: 100,
+      lost: 0,
+    };
+
+    return map[String(stage || "new").toLowerCase()] ?? 10;
   };
   return (
     <div className="leads-page">
@@ -902,10 +969,9 @@ export default function LeadsPage() {
                 <option value="new">New</option>
                 <option value="contacted">Contacted</option>
                 <option value="qualified">Qualified</option>
-                <option value="showing">Showing</option>
-                <option value="negotiation">Negotiation</option>
-                <option value="closed">Closed</option>
-                <option value="lost">Lost</option>
+                <option value="follow-up">Follow Up</option>
+                <option value="closed-won">Closed Won</option>
+                <option value="closed-lost">Closed Lost</option>
               </select>
             </div>
 
@@ -938,12 +1004,22 @@ export default function LeadsPage() {
                   }.`}
               </p>
             </div>
-            <button className="view-profile-btn">View Profile</button>
+            <button
+              className="view-profile-btn"
+              onClick={openLeadProfile}
+              disabled={!selectedLead}
+            >
+              View Profile
+            </button>
           </div>
 
           {/* CHAT BODY */}
           <div className="chat-body">
-            {leadMessages.length ? (
+            {leadMessagesLoading ? (
+              <div className="message left">
+                <p>Loading messages...</p>
+              </div>
+            ) : leadMessages.length ? (
               leadMessages
                 .slice()
                 .reverse()
@@ -1139,19 +1215,30 @@ export default function LeadsPage() {
             <div className="revenue-grid">
               <div className="revenue-box">
                 <span className="revenue-label">Deal Value</span>
-                <strong className="revenue-val-green">$220,000</strong>
+                <strong className="revenue-val-green">
+                  ${Number(selectedLead?.dealValue || 0).toLocaleString()}
+                </strong>
               </div>
+
               <div className="revenue-box">
                 <span className="revenue-label">Close Probability</span>
-                <strong className="revenue-val-blue">78%</strong>
+                <strong className="revenue-val-blue">
+                  {getCloseProbability(selectedLead?.dealStage)}%
+                </strong>
               </div>
+
               <div className="revenue-box">
                 <span className="revenue-label">Est. Close Date</span>
-                <strong className="revenue-val-dark">May 28, 2025</strong>
+                <strong className="revenue-val-dark">
+                  {selectedLead?.estimatedCloseDate || "-"}
+                </strong>
               </div>
+
               <div className="revenue-box">
                 <span className="revenue-label">Pipeline Stage</span>
-                <strong className="revenue-val-orange">Negotiation</strong>
+                <strong className="revenue-val-orange">
+                  {selectedLead?.dealStage || "new"}
+                </strong>
               </div>
             </div>
           </div>
@@ -1444,6 +1531,82 @@ export default function LeadsPage() {
                 </button>
 
                 <button type="submit">Send Follow-Up</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {showLeadProfileModal && selectedLead && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>Lead Profile</h3>
+              <button onClick={() => setShowLeadProfileModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={saveLeadProfile}>
+              <div className="lead-form-grid">
+                <div className="lead-form-field form-group">
+                  <label>Status</label>
+                  <select
+                    value={leadProfileForm.status}
+                    onChange={(e) =>
+                      setLeadProfileForm({
+                        ...leadProfileForm,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="follow-up">Follow Up</option>
+                    <option value="closed-won">Closed Won</option>
+                    <option value="closed-lost">Closed Lost</option>
+                  </select>
+                </div>
+
+                <div className="lead-form-field form-group">
+                  <label>Priority</label>
+                  <select
+                    value={leadProfileForm.priority}
+                    onChange={(e) =>
+                      setLeadProfileForm({
+                        ...leadProfileForm,
+                        priority: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="lead-form-field full">
+                  <label>Notes</label>
+                  <textarea
+                    rows="5"
+                    value={leadProfileForm.notes}
+                    onChange={(e) =>
+                      setLeadProfileForm({
+                        ...leadProfileForm,
+                        notes: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="lead-modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowLeadProfileModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit">Save Profile</button>
               </div>
             </form>
           </div>

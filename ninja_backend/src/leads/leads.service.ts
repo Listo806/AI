@@ -212,20 +212,55 @@ export class LeadsService {
     let query: string;
     let params: any[];
 
-    // If user has a team, show all team leads, otherwise only their own
+    const selectFields = `
+    l.id,
+    l.name,
+    l.email,
+    l.phone,
+    l.status,
+    l.priority,
+    l.assigned_to as "assignedTo",
+    l.property_id as "propertyId",
+    l.buyer_id as "buyerId",
+    l.created_by as "createdBy",
+    l.team_id as "teamId",
+    l.notes,
+    l.source,
+    l.created_at as "createdAt",
+    l.updated_at as "updatedAt",
+    d.id as "dealId",
+    d.value as "dealValue",
+    d.stage as "dealStage",
+    d.notes as "dealNotes"
+  `;
+
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
-                      team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
-               FROM leads
-               WHERE team_id = $1
-               ORDER BY created_at DESC`;
+      query = `
+      SELECT ${selectFields}
+      FROM leads l
+      LEFT JOIN LATERAL (
+        SELECT id, value, stage, notes
+        FROM deals
+        WHERE lead_id = l.id
+        LIMIT 1
+      ) d ON true
+      WHERE l.team_id = $1
+      ORDER BY l.created_at DESC
+    `;
       params = [teamId];
     } else {
-      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
-                      team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
-               FROM leads
-               WHERE created_by = $1
-               ORDER BY created_at DESC`;
+      query = `
+      SELECT ${selectFields}
+      FROM leads l
+      LEFT JOIN LATERAL (
+        SELECT id, value, stage, notes
+        FROM deals
+        WHERE lead_id = l.id
+        LIMIT 1
+      ) d ON true
+      WHERE l.created_by = $1
+      ORDER BY l.created_at DESC
+    `;
       params = [userId];
     }
 
@@ -264,9 +299,19 @@ export class LeadsService {
         p.type as "propertyType",
         p.address as "propertyAddress",
         p.city as "propertyCity",
-        p.state as "propertyState"
+        p.state as "propertyState",
+        d.id as "dealId",
+        d.value as "dealValue",
+        d.stage as "dealStage",
+        d.notes as "dealNotes",
        FROM leads l
        LEFT JOIN properties p ON l.property_id = p.id
+       LEFT JOIN LATERAL (
+          SELECT id, value, stage, notes
+          FROM deals
+          WHERE lead_id = l.id
+          LIMIT 1
+        ) d ON true
        WHERE l.id = $1`,
       [id],
     );

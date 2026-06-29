@@ -1508,7 +1508,55 @@ body .leads-page {
   background: #2563eb;
   color: #fff;
 }
+.leads-page .lead-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
 
+.leads-page .lead-profile-grid div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.leads-page .lead-profile-grid .full {
+  grid-column: span 2;
+}
+
+.leads-page .lead-profile-grid label {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.leads-page .lead-profile-grid strong {
+  color: #0f172a;
+}
+
+.leads-page .lead-profile-grid p {
+  color: #334155;
+  line-height: 1.5;
+}
+.leads-page .form-group select{
+    border: 1px solid #dcdcdc;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    outline: none;
+}
+@media (max-width: 640px) {
+  .leads-page .lead-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leads-page .lead-profile-grid .full {
+    grid-column: span 1;
+  }
+}
 @media (max-width: 640px) {
   .leads-page .lead-form-grid {
     grid-template-columns: 1fr;
