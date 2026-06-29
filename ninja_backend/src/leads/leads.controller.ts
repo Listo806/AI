@@ -293,4 +293,9 @@ export class LeadsController {
   ) {
     return this.leadsService.createLeadEvent(id, body, user);
   }
+
+  @Get("stats")
+  getLeadStats(@CurrentUser() user: any) {
+    return this.leadsService.getLeadStats(user);
+  }
 }

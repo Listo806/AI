@@ -930,4 +930,89 @@ export class LeadsService {
 
     return rows[0];
   }
+
+  async getLeadStats(user: any) {
+    const userId = user.id;
+    const teamId = user.teamId || null;
+
+    const params = teamId ? [teamId] : [userId];
+    const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
+
+    const { rows } = await this.db.query(
+      `
+    WITH scoped_leads AS (
+      SELECT *
+      FROM leads l
+      WHERE ${scopeWhere}
+    ),
+    lead_counts AS (
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (
+          WHERE created_at >= date_trunc('month', NOW())
+        )::int AS new_this_month,
+        COUNT(*) FILTER (
+          WHERE status = 'qualified'
+        )::int AS qualified,
+        COUNT(*) FILTER (
+          WHERE status = 'closed-won'
+        )::int AS closed_won,
+        COUNT(*) FILTER (
+          WHERE status = 'closed-lost'
+        )::int AS closed_lost
+      FROM scoped_leads
+    ),
+    event_counts AS (
+      SELECT
+        COUNT(*) FILTER (
+          WHERE e.event_type = 'lead.message_sent'
+        )::int AS active_conversations,
+        COUNT(*) FILTER (
+          WHERE e.event_type = 'lead.message_sent'
+            AND e.created_at::date = CURRENT_DATE
+        )::int AS conversation_today,
+        COUNT(*) FILTER (
+          WHERE e.event_type = 'lead.showing_booked'
+        )::int AS appointments,
+        COUNT(*) FILTER (
+          WHERE e.event_type = 'lead.showing_booked'
+            AND e.created_at >= date_trunc('week', NOW())
+        )::int AS appointment_this_week
+      FROM events e
+      INNER JOIN scoped_leads sl ON sl.id = e.entity_id
+      WHERE e.entity_type = 'lead'
+    )
+    SELECT
+      lc.total AS "total",
+      lc.new_this_month AS "newThisMonth",
+
+      lc.qualified AS "qualified",
+      CASE
+        WHEN lc.total > 0
+        THEN ROUND((lc.qualified::numeric / lc.total::numeric) * 100)::int
+        ELSE 0
+      END AS "qualifiedRate",
+
+      ec.active_conversations AS "activeConversations",
+      ec.conversation_today AS "conversationToday",
+
+      ec.appointments AS "appointments",
+      ec.appointment_this_week AS "appointmentThisWeek",
+
+      CASE
+        WHEN lc.total > 0
+        THEN ROUND((lc.closed_won::numeric / lc.total::numeric) * 100)::int
+        ELSE 0
+      END AS "conversionRate",
+
+      '2m' AS "avgResponse",
+      0 AS "responseImprove"
+    FROM lead_counts lc
+    CROSS JOIN event_counts ec
+    `,
+      params,
+    );
+
+    return rows[0];
+  }
 }

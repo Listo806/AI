@@ -1548,6 +1548,33 @@ body .leads-page {
     font-size: 14px;
     outline: none;
 }
+.leads-page .status-inactive-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+.leads-page .automation-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leads-page .automation-modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.leads-page .automation-item-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+}
 @media (max-width: 640px) {
   .leads-page .lead-profile-grid {
     grid-template-columns: 1fr;

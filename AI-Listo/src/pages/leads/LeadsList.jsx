@@ -61,6 +61,8 @@ export default function LeadsPage() {
   const [leadMessagesLoading, setLeadMessagesLoading] = useState(false);
 
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
+  const [showAutomationModal, setShowAutomationModal] = useState(false);
+  const [leadStats, setLeadStats] = useState(null);
   const [showingForm, setShowingForm] = useState({
     date: "",
     time: "",
@@ -87,46 +89,57 @@ export default function LeadsPage() {
   }, []);
 
   const [showFilters, setShowFilters] = useState(false);
+  const fetchLeadStats = async () => {
+    try {
+      const response = await apiClient.request("/leads/stats", {
+        method: "GET",
+      });
+
+      setLeadStats(response?.data || response);
+    } catch (err) {
+      console.error("Fetch lead stats error:", err);
+    }
+  };
   const stats = [
     {
       title: "Total Leads",
-      value: "248",
-      change: "+32 this month",
+      value: leadStats?.total || 0,
+      change: `+${leadStats?.newThisMonth || 0} this month`,
       icon: <Users size={20} />,
       className: "blue",
     },
     {
       title: "AI Qualified",
-      value: "156",
-      change: "63% qualified",
+      value: leadStats?.qualified || 0,
+      change: `${leadStats?.qualifiedRate || 0}% qualified`,
       icon: <Bot size={20} />,
       className: "green",
     },
     {
       title: "Active Conversations",
-      value: "41",
-      change: "+28 today",
+      value: leadStats?.activeConversations || 0,
+      change: `+${leadStats?.conversationToday || 0} today`,
       icon: <MessageCircle size={20} />,
       className: "purple",
     },
     {
       title: "Appointments",
-      value: "18",
-      change: "+6 this week",
+      value: leadStats?.appointments || 0,
+      change: `+${leadStats?.appointmentThisWeek || 0} this week`,
       icon: <Calendar size={20} />,
       className: "orange",
     },
     {
       title: "Conversion Rate",
-      value: "21%",
-      change: "+4.8%",
+      value: `${leadStats?.conversionRate || 0}%`,
+      change: `${leadStats?.responseImprove || 0}%`,
       icon: <TrendingUp size={20} />,
       className: "cyan",
     },
     {
       title: "Avg Response",
-      value: "2m",
-      change: "-18%",
+      value: leadStats?.avgResponse || "0m",
+      change: `-${leadStats?.responseImprove || 0}%`,
       icon: <Clock3 size={20} />,
       className: "pink",
     },
@@ -202,6 +215,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     fetchLeads();
+    fetchLeadStats();
   }, [location.search]);
 
   const updateSelectedLead = async (payload) => {
@@ -547,6 +561,57 @@ export default function LeadsPage() {
 
     return map[String(stage || "new").toLowerCase()] ?? 10;
   };
+  const getAutomationStatus = (type) => {
+    if (!selectedLead) return false;
+
+    const status = selectedLead.status || "new";
+    const priority = selectedLead.priority || "low";
+    const stage = selectedLead.dealStage || "new";
+
+    const rules = {
+      followUp: ["contacted", "follow-up", "qualified"].includes(status),
+      qualification: ["new", "contacted"].includes(status),
+      appointment: ["qualified", "follow-up"].includes(status),
+      propertyMatch: ["qualified", "follow-up"].includes(status),
+      escalation:
+        priority === "high" ||
+        ["negotiation", "contract", "closing"].includes(stage),
+    };
+
+    return Boolean(rules[type]);
+  };
+  const automationItems = [
+    {
+      title: "AI Auto Follow-Up",
+      type: "followUp",
+      desc: "Send follow-up when lead needs nurturing",
+      icon: <Sparkles size={16} />,
+    },
+    {
+      title: "AI Qualification",
+      type: "qualification",
+      desc: "Analyze new leads and qualify intent",
+      icon: <Bot size={16} />,
+    },
+    {
+      title: "Auto Appointment Booking",
+      type: "appointment",
+      desc: "Suggest appointment actions for qualified leads",
+      icon: <Calendar size={16} />,
+    },
+    {
+      title: "Smart Property Matching",
+      type: "propertyMatch",
+      desc: "Recommend matching properties",
+      icon: <Home size={16} />,
+    },
+    {
+      title: "Escalate Hot Leads",
+      type: "escalation",
+      desc: "Flag urgent or high-value opportunities",
+      icon: <ArrowUpRight size={16} />,
+    },
+  ];
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -1252,35 +1317,42 @@ export default function LeadsPage() {
                   Manage AI actions for this lead
                 </p>
               </div>
-              <button className="manage-all-link">Manage All</button>
+              <button
+                className="manage-all-link"
+                onClick={() => setShowAutomationModal(true)}
+              >
+                Manage All
+              </button>
             </div>
 
             <div className="automation-list automation-list-spacing">
-              {[
-                { title: "AI Auto Follow-Up", icon: <Sparkles size={16} /> },
-                { title: "AI Qualification", icon: <Bot size={16} /> },
-                {
-                  title: "Auto Appointment Booking",
-                  icon: <Calendar size={16} />,
-                },
-                { title: "Smart Property Matching", icon: <Home size={16} /> },
-                {
-                  title: "Escalate Hot Leads",
-                  icon: <ArrowUpRight size={16} />,
-                },
-              ].map((item, idx) => (
-                <div className="automation-row-custom" key={idx}>
-                  <div className="automation-left-group">
-                    <span className="automation-row-icon">{item.icon}</span>
-                    <h4 className="automation-item-title">{item.title}</h4>
-                  </div>
+              {automationItems.map((item, idx) => {
+                const isActive = getAutomationStatus(item.type);
 
-                  <div className="automation-right-group">
-                    <span className="status-active-text">Active</span>
-                    <div className="switch active"></div>
+                return (
+                  <div className="automation-row-custom" key={idx}>
+                    <div className="automation-left-group">
+                      <span className="automation-row-icon">{item.icon}</span>
+                      <h4 className="automation-item-title">{item.title}</h4>
+                    </div>
+
+                    <div className="automation-right-group">
+                      <span
+                        className={
+                          isActive
+                            ? "status-active-text"
+                            : "status-inactive-text"
+                        }
+                      >
+                        {isActive ? "Active" : "Inactive"}
+                      </span>
+                      <div
+                        className={`switch ${isActive ? "active" : ""}`}
+                      ></div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1609,6 +1681,49 @@ export default function LeadsPage() {
                 <button type="submit">Save Profile</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {showAutomationModal && (
+        <div className="lead-modal-overlay">
+          <div className="lead-timeline-modal">
+            <div className="lead-modal-header">
+              <h3>AI Automation Controls</h3>
+              <button onClick={() => setShowAutomationModal(false)}>✕</button>
+            </div>
+
+            <div className="automation-modal-list">
+              {automationItems.map((item) => {
+                const isActive = getAutomationStatus(item.type);
+
+                return (
+                  <div className="automation-modal-row" key={item.type}>
+                    <div className="automation-left-group">
+                      <span className="automation-row-icon">{item.icon}</span>
+                      <div>
+                        <h4 className="automation-item-title">{item.title}</h4>
+                        <p className="automation-item-desc">{item.desc}</p>
+                      </div>
+                    </div>
+
+                    <div className="automation-right-group">
+                      <span
+                        className={
+                          isActive
+                            ? "status-active-text"
+                            : "status-inactive-text"
+                        }
+                      >
+                        {isActive ? "Active" : "Inactive"}
+                      </span>
+                      <div
+                        className={`switch ${isActive ? "active" : ""}`}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
