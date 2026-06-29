@@ -154,10 +154,11 @@ export class LeadsController {
   }
 
   @Get("stats")
-  getLeadStats(@CurrentUser() user: any) {
-    return this.leadsService.getLeadStats(user);
+  getLeadStats(@Req() req) {
+    const user = req.user;
+    return this.leadsService.getLeadStats(user.id, user.teamId || null);
   }
-  
+
   @Get(":id/email-thread")
   @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth("JWT-auth")
@@ -298,6 +299,4 @@ export class LeadsController {
   ) {
     return this.leadsService.createLeadEvent(id, body, user);
   }
-
-  
 }

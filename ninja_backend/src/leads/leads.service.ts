@@ -931,9 +931,7 @@ export class LeadsService {
     return rows[0];
   }
 
-  async getLeadStats(user: any) {
-    const userId = user.id;
-    const teamId = user.teamId || null;
+  async getLeadStats(userId: string, teamId: string | null) {
 
     const params = teamId ? [teamId] : [userId];
     const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
