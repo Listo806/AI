@@ -1803,7 +1803,8 @@ body.crm-dark .crm-error {
 .crm-dark .select-deal, .crm-dark .inspector-deal-activity-log-column, .crm-dark .inspector-ai-next-steps-actions-column,
 .crm-dark .pipeline-page .revenue-forecast-metric-quad-card, .crm-dark #root .properties-page .metrics-grid .metric-card,
 .crm-dark .generator-page .channel-chip.active-blue, .crm-dark #root .team-stat-card,
-.crm-dark .team-workspace .m-user-card, .crm-dark .team-workspace .team-card{
+.crm-dark .team-workspace .m-user-card, .crm-dark .team-workspace .team-card,
+.crm-dark .leads-page .lead-control-field select{
   background: #101827f2;
   border: 1px solid #202733;
 }
@@ -1821,7 +1822,7 @@ body.crm-dark .crm-error {
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
 .crm-dark #root textarea, .crm-dark #root .circle-btn,
 .crm-dark #root .timeline-dot, .crm-dark #root .step-number,
-.crm-dark .properties-page .donut-chart-mock::after{
+.crm-dark .properties-page .donut-chart-mock::after, .crm-dark .leads-page .secondary-btn select{
   background: #101827f2;
 }
 .crm-dark .team-workspace .team-stat-icon{
