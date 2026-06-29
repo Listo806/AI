@@ -31,6 +31,14 @@ export default function SignUp() {
       if (res.accessToken) {
         apiClient.setTokens(res.accessToken, res.refreshToken);
         localStorage.setItem('listo_user', JSON.stringify(res.user));
+        // Google Ads conversion: fire only on a successful signup
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'conversion', {
+            send_to: 'AW-17836518151/z4trCLizpNgbEIfWjrlC',
+            value: 67.0,
+            currency: 'USD',
+          });
+        }
         window.location.href = '/dashboard';
         return;
       } else {
