@@ -303,7 +303,7 @@ export class LeadsService {
         d.id as "dealId",
         d.value as "dealValue",
         d.stage as "dealStage",
-        d.notes as "dealNotes",
+        d.notes as "dealNotes"
        FROM leads l
        LEFT JOIN properties p ON l.property_id = p.id
        LEFT JOIN LATERAL (

@@ -153,6 +153,11 @@ export class LeadsController {
     return this.leadsService.findAll(user.id, user.teamId);
   }
 
+  @Get("stats")
+  getLeadStats(@CurrentUser() user: any) {
+    return this.leadsService.getLeadStats(user);
+  }
+  
   @Get(":id/email-thread")
   @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth("JWT-auth")
@@ -294,8 +299,5 @@ export class LeadsController {
     return this.leadsService.createLeadEvent(id, body, user);
   }
 
-  @Get("stats")
-  getLeadStats(@CurrentUser() user: any) {
-    return this.leadsService.getLeadStats(user);
-  }
+  
 }
