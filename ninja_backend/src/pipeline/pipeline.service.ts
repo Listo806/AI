@@ -952,4 +952,33 @@ export class PipelineService {
       },
     };
   }
+
+  async getDealEvents(id: string, userId: string, teamId?: string | null) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      id,
+      event_type AS "eventType",
+      entity_type AS "entityType",
+      entity_id AS "entityId",
+      user_id AS "userId",
+      team_id AS "teamId",
+      COALESCE(metadata, '{}'::jsonb) AS metadata,
+      created_at AS "createdAt"
+    FROM events
+    WHERE entity_type = 'deal'
+      AND entity_id = $1
+    ORDER BY created_at DESC
+    LIMIT 10
+    `,
+      [deal.id],
+    );
+
+    return {
+      deal,
+      events: rows,
+    };
+  }
 }

@@ -31,7 +31,7 @@ export class PipelineController {
       user.id,
       user.teamId || user.team_id || null,
     );
-  }  
+  }
   @Get()
   getPipeline(@Req() req: any) {
     const user = req.user;
@@ -62,7 +62,7 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
-  
+
   @Patch("deals/:id")
   updateDeal(
     @Param("id") id: string,
@@ -106,5 +106,14 @@ export class PipelineController {
     );
   }
 
-  
+  @Get("deals/:id/events")
+  getDealEvents(@Param("id") id: string, @Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.getDealEvents(
+      id,
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
 }

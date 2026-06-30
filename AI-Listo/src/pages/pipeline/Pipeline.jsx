@@ -57,7 +57,17 @@ export default function PipelinePage() {
   const [pipelineLoading, setPipelineLoading] = useState(false);
   const [movingDealId, setMovingDealId] = useState(null);
   const [search, setSearch] = useState("");
+  const [showCreateDealModal, setShowCreateDealModal] = useState(false);
+  const [selectedDeal, setSelectedDeal] = useState(null);
+  const [selectedDealEvents, setSelectedDealEvents] = useState([]);
+  const [selectedDealLoading, setSelectedDealLoading] = useState(false);
 
+  const [createDealForm, setCreateDealForm] = useState({
+    name: "",
+    value: "",
+    stage: "new",
+    notes: "",
+  });
   const statIcons = {
     users: <Users size={20} />,
     dollar: <DollarSign size={20} />,
@@ -79,6 +89,13 @@ export default function PipelinePage() {
 
       setPipelineStats(Array.isArray(data.stats) ? data.stats : []);
       setPipelineColumns(Array.isArray(data.columns) ? data.columns : []);
+      const columns = Array.isArray(data.columns) ? data.columns : [];
+      const firstDeal = columns.flatMap((col) => col.deals || [])[0] || null;
+
+      if (!selectedDeal && firstDeal) {
+        setSelectedDeal(firstDeal);
+        fetchDealEvents(firstDeal.id);
+      }
     } catch (err) {
       console.error("Fetch pipeline dashboard error:", err);
     } finally {
@@ -136,6 +153,60 @@ export default function PipelinePage() {
       ),
     };
   });
+  const createDeal = async (e) => {
+    e.preventDefault();
+
+    try {
+      await apiClient.request("/pipeline/deals", {
+        method: "POST",
+        body: JSON.stringify({
+          name: createDealForm.name,
+          value: Number(createDealForm.value || 0),
+          stage: createDealForm.stage,
+          notes: createDealForm.notes,
+        }),
+      });
+
+      setShowCreateDealModal(false);
+
+      setCreateDealForm({
+        name: "",
+        value: "",
+        stage: "new",
+        notes: "",
+      });
+
+      fetchPipelineDashboard();
+    } catch (err) {
+      console.error("Create deal error:", err);
+    }
+  };
+  const fetchDealEvents = async (dealId) => {
+    if (!dealId) return;
+
+    try {
+      setSelectedDealLoading(true);
+
+      const response = await apiClient.request(
+        `/pipeline/deals/${dealId}/events`,
+        {
+          method: "GET",
+        },
+      );
+
+      const data = response?.data || response || {};
+      setSelectedDealEvents(Array.isArray(data.events) ? data.events : []);
+    } catch (err) {
+      console.error("Fetch deal events error:", err);
+      setSelectedDealEvents([]);
+    } finally {
+      setSelectedDealLoading(false);
+    }
+  };
+  const selectDeal = (deal) => {
+    setSelectedDeal(deal);
+    fetchDealEvents(deal.id);
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -170,7 +241,10 @@ export default function PipelinePage() {
           <button className="secondary-btn">
             <Download size={15} /> Export
           </button>
-          <button className="primary-btn">
+          <button
+            className="primary-btn"
+            onClick={() => setShowCreateDealModal(true)}
+          >
             <Plus size={16} /> Add Deal
           </button>
         </div>
@@ -412,7 +486,13 @@ export default function PipelinePage() {
 
               <div className="kanban-cards-vertical-stack">
                 {col.deals.map((deal, dIdx) => (
-                  <div className="kanban-deal-card-item" key={dIdx}>
+                  <div
+                    className={`kanban-deal-card-item ${
+                      selectedDeal?.id === deal.id ? "active" : ""
+                    }`}
+                    key={deal.id}
+                    onClick={() => selectDeal(deal)}
+                  >
                     <div className="deal-card-header-top-row">
                       <div
                         className={`deal-card-avatar-circle ${deal.avatarClass}`}
@@ -492,7 +572,16 @@ export default function PipelinePage() {
                   </div>
                 ))}
 
-                <button className="kanban-column-add-deal-inline-trigger-btn">
+                <button
+                  className="kanban-column-add-deal-inline-trigger-btn"
+                  onClick={() => {
+                    setCreateDealForm((prev) => ({
+                      ...prev,
+                      stage: col.id,
+                    }));
+                    setShowCreateDealModal(true);
+                  }}
+                >
                   <Plus size={14} /> Add Deal
                 </button>
               </div>
@@ -685,17 +774,20 @@ export default function PipelinePage() {
                 </div>
                 <div className="inspector-deal-wrap">
                   <h4 className="inspector-deal-client-name">
-                    Makoto Kawamoto
+                    {selectedDeal?.name || "Select a deal"}
                   </h4>
+
                   <span className="inspector-deal-property-title">
-                    Luxury Penthouse
+                    {selectedDeal?.property || "No deal selected"}
                   </span>
                   <div className="flex items-center gap-2 mt-2">
                     <strong className="inspector-deal-financial-value">
-                      $910,000
+                      {selectedDeal?.amount || "$0"}
                     </strong>
-                    <span className="deal-card-temperature-tag tag-hot">
-                      Hot
+                    <span
+                      className={`deal-card-temperature-tag tag-${String(selectedDeal?.tag || "warm").toLowerCase()}`}
+                    >
+                      {selectedDeal?.tag || "Warm"}
                     </span>
                   </div>
                 </div>
@@ -707,13 +799,13 @@ export default function PipelinePage() {
                 <span className="inspector-metric-card-label">AI Score</span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <strong className="inspector-metric-card-large-value">
-                    84%
+                    {selectedDeal?.score || "0%"}
                   </strong>
                 </div>
                 <div className="inspector-metric-horizontal-progress-bar-bg">
                   <div
                     className="inspector-metric-horizontal-progress-fill"
-                    style={{ width: "84%" }}
+                    style={{ width: selectedDeal?.score || "0%" }}
                   ></div>
                 </div>
               </div>
@@ -728,9 +820,11 @@ export default function PipelinePage() {
               <div className="inspector-metric-box-card">
                 <span className="inspector-metric-card-label">Stage</span>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="column-status-dot dot-proposal"></span>
+                  <span
+                    className={`column-status-dot dot-${selectedDeal?.stage || "new"}`}
+                  ></span>
                   <strong className="inspector-metric-card-standard-text tag-purple">
-                    Proposal
+                    {selectedDeal?.stage || "new"}
                   </strong>
                 </div>
               </div>
@@ -738,7 +832,8 @@ export default function PipelinePage() {
               <div className="ofmobile inspector-metric-box-card">
                 <span className="inspector-metric-card-label">Next Action</span>
                 <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
-                  <Calendar size={14} /> <span>Follow up</span>
+                  <Calendar size={14} />{" "}
+                  <span>{selectedDeal?.action || "No action"}</span>
                 </div>
                 <span className="inspector-metric-card-sub-timestamp">
                   <Clock3 size={11} /> 45 min ago
@@ -767,33 +862,36 @@ export default function PipelinePage() {
               </button>
             </div>
             <div className="inspector-activity-logs-mini-stack">
-              <div className="inspector-activity-log-row-item">
-                <span className="activity-log-dot-indicator blue-dot"></span>
-                <span className="activity-log-description-text">
-                  AI score updated to 84%
-                </span>
-                <span className="activity-log-relative-timestamp">
-                  45 min ago
-                </span>
-              </div>
-              <div className="inspector-activity-log-row-item">
-                <span className="activity-log-dot-indicator green-dot"></span>
-                <span className="activity-log-description-text">
-                  Email opened: Property Proposal
-                </span>
-                <span className="activity-log-relative-timestamp">
-                  2 hours ago
-                </span>
-              </div>
-              <div className="inspector-activity-log-row-item">
-                <span className="activity-log-dot-indicator purple-dot"></span>
-                <span className="activity-log-description-text">
-                  Property proposal sent
-                </span>
-                <span className="activity-log-relative-timestamp">
-                  1 day ago
-                </span>
-              </div>
+              {selectedDealLoading ? (
+                <div className="inspector-activity-log-row-item">
+                  <span className="activity-log-dot-indicator blue-dot"></span>
+                  <span className="activity-log-description-text">
+                    Loading activity...
+                  </span>
+                </div>
+              ) : selectedDealEvents.length ? (
+                selectedDealEvents.map((event) => (
+                  <div
+                    className="inspector-activity-log-row-item"
+                    key={event.id}
+                  >
+                    <span className="activity-log-dot-indicator blue-dot"></span>
+                    <span className="activity-log-description-text">
+                      {event.metadata?.title || "Deal activity"}
+                    </span>
+                    <span className="activity-log-relative-timestamp">
+                      {event.metadata?.sub || ""}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="inspector-activity-log-row-item">
+                  <span className="activity-log-dot-indicator green-dot"></span>
+                  <span className="activity-log-description-text">
+                    No activity yet.
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -854,6 +952,108 @@ export default function PipelinePage() {
           <Sparkles size={16} fill="currentColor" /> Run AI Deal Review
         </button>
       </section>
+      {showCreateDealModal && (
+        <div className="pipeline-modal-overlay">
+          <div className="pipeline-modal">
+            <div className="pipeline-modal-header">
+              <h3>Create New Deal</h3>
+
+              <button
+                type="button"
+                className="pipeline-modal-close"
+                onClick={() => setShowCreateDealModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={createDeal}>
+              <div className="pipeline-modal-body">
+                <div className="pipeline-form-grid">
+                  <div className="pipeline-form-field full">
+                    <label>Deal Name</label>
+                    <input
+                      required
+                      value={createDealForm.name}
+                      onChange={(e) =>
+                        setCreateDealForm({
+                          ...createDealForm,
+                          name: e.target.value,
+                        })
+                      }
+                      placeholder="Example: Luxury villa buyer"
+                    />
+                  </div>
+
+                  <div className="pipeline-form-field">
+                    <label>Value</label>
+                    <input
+                      type="number"
+                      value={createDealForm.value}
+                      onChange={(e) =>
+                        setCreateDealForm({
+                          ...createDealForm,
+                          value: e.target.value,
+                        })
+                      }
+                      placeholder="250000"
+                    />
+                  </div>
+
+                  <div className="pipeline-form-field">
+                    <label>Stage</label>
+                    <select
+                      value={createDealForm.stage}
+                      onChange={(e) =>
+                        setCreateDealForm({
+                          ...createDealForm,
+                          stage: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="new">New</option>
+                      <option value="qualified">Qualified</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="won">Won</option>
+                      <option value="lost">Lost</option>
+                    </select>
+                  </div>
+
+                  <div className="pipeline-form-field full">
+                    <label>Notes</label>
+                    <textarea
+                      rows="4"
+                      value={createDealForm.notes}
+                      onChange={(e) =>
+                        setCreateDealForm({
+                          ...createDealForm,
+                          notes: e.target.value,
+                        })
+                      }
+                      placeholder="Add deal notes..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pipeline-modal-footer">
+                <button
+                  type="button"
+                  className="pipeline-btn-cancel"
+                  onClick={() => setShowCreateDealModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="pipeline-btn-save">
+                  Create Deal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

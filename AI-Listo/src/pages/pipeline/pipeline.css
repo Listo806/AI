@@ -1568,8 +1568,175 @@
   align-items: center;
 }
 .pipeline-page .mobile{
-    display: none;
+  display: none;
+}
+/* ===========================
+   CREATE DEAL MODAL
+=========================== */
+
+.pipeline-page .pipeline-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999999999;
+  padding: 32px;
+}
+
+.pipeline-page .pipeline-modal {
+  width: 100%;
+  max-width: 620px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  animation: pipelineModalIn .25s ease;
+}
+
+.pipeline-page .pipeline-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.pipeline-page .pipeline-modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.pipeline-page .pipeline-modal-close {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 12px;
+  background: #f3f4f6;
+  cursor: pointer;
+  font-size: 18px;
+  transition: .2s;
+}
+
+.pipeline-page .pipeline-modal-close:hover {
+  background: #e5e7eb;
+}
+
+.pipeline-page .pipeline-modal-body {
+  padding: 28px;
+}
+
+.pipeline-page .pipeline-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.pipeline-page .pipeline-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.pipeline-page .pipeline-form-field.full {
+  grid-column: 1 / -1;
+}
+
+.pipeline-page .pipeline-form-field label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.pipeline-page .pipeline-form-field input,
+.pipeline-page .pipeline-form-field select,
+.pipeline-page .pipeline-form-field textarea {
+  width: 100%;
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: .2s;
+  background: #fff;
+}
+
+.pipeline-page .pipeline-form-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.pipeline-page .pipeline-form-field input:focus,
+.pipeline-page .pipeline-form-field select:focus,
+.pipeline-page .pipeline-form-field textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+}
+
+.pipeline-page .pipeline-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 22px 28px;
+  border-top: 1px solid #edf2f7;
+}
+
+.pipeline-page .pipeline-btn-cancel {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #475569;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pipeline-page .pipeline-btn-cancel:hover {
+  background: #f8fafc;
+}
+
+.pipeline-page .pipeline-btn-save {
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.pipeline-page .pipeline-btn-save:hover {
+  background: #1d4ed8;
+}
+.pipeline-page .kanban-deal-card-item.active {
+  border-color: #2563eb;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
+}
+@keyframes pipelineModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.98);
   }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .pipeline-page .pipeline-modal {
+    max-width: 100%;
+  }
+
+  .pipeline-page .pipeline-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 1340px) {
   .pipeline-page .inspector-left-identity-column,
   .pipeline-page .inspector-center-metrics-column,
