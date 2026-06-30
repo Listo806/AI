@@ -61,6 +61,19 @@ export default function PipelinePage() {
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [selectedDealEvents, setSelectedDealEvents] = useState([]);
   const [selectedDealLoading, setSelectedDealLoading] = useState(false);
+  const [riskQueue, setRiskQueue] = useState([]);
+  const [forecast, setForecast] = useState(null);
+  const [automationHealth, setAutomationHealth] = useState([]);
+  const [forecastRange, setForecastRange] = useState("month");
+  const [showFilters, setShowFilters] = useState(false);
+  const [scoringDealId, setScoringDealId] = useState(null);
+
+  const [pipelineFilters, setPipelineFilters] = useState({
+    stage: "all",
+    risk: "all",
+    tag: "all",
+    minValue: "",
+  });
 
   const [createDealForm, setCreateDealForm] = useState({
     name: "",
@@ -81,14 +94,22 @@ export default function PipelinePage() {
     try {
       setPipelineLoading(true);
 
-      const response = await apiClient.request("/pipeline/dashboard", {
-        method: "GET",
-      });
+      const response = await apiClient.request(
+        `/pipeline/dashboard?forecastRange=${forecastRange}`,
+        {
+          method: "GET",
+        },
+      );
 
       const data = response?.data || response || {};
 
       setPipelineStats(Array.isArray(data.stats) ? data.stats : []);
       setPipelineColumns(Array.isArray(data.columns) ? data.columns : []);
+      setRiskQueue(Array.isArray(data.riskQueue) ? data.riskQueue : []);
+      setForecast(data.forecast || null);
+      setAutomationHealth(
+        Array.isArray(data.automationHealth) ? data.automationHealth : [],
+      );
       const columns = Array.isArray(data.columns) ? data.columns : [];
       const firstDeal = columns.flatMap((col) => col.deals || [])[0] || null;
 
@@ -105,7 +126,7 @@ export default function PipelinePage() {
 
   useEffect(() => {
     fetchPipelineDashboard();
-  }, []);
+  }, [forecastRange]);
 
   const moveDealToNextStage = async (deal, currentStage) => {
     const stageOrder = [
@@ -139,20 +160,40 @@ export default function PipelinePage() {
     }
   };
 
-  const visibleColumns = pipelineColumns.map((column) => {
-    const keyword = search.trim().toLowerCase();
+  const visibleColumns = pipelineColumns
+    .filter((column) => {
+      return (
+        pipelineFilters.stage === "all" || column.id === pipelineFilters.stage
+      );
+    })
+    .map((column) => {
+      const keyword = search.trim().toLowerCase();
 
-    if (!keyword) return column;
+      return {
+        ...column,
+        deals: (column.deals || []).filter((deal) => {
+          const matchesSearch = !keyword
+            ? true
+            : [deal.name, deal.property, deal.amount, deal.tag, deal.stage]
+                .filter(Boolean)
+                .some((value) => String(value).toLowerCase().includes(keyword));
 
-    return {
-      ...column,
-      deals: (column.deals || []).filter((deal) =>
-        [deal.name, deal.property, deal.amount, deal.tag, deal.stage]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(keyword)),
-      ),
-    };
-  });
+          const matchesRisk =
+            pipelineFilters.risk === "all" ||
+            String(deal.risk || "").toLowerCase() === pipelineFilters.risk;
+
+          const matchesTag =
+            pipelineFilters.tag === "all" ||
+            String(deal.tag || "").toLowerCase() === pipelineFilters.tag;
+
+          const matchesValue =
+            !pipelineFilters.minValue ||
+            Number(deal.value || 0) >= Number(pipelineFilters.minValue || 0);
+
+          return matchesSearch && matchesRisk && matchesTag && matchesValue;
+        }),
+      };
+    });
   const createDeal = async (e) => {
     e.preventDefault();
 
@@ -207,6 +248,115 @@ export default function PipelinePage() {
     setSelectedDeal(deal);
     fetchDealEvents(deal.id);
   };
+  const reviewRiskDeal = (dealId) => {
+    const allDeals = pipelineColumns.flatMap((col) => col.deals || []);
+    const matchedDeal = allDeals.find(
+      (deal) => String(deal.id) === String(dealId),
+    );
+
+    if (!matchedDeal) return;
+
+    selectDeal(matchedDeal);
+
+    setTimeout(() => {
+      document
+        .querySelector(".selected-deal-bottom-drilldown-inspector-panel")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+    }, 100);
+  };
+  const renderTrend = (trend, fallback = "→ 0%") => {
+    if (!trend) return fallback;
+    if (typeof trend === "string") return trend;
+    return trend.text || fallback;
+  };
+
+  const getTrendClass = (trend, fallback = "text-slate") => {
+    if (!trend || typeof trend === "string") return fallback;
+    return trend.className || fallback;
+  };
+  const exportPipelineCsv = () => {
+    const rows = visibleColumns.flatMap((column) =>
+      (column.deals || []).map((deal) => ({
+        stage: column.title,
+        name: deal.name || "",
+        contact: deal.property || "",
+        amount: deal.amount || "",
+        value: deal.value || 0,
+        score: deal.score || "",
+        tag: deal.tag || "",
+        risk: deal.risk || "",
+        nextAction: deal.action || "",
+        updated: deal.time || "",
+      })),
+    );
+
+    const headers = [
+      "Stage",
+      "Deal Name",
+      "Contact",
+      "Amount",
+      "Raw Value",
+      "AI Score",
+      "Tag",
+      "Risk",
+      "Next Action",
+      "Updated",
+    ];
+
+    const csv = [
+      headers,
+      ...rows.map((row) => [
+        row.stage,
+        row.name,
+        row.contact,
+        row.amount,
+        row.value,
+        row.score,
+        row.tag,
+        row.risk,
+        row.nextAction,
+        row.updated,
+      ]),
+    ]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "pipeline-deals.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const scoreDeal = async (deal) => {
+    if (!deal?.id) return;
+
+    try {
+      setScoringDealId(deal.id);
+
+      await apiClient.request(`/pipeline/deals/${deal.id}/score`, {
+        method: "POST",
+      });
+
+      await fetchDealEvents(deal.id);
+      await fetchPipelineDashboard();
+    } catch (err) {
+      console.error("Score deal error:", err);
+    } finally {
+      setScoringDealId(null);
+    }
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -232,13 +382,16 @@ export default function PipelinePage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="secondary-btn filter-btn">
+          <button
+            className={`secondary-btn filter-btn ${showFilters ? "active" : ""}`}
+            onClick={() => setShowFilters((prev) => !prev)}
+          >
             <SlidersHorizontal size={15} /> Filters
           </button>
           <button className="secondary-btn active-view-btn">
             <Sparkles size={15} /> AI Pipeline View
           </button>
-          <button className="secondary-btn">
+          <button className="secondary-btn" onClick={exportPipelineCsv}>
             <Download size={15} /> Export
           </button>
           <button
@@ -278,8 +431,22 @@ export default function PipelinePage() {
         <div className="secondary-btn dropdown-filter">
           <div>
             <GitFork size={15} />
-            <select defaultValue="">
-              <option value="">All Stages</option>
+            <select
+              value={pipelineFilters.stage}
+              onChange={(e) =>
+                setPipelineFilters((prev) => ({
+                  ...prev,
+                  stage: e.target.value,
+                }))
+              }
+            >
+              <option value="all">All Stages</option>
+              <option value="new">New</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
             </select>
           </div>
           <ChevronDown size={14} />
@@ -289,8 +456,19 @@ export default function PipelinePage() {
         <div className="secondary-btn dropdown-filter">
           <div>
             <AlertCircle size={15} />
-            <select defaultValue="">
-              <option value="">All Priorities</option>
+            <select
+              value={pipelineFilters.risk}
+              onChange={(e) =>
+                setPipelineFilters((prev) => ({
+                  ...prev,
+                  risk: e.target.value,
+                }))
+              }
+            >
+              <option value="all">All Priorities</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
           <ChevronDown size={14} />
@@ -300,8 +478,18 @@ export default function PipelinePage() {
         <div className="secondary-btn dropdown-filter">
           <div>
             <Sparkles size={15} />
-            <select defaultValue="">
-              <option value="">All AI Scores</option>
+            <select
+              value={pipelineFilters.tag}
+              onChange={(e) =>
+                setPipelineFilters((prev) => ({ ...prev, tag: e.target.value }))
+              }
+            >
+              <option value="all">All AI Scores</option>
+              <option value="hot">Hot</option>
+              <option value="warm">Warm</option>
+              <option value="cool">Cool</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
             </select>
           </div>
           <ChevronDown size={14} />
@@ -557,12 +745,20 @@ export default function PipelinePage() {
                     </div>
 
                     <div className="deal-card-bottom-interactive-action-triggers">
-                      <button className="deal-card-footer-action-trigger-btn">
-                        <Sparkles size={12} /> Score
+                      <button
+                        className="deal-card-footer-action-trigger-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          scoreDeal(deal);
+                        }}
+                        disabled={scoringDealId === deal.id}
+                      >
+                        <Sparkles size={12} />
+                        {scoringDealId === deal.id ? "Scoring..." : "Score"}
                       </button>
                       <button
                         className="deal-card-footer-action-trigger-btn"
-                        onClick={() => moveDealToNextStage(deal, col.id)}
+                        onClick={(e) => {e.stopPropagation();moveDealToNextStage(deal, col.id)}}
                         disabled={movingDealId === deal.id || col.id === "lost"}
                       >
                         <ArrowUpRight size={12} />
@@ -601,7 +797,7 @@ export default function PipelinePage() {
                 AI Deal Risk Queue
               </h3>
               <span className="intelligence-card-sub-header-counter">
-                4 at-risk deals need attention
+                {riskQueue.length} at-risk deals need attention
               </span>
             </div>
             <button className="intelligence-view-all-navigation-link">
@@ -610,52 +806,47 @@ export default function PipelinePage() {
           </div>
 
           <div className="risk-queue-table-rows-wrapper">
-            {[
-              {
-                name: "Luxury Penthouse",
-                val: "$910K",
-                reason: "Stale for 8 days",
-                status: "High",
-              },
-              {
-                name: "Beachfront Condo",
-                val: "$320K",
-                reason: "No response",
-                status: "High",
-              },
-              {
-                name: "Golf Course Condo",
-                val: "$675K",
-                reason: "Funding delay",
-                status: "Medium",
-              },
-              {
-                name: "Downtown Apartment",
-                val: "$185K",
-                reason: "Unanswered calls",
-                status: "Medium",
-              },
-            ].map((row, rIdx) => (
-              <div className="risk-queue-table-row-item" key={rIdx}>
+            {riskQueue.length ? (
+              riskQueue.map((row) => (
+                <div className="risk-queue-table-row-item" key={row.id}>
+                  <span className="risk-table-cell-property-name">
+                    {row.name}
+                  </span>
+                  <strong className="risk-table-cell-deal-value">
+                    {row.value}
+                  </strong>
+                  <span className="risk-table-cell-risk-reason-desc">
+                    {row.reason}
+                  </span>
+                  <span
+                    className={`risk-table-cell-severity-badge status-${String(
+                      row.status || "medium",
+                    ).toLowerCase()}`}
+                  >
+                    {row.status}
+                  </span>
+                  <button
+                    className="risk-table-cell-action-review-trigger-btn"
+                    onClick={() => reviewRiskDeal(row.id)}
+                  >
+                    Review
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="risk-queue-table-row-item">
                 <span className="risk-table-cell-property-name">
-                  {row.name}
+                  No at-risk deals
                 </span>
-                <strong className="risk-table-cell-deal-value">
-                  {row.val}
-                </strong>
+                <strong className="risk-table-cell-deal-value">$0</strong>
                 <span className="risk-table-cell-risk-reason-desc">
-                  {row.reason}
+                  Pipeline healthy
                 </span>
-                <span
-                  className={`risk-table-cell-severity-badge status-${row.status.toLowerCase()}`}
-                >
-                  {row.status}
+                <span className="risk-table-cell-severity-badge status-medium">
+                  Low
                 </span>
-                <button className="risk-table-cell-action-review-trigger-btn">
-                  Review
-                </button>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -666,9 +857,17 @@ export default function PipelinePage() {
               <LineChartIcon size={18} className="intelligence-header-icon" />
               <h3 className="intelligence-card-main-title">Revenue Forecast</h3>
             </div>
-            <button className="secondary-btn compact-dropdown-trigger">
-              This Month <ChevronDown size={14} />
-            </button>
+            <div className="secondary-btn compact-dropdown-trigger">
+              <select
+                value={forecastRange}
+                onChange={(e) => setForecastRange(e.target.value)}
+              >
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
           </div>
 
           <div className="revenue-forecast-metrics-grid-quad">
@@ -677,19 +876,29 @@ export default function PipelinePage() {
                 Forecasted Revenue
               </span>
               <strong className="forecast-quad-card-large-numeric">
-                $1.1M
+                {forecast?.forecastedRevenue || "$0"}
               </strong>
-              <span className="forecast-quad-card-trend-subtext text-green">
-                ↑ 14% vs last month
+              <span
+                className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                  forecast?.forecastedRevenueTrend,
+                )}`}
+              >
+                {renderTrend(forecast?.forecastedRevenueTrend)}
               </span>
             </div>
             <div className="revenue-forecast-metric-quad-card">
               <span className="forecast-quad-card-label">
                 Forecasted Closings
               </span>
-              <strong className="forecast-quad-card-large-numeric">12</strong>
-              <span className="forecast-quad-card-trend-subtext text-green">
-                ↑ 20% vs last month
+              <strong className="forecast-quad-card-large-numeric">
+                {forecast?.forecastedClosings || 0}
+              </strong>
+              <span
+                className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                  forecast?.forecastedClosingsTrend,
+                )}`}
+              >
+                {renderTrend(forecast?.forecastedClosingsTrend)}
               </span>
             </div>
             <div className="revenue-forecast-metric-quad-card">
@@ -697,24 +906,36 @@ export default function PipelinePage() {
                 Pipeline Velocity
               </span>
               <strong className="forecast-quad-card-large-numeric">
-                1.42x
+                {forecast?.pipelineVelocity || "0x"}
               </strong>
-              <span className="forecast-quad-card-trend-subtext text-green">
-                ↑ 18% vs last week
+              <span
+                className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                  forecast?.pipelineVelocityTrend,
+                )}`}
+              >
+                {renderTrend(forecast?.pipelineVelocityTrend)}
               </span>
             </div>
             <div className="revenue-forecast-metric-quad-card">
               <span className="forecast-quad-card-label">Close Confidence</span>
-              <strong className="forecast-quad-card-large-numeric">87%</strong>
-              <span className="forecast-quad-card-trend-subtext text-green">
-                High Confidence
+              <strong className="forecast-quad-card-large-numeric">
+                {forecast?.closeConfidence || "0%"}
+              </strong>
+              <span
+                className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                  forecast?.closeConfidenceTrend,
+                )}`}
+              >
+                {renderTrend(
+                  forecast?.closeConfidenceTrend,
+                  "→ Medium Confidence",
+                )}
               </span>
             </div>
           </div>
 
           <p className="revenue-forecast-footer-explanatory-text">
-            AI predicts $1.1M in revenue with 87% confidence based on current
-            pipeline health, deal velocity, and engagement signals.
+            {forecast?.description || "No forecast available yet."}
           </p>
         </div>
 
@@ -734,13 +955,7 @@ export default function PipelinePage() {
           </div>
 
           <div className="automation-health-list-rows-stack">
-            {[
-              { title: "AI Score Refresh", state: "Active" },
-              { title: "Auto Prioritization", state: "Active" },
-              { title: "Follow-Up Tasks", state: "Active" },
-              { title: "Pipeline Sync", state: "Active" },
-              { title: "Risk Detection", state: "Active" },
-            ].map((item, iIdx) => (
+            {automationHealth.map((item, iIdx) => (
               <div className="automation-health-row-item" key={iIdx}>
                 <div className="flex items-center gap-2">
                   <CheckSquare
@@ -769,8 +984,10 @@ export default function PipelinePage() {
                 Selected Deal
               </span>
               <div className="flex items-start gap-3 mt-2">
-                <div className="inspector-deal-avatar-circle avatar-purple">
-                  M
+                <div
+                  className={`inspector-deal-avatar-circle ${selectedDeal?.avatarClass || "avatar-purple"}`}
+                >
+                  {selectedDeal?.avatarInitials || "D"}
                 </div>
                 <div className="inspector-deal-wrap">
                   <h4 className="inspector-deal-client-name">
@@ -813,7 +1030,7 @@ export default function PipelinePage() {
               <div className="inspector-metric-box-card">
                 <span className="inspector-metric-card-label">Risk</span>
                 <strong className="inspector-metric-card-large-value text-red mt-1 tag-hot">
-                  High
+                  {selectedDeal?.risk || "Low"}
                 </strong>
               </div>
 
@@ -836,7 +1053,8 @@ export default function PipelinePage() {
                   <span>{selectedDeal?.action || "No action"}</span>
                 </div>
                 <span className="inspector-metric-card-sub-timestamp">
-                  <Clock3 size={11} /> 45 min ago
+                  <Clock3 size={11} />{" "}
+                  {selectedDeal?.time || "Recently updated"}
                 </span>
               </div>
             </div>
@@ -844,10 +1062,12 @@ export default function PipelinePage() {
               <span className="inspector-metric-card-label">Next Action</span>
               <div className="follow-up-right">
                 <span className="inspector-metric-card-sub-timestamp">
-                  <Clock3 size={11} /> 45 min ago
+                  <Clock3 size={11} />{" "}
+                  {selectedDeal?.time || "Recently updated"}
                 </span>
                 <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
-                  <Calendar size={14} /> <span>Follow up</span>
+                  <Calendar size={14} />{" "}
+                  <span>{selectedDeal?.action || "No action"}</span>
                 </div>
               </div>
             </div>
@@ -880,7 +1100,7 @@ export default function PipelinePage() {
                       {event.metadata?.title || "Deal activity"}
                     </span>
                     <span className="activity-log-relative-timestamp">
-                      {event.metadata?.sub || ""}
+                      {event.timeAgo || "Recently updated"}
                     </span>
                   </div>
                 ))
@@ -900,30 +1120,32 @@ export default function PipelinePage() {
               AI Suggested Next Steps
             </span>
             <div className="inspector-ai-action-steps-rows-stack mt-2">
-              <div className="inspector-ai-action-step-row-item">
-                <span className="ai-step-title-text">
-                  Schedule follow-up call
-                </span>
-                <span className="ai-step-impact-badge impact-high">
-                  High impact
-                </span>
-              </div>
-              <div className="inspector-ai-action-step-row-item">
-                <span className="ai-step-title-text">
-                  Send budget range analysis
-                </span>
-                <span className="ai-step-impact-badge impact-medium">
-                  Medium impact
-                </span>
-              </div>
-              <div className="inspector-ai-action-step-row-item">
-                <span className="ai-step-title-text">
-                  Share similar sold comps
-                </span>
-                <span className="ai-step-impact-badge impact-medium">
-                  Medium impact
-                </span>
-              </div>
+              {(selectedDeal?.suggestedSteps || []).length ? (
+                selectedDeal.suggestedSteps.map((step, index) => (
+                  <div
+                    className="inspector-ai-action-step-row-item"
+                    key={index}
+                  >
+                    <span className="ai-step-title-text">{step.title}</span>
+                    <span
+                      className={`ai-step-impact-badge impact-${String(
+                        step.impact || "medium",
+                      ).toLowerCase()}`}
+                    >
+                      {step.impactLabel || "Medium impact"}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="inspector-ai-action-step-row-item">
+                  <span className="ai-step-title-text">
+                    No AI suggestions yet
+                  </span>
+                  <span className="ai-step-impact-badge impact-medium">
+                    Pending
+                  </span>
+                </div>
+              )}
             </div>
             <button className="inspector-ai-action-primary-trigger-cta-btn">
               Send AI Suggestions

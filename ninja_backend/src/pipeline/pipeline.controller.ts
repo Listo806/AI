@@ -121,4 +121,15 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
+
+  @Post("deals/:id/score")
+  scoreDeal(@Param("id") id: string, @Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.scoreDeal(
+      id,
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
 }

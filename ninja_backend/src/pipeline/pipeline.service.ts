@@ -262,7 +262,10 @@ export class PipelineService {
     }
   }
 
-  private async getPeriodSummary(scope: { where: string; params: any[] }, period: any) {
+  private async getPeriodSummary(
+    scope: { where: string; params: any[] },
+    period: any,
+  ) {
     const { rows } = await this.db.query(
       `
       WITH scoped_deals AS (
@@ -1151,5 +1154,40 @@ export class PipelineService {
         JSON.stringify(params.metadata || {}),
       ],
     );
+  }
+
+  async scoreDeal(id: string, userId: string, teamId?: string | null) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+
+    const score =
+      deal.stage === "won"
+        ? 100
+        : deal.stage === "lost"
+          ? 22
+          : deal.stage === "negotiation"
+            ? 84
+            : deal.stage === "proposal"
+              ? 78
+              : deal.stage === "qualified"
+                ? 68
+                : 58;
+
+    await this.createEvent({
+      eventType: "deal.ai_score_reviewed",
+      entityId: id,
+      userId,
+      teamId: deal.teamId,
+      metadata: {
+        title: "AI score reviewed",
+        sub: `Score calculated at ${score}%`,
+        score,
+      },
+    });
+
+    return {
+      id,
+      score,
+      message: "AI score reviewed successfully",
+    };
   }
 }

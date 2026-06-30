@@ -131,9 +131,6 @@
   font-weight: 500;
   color: inherit;
   cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
   padding-right: 2px;
   height: 100%;
 }
@@ -142,7 +139,9 @@
   color: #94a3b8;
   flex-shrink: 0;
 }
-
+.pipeline-page .dropdown-filter >svg {
+  display: none;
+}
 .pipeline-page .pipeline-stats-cards-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -1088,7 +1087,12 @@
   font-size: 11px;
   padding: 0 8px;
 }
-
+.pipeline-page .compact-dropdown-trigger select{
+  border: 0;
+  background: none;
+  font-size: 11px;
+  color: #757272;
+}
 .pipeline-page .revenue-forecast-metrics-grid-quad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1715,6 +1719,11 @@
 .pipeline-page .kanban-deal-card-item.active {
   border-color: #2563eb;
   box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
+}
+.pipeline-page .kanban-deal-card-item.active {
+  border-color: #2563eb;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
+  transform: translateY(-2px);
 }
 @keyframes pipelineModalIn {
   from {
