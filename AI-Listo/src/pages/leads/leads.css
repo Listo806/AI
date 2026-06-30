@@ -1614,7 +1614,74 @@ body .leads-page {
 .message audio {
   max-width: 240px;
 }
+.util-icon-btn.recording {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
+.voice-recording-inline {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff1f2;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.recording-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ef4444;
+  animation: recordingPulse 1s infinite;
+}
+
+.voice-recording-inline button {
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.voice-cancel-btn {
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.voice-send-btn {
+  margin-left: auto;
+  border: none;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+@keyframes recordingPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 @media (max-width: 640px) {
   .leads-page .lead-profile-grid {
     grid-template-columns: 1fr;

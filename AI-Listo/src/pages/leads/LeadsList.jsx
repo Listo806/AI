@@ -74,6 +74,13 @@ export default function LeadsPage() {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const audioInputRef = useRef(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordTimerRef = useRef(null);
+  const recordingCancelledRef = useRef(false);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -949,6 +956,71 @@ export default function LeadsPage() {
   const startVoiceUpload = () => {
     audioInputRef.current?.click();
   };
+  const formatRecordTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const toggleVoiceRecording = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        clearInterval(recordTimerRef.current);
+
+        setIsRecording(false);
+        setRecordSeconds(0);
+
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const file = new File([blob], `voice-${Date.now()}.webm`, {
+          type: "audio/webm",
+        });
+
+        stream.getTracks().forEach((track) => track.stop());
+        if (recordingCancelledRef.current) {
+          audioChunksRef.current = [];
+          return;
+        }
+        if (blob.size > 0) {
+          await uploadLeadChatFile(file);
+        }
+      };
+      recordingCancelledRef.current = false;
+      recorder.start();
+      setIsRecording(true);
+
+      recordTimerRef.current = setInterval(() => {
+        setRecordSeconds((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Voice recording error:", err);
+    }
+  };
+  const cancelVoiceRecording = () => {
+    recordingCancelledRef.current = true;
+    mediaRecorderRef.current?.stop();
+  };
+
+  const finishVoiceRecording = () => {
+    recordingCancelledRef.current = false;
+    mediaRecorderRef.current?.stop();
+  };
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -1636,17 +1708,43 @@ export default function LeadsPage() {
           {/* INPUT FORM */}
           <div className="chat-input-box">
             <div className="chat-input-top">
-              <input
-                placeholder="Type a message or let AI assist..."
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    sendLeadMessage();
-                  }
-                }}
-              />
+              {isRecording ? (
+                <div className="voice-recording-inline">
+                  <button
+                    type="button"
+                    className="voice-cancel-btn"
+                    onClick={cancelVoiceRecording}
+                  >
+                    Cancel
+                  </button>
+
+                  <span className="recording-dot"></span>
+
+                  <strong>{formatRecordTime(recordSeconds)}</strong>
+
+                  <span>Recording...</span>
+
+                  <button
+                    type="button"
+                    className="voice-send-btn"
+                    onClick={finishVoiceRecording}
+                  >
+                    Send
+                  </button>
+                </div>
+              ) : (
+                <input
+                  placeholder="Type a message or let AI assist..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      sendLeadMessage();
+                    }
+                  }}
+                />
+              )}
             </div>
 
             <div className="chat-input-bottom">
@@ -1680,8 +1778,8 @@ export default function LeadsPage() {
 
                 <button
                   type="button"
-                  className="util-icon-btn"
-                  onClick={startVoiceUpload}
+                  className={`util-icon-btn ${isRecording ? "recording" : ""}`}
+                  onClick={toggleVoiceRecording}
                   disabled={!selectedLead || uploadingChatFile}
                 >
                   <Mic size={18} />
