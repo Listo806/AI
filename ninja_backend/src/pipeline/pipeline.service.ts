@@ -934,6 +934,22 @@ export class PipelineService {
             stage: deal.stage,
             leadId: deal.leadId,
             value: Number(deal.value || 0),
+            risk: score >= 80 ? "Low" : score >= 50 ? "Medium" : "High",
+            suggestedSteps: [
+              {
+                title: this.getNextAction(deal.stage),
+                impact: score >= 80 ? "high" : "medium",
+                impactLabel: score >= 80 ? "High impact" : "Medium impact",
+              },
+              {
+                title:
+                  deal.stage === "new"
+                    ? "Make first contact"
+                    : "Follow up with buyer",
+                impact: "medium",
+                impactLabel: "Medium impact",
+              },
+            ],
           };
         }),
       };
