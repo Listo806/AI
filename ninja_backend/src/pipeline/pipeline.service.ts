@@ -35,6 +35,220 @@ export class PipelineService {
     };
   }
 
+  private formatMoney(value: any) {
+    const amount = Number(value || 0);
+
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
+    if (amount >= 1000) return `$${Math.round(amount / 1000)}K`;
+
+    return `$${amount.toLocaleString()}`;
+  }
+
+  private formatTimeAgo(value: any) {
+    if (!value) return "Recently updated";
+
+    const date = new Date(value);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+    if (seconds < 60) return "Just now";
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} day${days > 1 ? "s" : ""} ago`;
+
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
+
+    const years = Math.floor(months / 12);
+    return `${years} year${years > 1 ? "s" : ""} ago`;
+  }
+
+  private getInitials(name = "") {
+    return (
+      String(name)
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((item) => item[0])
+        .join("")
+        .toUpperCase() || "D"
+    );
+  }
+
+  private getStageTitle(stage: string) {
+    const map = {
+      new: "New",
+      qualified: "Qualified",
+      proposal: "Proposal",
+      negotiation: "Negotiation",
+      won: "Won",
+      lost: "Lost",
+    };
+
+    return map[stage] || stage;
+  }
+
+  private getDealScore(deal: any) {
+    if (deal.stage === "won") return 100;
+    if (deal.stage === "lost") return 22;
+    if (deal.leadPriority === "high") return 91;
+    if (deal.leadPriority === "medium") return 72;
+    if (deal.stage === "negotiation") return 84;
+    if (deal.stage === "proposal") return 78;
+    if (deal.stage === "qualified") return 68;
+
+    return 58;
+  }
+
+  private getDealTag(score: number, stage: string) {
+    if (stage === "won") return "Won";
+    if (stage === "lost") return "Lost";
+    if (score >= 80) return "Hot";
+    if (score >= 50) return "Warm";
+    return "Cool";
+  }
+
+  private getNextAction(stage: string) {
+    const map = {
+      new: "Call now",
+      qualified: "Schedule tour",
+      proposal: "Follow up",
+      negotiation: "Send offer",
+      won: "Closed",
+      lost: "Review reason",
+    };
+
+    return map[stage] || "Follow up";
+  }
+
+  private calcGrowth(current: number, previous: number) {
+    if (!previous && current > 0) return 100;
+    if (!previous) return 0;
+
+    return Math.round(((current - previous) / previous) * 100);
+  }
+
+  private getTrend(
+    current: number,
+    previous: number,
+    compareLabel: string,
+    positiveGood = true,
+  ) {
+    const growth = this.calcGrowth(current, previous);
+    const absValue = Math.abs(growth);
+
+    if (current > previous) {
+      return {
+        direction: "up",
+        icon: "↑",
+        value: absValue,
+        compareLabel,
+        text: `↑ ${absValue}% ${compareLabel}`,
+        className: positiveGood ? "text-green" : "text-red",
+      };
+    }
+
+    if (current < previous) {
+      return {
+        direction: "down",
+        icon: "↓",
+        value: absValue,
+        compareLabel,
+        text: `↓ ${absValue}% ${compareLabel}`,
+        className: positiveGood ? "text-red" : "text-green",
+      };
+    }
+
+    return {
+      direction: "flat",
+      icon: "→",
+      value: 0,
+      compareLabel,
+      text: `→ 0% ${compareLabel}`,
+      className: "text-slate",
+    };
+  }
+
+  private getConfidenceTrend(aiCloseScore: number) {
+    if (aiCloseScore >= 80) {
+      return {
+        direction: "up",
+        icon: "↑",
+        value: aiCloseScore,
+        text: "↑ High Confidence",
+        className: "text-green",
+      };
+    }
+
+    if (aiCloseScore >= 50) {
+      return {
+        direction: "flat",
+        icon: "→",
+        value: aiCloseScore,
+        text: "→ Medium Confidence",
+        className: "text-orange",
+      };
+    }
+
+    return {
+      direction: "down",
+      icon: "↓",
+      value: aiCloseScore,
+      text: "↓ Low Confidence",
+      className: "text-red",
+    };
+  }
+
+  private getForecastPeriodSql(range = "month") {
+    switch (range) {
+      case "week":
+        return {
+          range: "week",
+          label: "This Week",
+          currentStart: "date_trunc('week', NOW())",
+          previousStart: "date_trunc('week', NOW() - interval '1 week')",
+          previousEnd: "date_trunc('week', NOW())",
+          trendLabel: "vs last week",
+        };
+
+      case "quarter":
+        return {
+          range: "quarter",
+          label: "This Quarter",
+          currentStart: "date_trunc('quarter', NOW())",
+          previousStart: "date_trunc('quarter', NOW() - interval '3 months')",
+          previousEnd: "date_trunc('quarter', NOW())",
+          trendLabel: "vs last quarter",
+        };
+
+      case "year":
+        return {
+          range: "year",
+          label: "This Year",
+          currentStart: "date_trunc('year', NOW())",
+          previousStart: "date_trunc('year', NOW() - interval '1 year')",
+          previousEnd: "date_trunc('year', NOW())",
+          trendLabel: "vs last year",
+        };
+
+      case "month":
+      default:
+        return {
+          range: "month",
+          label: "This Month",
+          currentStart: "date_trunc('month', NOW())",
+          previousStart: "date_trunc('month', NOW() - interval '1 month')",
+          previousEnd: "date_trunc('month', NOW())",
+          trendLabel: "vs last month",
+        };
+    }
+  }
+
   async getPipeline(userId: string, teamId?: string | null) {
     const scope = this.getScope(userId, teamId);
 
@@ -120,124 +334,173 @@ export class PipelineService {
   }
 
   async getSummary(userId: string, teamId?: string | null) {
+    const dashboard = await this.getDashboard(userId, teamId, "month");
+    return dashboard.summary;
+  }
+
+  async getDashboard(
+    userId: string,
+    teamId?: string | null,
+    forecastRange = "month",
+  ) {
+    const period = this.getForecastPeriodSql(forecastRange);
     const scope = this.getScope(userId, teamId);
 
-    const { rows } = await this.db.query(
+    const { rows: deals } = await this.db.query(
       `
-    WITH current_deals AS (
-      SELECT *
+      SELECT
+        d.id,
+        d.name,
+        COALESCE(d.value, 0) AS value,
+        COALESCE(d.stage, 'new') AS stage,
+        COALESCE(d.position, 0) AS position,
+        d.notes,
+        d.lead_id AS "leadId",
+        d.team_id AS "teamId",
+        d.created_by AS "createdBy",
+        d.assigned_to AS "assignedTo",
+        d.created_at AS "createdAt",
+        d.updated_at AS "updatedAt",
+
+        l.name AS "leadName",
+        l.email AS "leadEmail",
+        l.phone AS "leadPhone",
+        l.status AS "leadStatus",
+        l.priority AS "leadPriority"
+
       FROM deals d
+      LEFT JOIN leads l ON l.id = d.lead_id
       WHERE ${scope.where}
-    ),
-    this_month AS (
-      SELECT *
-      FROM current_deals
-      WHERE created_at >= date_trunc('month', NOW())
-    ),
-    last_month AS (
-      SELECT *
-      FROM current_deals
-      WHERE created_at >= date_trunc('month', NOW() - interval '1 month')
-        AND created_at < date_trunc('month', NOW())
-    )
-    SELECT
-      COUNT(*)::int AS "totalDeals",
-
-      COUNT(*) FILTER (
-        WHERE created_at >= date_trunc('month', NOW())
-      )::int AS "newDealsThisMonth",
-
-      COALESCE(SUM(value), 0)::numeric AS "pipelineValue",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage = 'won'
-          AND updated_at >= date_trunc('month', NOW())
-      ), 0)::numeric AS "wonThisMonth",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'negotiation'
-      )::int AS "activeNegotiations",
-
-      COUNT(*) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-          AND updated_at < NOW() - interval '7 days'
-      )::int AS "stuckDeals",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'won'
-      )::int AS "wonDeals",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'lost'
-      )::int AS "lostDeals",
-
-      COUNT(*) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-      )::int AS "openDeals",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-          AND updated_at < NOW() - interval '7 days'
-      ), 0)::numeric AS "revenueAtRisk",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-      ), 0)::numeric AS "openValue",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage = 'won'
-      ), 0)::numeric AS "wonValue",
-
-      COALESCE(AVG(value), 0)::numeric AS "averageDeal",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM this_month
-      ) AS "thisMonthValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM last_month
-      ) AS "lastMonthValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM this_month
-        WHERE stage = 'won'
-      ) AS "thisMonthWonValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM last_month
-        WHERE stage = 'won'
-      ) AS "lastMonthWonValue"
-
-    FROM current_deals
-    `,
+      ORDER BY d.position ASC, d.created_at DESC
+      `,
       scope.params,
     );
 
-    const data = rows[0] || {};
+    const { rows: summaryRows } = await this.db.query(
+      `
+      WITH current_deals AS (
+        SELECT *
+        FROM deals d
+        WHERE ${scope.where}
+      ),
+      current_period AS (
+        SELECT *
+        FROM current_deals
+        WHERE created_at >= ${period.currentStart}
+      ),
+      previous_period AS (
+        SELECT *
+        FROM current_deals
+        WHERE created_at >= ${period.previousStart}
+          AND created_at < ${period.previousEnd}
+      )
+      SELECT
+        COUNT(*)::int AS "totalDeals",
 
-    const totalDeals = Number(data.totalDeals || 0);
-    const wonDeals = Number(data.wonDeals || 0);
+        COUNT(*) FILTER (
+          WHERE created_at >= ${period.currentStart}
+        )::int AS "newDealsThisPeriod",
 
-    const pipelineValue = Number(data.pipelineValue || 0);
-    const thisMonthValue = Number(data.thisMonthValue || 0);
-    const lastMonthValue = Number(data.lastMonthValue || 0);
+        COALESCE(SUM(value), 0)::numeric AS "pipelineValue",
 
-    const thisMonthWonValue = Number(data.thisMonthWonValue || 0);
-    const lastMonthWonValue = Number(data.lastMonthWonValue || 0);
+        COALESCE(SUM(value) FILTER (
+          WHERE stage = 'won'
+            AND updated_at >= ${period.currentStart}
+        ), 0)::numeric AS "wonThisPeriod",
 
-    const revenueAtRisk = Number(data.revenueAtRisk || 0);
-    const openValue = Number(data.openValue || 0);
+        COUNT(*) FILTER (
+          WHERE stage = 'negotiation'
+        )::int AS "activeNegotiations",
 
-    const calcGrowth = (current: number, previous: number) => {
-      if (!previous && current > 0) return 100;
-      if (!previous) return 0;
+        COUNT(*) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+            AND updated_at < NOW() - interval '7 days'
+        )::int AS "stuckDeals",
 
-      return Math.round(((current - previous) / previous) * 100);
-    };
+        COUNT(*) FILTER (
+          WHERE stage = 'won'
+        )::int AS "wonDeals",
+
+        COUNT(*) FILTER (
+          WHERE stage = 'lost'
+        )::int AS "lostDeals",
+
+        COUNT(*) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+        )::int AS "openDeals",
+
+        COALESCE(SUM(value) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+        ), 0)::numeric AS "openValue",
+
+        COALESCE(SUM(value) FILTER (
+          WHERE stage = 'won'
+        ), 0)::numeric AS "wonValue",
+
+        COALESCE(SUM(value) FILTER (
+          WHERE stage NOT IN ('won', 'lost')
+            AND updated_at < NOW() - interval '7 days'
+        ), 0)::numeric AS "revenueAtRisk",
+
+        COALESCE(AVG(value), 0)::numeric AS "averageDeal",
+
+        (
+          SELECT COUNT(*)::int
+          FROM current_period
+        ) AS "currentPeriodDeals",
+
+        (
+          SELECT COUNT(*)::int
+          FROM previous_period
+        ) AS "previousPeriodDeals",
+
+        (
+          SELECT COALESCE(SUM(value), 0)::numeric
+          FROM current_period
+        ) AS "currentPeriodValue",
+
+        (
+          SELECT COALESCE(SUM(value), 0)::numeric
+          FROM previous_period
+        ) AS "previousPeriodValue",
+
+        (
+          SELECT COUNT(*)::int
+          FROM current_period
+          WHERE stage = 'won'
+        ) AS "currentPeriodClosings",
+
+        (
+          SELECT COUNT(*)::int
+          FROM previous_period
+          WHERE stage = 'won'
+        ) AS "previousPeriodClosings",
+
+        (
+          SELECT COALESCE(SUM(value), 0)::numeric
+          FROM current_period
+          WHERE stage = 'won'
+        ) AS "currentPeriodWonValue",
+
+        (
+          SELECT COALESCE(SUM(value), 0)::numeric
+          FROM previous_period
+          WHERE stage = 'won'
+        ) AS "previousPeriodWonValue"
+
+      FROM current_deals
+      `,
+      scope.params,
+    );
+
+    const summary = summaryRows[0] || {};
+
+    const totalDeals = Number(summary.totalDeals || 0);
+    const wonDeals = Number(summary.wonDeals || 0);
+    const lostDeals = Number(summary.lostDeals || 0);
+    const openDeals = Number(summary.openDeals || 0);
+    const activeNegotiations = Number(summary.activeNegotiations || 0);
+    const stuckDeals = Number(summary.stuckDeals || 0);
 
     const conversionRate = totalDeals
       ? Math.round((wonDeals / totalDeals) * 100)
@@ -247,44 +510,247 @@ export class PipelineService {
       100,
       Math.max(
         0,
-        Math.round(
-          conversionRate +
-            Number(data.activeNegotiations || 0) * 2 -
-            Number(data.stuckDeals || 0) * 3,
-        ),
+        Math.round(conversionRate + activeNegotiations * 2 - stuckDeals * 3),
       ),
     );
 
-    const riskGrowth = openValue
-      ? Math.round((revenueAtRisk / openValue) * 100)
-      : 0;
+    const dealsTrend = this.getTrend(
+      Number(summary.currentPeriodDeals || 0),
+      Number(summary.previousPeriodDeals || 0),
+      period.trendLabel,
+    );
+
+    const pipelineTrend = this.getTrend(
+      Number(summary.currentPeriodValue || 0),
+      Number(summary.previousPeriodValue || 0),
+      period.trendLabel,
+    );
+
+    const wonTrend = this.getTrend(
+      Number(summary.currentPeriodWonValue || 0),
+      Number(summary.previousPeriodWonValue || 0),
+      period.trendLabel,
+    );
+
+    const closingsTrend = this.getTrend(
+      Number(summary.currentPeriodClosings || 0),
+      Number(summary.previousPeriodClosings || 0),
+      period.trendLabel,
+    );
+
+    const riskTrend = this.getTrend(
+      Number(summary.revenueAtRisk || 0),
+      Number(summary.openValue || 0),
+      "of open value",
+      false,
+    );
+
+    const confidenceTrend = this.getConfidenceTrend(aiCloseScore);
+
+    const stats = [
+      {
+        title: "Total Deals",
+        value: totalDeals,
+        change: dealsTrend.text,
+        trend: dealsTrend,
+        iconKey: "users",
+        className: "blue",
+        changeClass: dealsTrend.className,
+      },
+      {
+        title: "Pipeline Value",
+        value: this.formatMoney(summary.pipelineValue),
+        change: pipelineTrend.text,
+        trend: pipelineTrend,
+        iconKey: "dollar",
+        className: "green",
+        changeClass: pipelineTrend.className,
+      },
+      {
+        title: `Won ${period.label.replace("This ", "This ")}`,
+        value: this.formatMoney(summary.wonThisPeriod),
+        change: wonTrend.text,
+        trend: wonTrend,
+        iconKey: "check",
+        className: "purple",
+        changeClass: wonTrend.className,
+      },
+      {
+        title: "Active Negotiations",
+        value: activeNegotiations,
+        change: `${stuckDeals} stuck deals`,
+        trend: {
+          direction: stuckDeals > 0 ? "down" : "flat",
+          icon: stuckDeals > 0 ? "↓" : "→",
+          value: stuckDeals,
+          text: `${stuckDeals} stuck deals`,
+          className: stuckDeals > 0 ? "text-orange" : "text-green",
+        },
+        iconKey: "flame",
+        className: "orange",
+        changeClass: stuckDeals > 0 ? "text-orange" : "text-green",
+      },
+      {
+        title: "AI Close Score",
+        value: `${aiCloseScore}%`,
+        change: confidenceTrend.text,
+        trend: confidenceTrend,
+        iconKey: "bot",
+        className: "cyan",
+        changeClass: confidenceTrend.className,
+      },
+      {
+        title: "Revenue At Risk",
+        value: this.formatMoney(summary.revenueAtRisk),
+        change: riskTrend.text,
+        trend: riskTrend,
+        iconKey: "alert",
+        className: "pink",
+        changeClass: riskTrend.className,
+      },
+    ];
+
+    const columns = PIPELINE_STAGES.map((stage) => {
+      const stageDeals = deals.filter((deal) => deal.stage === stage.key);
+      const totalValue = stageDeals.reduce(
+        (sum, deal) => sum + Number(deal.value || 0),
+        0,
+      );
+
+      return {
+        id: stage.key,
+        title: stage.label,
+        count: stageDeals.length,
+        amount: this.formatMoney(totalValue),
+        insight:
+          stageDeals.length > 0
+            ? `${stageDeals.length} active deal${stageDeals.length > 1 ? "s" : ""}`
+            : "No active deals",
+        deals: stageDeals.map((deal) => {
+          const displayName = deal.leadName || deal.name || "Unnamed Deal";
+          const score = this.getDealScore(deal);
+          const tag = this.getDealTag(score, deal.stage);
+
+          return {
+            id: deal.id,
+            name: displayName,
+            property:
+              deal.leadEmail ||
+              deal.leadPhone ||
+              deal.notes ||
+              "No contact info",
+            amount: this.formatMoney(deal.value),
+            score: `${score}%`,
+            tag,
+            action: this.getNextAction(deal.stage),
+            time: this.formatTimeAgo(deal.updatedAt || deal.createdAt),
+            avatarClass: "avatar-blue",
+            avatarInitials: this.getInitials(displayName),
+            stage: deal.stage,
+            leadId: deal.leadId,
+            value: Number(deal.value || 0),
+            risk: score >= 80 ? "Low" : score >= 50 ? "Medium" : "High",
+            suggestedSteps: [
+              {
+                title: this.getNextAction(deal.stage),
+                impact: score >= 80 ? "high" : "medium",
+                impactLabel: score >= 80 ? "High impact" : "Medium impact",
+              },
+              {
+                title:
+                  deal.stage === "new"
+                    ? "Make first contact"
+                    : "Follow up with buyer",
+                impact: "medium",
+                impactLabel: "Medium impact",
+              },
+            ],
+          };
+        }),
+      };
+    });
+
+    const riskQueue = deals
+      .filter(
+        (deal) =>
+          deal.stage !== "won" &&
+          deal.stage !== "lost" &&
+          new Date(deal.updatedAt).getTime() <
+            Date.now() - 7 * 24 * 60 * 60 * 1000,
+      )
+      .slice(0, 4)
+      .map((deal) => ({
+        id: deal.id,
+        name: deal.leadName || deal.name || "Unnamed Deal",
+        value: this.formatMoney(deal.value),
+        reason: "Stale for 7+ days",
+        status: Number(deal.value || 0) >= 500000 ? "High" : "Medium",
+        time: this.formatTimeAgo(deal.updatedAt || deal.createdAt),
+      }));
+
+    const forecast = {
+      range: period.range,
+      rangeLabel: period.label,
+
+      forecastedRevenue: this.formatMoney(summary.openValue || 0),
+      forecastedRevenueTrend: pipelineTrend,
+
+      forecastedClosings: Number(summary.currentPeriodClosings || 0),
+      forecastedClosingsTrend: closingsTrend,
+
+      pipelineVelocity: totalDeals
+        ? `${Math.max(1, totalDeals / 10).toFixed(2)}x`
+        : "0x",
+      pipelineVelocityTrend: pipelineTrend,
+
+      closeConfidence: `${aiCloseScore}%`,
+      closeConfidenceTrend: confidenceTrend,
+
+      description: `AI predicts ${this.formatMoney(
+        summary.openValue || 0,
+      )} in revenue with ${aiCloseScore}% confidence for ${period.label.toLowerCase()} based on current pipeline health, deal velocity, and engagement signals.`,
+    };
+
+    const automationHealth = [
+      { title: "AI Score Refresh", state: "Active" },
+      { title: "Auto Prioritization", state: "Active" },
+      { title: "Follow-Up Tasks", state: "Active" },
+      { title: "Pipeline Sync", state: "Active" },
+      {
+        title: "Risk Detection",
+        state: riskQueue.length ? "Active" : "Healthy",
+      },
+    ];
 
     return {
-      totalDeals,
-      newDealsThisMonth: Number(data.newDealsThisMonth || 0),
-
-      pipelineValue,
-      pipelineGrowth: calcGrowth(thisMonthValue, lastMonthValue),
-
-      wonThisMonth: Number(data.wonThisMonth || 0),
-      wonGrowth: calcGrowth(thisMonthWonValue, lastMonthWonValue),
-
-      activeNegotiations: Number(data.activeNegotiations || 0),
-      stuckDeals: Number(data.stuckDeals || 0),
-
-      aiCloseScore,
-      aiGrowth: conversionRate,
-
-      revenueAtRisk,
-      riskGrowth,
-
-      wonDeals,
-      lostDeals: Number(data.lostDeals || 0),
-      openDeals: Number(data.openDeals || 0),
-      openValue,
-      wonValue: Number(data.wonValue || 0),
-      averageDeal: Number(data.averageDeal || 0),
-      conversionRate,
+      stats,
+      columns,
+      riskQueue,
+      forecast,
+      automationHealth,
+      summary: {
+        totalDeals,
+        wonDeals,
+        lostDeals,
+        openDeals,
+        activeNegotiations,
+        stuckDeals,
+        pipelineValue: Number(summary.pipelineValue || 0),
+        openValue: Number(summary.openValue || 0),
+        wonValue: Number(summary.wonValue || 0),
+        revenueAtRisk: Number(summary.revenueAtRisk || 0),
+        averageDeal: Number(summary.averageDeal || 0),
+        conversionRate,
+        aiCloseScore,
+        trends: {
+          dealsTrend,
+          pipelineTrend,
+          wonTrend,
+          closingsTrend,
+          riskTrend,
+          confidenceTrend,
+        },
+      },
     };
   }
 
@@ -524,6 +990,38 @@ export class PipelineService {
     return { message: "Deal deleted successfully" };
   }
 
+  async getDealEvents(id: string, userId: string, teamId?: string | null) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        id,
+        event_type AS "eventType",
+        entity_type AS "entityType",
+        entity_id AS "entityId",
+        user_id AS "userId",
+        team_id AS "teamId",
+        COALESCE(metadata, '{}'::jsonb) AS metadata,
+        created_at AS "createdAt"
+      FROM events
+      WHERE entity_type = 'deal'
+        AND entity_id = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+      `,
+      [deal.id],
+    );
+
+    return {
+      deal,
+      events: rows.map((event) => ({
+        ...event,
+        timeAgo: this.formatTimeAgo(event.createdAt),
+      })),
+    };
+  }
+
   private async findDealForUser(
     id: string,
     userId: string,
@@ -608,420 +1106,5 @@ export class PipelineService {
         JSON.stringify(params.metadata || {}),
       ],
     );
-  }
-
-  private formatMoney(value: any) {
-    const amount = Number(value || 0);
-
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${Math.round(amount / 1000)}K`;
-
-    return `$${amount.toLocaleString()}`;
-  }
-
-  private getInitials(name = "") {
-    return (
-      String(name)
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((item) => item[0])
-        .join("")
-        .toUpperCase() || "D"
-    );
-  }
-
-  private getStageTitle(stage: string) {
-    const map = {
-      new: "New",
-      qualified: "Qualified",
-      proposal: "Proposal",
-      negotiation: "Negotiation",
-      won: "Won",
-      lost: "Lost",
-    };
-
-    return map[stage] || stage;
-  }
-
-  private getDealScore(deal: any) {
-    if (deal.stage === "won") return 100;
-    if (deal.stage === "lost") return 22;
-    if (deal.leadPriority === "high") return 91;
-    if (deal.leadPriority === "medium") return 72;
-    if (deal.stage === "negotiation") return 84;
-    if (deal.stage === "proposal") return 78;
-    if (deal.stage === "qualified") return 68;
-
-    return 58;
-  }
-
-  private getDealTag(score: number, stage: string) {
-    if (stage === "won") return "Won";
-    if (stage === "lost") return "Lost";
-    if (score >= 80) return "Hot";
-    if (score >= 50) return "Warm";
-    return "Cool";
-  }
-
-  private getNextAction(stage: string) {
-    const map = {
-      new: "Call now",
-      qualified: "Schedule tour",
-      proposal: "Follow up",
-      negotiation: "Send offer",
-      won: "Closed",
-      lost: "Review reason",
-    };
-
-    return map[stage] || "Follow up";
-  }
-
-  private calcGrowth(current: number, previous: number) {
-    if (!previous && current > 0) return 100;
-    if (!previous) return 0;
-
-    return Math.round(((current - previous) / previous) * 100);
-  }
-
-  async getDashboard(userId: string, teamId?: string | null) {
-    const scope = this.getScope(userId, teamId);
-
-    const { rows: deals } = await this.db.query(
-      `
-    SELECT
-      d.id,
-      d.name,
-      COALESCE(d.value, 0) AS value,
-      COALESCE(d.stage, 'new') AS stage,
-      COALESCE(d.position, 0) AS position,
-      d.notes,
-      d.lead_id AS "leadId",
-      d.team_id AS "teamId",
-      d.created_by AS "createdBy",
-      d.assigned_to AS "assignedTo",
-      d.created_at AS "createdAt",
-      d.updated_at AS "updatedAt",
-
-      l.name AS "leadName",
-      l.email AS "leadEmail",
-      l.phone AS "leadPhone",
-      l.status AS "leadStatus",
-      l.priority AS "leadPriority"
-
-    FROM deals d
-    LEFT JOIN leads l ON l.id = d.lead_id
-    WHERE ${scope.where}
-    ORDER BY d.position ASC, d.created_at DESC
-    `,
-      scope.params,
-    );
-
-    const { rows: summaryRows } = await this.db.query(
-      `
-    WITH current_deals AS (
-      SELECT *
-      FROM deals d
-      WHERE ${scope.where}
-    ),
-    this_month AS (
-      SELECT *
-      FROM current_deals
-      WHERE created_at >= date_trunc('month', NOW())
-    ),
-    last_month AS (
-      SELECT *
-      FROM current_deals
-      WHERE created_at >= date_trunc('month', NOW() - interval '1 month')
-        AND created_at < date_trunc('month', NOW())
-    )
-    SELECT
-      COUNT(*)::int AS "totalDeals",
-
-      COUNT(*) FILTER (
-        WHERE created_at >= date_trunc('month', NOW())
-      )::int AS "newDealsThisMonth",
-
-      COALESCE(SUM(value), 0)::numeric AS "pipelineValue",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage = 'won'
-          AND updated_at >= date_trunc('month', NOW())
-      ), 0)::numeric AS "wonThisMonth",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'negotiation'
-      )::int AS "activeNegotiations",
-
-      COUNT(*) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-          AND updated_at < NOW() - interval '7 days'
-      )::int AS "stuckDeals",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'won'
-      )::int AS "wonDeals",
-
-      COUNT(*) FILTER (
-        WHERE stage = 'lost'
-      )::int AS "lostDeals",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-          AND updated_at < NOW() - interval '7 days'
-      ), 0)::numeric AS "revenueAtRisk",
-
-      COALESCE(SUM(value) FILTER (
-        WHERE stage NOT IN ('won', 'lost')
-      ), 0)::numeric AS "openValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM this_month
-      ) AS "thisMonthValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM last_month
-      ) AS "lastMonthValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM this_month
-        WHERE stage = 'won'
-      ) AS "thisMonthWonValue",
-
-      (
-        SELECT COALESCE(SUM(value), 0)::numeric
-        FROM last_month
-        WHERE stage = 'won'
-      ) AS "lastMonthWonValue"
-    FROM current_deals
-    `,
-      scope.params,
-    );
-
-    const summary = summaryRows[0] || {};
-
-    const totalDeals = Number(summary.totalDeals || 0);
-    const wonDeals = Number(summary.wonDeals || 0);
-    const activeNegotiations = Number(summary.activeNegotiations || 0);
-    const stuckDeals = Number(summary.stuckDeals || 0);
-
-    const conversionRate = totalDeals
-      ? Math.round((wonDeals / totalDeals) * 100)
-      : 0;
-
-    const aiCloseScore = Math.min(
-      100,
-      Math.max(0, conversionRate + activeNegotiations * 2 - stuckDeals * 3),
-    );
-
-    const pipelineGrowth = this.calcGrowth(
-      Number(summary.thisMonthValue || 0),
-      Number(summary.lastMonthValue || 0),
-    );
-
-    const wonGrowth = this.calcGrowth(
-      Number(summary.thisMonthWonValue || 0),
-      Number(summary.lastMonthWonValue || 0),
-    );
-
-    const riskGrowth = Number(summary.openValue || 0)
-      ? Math.round(
-          (Number(summary.revenueAtRisk || 0) /
-            Number(summary.openValue || 0)) *
-            100,
-        )
-      : 0;
-
-    const stats = [
-      {
-        title: "Total Deals",
-        value: totalDeals,
-        change: `↑ ${Number(summary.newDealsThisMonth || 0)} this month`,
-        iconKey: "users",
-        className: "blue",
-        changeClass: "text-green",
-      },
-      {
-        title: "Pipeline Value",
-        value: this.formatMoney(summary.pipelineValue),
-        change: `↑ ${pipelineGrowth}% vs last month`,
-        iconKey: "dollar",
-        className: "green",
-        changeClass: "text-green",
-      },
-      {
-        title: "Won This Month",
-        value: this.formatMoney(summary.wonThisMonth),
-        change: `↑ ${wonGrowth}% vs last month`,
-        iconKey: "check",
-        className: "purple",
-        changeClass: "text-green",
-      },
-      {
-        title: "Active Negotiations",
-        value: activeNegotiations,
-        change: `${stuckDeals} stuck deals`,
-        iconKey: "flame",
-        className: "orange",
-        changeClass: "text-orange",
-      },
-      {
-        title: "AI Close Score",
-        value: `${aiCloseScore}%`,
-        change: `↑ ${conversionRate}% vs last month`,
-        iconKey: "bot",
-        className: "cyan",
-        changeClass: "text-green",
-      },
-      {
-        title: "Revenue At Risk",
-        value: this.formatMoney(summary.revenueAtRisk),
-        change: `↑ ${riskGrowth}% vs last month`,
-        iconKey: "alert",
-        className: "pink",
-        changeClass: "text-red",
-      },
-    ];
-
-    const stageOrder = [
-      "new",
-      "qualified",
-      "proposal",
-      "negotiation",
-      "won",
-      "lost",
-    ];
-
-    const columns = stageOrder.map((stage) => {
-      const stageDeals = deals.filter((deal) => deal.stage === stage);
-      const totalValue = stageDeals.reduce(
-        (sum, deal) => sum + Number(deal.value || 0),
-        0,
-      );
-
-      return {
-        id: stage,
-        title: this.getStageTitle(stage),
-        count: stageDeals.length,
-        amount: this.formatMoney(totalValue),
-        insight:
-          stageDeals.length > 0
-            ? `${stageDeals.length} active deal${stageDeals.length > 1 ? "s" : ""}`
-            : "No active deals",
-        deals: stageDeals.map((deal) => {
-          const displayName = deal.leadName || deal.name || "Unnamed Deal";
-          const score = this.getDealScore(deal);
-          const tag = this.getDealTag(score, deal.stage);
-
-          return {
-            id: deal.id,
-            name: displayName,
-            property:
-              deal.leadEmail ||
-              deal.leadPhone ||
-              deal.notes ||
-              "No contact info",
-            amount: this.formatMoney(deal.value),
-            score: `${score}%`,
-            tag,
-            action: this.getNextAction(deal.stage),
-            time: this.formatTimeAgo(deal.updatedAt || deal.createdAt),
-            avatarClass: "avatar-blue",
-            avatarInitials: this.getInitials(displayName),
-            stage: deal.stage,
-            leadId: deal.leadId,
-            value: Number(deal.value || 0),
-            risk: score >= 80 ? "Low" : score >= 50 ? "Medium" : "High",
-            suggestedSteps: [
-              {
-                title: this.getNextAction(deal.stage),
-                impact: score >= 80 ? "high" : "medium",
-                impactLabel: score >= 80 ? "High impact" : "Medium impact",
-              },
-              {
-                title:
-                  deal.stage === "new"
-                    ? "Make first contact"
-                    : "Follow up with buyer",
-                impact: "medium",
-                impactLabel: "Medium impact",
-              },
-            ],
-          };
-        }),
-      };
-    });
-
-    return {
-      stats,
-      columns,
-      summary: {
-        totalDeals,
-        conversionRate,
-        aiCloseScore,
-        pipelineGrowth,
-        wonGrowth,
-        riskGrowth,
-      },
-    };
-  }
-
-  async getDealEvents(id: string, userId: string, teamId?: string | null) {
-    const deal = await this.findDealForUser(id, userId, teamId);
-
-    const { rows } = await this.db.query(
-      `
-    SELECT
-      id,
-      event_type AS "eventType",
-      entity_type AS "entityType",
-      entity_id AS "entityId",
-      user_id AS "userId",
-      team_id AS "teamId",
-      COALESCE(metadata, '{}'::jsonb) AS metadata,
-      created_at AS "createdAt"
-    FROM events
-    WHERE entity_type = 'deal'
-      AND entity_id = $1
-    ORDER BY created_at DESC
-    LIMIT 10
-    `,
-      [deal.id],
-    );
-
-    return {
-      deal,
-      events: rows.map((event) => ({
-        ...event,
-        timeAgo: this.formatTimeAgo(event.createdAt),
-      })),
-    };
-  }
-
-  private formatTimeAgo(value: any) {
-    if (!value) return "Recently updated";
-
-    const date = new Date(value);
-    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-
-    if (seconds < 60) return "Just now";
-
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes} min ago`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
-
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days} day${days > 1 ? "s" : ""} ago`;
-
-    const months = Math.floor(days / 30);
-    if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
-
-    const years = Math.floor(months / 12);
-    return `${years} year${years > 1 ? "s" : ""} ago`;
   }
 }

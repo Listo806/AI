@@ -24,12 +24,16 @@ import { MoveDealDto } from "./dto/move-deal.dto";
 export class PipelineController {
   constructor(private readonly pipelineService: PipelineService) {}
   @Get("dashboard")
-  getDashboard(@Req() req: any) {
+  getDashboard(
+    @Req() req: any,
+    @Query("forecastRange") forecastRange = "month",
+  ) {
     const user = req.user;
 
     return this.pipelineService.getDashboard(
       user.id,
       user.teamId || user.team_id || null,
+      forecastRange,
     );
   }
   @Get()
