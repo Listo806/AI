@@ -362,7 +362,7 @@ const Terms = () => {
         </p>
       </Section>
 
-      <Section title="18. Contact Information">
+      <Section title="Contact Information">
         <p><strong>Support Email:</strong> support@cortexaaios.com</p>
         <p><strong>Platform:</strong> CORTEXA AI Revenue OS</p>
         <p><strong>Legal Business Name:</strong> Listo Qasa S.A.</p>
