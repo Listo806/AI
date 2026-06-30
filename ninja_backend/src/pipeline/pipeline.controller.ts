@@ -97,4 +97,14 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
+
+  @Get("dashboard")
+  getDashboard(@Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.getDashboard(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
 }

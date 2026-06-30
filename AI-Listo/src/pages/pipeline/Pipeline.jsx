@@ -1,9 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  getPipeline,
-  getPipelineSummary,
-  moveDeal,
-} from "../../api/pipelineApi";
+import apiClient from "../../api/apiClient";
 import "./pipeline.css";
 import {
   Search,
@@ -56,274 +52,90 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
-  const [pipelineData, setPipelineData] = useState([]);
-  const [pipelineSummary, setPipelineSummary] = useState(null);
+  const [pipelineStats, setPipelineStats] = useState([]);
+  const [pipelineColumns, setPipelineColumns] = useState([]);
   const [pipelineLoading, setPipelineLoading] = useState(false);
-  const fetchPipeline = async () => {
+  const [movingDealId, setMovingDealId] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const statIcons = {
+    users: <Users size={20} />,
+    dollar: <DollarSign size={20} />,
+    check: <CheckCircle2 size={20} />,
+    flame: <Flame size={20} />,
+    bot: <Bot size={20} />,
+    alert: <AlertTriangle size={20} />,
+  };
+
+  const fetchPipelineDashboard = async () => {
     try {
       setPipelineLoading(true);
 
-      const [pipelineRes, summaryRes] = await Promise.all([
-        apiClient.request("/pipeline", { method: "GET" }),
-        apiClient.request("/pipeline/summary", { method: "GET" }),
-      ]);
+      const response = await apiClient.request("/pipeline/dashboard", {
+        method: "GET",
+      });
 
-      const pipeline = pipelineRes?.data || pipelineRes || [];
-      const summary = summaryRes?.data || summaryRes || null;
+      const data = response?.data || response || {};
 
-      setPipelineData(Array.isArray(pipeline) ? pipeline : []);
-      setPipelineSummary(summary);
+      setPipelineStats(Array.isArray(data.stats) ? data.stats : []);
+      setPipelineColumns(Array.isArray(data.columns) ? data.columns : []);
     } catch (err) {
-      console.error("Fetch pipeline error:", err);
+      console.error("Fetch pipeline dashboard error:", err);
     } finally {
       setPipelineLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPipeline();
+    fetchPipelineDashboard();
   }, []);
-  const stats = [
-    {
-      title: "Total Deals",
-      value: pipelineSummary?.totalDeals || 0,
-      change: `↑ ${pipelineSummary?.newDealsThisMonth || 0} this month`,
-      icon: <Users size={20} />,
-      className: "blue",
-      changeClass: "text-green",
-    },
-    {
-      title: "Pipeline Value",
-      value: formatMoney(pipelineSummary?.pipelineValue || 0),
-      change: `↑ ${pipelineSummary?.pipelineGrowth || 0}% vs last month`,
-      icon: <DollarSign size={20} />,
-      className: "green",
-      changeClass: "text-green",
-    },
-    {
-      title: "Won This Month",
-      value: formatMoney(pipelineSummary?.wonThisMonth || 0),
-      change: `↑ ${pipelineSummary?.wonGrowth || 0}% vs last month`,
-      icon: <CheckCircle2 size={20} />,
-      className: "purple",
-      changeClass: "text-green",
-    },
-    {
-      title: "Active Negotiations",
-      value: pipelineSummary?.activeNegotiations || 0,
-      change: `${pipelineSummary?.stuckDeals || 0} stuck deals`,
-      icon: <Flame size={20} />,
-      className: "orange",
-      changeClass: "text-orange",
-    },
-    {
-      title: "AI Close Score",
-      value: `${pipelineSummary?.aiCloseScore || 0}%`,
-      change: `↑ ${pipelineSummary?.aiGrowth || 0}% vs last month`,
-      icon: <Bot size={20} />,
-      className: "cyan",
-      changeClass: "text-green",
-    },
-    {
-      title: "Revenue At Risk",
-      value: formatMoney(pipelineSummary?.revenueAtRisk || 0),
-      change: `↑ ${pipelineSummary?.riskGrowth || 0}% vs last month`,
-      icon: <AlertTriangle size={20} />,
-      className: "pink",
-      changeClass: "text-red",
-    },
-  ];
 
-  const columns = [
-    {
-      id: "new",
-      title: "New",
-      count: 7,
-      amount: "$420K",
-      insight: "3 need initial contact",
-      deals: [
-        {
-          name: "Maria Fernandez",
-          property: "Modern Luxury Villa",
-          amount: "$450,000",
-          score: "68%",
-          tag: "Hot",
-          action: "Call now",
-          time: "1 min ago",
-          avatarClass: "avatar-purple",
-          avatarInitials: "M",
-        },
-        {
-          name: "Andres Lopez",
-          property: "Downtown Apartment",
-          amount: "$185,000",
-          score: "58%",
-          tag: "Warm",
-          action: "Send market report",
-          time: "2 min ago",
-          avatarClass: "avatar-blue",
-          avatarInitials: "A",
-        },
-      ],
-    },
-    {
-      id: "qualified",
-      title: "Qualified",
-      count: 7,
-      amount: "$1.2M",
-      insight: "2 buyers ready to view",
-      deals: [
-        {
-          name: "Carlos Mendoza",
-          property: "Beachfront Condo",
-          amount: "$320,000",
-          score: "91%",
-          tag: "Hot",
-          action: "Schedule tour",
-          time: "2 min ago",
-          avatarClass: "avatar-green",
-          avatarInitials: "C",
-        },
-        {
-          name: "Ninja Test Lead",
-          property: "Family Home in Suburbs",
-          amount: "$950,000",
-          score: "77%",
-          tag: "Warm",
-          action: "Send financing options",
-          time: "2 min ago",
-          avatarClass: "avatar-sky",
-          avatarInitials: "N",
-        },
-      ],
-    },
-    {
-      id: "proposal",
-      title: "Proposal",
-      count: 6,
-      amount: "$750K",
-      insight: "2 proposals pending",
-      deals: [
-        {
-          name: "Makoto Kawamoto",
-          property: "Luxury Penthouse",
-          amount: "$910,000",
-          score: "84%",
-          tag: "Hot",
-          action: "Follow up",
-          time: "45 min ago",
-          avatarClass: "avatar-purple",
-          avatarInitials: "M",
-        },
-        {
-          name: "Sofia Martinez",
-          property: "Golf Course Condo",
-          amount: "$675,000",
-          score: "93%",
-          tag: "Hot",
-          action: "Call owner",
-          time: "1 hour ago",
-          avatarClass: "avatar-orange",
-          avatarInitials: "S",
-        },
-      ],
-    },
-    {
-      id: "negotiation",
-      title: "Negotiation",
-      count: 5,
-      amount: "$680K",
-      insight: "3 close to closing",
-      deals: [
-        {
-          name: "David Costa",
-          property: "Suburban Home",
-          amount: "$340,000",
-          score: "100%",
-          tag: "Won",
-          action: "Send offer",
-          time: "2 hours ago",
-          avatarClass: "avatar-green",
-          avatarInitials: "D",
-        },
-        {
-          name: "Javier Torres",
-          property: "Investment Property",
-          amount: "$295,000",
-          score: "72%",
-          tag: "Warm",
-          action: "Last buyer check-in",
-          time: "3 hours ago",
-          avatarClass: "avatar-orange",
-          avatarInitials: "J",
-        },
-      ],
-    },
-    {
-      id: "won",
-      title: "Won",
-      count: 2,
-      amount: "$680K",
-      insight: "Celebrate & upsell",
-      deals: [
-        {
-          name: "Ana Neves",
-          property: "City Loft",
-          amount: "$210,000",
-          score: "100%",
-          tag: "Won",
-          action: "Closed",
-          time: "2 days ago",
-          nextStep: "Upsell opportunity",
-          avatarClass: "avatar-red",
-          avatarInitials: "A",
-        },
-        {
-          name: "John Smith",
-          property: "Lakeview Condo",
-          amount: "$470,000",
-          score: "100%",
-          tag: "Won",
-          action: "Closed",
-          time: "3 days ago",
-          nextStep: "Referral request",
-          avatarClass: "avatar-dark",
-          avatarInitials: "JS",
-        },
-      ],
-    },
-    {
-      id: "lost",
-      title: "Lost",
-      count: 2,
-      amount: "$210K",
-      insight: "Re-target & learn",
-      deals: [
-        {
-          name: "Robert Wilson",
-          property: "Downtown Unit",
-          amount: "$110,000",
-          score: "29%",
-          tag: "Lost",
-          action: "Chose competitor",
-          time: "2 days ago",
-          avatarClass: "avatar-red",
-          avatarInitials: "R",
-        },
-        {
-          name: "Emily Clark",
-          property: "Suburban Townhome",
-          amount: "$100,000",
-          score: "22%",
-          tag: "Lost",
-          action: "Timing",
-          time: "3 days ago",
-          avatarClass: "avatar-pink",
-          avatarInitials: "E",
-        },
-      ],
-    },
-  ];
+  const moveDealToNextStage = async (deal, currentStage) => {
+    const stageOrder = [
+      "new",
+      "qualified",
+      "proposal",
+      "negotiation",
+      "won",
+      "lost",
+    ];
+    const index = stageOrder.indexOf(currentStage);
+    const nextStage = stageOrder[index + 1];
+
+    if (!deal?.id || !nextStage) return;
+
+    try {
+      setMovingDealId(deal.id);
+
+      await apiClient.request(`/pipeline/deals/${deal.id}/move`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          stage: nextStage,
+        }),
+      });
+
+      fetchPipelineDashboard();
+    } catch (err) {
+      console.error("Move deal error:", err);
+    } finally {
+      setMovingDealId(null);
+    }
+  };
+
+  const visibleColumns = pipelineColumns.map((column) => {
+    const keyword = search.trim().toLowerCase();
+
+    if (!keyword) return column;
+
+    return {
+      ...column,
+      deals: (column.deals || []).filter((deal) =>
+        [deal.name, deal.property, deal.amount, deal.tag, deal.stage]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(keyword)),
+      ),
+    };
+  });
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -345,6 +157,8 @@ export default function PipelinePage() {
               type="text"
               placeholder="Search deals..."
               className="global-search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button className="secondary-btn filter-btn">
@@ -433,10 +247,10 @@ export default function PipelinePage() {
 
       {/* SUMMARY STATS GRID */}
       <section className="pipeline-stats-cards-grid">
-        {stats.map((card, idx) => (
+        {pipelineStats.map((card, idx) => (
           <div className="pipeline-stat-card-item" key={idx}>
             <div className={`stat-card-icon-box ${card.className}`}>
-              {card.icon}
+              {statIcons[card.iconKey]}
             </div>
             <div className="stat-card-content-wrapper">
               <span className="stat-card-label-title">{card.title}</span>
@@ -561,92 +375,98 @@ export default function PipelinePage() {
 
       {/* KANBAN BOARD SECTION */}
       <section className="pipeline-kanban-board-scrollable-container">
-        {columns.map((col) => (
-          <div className="kanban-stage-column-wrapper" key={col.id}>
-            <div className="kanban-column-header-details">
-              <div className="flex justify-between items-center w-full">
-                <div className="flex items-center gap-2">
-                  <span className={`column-status-dot dot-${col.id}`}></span>
-                  <h3 className="column-stage-title-text">{col.title}</h3>
+        {pipelineLoading ? (
+          <div className="pipeline-loading-state">
+            <RefreshCw size={18} className="spin" />
+            Loading pipeline...
+          </div>
+        ) : (
+          visibleColumns.map((col) => (
+            <div className="kanban-stage-column-wrapper" key={col.id}>
+              <div className="kanban-column-header-details">
+                <div className="flex justify-between items-center w-full">
+                  <div className="flex items-center gap-2">
+                    <span className={`column-status-dot dot-${col.id}`}></span>
+                    <h3 className="column-stage-title-text">{col.title}</h3>
+                  </div>
+
+                  <button className="deal-card-context-menu-trigger">
+                    <MoreVertical size={14} />
+                  </button>
                 </div>
-
-                <button className="deal-card-context-menu-trigger">
-                  <MoreVertical size={14} />
-                </button>
               </div>
-            </div>
 
-            <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
-              <span className="column-deals-counter-badge">
-                {col.count} deals
-              </span>
-              <span className="column-header-divider">•</span>
-              <span className="column-aggregate-financial-sum">
-                {col.amount}
-              </span>
-            </div>
+              <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
+                <span className="column-deals-counter-badge">
+                  {col.count} deals
+                </span>
+                <span className="column-header-divider">•</span>
+                <span className="column-aggregate-financial-sum">
+                  {col.amount}
+                </span>
+              </div>
 
-            <div className="kanban-column-ai-insight-strip">
-              <span>AI Insight: {col.insight}</span>
-            </div>
+              <div className="kanban-column-ai-insight-strip">
+                <span>AI Insight: {col.insight}</span>
+              </div>
 
-            <div className="kanban-cards-vertical-stack">
-              {col.deals.map((deal, dIdx) => (
-                <div className="kanban-deal-card-item" key={dIdx}>
-                  <div className="deal-card-header-top-row">
-                    <div
-                      className={`deal-card-avatar-circle ${deal.avatarClass}`}
-                    >
-                      {deal.avatarInitials}
+              <div className="kanban-cards-vertical-stack">
+                {col.deals.map((deal, dIdx) => (
+                  <div className="kanban-deal-card-item" key={dIdx}>
+                    <div className="deal-card-header-top-row">
+                      <div
+                        className={`deal-card-avatar-circle ${deal.avatarClass}`}
+                      >
+                        {deal.avatarInitials}
+                      </div>
+
+                      <div className="deal-card-lead-identity">
+                        <div className="flex justify-between items-start w-full">
+                          <h4 className="deal-card-client-name">{deal.name}</h4>
+
+                          <span
+                            className={`deal-card-temperature-tag tag-${deal.tag.toLowerCase()}`}
+                          >
+                            {deal.tag}
+                          </span>
+                        </div>
+                        <span className="deal-card-property-title">
+                          {deal.property}
+                        </span>
+                        <strong className="deal-card-financial-value">
+                          {deal.amount}
+                        </strong>
+                      </div>
                     </div>
 
-                    <div className="deal-card-lead-identity">
-                      <div className="flex justify-between items-start w-full">
-                        <h4 className="deal-card-client-name">{deal.name}</h4>
-
-                        <span
-                          className={`deal-card-temperature-tag tag-${deal.tag.toLowerCase()}`}
-                        >
-                          {deal.tag}
+                    <div className="deal-card-ai-score-metric-row">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="ai-score-label-text">AI Score</span>
+                        <span className="ai-score-numeric-percentage">
+                          {deal.score}
                         </span>
                       </div>
-                      <span className="deal-card-property-title">
-                        {deal.property}
-                      </span>
-                      <strong className="deal-card-financial-value">
-                        {deal.amount}
-                      </strong>
+                      <div className="ai-score-horizontal-progress-bar-bg">
+                        <div
+                          className="ai-score-horizontal-progress-fill-active"
+                          style={{ width: deal.score }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="deal-card-ai-score-metric-row">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="ai-score-label-text">AI Score</span>
-                      <span className="ai-score-numeric-percentage">
-                        {deal.score}
+                    <div className="deal-card-recommended-next-action-box">
+                      <div className="flex justify-between items-center">
+                        <span className="next-action-label-title">
+                          Next Best Action
+                        </span>
+                        <span className="next-action-timestamp-clock">
+                          <Clock3 size={11} /> {deal.time}
+                        </span>
+                      </div>
+                      <span className="next-action-description-text">
+                        <Clock3 size={11} /> {deal.action}
                       </span>
-                    </div>
-                    <div className="ai-score-horizontal-progress-bar-bg">
-                      <div
-                        className="ai-score-horizontal-progress-fill-active"
-                        style={{ width: deal.score }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="deal-card-recommended-next-action-box">
-                    <div className="flex justify-between items-center">
-                      <span className="next-action-label-title">
-                        Next Best Action
-                      </span>
-                      <span className="next-action-timestamp-clock">
-                        <Clock3 size={11} /> {deal.time}
-                      </span>
-                    </div>
-                    <span className="next-action-description-text">
-                      <Clock3 size={11} /> {deal.action}
-                    </span>
-                    {/*{deal.nextStep && (
+                      {/*{deal.nextStep && (
                       <div className="deal-card-extended-next-step-strip">
                        <span className="extended-step-label">Next Step:</span>
                         <span className="extended-step-desc">
@@ -654,25 +474,31 @@ export default function PipelinePage() {
                         </span>
                       </div>
                     )}*/}
-                  </div>
+                    </div>
 
-                  <div className="deal-card-bottom-interactive-action-triggers">
-                    <button className="deal-card-footer-action-trigger-btn">
-                      <Sparkles size={12} /> Score
-                    </button>
-                    <button className="deal-card-footer-action-trigger-btn">
-                      <ArrowUpRight size={12} /> Move
-                    </button>
+                    <div className="deal-card-bottom-interactive-action-triggers">
+                      <button className="deal-card-footer-action-trigger-btn">
+                        <Sparkles size={12} /> Score
+                      </button>
+                      <button
+                        className="deal-card-footer-action-trigger-btn"
+                        onClick={() => moveDealToNextStage(deal, col.id)}
+                        disabled={movingDealId === deal.id || col.id === "lost"}
+                      >
+                        <ArrowUpRight size={12} />
+                        {movingDealId === deal.id ? "Moving..." : "Move"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              <button className="kanban-column-add-deal-inline-trigger-btn">
-                <Plus size={14} /> Add Deal
-              </button>
+                <button className="kanban-column-add-deal-inline-trigger-btn">
+                  <Plus size={14} /> Add Deal
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </section>
 
       {/* SPLIT BOTTOM INTELLIGENCE GRID */}
