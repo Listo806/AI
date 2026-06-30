@@ -81,7 +81,7 @@ export class PipelineService {
   }
 
   private getStageTitle(stage: string) {
-    const map = {
+    const map: Record<string, string> = {
       new: "New",
       qualified: "Qualified",
       proposal: "Proposal",
@@ -114,7 +114,7 @@ export class PipelineService {
   }
 
   private getNextAction(stage: string) {
-    const map = {
+    const map: Record<string, string> = {
       new: "Call now",
       qualified: "Schedule tour",
       proposal: "Follow up",
@@ -138,28 +138,41 @@ export class PipelineService {
     previous: number,
     compareLabel: string,
     positiveGood = true,
+    minPreviousForPercent = 1,
   ) {
-    const growth = this.calcGrowth(current, previous);
-    const absValue = Math.abs(growth);
-
-    if (current > previous) {
+    if (previous < minPreviousForPercent && current > 0) {
       return {
         direction: "up",
         icon: "↑",
-        value: absValue,
+        value: null,
         compareLabel,
-        text: `↑ ${absValue}% ${compareLabel}`,
+        text: "New this period",
+        className: positiveGood ? "text-green" : "text-red",
+      };
+    }
+
+    if (current > previous) {
+      const value = Math.abs(this.calcGrowth(current, previous));
+
+      return {
+        direction: "up",
+        icon: "↑",
+        value,
+        compareLabel,
+        text: `↑ ${value}% ${compareLabel}`,
         className: positiveGood ? "text-green" : "text-red",
       };
     }
 
     if (current < previous) {
+      const value = Math.abs(this.calcGrowth(current, previous));
+
       return {
         direction: "down",
         icon: "↓",
-        value: absValue,
+        value,
         compareLabel,
-        text: `↓ ${absValue}% ${compareLabel}`,
+        text: `↓ ${value}% ${compareLabel}`,
         className: positiveGood ? "text-red" : "text-green",
       };
     }
@@ -249,148 +262,22 @@ export class PipelineService {
     }
   }
 
-  async getPipeline(userId: string, teamId?: string | null) {
-    const scope = this.getScope(userId, teamId);
-
+  private async getPeriodSummary(scope: { where: string; params: any[] }, period: any) {
     const { rows } = await this.db.query(
       `
-      SELECT
-        d.id,
-        d.name,
-        d.value,
-        d.stage,
-        d.position,
-        d.notes,
-        d.lead_id AS "leadId",
-        d.team_id AS "teamId",
-        d.created_by AS "createdBy",
-        d.assigned_to AS "assignedTo",
-        d.created_at AS "createdAt",
-        d.updated_at AS "updatedAt",
-
-        l.name AS "leadName",
-        l.email AS "leadEmail",
-        l.phone AS "leadPhone",
-        l.status AS "leadStatus",
-        l.priority AS "leadPriority",
-
-        u.name AS "assignedName",
-        u.email AS "assignedEmail"
-
-      FROM deals d
-      LEFT JOIN leads l ON l.id = d.lead_id
-      LEFT JOIN users u ON u.id = d.assigned_to
-      WHERE ${scope.where}
-      ORDER BY d.position ASC, d.created_at DESC
-      `,
-      scope.params,
-    );
-
-    return PIPELINE_STAGES.map((stage) => {
-      const deals = rows.filter((deal) => deal.stage === stage.key);
-
-      return {
-        id: stage.key,
-        key: stage.key,
-        name: stage.label,
-        color: stage.color,
-        position: stage.position,
-        totalDeals: deals.length,
-        totalValue: deals.reduce(
-          (sum, deal) => sum + Number(deal.value || 0),
-          0,
-        ),
-        deals: deals.map((deal) => ({
-          id: deal.id,
-          name: deal.name,
-          value: Number(deal.value || 0),
-          stage: deal.stage,
-          position: deal.position,
-          notes: deal.notes,
-          leadId: deal.leadId,
-          createdAt: deal.createdAt,
-          updatedAt: deal.updatedAt,
-          lead: deal.leadId
-            ? {
-                id: deal.leadId,
-                name: deal.leadName,
-                email: deal.leadEmail,
-                phone: deal.leadPhone,
-                status: deal.leadStatus,
-                priority: deal.leadPriority,
-              }
-            : null,
-          assignedTo: deal.assignedTo,
-          assignedUser: deal.assignedTo
-            ? {
-                id: deal.assignedTo,
-                name: deal.assignedName,
-                email: deal.assignedEmail,
-              }
-            : null,
-        })),
-      };
-    });
-  }
-
-  async getSummary(userId: string, teamId?: string | null) {
-    const dashboard = await this.getDashboard(userId, teamId, "month");
-    return dashboard.summary;
-  }
-
-  async getDashboard(
-    userId: string,
-    teamId?: string | null,
-    forecastRange = "month",
-  ) {
-    const period = this.getForecastPeriodSql(forecastRange);
-    const scope = this.getScope(userId, teamId);
-
-    const { rows: deals } = await this.db.query(
-      `
-      SELECT
-        d.id,
-        d.name,
-        COALESCE(d.value, 0) AS value,
-        COALESCE(d.stage, 'new') AS stage,
-        COALESCE(d.position, 0) AS position,
-        d.notes,
-        d.lead_id AS "leadId",
-        d.team_id AS "teamId",
-        d.created_by AS "createdBy",
-        d.assigned_to AS "assignedTo",
-        d.created_at AS "createdAt",
-        d.updated_at AS "updatedAt",
-
-        l.name AS "leadName",
-        l.email AS "leadEmail",
-        l.phone AS "leadPhone",
-        l.status AS "leadStatus",
-        l.priority AS "leadPriority"
-
-      FROM deals d
-      LEFT JOIN leads l ON l.id = d.lead_id
-      WHERE ${scope.where}
-      ORDER BY d.position ASC, d.created_at DESC
-      `,
-      scope.params,
-    );
-
-    const { rows: summaryRows } = await this.db.query(
-      `
-      WITH current_deals AS (
+      WITH scoped_deals AS (
         SELECT *
         FROM deals d
         WHERE ${scope.where}
       ),
       current_period AS (
         SELECT *
-        FROM current_deals
+        FROM scoped_deals
         WHERE created_at >= ${period.currentStart}
       ),
       previous_period AS (
         SELECT *
-        FROM current_deals
+        FROM scoped_deals
         WHERE created_at >= ${period.previousStart}
           AND created_at < ${period.previousEnd}
       )
@@ -488,19 +375,152 @@ export class PipelineService {
           WHERE stage = 'won'
         ) AS "previousPeriodWonValue"
 
-      FROM current_deals
+      FROM scoped_deals
       `,
       scope.params,
     );
 
-    const summary = summaryRows[0] || {};
+    return rows[0] || {};
+  }
 
-    const totalDeals = Number(summary.totalDeals || 0);
-    const wonDeals = Number(summary.wonDeals || 0);
-    const lostDeals = Number(summary.lostDeals || 0);
-    const openDeals = Number(summary.openDeals || 0);
-    const activeNegotiations = Number(summary.activeNegotiations || 0);
-    const stuckDeals = Number(summary.stuckDeals || 0);
+  async getPipeline(userId: string, teamId?: string | null) {
+    const scope = this.getScope(userId, teamId);
+
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        d.id,
+        d.name,
+        d.value,
+        d.stage,
+        d.position,
+        d.notes,
+        d.lead_id AS "leadId",
+        d.team_id AS "teamId",
+        d.created_by AS "createdBy",
+        d.assigned_to AS "assignedTo",
+        d.created_at AS "createdAt",
+        d.updated_at AS "updatedAt",
+
+        l.name AS "leadName",
+        l.email AS "leadEmail",
+        l.phone AS "leadPhone",
+        l.status AS "leadStatus",
+        l.priority AS "leadPriority",
+
+        u.name AS "assignedName",
+        u.email AS "assignedEmail"
+
+      FROM deals d
+      LEFT JOIN leads l ON l.id = d.lead_id
+      LEFT JOIN users u ON u.id = d.assigned_to
+      WHERE ${scope.where}
+      ORDER BY d.position ASC, d.created_at DESC
+      `,
+      scope.params,
+    );
+
+    return PIPELINE_STAGES.map((stage) => {
+      const deals = rows.filter((deal) => deal.stage === stage.key);
+
+      return {
+        id: stage.key,
+        key: stage.key,
+        name: stage.label,
+        color: stage.color,
+        position: stage.position,
+        totalDeals: deals.length,
+        totalValue: deals.reduce(
+          (sum, deal) => sum + Number(deal.value || 0),
+          0,
+        ),
+        deals: deals.map((deal) => ({
+          id: deal.id,
+          name: deal.name,
+          value: Number(deal.value || 0),
+          stage: deal.stage,
+          position: deal.position,
+          notes: deal.notes,
+          leadId: deal.leadId,
+          createdAt: deal.createdAt,
+          updatedAt: deal.updatedAt,
+          lead: deal.leadId
+            ? {
+                id: deal.leadId,
+                name: deal.leadName,
+                email: deal.leadEmail,
+                phone: deal.leadPhone,
+                status: deal.leadStatus,
+                priority: deal.leadPriority,
+              }
+            : null,
+          assignedTo: deal.assignedTo,
+          assignedUser: deal.assignedTo
+            ? {
+                id: deal.assignedTo,
+                name: deal.assignedName,
+                email: deal.assignedEmail,
+              }
+            : null,
+        })),
+      };
+    });
+  }
+
+  async getSummary(userId: string, teamId?: string | null) {
+    const dashboard = await this.getDashboard(userId, teamId, "month");
+    return dashboard.summary;
+  }
+
+  async getDashboard(
+    userId: string,
+    teamId?: string | null,
+    forecastRange = "month",
+  ) {
+    const scope = this.getScope(userId, teamId);
+
+    const statsPeriod = this.getForecastPeriodSql("month");
+    const forecastPeriod = this.getForecastPeriodSql(forecastRange);
+
+    const { rows: deals } = await this.db.query(
+      `
+      SELECT
+        d.id,
+        d.name,
+        COALESCE(d.value, 0) AS value,
+        COALESCE(d.stage, 'new') AS stage,
+        COALESCE(d.position, 0) AS position,
+        d.notes,
+        d.lead_id AS "leadId",
+        d.team_id AS "teamId",
+        d.created_by AS "createdBy",
+        d.assigned_to AS "assignedTo",
+        d.created_at AS "createdAt",
+        d.updated_at AS "updatedAt",
+
+        l.name AS "leadName",
+        l.email AS "leadEmail",
+        l.phone AS "leadPhone",
+        l.status AS "leadStatus",
+        l.priority AS "leadPriority"
+
+      FROM deals d
+      LEFT JOIN leads l ON l.id = d.lead_id
+      WHERE ${scope.where}
+      ORDER BY d.position ASC, d.created_at DESC
+      `,
+      scope.params,
+    );
+
+    const statsSummary = await this.getPeriodSummary(scope, statsPeriod);
+    const forecastSummary = await this.getPeriodSummary(scope, forecastPeriod);
+
+    const totalDeals = Number(statsSummary.totalDeals || 0);
+    const wonDeals = Number(statsSummary.wonDeals || 0);
+    const lostDeals = Number(statsSummary.lostDeals || 0);
+    const openDeals = Number(statsSummary.openDeals || 0);
+    const activeNegotiations = Number(statsSummary.activeNegotiations || 0);
+    const stuckDeals = Number(statsSummary.stuckDeals || 0);
 
     const conversionRate = totalDeals
       ? Math.round((wonDeals / totalDeals) * 100)
@@ -515,34 +535,55 @@ export class PipelineService {
     );
 
     const dealsTrend = this.getTrend(
-      Number(summary.currentPeriodDeals || 0),
-      Number(summary.previousPeriodDeals || 0),
-      period.trendLabel,
+      Number(statsSummary.currentPeriodDeals || 0),
+      Number(statsSummary.previousPeriodDeals || 0),
+      statsPeriod.trendLabel,
     );
 
     const pipelineTrend = this.getTrend(
-      Number(summary.currentPeriodValue || 0),
-      Number(summary.previousPeriodValue || 0),
-      period.trendLabel,
+      Number(statsSummary.currentPeriodValue || 0),
+      Number(statsSummary.previousPeriodValue || 0),
+      statsPeriod.trendLabel,
+      true,
+      1000,
     );
 
     const wonTrend = this.getTrend(
-      Number(summary.currentPeriodWonValue || 0),
-      Number(summary.previousPeriodWonValue || 0),
-      period.trendLabel,
-    );
-
-    const closingsTrend = this.getTrend(
-      Number(summary.currentPeriodClosings || 0),
-      Number(summary.previousPeriodClosings || 0),
-      period.trendLabel,
+      Number(statsSummary.currentPeriodWonValue || 0),
+      Number(statsSummary.previousPeriodWonValue || 0),
+      statsPeriod.trendLabel,
+      true,
+      1000,
     );
 
     const riskTrend = this.getTrend(
-      Number(summary.revenueAtRisk || 0),
-      Number(summary.openValue || 0),
+      Number(statsSummary.revenueAtRisk || 0),
+      Number(statsSummary.openValue || 0),
       "of open value",
       false,
+      1000,
+    );
+
+    const forecastRevenueTrend = this.getTrend(
+      Number(forecastSummary.currentPeriodValue || 0),
+      Number(forecastSummary.previousPeriodValue || 0),
+      forecastPeriod.trendLabel,
+      true,
+      1000,
+    );
+
+    const forecastClosingsTrend = this.getTrend(
+      Number(forecastSummary.currentPeriodClosings || 0),
+      Number(forecastSummary.previousPeriodClosings || 0),
+      forecastPeriod.trendLabel,
+    );
+
+    const forecastVelocityTrend = this.getTrend(
+      Number(forecastSummary.currentPeriodValue || 0),
+      Number(forecastSummary.previousPeriodValue || 0),
+      forecastPeriod.trendLabel,
+      true,
+      1000,
     );
 
     const confidenceTrend = this.getConfidenceTrend(aiCloseScore);
@@ -559,7 +600,7 @@ export class PipelineService {
       },
       {
         title: "Pipeline Value",
-        value: this.formatMoney(summary.pipelineValue),
+        value: this.formatMoney(statsSummary.pipelineValue),
         change: pipelineTrend.text,
         trend: pipelineTrend,
         iconKey: "dollar",
@@ -567,8 +608,8 @@ export class PipelineService {
         changeClass: pipelineTrend.className,
       },
       {
-        title: `Won ${period.label.replace("This ", "This ")}`,
-        value: this.formatMoney(summary.wonThisPeriod),
+        title: "Won This Month",
+        value: this.formatMoney(statsSummary.wonThisPeriod),
         change: wonTrend.text,
         trend: wonTrend,
         iconKey: "check",
@@ -601,7 +642,7 @@ export class PipelineService {
       },
       {
         title: "Revenue At Risk",
-        value: this.formatMoney(summary.revenueAtRisk),
+        value: this.formatMoney(statsSummary.revenueAtRisk),
         change: riskTrend.text,
         trend: riskTrend,
         iconKey: "alert",
@@ -689,26 +730,28 @@ export class PipelineService {
       }));
 
     const forecast = {
-      range: period.range,
-      rangeLabel: period.label,
+      range: forecastPeriod.range,
+      rangeLabel: forecastPeriod.label,
 
-      forecastedRevenue: this.formatMoney(summary.openValue || 0),
-      forecastedRevenueTrend: pipelineTrend,
+      forecastedRevenue: this.formatMoney(
+        forecastSummary.currentPeriodValue || 0,
+      ),
+      forecastedRevenueTrend: forecastRevenueTrend,
 
-      forecastedClosings: Number(summary.currentPeriodClosings || 0),
-      forecastedClosingsTrend: closingsTrend,
+      forecastedClosings: Number(forecastSummary.currentPeriodClosings || 0),
+      forecastedClosingsTrend: forecastClosingsTrend,
 
       pipelineVelocity: totalDeals
         ? `${Math.max(1, totalDeals / 10).toFixed(2)}x`
         : "0x",
-      pipelineVelocityTrend: pipelineTrend,
+      pipelineVelocityTrend: forecastVelocityTrend,
 
       closeConfidence: `${aiCloseScore}%`,
       closeConfidenceTrend: confidenceTrend,
 
       description: `AI predicts ${this.formatMoney(
-        summary.openValue || 0,
-      )} in revenue with ${aiCloseScore}% confidence for ${period.label.toLowerCase()} based on current pipeline health, deal velocity, and engagement signals.`,
+        forecastSummary.currentPeriodValue || 0,
+      )} in revenue with ${aiCloseScore}% confidence for ${forecastPeriod.label.toLowerCase()} based on current pipeline health, deal velocity, and engagement signals.`,
     };
 
     const automationHealth = [
@@ -735,19 +778,21 @@ export class PipelineService {
         openDeals,
         activeNegotiations,
         stuckDeals,
-        pipelineValue: Number(summary.pipelineValue || 0),
-        openValue: Number(summary.openValue || 0),
-        wonValue: Number(summary.wonValue || 0),
-        revenueAtRisk: Number(summary.revenueAtRisk || 0),
-        averageDeal: Number(summary.averageDeal || 0),
+        pipelineValue: Number(statsSummary.pipelineValue || 0),
+        openValue: Number(statsSummary.openValue || 0),
+        wonValue: Number(statsSummary.wonValue || 0),
+        revenueAtRisk: Number(statsSummary.revenueAtRisk || 0),
+        averageDeal: Number(statsSummary.averageDeal || 0),
         conversionRate,
         aiCloseScore,
         trends: {
           dealsTrend,
           pipelineTrend,
           wonTrend,
-          closingsTrend,
           riskTrend,
+          forecastRevenueTrend,
+          forecastClosingsTrend,
+          forecastVelocityTrend,
           confidenceTrend,
         },
       },
