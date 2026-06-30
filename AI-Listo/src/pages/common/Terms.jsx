@@ -4,12 +4,13 @@ const Terms = () => {
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Terms of Service</h1>
-      <p style={styles.effectiveDate}>
-        Effective Date: April 22, 2026
-      </p>
+      <p style={styles.effectiveDate}>Effective Date: April 22, 2026</p>
 
       <p>
-        These Terms of Service ("Terms") govern your access to and use of <strong>CORTEXA AI Revenue OS</strong> (“CORTEXA”, “we”, “our”, or “us”). By accessing, using, or subscribing to the platform, you agree to be bound by these Terms.
+        These Terms of Service ("Terms") govern your access to and use of{" "}
+        <strong>CORTEXA AI Revenue OS</strong> ("CORTEXA", "we", "our", or
+        "us"). By accessing, using, or subscribing to the platform, you agree to
+        be bound by these Terms.
       </p>
 
       <Section title="Eligibility">
@@ -20,12 +21,16 @@ const Terms = () => {
           <li>Have the legal authority to enter into this agreement.</li>
         </ul>
         <p>
-          You may not use CORTEXA AI Revenue OS for illegal, fraudulent, abusive, deceptive, or prohibited activities.
+          You may not use CORTEXA AI Revenue OS for illegal, fraudulent,
+          abusive, deceptive, or prohibited activities.
         </p>
       </Section>
 
       <Section title="Services">
-        <p>CORTEXA AI Revenue OS provides business automation and customer management tools, including but not limited to:</p>
+        <p>
+          CORTEXA AI Revenue OS provides business automation and customer
+          management tools, including but not limited to:
+        </p>
         <ul style={styles.ul}>
           <li>CRM functionality</li>
           <li>Lead management</li>
@@ -39,9 +44,7 @@ const Terms = () => {
           <li>Appointment booking</li>
           <li>Integrations with third-party services</li>
         </ul>
-        <p>
-          We may modify, improve, suspend, or discontinue features at any time.
-        </p>
+        <p>We may modify, improve, suspend, or discontinue features at any time.</p>
       </Section>
 
       <Section title="Account Responsibility">
@@ -53,7 +56,8 @@ const Terms = () => {
           <li>Maintaining access credentials securely.</li>
         </ul>
         <p>
-          We may suspend or terminate accounts involved in suspicious, abusive, fraudulent, or prohibited activity.
+          We may suspend or terminate accounts involved in suspicious, abusive,
+          fraudulent, or prohibited activity.
         </p>
       </Section>
 
@@ -78,27 +82,55 @@ const Terms = () => {
         <p><strong>Setup Fee</strong></p>
         <p>To activate your account:</p>
         <ul style={styles.ul}>
-          <li>A one-time setup and activation fee of $97 USD may be charged at signup.</li>
+          <li>
+            A one-time setup and activation fee of $97 USD may be charged at
+            signup.
+          </li>
         </ul>
-        <p>The setup fee covers onboarding, account provisioning, platform configuration, and activation services.</p>
+        <p>
+          The setup fee covers onboarding, account provisioning, platform
+          configuration, and activation services.
+        </p>
 
         <p><strong>Subscription Plans</strong></p>
         <p>CORTEXA AI Revenue OS currently offers the following plans:</p>
         <ul style={styles.ul}>
-          <li><strong>Solo Plan:</strong> $197 USD per month. Designed for individual professionals and business owners. Includes access to all core platform features.</li>
-          <li><strong>Team Plan:</strong> $347 USD per month. Includes up to three (3) users. Includes access to all core platform features.</li>
-          <li><strong>Growth Plan:</strong> $497 USD per month. Includes up to five (5) users. Includes access to all core platform features.</li>
+          <li>
+            <strong>Solo Plan:</strong> $197 USD per month. Designed for
+            individual professionals and business owners. Includes access to all
+            core platform features.
+          </li>
+          <li>
+            <strong>Team Plan:</strong> $347 USD per month. Includes up to three
+            (3) users. Includes access to all core platform features.
+          </li>
+          <li>
+            <strong>Growth Plan:</strong> $497 USD per month. Includes up to
+            five (5) users. Includes access to all core platform features.
+          </li>
         </ul>
 
         <p><strong>Feature Access</strong></p>
-        <p>All subscription plans include access to the same core CORTEXA AI Revenue OS platform features. Plan differences are based primarily on:</p>
+        <p>
+          All subscription plans include access to the same core CORTEXA AI
+          Revenue OS platform features.
+        </p>
+        <p>Plan differences are based primarily on:</p>
         <ul style={styles.ul}>
           <li>Included users</li>
           <li>Team size</li>
           <li>Supported business scale</li>
           <li>Platform capacity and usage requirements</li>
         </ul>
-        <p>CORTEXA AI Revenue OS does not restrict core functionality based solely on plan tier. Customers selecting higher-tier plans receive increased capacity and support for larger teams and growing businesses rather than access to a separate feature set.</p>
+        <p>
+          CORTEXA AI Revenue OS does not restrict core functionality based solely
+          on plan tier.
+        </p>
+        <p>
+          Customers selecting higher-tier plans receive increased capacity and
+          support for larger teams and growing businesses rather than access to
+          a separate feature set.
+        </p>
 
         <p><strong>Additional Users</strong></p>
         <p>Customers may add additional users to any plan for:</p>
@@ -107,34 +139,77 @@ const Terms = () => {
         </ul>
 
         <p><strong>Pricing Changes</strong></p>
-        <p>Pricing may be updated from time to time. Existing customers will receive notice of material pricing changes where required by law.</p>
+        <p>
+          Pricing may be updated from time to time. Existing customers will
+          receive notice of material pricing changes where required by law.
+        </p>
 
         <p><strong>Billing</strong></p>
         <p>After the trial period:</p>
         <ul style={styles.ul}>
-          <li>Your subscription automatically converts to a paid plan unless canceled before the renewal date.</li>
+          <li>
+            Your subscription automatically converts to a paid plan unless
+            canceled before the renewal date.
+          </li>
           <li>Billing is recurring and continues until canceled.</li>
           <li>Charges are processed through authorized third-party payment providers.</li>
-          <li>Additional users added during an active subscription may result in prorated charges where applicable.</li>
+          <li>
+            Additional users added during an active subscription may result in
+            prorated charges where applicable.
+          </li>
         </ul>
-        <p>By subscribing, you authorize CORTEXA AI Revenue OS to charge your selected payment method according to your selected plan and any additional services you purchase.</p>
+        <p>
+          By subscribing, you authorize CORTEXA AI Revenue OS to charge your
+          selected payment method according to your selected plan and any
+          additional services you purchase.
+        </p>
       </Section>
 
       <Section title="AI Fair Usage Policy">
-        <p>CORTEXA AI Revenue OS includes AI-powered functionality as part of your subscription. Normal business usage is included. To ensure platform reliability for all customers:</p>
+        <p>
+          CORTEXA AI Revenue OS includes AI-powered functionality as part of your
+          subscription.
+        </p>
+        <p>Normal business usage is included.</p>
+        <p>To ensure platform reliability for all customers:</p>
         <ul style={styles.ul}>
           <li>AI usage may be subject to reasonable fair-use limits.</li>
-          <li>Accounts generating unusually high AI workloads, excessive automation activity, or enterprise-scale processing may require a higher-tier plan or additional AI capacity package.</li>
+          <li>
+            Accounts generating unusually high AI workloads, excessive
+            automation activity, or enterprise-scale processing may require a
+            higher-tier plan or additional AI capacity package.
+          </li>
+          <li>
+            CORTEXA AI Revenue OS reserves the right to notify customers before
+            implementing any usage-related upgrade requirements.
+          </li>
         </ul>
-        <p>CORTEXA AI Revenue OS reserves the right to notify customers before implementing any usage-related upgrade requirements. CORTEXA AI Revenue OS does not utilize customer-facing AI credit systems as part of standard subscriptions.</p>
+        <p>
+          CORTEXA AI Revenue OS does not utilize customer-facing AI credit
+          systems as part of standard subscriptions.
+        </p>
       </Section>
 
       <Section title="Contact Database Usage">
-        <p>CORTEXA AI Revenue OS does not charge customers solely based on the number of contacts stored within the platform. Customers may manage contacts within the limits of their subscription plan without per-contact billing fees. Reasonable storage, database, and platform limits may apply to ensure platform performance and reliability.</p>
+        <p>
+          CORTEXA AI Revenue OS does not charge customers solely based on the
+          number of contacts stored within the platform.
+        </p>
+        <p>
+          Customers may manage contacts within the limits of their subscription
+          plan without per-contact billing fees.
+        </p>
+        <p>
+          Reasonable storage, database, and platform limits may apply to ensure
+          platform performance and reliability.
+        </p>
       </Section>
 
       <Section title="Third-Party Services">
-        <p>CORTEXA AI Revenue OS may integrate with third-party providers, including but not limited to:</p>
+        <p>
+          CORTEXA AI Revenue OS may integrate with third-party providers,
+          including but not limited to:
+        </p>
         <ul style={styles.ul}>
           <li>WhatsApp</li>
           <li>Google</li>
@@ -155,10 +230,12 @@ const Terms = () => {
       </Section>
 
       <Section title="Cancellation & Refund Policy">
-        <ul style={styles.ul}>
-          <li>You may cancel your subscription at any time.</li>
-          <li>Cancellation prevents future billing but does not retroactively refund charges already processed.</li>
-        </ul>
+        <p>You may cancel your subscription at any time.</p>
+        <p>
+          Cancellation prevents future billing but does not retroactively refund
+          charges already processed.
+        </p>
+
         <p><strong>Non-Refundable Fees</strong></p>
         <p>The following are generally non-refundable:</p>
         <ul style={styles.ul}>
@@ -171,11 +248,11 @@ const Terms = () => {
       </Section>
 
       <Section title="User Data & Responsibility">
-        <ul style={styles.ul}>
-          <li>You retain ownership of your data.</li>
-          <li>CORTEXA AI Revenue OS processes customer data solely to provide platform functionality and services.</li>
-          <li>We do not sell customer data.</li>
-        </ul>
+        <p>You retain ownership of your data.</p>
+        <p>
+          CORTEXA AI Revenue OS processes customer data solely to provide
+          platform functionality and services.
+        </p>
         <p>You are responsible for ensuring that your data:</p>
         <ul style={styles.ul}>
           <li>Is lawfully obtained.</li>
@@ -183,10 +260,15 @@ const Terms = () => {
           <li>Complies with applicable regulations.</li>
           <li>Does not infringe the rights of others.</li>
         </ul>
+        <p>We do not sell customer data.</p>
       </Section>
 
       <Section title="Intellectual Property">
-        <p>All software, content, branding, platform designs, functionality, workflows, and technology associated with CORTEXA AI Revenue OS remain the exclusive property of CORTEXA AI Revenue OS.</p>
+        <p>
+          All software, content, branding, platform designs, functionality,
+          workflows, and technology associated with CORTEXA AI Revenue OS remain
+          the exclusive property of CORTEXA AI Revenue OS.
+        </p>
         <p>You may not:</p>
         <ul style={styles.ul}>
           <li>Copy</li>
@@ -201,7 +283,11 @@ const Terms = () => {
       </Section>
 
       <Section title="Service Availability">
-        <p>While we strive for reliable service, we do not guarantee uninterrupted or error-free availability. Service availability may be affected by:</p>
+        <p>
+          While we strive for reliable service, we do not guarantee
+          uninterrupted or error-free availability.
+        </p>
+        <p>Service availability may be affected by:</p>
         <ul style={styles.ul}>
           <li>Maintenance</li>
           <li>Updates</li>
@@ -213,7 +299,10 @@ const Terms = () => {
       </Section>
 
       <Section title="Limitation of Liability">
-        <p>To the maximum extent permitted by law, CORTEXA AI Revenue OS shall not be liable for:</p>
+        <p>
+          To the maximum extent permitted by law, CORTEXA AI Revenue OS shall
+          not be liable for:
+        </p>
         <ul style={styles.ul}>
           <li>Lost profits</li>
           <li>Lost revenue</li>
@@ -224,11 +313,18 @@ const Terms = () => {
           <li>Consequential damages</li>
           <li>Special or incidental damages</li>
         </ul>
-        <p>Our total liability shall not exceed the amount paid by you to CORTEXA AI Revenue OS during the preceding twelve (12) months.</p>
+        <p>
+          Our total liability shall not exceed the amount paid by you to CORTEXA
+          AI Revenue OS during the preceding twelve (12) months.
+        </p>
       </Section>
 
       <Section title="Indemnification">
-        <p>You agree to defend, indemnify, and hold harmless CORTEXA AI Revenue OS, its owners, employees, contractors, and affiliates from claims, liabilities, damages, losses, and expenses arising from:</p>
+        <p>
+          You agree to defend, indemnify, and hold harmless CORTEXA AI Revenue
+          OS, its owners, employees, contractors, and affiliates from claims,
+          liabilities, damages, losses, and expenses arising from:
+        </p>
         <ul style={styles.ul}>
           <li>Your use of the platform</li>
           <li>Your content or data</li>
@@ -252,20 +348,31 @@ const Terms = () => {
 
       <Section title="Changes to Terms">
         <p>
-          We may update these Terms periodically. Continued use of the platform after updates become effective constitutes acceptance of the revised Terms.
+          We may update these Terms periodically. Continued use of the platform
+          after updates become effective constitutes acceptance of the revised
+          Terms.
         </p>
       </Section>
 
       <Section title="Governing Law">
         <p>
-          These Terms shall be governed by and interpreted in accordance with the laws applicable to the jurisdiction in which CORTEXA AI Revenue OS operates, without regard to conflict of law principles.
+          These Terms shall be governed by and interpreted in accordance with the
+          laws applicable to the jurisdiction in which CORTEXA AI Revenue OS
+          operates, without regard to conflict of law principles.
         </p>
       </Section>
 
-      <Section title="Contact Information">
-        <p>Support Email: support@cortexaaios.com</p>
-        <p>Company: CORTEXA AI Revenue OS</p>
-        <p>For questions regarding these Terms, billing, or platform usage, please contact our support team.</p>
+      <Section title="18. Contact Information">
+        <p><strong>Support Email:</strong> support@cortexaaios.com</p>
+        <p><strong>Platform:</strong> CORTEXA AI Revenue OS</p>
+        <p><strong>Legal Business Name:</strong> Listo Qasa S.A.</p>
+        <p><strong>Trade Name / Brand:</strong> CORTEXA Agentic AI Revenue OS</p>
+        <p><strong>RUC:</strong> 1793234655001</p>
+        <p><strong>Country of Registration:</strong> Ecuador</p>
+        <p>
+          For questions regarding these Terms, billing, platform usage, or legal
+          matters, please contact our support team at support@cortexaaios.com.
+        </p>
       </Section>
     </div>
   );
