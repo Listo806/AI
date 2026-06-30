@@ -7,6 +7,7 @@ import { DatabaseService } from "../database/database.service";
 import { CreateDealDto } from "./dto/create-deal.dto";
 import { UpdateDealDto } from "./dto/update-deal.dto";
 import { MoveDealDto } from "./dto/move-deal.dto";
+import OpenAI from "openai";
 
 const PIPELINE_STAGES = [
   { key: "new", label: "New", color: "#3b82f6", position: 1 },
@@ -19,6 +20,9 @@ const PIPELINE_STAGES = [
 
 @Injectable()
 export class PipelineService {
+  private openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
   constructor(private readonly db: DatabaseService) {}
 
   private getScope(userId: string, teamId?: string | null) {
@@ -1159,18 +1163,169 @@ export class PipelineService {
   async scoreDeal(id: string, userId: string, teamId?: string | null) {
     const deal = await this.findDealForUser(id, userId, teamId);
 
-    const score =
-      deal.stage === "won"
-        ? 100
-        : deal.stage === "lost"
-          ? 22
-          : deal.stage === "negotiation"
-            ? 84
-            : deal.stage === "proposal"
-              ? 78
-              : deal.stage === "qualified"
-                ? 68
-                : 58;
+    const { rows: detailRows } = await this.db.query(
+      `
+    SELECT
+      d.id,
+      d.name,
+      d.value,
+      d.stage,
+      d.notes,
+      d.created_at AS "createdAt",
+      d.updated_at AS "updatedAt",
+
+      l.name AS "leadName",
+      l.email AS "leadEmail",
+      l.phone AS "leadPhone",
+      l.status AS "leadStatus",
+      l.priority AS "leadPriority",
+      l.source AS "leadSource",
+      l.notes AS "leadNotes",
+
+      u.name AS "assignedName",
+      u.email AS "assignedEmail"
+
+    FROM deals d
+    LEFT JOIN leads l ON l.id = d.lead_id
+    LEFT JOIN users u ON u.id = d.assigned_to
+    WHERE d.id = $1
+    LIMIT 1
+    `,
+      [id],
+    );
+
+    const dealDetail = detailRows[0] || deal;
+
+    const { rows: eventRows } = await this.db.query(
+      `
+    SELECT
+      event_type AS "eventType",
+      metadata,
+      created_at AS "createdAt"
+    FROM events
+    WHERE entity_type = 'deal'
+      AND entity_id = $1
+    ORDER BY created_at DESC
+    LIMIT 10
+    `,
+      [id],
+    );
+
+    const aiContext = {
+      deal: dealDetail,
+      recentEvents: eventRows,
+    };
+
+    const systemPrompt = `
+You are CORTEXA AI, a real estate CRM pipeline scoring assistant.
+
+Analyze the deal and return ONLY valid JSON.
+
+Scoring rules:
+- score must be 0 to 100.
+- tag must be one of: Hot, Warm, Cool, Won, Lost.
+- risk must be one of: Low, Medium, High.
+- nextActions must contain 2 to 4 practical actions.
+- Be realistic based only on the CRM data provided.
+- If data is limited, still give a useful conservative score.
+
+Return JSON with this exact shape:
+{
+  "score": 84,
+  "tag": "Hot",
+  "risk": "Medium",
+  "reason": "Short explanation",
+  "nextActions": [
+    {
+      "title": "Schedule follow-up call",
+      "impact": "high",
+      "impactLabel": "High impact"
+    }
+  ]
+}
+`;
+
+    let aiResult: any = null;
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [
+              {
+                type: "input_text",
+                text: systemPrompt,
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `CRM DEAL DATA:\n${JSON.stringify(aiContext)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const raw = response.output_text || "{}";
+      aiResult = JSON.parse(raw);
+    } catch (err) {
+      console.error("AI score deal error:", err);
+
+      const fallbackScore =
+        deal.stage === "won"
+          ? 100
+          : deal.stage === "lost"
+            ? 22
+            : deal.stage === "negotiation"
+              ? 84
+              : deal.stage === "proposal"
+                ? 78
+                : deal.stage === "qualified"
+                  ? 68
+                  : 58;
+
+      aiResult = {
+        score: fallbackScore,
+        tag: this.getDealTag(fallbackScore, deal.stage),
+        risk:
+          fallbackScore >= 80 ? "Low" : fallbackScore >= 50 ? "Medium" : "High",
+        reason:
+          "Fallback score generated from deal stage because AI scoring failed.",
+        nextActions: [
+          {
+            title: this.getNextAction(deal.stage),
+            impact: fallbackScore >= 80 ? "high" : "medium",
+            impactLabel: fallbackScore >= 80 ? "High impact" : "Medium impact",
+          },
+        ],
+      };
+    }
+
+    const score = Math.max(0, Math.min(100, Number(aiResult.score || 0)));
+
+    const result = {
+      score,
+      tag: aiResult.tag || this.getDealTag(score, deal.stage),
+      risk:
+        aiResult.risk ||
+        (score >= 80 ? "Low" : score >= 50 ? "Medium" : "High"),
+      reason: aiResult.reason || "AI score completed.",
+      nextActions: Array.isArray(aiResult.nextActions)
+        ? aiResult.nextActions.slice(0, 4)
+        : [
+            {
+              title: this.getNextAction(deal.stage),
+              impact: "medium",
+              impactLabel: "Medium impact",
+            },
+          ],
+    };
 
     await this.createEvent({
       eventType: "deal.ai_score_reviewed",
@@ -1179,14 +1334,14 @@ export class PipelineService {
       teamId: deal.teamId,
       metadata: {
         title: "AI score reviewed",
-        sub: `Score calculated at ${score}%`,
-        score,
+        sub: `${result.tag} deal • ${result.score}% • ${result.risk} risk`,
+        ...result,
       },
     });
 
     return {
       id,
-      score,
+      ...result,
       message: "AI score reviewed successfully",
     };
   }
