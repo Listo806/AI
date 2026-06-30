@@ -22,6 +22,8 @@ import {
   ApiParam,
   ApiBody,
 } from "@nestjs/swagger";
+import { UploadedFile, UseInterceptors } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import { LeadsService } from "./leads.service";
 import { WhatsAppLeadService } from "./services/whatsapp-lead.service";
 import { LeadMessagesService } from "../messaging/lead-messages.service";
@@ -33,6 +35,7 @@ import { UpdateLeadDto } from "./dto/update-lead.dto";
 import { LeadStatus } from "./entities/lead.entity";
 import { SubscriptionRequiredGuard } from "../subscriptions/guards/subscription-required.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
+import { S3Service } from "../common/aws/s3.service";
 
 @ApiTags("leads")
 @Controller("leads")
@@ -41,6 +44,7 @@ export class LeadsController {
     private readonly leadsService: LeadsService,
     private readonly whatsappLeadService: WhatsAppLeadService,
     private readonly leadMessages: LeadMessagesService,
+    private readonly s3Service: S3Service,
   ) {}
 
   @Post("whatsapp")
@@ -318,5 +322,38 @@ export class LeadsController {
     return this.leadsService.createLeadEvent(id, body, user);
   }
 
-  
+  @Post(":id/upload-message-file")
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseInterceptors(FileInterceptor("file"))
+  async uploadLeadMessageFile(
+    @Param("id") id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    const uploaded = await this.s3Service.uploadFile(file);
+
+    return this.leadsService.createLeadEvent(
+      id,
+      {
+        eventType: file.mimetype?.startsWith("image/")
+          ? "lead.image_sent"
+          : file.mimetype?.startsWith("audio/")
+            ? "lead.voice_sent"
+            : "lead.file_sent",
+        metadata: {
+          title: file.mimetype?.startsWith("image/")
+            ? "Image sent"
+            : file.mimetype?.startsWith("audio/")
+              ? "Voice message sent"
+              : "File sent",
+          sub: file.originalname,
+          fileName: file.originalname,
+          fileType: file.mimetype,
+          fileUrl: uploaded.url,
+          fileKey: uploaded.key,
+        },
+      },
+      req.user,
+    );
+  }
 }

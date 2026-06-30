@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import "./leads.css";
-
+import EmojiPicker from "emoji-picker-react";
 import {
   Search,
   SlidersHorizontal,
@@ -68,6 +68,12 @@ export default function LeadsPage() {
   const [leadSearch, setLeadSearch] = useState("");
   const [dateRange, setDateRange] = useState("all");
   const [aiView, setAiView] = useState(false);
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [uploadingChatFile, setUploadingChatFile] = useState(false);
+  const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+  const audioInputRef = useRef(null);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -532,7 +538,14 @@ export default function LeadsPage() {
       const items = Array.isArray(data.items) ? data.items : [];
 
       setLeadMessages(
-        items.filter((event) => event.eventType === "lead.message_sent"),
+        items.filter((event) =>
+          [
+            "lead.message_sent",
+            "lead.file_sent",
+            "lead.image_sent",
+            "lead.voice_sent",
+          ].includes(event.eventType),
+        ),
       );
     } catch (err) {
       console.error("Fetch lead messages error:", err);
@@ -908,6 +921,34 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchDashboard();
   }, [location.search, dateRange]);
+
+  const uploadLeadChatFile = async (file) => {
+    if (!selectedLead?.id || !file) return;
+
+    try {
+      setUploadingChatFile(true);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      await apiClient.request(`/leads/${selectedLead.id}/upload-message-file`, {
+        method: "POST",
+        body: formData,
+      });
+
+      fetchLeadEvents(selectedLead.id);
+      fetchLeadMessages(selectedLead.id);
+      fetchFullLeadEvents(1, false);
+    } catch (err) {
+      console.error("Upload chat file error:", err);
+    } finally {
+      setUploadingChatFile(false);
+    }
+  };
+
+  const startVoiceUpload = () => {
+    audioInputRef.current?.click();
+  };
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -1525,7 +1566,33 @@ export default function LeadsPage() {
                     key={event.id}
                     className="message right robot-msg-container"
                   >
-                    <p>{event.metadata?.message || event.metadata?.sub}</p>
+                    {event.metadata?.fileUrl ? (
+                      event.metadata?.fileType?.startsWith("image/") ? (
+                        <a
+                          href={event.metadata.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            src={event.metadata.fileUrl}
+                            alt={event.metadata.fileName || "Attachment"}
+                            className="chat-image-preview"
+                          />
+                        </a>
+                      ) : event.metadata?.fileType?.startsWith("audio/") ? (
+                        <audio controls src={event.metadata.fileUrl} />
+                      ) : (
+                        <a
+                          href={event.metadata.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          📎 {event.metadata.fileName || "Download file"}
+                        </a>
+                      )
+                    ) : (
+                      <p>{event.metadata?.message || event.metadata?.sub}</p>
+                    )}
                     <span className="msg-status-right">
                       {formatLeadEventDate(event.createdAt)}{" "}
                       <CheckCheck size={12} />
@@ -1584,18 +1651,76 @@ export default function LeadsPage() {
 
             <div className="chat-input-bottom">
               <div className="chat-util-icons">
-                <button className="util-icon-btn">
+                <button
+                  type="button"
+                  className="util-icon-btn"
+                  onClick={() => setShowEmojiPicker((prev) => !prev)}
+                  disabled={!selectedLead}
+                >
                   <Smile size={18} />
                 </button>
-                <button className="util-icon-btn">
+
+                <button
+                  type="button"
+                  className="util-icon-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!selectedLead || uploadingChatFile}
+                >
                   <Paperclip size={18} />
                 </button>
-                <button className="util-icon-btn">
+
+                <button
+                  type="button"
+                  className="util-icon-btn"
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={!selectedLead || uploadingChatFile}
+                >
                   <ImageIcon size={18} />
                 </button>
-                <button className="util-icon-btn">
+
+                <button
+                  type="button"
+                  className="util-icon-btn"
+                  onClick={startVoiceUpload}
+                  disabled={!selectedLead || uploadingChatFile}
+                >
                   <Mic size={18} />
                 </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    uploadLeadChatFile(file);
+                    e.target.value = "";
+                  }}
+                />
+
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    uploadLeadChatFile(file);
+                    e.target.value = "";
+                  }}
+                />
+
+                <input
+                  ref={audioInputRef}
+                  type="file"
+                  accept="audio/*"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    uploadLeadChatFile(file);
+                    e.target.value = "";
+                  }}
+                />
               </div>
 
               <div className="chat-action-buttons">
@@ -1617,7 +1742,15 @@ export default function LeadsPage() {
               </div>
             </div>
           </div>
-
+          {showEmojiPicker && (
+            <div className="emoji-picker-wrap">
+              <EmojiPicker
+                onEmojiClick={(emojiData) => {
+                  setChatMessage((prev) => `${prev}${emojiData.emoji}`);
+                }}
+              />
+            </div>
+          )}
           {/* QUICK CHAT ACTIONS */}
           <div className="quick-actions-grid">
             {[
