@@ -21,29 +21,6 @@ export async function getDeal(id) {
   return apiClient.request(`${DEALS_BASE}/${id}`);
 }
 
-export async function createDeal(payload) {
-  return apiClient.request(DEALS_BASE, {
-    method: 'POST',
-    body: JSON.stringify({
-      name: payload.name,
-      value: payload.value ?? 0,
-      stage: payload.stage ?? 'new',
-      position: payload.position ?? 0,
-      leadId: payload.leadId ?? undefined,
-      teamId: payload.teamId ?? undefined,
-      assignedTo: payload.assignedTo ?? undefined,
-      notes: payload.notes ?? undefined,
-    }),
-  });
-}
-
-export async function updateDeal(id, payload) {
-  return apiClient.request(`${DEALS_BASE}/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
-}
-
 export async function updateDealStage(id, stage, position = 0) {
   return apiClient.request(`${DEALS_BASE}/${id}/stage`, {
     method: 'PATCH',
@@ -51,8 +28,32 @@ export async function updateDealStage(id, stage, position = 0) {
   });
 }
 
-export async function deleteDeal(id) {
-  return apiClient.request(`${DEALS_BASE}/${id}`, {
-    method: 'DELETE',
-  });
-}
+export const getPipeline = async () => {
+  const res = await apiClient.get("/pipeline");
+  return res.data;
+};
+
+export const getPipelineSummary = async () => {
+  const res = await apiClient.get("/pipeline/summary");
+  return res.data;
+};
+
+export const createDeal = async (payload) => {
+  const res = await apiClient.post("/pipeline/deals", payload);
+  return res.data;
+};
+
+export const updateDeal = async (dealId, payload) => {
+  const res = await apiClient.patch(`/pipeline/deals/${dealId}`, payload);
+  return res.data;
+};
+
+export const moveDeal = async (dealId, payload) => {
+  const res = await apiClient.patch(`/pipeline/deals/${dealId}/move`, payload);
+  return res.data;
+};
+
+export const deleteDeal = async (dealId) => {
+  const res = await apiClient.delete(`/pipeline/deals/${dealId}`);
+  return res.data;
+};

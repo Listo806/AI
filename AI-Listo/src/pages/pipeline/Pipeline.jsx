@@ -1,4 +1,9 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  getPipeline,
+  getPipelineSummary,
+  moveDeal,
+} from "../../api/pipelineApi";
 import "./pipeline.css";
 import {
   Search,
@@ -51,51 +56,78 @@ import {
 } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
+  const [pipelineData, setPipelineData] = useState([]);
+  const [pipelineSummary, setPipelineSummary] = useState(null);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+  const fetchPipeline = async () => {
+    try {
+      setPipelineLoading(true);
+
+      const [pipelineRes, summaryRes] = await Promise.all([
+        apiClient.request("/pipeline", { method: "GET" }),
+        apiClient.request("/pipeline/summary", { method: "GET" }),
+      ]);
+
+      const pipeline = pipelineRes?.data || pipelineRes || [];
+      const summary = summaryRes?.data || summaryRes || null;
+
+      setPipelineData(Array.isArray(pipeline) ? pipeline : []);
+      setPipelineSummary(summary);
+    } catch (err) {
+      console.error("Fetch pipeline error:", err);
+    } finally {
+      setPipelineLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPipeline();
+  }, []);
   const stats = [
     {
       title: "Total Deals",
-      value: "42",
-      change: "↑ 8 this month",
+      value: pipelineSummary?.totalDeals || 0,
+      change: `↑ ${pipelineSummary?.newDealsThisMonth || 0} this month`,
       icon: <Users size={20} />,
       className: "blue",
       changeClass: "text-green",
     },
     {
       title: "Pipeline Value",
-      value: "$2.4M",
-      change: "↑ 12% vs last month",
+      value: formatMoney(pipelineSummary?.pipelineValue || 0),
+      change: `↑ ${pipelineSummary?.pipelineGrowth || 0}% vs last month`,
       icon: <DollarSign size={20} />,
       className: "green",
       changeClass: "text-green",
     },
     {
       title: "Won This Month",
-      value: "$680K",
-      change: "↑ 15% vs last month",
+      value: formatMoney(pipelineSummary?.wonThisMonth || 0),
+      change: `↑ ${pipelineSummary?.wonGrowth || 0}% vs last month`,
       icon: <CheckCircle2 size={20} />,
       className: "purple",
       changeClass: "text-green",
     },
     {
       title: "Active Negotiations",
-      value: "9",
-      change: "3 stuck deals",
+      value: pipelineSummary?.activeNegotiations || 0,
+      change: `${pipelineSummary?.stuckDeals || 0} stuck deals`,
       icon: <Flame size={20} />,
       className: "orange",
       changeClass: "text-orange",
     },
     {
       title: "AI Close Score",
-      value: "91%",
-      change: "↑ 6% vs last month",
+      value: `${pipelineSummary?.aiCloseScore || 0}%`,
+      change: `↑ ${pipelineSummary?.aiGrowth || 0}% vs last month`,
       icon: <Bot size={20} />,
       className: "cyan",
       changeClass: "text-green",
     },
     {
       title: "Revenue At Risk",
-      value: "$310K",
-      change: "↑ 18% vs last month",
+      value: formatMoney(pipelineSummary?.revenueAtRisk || 0),
+      change: `↑ ${pipelineSummary?.riskGrowth || 0}% vs last month`,
       icon: <AlertTriangle size={20} />,
       className: "pink",
       changeClass: "text-red",

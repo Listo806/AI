@@ -291,11 +291,6 @@ export class LeadsController {
     }
   }
 
-  @Put(":id")
-  updateLead(@Param("id") id: string, @Body() body: any, @Req() req) {
-    return this.leadsService.updateLead(id, body, req.user);
-  }
-
   @Get(":id/events")
   getLeadEvents(
     @Param("id") id: string,
