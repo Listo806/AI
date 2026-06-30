@@ -23,7 +23,15 @@ import { MoveDealDto } from "./dto/move-deal.dto";
 @UseGuards(JwtAuthGuard, CrmAccessGuard)
 export class PipelineController {
   constructor(private readonly pipelineService: PipelineService) {}
+  @Get("dashboard")
+  getDashboard(@Req() req: any) {
+    const user = req.user;
 
+    return this.pipelineService.getDashboard(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }  
   @Get()
   getPipeline(@Req() req: any) {
     const user = req.user;
@@ -54,7 +62,7 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
-
+  
   @Patch("deals/:id")
   updateDeal(
     @Param("id") id: string,
@@ -98,13 +106,5 @@ export class PipelineController {
     );
   }
 
-  @Get("dashboard")
-  getDashboard(@Req() req: any) {
-    const user = req.user;
-
-    return this.pipelineService.getDashboard(
-      user.id,
-      user.teamId || user.team_id || null,
-    );
-  }
+  
 }
