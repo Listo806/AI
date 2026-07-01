@@ -1411,6 +1411,7 @@
   font-size: 11px;
   color: #334155;
   font-weight: 500;
+  text-align: left;
 }
 
 .pipeline-page .ai-step-impact-badge {
@@ -1724,6 +1725,32 @@
   border-color: #2563eb;
   box-shadow: 0 18px 40px rgba(37, 99, 235, 0.18);
   transform: translateY(-2px);
+}
+.pipeline-page .inspector-ai-reason-text {
+  margin: 8px 0 10px;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.2;
+  text-align: left;
+}
+.pipeline-page .pipeline-ai-analysis-result {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.pipeline-page .pipeline-ai-analysis-result strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.pipeline-page .pipeline-ai-analysis-result p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
 }
 @keyframes pipelineModalIn {
   from {

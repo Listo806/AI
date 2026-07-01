@@ -67,6 +67,8 @@ export default function PipelinePage() {
   const [forecastRange, setForecastRange] = useState("month");
   const [showFilters, setShowFilters] = useState(false);
   const [scoringDealId, setScoringDealId] = useState(null);
+  const [analyzingPipeline, setAnalyzingPipeline] = useState(false);
+  const [pipelineInsight, setPipelineInsight] = useState(null);
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -375,6 +377,23 @@ export default function PipelinePage() {
       setScoringDealId(null);
     }
   };
+
+  const analyzePipeline = async () => {
+    try {
+      setAnalyzingPipeline(true);
+
+      const response = await apiClient.request("/pipeline/analyze", {
+        method: "POST",
+      });
+
+      const data = response?.data || response;
+      setPipelineInsight(data || null);
+    } catch (err) {
+      console.error("Analyze pipeline error:", err);
+    } finally {
+      setAnalyzingPipeline(false);
+    }
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -560,6 +579,12 @@ export default function PipelinePage() {
               Cortexa analyzes your pipeline, detects revenue risk, and
               recommends next best actions to accelerate deal velocity.
             </p>
+            {pipelineInsight && (
+              <div className="pipeline-ai-analysis-result">
+                <strong>{pipelineInsight.headline}</strong>
+                <p>{pipelineInsight.revenueAtRiskReason}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -641,8 +666,13 @@ export default function PipelinePage() {
         </div>
 
         <div className="ai-banner-action-buttons-group">
-          <button className="ai-action-primary-trigger-btn">
-            <Sparkles size={14} /> Analyze Pipeline
+          <button
+            className="ai-action-primary-trigger-btn"
+            onClick={analyzePipeline}
+            disabled={analyzingPipeline}
+          >
+            <Sparkles size={14} />
+            {analyzingPipeline ? "Analyzing..." : "Analyze Pipeline"}
           </button>
           <button className="ai-action-secondary-trigger-btn">
             <Bot size={14} /> Auto-Prioritize Deals

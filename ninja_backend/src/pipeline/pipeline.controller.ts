@@ -68,6 +68,15 @@ export class PipelineController {
     );
   }
 
+  @Post("analyze")
+  analyzePipeline(@Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.analyzePipeline(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
   @Patch("deals/:id")
   updateDeal(
     @Param("id") id: string,

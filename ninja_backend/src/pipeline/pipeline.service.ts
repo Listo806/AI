@@ -1366,4 +1366,148 @@ Return JSON with this exact shape:
       message: "AI score reviewed successfully",
     };
   }
+
+  async analyzePipeline(userId: string, teamId?: string | null) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required to analyze pipeline");
+    }
+
+    const dashboard = await this.getDashboard(userId, teamId, "month");
+
+    const aiContext = {
+      summary: dashboard.summary,
+      stats: dashboard.stats,
+      riskQueue: dashboard.riskQueue,
+      forecast: dashboard.forecast,
+      columns: dashboard.columns.map((col) => ({
+        id: col.id,
+        title: col.title,
+        count: col.count,
+        amount: col.amount,
+        deals: col.deals.map((deal) => ({
+          id: deal.id,
+          name: deal.name,
+          value: deal.value,
+          stage: deal.stage,
+          score: deal.score,
+          tag: deal.tag,
+          risk: deal.risk,
+          action: deal.action,
+          time: deal.time,
+        })),
+      })),
+    };
+
+    const systemPrompt = `
+You are CORTEXA AI, a CRM pipeline intelligence analyst for real estate teams.
+
+Analyze the CRM pipeline and return ONLY valid JSON.
+
+Return this exact shape:
+{
+  "headline": "Short executive summary",
+  "health": "Healthy | Watch | Critical",
+  "confidence": 0,
+  "revenueAtRiskReason": "Short reason",
+  "recommendedActions": [
+    {
+      "title": "Action title",
+      "priority": "high | medium | low",
+      "reason": "Why this matters"
+    }
+  ],
+  "stageInsights": [
+    {
+      "stage": "new",
+      "insight": "Short insight"
+    }
+  ]
+}
+
+Rules:
+- confidence must be 0-100.
+- recommendedActions should contain 3 to 5 actions.
+- Be direct and practical.
+- Use only the CRM data provided.
+`;
+
+    let result: any;
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `PIPELINE DATA:\n${JSON.stringify(aiContext)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      result = JSON.parse(response.output_text || "{}");
+    } catch (err) {
+      console.error("Analyze pipeline AI error:", err);
+
+      result = {
+        headline: "Pipeline analysis completed with fallback logic.",
+        health: dashboard.riskQueue.length ? "Watch" : "Healthy",
+        confidence: dashboard.summary.aiCloseScore || 0,
+        revenueAtRiskReason: dashboard.riskQueue.length
+          ? "Some deals have been stale for more than 7 days."
+          : "No major risk detected.",
+        recommendedActions: [
+          {
+            title: "Review stale deals",
+            priority: dashboard.riskQueue.length ? "high" : "low",
+            reason: "Stale deals can reduce close probability.",
+          },
+          {
+            title: "Prioritize negotiation stage",
+            priority: "medium",
+            reason: "Negotiation deals are closest to revenue.",
+          },
+        ],
+        stageInsights: dashboard.columns.map((col) => ({
+          stage: col.id,
+          insight: col.insight,
+        })),
+      };
+    }
+
+    await this.db.query(
+      `
+    INSERT INTO ai_activity (
+      team_id,
+      action,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES ($1, $2, $3, $4, NOW())
+    `,
+      [
+        teamId,
+        "pipeline_analysis",
+        "success",
+        JSON.stringify({
+          userId,
+          ...result,
+        }),
+      ],
+    );
+
+    return {
+      success: true,
+      ...result,
+    };
+  }
 }
