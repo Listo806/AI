@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { TriggerEvaluationService, TriggerType, Trigger } from './trigger-evaluation.service';
 import { IntentScoringService } from './intent-scoring.service';
@@ -49,15 +54,30 @@ export class AgentPriorityFeedService {
    * Get priority feed for an agent
    * Returns ranked list of buyers with active triggers
    */
-  async getPriorityFeed(agentId: string): Promise<PriorityFeedItem[]> {
+  async getPriorityFeed(
+    agentId: string,
+    requester: any,
+  ): Promise<PriorityFeedItem[]> {
     // Verify agent exists
     const { rows: agentRows } = await this.db.query(
-      `SELECT id, role FROM users WHERE id = $1`,
+      `SELECT id, role, team_id AS "teamId" FROM users WHERE id = $1`,
       [agentId],
     );
 
     if (agentRows.length === 0) {
       throw new NotFoundException(`Agent with ID ${agentId} not found`);
+    }
+
+    // Authorize: only the agent themselves, or a member of the same team,
+    // may view this feed. Prevents reading another team's pipeline by id.
+    const agent = agentRows[0];
+    const requesterTeamId = requester?.teamId ?? requester?.team_id ?? null;
+    const sameTeam =
+      requesterTeamId !== null && requesterTeamId === agent.teamId;
+    if (requester?.id !== agentId && !sameTeam) {
+      throw new ForbiddenException(
+        'You do not have access to this agent feed',
+      );
     }
 
     // Get all buyers assigned to this agent (via leads)

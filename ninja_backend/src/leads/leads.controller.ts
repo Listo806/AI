@@ -216,8 +216,8 @@ export class LeadsController {
   @ApiParam({ name: "id", description: "Lead ID" })
   @ApiResponse({ status: 200, description: "Lead retrieved successfully" })
   @ApiResponse({ status: 404, description: "Lead not found" })
-  async findOne(@Param("id") id: string) {
-    return this.leadsService.findById(id);
+  async findOne(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.assertLeadAccess(id, user);
   }
 
   @Put(":id")
@@ -283,12 +283,13 @@ export class LeadsController {
     return { message: "Lead deleted successfully" };
   }
 
-  private async assertLeadAccess(leadId: string, user: any): Promise<void> {
+  private async assertLeadAccess(leadId: string, user: any): Promise<any> {
     const lead = await this.leadsService.findById(leadId);
     if (!lead) throw new NotFoundException("Lead not found");
     if (lead.teamId !== user.teamId && lead.createdBy !== user.id) {
       throw new ForbiddenException("You do not have access to this lead");
     }
+    return lead;
   }
 
   @Get(":id/events")
