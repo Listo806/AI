@@ -72,6 +72,10 @@ export default function PipelinePage() {
   const [prioritizingDeals, setPrioritizingDeals] = useState(false);
   const [priorityInsight, setPriorityInsight] = useState(null);
   const [sendingSuggestions, setSendingSuggestions] = useState(false);
+  const [showDealModal, setShowDealModal] = useState(false);
+  const [editingDeal, setEditingDeal] = useState(null);
+  const [savingDeal, setSavingDeal] = useState(false);
+  const [deletingDeal, setDeletingDeal] = useState(false);
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -476,6 +480,73 @@ export default function PipelinePage() {
 
     URL.revokeObjectURL(url);
   };
+  const openDealModal = (deal) => {
+    setEditingDeal({
+      id: deal.id,
+      name: deal.name || "",
+      value: deal.value || "",
+      stage: deal.stage || "new",
+      notes: deal.notes || "",
+    });
+
+    setShowDealModal(true);
+  };
+  const updateDeal = async (e) => {
+    e.preventDefault();
+    if (!editingDeal?.id) return;
+
+    try {
+      setSavingDeal(true);
+
+      await apiClient.request(`/pipeline/deals/${editingDeal.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: editingDeal.name,
+          value: Number(editingDeal.value || 0),
+          stage: editingDeal.stage,
+          notes: editingDeal.notes,
+        }),
+      });
+
+      setShowDealModal(false);
+      setEditingDeal(null);
+      await fetchPipelineDashboard();
+
+      if (selectedDeal?.id === editingDeal.id) {
+        await fetchDealEvents(editingDeal.id);
+      }
+    } catch (err) {
+      console.error("Update deal error:", err);
+    } finally {
+      setSavingDeal(false);
+    }
+  };
+
+  const deleteDeal = async () => {
+    if (!editingDeal?.id) return;
+
+    try {
+      setDeletingDeal(true);
+
+      await apiClient.request(`/pipeline/deals/${editingDeal.id}`, {
+        method: "DELETE",
+      });
+
+      setShowDealModal(false);
+      setEditingDeal(null);
+
+      if (selectedDeal?.id === editingDeal.id) {
+        setSelectedDeal(null);
+        setSelectedDealEvents([]);
+      }
+
+      await fetchPipelineDashboard();
+    } catch (err) {
+      console.error("Delete deal error:", err);
+    } finally {
+      setDeletingDeal(false);
+    }
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -849,6 +920,16 @@ export default function PipelinePage() {
                           {deal.amount}
                         </strong>
                       </div>
+                      <button
+                        className="deal-card-context-menu-trigger"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDealModal(deal);
+                        }}
+                      >
+                        <MoreVertical size={14} />
+                      </button>
                     </div>
 
                     <div className="deal-card-ai-score-metric-row">
@@ -1426,6 +1507,118 @@ export default function PipelinePage() {
 
                 <button type="submit" className="pipeline-btn-save">
                   Create Deal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {showDealModal && editingDeal && (
+        <div className="pipeline-modal-overlay">
+          <div className="pipeline-modal">
+            <div className="pipeline-modal-header">
+              <h3>Edit Deal</h3>
+
+              <button
+                type="button"
+                className="pipeline-modal-close"
+                onClick={() => setShowDealModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={updateDeal}>
+              <div className="pipeline-modal-body">
+                <div className="pipeline-form-grid">
+                  <div className="pipeline-form-field full">
+                    <label>Deal Name</label>
+                    <input
+                      required
+                      value={editingDeal.name}
+                      onChange={(e) =>
+                        setEditingDeal({
+                          ...editingDeal,
+                          name: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="pipeline-form-field">
+                    <label>Value</label>
+                    <input
+                      type="number"
+                      value={editingDeal.value}
+                      onChange={(e) =>
+                        setEditingDeal({
+                          ...editingDeal,
+                          value: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="pipeline-form-field">
+                    <label>Stage</label>
+                    <select
+                      value={editingDeal.stage}
+                      onChange={(e) =>
+                        setEditingDeal({
+                          ...editingDeal,
+                          stage: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="new">New</option>
+                      <option value="qualified">Qualified</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="won">Won</option>
+                      <option value="lost">Lost</option>
+                    </select>
+                  </div>
+
+                  <div className="pipeline-form-field full">
+                    <label>Notes</label>
+                    <textarea
+                      rows="4"
+                      value={editingDeal.notes}
+                      onChange={(e) =>
+                        setEditingDeal({
+                          ...editingDeal,
+                          notes: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pipeline-modal-footer">
+                <button
+                  type="button"
+                  className="pipeline-btn-danger"
+                  onClick={deleteDeal}
+                  disabled={deletingDeal}
+                >
+                  {deletingDeal ? "Deleting..." : "Delete"}
+                </button>
+
+                <button
+                  type="button"
+                  className="pipeline-btn-cancel"
+                  onClick={() => setShowDealModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="pipeline-btn-save"
+                  disabled={savingDeal}
+                >
+                  {savingDeal ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </form>
