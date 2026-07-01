@@ -151,4 +151,15 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
+
+  @Post("deals/:id/send-suggestions")
+  sendDealSuggestions(@Param("id") id: string, @Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.sendDealSuggestions(
+      id,
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
 }

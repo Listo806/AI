@@ -71,6 +71,7 @@ export default function PipelinePage() {
   const [pipelineInsight, setPipelineInsight] = useState(null);
   const [prioritizingDeals, setPrioritizingDeals] = useState(false);
   const [priorityInsight, setPriorityInsight] = useState(null);
+  const [sendingSuggestions, setSendingSuggestions] = useState(false);
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -416,6 +417,26 @@ export default function PipelinePage() {
       console.error("Auto prioritize error:", err);
     } finally {
       setPrioritizingDeals(false);
+    }
+  };
+  const sendAiSuggestions = async () => {
+    if (!selectedDeal?.id) return;
+
+    try {
+      setSendingSuggestions(true);
+
+      await apiClient.request(
+        `/pipeline/deals/${selectedDeal.id}/send-suggestions`,
+        {
+          method: "POST",
+        },
+      );
+
+      await fetchDealEvents(selectedDeal.id);
+    } catch (err) {
+      console.error("Send AI suggestions error:", err);
+    } finally {
+      setSendingSuggestions(false);
     }
   };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
@@ -1238,8 +1259,12 @@ export default function PipelinePage() {
                 </div>
               )}
             </div>
-            <button className="inspector-ai-action-primary-trigger-cta-btn">
-              Send AI Suggestions
+            <button
+              className="inspector-ai-action-primary-trigger-cta-btn"
+              onClick={sendAiSuggestions}
+              disabled={sendingSuggestions || !selectedDeal?.id}
+            >
+              {sendingSuggestions ? "Sending..." : "Send AI Suggestions"}
             </button>
           </div>
         </div>

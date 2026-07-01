@@ -1652,4 +1652,54 @@ Rules:
       prioritizedDeals,
     };
   }
+
+  async sendDealSuggestions(
+    id: string,
+    userId: string,
+    teamId?: string | null,
+  ) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT metadata
+    FROM events
+    WHERE entity_type = 'deal'
+      AND entity_id = $1
+      AND event_type = 'deal.ai_score_reviewed'
+    ORDER BY created_at DESC
+    LIMIT 1
+    `,
+      [id],
+    );
+
+    const latestAi = rows[0]?.metadata || {};
+    const nextActions = Array.isArray(latestAi.nextActions)
+      ? latestAi.nextActions
+      : [
+          {
+            title: this.getNextAction(deal.stage),
+            impact: "medium",
+            impactLabel: "Medium impact",
+          },
+        ];
+
+    await this.createEvent({
+      eventType: "deal.ai_suggestions_sent",
+      entityId: id,
+      userId,
+      teamId: deal.teamId,
+      metadata: {
+        title: "AI suggestions sent",
+        sub: `${nextActions.length} suggested action${nextActions.length > 1 ? "s" : ""} logged`,
+        nextActions,
+      },
+    });
+
+    return {
+      success: true,
+      message: "AI suggestions sent successfully",
+      nextActions,
+    };
+  }
 }
