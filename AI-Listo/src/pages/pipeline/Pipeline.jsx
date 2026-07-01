@@ -77,6 +77,9 @@ export default function PipelinePage() {
   const [savingDeal, setSavingDeal] = useState(false);
   const [deletingDeal, setDeletingDeal] = useState(false);
 
+  const [draggingDeal, setDraggingDeal] = useState(null);
+  const [dragOverStage, setDragOverStage] = useState(null);
+
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
     risk: "all",
@@ -547,6 +550,41 @@ export default function PipelinePage() {
       setDeletingDeal(false);
     }
   };
+  const handleDropDeal = async (targetStage) => {
+    if (!draggingDeal?.id || !targetStage) return;
+
+    if (draggingDeal.stage === targetStage) {
+      setDraggingDeal(null);
+      setDragOverStage(null);
+      return;
+    }
+
+    try {
+      setMovingDealId(draggingDeal.id);
+
+      await apiClient.request(`/pipeline/deals/${draggingDeal.id}/move`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          stage: targetStage,
+        }),
+      });
+
+      await fetchPipelineDashboard();
+
+      if (selectedDeal?.id === draggingDeal.id) {
+        setSelectedDeal((prev) =>
+          prev ? { ...prev, stage: targetStage } : prev,
+        );
+        await fetchDealEvents(draggingDeal.id);
+      }
+    } catch (err) {
+      console.error("Drop deal error:", err);
+    } finally {
+      setMovingDealId(null);
+      setDraggingDeal(null);
+      setDragOverStage(null);
+    }
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -609,12 +647,19 @@ export default function PipelinePage() {
         {/* 2. Sources Filter */}
         <div className="secondary-btn dropdown-filter">
           <div>
-            <Layers size={15} />
-            <select defaultValue="">
-              <option value="">All Sources</option>
-            </select>
+            <DollarSign size={15} />
+            <input
+              type="number"
+              placeholder="Min Value"
+              value={pipelineFilters.minValue}
+              onChange={(e) =>
+                setPipelineFilters((prev) => ({
+                  ...prev,
+                  minValue: e.target.value,
+                }))
+              }
+            />
           </div>
-          <ChevronDown size={14} />
         </div>
 
         {/* 3. Stages Filter */}
@@ -695,6 +740,20 @@ export default function PipelinePage() {
           </div>
           <ChevronDown size={14} />
         </div>
+        <button
+          className="secondary-btn filter-btn"
+          onClick={() => {
+            setSearch("");
+            setPipelineFilters({
+              stage: "all",
+              risk: "all",
+              tag: "all",
+              minValue: "",
+            });
+          }}
+        >
+          Reset Filters
+        </button>
       </section>
 
       {/* SUMMARY STATS GRID */}
@@ -859,7 +918,18 @@ export default function PipelinePage() {
           </div>
         ) : (
           visibleColumns.map((col) => (
-            <div className="kanban-stage-column-wrapper" key={col.id}>
+            <div
+              className={`kanban-stage-column-wrapper ${
+                dragOverStage === col.id ? "drag-over" : ""
+              }`}
+              key={col.id}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOverStage(col.id);
+              }}
+              onDragLeave={() => setDragOverStage(null)}
+              onDrop={() => handleDropDeal(col.id)}
+            >
               <div className="kanban-column-header-details">
                 <div className="flex justify-between items-center w-full">
                   <div className="flex items-center gap-2">
@@ -892,8 +962,14 @@ export default function PipelinePage() {
                   <div
                     className={`kanban-deal-card-item ${
                       selectedDeal?.id === deal.id ? "active" : ""
-                    }`}
+                    } ${draggingDeal?.id === deal.id ? "dragging" : ""}`}
                     key={deal.id}
+                    draggable
+                    onDragStart={() => setDraggingDeal(deal)}
+                    onDragEnd={() => {
+                      setDraggingDeal(null);
+                      setDragOverStage(null);
+                    }}
                     onClick={() => selectDeal(deal)}
                   >
                     <div className="deal-card-header-top-row">
