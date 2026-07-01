@@ -9,6 +9,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@ne
 import { AgentPriorityFeedService } from './services/agent-priority-feed.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('agents')
 @Controller('agents')
@@ -64,8 +65,14 @@ export class AgentsController {
     }
   })
   @ApiResponse({ status: 404, description: 'Agent not found' })
-  async getPriorityFeed(@Param('id') agentId: string) {
-    const feed = await this.priorityFeedService.getPriorityFeed(agentId);
+  async getPriorityFeed(
+    @Param('id') agentId: string,
+    @CurrentUser() user: any,
+  ) {
+    const feed = await this.priorityFeedService.getPriorityFeed(
+      agentId,
+      user,
+    );
     return {
       success: true,
       data: feed,
