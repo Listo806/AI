@@ -509,10 +509,21 @@ export class PipelineService {
         l.email AS "leadEmail",
         l.phone AS "leadPhone",
         l.status AS "leadStatus",
-        l.priority AS "leadPriority"
+        l.priority AS "leadPriority",
+        score_event.metadata AS "latestScoreMetadata",
+        score_event.created_at AS "latestScoreAt"
 
       FROM deals d
       LEFT JOIN leads l ON l.id = d.lead_id
+      LEFT JOIN LATERAL (
+            SELECT metadata, created_at
+            FROM events e
+            WHERE e.entity_type = 'deal'
+                AND e.entity_id = d.id
+                AND e.event_type = 'deal.ai_score_reviewed'
+            ORDER BY e.created_at DESC
+            LIMIT 1
+            ) score_event ON true
       WHERE ${scope.where}
       ORDER BY d.position ASC, d.created_at DESC
       `,
@@ -676,8 +687,30 @@ export class PipelineService {
             : "No active deals",
         deals: stageDeals.map((deal) => {
           const displayName = deal.leadName || deal.name || "Unnamed Deal";
-          const score = this.getDealScore(deal);
-          const tag = this.getDealTag(score, deal.stage);
+          const aiMetadata = deal.latestScoreMetadata || {};
+          const score = Number(aiMetadata.score || this.getDealScore(deal));
+          const tag = aiMetadata.tag || this.getDealTag(score, deal.stage);
+          const risk =
+            aiMetadata.risk ||
+            (score >= 80 ? "Low" : score >= 50 ? "Medium" : "High");
+
+          const suggestedSteps = Array.isArray(aiMetadata.nextActions)
+            ? aiMetadata.nextActions
+            : [
+                {
+                  title: this.getNextAction(deal.stage),
+                  impact: score >= 80 ? "high" : "medium",
+                  impactLabel: score >= 80 ? "High impact" : "Medium impact",
+                },
+                {
+                  title:
+                    deal.stage === "new"
+                      ? "Make first contact"
+                      : "Follow up with buyer",
+                  impact: "medium",
+                  impactLabel: "Medium impact",
+                },
+              ];
 
           return {
             id: deal.id,
@@ -697,22 +730,10 @@ export class PipelineService {
             stage: deal.stage,
             leadId: deal.leadId,
             value: Number(deal.value || 0),
-            risk: score >= 80 ? "Low" : score >= 50 ? "Medium" : "High",
-            suggestedSteps: [
-              {
-                title: this.getNextAction(deal.stage),
-                impact: score >= 80 ? "high" : "medium",
-                impactLabel: score >= 80 ? "High impact" : "Medium impact",
-              },
-              {
-                title:
-                  deal.stage === "new"
-                    ? "Make first contact"
-                    : "Follow up with buyer",
-                impact: "medium",
-                impactLabel: "Medium impact",
-              },
-            ],
+            risk,
+            suggestedSteps,
+            aiReason: aiMetadata.reason || null,
+            aiScoredAt: deal.latestScoreAt || null,
           };
         }),
       };

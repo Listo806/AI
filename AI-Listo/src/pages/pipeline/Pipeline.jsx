@@ -345,9 +345,27 @@ export default function PipelinePage() {
     try {
       setScoringDealId(deal.id);
 
-      await apiClient.request(`/pipeline/deals/${deal.id}/score`, {
-        method: "POST",
-      });
+      const response = await apiClient.request(
+        `/pipeline/deals/${deal.id}/score`,
+        {
+          method: "POST",
+        },
+      );
+
+      const result = response?.data || response;
+
+      setSelectedDeal((prev) =>
+        prev?.id === deal.id
+          ? {
+              ...prev,
+              score: `${result.score || 0}%`,
+              tag: result.tag || prev.tag,
+              risk: result.risk || prev.risk,
+              suggestedSteps: result.nextActions || prev.suggestedSteps,
+              aiReason: result.reason || prev.aiReason,
+            }
+          : prev,
+      );
 
       await fetchDealEvents(deal.id);
       await fetchPipelineDashboard();
@@ -758,7 +776,10 @@ export default function PipelinePage() {
                       </button>
                       <button
                         className="deal-card-footer-action-trigger-btn"
-                        onClick={(e) => {e.stopPropagation();moveDealToNextStage(deal, col.id)}}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveDealToNextStage(deal, col.id);
+                        }}
                         disabled={movingDealId === deal.id || col.id === "lost"}
                       >
                         <ArrowUpRight size={12} />
@@ -1119,6 +1140,11 @@ export default function PipelinePage() {
             <span className="inspector-section-small-overhead-label">
               AI Suggested Next Steps
             </span>
+            {selectedDeal?.aiReason && (
+              <p className="inspector-ai-reason-text">
+                {selectedDeal.aiReason}
+              </p>
+            )}
             <div className="inspector-ai-action-steps-rows-stack mt-2">
               {(selectedDeal?.suggestedSteps || []).length ? (
                 selectedDeal.suggestedSteps.map((step, index) => (
