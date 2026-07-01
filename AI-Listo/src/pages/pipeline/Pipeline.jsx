@@ -79,6 +79,8 @@ export default function PipelinePage() {
 
   const [draggingDeal, setDraggingDeal] = useState(null);
   const [dragOverStage, setDragOverStage] = useState(null);
+  const [dateRange, setDateRange] = useState("this_week");
+  const [pipelineViewMode, setPipelineViewMode] = useState("ai");
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -180,7 +182,44 @@ export default function PipelinePage() {
     })
     .map((column) => {
       const keyword = search.trim().toLowerCase();
+      const isWithinDateRange = (deal) => {
+        if (dateRange === "all") return true;
 
+        const updatedAt = deal.updatedAt || deal.createdAt || deal.aiScoredAt;
+        if (!updatedAt) return true;
+
+        const date = new Date(updatedAt);
+        const now = new Date();
+
+        if (dateRange === "today") {
+          return date.toDateString() === now.toDateString();
+        }
+
+        if (dateRange === "this_week") {
+          const sevenDaysAgo = new Date();
+          sevenDaysAgo.setDate(now.getDate() - 7);
+          return date >= sevenDaysAgo;
+        }
+
+        if (dateRange === "this_month") {
+          return (
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear()
+          );
+        }
+
+        if (dateRange === "this_quarter") {
+          const currentQuarter = Math.floor(now.getMonth() / 3);
+          const dealQuarter = Math.floor(date.getMonth() / 3);
+
+          return (
+            dealQuarter === currentQuarter &&
+            date.getFullYear() === now.getFullYear()
+          );
+        }
+
+        return true;
+      };
       return {
         ...column,
         deals: (column.deals || []).filter((deal) => {
@@ -201,8 +240,15 @@ export default function PipelinePage() {
           const matchesValue =
             !pipelineFilters.minValue ||
             Number(deal.value || 0) >= Number(pipelineFilters.minValue || 0);
+          const matchesDate = isWithinDateRange(deal);
 
-          return matchesSearch && matchesRisk && matchesTag && matchesValue;
+          return (
+            matchesSearch &&
+            matchesRisk &&
+            matchesTag &&
+            matchesValue &&
+            matchesDate
+          );
         }),
       };
     });
@@ -616,8 +662,16 @@ export default function PipelinePage() {
           >
             <SlidersHorizontal size={15} /> Filters
           </button>
-          <button className="secondary-btn active-view-btn">
-            <Sparkles size={15} /> AI Pipeline View
+          <button
+            className={`secondary-btn active-view-btn ${
+              pipelineViewMode === "ai" ? "active" : ""
+            }`}
+            onClick={() =>
+              setPipelineViewMode((prev) => (prev === "ai" ? "standard" : "ai"))
+            }
+          >
+            <Sparkles size={15} />
+            {pipelineViewMode === "ai" ? "AI Pipeline View" : "Standard View"}
           </button>
           <button className="secondary-btn" onClick={exportPipelineCsv}>
             <Download size={15} /> Export
@@ -632,129 +686,141 @@ export default function PipelinePage() {
       </header>
 
       {/* CONTROLS & DRILLDOWN FILTER BAR */}
-      <section className="pipeline-horizontal-filters">
-        {/* 1. Date Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <Calendar size={15} />
-            <select defaultValue="may12-may18">
-              <option value="may12-may18">May 12 – May 18, 2025</option>
-            </select>
+      {showFilters && (
+        <section className="pipeline-horizontal-filters">
+          {/* 1. Date Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <Calendar size={15} />
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+              >
+                <option value="today">Today</option>
+                <option value="this_week">This Week</option>
+                <option value="this_month">This Month</option>
+                <option value="this_quarter">This Quarter</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+            <ChevronDown size={14} />
           </div>
-          <ChevronDown size={14} />
-        </div>
 
-        {/* 2. Sources Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <DollarSign size={15} />
-            <input
-              type="number"
-              placeholder="Min Value"
-              value={pipelineFilters.minValue}
-              onChange={(e) =>
-                setPipelineFilters((prev) => ({
-                  ...prev,
-                  minValue: e.target.value,
-                }))
-              }
-            />
+          {/* 2. Sources Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <DollarSign size={15} />
+              <input
+                type="number"
+                placeholder="Min Value"
+                value={pipelineFilters.minValue}
+                onChange={(e) =>
+                  setPipelineFilters((prev) => ({
+                    ...prev,
+                    minValue: e.target.value,
+                  }))
+                }
+              />
+            </div>
           </div>
-        </div>
 
-        {/* 3. Stages Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <GitFork size={15} />
-            <select
-              value={pipelineFilters.stage}
-              onChange={(e) =>
-                setPipelineFilters((prev) => ({
-                  ...prev,
-                  stage: e.target.value,
-                }))
-              }
-            >
-              <option value="all">All Stages</option>
-              <option value="new">New</option>
-              <option value="qualified">Qualified</option>
-              <option value="proposal">Proposal</option>
-              <option value="negotiation">Negotiation</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
-            </select>
+          {/* 3. Stages Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <GitFork size={15} />
+              <select
+                value={pipelineFilters.stage}
+                onChange={(e) =>
+                  setPipelineFilters((prev) => ({
+                    ...prev,
+                    stage: e.target.value,
+                  }))
+                }
+              >
+                <option value="all">All Stages</option>
+                <option value="new">New</option>
+                <option value="qualified">Qualified</option>
+                <option value="proposal">Proposal</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <ChevronDown size={14} />
           </div>
-          <ChevronDown size={14} />
-        </div>
 
-        {/* 4. Priorities Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <AlertCircle size={15} />
-            <select
-              value={pipelineFilters.risk}
-              onChange={(e) =>
-                setPipelineFilters((prev) => ({
-                  ...prev,
-                  risk: e.target.value,
-                }))
-              }
-            >
-              <option value="all">All Priorities</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+          {/* 4. Priorities Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <AlertCircle size={15} />
+              <select
+                value={pipelineFilters.risk}
+                onChange={(e) =>
+                  setPipelineFilters((prev) => ({
+                    ...prev,
+                    risk: e.target.value,
+                  }))
+                }
+              >
+                <option value="all">All Priorities</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <ChevronDown size={14} />
           </div>
-          <ChevronDown size={14} />
-        </div>
 
-        {/* 5. AI Scores Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <Sparkles size={15} />
-            <select
-              value={pipelineFilters.tag}
-              onChange={(e) =>
-                setPipelineFilters((prev) => ({ ...prev, tag: e.target.value }))
-              }
-            >
-              <option value="all">All AI Scores</option>
-              <option value="hot">Hot</option>
-              <option value="warm">Warm</option>
-              <option value="cool">Cool</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
-            </select>
+          {/* 5. AI Scores Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <Sparkles size={15} />
+              <select
+                value={pipelineFilters.tag}
+                onChange={(e) =>
+                  setPipelineFilters((prev) => ({
+                    ...prev,
+                    tag: e.target.value,
+                  }))
+                }
+              >
+                <option value="all">All AI Scores</option>
+                <option value="hot">Hot</option>
+                <option value="warm">Warm</option>
+                <option value="cool">Cool</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <ChevronDown size={14} />
           </div>
-          <ChevronDown size={14} />
-        </div>
 
-        {/* 6. Agents Filter */}
-        <div className="secondary-btn dropdown-filter">
-          <div>
-            <UserCheck size={15} />
-            <select defaultValue="">
-              <option value="">All Agents</option>
-            </select>
+          {/* 6. Agents Filter */}
+          <div className="secondary-btn dropdown-filter">
+            <div>
+              <UserCheck size={15} />
+              <select defaultValue="">
+                <option value="">All Agents</option>
+              </select>
+            </div>
+            <ChevronDown size={14} />
           </div>
-          <ChevronDown size={14} />
-        </div>
-        <button
-          className="secondary-btn filter-btn"
-          onClick={() => {
-            setSearch("");
-            setPipelineFilters({
-              stage: "all",
-              risk: "all",
-              tag: "all",
-              minValue: "",
-            });
-          }}
-        >
-          Reset Filters
-        </button>
-      </section>
+          <button
+            className="secondary-btn filter-btn"
+            onClick={() => {
+              setSearch("");
+              setPipelineFilters({
+                stage: "all",
+                risk: "all",
+                tag: "all",
+                minValue: "",
+              });
+            }}
+          >
+            Reset Filters
+          </button>
+        </section>
+      )}
 
       {/* SUMMARY STATS GRID */}
       <section className="pipeline-stats-cards-grid">
@@ -775,139 +841,141 @@ export default function PipelinePage() {
       </section>
 
       {/* AI INSIGHTS NOTIFICATION BANNER */}
-      <section className="ai-intelligence-insight-banner">
-        <div className="ai-banner-left-info">
-          <div className="ai-sparkle-avatar-glow">
-            <Sparkles size={20} className="text-white" />
-          </div>
-          <div className="ai-banner-text-details">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="ai-banner-header-title">
-                AI Pipeline Intelligence
-              </h3>
-              <span className="ai-intelligence-active-badge">Active</span>
+      {pipelineViewMode === "ai" && (
+        <section className="ai-intelligence-insight-banner">
+          <div className="ai-banner-left-info">
+            <div className="ai-sparkle-avatar-glow">
+              <Sparkles size={20} className="text-white" />
             </div>
-            <p className="ai-banner-description">
-              Cortexa analyzes your pipeline, detects revenue risk, and
-              recommends next best actions to accelerate deal velocity.
-            </p>
-            {pipelineInsight && (
-              <div className="pipeline-ai-analysis-result">
-                <strong>{pipelineInsight.headline}</strong>
-                <p>{pipelineInsight.revenueAtRiskReason}</p>
+            <div className="ai-banner-text-details">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="ai-banner-header-title">
+                  AI Pipeline Intelligence
+                </h3>
+                <span className="ai-intelligence-active-badge">Active</span>
               </div>
-            )}
-            {priorityInsight && (
-              <div className="pipeline-ai-analysis-result">
-                <strong>AI Prioritization Complete</strong>
-                <p>{priorityInsight.summary}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="ai-banner-metrics-container">
-          <div className="ai-metric-column-box">
-            <span className="ai-metric-box-label">AI Confidence</span>
-            <div className="ai-metric-content-wrapper">
-              <div className="ai-metric-value-group">
-                <strong className="ai-metric-box-value">92%</strong>
-                <span className="ai-metric-pill-green">High</span>
-              </div>
-
-              <div className="ai-mini-chart-inline">
-                <ResponsiveContainer width="100%" height={24}>
-                  <LineChart data={confidenceData}>
-                    <YAxis hide domain={["dataMin - 10", "dataMax + 10"]} />
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke="#22c55e"
-                      strokeWidth={1.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <p className="ai-banner-description">
+                Cortexa analyzes your pipeline, detects revenue risk, and
+                recommends next best actions to accelerate deal velocity.
+              </p>
+              {pipelineInsight && (
+                <div className="pipeline-ai-analysis-result">
+                  <strong>{pipelineInsight.headline}</strong>
+                  <p>{pipelineInsight.revenueAtRiskReason}</p>
+                </div>
+              )}
+              {priorityInsight && (
+                <div className="pipeline-ai-analysis-result">
+                  <strong>AI Prioritization Complete</strong>
+                  <p>{priorityInsight.summary}</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="ai-metric-column-box">
-            <span className="ai-metric-box-label">Revenue At Risk</span>
-            <div className="ai-metric-content-wrapper">
-              <div className="ai-metric-value-group">
-                <strong className="ai-metric-box-value">$310K</strong>
-                <span className="ai-metric-pill-red">High</span>
-              </div>
+          <div className="ai-banner-metrics-container">
+            <div className="ai-metric-column-box">
+              <span className="ai-metric-box-label">AI Confidence</span>
+              <div className="ai-metric-content-wrapper">
+                <div className="ai-metric-value-group">
+                  <strong className="ai-metric-box-value">92%</strong>
+                  <span className="ai-metric-pill-green">High</span>
+                </div>
 
-              <div className="ai-mini-chart-inline">
-                <ResponsiveContainer width="100%" height={24}>
-                  <LineChart data={riskData}>
-                    <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke="#ef4444"
-                      strokeWidth={1.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="ai-mini-chart-inline">
+                  <ResponsiveContainer width="100%" height={24}>
+                    <LineChart data={confidenceData}>
+                      <YAxis hide domain={["dataMin - 10", "dataMax + 10"]} />
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke="#22c55e"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="ai-metric-column-box">
+              <span className="ai-metric-box-label">Revenue At Risk</span>
+              <div className="ai-metric-content-wrapper">
+                <div className="ai-metric-value-group">
+                  <strong className="ai-metric-box-value">$310K</strong>
+                  <span className="ai-metric-pill-red">High</span>
+                </div>
+
+                <div className="ai-mini-chart-inline">
+                  <ResponsiveContainer width="100%" height={24}>
+                    <LineChart data={riskData}>
+                      <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke="#ef4444"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="ai-metric-column-box">
+              <span className="ai-metric-box-label">Expected Closings</span>
+              <div className="ai-metric-content-wrapper">
+                <div className="ai-metric-value-group">
+                  <strong className="ai-metric-box-value">$1.1M</strong>
+                  <span className="ai-metric-pill-blue">This Month</span>
+                </div>
+
+                <div className="ai-mini-chart-inline">
+                  <ResponsiveContainer width="100%" height={24}>
+                    <LineChart data={closingData}>
+                      <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
+                      <Line
+                        type="monotone"
+                        dataKey="v"
+                        stroke="#3b82f6"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="ai-metric-column-box">
-            <span className="ai-metric-box-label">Expected Closings</span>
-            <div className="ai-metric-content-wrapper">
-              <div className="ai-metric-value-group">
-                <strong className="ai-metric-box-value">$1.1M</strong>
-                <span className="ai-metric-pill-blue">This Month</span>
-              </div>
-
-              <div className="ai-mini-chart-inline">
-                <ResponsiveContainer width="100%" height={24}>
-                  <LineChart data={closingData}>
-                    <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke="#3b82f6"
-                      strokeWidth={1.5}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+          <div className="ai-banner-action-buttons-group">
+            <button
+              className="ai-action-primary-trigger-btn"
+              onClick={analyzePipeline}
+              disabled={analyzingPipeline}
+            >
+              <Sparkles size={14} />
+              {analyzingPipeline ? "Analyzing..." : "Analyze Pipeline"}
+            </button>
+            <button
+              className="ai-action-secondary-trigger-btn"
+              onClick={autoPrioritizeDeals}
+              disabled={prioritizingDeals}
+            >
+              <Bot size={14} />
+              {prioritizingDeals ? "Prioritizing..." : "Auto-Prioritize Deals"}
+            </button>
+            <button
+              className="ai-action-secondary-trigger-btn"
+              onClick={exportPipelineReport}
+            >
+              <Download size={14} /> Export Report
+            </button>
           </div>
-        </div>
-
-        <div className="ai-banner-action-buttons-group">
-          <button
-            className="ai-action-primary-trigger-btn"
-            onClick={analyzePipeline}
-            disabled={analyzingPipeline}
-          >
-            <Sparkles size={14} />
-            {analyzingPipeline ? "Analyzing..." : "Analyze Pipeline"}
-          </button>
-          <button
-            className="ai-action-secondary-trigger-btn"
-            onClick={autoPrioritizeDeals}
-            disabled={prioritizingDeals}
-          >
-            <Bot size={14} />
-            {prioritizingDeals ? "Prioritizing..." : "Auto-Prioritize Deals"}
-          </button>
-          <button
-            className="ai-action-secondary-trigger-btn"
-            onClick={exportPipelineReport}
-          >
-            <Download size={14} /> Export Report
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* KANBAN BOARD SECTION */}
       <section className="pipeline-kanban-board-scrollable-container">
@@ -1091,193 +1159,199 @@ export default function PipelinePage() {
       </section>
 
       {/* SPLIT BOTTOM INTELLIGENCE GRID */}
-      <section className="pipeline-bottom-split-intelligence-grid">
-        {/* PANEL 1: AI DEAL RISK QUEUE */}
-        <div className="bottom-intelligence-card-panel">
-          <div className="intelligence-card-header-row">
-            <div className="flex items-center gap-2">
-              <AlertTriangle size={18} className="intelligence-header-icon" />
-              <h3 className="intelligence-card-main-title">
-                AI Deal Risk Queue
-              </h3>
-              <span className="intelligence-card-sub-header-counter">
-                {riskQueue.length} at-risk deals need attention
-              </span>
+      {pipelineViewMode === "ai" && (
+        <section className="pipeline-bottom-split-intelligence-grid">
+          {/* PANEL 1: AI DEAL RISK QUEUE */}
+          <div className="bottom-intelligence-card-panel">
+            <div className="intelligence-card-header-row">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={18} className="intelligence-header-icon" />
+                <h3 className="intelligence-card-main-title">
+                  AI Deal Risk Queue
+                </h3>
+                <span className="intelligence-card-sub-header-counter">
+                  {riskQueue.length} at-risk deals need attention
+                </span>
+              </div>
+              <button className="intelligence-view-all-navigation-link">
+                View All <ArrowRight size={14} />
+              </button>
             </div>
-            <button className="intelligence-view-all-navigation-link">
-              View All <ArrowRight size={14} />
-            </button>
-          </div>
 
-          <div className="risk-queue-table-rows-wrapper">
-            {riskQueue.length ? (
-              riskQueue.map((row) => (
-                <div className="risk-queue-table-row-item" key={row.id}>
+            <div className="risk-queue-table-rows-wrapper">
+              {riskQueue.length ? (
+                riskQueue.map((row) => (
+                  <div className="risk-queue-table-row-item" key={row.id}>
+                    <span className="risk-table-cell-property-name">
+                      {row.name}
+                    </span>
+                    <strong className="risk-table-cell-deal-value">
+                      {row.value}
+                    </strong>
+                    <span className="risk-table-cell-risk-reason-desc">
+                      {row.reason}
+                    </span>
+                    <span
+                      className={`risk-table-cell-severity-badge status-${String(
+                        row.status || "medium",
+                      ).toLowerCase()}`}
+                    >
+                      {row.status}
+                    </span>
+                    <button
+                      className="risk-table-cell-action-review-trigger-btn"
+                      onClick={() => reviewRiskDeal(row.id)}
+                    >
+                      Review
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="risk-queue-table-row-item">
                   <span className="risk-table-cell-property-name">
-                    {row.name}
+                    No at-risk deals
                   </span>
-                  <strong className="risk-table-cell-deal-value">
-                    {row.value}
-                  </strong>
+                  <strong className="risk-table-cell-deal-value">$0</strong>
                   <span className="risk-table-cell-risk-reason-desc">
-                    {row.reason}
+                    Pipeline healthy
                   </span>
-                  <span
-                    className={`risk-table-cell-severity-badge status-${String(
-                      row.status || "medium",
-                    ).toLowerCase()}`}
-                  >
-                    {row.status}
-                  </span>
-                  <button
-                    className="risk-table-cell-action-review-trigger-btn"
-                    onClick={() => reviewRiskDeal(row.id)}
-                  >
-                    Review
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="risk-queue-table-row-item">
-                <span className="risk-table-cell-property-name">
-                  No at-risk deals
-                </span>
-                <strong className="risk-table-cell-deal-value">$0</strong>
-                <span className="risk-table-cell-risk-reason-desc">
-                  Pipeline healthy
-                </span>
-                <span className="risk-table-cell-severity-badge status-medium">
-                  Low
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* PANEL 2: REVENUE FORECAST */}
-        <div className="bottom-intelligence-card-panel">
-          <div className="intelligence-card-header-row">
-            <div className="flex items-center gap-2">
-              <LineChartIcon size={18} className="intelligence-header-icon" />
-              <h3 className="intelligence-card-main-title">Revenue Forecast</h3>
-            </div>
-            <div className="secondary-btn compact-dropdown-trigger">
-              <select
-                value={forecastRange}
-                onChange={(e) => setForecastRange(e.target.value)}
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">This Quarter</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="revenue-forecast-metrics-grid-quad">
-            <div className="revenue-forecast-metric-quad-card">
-              <span className="forecast-quad-card-label">
-                Forecasted Revenue
-              </span>
-              <strong className="forecast-quad-card-large-numeric">
-                {forecast?.forecastedRevenue || "$0"}
-              </strong>
-              <span
-                className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                  forecast?.forecastedRevenueTrend,
-                )}`}
-              >
-                {renderTrend(forecast?.forecastedRevenueTrend)}
-              </span>
-            </div>
-            <div className="revenue-forecast-metric-quad-card">
-              <span className="forecast-quad-card-label">
-                Forecasted Closings
-              </span>
-              <strong className="forecast-quad-card-large-numeric">
-                {forecast?.forecastedClosings || 0}
-              </strong>
-              <span
-                className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                  forecast?.forecastedClosingsTrend,
-                )}`}
-              >
-                {renderTrend(forecast?.forecastedClosingsTrend)}
-              </span>
-            </div>
-            <div className="revenue-forecast-metric-quad-card">
-              <span className="forecast-quad-card-label">
-                Pipeline Velocity
-              </span>
-              <strong className="forecast-quad-card-large-numeric">
-                {forecast?.pipelineVelocity || "0x"}
-              </strong>
-              <span
-                className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                  forecast?.pipelineVelocityTrend,
-                )}`}
-              >
-                {renderTrend(forecast?.pipelineVelocityTrend)}
-              </span>
-            </div>
-            <div className="revenue-forecast-metric-quad-card">
-              <span className="forecast-quad-card-label">Close Confidence</span>
-              <strong className="forecast-quad-card-large-numeric">
-                {forecast?.closeConfidence || "0%"}
-              </strong>
-              <span
-                className={`forecast-quad-card-trend-subtext ${getTrendClass(
-                  forecast?.closeConfidenceTrend,
-                )}`}
-              >
-                {renderTrend(
-                  forecast?.closeConfidenceTrend,
-                  "→ Medium Confidence",
-                )}
-              </span>
-            </div>
-          </div>
-
-          <p className="revenue-forecast-footer-explanatory-text">
-            {forecast?.description || "No forecast available yet."}
-          </p>
-        </div>
-
-        {/* PANEL 3: AUTOMATION HEALTH */}
-        <div className="bottom-intelligence-card-panel">
-          <div className="intelligence-card-header-row">
-            <div className="flex items-center gap-2">
-              <Settings size={18} className="intelligence-header-icon" />
-              <h3 className="intelligence-card-main-title">
-                Automation Health
-              </h3>
-            </div>
-            <span className="automation-global-status-indicator-pill">
-              <span className="live-status-dot-green"></span> All Systems
-              Operational
-            </span>
-          </div>
-
-          <div className="automation-health-list-rows-stack">
-            {automationHealth.map((item, iIdx) => (
-              <div className="automation-health-row-item" key={iIdx}>
-                <div className="flex items-center gap-2">
-                  <CheckSquare
-                    size={14}
-                    className="automation-item-check-icon"
-                  />
-                  <span className="automation-health-item-title-text">
-                    {item.title}
+                  <span className="risk-table-cell-severity-badge status-medium">
+                    Low
                   </span>
                 </div>
-                <span className="automation-health-item-status-active-badge">
-                  {item.state}
+              )}
+            </div>
+          </div>
+
+          {/* PANEL 2: REVENUE FORECAST */}
+          <div className="bottom-intelligence-card-panel">
+            <div className="intelligence-card-header-row">
+              <div className="flex items-center gap-2">
+                <LineChartIcon size={18} className="intelligence-header-icon" />
+                <h3 className="intelligence-card-main-title">
+                  Revenue Forecast
+                </h3>
+              </div>
+              <div className="secondary-btn compact-dropdown-trigger">
+                <select
+                  value={forecastRange}
+                  onChange={(e) => setForecastRange(e.target.value)}
+                >
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="quarter">This Quarter</option>
+                  <option value="year">This Year</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="revenue-forecast-metrics-grid-quad">
+              <div className="revenue-forecast-metric-quad-card">
+                <span className="forecast-quad-card-label">
+                  Forecasted Revenue
+                </span>
+                <strong className="forecast-quad-card-large-numeric">
+                  {forecast?.forecastedRevenue || "$0"}
+                </strong>
+                <span
+                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                    forecast?.forecastedRevenueTrend,
+                  )}`}
+                >
+                  {renderTrend(forecast?.forecastedRevenueTrend)}
                 </span>
               </div>
-            ))}
+              <div className="revenue-forecast-metric-quad-card">
+                <span className="forecast-quad-card-label">
+                  Forecasted Closings
+                </span>
+                <strong className="forecast-quad-card-large-numeric">
+                  {forecast?.forecastedClosings || 0}
+                </strong>
+                <span
+                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                    forecast?.forecastedClosingsTrend,
+                  )}`}
+                >
+                  {renderTrend(forecast?.forecastedClosingsTrend)}
+                </span>
+              </div>
+              <div className="revenue-forecast-metric-quad-card">
+                <span className="forecast-quad-card-label">
+                  Pipeline Velocity
+                </span>
+                <strong className="forecast-quad-card-large-numeric">
+                  {forecast?.pipelineVelocity || "0x"}
+                </strong>
+                <span
+                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                    forecast?.pipelineVelocityTrend,
+                  )}`}
+                >
+                  {renderTrend(forecast?.pipelineVelocityTrend)}
+                </span>
+              </div>
+              <div className="revenue-forecast-metric-quad-card">
+                <span className="forecast-quad-card-label">
+                  Close Confidence
+                </span>
+                <strong className="forecast-quad-card-large-numeric">
+                  {forecast?.closeConfidence || "0%"}
+                </strong>
+                <span
+                  className={`forecast-quad-card-trend-subtext ${getTrendClass(
+                    forecast?.closeConfidenceTrend,
+                  )}`}
+                >
+                  {renderTrend(
+                    forecast?.closeConfidenceTrend,
+                    "→ Medium Confidence",
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <p className="revenue-forecast-footer-explanatory-text">
+              {forecast?.description || "No forecast available yet."}
+            </p>
           </div>
-        </div>
-      </section>
+
+          {/* PANEL 3: AUTOMATION HEALTH */}
+          <div className="bottom-intelligence-card-panel">
+            <div className="intelligence-card-header-row">
+              <div className="flex items-center gap-2">
+                <Settings size={18} className="intelligence-header-icon" />
+                <h3 className="intelligence-card-main-title">
+                  Automation Health
+                </h3>
+              </div>
+              <span className="automation-global-status-indicator-pill">
+                <span className="live-status-dot-green"></span> All Systems
+                Operational
+              </span>
+            </div>
+
+            <div className="automation-health-list-rows-stack">
+              {automationHealth.map((item, iIdx) => (
+                <div className="automation-health-row-item" key={iIdx}>
+                  <div className="flex items-center gap-2">
+                    <CheckSquare
+                      size={14}
+                      className="automation-item-check-icon"
+                    />
+                    <span className="automation-health-item-title-text">
+                      {item.title}
+                    </span>
+                  </div>
+                  <span className="automation-health-item-status-active-badge">
+                    {item.state}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* SELECTED DEAL BOTTOM DRILLDOWN VIEW CARD */}
       <section className="selected-deal-bottom-drilldown-inspector-panel">

@@ -734,6 +734,8 @@ export class PipelineService {
             suggestedSteps,
             aiReason: aiMetadata.reason || null,
             aiScoredAt: deal.latestScoreAt || null,
+            createdAt: deal.createdAt,
+            updatedAt: deal.updatedAt,
           };
         }),
       };
