@@ -177,7 +177,7 @@ export class PipelineService {
         value,
         compareLabel,
         text: `↓ ${value}% ${compareLabel}`,
-        className: positiveGood ? "text-green" : "text-red",
+        className: positiveGood ? "text-red" : "text-green",
       };
     }
 

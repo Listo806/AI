@@ -439,6 +439,43 @@ export default function PipelinePage() {
       setSendingSuggestions(false);
     }
   };
+  const exportPipelineReport = () => {
+    const report = {
+      generatedAt: new Date().toISOString(),
+      stats: pipelineStats,
+      forecast,
+      riskQueue,
+      automationHealth,
+      columns: pipelineColumns.map((col) => ({
+        stage: col.title,
+        count: col.count,
+        amount: col.amount,
+        insight: col.insight,
+        deals: (col.deals || []).map((deal) => ({
+          name: deal.name,
+          amount: deal.amount,
+          score: deal.score,
+          tag: deal.tag,
+          risk: deal.risk,
+          nextAction: deal.action,
+          updated: deal.time,
+        })),
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "pipeline-ai-report.json";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -733,7 +770,10 @@ export default function PipelinePage() {
             <Bot size={14} />
             {prioritizingDeals ? "Prioritizing..." : "Auto-Prioritize Deals"}
           </button>
-          <button className="ai-action-secondary-trigger-btn">
+          <button
+            className="ai-action-secondary-trigger-btn"
+            onClick={exportPipelineReport}
+          >
             <Download size={14} /> Export Report
           </button>
         </div>
