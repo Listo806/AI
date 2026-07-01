@@ -77,6 +77,16 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
+
+  @Post("auto-prioritize")
+  autoPrioritizeDeals(@Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.autoPrioritizeDeals(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
   @Patch("deals/:id")
   updateDeal(
     @Param("id") id: string,

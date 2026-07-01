@@ -1510,4 +1510,146 @@ Rules:
       ...result,
     };
   }
+
+  async autoPrioritizeDeals(userId: string, teamId?: string | null) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required to prioritize deals");
+    }
+
+    const dashboard = await this.getDashboard(userId, teamId, "month");
+
+    const deals = dashboard.columns.flatMap((col) =>
+      col.deals.map((deal) => ({
+        id: deal.id,
+        name: deal.name,
+        value: deal.value,
+        stage: deal.stage,
+        score: deal.score,
+        tag: deal.tag,
+        risk: deal.risk,
+        action: deal.action,
+        time: deal.time,
+      })),
+    );
+
+    const systemPrompt = `
+You are CORTEXA AI, a CRM deal prioritization assistant.
+
+Return ONLY valid JSON.
+
+Return this exact shape:
+{
+  "prioritizedDeals": [
+    {
+      "dealId": "uuid",
+      "priorityRank": 1,
+      "priority": "high | medium | low",
+      "reason": "Short reason",
+      "recommendedAction": "Next best action"
+    }
+  ],
+  "summary": "Short summary"
+}
+
+Rules:
+- Only use deal IDs from the input.
+- Sort by highest business priority first.
+- Consider value, stage, risk, score, and stale time.
+- Return maximum 10 deals.
+`;
+
+    let result: any;
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `DEALS:\n${JSON.stringify(deals)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      result = JSON.parse(response.output_text || "{}");
+    } catch (err) {
+      console.error("Auto prioritize AI error:", err);
+
+      result = {
+        summary: "Fallback prioritization completed.",
+        prioritizedDeals: deals
+          .slice()
+          .sort((a, b) => Number(b.value || 0) - Number(a.value || 0))
+          .slice(0, 10)
+          .map((deal, index) => ({
+            dealId: deal.id,
+            priorityRank: index + 1,
+            priority: index < 3 ? "high" : index < 6 ? "medium" : "low",
+            reason: "Prioritized by deal value and stage.",
+            recommendedAction: deal.action || "Follow up",
+          })),
+      };
+    }
+
+    const prioritizedDeals = Array.isArray(result.prioritizedDeals)
+      ? result.prioritizedDeals.slice(0, 10)
+      : [];
+
+    for (const item of prioritizedDeals) {
+      if (!item.dealId) continue;
+
+      await this.createEvent({
+        eventType: "deal.ai_prioritized",
+        entityId: item.dealId,
+        userId,
+        teamId,
+        metadata: {
+          title: `AI priority #${item.priorityRank}`,
+          sub: item.recommendedAction || item.reason || "Prioritized by AI",
+          priority: item.priority,
+          priorityRank: item.priorityRank,
+          reason: item.reason,
+          recommendedAction: item.recommendedAction,
+        },
+      });
+    }
+
+    await this.db.query(
+      `
+    INSERT INTO ai_activity (
+      team_id,
+      action,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES ($1, $2, $3, $4, NOW())
+    `,
+      [
+        teamId,
+        "pipeline_auto_prioritize",
+        "success",
+        JSON.stringify({
+          userId,
+          summary: result.summary || "Pipeline prioritized by AI.",
+          prioritizedDeals,
+        }),
+      ],
+    );
+
+    return {
+      success: true,
+      summary: result.summary || "Pipeline prioritized by AI.",
+      prioritizedDeals,
+    };
+  }
 }

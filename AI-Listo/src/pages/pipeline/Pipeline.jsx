@@ -69,6 +69,8 @@ export default function PipelinePage() {
   const [scoringDealId, setScoringDealId] = useState(null);
   const [analyzingPipeline, setAnalyzingPipeline] = useState(false);
   const [pipelineInsight, setPipelineInsight] = useState(null);
+  const [prioritizingDeals, setPrioritizingDeals] = useState(false);
+  const [priorityInsight, setPriorityInsight] = useState(null);
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -394,6 +396,28 @@ export default function PipelinePage() {
       setAnalyzingPipeline(false);
     }
   };
+  const autoPrioritizeDeals = async () => {
+    try {
+      setPrioritizingDeals(true);
+
+      const response = await apiClient.request("/pipeline/auto-prioritize", {
+        method: "POST",
+      });
+
+      const data = response?.data || response;
+
+      setPriorityInsight(data || null);
+      await fetchPipelineDashboard();
+
+      if (selectedDeal?.id) {
+        await fetchDealEvents(selectedDeal.id);
+      }
+    } catch (err) {
+      console.error("Auto prioritize error:", err);
+    } finally {
+      setPrioritizingDeals(false);
+    }
+  };
   const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
   const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
   const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
@@ -585,6 +609,12 @@ export default function PipelinePage() {
                 <p>{pipelineInsight.revenueAtRiskReason}</p>
               </div>
             )}
+            {priorityInsight && (
+              <div className="pipeline-ai-analysis-result">
+                <strong>AI Prioritization Complete</strong>
+                <p>{priorityInsight.summary}</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -674,8 +704,13 @@ export default function PipelinePage() {
             <Sparkles size={14} />
             {analyzingPipeline ? "Analyzing..." : "Analyze Pipeline"}
           </button>
-          <button className="ai-action-secondary-trigger-btn">
-            <Bot size={14} /> Auto-Prioritize Deals
+          <button
+            className="ai-action-secondary-trigger-btn"
+            onClick={autoPrioritizeDeals}
+            disabled={prioritizingDeals}
+          >
+            <Bot size={14} />
+            {prioritizingDeals ? "Prioritizing..." : "Auto-Prioritize Deals"}
           </button>
           <button className="ai-action-secondary-trigger-btn">
             <Download size={14} /> Export Report
