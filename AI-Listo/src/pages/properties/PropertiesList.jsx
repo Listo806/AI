@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import "./properties.css";
 
 import {
@@ -77,12 +78,38 @@ function statusView(status) {
 }
 
 export default function PropertiesPage() {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid");
   const [properties, setProperties] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { handleError } = useApiErrorHandler();
+
+  // Filter controls (applied client-side over the loaded inventory)
+  const [q, setQ] = useState("");
+  const [cityFilter, setCityFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [notice, setNotice] = useState(null);
+
+  const clearFilters = () => {
+    setQ("");
+    setCityFilter("all");
+    setTypeFilter("all");
+    setStatusFilter("all");
+    setMinPrice("");
+    setMaxPrice("");
+    setDateFilter("all");
+  };
+
+  const notAvailable = (feature) =>
+    setNotice(
+      `${feature} isn't connected to a backend engine yet, so it can't run. It stays in the layout per the approved design.`
+    );
 
   useEffect(() => {
     let active = true;
@@ -169,6 +196,70 @@ export default function PropertiesPage() {
   const pct = (n) =>
     inventoryTotal > 0 ? Math.round((n / inventoryTotal) * 100) : 0;
 
+  // Option lists derived from the live inventory
+  const cityOptions = useMemo(
+    () =>
+      [...new Set(properties.map((p) => p.city).filter(Boolean))].sort(),
+    [properties]
+  );
+  const typeOptions = useMemo(
+    () =>
+      [...new Set(properties.map((p) => p.listingType || p.type).filter(Boolean))].sort(),
+    [properties]
+  );
+  const statusOptions = useMemo(
+    () => [...new Set(properties.map((p) => p.status).filter(Boolean))].sort(),
+    [properties]
+  );
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const min = minPrice !== "" ? Number(minPrice) : null;
+    const max = maxPrice !== "" ? Number(maxPrice) : null;
+    const now = Date.now();
+    const cutoffs = { "30d": 30, "90d": 90, "365d": 365 };
+    return properties.filter((p) => {
+      if (needle) {
+        const hay = [p.title, p.address, p.city, p.state, p.zipCode, p.mlsId]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(needle)) return false;
+      }
+      if (cityFilter !== "all" && p.city !== cityFilter) return false;
+      if (typeFilter !== "all" && (p.listingType || p.type) !== typeFilter)
+        return false;
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      const price = Number(p.price) || 0;
+      if (min != null && price < min) return false;
+      if (max != null && price > max) return false;
+      if (dateFilter !== "all" && cutoffs[dateFilter]) {
+        const created = p.createdAt ? new Date(p.createdAt).getTime() : null;
+        if (!created || now - created > cutoffs[dateFilter] * 86400000)
+          return false;
+      }
+      return true;
+    });
+  }, [properties, q, cityFilter, typeFilter, statusFilter, minPrice, maxPrice, dateFilter]);
+
+  // Client-side CSV export of the currently filtered inventory
+  const exportCsv = () => {
+    const cols = [
+      "title", "address", "city", "state", "zipCode", "price",
+      "status", "bedrooms", "bathrooms", "squareFeet", "createdAt",
+    ];
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = [cols.join(",")].concat(
+      filtered.map((p) => cols.map((c) => esc(p[c])).join(","))
+    );
+    const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "property-report.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   return (
     <div className="properties-page">
       <div className="heading_page">
@@ -182,18 +273,51 @@ export default function PropertiesPage() {
       </p>
       <div className="page-header">
         <div className="header-actions">
-          <button className="btn btn-secondary">
+          <button
+            className="btn btn-secondary"
+            onClick={() => notAvailable("Analyze Properties")}
+          >
             <Sparkles size={16} color="#2563eb" /> Analyze Properties
           </button>
-          <button className="btn btn-primary">
+          <button
+            className="btn btn-primary"
+            onClick={() => notAvailable("Auto-Optimize Listings")}
+          >
             <Pipette size={16} />
             Auto-Optimize Listings
           </button>
-          <button className="btn btn-secondary">
+          <button className="btn btn-secondary" onClick={exportCsv}>
             <Download size={16} className="blue" /> Export Property Report
           </button>
         </div>
       </div>
+
+      {notice && (
+        <div
+          style={{
+            margin: "8px 0",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            background: "#fef9c3",
+            color: "#854d0e",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          <span>
+            <AlertCircle size={14} style={{ verticalAlign: "-2px" }} /> {notice}
+          </span>
+          <button
+            className="btn btn-secondary"
+            style={{ height: "26px", padding: "0 10px" }}
+            onClick={() => setNotice(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* METRICS ROW */}
       <div className="metrics-grid">
@@ -212,56 +336,107 @@ export default function PropertiesPage() {
       <div className="filters-row">
         <div className="search-box">
           <Search size={16} color="#94a3b8" />
-          <input placeholder="Search properties, addresses, MLS ID..." />
+          <input
+            placeholder="Search properties, addresses, MLS ID..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
         </div>
 
         <div className="filter-select-wrapper search-date">
-          <select className="filter-select" defaultValue="may">
-            <option value="may">May 1, 2024 - May 31, 2024</option>
+          <select
+            className="filter-select"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="all">All Dates</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+            <option value="365d">Last 12 months</option>
           </select>
           <Calendar size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
+          <select
+            className="filter-select"
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+          >
             <option value="all">All Cities</option>
+            {cityOptions.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
+          <select
+            className="filter-select"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+          >
             <option value="all">All Types</option>
+            {typeOptions.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="all">All Status</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="search-box price" style={{ maxWidth: "120px" }}>
-          <input placeholder="Min Price" />
+          <input
+            placeholder="Min Price"
+            type="number"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
         </div>
         <div className="search-box price" style={{ maxWidth: "120px" }}>
-          <input placeholder="Max Price" />
+          <input
+            placeholder="Max Price"
+            type="number"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
         </div>
 
-        <button className="btn btn-secondary" style={{ height: "38px" }}>
+        <button
+          className="btn btn-secondary"
+          style={{ height: "38px" }}
+          onClick={clearFilters}
+        >
           <RotateCcw size={14} />
           Clear Filters
         </button>
         <button
           className="btn btn-primary"
           style={{ height: "38px", padding: "0 20px" }}
+          title="Filters apply as you type"
         >
           <Search size={14} />
           Search
         </button>
-        <button className="btn btn-secondary export" style={{ height: "38px" }}>
+        <button
+          className="btn btn-secondary export"
+          style={{ height: "38px" }}
+          onClick={exportCsv}
+        >
           <Download size={15} className="blue" /> Export
         </button>
 
@@ -291,15 +466,24 @@ export default function PropertiesPage() {
           {!loading && error && (
             <div className="properties-empty">{error}</div>
           )}
-          {!loading && !error && properties.length === 0 && (
-            <div className="properties-empty">No properties yet.</div>
+          {!loading && !error && filtered.length === 0 && (
+            <div className="properties-empty">
+              {properties.length === 0
+                ? "No properties yet."
+                : "No properties match the current filters."}
+            </div>
           )}
           {!loading &&
             !error &&
-            properties.map((property) => {
+            filtered.map((property) => {
               const sv = statusView(property.status);
               return (
-                <div className="property-card" key={property.id}>
+                <div
+                  className="property-card"
+                  key={property.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => navigate(`/dashboard/properties/${property.id}`)}
+                >
                   <div className="card-image-wrapper">
                     {property.thumbnailUrl ? (
                       <img
@@ -327,7 +511,14 @@ export default function PropertiesPage() {
                       </div>
                     )}
                     <span className={`badge-status ${sv.cls}`}>{sv.label}</span>
-                    <button className="card-actions-trigger">
+                    <button
+                      className="card-actions-trigger"
+                      title="Edit property"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/properties/${property.id}/edit`);
+                      }}
+                    >
                       <MoreVertical size={16} />
                     </button>
                   </div>
@@ -440,7 +631,14 @@ export default function PropertiesPage() {
               </div>
             </div>
             <div className="section-footer-link">
-              <a href="#view-analysis" className="section-link">
+              <a
+                href="/dashboard/analytics"
+                className="section-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/dashboard/analytics");
+                }}
+              >
                 View Full Analysis <ArrowRight size={13} />
               </a>
             </div>

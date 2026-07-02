@@ -1,4 +1,8 @@
 import React, { useState } from "react";
+import {
+  useFeatureNotice,
+  FeatureNoticeBanner,
+} from "../../components/FeatureNotice";
 import "./generator.css";
 import {
   Download,
@@ -34,6 +38,11 @@ import {
 
 export default function LeadGeneratorPage() {
   const [saveSearchActive, setSaveSearchActive] = useState(false);
+  const { notice, setNotice, notAvailable } = useFeatureNotice();
+  const genNotAvailable = () =>
+    setNotice(
+      "Lead generation runs on a discovery engine that doesn't exist in the backend yet - it's scoped separately. The page and its layout stay per the approved design."
+    );
   const [selectedLeads, setSelectedLeads] = useState([1, 2]);
 
   // Lead generation engine is separate scope; figures shown as neutral
@@ -67,18 +76,19 @@ export default function LeadGeneratorPage() {
       <p className="sub_head">
         Discover, score, and organize fresh opportunities outside your CRM.
       </p>
+      <FeatureNoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
       <div className="page-header">
         <div className="header-actions">
-          <button className="btn-icon-text">
+          <button className="btn-icon-text" onClick={() => notAvailable("Export")}>
             <Download size={15} /> Export
           </button>
-          <button className="btn-icon-text">
+          <button className="btn-icon-text" onClick={() => notAvailable("Saved Searches")}>
             <Eye size={15} /> Saved Searches
           </button>
-          <button className="btn-icon-text">
+          <button className="btn-icon-text" onClick={() => notAvailable("Campaign Drafts")}>
             <Activity size={15} /> Campaign Drafts
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={genNotAvailable}>
             <Sparkles size={15} fill="white" /> Generate New Leads
           </button>
         </div>
@@ -237,10 +247,10 @@ export default function LeadGeneratorPage() {
         </div>
 
         <div className="config-action-bottom-row">
-          <button className="advanced-options-trigger">
+          <button className="advanced-options-trigger" onClick={() => notAvailable("Advanced Options")}>
             Advanced Options <ChevronDown size={14} />
           </button>
-          <button className="btn-primary" style={{ padding: "0 24px" }}>
+          <button className="btn-primary" style={{ padding: "0 24px" }} onClick={genNotAvailable}>
             <ToolCase size={14} /> Generate New Leads
           </button>
           <div className="right-action-cluster">
@@ -251,7 +261,7 @@ export default function LeadGeneratorPage() {
                 onClick={() => setSaveSearchActive(!saveSearchActive)}
               ></div>
             </div>
-            <button className="btn-clear-form">Clear</button>
+            <button className="btn-clear-form" onClick={() => setSaveSearchActive(false)}>Clear</button>
           </div>
         </div>
       </div>
@@ -428,7 +438,7 @@ export default function LeadGeneratorPage() {
                   </select>
                 </div>
 
-                <button className="btn-table-util-filter">
+                <button className="btn-table-util-filter" onClick={() => notAvailable("Result filters")}>
                   <Filter size={14} /> Filters
                 </button>
 

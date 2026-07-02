@@ -1,4 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  useFeatureNotice,
+  FeatureNoticeBanner,
+} from "../../components/FeatureNotice";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -101,6 +106,9 @@ export default function CortexaDashboard() {
   }, []);
 
   const [showFilters, setShowFilters] = useState(false);
+  const navigate = useNavigate();
+  const { notice, setNotice, notAvailable } = useFeatureNotice();
+  const [trendMode, setTrendMode] = useState("revenue");
   // No backend source for these sparklines; empty rather than fabricated curves.
   const confidenceSparkData = [];
   const riskSparkData = [];
@@ -168,8 +176,34 @@ export default function CortexaDashboard() {
   // No backend source for these on /crm/dashboard/summary or /analytics/dashboard.
   // Kept empty rather than showing fabricated figures; they render as empty sections.
   const secondaryKpis = [];
-  const revenueTrendData = [];
   const leadSources = [];
+
+  // Trend chart: "Leads" mode has a real source (activity.eventsByDay from
+  // /analytics/dashboard); revenue/appointments have none yet and stay empty.
+  const eventsByDay = A.activity?.eventsByDay || [];
+  const revenueTrendData =
+    trendMode === "leads"
+      ? eventsByDay.map((d) => ({ day: d.date, trend: d.count }))
+      : [];
+
+  // CSV export of the live dashboard figures (client-side)
+  const exportDashboardCsv = () => {
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["metric", "value"]];
+    miniKpis.forEach((k) => rows.push([k.title, k.value]));
+    rows.push(["Conversion Rate", convRate != null ? `${convRate}%` : ""]);
+    rows.push(["Pipeline Value", sDeals.pipelineValue ?? ""]);
+    Object.entries(byStage).forEach(([k, v]) => rows.push([`Deals: ${k}`, v]));
+    const blob = new Blob(
+      [rows.map((r) => r.map(esc).join(",")).join("\n")],
+      { type: "text/csv" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dashboard-summary.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   // Real deal-stage figures from summary.deals.byStage (counts only; no per-stage $).
   const dealsByStageArr = [
@@ -277,7 +311,7 @@ export default function CortexaDashboard() {
                 <span className="notif-badge">8</span>
               </div>*/}
 
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -286,6 +320,7 @@ export default function CortexaDashboard() {
           )}
         </div>
       </header>
+      <FeatureNoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
       {isMobile && showFilters && (
         <>
           <div
@@ -324,7 +359,7 @@ export default function CortexaDashboard() {
                 <span>All Stages</span>
                 <ChevronDown size={14} />
               </div>
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -407,16 +442,16 @@ export default function CortexaDashboard() {
             </div>
           </div>
           <div className="banner-action-row">
-            <button className="banner-btn text-dark">
+            <button className="banner-btn text-dark" onClick={() => notAvailable("Call")}>
               <Phone size={16} /> Call
             </button>
-            <button className="banner-btn btn-whatsapp-color">
+            <button className="banner-btn btn-whatsapp-color" onClick={() => navigate("/dashboard/whatsapp")}>
               <MessageCircle size={16} /> WhatsApp
             </button>
-            <button className="banner-btn btn-assign-color">
+            <button className="banner-btn btn-assign-color" onClick={() => notAvailable("Assign")}>
               <Users size={16} /> Assign
             </button>
-            <button className="banner-btn btn-followup-color">
+            <button className="banner-btn btn-followup-color" onClick={() => notAvailable("Follow-up")}>
               <Calendar size={16} /> Follow-up
             </button>
           </div>
@@ -484,9 +519,9 @@ export default function CortexaDashboard() {
               <h3>Revenue & Lead Trend</h3>
             </div>
             <div className="pill-toggles">
-              <button>Leads</button>
-              <button>Appointments</button>
-              <button className="active">Revenue</button>
+              <button className={trendMode === "leads" ? "active" : ""} onClick={() => setTrendMode("leads")}>Leads</button>
+              <button className={trendMode === "appointments" ? "active" : ""} onClick={() => notAvailable("Appointments trend")}>Appointments</button>
+              <button className={trendMode === "revenue" ? "active" : ""} onClick={() => setTrendMode("revenue")}>Revenue</button>
             </div>
           </div>
           <div className="chart-viewbox">
@@ -844,7 +879,7 @@ export default function CortexaDashboard() {
                 <h3 className="text-red">—</h3>
               </div>
             </div>
-            <button className="btn-run-analysis">
+            <button className="btn-run-analysis" onClick={() => notAvailable("Run AI Dashboard Review")}>
               Run AI Dashboard Review <Zap size={14} fill="currentColor" />
             </button>
           </div>

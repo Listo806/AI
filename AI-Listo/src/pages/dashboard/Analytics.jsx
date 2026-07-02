@@ -57,6 +57,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+import {
+  useFeatureNotice,
+  FeatureNoticeBanner,
+} from "../../components/FeatureNotice";
 import "./analytics.css";
 import {
   getAnalyticsDashboard,
@@ -73,6 +78,26 @@ function money(value) {
 
 export default function CortexaAnalyticsDashboard() {
   const { handleError } = useApiErrorHandler();
+  const navigate = useNavigate();
+  const { notice, setNotice, notAvailable } = useFeatureNotice();
+
+  // CSV export of the live KPI row (client-side)
+  const exportAnalyticsCsv = () => {
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["metric", "value", "note"]].concat(
+      kpisRow1Ref.current.map((k) => [k.title, k.value, k.subtext || ""])
+    );
+    const blob = new Blob(
+      [rows.map((r) => r.map(esc).join(",")).join("\n")],
+      { type: "text/csv" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "analytics-kpis.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const kpisRow1Ref = React.useRef([]);
   const [analytics, setAnalytics] = useState(null);
   const [summary, setSummary] = useState(null);
   useEffect(() => {
@@ -119,6 +144,7 @@ export default function CortexaAnalyticsDashboard() {
     { title: "Pipeline Value", value: money(sDeals.pipelineValue), subtext: "open deals", icon: PieChartIcon, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
     { title: "Follow-Up Completion", value: "0%", subtext: "No data available", icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong" },
   ];
+  kpisRow1Ref.current = kpisRow1;
   const kpisRow2 = [];
   const revenueTrend = [];
   const leadSources = [];
@@ -157,14 +183,15 @@ export default function CortexaAnalyticsDashboard() {
             <ChevronDown size={14} className="select-arrow" />
           </div>
 
-          <button className="btn-secondary">
+          <button className="btn-secondary" onClick={exportAnalyticsCsv}>
             <Download size={15} /> Export
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => notAvailable("Run AI Revenue Analysis")}>
             <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
           </button>
         </div>
       </header>
+      <FeatureNoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* KPI ROW 1 */}
       <div className="kpi-grid-row1">
@@ -266,7 +293,7 @@ export default function CortexaAnalyticsDashboard() {
 
           {/* Footer Link */}
           <div className="card-footer-action">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => notAvailable("Lead source breakdown")}>
               View all sources <ArrowRight size={14} />
             </button>
           </div>
@@ -320,7 +347,7 @@ export default function CortexaAnalyticsDashboard() {
               })}
             </div>
             <div className="funnel-footer">
-              <button className="btn-view-all">
+              <button className="btn-view-all" onClick={() => navigate("/dashboard/pipeline")}>
                 View full pipeline <ArrowRight size={14} />
               </button>
             </div>
@@ -463,7 +490,7 @@ export default function CortexaAnalyticsDashboard() {
             ))}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => notAvailable("Lost deal reasons")}>
               View all reasons <ArrowRight size={14} />
             </button>
           </div>
@@ -513,7 +540,7 @@ export default function CortexaAnalyticsDashboard() {
             ))}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => navigate("/dashboard/team")}>
               View full team report <ArrowRight size={14} />
             </button>
           </div>
@@ -546,7 +573,7 @@ export default function CortexaAnalyticsDashboard() {
                       <p>Review which channels convert best for your team.</p>
                   </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/whatsapp" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/whatsapp"); }}>
                     Open WhatsApp Leads →
                   </a>
                 </div>
@@ -565,7 +592,7 @@ export default function CortexaAnalyticsDashboard() {
                       </p>
                     </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/pipeline" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/pipeline"); }}>
                     Reviewing Showings →
                   </a>
                 </div>
@@ -584,7 +611,7 @@ export default function CortexaAnalyticsDashboard() {
                       </p>
                     </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/ai-auto-reply" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/ai-auto-reply"); }}>
                     Open AI Automation →
                   </a>
                 </div>
@@ -613,7 +640,7 @@ export default function CortexaAnalyticsDashboard() {
                 </p>
               </div>
 
-              <button className="btn-forecast-action">
+              <button className="btn-forecast-action" onClick={() => notAvailable("AI Forecast")}>
                 Generate AI Forecast →
               </button>
             </div>
