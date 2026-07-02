@@ -24,6 +24,9 @@ import {
   AlertCircle,
   MapPin,
   ShieldCheck,
+  Flame,
+  Bot,
+  Percent,
 } from "lucide-react";
 import { getProperties } from "../../api/propertiesApi";
 import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
@@ -139,6 +142,26 @@ export default function PropertiesPage() {
       value: formatCompactCurrency(derived.totalValue),
       icon: <DollarSign size={20} />,
       className: "purple",
+    },
+    // Approved layout keeps these cards visible; no backend metric yet, so
+    // they show a neutral value until an endpoint exists.
+    {
+      title: "Hot Properties",
+      value: "0",
+      icon: <Flame size={20} />,
+      className: "orange",
+    },
+    {
+      title: "AI Optimized",
+      value: "0",
+      icon: <Bot size={20} />,
+      className: "cyan",
+    },
+    {
+      title: "Conversion Rate",
+      value: "0%",
+      icon: <Percent size={20} />,
+      className: "green",
     },
   ];
 

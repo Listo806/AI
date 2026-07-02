@@ -58,7 +58,10 @@ import {
 } from "lucide-react";
 
 import "./analytics.css";
-import { getAnalyticsDashboard } from "../../api/analyticsApi";
+import {
+  getAnalyticsDashboard,
+  getDashboardSummary,
+} from "../../api/analyticsApi";
 import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
 
 function money(value) {
@@ -71,12 +74,19 @@ function money(value) {
 export default function CortexaAnalyticsDashboard() {
   const { handleError } = useApiErrorHandler();
   const [analytics, setAnalytics] = useState(null);
+  const [summary, setSummary] = useState(null);
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const a = await getAnalyticsDashboard("30d");
-        if (active) setAnalytics(a);
+        const [a, s] = await Promise.all([
+          getAnalyticsDashboard("30d"),
+          getDashboardSummary().catch(() => null),
+        ]);
+        if (active) {
+          setAnalytics(a);
+          setSummary(s);
+        }
       } catch (err) {
         if (active) handleError(err, "Failed to load analytics");
       }
@@ -95,13 +105,19 @@ export default function CortexaAnalyticsDashboard() {
   const aUsers = A.users || {};
   const aActivity = A.activity || {};
 
+  const sDeals = (summary || {}).deals || {};
+
+  // Approved KPI layout: all eight cards stay visible. Cards whose metric has
+  // no backend endpoint yet show a neutral value with "No data available".
   const kpisRow1 = [
-    { title: "Total Leads", value: String(aLeads.total ?? 0), subtext: "last 30 days", icon: User, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
-    { title: "Converted", value: String(aLeads.converted ?? 0), subtext: "last 30 days", icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong" },
-    { title: "Conversion Rate", value: aLeads.conversionRate != null ? `${aLeads.conversionRate}%` : "—", subtext: "leads to converted", icon: Filter, iconBg: "bg-cyan-light", iconColor: "text-cyan-strong" },
-    { title: "Properties", value: String(aProps.total ?? 0), subtext: `${aProps.published ?? 0} published`, icon: PieChartIcon, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
-    { title: "Active Users", value: String(aUsers.activeUsers ?? 0), subtext: `${aUsers.total ?? 0} total`, icon: User, iconBg: "bg-pink-light", iconColor: "text-pink-strong" },
-    { title: "Activity Events", value: String(aActivity.totalEvents ?? 0), subtext: "last 30 days", icon: Clock, iconBg: "bg-orange-light", iconColor: "text-orange-strong" },
+    { title: "Projected Revenue", value: "$0", subtext: "No data available", icon: DollarSign, iconBg: "bg-green-light", iconColor: "text-green-strong" },
+    { title: "New Leads", value: String(aLeads.created ?? aLeads.total ?? 0), subtext: "last 30 days", icon: User, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
+    { title: "Conversion Rate", value: aLeads.conversionRate != null ? `${aLeads.conversionRate}%` : "0%", subtext: "leads to converted", icon: Filter, iconBg: "bg-cyan-light", iconColor: "text-cyan-strong" },
+    { title: "Appointments Booked", value: "0", subtext: "No data available", icon: CalendarCheck, iconBg: "bg-pink-light", iconColor: "text-pink-strong" },
+    { title: "Avg Speed to Lead", value: "—", subtext: "No data available", icon: Timer, iconBg: "bg-orange-light", iconColor: "text-orange-strong" },
+    { title: "Avg Time to Close", value: aLeads.averageTimeToConvert != null ? `${Math.round(aLeads.averageTimeToConvert)} Days` : "—", subtext: aLeads.averageTimeToConvert != null ? "avg lead to converted" : "No data available", icon: Clock, iconBg: "bg-red-light", iconColor: "text-red-strong" },
+    { title: "Pipeline Value", value: money(sDeals.pipelineValue), subtext: "open deals", icon: PieChartIcon, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
+    { title: "Follow-Up Completion", value: "0%", subtext: "No data available", icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong" },
   ];
   const kpisRow2 = [];
   const revenueTrend = [];
