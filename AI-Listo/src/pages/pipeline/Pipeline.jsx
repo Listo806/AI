@@ -81,6 +81,9 @@ export default function PipelinePage() {
   const [dragOverStage, setDragOverStage] = useState(null);
   const [dateRange, setDateRange] = useState("this_week");
   const [pipelineViewMode, setPipelineViewMode] = useState("ai");
+  const [commandActionLoading, setCommandActionLoading] = useState(null);
+  const [commandOutput, setCommandOutput] = useState(null);
+  const [aiMetrics, setAiMetrics] = useState(null);
 
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
@@ -121,6 +124,7 @@ export default function PipelinePage() {
       setPipelineColumns(Array.isArray(data.columns) ? data.columns : []);
       setRiskQueue(Array.isArray(data.riskQueue) ? data.riskQueue : []);
       setForecast(data.forecast || null);
+      setAiMetrics(data.aiMetrics || null);
       setAutomationHealth(
         Array.isArray(data.automationHealth) ? data.automationHealth : [],
       );
@@ -631,9 +635,113 @@ export default function PipelinePage() {
       setDragOverStage(null);
     }
   };
-  const confidenceData = [{ v: 80 }, { v: 85 }, { v: 83 }, { v: 92 }];
-  const riskData = [{ v: 100 }, { v: 150 }, { v: 280 }, { v: 310 }];
-  const closingData = [{ v: 500 }, { v: 700 }, { v: 900 }, { v: 1100 }];
+
+  const commandMoveDeal = async (stage) => {
+    if (!selectedDeal?.id || !stage) return;
+
+    try {
+      setCommandActionLoading(`move-${stage}`);
+
+      await apiClient.request(`/pipeline/deals/${selectedDeal.id}/move`, {
+        method: "PATCH",
+        body: JSON.stringify({ stage }),
+      });
+
+      setSelectedDeal((prev) => (prev ? { ...prev, stage } : prev));
+      await fetchPipelineDashboard();
+      await fetchDealEvents(selectedDeal.id);
+    } catch (err) {
+      console.error("Command move deal error:", err);
+    } finally {
+      setCommandActionLoading(null);
+    }
+  };
+
+  const commandScoreDeal = async () => {
+    if (!selectedDeal?.id) return;
+
+    try {
+      setCommandActionLoading("score");
+
+      const response = await apiClient.request(
+        `/pipeline/deals/${selectedDeal.id}/score`,
+        { method: "POST" },
+      );
+
+      const result = response?.data || response;
+
+      setSelectedDeal((prev) =>
+        prev
+          ? {
+              ...prev,
+              score: `${result.score || 0}%`,
+              tag: result.tag || prev.tag,
+              risk: result.risk || prev.risk,
+              suggestedSteps: result.nextActions || prev.suggestedSteps,
+              aiReason: result.reason || prev.aiReason,
+            }
+          : prev,
+      );
+
+      await fetchDealEvents(selectedDeal.id);
+      await fetchPipelineDashboard();
+    } catch (err) {
+      console.error("Command score deal error:", err);
+    } finally {
+      setCommandActionLoading(null);
+    }
+  };
+
+  const commandGenerateFollowUp = async () => {
+    if (!selectedDeal?.id) return;
+
+    try {
+      setCommandActionLoading("followup");
+
+      const response = await apiClient.request(
+        `/pipeline/deals/${selectedDeal.id}/generate-followup`,
+        { method: "POST" },
+      );
+
+      const data = response?.data || response;
+
+      setCommandOutput(data || null);
+      await fetchDealEvents(selectedDeal.id);
+    } catch (err) {
+      console.error("Command generate follow-up error:", err);
+    } finally {
+      setCommandActionLoading(null);
+    }
+  };
+
+  const commandSendSuggestions = async () => {
+    if (!selectedDeal?.id) return;
+
+    try {
+      setCommandActionLoading("suggestions");
+
+      await apiClient.request(
+        `/pipeline/deals/${selectedDeal.id}/send-suggestions`,
+        { method: "POST" },
+      );
+
+      await fetchDealEvents(selectedDeal.id);
+    } catch (err) {
+      console.error("Command send suggestions error:", err);
+    } finally {
+      setCommandActionLoading(null);
+    }
+  };
+
+  const scrollToSelectedDeal = () => {
+    document
+      .querySelector(".selected-deal-bottom-drilldown-inspector-panel")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+  };
+
   return (
     <div className="pipeline-container-layout pipeline-page">
       <div className="heading_page">
@@ -874,80 +982,45 @@ export default function PipelinePage() {
           </div>
 
           <div className="ai-banner-metrics-container">
-            <div className="ai-metric-column-box">
-              <span className="ai-metric-box-label">AI Confidence</span>
-              <div className="ai-metric-content-wrapper">
-                <div className="ai-metric-value-group">
-                  <strong className="ai-metric-box-value">92%</strong>
-                  <span className="ai-metric-pill-green">High</span>
-                </div>
+            {[
+              aiMetrics?.confidence,
+              aiMetrics?.revenueAtRisk,
+              aiMetrics?.expectedClosings,
+            ].map((metric, index) => (
+              <div className="ai-metric-column-box" key={index}>
+                <span className="ai-metric-box-label">
+                  {metric?.label || "Metric"}
+                </span>
 
-                <div className="ai-mini-chart-inline">
-                  <ResponsiveContainer width="100%" height={24}>
-                    <LineChart data={confidenceData}>
-                      <YAxis hide domain={["dataMin - 10", "dataMax + 10"]} />
-                      <Line
-                        type="monotone"
-                        dataKey="v"
-                        stroke="#22c55e"
-                        strokeWidth={1.5}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="ai-metric-content-wrapper">
+                  <div className="ai-metric-value-group">
+                    <strong className="ai-metric-box-value">
+                      {metric?.value || "0"}
+                    </strong>
+
+                    <span
+                      className={metric?.badgeClass || "ai-metric-pill-blue"}
+                    >
+                      {metric?.badge || "Pending"}
+                    </span>
+                  </div>
+
+                  <div className="ai-mini-chart-inline">
+                    <ResponsiveContainer width="100%" height={24}>
+                      <LineChart data={metric?.chart || [{ v: 0 }, { v: 0 }]}>
+                        <YAxis hide domain={["dataMin", "dataMax"]} />
+                        <Line
+                          type="monotone"
+                          dataKey="v"
+                          strokeWidth={1.5}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="ai-metric-column-box">
-              <span className="ai-metric-box-label">Revenue At Risk</span>
-              <div className="ai-metric-content-wrapper">
-                <div className="ai-metric-value-group">
-                  <strong className="ai-metric-box-value">$310K</strong>
-                  <span className="ai-metric-pill-red">High</span>
-                </div>
-
-                <div className="ai-mini-chart-inline">
-                  <ResponsiveContainer width="100%" height={24}>
-                    <LineChart data={riskData}>
-                      <YAxis hide domain={["dataMin - 50", "dataMax + 50"]} />
-                      <Line
-                        type="monotone"
-                        dataKey="v"
-                        stroke="#ef4444"
-                        strokeWidth={1.5}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            <div className="ai-metric-column-box">
-              <span className="ai-metric-box-label">Expected Closings</span>
-              <div className="ai-metric-content-wrapper">
-                <div className="ai-metric-value-group">
-                  <strong className="ai-metric-box-value">$1.1M</strong>
-                  <span className="ai-metric-pill-blue">This Month</span>
-                </div>
-
-                <div className="ai-mini-chart-inline">
-                  <ResponsiveContainer width="100%" height={24}>
-                    <LineChart data={closingData}>
-                      <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
-                      <Line
-                        type="monotone"
-                        dataKey="v"
-                        stroke="#3b82f6"
-                        strokeWidth={1.5}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
           <div className="ai-banner-action-buttons-group">
@@ -1543,23 +1616,82 @@ export default function PipelinePage() {
 
       {/* BOTTOM REVENUE COMMAND CENTER BAR */}
       <section className="revenue-command-center-sticky-bottom-bar">
-        <div className="command-center-left flex items-center gap-4">
+        <div className="command-center-left">
           <div className="command-center-sparkle-avatar-box">
             <Sparkles size={20} className="text-white" />
           </div>
+
           <div className="command-center-wrap">
             <h3 className="command-center-main-title">
-              Revenue Command Center
+              {selectedDeal?.name || "Revenue Command Center"}
             </h3>
+
             <p className="command-center-sub-description">
-              Track deal flow, detect revenue risk, and get AI-powered
-              recommendations to maximize conversions and accelerate closings.
+              {selectedDeal
+                ? `${selectedDeal.amount || "$0"} • ${selectedDeal.stage || "new"} • AI Score ${selectedDeal.score || "0%"} • ${selectedDeal.risk || "Low"} Risk`
+                : "Select a deal to run AI actions, generate follow-ups, move stages, and accelerate closings."}
             </p>
           </div>
         </div>
-        <button className="command-center-run-review-cta-btn">
-          <Sparkles size={16} fill="currentColor" /> Run AI Deal Review
-        </button>
+
+        <div className="command-center-actions">
+          <button
+            className="command-center-action-btn primary"
+            disabled={!selectedDeal?.id || commandActionLoading === "score"}
+            onClick={commandScoreDeal}
+          >
+            <Sparkles size={15} />
+            {commandActionLoading === "score" ? "Scoring..." : "Re-Score AI"}
+          </button>
+
+          <button
+            className="command-center-action-btn"
+            disabled={!selectedDeal?.id || commandActionLoading === "followup"}
+            onClick={commandGenerateFollowUp}
+          >
+            <MessageCircle size={15} />
+            {commandActionLoading === "followup"
+              ? "Generating..."
+              : "Generate Follow-up"}
+          </button>
+
+          <button
+            className="command-center-action-btn"
+            disabled={
+              !selectedDeal?.id || commandActionLoading === "suggestions"
+            }
+            onClick={commandSendSuggestions}
+          >
+            <Send size={15} />
+            {commandActionLoading === "suggestions"
+              ? "Sending..."
+              : "Send Suggestions"}
+          </button>
+
+          <div className="command-center-select-wrap">
+            <select
+              disabled={!selectedDeal?.id}
+              value={selectedDeal?.stage || "new"}
+              onChange={(e) => commandMoveDeal(e.target.value)}
+            >
+              <option value="new">Move: New</option>
+              <option value="qualified">Move: Qualified</option>
+              <option value="proposal">Move: Proposal</option>
+              <option value="negotiation">Move: Negotiation</option>
+              <option value="won">Close as Won</option>
+              <option value="lost">Close as Lost</option>
+            </select>
+          </div>
+
+          <button
+            className="command-center-action-btn"
+            disabled={!selectedDeal?.id}
+            onClick={scrollToSelectedDeal}
+          >
+            <Clock3 size={15} />
+            Timeline
+          </button>
+        </div>
       </section>
       {showCreateDealModal && (
         <div className="pipeline-modal-overlay">
@@ -1772,6 +1904,68 @@ export default function PipelinePage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {commandOutput && (
+        <div className="pipeline-modal-overlay">
+          <div className="pipeline-modal command-output-modal">
+            <div className="pipeline-modal-header">
+              <h3>AI Follow-up Generated</h3>
+
+              <button
+                type="button"
+                className="pipeline-modal-close"
+                onClick={() => setCommandOutput(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="pipeline-modal-body">
+              <div className="command-output-section">
+                <label>Email Subject</label>
+                <p>{commandOutput.emailSubject || "No subject generated."}</p>
+              </div>
+
+              <div className="command-output-section">
+                <label>Email Body</label>
+                <p>{commandOutput.emailBody || "No email generated."}</p>
+              </div>
+
+              <div className="command-output-section">
+                <label>WhatsApp Message</label>
+                <p>
+                  {commandOutput.whatsappMessage ||
+                    "No WhatsApp message generated."}
+                </p>
+              </div>
+
+              <div className="command-output-section">
+                <label>Call Script</label>
+                <p>{commandOutput.callScript || "No call script generated."}</p>
+              </div>
+
+              <div className="command-output-section">
+                <label>Recommended Task</label>
+                <p>{commandOutput.recommendedTask || "No task generated."}</p>
+              </div>
+
+              <div className="command-output-section">
+                <label>AI Reason</label>
+                <p>{commandOutput.reason || "No reason provided."}</p>
+              </div>
+            </div>
+
+            <div className="pipeline-modal-footer">
+              <button
+                type="button"
+                className="pipeline-btn-cancel"
+                onClick={() => setCommandOutput(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

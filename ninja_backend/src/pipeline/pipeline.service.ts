@@ -794,13 +794,65 @@ export class PipelineService {
         state: riskQueue.length ? "Active" : "Healthy",
       },
     ];
+    const aiMetrics = {
+      confidence: {
+        label: "AI Confidence",
+        value: `${aiCloseScore}%`,
+        badge:
+          aiCloseScore >= 80 ? "High" : aiCloseScore >= 50 ? "Medium" : "Low",
+        badgeClass:
+          aiCloseScore >= 80
+            ? "ai-metric-pill-green"
+            : aiCloseScore >= 50
+              ? "ai-metric-pill-blue"
+              : "ai-metric-pill-red",
+        chart: [
+          { v: Math.max(0, aiCloseScore - 12) },
+          { v: Math.max(0, aiCloseScore - 7) },
+          { v: Math.max(0, aiCloseScore - 3) },
+          { v: aiCloseScore },
+        ],
+      },
 
+      revenueAtRisk: {
+        label: "Revenue At Risk",
+        value: this.formatMoney(statsSummary.revenueAtRisk || 0),
+        badge:
+          Number(statsSummary.revenueAtRisk || 0) > 0
+            ? "Needs Review"
+            : "Healthy",
+        badgeClass:
+          Number(statsSummary.revenueAtRisk || 0) > 0
+            ? "ai-metric-pill-red"
+            : "ai-metric-pill-green",
+        chart: [
+          { v: 0 },
+          { v: Number(statsSummary.revenueAtRisk || 0) * 0.35 },
+          { v: Number(statsSummary.revenueAtRisk || 0) * 0.7 },
+          { v: Number(statsSummary.revenueAtRisk || 0) },
+        ],
+      },
+
+      expectedClosings: {
+        label: "Expected Closings",
+        value: this.formatMoney(forecastSummary.currentPeriodValue || 0),
+        badge: forecastPeriod.label,
+        badgeClass: "ai-metric-pill-blue",
+        chart: [
+          { v: 0 },
+          { v: Number(forecastSummary.currentPeriodValue || 0) * 0.4 },
+          { v: Number(forecastSummary.currentPeriodValue || 0) * 0.75 },
+          { v: Number(forecastSummary.currentPeriodValue || 0) },
+        ],
+      },
+    };
     return {
       stats,
       columns,
       riskQueue,
       forecast,
       automationHealth,
+      aiMetrics,
       summary: {
         totalDeals,
         wonDeals,

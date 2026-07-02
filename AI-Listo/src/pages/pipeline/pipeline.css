@@ -131,7 +131,7 @@
   font-weight: 500;
   color: inherit;
   cursor: pointer;
-  padding-right: 2px;
+  padding: 0 5px;
   height: 100%;
 }
 
@@ -1793,6 +1793,212 @@
 
 .pipeline-page .kanban-stage-column-wrapper.drag-over .kanban-column-ai-insight-strip {
   border-color: #2563eb;
+}
+.pipeline-page .revenue-command-center-sticky-bottom-bar {
+  bottom: 18px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  color: #fff;
+  margin-top: 24px;
+}
+
+.pipeline-page .command-center-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 260px;
+}
+
+.pipeline-page .command-center-sparkle-avatar-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pipeline-page .command-center-main-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.pipeline-page .command-center-sub-description {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.4;
+}
+
+.pipeline-page .command-center-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pipeline-page .command-center-action-btn {
+  height: 38px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.pipeline-page .command-center-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.pipeline-page .command-center-action-btn.primary {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-color: transparent;
+}
+
+.pipeline-page .command-center-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pipeline-page .command-center-select-wrap {
+  height: 38px;
+  padding: 0 10px 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pipeline-page .command-center-select-wrap select {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+.pipeline-page .command-center-select-wrap select option {
+  color: #111827;
+}
+
+.pipeline-page .command-center-select-wrap:has(select:disabled) {
+  opacity: 0.45;
+}
+
+.pipeline-page .command-output-modal {
+  width: min(820px, calc(100vw - 48px));
+  max-width: 820px;
+  max-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pipeline-page .command-output-modal .pipeline-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: white;
+  border-bottom: 1px solid #edf2f7;
+  flex-shrink: 0;
+}
+.pipeline-page .command-output-modal .pipeline-modal-footer {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  border-top: 1px solid #edf2f7;
+  flex-shrink: 0;
+  z-index: 5;
+}
+.pipeline-page .command-output-modal .pipeline-modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  padding: 24px;
+  max-height: calc(100vh - 180px);
+}
+.pipeline-page .command-output-section {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.pipeline-page .command-output-section:last-child {
+  border-bottom: none;
+}
+
+.pipeline-page .command-output-section label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pipeline-page .command-output-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #111827;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 1024px) {
+  .pipeline-page .revenue-command-center-sticky-bottom-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pipeline-page .command-center-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .pipeline-page .command-output-modal{
+   width:calc(100vw - 24px);
+   max-height:calc(100vh - 135px);
+  }
+}
+@media (max-width:768px){
+  .pipeline-page .command-output-modal .pipeline-modal-body{
+    padding:18px;
+  }
+
+}
+@media (max-width: 640px) {
+  .pipeline-page .command-center-action-btn,
+  .pipeline-page .command-center-select-wrap {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pipeline-page .command-center-select-wrap select {
+    width: 100%;
+    text-align: center;
+  }
 }
 @keyframes pipelineModalIn {
   from {
