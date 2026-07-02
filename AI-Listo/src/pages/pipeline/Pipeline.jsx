@@ -85,6 +85,12 @@ export default function PipelinePage() {
   const [commandOutput, setCommandOutput] = useState(null);
   const [aiMetrics, setAiMetrics] = useState(null);
 
+  const [activityModalOpen, setActivityModalOpen] = useState(false);
+  const [activityModalEvents, setActivityModalEvents] = useState([]);
+  const [activityModalOffset, setActivityModalOffset] = useState(0);
+  const [activityModalHasMore, setActivityModalHasMore] = useState(false);
+  const [activityModalLoading, setActivityModalLoading] = useState(false);
+
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
     risk: "all",
@@ -291,10 +297,8 @@ export default function PipelinePage() {
       setSelectedDealLoading(true);
 
       const response = await apiClient.request(
-        `/pipeline/deals/${dealId}/events`,
-        {
-          method: "GET",
-        },
+        `/pipeline/deals/${dealId}/events?limit=5&offset=0`,
+        { method: "GET" },
       );
 
       const data = response?.data || response || {};
@@ -742,6 +746,40 @@ export default function PipelinePage() {
       });
   };
 
+  const openActivityModal = async () => {
+    if (!selectedDeal?.id) return;
+
+    setActivityModalOpen(true);
+    setActivityModalEvents([]);
+    setActivityModalOffset(0);
+    await loadMoreActivity(true);
+  };
+
+  const loadMoreActivity = async (reset = false) => {
+    if (!selectedDeal?.id) return;
+
+    const nextOffset = reset ? 0 : activityModalOffset;
+
+    try {
+      setActivityModalLoading(true);
+
+      const response = await apiClient.request(
+        `/pipeline/deals/${selectedDeal.id}/events?limit=10&offset=${nextOffset}`,
+        { method: "GET" },
+      );
+
+      const data = response?.data || response || {};
+      const events = Array.isArray(data.events) ? data.events : [];
+
+      setActivityModalEvents((prev) => (reset ? events : [...prev, ...events]));
+      setActivityModalOffset(nextOffset + events.length);
+      setActivityModalHasMore(Boolean(data.pagination?.hasMore));
+    } catch (err) {
+      console.error("Load activity error:", err);
+    } finally {
+      setActivityModalLoading(false);
+    }
+  };
   return (
     <div className="pipeline-container-layout pipeline-page">
       <div className="heading_page">
@@ -1528,7 +1566,11 @@ export default function PipelinePage() {
               <span className="inspector-section-small-overhead-label">
                 Deal Activity
               </span>
-              <button className="intelligence-view-all-navigation-link text-xs">
+              <button
+                className="intelligence-view-all-navigation-link text-xs"
+                onClick={openActivityModal}
+                disabled={!selectedDeal?.id}
+              >
                 View All
               </button>
             </div>
@@ -1965,6 +2007,54 @@ export default function PipelinePage() {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {activityModalOpen && (
+        <div className="pipeline-modal-overlay">
+          <div className="pipeline-modal command-output-modal">
+            <div className="pipeline-modal-header">
+              <h3>Deal Activity</h3>
+
+              <button
+                type="button"
+                className="pipeline-modal-close"
+                onClick={() => setActivityModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="pipeline-modal-body activity-modal-body">
+              {activityModalEvents.length ? (
+                activityModalEvents.map((event) => (
+                  <div className="activity-modal-row" key={event.id}>
+                    <span className="activity-log-dot-indicator blue-dot"></span>
+
+                    <div>
+                      <strong>
+                        {event.metadata?.title || "Deal activity"}
+                      </strong>
+                      <p>{event.metadata?.sub || event.eventType}</p>
+                    </div>
+
+                    <span>{event.timeAgo || "Recently updated"}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="activity-modal-empty">No activity yet.</div>
+              )}
+
+              {activityModalHasMore && (
+                <button
+                  className="pipeline-load-more-btn"
+                  onClick={() => loadMoreActivity(false)}
+                  disabled={activityModalLoading}
+                >
+                  {activityModalLoading ? "Loading..." : "Load More"}
+                </button>
+              )}
             </div>
           </div>
         </div>

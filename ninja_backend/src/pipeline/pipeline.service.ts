@@ -1117,28 +1117,49 @@ export class PipelineService {
     return { message: "Deal deleted successfully" };
   }
 
-  async getDealEvents(id: string, userId: string, teamId?: string | null) {
+  async getDealEvents(
+    id: string,
+    userId: string,
+    teamId?: string | null,
+    limit = 5,
+    offset = 0,
+  ) {
     const deal = await this.findDealForUser(id, userId, teamId);
+
+    const safeLimit = Math.min(Math.max(Number(limit) || 5, 1), 20);
+    const safeOffset = Math.max(Number(offset) || 0, 0);
 
     const { rows } = await this.db.query(
       `
-      SELECT
-        id,
-        event_type AS "eventType",
-        entity_type AS "entityType",
-        entity_id AS "entityId",
-        user_id AS "userId",
-        team_id AS "teamId",
-        COALESCE(metadata, '{}'::jsonb) AS metadata,
-        created_at AS "createdAt"
-      FROM events
-      WHERE entity_type = 'deal'
-        AND entity_id = $1
-      ORDER BY created_at DESC
-      LIMIT 10
-      `,
+    SELECT
+      id,
+      event_type AS "eventType",
+      entity_type AS "entityType",
+      entity_id AS "entityId",
+      user_id AS "userId",
+      team_id AS "teamId",
+      COALESCE(metadata, '{}'::jsonb) AS metadata,
+      created_at AS "createdAt"
+    FROM events
+    WHERE entity_type = 'deal'
+      AND entity_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+    `,
+      [deal.id, safeLimit, safeOffset],
+    );
+
+    const { rows: countRows } = await this.db.query(
+      `
+    SELECT COUNT(*)::int AS total
+    FROM events
+    WHERE entity_type = 'deal'
+      AND entity_id = $1
+    `,
       [deal.id],
     );
+
+    const total = Number(countRows[0]?.total || 0);
 
     return {
       deal,
@@ -1146,6 +1167,12 @@ export class PipelineService {
         ...event,
         timeAgo: this.formatTimeAgo(event.createdAt),
       })),
+      pagination: {
+        limit: safeLimit,
+        offset: safeOffset,
+        total,
+        hasMore: safeOffset + rows.length < total,
+      },
     };
   }
 

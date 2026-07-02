@@ -131,13 +131,20 @@ export class PipelineController {
   }
 
   @Get("deals/:id/events")
-  getDealEvents(@Param("id") id: string, @Req() req: any) {
+  getDealEvents(
+    @Param("id") id: string,
+    @Req() req: any,
+    @Query("limit") limit = "5",
+    @Query("offset") offset = "0",
+  ) {
     const user = req.user;
 
     return this.pipelineService.getDealEvents(
       id,
       user.id,
       user.teamId || user.team_id || null,
+      Number(limit),
+      Number(offset),
     );
   }
 
