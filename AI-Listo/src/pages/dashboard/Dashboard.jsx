@@ -303,8 +303,10 @@ export default function CortexaDashboard() {
     { icon: "🧊", title: "Deals stalled 14 days+", count: riskAlertsData.stalledDeals14d ?? 0 },
   ];
   const liveTracking = (E.liveTracking || []).map((a) => ({
-    text: a.title || a.text || a.action || "Activity",
-    time: a.time_ago || a.timeAgo || (a.created_at ? new Date(a.created_at).toLocaleString() : ""),
+    text: a.label || a.title || a.type || "Activity",
+    time: a.timestamp
+      ? new Date(a.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "",
   }));
   const automationHealth = (E.automationHealth || []).map((h) => ({
     icon: h.status === "Active" || h.status === "Connected" ? "🟢" : "⚪",
