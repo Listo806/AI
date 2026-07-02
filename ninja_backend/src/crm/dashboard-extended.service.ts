@@ -223,7 +223,7 @@ export class DashboardExtendedService {
         AND ${lw.clause}
     `;
 
-    const dwOpen = this.dealWhere(isGlobal, teamIds, userId, f, 1, false);
+    const dwOpen = this.dealWhere(isGlobal, teamIds, userId, f, 1, true);
     const projSql = `
       SELECT COALESCE(SUM(
         d.value * (CASE d.stage
@@ -255,7 +255,7 @@ export class DashboardExtendedService {
     const scoreSql = `
       SELECT AVG(a.score)::float AS score
       FROM leads l INNER JOIN lead_ai_analysis a ON a.lead_id = l.id
-      WHERE l.status NOT IN ('converted', 'lost') AND ${lwScore.clause}
+      WHERE l.status NOT IN ('closed-won', 'closed-lost', 'converted', 'lost') AND ${lwScore.clause}
     `;
     const dwRisk = this.dealWhere(isGlobal, teamIds, userId, f, 1, false);
     const riskSql = `
@@ -298,7 +298,7 @@ export class DashboardExtendedService {
       GROUP BY 1 ORDER BY 1
     `;
 
-    const dw = this.dealWhere(isGlobal, teamIds, userId, f, 3, false);
+    const dw = this.dealWhere(isGlobal, teamIds, userId, f, 3, true);
     const revSql = `
       SELECT (d.updated_at AT TIME ZONE 'UTC')::date AS d, COALESCE(SUM(d.value), 0)::float AS v, COUNT(*)::int AS n
       FROM deals d
@@ -334,7 +334,7 @@ export class DashboardExtendedService {
       SELECT
         COALESCE(NULLIF(TRIM(l.source), ''), 'direct') AS source,
         COUNT(*)::int AS leads,
-        COUNT(*) FILTER (WHERE l.status = 'converted')::int AS converted,
+        COUNT(*) FILTER (WHERE l.status IN ('closed-won', 'converted'))::int AS converted,
         COALESCE(SUM(d.won_value), 0)::float AS revenue
       FROM leads l
       LEFT JOIN LATERAL (
@@ -494,7 +494,7 @@ export class DashboardExtendedService {
              a.next_action_json->>'action' AS next_action
       FROM leads l
       LEFT JOIN lead_ai_analysis a ON a.lead_id = l.id
-      WHERE l.status NOT IN ('converted', 'lost') AND ${lw.clause}
+      WHERE l.status NOT IN ('closed-won', 'closed-lost', 'converted', 'lost') AND ${lw.clause}
       ORDER BY a.score DESC NULLS LAST,
         CASE COALESCE(a.priority, l.priority)
           WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
@@ -553,9 +553,12 @@ export class DashboardExtendedService {
         BOOL_OR(COALESCE(ai_appointment_setter_enabled, false)) AS appt_setter
       FROM team_ai_config WHERE ${teamFilter}
     `;
+    const waTeamFilter = isGlobal ? 'TRUE' : `u.team_id IN (${teamIds.map((_, i) => `$${i + 1}`).join(', ')})`;
     const waSql = `
-      SELECT COUNT(*) FILTER (WHERE status = 'connected')::int AS connected, COUNT(*)::int AS total
-      FROM whatsapp_qr_sessions WHERE ${teamFilter}
+      SELECT COUNT(*) FILTER (WHERE s.status = 'connected')::int AS connected, COUNT(*)::int AS total
+      FROM whatsapp_qr_sessions s
+      INNER JOIN users u ON u.id = s.user_id
+      WHERE ${waTeamFilter}
     `;
     let cfg: any = {};
     let wa: any = {};
@@ -597,7 +600,7 @@ export class DashboardExtendedService {
   }
 
   private async getDealsByStage(isGlobal: boolean, teamIds: string[], userId: string, f: ExtendedFilters) {
-    const dw = this.dealWhere(isGlobal, teamIds, userId, f, 1, false);
+    const dw = this.dealWhere(isGlobal, teamIds, userId, f, 1, true);
     const sql = `
       SELECT d.stage, COUNT(*)::int AS n, COALESCE(SUM(d.value), 0)::float AS v
       FROM deals d
