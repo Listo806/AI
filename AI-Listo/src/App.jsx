@@ -14,6 +14,7 @@ import "./i18n/config";
 import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
+import SignUpDev from "./pages/auth/SignUpDev";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/leads/LeadsList";
@@ -136,6 +137,7 @@ function AppRoutes() {
       <Route path="/" element={<RootRoute />} />
       <Route path="/sign-in" element={<SignIn variant="crm" />} />
       <Route path="/sign-up" element={<SignUp />} />
+      <Route path="/sign-up-dev" element={<SignUpDev />} />
       <Route path="/privacy-policy" element={<Privacy />} />
       <Route path="/refund-policy" element={<Refund />} />
       <Route path="/terms" element={<Terms />} />

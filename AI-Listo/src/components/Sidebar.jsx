@@ -174,10 +174,13 @@ export default function Sidebar({
 
   const role =
     typeof user?.role === "string" ? user.role.toLowerCase() : user?.role;
+  const isDeveloper = role === "developer";
+  const isFullAccessRole = ["super_admin", "admin", "developer"].includes(role);
+
   const canSeeAiCenter =
-    role && ["super_admin", "admin", "owner", "agent"].includes(role);
-  const canSeeAdmin = role === "super_admin" || role === "admin";
-  const canSeePlatformListings = ["agent", "owner", "user"].includes(role);
+    role && ["super_admin", "admin", "owner", "agent", "developer"].includes(role);
+  const canSeeAdmin = role === "super_admin" || role === "admin" || isDeveloper;
+  const canSeePlatformListings = ["agent", "owner", "user", "developer"].includes(role);
   console.log("USER IN SIDEBAR:", user);
   let navItems = topNavItems;
   if (role === "va") {
@@ -196,6 +199,10 @@ export default function Sidebar({
     navItems = [
       { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
       ...whatsappNavEntries,
+      { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
+      { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
+      { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
+      { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
       {
         path: "/dashboard/properties",
         icon: "building",
