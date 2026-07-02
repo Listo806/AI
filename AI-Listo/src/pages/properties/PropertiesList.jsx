@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./properties.css";
 
 import {
   Search,
   ChevronDown,
   Download,
-  Plus,
   LayoutGrid,
   List,
   Sparkles,
@@ -13,14 +12,10 @@ import {
   Home,
   CheckCircle2,
   DollarSign,
-  Flame,
-  Bot,
-  Percent,
   MoreVertical,
   BedDouble,
   Bath,
   Maximize,
-  ArrowUpRight,
   Pipette,
   Calendar,
   RotateCcw,
@@ -29,160 +24,127 @@ import {
   AlertCircle,
   MapPin,
   ShieldCheck,
-  Users,
 } from "lucide-react";
+import { getProperties } from "../../api/propertiesApi";
+import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
+
+/** Format a numeric price into a compact currency string. */
+function formatPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return "—";
+  return n.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+/** Compact currency for totals (e.g. $24.8M). */
+function formatCompactCurrency(value) {
+  const n = Number(value) || 0;
+  return `$${n.toLocaleString("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  })}`;
+}
+
+/** Build a single-line address from the property fields the backend returns. */
+function formatAddress(p) {
+  return (
+    [p.address, p.city, p.state, p.zipCode].filter(Boolean).join(", ") || "—"
+  );
+}
+
+/** Map a backend status to the display label + css class used by the card. */
+function statusView(status) {
+  switch ((status || "").toLowerCase()) {
+    case "published":
+      return { label: "Active", listing: "Active", cls: "active" };
+    case "draft":
+      return { label: "Draft", listing: "Under Review", cls: "under-review" };
+    case "sold":
+      return { label: "Sold", listing: "Under Review", cls: "under-review" };
+    case "rented":
+      return { label: "Rented", listing: "Under Review", cls: "under-review" };
+    case "archived":
+      return { label: "Archived", listing: "Under Review", cls: "under-review" };
+    default:
+      return { label: status || "—", listing: status || "—", cls: "active" };
+  }
+}
 
 export default function PropertiesPage() {
   const [viewMode, setViewMode] = useState("grid");
+  const [properties, setProperties] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { handleError } = useApiErrorHandler();
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Pull a healthy page so the inventory summary reflects real data.
+        const res = await getProperties({ limit: 100 });
+        if (!active) return;
+        setProperties(Array.isArray(res.items) ? res.items : []);
+        setTotal(res.total || (res.items ? res.items.length : 0));
+      } catch (err) {
+        if (!active) return;
+        setError(err?.message || "Failed to load properties");
+        handleError(err, "Failed to load properties");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Derived, real inventory numbers (no fabricated figures).
+  const derived = useMemo(() => {
+    const counts = { active: 0, review: 0, draft: 0, inactive: 0 };
+    let totalValue = 0;
+    for (const p of properties) {
+      const s = (p.status || "").toLowerCase();
+      if (s === "published") counts.active += 1;
+      else if (s === "draft") counts.draft += 1;
+      else if (s === "archived") counts.inactive += 1;
+      else counts.review += 1;
+      totalValue += Number(p.price) || 0;
+    }
+    return { counts, totalValue };
+  }, [properties]);
 
   const metrics = [
     {
       title: "Total Properties",
-      value: "248",
-      trend: "↑ 12% vs last month",
-      trendType: "up",
+      value: String(total),
       icon: <Home size={20} />,
       className: "blue",
     },
     {
       title: "Active Listings",
-      value: "186",
-      trend: "↑ 8% vs last month",
-      trendType: "up",
+      value: String(derived.counts.active),
       icon: <CheckCircle2 size={20} />,
       className: "green",
     },
     {
       title: "Total Value",
-      value: "$24.8M",
-      trend: "↑ 15% vs last month",
-      trendType: "up",
+      value: formatCompactCurrency(derived.totalValue),
       icon: <DollarSign size={20} />,
       className: "purple",
     },
-    {
-      title: "Hot Properties",
-      value: "32",
-      trend: "↑ 18% vs last month",
-      trendType: "up",
-      icon: <Flame size={20} />,
-      className: "orange",
-    },
-    {
-      title: "AI Optimized",
-      value: "142",
-      trend: "↑ 22% vs last month",
-      trendType: "up",
-      icon: <Bot size={20} />,
-      className: "cyan",
-    },
-    {
-      title: "Conversion Rate",
-      value: "24.8%",
-      trend: "↑ 6% vs last month",
-      trendType: "up",
-      icon: <Percent size={20} />,
-      className: "green",
-    },
   ];
 
-  const propertiesList = [
-    {
-      price: "$1,250,000",
-      address: "123 Luxury Way, Beverly Hills, CA 90210",
-      aiScore: "92",
-      beds: 4,
-      baths: 5,
-      sqft: "3,456 sqft",
-      revenue: "$125K",
-      leads: 28,
-      status: "HOT PROPERTY",
-      statusClass: "hot",
-      agentName: "Sarah Johnson",
-      agentTeam: "Luxury Team",
-      agentAvatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80",
-      listingStatus: "Active",
-    },
-    {
-      price: "$850,000",
-      address: "456 Ocean Drive, Miami, FL 33139",
-      aiScore: "88",
-      beds: 3,
-      baths: 3,
-      sqft: "2,100 sqft",
-      revenue: "$85K",
-      leads: 19,
-      status: "AI OPTIMIZED",
-      statusClass: "ai-optimized",
-      agentName: "Mike Rodriguez",
-      agentTeam: "Coastal Team",
-      agentAvatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80",
-      listingStatus: "Active",
-    },
-    {
-      price: "$620,000",
-      address: "789 Maple Street, Austin, TX 78701",
-      aiScore: "65",
-      beds: 3,
-      baths: 2,
-      sqft: "1,850 sqft",
-      revenue: "$45K",
-      leads: 12,
-      status: "UNDER REVIEW",
-      statusClass: "under-review",
-      agentName: "Emily Davis",
-      agentTeam: "Central Team",
-      agentAvatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80",
-      listingStatus: "Under Review",
-    },
-    {
-      price: "$450,000",
-      address: "321 Pine Avenue, Seattle, WA 98101",
-      aiScore: "78",
-      beds: 2,
-      baths: 2,
-      sqft: "1,200 sqft",
-      revenue: "$32K",
-      leads: 8,
-      status: "ACTIVE",
-      statusClass: "active",
-      agentName: "David Chen",
-      agentTeam: "Northwest Team",
-      agentAvatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80",
-      listingStatus: "Active",
-    },
-  ];
-
-  const matchedLeads = [
-    {
-      name: "John Smith",
-      location: "Miami, FL",
-      budget: "$800K - $1.2M",
-      count: 5,
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80",
-    },
-    {
-      name: "Sarah Williams",
-      location: "Austin, TX",
-      budget: "$500K - $750K",
-      count: 3,
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
-    },
-    {
-      name: "Michael Brown",
-      location: "Seattle, WA",
-      budget: "$400K - $600K",
-      count: 4,
-      avatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80",
-    },
-  ];
+  const inventoryTotal = properties.length;
+  const pct = (n) =>
+    inventoryTotal > 0 ? Math.round((n / inventoryTotal) * 100) : 0;
 
   return (
     <div className="properties-page">
@@ -218,9 +180,6 @@ export default function PropertiesPage() {
             <div className="metric-info">
               <span>{item.title}</span>
               <h2>{item.value}</h2>
-              <span className={`metric-trend ${item.trendType}`}>
-                {item.trend}
-              </span>
             </div>
           </div>
         ))}
@@ -268,20 +227,6 @@ export default function PropertiesPage() {
           <input placeholder="Max Price" />
         </div>
 
-        <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All AI Scores</option>
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-
-        <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Agents/Teams</option>
-          </select>
-          <ChevronDown size={14} className="select-icon" />
-        </div>
-
         <button className="btn btn-secondary" style={{ height: "38px" }}>
           <RotateCcw size={14} />
           Clear Filters
@@ -317,95 +262,98 @@ export default function PropertiesPage() {
       <div className="main-layout">
         {/* LEFT COMPONENT: PROPERTIES LIST */}
         <div className="properties-grid">
-          {propertiesList.map((property, idx) => (
-            <div className="property-card" key={idx}>
-              <div className="card-image-wrapper">
-                {/* Fallback pattern representing images in mockup */}
-                <div
-                  style={{
-                    background: "#e2e8f0",
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#94a3b8",
-                  }}
-                >
-                  Property Image Layout
-                </div>
-                <span className={`badge-status ${property.statusClass}`}>
-                  {property.status}
-                </span>
-                <button className="card-actions-trigger">
-                  <MoreVertical size={16} />
-                </button>
-              </div>
+          {loading && (
+            <div className="properties-empty">Loading properties…</div>
+          )}
+          {!loading && error && (
+            <div className="properties-empty">{error}</div>
+          )}
+          {!loading && !error && properties.length === 0 && (
+            <div className="properties-empty">No properties yet.</div>
+          )}
+          {!loading &&
+            !error &&
+            properties.map((property) => {
+              const sv = statusView(property.status);
+              return (
+                <div className="property-card" key={property.id}>
+                  <div className="card-image-wrapper">
+                    {property.thumbnailUrl ? (
+                      <img
+                        src={property.thumbnailUrl}
+                        alt={property.title || "Property"}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          background: "#e2e8f0",
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        No image
+                      </div>
+                    )}
+                    <span className={`badge-status ${sv.cls}`}>{sv.label}</span>
+                    <button className="card-actions-trigger">
+                      <MoreVertical size={16} />
+                    </button>
+                  </div>
 
-              <div className="card-body">
-                <div className="price-row">
-                  <h3>{property.price}</h3>
-                  <div className="ai-score-badge">
-                    <strong
-                      className={`score-number ${parseInt(property.aiScore) > 80 ? "high" : "medium"}`}
-                    >
-                      {property.aiScore}
-                    </strong>
-                    <span>AI Score</span>
-                  </div>
-                </div>
+                  <div className="card-body">
+                    <div className="price-row">
+                      <h3>{formatPrice(property.price)}</h3>
+                    </div>
 
-                <p className="property-address">{property.address}</p>
+                    {property.title && (
+                      <p className="property-title">{property.title}</p>
+                    )}
+                    <p className="property-address">{formatAddress(property)}</p>
 
-                <div className="property-specs">
-                  <div className="spec-item">
-                    <BedDouble size={14} /> {property.beds}
-                  </div>
-                  <div className="spec-item">
-                    <Bath size={14} /> {property.baths}
-                  </div>
-                  <div className="spec-item">
-                    <Maximize size={14} /> {property.sqft}
-                  </div>
-                </div>
+                    <div className="property-specs">
+                      {property.bedrooms != null && (
+                        <div className="spec-item">
+                          <BedDouble size={14} /> {property.bedrooms}
+                        </div>
+                      )}
+                      {property.bathrooms != null && (
+                        <div className="spec-item">
+                          <Bath size={14} /> {property.bathrooms}
+                        </div>
+                      )}
+                      {property.squareFeet != null && (
+                        <div className="spec-item">
+                          <Maximize size={14} /> {property.squareFeet} sqft
+                        </div>
+                      )}
+                    </div>
 
-                <div className="financials-row">
-                  <div className="financial-item">
-                    <span>Revenue Potential</span>
-                    <strong className="green-text">{property.revenue}</strong>
-                  </div>
-                  <div
-                    className="financial-item"
-                    style={{ textAlign: "right" }}
-                  >
-                    <span>Matched Leads</span>
-                    <strong className="text-align-right">
-                      {property.leads} ↗
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="agent-footer">
-                  <div className="agent-info">
-                    <img
-                      src={property.agentAvatar}
-                      alt={property.agentName}
-                      className="agent-avatar"
-                    />
-                    <div>
-                      <h5>{property.agentName}</h5>
-                      <p>{property.agentTeam}</p>
+                    <div className="agent-footer">
+                      <div className="agent-info">
+                        <MapPin size={14} color="#94a3b8" />
+                        <div>
+                          <p>{property.city || property.state || "—"}</p>
+                        </div>
+                      </div>
+                      <span
+                        className={`listing-status-tag ${sv.cls === "active" ? "active" : "review"}`}
+                      >
+                        {sv.listing}
+                      </span>
                     </div>
                   </div>
-                  <span
-                    className={`listing-status-tag ${property.listingStatus === "Active" ? "active" : "review"}`}
-                  >
-                    {property.listingStatus}
-                  </span>
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
         </div>
 
         {/* RIGHT COMPONENT: SIDEBAR PLATFORM PANEL */}
@@ -423,7 +371,7 @@ export default function PropertiesPage() {
               <div className="chart-wrap">
                 <div className="donut-chart-mock">
                   <div className="chart-center">
-                    <h4>248</h4>
+                    <h4>{inventoryTotal}</h4>
                     <span>Total</span>
                   </div>
                 </div>
@@ -434,42 +382,37 @@ export default function PropertiesPage() {
                       <CheckCircle2 size={14} color="#16a34a" />
                       <span>Active</span>
                     </div>
-                    <span className="legend-value">186 (75%)</span>
+                    <span className="legend-value">
+                      {derived.counts.active} ({pct(derived.counts.active)}%)
+                    </span>
                   </div>
                   <div className="legend-item">
                     <div className="legend-label">
                       <Clock3 size={14} color="#ea580c" />
                       <span>Under Review</span>
                     </div>
-                    <span className="legend-value">32 (13%)</span>
+                    <span className="legend-value">
+                      {derived.counts.review} ({pct(derived.counts.review)}%)
+                    </span>
                   </div>
                   <div className="legend-item">
                     <div className="legend-label">
                       <FileText size={14} color="#64748b" />
                       <span>Draft</span>
                     </div>
-                    <span className="legend-value">18 (7%)</span>
+                    <span className="legend-value">
+                      {derived.counts.draft} ({pct(derived.counts.draft)}%)
+                    </span>
                   </div>
                   <div className="legend-item">
                     <div className="legend-label">
                       <AlertCircle size={14} color="#dc2626" />
-                      <span>Inactive</span>
+                      <span>Archived</span>
                     </div>
-                    <span className="legend-value">12 (5%)</span>
+                    <span className="legend-value">
+                      {derived.counts.inactive} ({pct(derived.counts.inactive)}%)
+                    </span>
                   </div>
-                </div>
-              </div>
-              <div className="inventory-score-box">
-                <div className="score-info">
-                  <h5>Inventory Score</h5>
-                  <div className="score-display">
-                    82 <span className="score-max">/100</span>
-                  </div>
-                  <span className="score-status">Excellent</span>
-                </div>
-                <div className="score-trend">
-                  <span className="trend-up-text">↑ 12 points</span>
-                  <p>vs last month</p>
                 </div>
               </div>
             </div>
@@ -477,51 +420,6 @@ export default function PropertiesPage() {
               <a href="#view-analysis" className="section-link">
                 View Full Analysis <ArrowRight size={13} />
               </a>
-            </div>
-          </div>
-
-          {/* SECTION 2: MATCHED LEADS */}
-          <div className="sidebar-section">
-            <div className="section-header">
-              <h3>
-                <Users size={18} className="blue" />
-                Matched Leads
-              </h3>
-              <a href="#view-all-leads" className="section-link">
-                View All Leads
-                <ArrowRight size={13} />
-              </a>
-            </div>
-
-            <div className="matched-leads-list">
-              {matchedLeads.map((lead, index) => (
-                <div className="matched-lead-item" key={index}>
-                  <div className="lead-left-content">
-                    <img
-                      src={lead.avatar}
-                      alt={lead.name}
-                      className="lead-avatar-img"
-                    />
-                    <div className="lead-details">
-                      <h4>{lead.name}</h4>
-                      <p>
-                        <MapPin size={12} color="#94a3b8" /> {lead.location}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="lead-right-meta">
-                    <span className="budget">Budget: {lead.budget}</span>
-                    <span className="matches-count">
-                      Matched properties: <strong>{lead.count}</strong>
-                    </span>
-                  </div>
-                  <button className="btn-match-view">
-                    View Matches
-                    <ArrowUpRight size={12} />
-                  </button>
-                </div>
-              ))}
             </div>
           </div>
         </div>
