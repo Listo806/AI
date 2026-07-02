@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
+import { MetaWebhookSignatureGuard } from './guards/meta-webhook-signature.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { InstagramDmService } from './instagram-dm.service';
 import { SendInstagramDmDto } from './dto/send-instagram-dm.dto';
@@ -73,11 +74,13 @@ export class InstagramController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(MetaWebhookSignatureGuard)
   @ApiOperation({
     summary: 'Webhook events (Meta)',
-    description: 'Meta sends POST with Instagram messaging events. Resolves agent/lead, stores inbound DMs in lead_messages. No auth.',
+    description: 'Meta sends POST with Instagram messaging events, signed with X-Hub-Signature-256. Resolves agent/lead, stores inbound DMs in lead_messages.',
   })
   @ApiResponse({ status: 200, description: 'Accepted' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing webhook signature' })
   async webhook(@Req() req: Request, @Res() res: Response) {
     const raw = req.body;
     await this.webhookService.handle(raw);
