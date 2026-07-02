@@ -80,7 +80,7 @@ export default function CortexaAnalyticsDashboard() {
         const cur = rangeToDates(range);
         const prev = prevRangeToDates(range);
         const [e, pe, s] = await Promise.all([
-          getDashboardExtended(cur),
+          getDashboardExtended(cur).catch(() => null),
           compare ? getDashboardExtended(prev).catch(() => null) : Promise.resolve(null),
           getDashboardSummary().catch(() => null),
         ]);
