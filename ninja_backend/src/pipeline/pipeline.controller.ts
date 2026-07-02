@@ -162,4 +162,15 @@ export class PipelineController {
       user.teamId || user.team_id || null,
     );
   }
+
+  @Post("deals/:id/generate-followup")
+  generateDealFollowUp(@Param("id") id: string, @Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.generateDealFollowUp(
+      id,
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
 }

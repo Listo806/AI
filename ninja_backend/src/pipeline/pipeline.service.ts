@@ -1704,4 +1704,110 @@ Rules:
       nextActions,
     };
   }
+
+  async generateDealFollowUp(
+    id: string,
+    userId: string,
+    teamId?: string | null,
+  ) {
+    const deal = await this.findDealForUser(id, userId, teamId);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      d.id,
+      d.name,
+      d.value,
+      d.stage,
+      d.notes,
+
+      l.name AS "leadName",
+      l.email AS "leadEmail",
+      l.phone AS "leadPhone",
+      l.status AS "leadStatus",
+      l.priority AS "leadPriority",
+      l.notes AS "leadNotes"
+
+    FROM deals d
+    LEFT JOIN leads l ON l.id = d.lead_id
+    WHERE d.id = $1
+    LIMIT 1
+    `,
+      [id],
+    );
+
+    const context = rows[0] || deal;
+
+    const systemPrompt = `
+You are CORTEXA AI, a CRM sales assistant for real estate teams.
+
+Generate practical follow-up content for this deal.
+
+Return ONLY valid JSON:
+{
+  "emailSubject": "Subject line",
+  "emailBody": "Short professional email",
+  "callScript": "Short call script",
+  "whatsappMessage": "Short WhatsApp message",
+  "recommendedTask": "One task title",
+  "reason": "Why this follow-up is recommended"
+}
+`;
+
+    let result: any;
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `DEAL DATA:\n${JSON.stringify(context)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      result = JSON.parse(response.output_text || "{}");
+    } catch (err) {
+      console.error("Generate follow-up AI error:", err);
+
+      result = {
+        emailSubject: "Following up on your property interest",
+        emailBody:
+          "Hi, I wanted to follow up on your interest and see if you would like to discuss the next steps.",
+        callScript:
+          "Hi, this is a quick follow-up regarding your property interest. Do you have a few minutes to talk about next steps?",
+        whatsappMessage:
+          "Hi, just following up on your property interest. Would you like to discuss next steps?",
+        recommendedTask: this.getNextAction(deal.stage),
+        reason: "Fallback follow-up generated because AI response failed.",
+      };
+    }
+
+    await this.createEvent({
+      eventType: "deal.ai_followup_generated",
+      entityId: id,
+      userId,
+      teamId: deal.teamId,
+      metadata: {
+        title: "AI follow-up generated",
+        sub: result.recommendedTask || "Follow-up content created",
+        ...result,
+      },
+    });
+
+    return {
+      success: true,
+      ...result,
+    };
+  }
 }
