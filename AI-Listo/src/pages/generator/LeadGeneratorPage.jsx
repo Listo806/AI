@@ -36,118 +36,19 @@ export default function LeadGeneratorPage() {
   const [saveSearchActive, setSaveSearchActive] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState([1, 2]);
 
+  // Lead generation engine is separate scope; figures shown as neutral
+  // placeholders rather than fabricated counts until it is connected.
   const topMetrics = [
-    {
-      title: "Generated Leads",
-      value: "1,342",
-      sub: "↑ 28% this month",
-      type: "blue",
-      icon: <Users size={20} />,
-    },
-    {
-      title: "AI Qualified",
-      value: "687",
-      sub: "↑ 51% of total",
-      type: "green",
-      icon: <Bot size={20} />,
-    },
-    {
-      title: "Hot Opportunities",
-      value: "213",
-      sub: "↓ 16% this month",
-      type: "red",
-      icon: <Flame size={20} />,
-    },
-    {
-      title: "Enriched Leads",
-      value: "1,089",
-      sub: "81% enriched",
-      type: "purple",
-      icon: <Layers size={20} />,
-    },
-    {
-      title: "Campaign Ready",
-      value: "356",
-      sub: "↑ 22% this month",
-      type: "orange",
-      icon: <TrendingUp size={20} />,
-    },
-    {
-      title: "Moved to CRM",
-      value: "124",
-      sub: "↑ 18% this month",
-      type: "cyan",
-      icon: <CheckCircle2 size={20} />,
-    },
-    {
-      title: "Avg AI Score",
-      value: "78%",
-      sub: "↑ 6 pts this month",
-      type: "star",
-      icon: <Sparkles size={20} />,
-    },
+    { title: "Generated Leads", value: "—", sub: "", type: "blue", icon: <Users size={20} /> },
+    { title: "AI Qualified", value: "—", sub: "", type: "green", icon: <Bot size={20} /> },
+    { title: "Hot Opportunities", value: "—", sub: "", type: "red", icon: <Flame size={20} /> },
+    { title: "Enriched Leads", value: "—", sub: "", type: "purple", icon: <Layers size={20} /> },
+    { title: "Campaign Ready", value: "—", sub: "", type: "orange", icon: <TrendingUp size={20} /> },
+    { title: "Moved to CRM", value: "—", sub: "", type: "cyan", icon: <CheckCircle2 size={20} /> },
+    { title: "Avg AI Score", value: "—", sub: "", type: "star", icon: <Sparkles size={20} /> },
   ];
-
-  const leadRecords = [
-    {
-      id: 1,
-      name: "María López",
-      badge: "New",
-      email: "maria.lopez@email.com",
-      phone: "+593 98 765 4321",
-      role: "Renter",
-      temp: "Warm",
-      aiScore: "64%",
-      interest: "2-bedroom apartment in La Carolina",
-      budget: "$500 - $900",
-      source: "Public Web Search",
-      sourceUrl: "verpropiedades.com/alq...",
-      action: "Send rental availability message",
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-    },
-    {
-      id: 2,
-      name: "Constructora Andina",
-      badge: "New",
-      email: "info@andina.com.ec",
-      phone: "+593 2 222 3344",
-      role: "Developer",
-      temp: "Warm",
-      aiScore: "71%",
-      interest: "New condo project in Cumbayá",
-      budget: "$150,000+",
-      source: "Business / Places Search",
-      sourceUrl: "andina.com.ec/proyectos",
-      action: "Send new project information request",
-      avatar: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=150",
-    },
-    {
-      id: 3,
-      name: "Carlos Jiménez",
-      badge: "New",
-      email: "carlosj@gmail.com",
-      phone: "+593 99 456 7890",
-      role: "Seller",
-      temp: "Hot",
-      aiScore: "82%",
-      interest: "Selling house in Tumbaco",
-      budget: "$180,000 - $220,000",
-      source: "Real Estate Pages",
-      sourceUrl: "plusvalia.com/propiedad/...",
-      action: "Send home valuation and listing proposal",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-    },
-  ];
-
-  const cityRankings = [
-    { name: "Quito", count: 14 },
-    { name: "Cumbayá", count: 7 },
-    { name: "La Carolina", count: 5 },
-    { name: "Tumbaco", count: 3 },
-    { name: "Bellavista", count: 3 },
-  ];
+  const leadRecords = [];
+  const cityRankings = [];
 
   const toggleLeadSelection = (id) => {
     if (selectedLeads.includes(id)) {
@@ -461,7 +362,7 @@ export default function LeadGeneratorPage() {
                   className="legend-count-value-number"
                   style={{ color: "#16a34a" }}
                 >
-                  24
+                  —
                 </span>
               </div>
               <div className="legend-row-item-align">
@@ -470,7 +371,7 @@ export default function LeadGeneratorPage() {
                   className="legend-count-value-number"
                   style={{ color: "#16a34a" }}
                 >
-                  186
+                  —
                 </span>
               </div>
               <div className="legend-row-item-align">
@@ -479,7 +380,7 @@ export default function LeadGeneratorPage() {
                   className="legend-count-value-number"
                   style={{ color: "#ea580c" }}
                 >
-                  32
+                  —
                 </span>
               </div>
               <div className="legend-row-item-align">
@@ -490,7 +391,7 @@ export default function LeadGeneratorPage() {
                   className="legend-count-value-number"
                   style={{ color: "#dc2626" }}
                 >
-                  64
+                  —
                 </span>
               </div>
             </div>
@@ -515,7 +416,7 @@ export default function LeadGeneratorPage() {
           <div className="results-table-container-card">
             <div className="table-top-controls-bar">
               <h3 className="table-main-headline-title">
-                4. Leads Found (32 Qualified){" "}
+                4. Leads Found{" "}
                 <Sparkles size={16} color="#ea580c" fill="#ea580c" />
               </h3>
 
@@ -718,7 +619,7 @@ export default function LeadGeneratorPage() {
                   />
                 </svg>
                 <div className="donut-center-absolute-labels-stack">
-                  <h3>32</h3>
+                  <h3>—</h3>
                   <p>
                     Qualified
                     <br /> Leads
@@ -732,7 +633,7 @@ export default function LeadGeneratorPage() {
                     <div className="legend-color-dot-indicator hot-red"></div>
                     <span>Hot (70-100)</span>
                   </div>
-                  <span className="legend-count-value-number">10</span>
+                  <span className="legend-count-value-number">—</span>
                 </div>
 
                 <div className="legend-row-item-align">
@@ -740,7 +641,7 @@ export default function LeadGeneratorPage() {
                     <div className="legend-color-dot-indicator warm-orange"></div>
                     <span>Warm (40-69)</span>
                   </div>
-                  <span className="legend-count-value-number">17</span>
+                  <span className="legend-count-value-number">—</span>
                 </div>
 
                 <div className="legend-row-item-align">
@@ -748,7 +649,7 @@ export default function LeadGeneratorPage() {
                     <div className="legend-color-dot-indicator cold-blue"></div>
                     <span>Cold (0-39)</span>
                   </div>
-                  <span className="legend-count-value-number">5</span>
+                  <span className="legend-count-value-number">—</span>
                 </div>
               </div>
             </div>
