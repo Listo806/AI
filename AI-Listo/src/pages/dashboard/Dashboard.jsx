@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useFeatureNotice,
@@ -18,7 +18,6 @@ import {
 } from "recharts";
 
 import {
-  LayoutDashboard,
   Users,
   TrendingUp,
   DollarSign,
@@ -30,41 +29,38 @@ import {
   Target,
   Zap,
   AlertTriangle,
-  Search,
   SlidersHorizontal,
-  Bell,
   Download,
   Phone,
-  UserPlus,
-  ArrowUpRight,
   ShieldCheck,
-  Menu,
   ChevronDown,
   Briefcase,
   Layers,
-  Settings,
-  HelpCircle,
-  FileText,
   Activity,
   Award,
-  Globe,
-  Camera,
+  Timer,
   Shuffle,
 } from "lucide-react";
 
 import "./dashboard.css";
 import {
   getDashboardSummary,
-  getAnalyticsDashboard,
+  getDashboardExtended,
+  rangeToDates,
+  DATE_RANGES,
 } from "../../api/analyticsApi";
 import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
+import {
+  EmptyState,
+  FilterDropdown,
+  InitialsAvatar,
+  downloadCsv,
+  fmtMoney,
+  fmtHours,
+  SOURCE_COLORS,
+} from "./dashboardShared";
 
-const money = (n) => {
-  const v = Number(n) || 0;
-  if (Math.abs(v) >= 1000)
-    return `$${(v / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}K`;
-  return `$${v.toLocaleString("en-US")}`;
-};
+const money = fmtMoney;
 
 export default function CortexaDashboard() {
   const [isMobile, setIsMobile] = useState(
@@ -72,19 +68,34 @@ export default function CortexaDashboard() {
   );
   const { handleError } = useApiErrorHandler();
   const [summary, setSummary] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
+  const [ext, setExt] = useState(null);
+
+  // Filters (date / team / source / agent / stage) — drive every panel below.
+  const [range, setRange] = useState("7d");
+  const [teamFilter, setTeamFilter] = useState(null);
+  const [sourceFilter, setSourceFilter] = useState(null);
+  const [agentFilter, setAgentFilter] = useState(null);
+  const [stageFilter, setStageFilter] = useState(null);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const [s, a] = await Promise.all([
+        const { startDate, endDate } = rangeToDates(range);
+        const [s, e] = await Promise.all([
           getDashboardSummary().catch(() => null),
-          getAnalyticsDashboard("30d").catch(() => null),
+          getDashboardExtended({
+            startDate,
+            endDate,
+            teamId: teamFilter,
+            source: sourceFilter,
+            agentId: agentFilter,
+            stage: stageFilter,
+          }).catch(() => null),
         ]);
         if (!active) return;
         setSummary(s);
-        setAnalytics(a);
+        setExt(e);
       } catch (err) {
         if (active) handleError(err, "Failed to load dashboard");
       }
@@ -92,7 +103,7 @@ export default function CortexaDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [range, teamFilter, sourceFilter, agentFilter, stageFilter]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -108,28 +119,39 @@ export default function CortexaDashboard() {
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
   const { notice, setNotice, notAvailable } = useFeatureNotice();
-  const [trendMode, setTrendMode] = useState("revenue");
-  // No backend source for these sparklines; empty rather than fabricated curves.
-  const confidenceSparkData = [];
-  const riskSparkData = [];
+  const [trendMode, setTrendMode] = useState("leads");
 
-  // Live figures from /crm/dashboard/summary + /analytics/dashboard.
+  // Live figures from /crm/dashboard/summary + /crm/dashboard/extended.
   const S = summary || {};
-  const A = analytics || {};
+  const E = ext || {};
   const sLeads = S.leads || {};
   const sDeals = S.deals || {};
   const sProps = S.properties || {};
-  const byStage = sDeals.byStage || {};
-  const convRate = A.leads?.conversionRate;
+  const byStage = (E.dealsByStage && E.dealsByStage.counts) || sDeals.byStage || {};
+  const stageValues = (E.dealsByStage && E.dealsByStage.values) || {};
+  const K = E.kpis || {};
+  const WA = E.whatsapp || {};
+  const trendsData = E.trends || {};
+  const leadSourcesData = E.leadSources || [];
+  const filterOptions = E.filterOptions || {};
+
+  const totalLeadsInPeriod = (trendsData.leadsByDay || []).reduce((s, d) => s + d.count, 0);
+  const wonInPeriod = (trendsData.revenueByDay || []).reduce((s, d) => s + d.value, 0);
+  const convRate =
+    totalLeadsInPeriod > 0 && leadSourcesData.length
+      ? Math.round(
+          (leadSourcesData.reduce((s, x) => s + x.converted, 0) / totalLeadsInPeriod) * 100,
+        )
+      : null;
 
   const miniKpis = [
     {
       title: "New Leads",
-      value: String(sLeads.new ?? 0),
+      value: String(totalLeadsInPeriod || sLeads.new || 0),
       subtext: `${sLeads.total ?? 0} total leads`,
       icon: <Users size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
-      intime: "last 7 days",
+      intime: (DATE_RANGES.find((r) => r.key === range) || {}).label?.toLowerCase() || "period",
     },
     {
       title: "Qualified Leads",
@@ -149,11 +171,11 @@ export default function CortexaDashboard() {
     },
     {
       title: "Won Revenue",
-      value: money(sDeals.wonValue),
+      value: money(wonInPeriod || sDeals.wonValue),
       subtext: `${byStage.won ?? 0} closed won`,
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
-      intime: "to date",
+      intime: wonInPeriod ? "this period" : "to date",
     },
     {
       title: "Conversion Rate",
@@ -161,7 +183,7 @@ export default function CortexaDashboard() {
       subtext: "leads to converted",
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
-      intime: "last 30 days",
+      intime: "period",
     },
     {
       title: "Properties",
@@ -173,46 +195,95 @@ export default function CortexaDashboard() {
     },
   ];
 
-  // No backend source for these on /crm/dashboard/summary or /analytics/dashboard.
-  // Kept empty rather than showing fabricated figures; they render as empty sections.
-  const secondaryKpis = [];
-  const leadSources = [];
+  // Secondary KPI row — approved card set, every figure from the extended endpoint.
+  const secondaryKpis = [
+    {
+      title: "First Response Time",
+      value: fmtHours(K.speedToLeadHours),
+      intime: K.speedToLeadHours != null ? "avg this period" : "No data available",
+      icon: <Timer size={16} className="text-orange" />,
+    },
+    {
+      title: "Follow-up Completion",
+      value: K.followUp && K.followUp.pct != null ? `${K.followUp.pct}%` : "—",
+      intime:
+        K.followUp && K.followUp.total
+          ? `${K.followUp.completed}/${K.followUp.total} tasks`
+          : "No data available",
+      icon: <CheckCircle2 size={16} className="text-green" />,
+    },
+    {
+      title: "Lead Quality Score",
+      value: K.avgLeadScore != null ? String(K.avgLeadScore) : "—",
+      intime: K.avgLeadScore != null ? "avg AI score / 100" : "No data available",
+      icon: <Award size={16} className="text-royal-blue" />,
+    },
+    {
+      title: "Pipeline Velocity",
+      value: K.avgTimeToCloseDays != null ? `${Math.round(K.avgTimeToCloseDays)}d` : "—",
+      intime: K.avgTimeToCloseDays != null ? "avg open → won" : "No data available",
+      icon: <Activity size={16} className="text-purple" />,
+    },
+    {
+      title: "Revenue at Risk",
+      value: money(K.revenueAtRisk),
+      intime: "deals stalled 14d+",
+      icon: <AlertTriangle size={16} className="text-red" />,
+    },
+    {
+      title: "WhatsApp Response",
+      value: String(WA.repliesPeriod ?? 0),
+      intime: "replies this period",
+      icon: <MessageCircle size={16} className="text-green" />,
+    },
+  ];
 
-  // Trend chart: "Leads" mode has a real source (activity.eventsByDay from
-  // /analytics/dashboard); revenue/appointments have none yet and stay empty.
-  const eventsByDay = A.activity?.eventsByDay || [];
-  const revenueTrendData =
-    trendMode === "leads"
-      ? eventsByDay.map((d) => ({ day: d.date, trend: d.count }))
-      : [];
+  const leadSources = leadSourcesData.map((s, i) => ({
+    source: s.source,
+    leads: s.leads,
+    conversion: s.conversionRate,
+    revenue: s.revenue,
+    color: SOURCE_COLORS[i % SOURCE_COLORS.length],
+  }));
 
-  // CSV export of the live dashboard figures (client-side)
+  // Trend chart: all three modes backed by /crm/dashboard/extended.
+  const revenueTrendData = useMemo(() => {
+    if (trendMode === "leads")
+      return (trendsData.leadsByDay || []).map((d) => ({ day: d.date, trend: d.count }));
+    if (trendMode === "appointments")
+      return (trendsData.appointmentsByDay || []).map((d) => ({ day: d.date, trend: d.count }));
+    return (trendsData.revenueByDay || []).map((d) => ({ day: d.date, trend: d.value }));
+  }, [trendMode, trendsData]);
+
+  // CSV export of every live figure, honoring the active filters.
   const exportDashboardCsv = () => {
-    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const rows = [["metric", "value"]];
+    rows.push(["Period", (DATE_RANGES.find((r) => r.key === range) || {}).label || range]);
+    if (sourceFilter) rows.push(["Source filter", sourceFilter]);
+    if (agentFilter) rows.push(["Agent filter", agentFilter]);
+    if (stageFilter) rows.push(["Stage filter", stageFilter]);
     miniKpis.forEach((k) => rows.push([k.title, k.value]));
-    rows.push(["Conversion Rate", convRate != null ? `${convRate}%` : ""]);
-    rows.push(["Pipeline Value", sDeals.pipelineValue ?? ""]);
+    secondaryKpis.forEach((k) => rows.push([k.title, k.value]));
     Object.entries(byStage).forEach(([k, v]) => rows.push([`Deals: ${k}`, v]));
-    const blob = new Blob(
-      [rows.map((r) => r.map(esc).join(",")).join("\n")],
-      { type: "text/csv" }
-    );
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "dashboard-summary.csv";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    rows.push([]);
+    rows.push(["Lead source", "leads", "conversion %", "revenue"]);
+    leadSources.forEach((s) => rows.push([s.source, s.leads, s.conversion, s.revenue]));
+    rows.push([]);
+    rows.push(["Trend day", trendMode]);
+    revenueTrendData.forEach((d) => rows.push([d.day, d.trend]));
+    downloadCsv("dashboard-summary.csv", rows);
   };
 
-  // Real deal-stage figures from summary.deals.byStage (counts only; no per-stage $).
-  const dealsByStageArr = [
-    { name: "New", count: String(byStage.new ?? 0), value: "" },
-    { name: "Qualified", count: String(byStage.qualified ?? 0), value: "" },
-    { name: "Proposal", count: String(byStage.proposal ?? 0), value: "" },
-    { name: "Negotiation", count: String(byStage.negotiation ?? 0), value: "" },
-    { name: "Won", count: String(byStage.won ?? 0), value: "" },
-  ];
+  const stageOrder = ["new", "qualified", "proposal", "negotiation", "won"];
+  const dealsByStageArr = stageOrder.map((s) => ({
+    name: s.charAt(0).toUpperCase() + s.slice(1),
+    count: String(byStage[s] ?? 0),
+    value: stageValues[s] ? money(stageValues[s]) : "",
+  }));
+  const stageTotal = stageOrder.reduce((sum, s) => sum + (Number(byStage[s]) || 0), 0);
+  const stageWidth = (s) =>
+    stageTotal > 0 ? `${Math.max(2, Math.round(((Number(byStage[s]) || 0) / stageTotal) * 100))}%` : "20%";
+
   const _funnelTotal = Number(sLeads.total ?? 0) || 0;
   const _pct = (n) =>
     _funnelTotal > 0 ? Math.round(((Number(n) || 0) / _funnelTotal) * 100) : 0;
@@ -223,23 +294,84 @@ export default function CortexaDashboard() {
     { stage: "Negotiation", count: String(byStage.negotiation ?? 0), percent: `${_pct(byStage.negotiation)}%`, width: `${_pct(byStage.negotiation)}%` },
     { stage: "Won", count: String(byStage.won ?? 0), percent: `${_pct(byStage.won)}%`, width: `${_pct(byStage.won)}%` },
   ];
-  // No backend source for these panels; empty rather than fabricated.
-  const aiPriorityQueue = [];
-  const riskAlerts = [];
-  const liveTracking = [];
-  const automationHealth = [];
-  const upcomingClosings = [];
 
-  const CustomXAxisTick = ({ x, y, payload }) => {
-    const matchedSource = leadSources.find(
-      (src) => src.source === payload.value,
-    );
-    return (
-      <g transform={`translate(${x - 6},${y + 6})`}>
-        {matchedSource ? matchedSource.icon : null}
-      </g>
-    );
-  };
+  const aiPriorityQueue = E.priorityQueue || [];
+  const riskAlertsData = E.riskAlerts || {};
+  const riskAlerts = [
+    { icon: "⏰", title: "Overdue follow-up tasks", count: riskAlertsData.overdueTasks ?? 0 },
+    { icon: "📭", title: "New leads uncontacted 48h+", count: riskAlertsData.uncontacted48h ?? 0 },
+    { icon: "🧊", title: "Deals stalled 14 days+", count: riskAlertsData.stalledDeals14d ?? 0 },
+  ];
+  const liveTracking = (E.liveTracking || []).map((a) => ({
+    text: a.title || a.text || a.action || "Activity",
+    time: a.time_ago || a.timeAgo || (a.created_at ? new Date(a.created_at).toLocaleString() : ""),
+  }));
+  const automationHealth = (E.automationHealth || []).map((h) => ({
+    icon: h.status === "Active" || h.status === "Connected" ? "🟢" : "⚪",
+    label: h.label,
+    status: h.status,
+    color: h.status === "Active" || h.status === "Connected" ? "green" : "gray",
+  }));
+  const upcomingClosings = (E.upcomingClosings || []).map((d) => ({
+    icon: <Briefcase size={13} />,
+    label: `${d.name} — ${money(d.value)}`,
+    time: d.expectedCloseDate,
+  }));
+  const nextTasks = E.nextTasks || [];
+
+  const recommendedActions = aiPriorityQueue.filter((l) => l.nextAction).length;
+
+  const filterControls = (
+    <>
+      <FilterDropdown
+        icon={<Calendar size={15} />}
+        label="Date"
+        value={range}
+        options={DATE_RANGES.map((r) => ({ value: r.key, label: r.label }))}
+        onChange={(v) => setRange(v || "7d")}
+      />
+      <FilterDropdown
+        icon={<Users size={15} />}
+        label="Teams"
+        allLabel="All Teams"
+        value={teamFilter}
+        options={(filterOptions.teams || []).map((t) => ({ value: t.id, label: t.name }))}
+        onChange={setTeamFilter}
+      />
+      <FilterDropdown
+        icon={<Layers size={15} />}
+        label="Sources"
+        allLabel="All Sources"
+        value={sourceFilter}
+        options={(filterOptions.sources || []).map((s) => ({ value: s, label: s }))}
+        onChange={setSourceFilter}
+      />
+      <FilterDropdown
+        icon={<Users size={15} />}
+        label="Agents"
+        allLabel="All Agents"
+        value={agentFilter}
+        options={(filterOptions.agents || []).map((a) => ({ value: a.id, label: a.name }))}
+        onChange={setAgentFilter}
+      />
+      <FilterDropdown
+        icon={<Layers size={15} />}
+        label="Stages"
+        allLabel="All Stages"
+        value={stageFilter}
+        options={(filterOptions.stages || []).map((s) => ({ value: s, label: s }))}
+        onChange={setStageFilter}
+      />
+    </>
+  );
+
+  const CustomXAxisTick = ({ x, y, payload }) => (
+    <g transform={`translate(${x},${y + 10})`}>
+      <text textAnchor="middle" fill="#94a3b8" fontSize={9}>
+        {String(payload.value).slice(0, 8)}
+      </text>
+    </g>
+  );
 
   return (
     <div className="dashboard-container dashboard-page">
@@ -254,17 +386,21 @@ export default function CortexaDashboard() {
         <div className="header-actions">
           {isMobile ? (
             <>
-              <div className="control-btn">
-                <Calendar size={15} />
-                <span>This Week</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Teams</span>
-                <ChevronDown size={14} />
-              </div>   
+              <FilterDropdown
+                icon={<Calendar size={15} />}
+                label="Date"
+                value={range}
+                options={DATE_RANGES.map((r) => ({ value: r.key, label: r.label }))}
+                onChange={(v) => setRange(v || "7d")}
+              />
+              <FilterDropdown
+                icon={<Users size={15} />}
+                label="Teams"
+                allLabel="All Teams"
+                value={teamFilter}
+                options={(filterOptions.teams || []).map((t) => ({ value: t.id, label: t.name }))}
+                onChange={setTeamFilter}
+              />
               <div className="control-btn" onClick={() => setShowFilters(true)}>
                 <SlidersHorizontal size={15} />
                 <span></span>
@@ -272,45 +408,7 @@ export default function CortexaDashboard() {
             </>
           ) : (
             <>
-              <div className="control-btn">
-                <Calendar size={15} />
-                <span>This Week</span>
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Teams</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Sources</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Agents</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Stages</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <SlidersHorizontal size={15} />
-                <span>Filters</span>
-              </div>
-
-              {/*<div className="notification-icon">
-                <Bell size={18} />
-                <span className="notif-badge">8</span>
-              </div>*/}
-
+              {filterControls}
               <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
@@ -341,24 +439,7 @@ export default function CortexaDashboard() {
             </div>
 
             <div className="drawer-body">
-              
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Sources</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Agents</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Stages</span>
-                <ChevronDown size={14} />
-              </div>
+              {filterControls}
               <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
@@ -396,7 +477,7 @@ export default function CortexaDashboard() {
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
-                      data={confidenceSparkData}
+                      data={(trendsData.leadsByDay || []).map((d) => ({ v: d.count }))}
                       margin={{ top: 2, bottom: 2, left: 2, right: 2 }}
                     >
                       <Area
@@ -418,7 +499,7 @@ export default function CortexaDashboard() {
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
-                      data={riskSparkData}
+                      data={(trendsData.revenueByDay || []).map((d) => ({ v: d.value }))}
                       margin={{ top: 2, bottom: 2, left: 2, right: 2 }}
                     >
                       <Area
@@ -496,11 +577,7 @@ export default function CortexaDashboard() {
               <div className="kpi-flex-body">
                 <span className="kpi-lbl">{kpi.title}</span>
                 <h3 className="kpi-sub-val">{kpi.value}</h3>
-                {/* ĐÃ FIX: Đổi class sang className ở dòng dưới đây */}
                 <div>
-                  <span className="kpi-indicator-badge pos">
-                    ↑ {kpi.delta}{" "}
-                  </span>{" "}
                   <span className="kpi-indicator-badge">{kpi.intime}</span>
                 </div>
               </div>
@@ -520,12 +597,15 @@ export default function CortexaDashboard() {
             </div>
             <div className="pill-toggles">
               <button className={trendMode === "leads" ? "active" : ""} onClick={() => setTrendMode("leads")}>Leads</button>
-              <button className={trendMode === "appointments" ? "active" : ""} onClick={() => notAvailable("Appointments trend")}>Appointments</button>
+              <button className={trendMode === "appointments" ? "active" : ""} onClick={() => setTrendMode("appointments")}>Appointments</button>
               <button className={trendMode === "revenue" ? "active" : ""} onClick={() => setTrendMode("revenue")}>Revenue</button>
             </div>
           </div>
           <div className="chart-viewbox">
-            <ResponsiveContainer width="100%" height={180}>
+            {revenueTrendData.length === 0 ? (
+              <EmptyState label={`No ${trendMode} data in this period`} />
+            ) : null}
+            <ResponsiveContainer width="100%" height={revenueTrendData.length === 0 ? 120 : 180}>
               <AreaChart
                 data={revenueTrendData}
                 margin={{ top: 10, right: 5, left: -25, bottom: 0 }}
@@ -573,41 +653,53 @@ export default function CortexaDashboard() {
               <Target size={16} className="text-royal-blue" />
               <h3>Lead Source Performance</h3>
             </div>
-            <a href="#all-sources" className="card-text-link">
+            <a
+              href="/dashboard/analytics"
+              className="card-text-link"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/dashboard/analytics");
+              }}
+            >
               View All Sources →
             </a>
           </div>
           <div className="split-layout-grid">
             <div className="chart-half">
-              <ResponsiveContainer width="100%" height={195}>
-                <BarChart
-                  data={leadSources}
-                  margin={{ top: 5, right: 5, left: -25, bottom: 10 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                  />
-                  <XAxis
-                    dataKey="source"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={<CustomXAxisTick />}
-                    interval={0}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 9 }}
-                  />
-                  <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
-                    {leadSources.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {leadSources.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <ResponsiveContainer width="100%" height={195}>
+                  <BarChart
+                    data={leadSources}
+                    margin={{ top: 5, right: 5, left: -25, bottom: 10 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="source"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={<CustomXAxisTick />}
+                      interval={0}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fill: "#94a3b8", fontSize: 9 }}
+                    />
+                    <Tooltip />
+                    <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
+                      {leadSources.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <div className="table-list-half">
               <div className="list-tbl-header">
@@ -615,6 +707,7 @@ export default function CortexaDashboard() {
                 <span className="text-right">Conv.</span>
                 <span className="text-right">Revenue</span>
               </div>
+              {leadSources.length === 0 ? <EmptyState /> : null}
               {leadSources.map((item, idx) => (
                 <div key={idx} className="list-tbl-row">
                   <span className="src-label-dot">
@@ -628,10 +721,7 @@ export default function CortexaDashboard() {
                     {item.conversion}%
                   </span>
                   <span className="text-right font-bold">
-                    $
-                    {item.revenue >= 1000
-                      ? `${item.revenue / 1000}K`
-                      : item.revenue}
+                    {money(item.revenue)}
                   </span>
                 </div>
               ))}
@@ -646,7 +736,14 @@ export default function CortexaDashboard() {
               <Zap size={16} className="text-orange" />
               <h3>AI Priority Queue</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              href="/dashboard/leads"
+              className="card-text-link"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/dashboard/leads");
+              }}
+            >
               View All →
             </a>
           </div>
@@ -657,34 +754,31 @@ export default function CortexaDashboard() {
               <span className="text-left">Probability</span>
               <span>Next Action</span>
             </div>
+            {aiPriorityQueue.length === 0 ? <EmptyState /> : null}
             {aiPriorityQueue.map((lead, idx) => (
               <div key={idx} className="queue-item-row">
                 <div className="lead-meta-profile">
-                  <img src={lead.img} alt={lead.name} className="mini-avatar" />
+                  <InitialsAvatar name={lead.name} />
                   <div className="meta-name">
                     <h4>{lead.name}</h4>
                   </div>
                 </div>
-                <span className="meta-intent">{lead.intent}</span>
-                <span className="prob-badge">{lead.prob}</span>
+                <span className="meta-intent">
+                  {lead.intent ? lead.intent.replace(/_/g, " ") : "—"}
+                </span>
+                <span className="prob-badge">
+                  {lead.score != null ? `${lead.score}%` : "—"}
+                </span>
                 <div className="action-icon-shortcuts">
-                  <button className="shortcut-btn black-btn">
-                    <Phone size={12} />
-                  </button>
-                  <button className="shortcut-btn green-btn">
-                    <MessageCircle size={12} />
-                  </button>
-                  <button className="shortcut-btn white-btn">
-                    <Users size={12} />
-                  </button>
+                  <span className="timeline-log-txt" style={{ fontSize: 11 }}>
+                    {lead.nextAction || "—"}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      {/*</section>
 
-      <section className="dashboard-logs-row grid-3-col">*/}
         {/* Today's Revenue Risk */}
         <div className="content-card">
           <div className="card-top-header">
@@ -692,7 +786,14 @@ export default function CortexaDashboard() {
               <AlertTriangle size={16} className="text-red" />
               <h3>Today's Revenue Risk</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              href="/dashboard/leads"
+              className="card-text-link"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/dashboard/leads");
+              }}
+            >
               View All →
             </a>
           </div>
@@ -715,11 +816,19 @@ export default function CortexaDashboard() {
               <ShieldCheck size={16} className="text-royal-blue" />
               <h3>Live AI Tracking</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              href="/dashboard/ai-logs"
+              className="card-text-link"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/dashboard/ai-logs");
+              }}
+            >
               View All →
             </a>
           </div>
           <div className="tracking-timeline-list">
+            {liveTracking.length === 0 ? <EmptyState /> : null}
             {liveTracking.map((log, idx) => (
               <div key={idx} className="timeline-item-row">
                 <div className="timeline-marker-dot"></div>
@@ -737,7 +846,14 @@ export default function CortexaDashboard() {
               <Briefcase size={16} className="text-royal-blue" />
               <h3>Active Deals by Stage</h3>
             </div>
-            <a href="#pipeline" className="card-text-link">
+            <a
+              href="/dashboard/pipeline"
+              className="card-text-link"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/dashboard/pipeline");
+              }}
+            >
               View Pipeline →
             </a>
           </div>
@@ -750,26 +866,11 @@ export default function CortexaDashboard() {
               ))}
             </div>
             <div className="stage-progress-bar-wrapper">
-              <div
-                className="bar-chunk chunk-new"
-                style={{ width: "25%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-qualified"
-                style={{ width: "20%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-showing"
-                style={{ width: "25%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-offer"
-                style={{ width: "15%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-closed"
-                style={{ width: "15%" }}
-              ></div>
+              <div className="bar-chunk chunk-new" style={{ width: stageWidth("new") }}></div>
+              <div className="bar-chunk chunk-qualified" style={{ width: stageWidth("qualified") }}></div>
+              <div className="bar-chunk chunk-showing" style={{ width: stageWidth("proposal") }}></div>
+              <div className="bar-chunk chunk-offer" style={{ width: stageWidth("negotiation") }}></div>
+              <div className="bar-chunk chunk-closed" style={{ width: stageWidth("won") }}></div>
             </div>
             <div className="stage-stats-columns">
               {dealsByStageArr.map((stage, idx) => (
@@ -817,6 +918,7 @@ export default function CortexaDashboard() {
             <h5>Automation Health</h5>
           </div>
           <div className="health-status-list">
+            {automationHealth.length === 0 ? <EmptyState /> : null}
             {automationHealth.map((health, idx) => (
               <div key={idx} className="health-row-item">
                 <span className="health-lbl">
@@ -836,7 +938,19 @@ export default function CortexaDashboard() {
             <Shuffle size={16} />
             <h5>Next Actions</h5>
           </div>
-          <div className="action-todo-list"></div>
+          <div className="action-todo-list">
+            {nextTasks.length === 0 ? <EmptyState label="No open tasks" /> : null}
+            {nextTasks.map((t, idx) => (
+              <div key={idx} className="health-row-item">
+                <span className="health-lbl" style={{ fontSize: 12 }}>
+                  {t.title} {t.leadName ? `· ${t.leadName}` : ""}
+                </span>
+                <span className="timeline-time-stamp">
+                  {t.dueDate ? new Date(t.dueDate).toLocaleDateString() : ""}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Upcoming Closings */}
@@ -846,6 +960,9 @@ export default function CortexaDashboard() {
             <h5>Upcoming Closings</h5>
           </div>
           <div className="closing-list-wrapper">
+            {upcomingClosings.length === 0 ? (
+              <EmptyState label="No close dates set" />
+            ) : null}
             {upcomingClosings.map((item, idx) => (
               <div key={idx} className="closing-row-item">
                 <div className="closing-details">
@@ -872,11 +989,11 @@ export default function CortexaDashboard() {
             <div className="dark-card-counter-row">
               <div className="counter-box">
                 <span>Recommends Actions</span>
-                <h3>—</h3>
+                <h3>{recommendedActions || "—"}</h3>
               </div>
               <div className="counter-box urgent-border">
                 <span className="text-red">Urgent Tasks</span>
-                <h3 className="text-red">—</h3>
+                <h3 className="text-red">{riskAlertsData.overdueTasks ?? "—"}</h3>
               </div>
             </div>
             <button className="btn-run-analysis" onClick={() => notAvailable("Run AI Dashboard Review")}>

@@ -3,6 +3,7 @@ import { CrmController } from './crm.controller';
 import { CrmService } from './crm.service';
 import { ActivityFeedService } from './activity-feed.service';
 import { DashboardAggregationService } from './dashboard-aggregation.service';
+import { DashboardExtendedService } from './dashboard-extended.service';
 import { CrmPropertiesController } from './crm-properties.controller';
 import { CrmProjectsController } from './crm-projects.controller';
 import { CrmPropertiesService } from './crm-properties.service';
@@ -22,6 +23,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
     CrmService,
     ActivityFeedService,
     DashboardAggregationService,
+    DashboardExtendedService,
     CrmPropertiesService,
     CrmProjectsService,
     DealsService,
@@ -31,6 +33,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
     CrmService,
     ActivityFeedService,
     DashboardAggregationService,
+    DashboardExtendedService,
     CrmPropertiesService,
     CrmProjectsService,
     DealsService,
