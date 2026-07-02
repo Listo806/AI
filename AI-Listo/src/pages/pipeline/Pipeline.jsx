@@ -65,7 +65,7 @@ export default function PipelinePage() {
   const [riskQueue, setRiskQueue] = useState([]);
   const [forecast, setForecast] = useState(null);
   const [automationHealth, setAutomationHealth] = useState([]);
-  cconst[(forecastRange, setForecastRange)] = useState(
+  const [forecastRange, setForecastRange] = useState(
     localStorage.getItem("pipeline_forecast_range") || "month",
   );
   const [showFilters, setShowFilters] = useState(false);

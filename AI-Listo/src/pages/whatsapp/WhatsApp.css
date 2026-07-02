@@ -1322,6 +1322,36 @@
     gap: 10px;
     flex: 1;
 }
+.whatsapp-page .status-red-pill {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.whatsapp-page .text-red {
+  color: #dc2626;
+}
+
+.whatsapp-page .ai-handling-badge {
+  cursor: pointer;
+}
+
+.whatsapp-page .ai-handling-badge:hover {
+  background: #dbeafe;
+}
+
+.whatsapp-page .send-message-main-submit-btn:disabled,
+.whatsapp-page .refresh-qr-link:disabled,
+.whatsapp-page .blue-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.whatsapp-page .dummy-qr-graphic canvas {
+  display: block;
+}
 @media (max-width: 1024px) {
     .whatsapp-page .segment-line-item {
         display: flex;

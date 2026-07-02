@@ -1,4 +1,6 @@
 import React from "react";
+import { QRCodeCanvas } from "qrcode.react";
+import { useWhatsAppDashboard } from "./hooks/useWhatsAppDashboard";
 import "./WhatsApp.css";
 
 import {
@@ -37,6 +39,41 @@ import {
 } from "lucide-react";
 import qrImg from "../../assets/cortexa/qr.png";
 export default function WhatsAppPage() {
+  const {
+    loading,
+    statusLoading,
+    messagesLoading,
+    sending,
+
+    status,
+    qr,
+    stats,
+    segments,
+
+    filteredConversations,
+    selectedConversation,
+    setSelectedConversation,
+
+    messages,
+    selectedIntelligence,
+    timeline,
+
+    search,
+    setSearch,
+    statusFilter,
+    setStatusFilter,
+    aiFilter,
+    setAiFilter,
+
+    messageText,
+    setMessageText,
+
+    refresh,
+    connectDevice,
+    disconnectDevice,
+    sendMessage,
+    toggleSelectedAi,
+  } = useWhatsAppDashboard();
   return (
     <div className="leads-page whatsapp-page">
       <div className="heading_page">
@@ -105,7 +142,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">Connected Accounts</span>
-            <h3 className="metric-value">1</h3>
+            <h3 className="metric-value">{stats.connectedAccounts}</h3>
             <span className="metric-subtext text-green">
               ● Device connected
             </span>
@@ -118,7 +155,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">Active Conversations</span>
-            <h3 className="metric-value">148</h3>
+            <h3 className="metric-value">{stats.activeConversations}</h3>
             <span className="metric-subtext text-green">
               WhatsApp + CRM ↗ 18%
             </span>
@@ -131,7 +168,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">Unread Conversations</span>
-            <h3 className="metric-value">23</h3>
+            <h3 className="metric-value">{stats.unreadConversations}</h3>
             <span className="metric-subtext text-red">
               Need attention ↗ 12%
             </span>
@@ -144,7 +181,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">AI Replies Today</span>
-            <h3 className="metric-value">326</h3>
+            <h3 className="metric-value">{stats.aiRepliesToday}</h3>
             <span className="metric-subtext text-green">
               Auto-reply activity ↗ 24%
             </span>
@@ -157,7 +194,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">Appointments Booked</span>
-            <h3 className="metric-value">37</h3>
+            <h3 className="metric-value">{stats.appointmentsBooked}</h3>
             <span className="metric-subtext text-green">This week ↗ 15%</span>
           </div>
         </div>
@@ -168,7 +205,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">Avg Response Time</span>
-            <h3 className="metric-value">14s</h3>
+            <h3 className="metric-value">{stats.avgResponseTime}</h3>
             <span className="metric-subtext text-green">
               AI-assisted replies ↓ 8%
             </span>
@@ -181,7 +218,7 @@ export default function WhatsAppPage() {
           </div>
           <div className="metric-details">
             <span className="metric-label">WhatsApp Close Rate</span>
-            <h3 className="metric-value">28.6%</h3>
+            <h3 className="metric-value">{stats.closeRate}</h3>
             <span className="metric-subtext text-green">
               Lead-to-close ↗ 6%
             </span>
@@ -194,23 +231,23 @@ export default function WhatsAppPage() {
         <div className="priority-bar-line-layout">
           <div className="segment-line-item text-red">
             <span className="segment-label">🔥 Urgent WhatsApp Leads</span>
-            <h2 className="segment-count">11</h2>
+            <h2 className="segment-count">{segments.urgent}</h2>
           </div>
           <div className="segment-line-item text-orange">
             <span className="segment-label">🔔 Unread Conversations</span>
-            <h2 className="segment-count">23</h2>
+            <h2 className="segment-count">{segments.unread}</h2>
           </div>
           <div className="segment-line-item text-blue">
             <span className="segment-label">⏳ Need Follow-Up</span>
-            <h2 className="segment-count">34</h2>
+            <h2 className="segment-count">{segments.needFollowUp}</h2>
           </div>
           <div className="segment-line-item text-green">
             <span className="segment-label">📅 Ready To Book</span>
-            <h2 className="segment-count">18</h2>
+            <h2 className="segment-count">{segments.readyToBook}</h2>
           </div>
           <div className="segment-line-item text-purple">
             <span className="segment-label">💜 AI Replies Pending Review</span>
-            <h2 className="segment-count">7</h2>
+            <h2 className="segment-count">{segments.aiPending}</h2>
           </div>
         </div>
         <div className="device-wrap">
@@ -219,11 +256,23 @@ export default function WhatsAppPage() {
             <div className="status-subpanel-column">
               <span className="device-status-header-text">
                 Device Status{" "}
-                <span className="status-green-pill">Connected</span>
+                <span
+                  className={
+                    status?.connected ? "status-green-pill" : "status-red-pill"
+                  }
+                >
+                  {status?.connected
+                    ? "Connected"
+                    : status?.status || "Disconnected"}
+                </span>
               </span>
               <div className="device-meta-mini">
                 ● Session Health:{" "}
-                <strong className="text-green">Healthy</strong>
+                <strong
+                  className={status?.connected ? "text-green" : "text-red"}
+                >
+                  {status?.connected ? "Healthy" : "Disconnected"}
+                </strong>
               </div>
               <div className="device-meta-mini">
                 ● Messages Synced: <strong>12,842</strong>
@@ -244,8 +293,31 @@ export default function WhatsAppPage() {
 
           {/* QR CODE PLUG */}
           <div className="qr-code-holder-box">
-            <div className="dummy-qr-graphic"><img src={qrImg} alt="Cortexa" className="qrcode" /></div>
-            <button className="refresh-qr-link">Refresh QR</button>
+            <div className="dummy-qr-graphic">
+              {qr ? (
+                <QRCodeCanvas value={qr} size={92} />
+              ) : (
+                <img src={qrImg} alt="Cortexa" className="qrcode" />
+              )}
+            </div>
+
+            {status?.connected ? (
+              <button
+                className="refresh-qr-link"
+                onClick={disconnectDevice}
+                disabled={statusLoading}
+              >
+                {statusLoading ? "Disconnecting..." : "Disconnect"}
+              </button>
+            ) : (
+              <button
+                className="refresh-qr-link"
+                onClick={connectDevice}
+                disabled={statusLoading}
+              >
+                {statusLoading ? "Connecting..." : "Connect / Refresh QR"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -273,8 +345,14 @@ export default function WhatsAppPage() {
         <div className="filter-btn text-dropdown-btn">
           <div className="filter-wrap">
             <Layers size={15} />
-            <select>
-              <option>All Statuses</option>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="unread">Unread</option>
+              <option value="ai">AI Handling</option>
+              <option value="human">Human Handling</option>
             </select>
           </div>
           <ChevronDown size={14} />
@@ -282,8 +360,13 @@ export default function WhatsAppPage() {
         <div className="filter-btn text-dropdown-btn">
           <div className="filter-wrap">
             <Bot size={15} />
-            <select>
-              <option>AI Handling</option>
+            <select
+              value={aiFilter}
+              onChange={(e) => setAiFilter(e.target.value)}
+            >
+              <option value="all">All AI Modes</option>
+              <option value="ai">AI Enabled</option>
+              <option value="human">Human Owner</option>
             </select>
           </div>
           <ChevronDown size={14} />
@@ -300,7 +383,11 @@ export default function WhatsAppPage() {
         <div className="search-box-wrap">
           <div className="search-box search-box-expanded">
             <Search size={14} />
-            <input placeholder="Search conversations..." />
+            <input
+              placeholder="Search conversations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <button className="filter-btn icon-only-filter-btn">
             <SlidersHorizontal size={14} />
@@ -323,130 +410,82 @@ export default function WhatsAppPage() {
             </div>
 
             <div className="lead-list inbox-cards-stack">
-              {/* Active Contact: Makoto Kawamoto */}
-              <div className="lead-card active-chat-card">
-                <div className="lead-card-top">
-                  <div className="avatar-circle-frame">
-                    <div className="avatar-letters bg-orange-avatar">MK</div>
-                    <div className="avatar-status-badge-dot online"></div>
-                  </div>
-                  <div className="lead-meta-details">
-                    <div className="meta-name-row">
-                      <h4>Makoto Kawamoto</h4>
-                      <span className="card-timestamp-meta">3 min ago</span>
-                    </div>
-                    <span className="meta-phone-string">+1 (478) 419-6510</span>
-                  </div>
-                </div>
-                <div className="chat-card-score-strip">
-                  <span className="pill-tag-temp hot">Hot</span>
-                  <span className="pill-tag-percentage score-high">88%</span>
-                  <div className="spark-line-placeholder">📈</div>
-                  <div className="unread-count-bubble-badge">2</div>
-                </div>
-                <p className="last-message-snippet emphasis-unread">
-                  Can you send me more details about the apartment?
-                </p>
-              </div>
+              {filteredConversations.length ? (
+                filteredConversations.map((conv) => (
+                  <div
+                    className={`lead-card ${
+                      selectedConversation?.id === conv.id
+                        ? "active-chat-card"
+                        : ""
+                    }`}
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv)}
+                  >
+                    <div className="lead-card-top">
+                      <div className="avatar-circle-frame">
+                        <div className="avatar-letters bg-orange-avatar">
+                          {conv.initials}
+                        </div>
+                        {conv.status !== "closed" && (
+                          <div className="avatar-status-badge-dot online"></div>
+                        )}
+                      </div>
 
-              {/* Contact 2: Maria Gomez */}
-              <div className="lead-card">
-                <div className="lead-card-top">
-                  <div className="avatar-circle-frame">
-                    <div className="avatar-letters bg-green-avatar">MG</div>
-                  </div>
-                  <div className="lead-meta-details">
-                    <div className="meta-name-row">
-                      <h4>Maria Gomez</h4>
-                      <span className="card-timestamp-meta">12 min ago</span>
-                    </div>
-                    <span className="meta-phone-string">
-                      +1 (593) 988-55817
-                    </span>
-                  </div>
-                </div>
-                <div className="chat-card-score-strip">
-                  <span className="pill-tag-temp warm">Warm</span>
-                  <span className="pill-tag-percentage score-med">74%</span>
-                  <div className="spark-line-placeholder">📉</div>
-                  <div className="unread-count-bubble-badge">1</div>
-                </div>
-                <p className="last-message-snippet">
-                  I'm interested in seeing available homes this week.
-                </p>
-              </div>
+                      <div className="lead-meta-details">
+                        <div className="meta-name-row">
+                          <h4>{conv.displayName}</h4>
+                          <span className="card-timestamp-meta">
+                            {conv.timeAgo}
+                          </span>
+                        </div>
 
-              {/* Contact 3: Ninja */}
-              <div className="lead-card">
-                <div className="lead-card-top">
-                  <div className="avatar-circle-frame">
-                    <div className="avatar-letters bg-blue-avatar">NJ</div>
-                  </div>
-                  <div className="lead-meta-details">
-                    <div className="meta-name-row">
-                      <h4>Ninja</h4>
-                      <span className="card-timestamp-meta">1 hr ago</span>
+                        <span className="meta-phone-string">
+                          {conv.contact_phone}
+                        </span>
+                      </div>
                     </div>
-                    <span className="meta-phone-string">+1 (203) 315-7490</span>
-                  </div>
-                </div>
-                <div className="chat-card-score-strip">
-                  <span className="pill-tag-temp cold">Cold</span>
-                  <span className="pill-tag-percentage score-low">39%</span>
-                  <div className="spark-line-placeholder">➖</div>
-                </div>
-                <p className="last-message-snippet">
-                  Thanks, I'll review and let you know.
-                </p>
-              </div>
 
-              {/* Contact 4: Luis Fernandez */}
-              <div className="lead-card">
-                <div className="lead-card-top">
-                  <div className="avatar-circle-frame">
-                    <div className="avatar-letters bg-purple-avatar">LF</div>
-                  </div>
-                  <div className="lead-meta-details">
-                    <div className="meta-name-row">
-                      <h4>Luis Fernandez</h4>
-                      <span className="card-timestamp-meta">2 hr ago</span>
-                    </div>
-                    <span className="meta-phone-string">+1 (786) 555-0198</span>
-                  </div>
-                </div>
-                <div className="chat-card-score-strip">
-                  <span className="pill-tag-temp warm">Warm</span>
-                  <span className="pill-tag-percentage score-med">65%</span>
-                  <div className="spark-line-placeholder">📈</div>
-                </div>
-                <p className="last-message-snippet">
-                  Do you have anything with an ocean view?
-                </p>
-              </div>
+                    <div className="chat-card-score-strip">
+                      <span className={`pill-tag-temp ${conv.tag}`}>
+                        {conv.tag}
+                      </span>
+                      <span
+                        className={`pill-tag-percentage ${
+                          conv.score >= 80
+                            ? "score-high"
+                            : conv.score >= 60
+                              ? "score-med"
+                              : "score-low"
+                        }`}
+                      >
+                        {conv.score}%
+                      </span>
 
-              {/* Contact 5: Sophie Martin */}
-              <div className="lead-card">
-                <div className="lead-card-top">
-                  <div className="avatar-circle-frame">
-                    <div className="avatar-letters bg-pink-avatar">SM</div>
-                  </div>
-                  <div className="lead-meta-details">
-                    <div className="meta-name-row">
-                      <h4>Sophie Martin</h4>
-                      <span className="card-timestamp-meta">3 hr ago</span>
+                      {Number(conv.unread_count || 0) > 0 && (
+                        <div className="unread-count-bubble-badge">
+                          {conv.unread_count}
+                        </div>
+                      )}
                     </div>
-                    <span className="meta-phone-string">+1 (305) 701-2234</span>
+
+                    <p
+                      className={`last-message-snippet ${
+                        Number(conv.unread_count || 0) > 0
+                          ? "emphasis-unread"
+                          : ""
+                      }`}
+                    >
+                      {conv.lastMessage}
+                    </p>
                   </div>
+                ))
+              ) : (
+                <div className="lead-card">
+                  <p className="last-message-snippet">
+                    No conversations found.
+                  </p>
                 </div>
-                <div className="chat-card-score-strip">
-                  <span className="pill-tag-temp hot">Hot</span>
-                  <span className="pill-tag-percentage score-high">82%</span>
-                  <div className="spark-line-placeholder">📈</div>
-                </div>
-                <p className="last-message-snippet">
-                  We're ready to move next month. Let's schedule a tour.
-                </p>
-              </div>
+              )}
             </div>
 
             <div className="sidebar-footer">
@@ -461,18 +500,25 @@ export default function WhatsAppPage() {
             <div className="conversation-header chat-header-top-nav">
               <div className="conversation-user header-user-profile-left">
                 <div className="avatar-letters bg-orange-avatar size-44">
-                  MK
+                  {selectedConversation?.initials || "WA"}
                 </div>
                 <div>
-                  <h3>Makoto Kawamoto 🌟</h3>
-                  <p>+1 (478) 419-6510 • WhatsApp</p>
+                  <h3>
+                    {selectedConversation?.displayName || "Select Conversation"}
+                  </h3>
+                  <p>{selectedConversation?.contact_phone || "-"} • WhatsApp</p>
                 </div>
               </div>
 
               <div className="conversation-actions center-header-action-cluster">
-                <span className="hot-tag-pill">Hot</span>
-                <span className="ai-handling-badge">
-                  <Sparkles size={12} /> AI Handling
+                <span className="hot-tag-pill">
+                  {selectedConversation?.tag || "cold"}
+                </span>
+                <span className="ai-handling-badge" onClick={toggleSelectedAi}>
+                  <Sparkles size={12} />
+                  {selectedConversation?.ai_enabled
+                    ? "AI Handling"
+                    : "Human Handling"}
                 </span>
                 <button className="icon-btn-borderless">
                   <Phone size={16} />
@@ -493,22 +539,22 @@ export default function WhatsAppPage() {
                   AI Summary <span className="beta-tag-pill">Beta</span>
                 </h4>
                 <p>
-                  Highly interested in <strong>Downtown Apartment</strong>.
-                  Budget <strong>$250K - $400K</strong>. Timeline within 30
-                  days. Looking for more details and scheduling a showing.
+                  {selectedConversation
+                    ? `Latest context: ${selectedConversation.lastMessage || "No recent activity."}`
+                    : "Select a WhatsApp conversation to view AI summary."}
                 </p>
                 <div className="summary-pills-row-footer">
                   <span className="badge-pill bg-light-green text-green">
-                    Sentiment: Positive
+                    Sentiment: {selectedIntelligence.sentiment}
                   </span>
                   <span className="badge-pill bg-light-blue text-blue">
-                    Intent: High
+                    Intent: {selectedIntelligence.intent}
                   </span>
                   <span className="badge-pill bg-light-purple text-purple">
-                    Score: 88%
+                    Score: {selectedIntelligence.score}%
                   </span>
                   <span className="badge-pill bg-slate text-dark-gray">
-                    Next Best Action: Send property details
+                    Next Best Action: {selectedIntelligence.recommendedAction}
                   </span>
                 </div>
               </div>
@@ -517,15 +563,76 @@ export default function WhatsAppPage() {
             {/* DIALOGUE STREAM SCROLL */}
             <div className="chat-body message-stream-container">
               {/* Incoming Customer Message */}
-              <div className="chat-message-row user-incoming-msg">
-                <div className="avatar-letters bg-orange-avatar size-28">
-                  MK
+              {messagesLoading ? (
+                <div className="chat-message-row user-incoming-msg">
+                  <div className="message-bubble-body">
+                    <p>Loading messages...</p>
+                  </div>
                 </div>
-                <div className="message-bubble-body">
-                  <p>Hi, I saw the property online. Is it still available?</p>
-                  <span className="message-time-stamp">10:31 AM</span>
+              ) : messages.length ? (
+                messages.map((msg) => {
+                  const isInbound = msg.direction === "inbound";
+                  const isAi = msg.sender_type === "ai";
+
+                  return (
+                    <div
+                      className={`chat-message-row ${
+                        isInbound ? "user-incoming-msg" : "agent-outgoing-msg"
+                      }`}
+                      key={msg.id}
+                    >
+                      {isInbound && (
+                        <div className="avatar-letters bg-orange-avatar size-28">
+                          {selectedConversation?.initials || "WA"}
+                        </div>
+                      )}
+
+                      <div
+                        className={`message-bubble-body ${
+                          !isInbound ? "bg-light-blue-bubble" : ""
+                        }`}
+                      >
+                        <p>
+                          {msg.body || `[${msg.message_type || "message"}]`}
+                        </p>
+                        <span
+                          className={`message-time-stamp ${!isInbound ? "text-right" : ""}`}
+                        >
+                          {msg.created_at
+                            ? new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : ""}
+                          {!isInbound && (
+                            <CheckCheck
+                              size={12}
+                              color="#2563eb"
+                              className="ticks-inline"
+                            />
+                          )}
+                        </span>
+                      </div>
+
+                      {!isInbound && (
+                        <div className="chat-avatar-badge-bot">
+                          {isAi ? (
+                            <Bot size={14} color="white" />
+                          ) : (
+                            <Users size={14} color="white" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="chat-message-row user-incoming-msg">
+                  <div className="message-bubble-body">
+                    <p>No messages yet.</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Outgoing AI Auto-Reply */}
               <div className="chat-message-row agent-outgoing-msg">
@@ -605,13 +712,26 @@ export default function WhatsAppPage() {
                   <button className="attachment-clip-btn">
                     <Paperclip size={18} />
                   </button>
-                  <input placeholder="Type a message or use AI Assist..." />
+                  <input
+                    placeholder="Type a message or use AI Assist..."
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        sendMessage();
+                      }
+                    }}
+                  />
                 </div>
                 <div className="chat-input-right">
                   <button className="ai-assist-spark-inline-btn">
                     <Sparkles size={16} color="#2563eb" /> AI Assist
                   </button>
-                  <button className="send-message-main-submit-btn">
+                  <button
+                    className="send-message-main-submit-btn"
+                    onClick={sendMessage}
+                    disabled={sending || !selectedConversation?.contact_phone}
+                  >
                     <Send size={16} />
                   </button>
                 </div>
@@ -696,28 +816,34 @@ export default function WhatsAppPage() {
                   </svg>
 
                   <div className="gauge-internal-text">
-                    <h2>88%</h2>
+                    <h2>{selectedIntelligence.score}%</h2>
                     <span>AI Score</span>
                   </div>
                 </div>
                 <div className="gauge-metrics-list-right">
                   <div className="metric-row-item-flat">
                     <span className="flat-lbl">Sentiment</span>
-                    <span className="flat-val positive-text">Positive</span>
+                    <span className="flat-val positive-text">
+                      {selectedIntelligence.sentiment}
+                    </span>
                   </div>
                   <div className="metric-row-item-flat">
                     <span className="flat-lbl">Intent Level</span>
                     <span className="flat-val high-intent-badge-pill">
-                      Very High
+                      {selectedIntelligence.intent}
                     </span>
                   </div>
                   <div className="metric-row-item-flat">
                     <span className="flat-lbl">Response Likelihood</span>
-                    <span className="flat-val positive-text">92%</span>
+                    <span className="flat-val positive-text">
+                      {selectedIntelligence.responseLikelihood}
+                    </span>
                   </div>
                   <div className="metric-row-item-flat">
                     <span className="flat-lbl">Close Probability</span>
-                    <span className="flat-val positive-text">78%</span>
+                    <span className="flat-val positive-text">
+                      {selectedIntelligence.closeProbability}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -731,19 +857,27 @@ export default function WhatsAppPage() {
               <div className="revenue-flat-data-grid">
                 <div className="revenue-data-line">
                   <span className="rev-lbl">Expected Revenue</span>
-                  <span className="rev-val font-semibold">$325K</span>
+                  <span className="rev-val font-semibold">
+                    {selectedIntelligence.expectedRevenue}
+                  </span>
                 </div>
                 <div className="revenue-data-line">
                   <span className="rev-lbl">Budget</span>
-                  <span className="rev-val font-medium">$250K - $400K</span>
+                  <span className="rev-val font-medium">
+                    {selectedIntelligence.budget}
+                  </span>
                 </div>
                 <div className="revenue-data-line">
                   <span className="rev-lbl">Timeline</span>
-                  <span className="rev-val font-medium">Within 30 days</span>
+                  <span className="rev-val font-medium">
+                    {selectedIntelligence.timeline}
+                  </span>
                 </div>
                 <div className="revenue-data-line">
                   <span className="rev-lbl">Ghost Risk</span>
-                  <span className="rev-val text-green font-medium">12%</span>
+                  <span className="rev-val text-green font-medium">
+                    {selectedIntelligence.ghostRisk}
+                  </span>
                 </div>
 
                 {/* LARGE FLOATING GREEN CASH BADGE */}
@@ -759,12 +893,18 @@ export default function WhatsAppPage() {
                 <h3>Recommended Action</h3>
               </div>
               <p className="recommendation-instruction-text">
-                Send 3 matching properties, ask for preferred viewing time, and
-                offer to book an appointment.
+                {selectedIntelligence.recommendedAction}
               </p>
               <div className="recommendation-cta-buttons-stack">
-                <button className="primary-btn center-aligned-btn blue-action-btn">
-                  <Sparkles size={14} /> Let AI Handle Follow-Up
+                <button
+                  className="primary-btn center-aligned-btn blue-action-btn"
+                  onClick={toggleSelectedAi}
+                  disabled={!selectedConversation?.id}
+                >
+                  <Sparkles size={14} />
+                  {selectedConversation?.ai_enabled
+                    ? "AI Is Handling"
+                    : "Let AI Handle Follow-Up"}
                 </button>
                 <button className="secondary-btn center-aligned-btn white-action-btn">
                   <Calendar size={14} /> Book Appointment
@@ -781,90 +921,41 @@ export default function WhatsAppPage() {
               <div className="timeline-container vertical-stepper-axis">
                 <div className="timeline-vertical-line axis-offset"></div>
 
-                <div className="timeline-item stepper-node">
-                  <div className="timeline-dot dot-green node-dot-style"></div>
-                  <div className="timeline-content box-content-layout">
-                    <div className="timeline-content-top text-row-space">
-                      <h5 className="timeline-title font-bold">
-                        Message received
-                      </h5>
-                      <span className="timeline-time time-stamp-meta">
-                        10:31 AM
-                      </span>
-                    </div>
-                    <p className="timeline-desc desc-dim text-small">
-                      Incoming WhatsApp
-                    </p>
-                  </div>
-                </div>
+                {timeline.length ? (
+                  timeline.map((item) => (
+                    <div className="timeline-item stepper-node" key={item.id}>
+                      <div
+                        className={`timeline-dot node-dot-style ${
+                          item.type === "inbound" ? "dot-green" : "dot-blue"
+                        }`}
+                      ></div>
 
-                <div className="timeline-item stepper-node">
-                  <div className="timeline-dot dot-blue node-dot-style"></div>
-                  <div className="timeline-content box-content-layout">
-                    <div className="timeline-content-top text-row-space">
-                      <h5 className="timeline-title font-bold">
-                        AI auto-replied
-                      </h5>
-                      <span className="timeline-time time-stamp-meta">
-                        10:32 AM
-                      </span>
-                    </div>
-                    <p className="timeline-desc desc-dim text-small">
-                      Property inquiry
-                    </p>
-                  </div>
-                </div>
+                      <div className="timeline-content box-content-layout">
+                        <div className="timeline-content-top text-row-space">
+                          <h5 className="timeline-title font-bold">
+                            {item.title}
+                          </h5>
+                          <span className="timeline-time time-stamp-meta">
+                            {item.time}
+                          </span>
+                        </div>
 
-                <div className="timeline-item stepper-node">
-                  <div className="timeline-dot dot-green node-dot-style"></div>
-                  <div className="timeline-content box-content-layout">
-                    <div className="timeline-content-top text-row-space">
-                      <h5 className="timeline-title font-bold">
-                        Lead qualified
-                      </h5>
-                      <span className="timeline-time time-stamp-meta">
-                        10:34 AM
-                      </span>
+                        <p className="timeline-desc desc-dim text-small">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                    <p className="timeline-desc desc-dim text-small">
-                      Budget & intent detected
-                    </p>
-                  </div>
-                </div>
-
-                <div className="timeline-item stepper-node">
-                  <div className="timeline-dot dot-blue node-dot-style"></div>
-                  <div className="timeline-content box-content-layout">
-                    <div className="timeline-content-top text-row-space">
+                  ))
+                ) : (
+                  <div className="timeline-item stepper-node">
+                    <div className="timeline-dot dot-blue node-dot-style"></div>
+                    <div className="timeline-content box-content-layout">
                       <h5 className="timeline-title font-bold">
-                        Property options sent
+                        No activity yet
                       </h5>
-                      <span className="timeline-time time-stamp-meta">
-                        10:36 AM
-                      </span>
                     </div>
-                    <p className="timeline-desc desc-dim text-small">
-                      3 properties shared
-                    </p>
                   </div>
-                </div>
-
-                <div className="timeline-item stepper-node">
-                  <div className="timeline-dot dot-purple node-dot-style"></div>
-                  <div className="timeline-content box-content-layout">
-                    <div className="timeline-content-top text-row-space">
-                      <h5 className="timeline-title font-bold">
-                        Follow-up scheduled
-                      </h5>
-                      <span className="timeline-time time-stamp-meta">
-                        10:37 AM
-                      </span>
-                    </div>
-                    <p className="timeline-desc desc-dim text-small">
-                      AI follow-up in 2 hours
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               <div className="timeline-footer link-footer-row">
