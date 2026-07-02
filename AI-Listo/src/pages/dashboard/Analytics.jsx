@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -58,6 +58,8 @@ import {
 } from "lucide-react";
 
 import "./analytics.css";
+import { getAnalyticsDashboard } from "../../api/analyticsApi";
+import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
 
 function money(value) {
   const amount = Number(value || 0);
@@ -67,238 +69,54 @@ function money(value) {
 }
 
 export default function CortexaAnalyticsDashboard() {
+  const { handleError } = useApiErrorHandler();
+  const [analytics, setAnalytics] = useState(null);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const a = await getAnalyticsDashboard("30d");
+        if (active) setAnalytics(a);
+      } catch (err) {
+        if (active) handleError(err, "Failed to load analytics");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Live figures from /analytics/dashboard. Panels without a backend source
+  // are emptied rather than showing fabricated numbers.
+  const A = analytics || {};
+  const aLeads = A.leads || {};
+  const aByStatus = aLeads.byStatus || {};
+  const aProps = A.properties || {};
+  const aUsers = A.users || {};
+  const aActivity = A.activity || {};
+
   const kpisRow1 = [
-    {
-      title: "Projected Revenue",
-      value: "$2.48M",
-      delta: "18.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: DollarSign,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
-    },
-    {
-      title: "New Leads",
-      value: "248",
-      delta: "15.7%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: User,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
-    },
-    {
-      title: "Conversion Rate",
-      value: "21.8%",
-      delta: "3.2%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: Filter,
-      iconBg: "bg-cyan-light",
-      iconColor: "text-cyan-strong",
-    },
-    {
-      title: "Appointments Booked",
-      value: "148",
-      delta: "16.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: CalendarCheck,
-      iconBg: "bg-pink-light",
-      iconColor: "text-pink-strong",
-    },
-    {
-      title: "Avg Speed to Lead",
-      value: "2m 34s",
-      delta: "8.6%",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
-      icon: Timer,
-      iconBg: "bg-orange-light",
-      iconColor: "text-orange-strong",
-    },
-    {
-      title: "Avg Time to Close",
-      value: "18 Days",
-      delta: "4 days",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
-      icon: Clock,
-      iconBg: "bg-red-light",
-      iconColor: "text-red-strong",
-    },
-    {
-      title: "Pipeline Value",
-      value: "$5.72M",
-      delta: "12.1%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: PieChartIcon,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
-    },
-    {
-      title: "Follow-Up Completion",
-      value: "68%",
-      delta: "9.3%",
-      type: "up-good", 
-      subtext: "vs May 5 – May 11",
-      icon: CheckCircle,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
-    },
+    { title: "Total Leads", value: String(aLeads.total ?? 0), subtext: "last 30 days", icon: User, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
+    { title: "Converted", value: String(aLeads.converted ?? 0), subtext: "last 30 days", icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong" },
+    { title: "Conversion Rate", value: aLeads.conversionRate != null ? `${aLeads.conversionRate}%` : "—", subtext: "leads to converted", icon: Filter, iconBg: "bg-cyan-light", iconColor: "text-cyan-strong" },
+    { title: "Properties", value: String(aProps.total ?? 0), subtext: `${aProps.published ?? 0} published`, icon: PieChartIcon, iconBg: "bg-blue-light", iconColor: "text-blue-strong" },
+    { title: "Active Users", value: String(aUsers.activeUsers ?? 0), subtext: `${aUsers.total ?? 0} total`, icon: User, iconBg: "bg-pink-light", iconColor: "text-pink-strong" },
+    { title: "Activity Events", value: String(aActivity.totalEvents ?? 0), subtext: "last 30 days", icon: Clock, iconBg: "bg-orange-light", iconColor: "text-orange-strong" },
   ];
-
-  const kpisRow2 = [
-    {
-      title: "Ad Spend",
-      value: "$53,420",
-      delta: "6.2%",
-      positive: true,
-      subtext: "Total campaign spend",
-      icon: Megaphone,
-      iconColor: "text-blue-spend",
-      iconBg: "bg-blue-light",
-    },
-    {
-      title: "Cost Per Lead",
-      value: "$12.48",
-      delta: "8.5%",
-      positive: false,
-      subtext: "Average CPL",
-      icon: Target,
-      iconColor: "text-red-cpl",
-      iconBg: "bg-red-light",
-    },
-    {
-      title: "Cost Per Appointment",
-      value: "$48.21",
-      delta: "5.1%",
-      positive: true,
-      subtext: "Cost to book a showing",
-      icon: Calendar,
-      iconColor: "text-purple-cpa",
-      iconBg: "bg-purple-light",
-    },
-    {
-      title: "Cost Per Closing",
-      value: "$342.65",
-      delta: "7.7%",
-      positive: true,
-      subtext: "Cost to close a deal",
-      icon: DollarSign,
-      iconColor: "text-darkblue-cpc",
-      iconBg: "bg-cyan-light",
-    },
-  ];
-
-  const revenueTrend = [
-    { month: "Jan", revenue: 180000 },
-    { month: "Feb", revenue: 240000 },
-    { month: "Mar", revenue: 210000 },
-    { month: "Apr", revenue: 310000 },
-    { month: "May", revenue: 510000 },
-    { month: "Jun", revenue: 600000 },
-  ];
-
-  const leadSources = [
-    { name: "WhatsApp", value: 96, percentage: "38.7%", fill: "#0ea5e9" },
-    { name: "Instagram", value: 52, percentage: "21.0%", fill: "#d946ef" },
-    { name: "Website", value: 46, percentage: "18.5%", fill: "#3b82f6" },
-    { name: "Marketplace", value: 28, percentage: "11.3%", fill: "#f97316" },
-    { name: "Referrals", value: 26, percentage: "10.5%", fill: "#64748b" },
-  ];
-
+  const kpisRow2 = [];
+  const revenueTrend = [];
+  const leadSources = [];
   const pipelineStages = [
-    { name: "Leeds", count: 218, conversion: "156%", drop: "-" },
-    { name: "Qualified", count: 218, conversion: "68%", drop: "-32%" },
-    { name: "Showings", count: 216, conversion: "37%", drop: "-32%" },
-    { name: "Offers", count: 54, conversion: "17%", drop: "-22%" },
-    { name: "Closings", count: 16, conversion: "6%", drop: "-11%" },
+    { name: "New", count: aByStatus.new ?? 0, conversion: "", drop: "" },
+    { name: "Contacted", count: aByStatus.contacted ?? 0, conversion: "", drop: "" },
+    { name: "Qualified", count: aByStatus.qualified ?? 0, conversion: "", drop: "" },
+    { name: "Converted", count: aByStatus.converted ?? 0, conversion: "", drop: "" },
+    { name: "Lost", count: aByStatus.lost ?? 0, conversion: "", drop: "" },
   ];
-
-  const aiPerformance = [
-    { day: "Mon", replies: 42, appointments: 8 },
-    { day: "Tue", replies: 51, appointments: 11 },
-    { day: "Wed", replies: 67, appointments: 15 },
-    { day: "Thu", replies: 74, appointments: 18 },
-    { day: "Fri", replies: 83, appointments: 21 },
-    { day: "Sat", replies: 58, appointments: 12 },
-    { day: "Sun", replies: 63, appointments: 14 },
-  ];
-
-  const lostReasons = [
-    { reason: "No response", count: 42, percentage: 28, width: "85%" },
-    { reason: "Price too high", count: 31, percentage: 20, width: "65%" },
-    { reason: "Wrong location", count: 22, percentage: 15, width: "45%" },
-    { reason: "Financing issue", count: 18, percentage: 12, width: "35%" },
-    { reason: "Bought elsewhere", count: 15, percentage: 10, width: "30%" },
-    { reason: "Not qualified", count: 12, percentage: 8, width: "20%" },
-    {
-      reason: "Agent did not follow up",
-      count: 10,
-      percentage: 7,
-      width: "15%",
-    },
-  ];
-
-  const teamPerformance = [
-    {
-      name: "Sofia Reyes",
-      rate: "27%",
-      time: "5m",
-      deals: 18,
-      revenue: "$640,000",
-      color: "bg-green-strong",
-      width: "80%",
-    },
-    {
-      name: "Carlos Vega",
-      rate: "27%",
-      time: "4m",
-      deals: 14,
-      revenue: "$450,000",
-      color: "bg-green-strong",
-      width: "70%",
-    },
-    {
-      name: "Maria Lopez",
-      rate: "24%",
-      time: "5m",
-      deals: 11,
-      revenue: "$310,000",
-      color: "bg-green-strong",
-      width: "60%",
-    },
-    {
-      name: "Diego Ruiz",
-      rate: "21%",
-      time: "6m",
-      deals: 9,
-      revenue: "$270,000",
-      color: "bg-green-strong",
-      width: "50%",
-    },
-    {
-      name: "Ana Torres",
-      rate: "19%",
-      time: "8m",
-      deals: 7,
-      revenue: "$210,000",
-      color: "bg-green-strong",
-      width: "40%",
-    },
-  ];
-  const whatsappChartData = [
-    { day: "Mon", conversations: 34 },
-    { day: "Tue", conversations: 49 },
-    { day: "Wed", conversations: 44 },
-    { day: "Thu", conversations: 55 },
-    { day: "Fri", conversations: 78 },
-    { day: "Sat", conversations: 69 },
-    { day: "Sun", conversations: 84 },
-  ];
+  const aiPerformance = [];
+  const lostReasons = [];
+  const teamPerformance = [];
+  const whatsappChartData = [];
   return (
     <div className="analytics-page">
       <div className="heading_page">
@@ -337,7 +155,7 @@ export default function CortexaAnalyticsDashboard() {
         {kpisRow1.map((kpi, i) => {
           const Icon = kpi.icon;
 
-          const isUp = kpi.type.startsWith("up");
+          const isUp = (kpi.type || "up").startsWith("up");
           const arrow = isUp ? "↑" : "↓";
 
           const badgeClass = "kpi-badge pos";
@@ -355,9 +173,11 @@ export default function CortexaAnalyticsDashboard() {
               <div className="kpi-body">
                 <span className="kpi-value">{kpi.value}</span>
                 <div className="kpi-footer-meta">
-                  <span className={badgeClass}>
-                    {arrow} {kpi.delta}
-                  </span>
+                  {kpi.delta ? (
+                    <span className={badgeClass}>
+                      {arrow} {kpi.delta}
+                    </span>
+                  ) : null}
                   <span className="kpi-subtext">{kpi.subtext}</span>
                 </div>
               </div>
@@ -561,29 +381,27 @@ export default function CortexaAnalyticsDashboard() {
 
             <div className="wa-metrics-grid">
               {/* Card 1 */}
-              <div className="wa-metric-card">
+              <div className="wa-metric-card no-badge">
                 <span className="metric-title">Conversations</span>
-                <span className="metric-value">246</span>
-                <span className="metric-badge pos">↑ 14.6%</span>
+                <span className="metric-value">—</span>
               </div>
 
               {/* Card 2 */}
-              <div className="wa-metric-card">
+              <div className="wa-metric-card no-badge">
                 <span className="metric-title">Replies Sent</span>
-                <span className="metric-value">382</span>
-                <span className="metric-badge pos">↑ 12.1%</span>
+                <span className="metric-value">—</span>
               </div>
 
               {/* Card 3 */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Replies This Period</span>
-                <span className="metric-value">438</span>
+                <span className="metric-value">—</span>
               </div>
 
               {/* Card 4 */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Appointments Booked</span>
-                <span className="metric-value">101</span>
+                <span className="metric-value">—</span>
               </div>
             </div>
           </div>
@@ -708,8 +526,8 @@ export default function CortexaAnalyticsDashboard() {
                       <MessageCircle size={16} className="text-green-strong" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>WhatsApp is outperforming of other sources</h4>
-                      <p>You're converting 2.4x higher than Instagram traffic.</p>
+                      <h4>Compare performance across your lead sources</h4>
+                      <p>Review which channels convert best for your team.</p>
                   </div>
                   </div>
                   <a href="#action" className="text-royal-blue">
@@ -725,7 +543,7 @@ export default function CortexaAnalyticsDashboard() {
                       <Target size={20} className="text-orange-strong" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>41% of showing are not converting</h4>
+                      <h4>Keep showings moving to a close</h4>
                       <p>
                         Follow up within 24 hours to increase your close rate.
                       </p>
@@ -771,11 +589,11 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="forecast-metrics">
                 <div className="m-box">
-                  <h3>$1.25M</h3>
+                  <h3>—</h3>
                 </div>
-                <p className="forecast-desc">Estimated revenue next 30 days</p>
-                <p className="top-opp">
-                  Top Opportunity: Conerotau Agortment – $420K
+                <p className="forecast-desc">
+                  Revenue forecasting connects once historical deal data is
+                  available.
                 </p>
               </div>
 
