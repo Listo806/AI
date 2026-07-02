@@ -40,6 +40,15 @@ export class PipelineController {
       agentId,
     );
   }
+  @Get("agents")
+  getPipelineAgents(@Req() req: any) {
+    const user = req.user;
+
+    return this.pipelineService.getPipelineAgents(
+      user.id,
+      user.teamId || user.team_id || null,
+    );
+  }
   @Get()
   getPipeline(@Req() req: any) {
     const user = req.user;
