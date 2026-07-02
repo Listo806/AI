@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { AnalyticsService } from '../analytics.service';
 import { DatabaseService } from '../../database/database.service';
 
@@ -215,13 +220,96 @@ export class ReportGeneratorService {
    */
   private async storeReport(report: Report, teamId: string | null): Promise<void> {
     try {
-      // Note: You might want to create a reports table for storing historical reports
-      // For now, we'll just log that a report was generated
-      this.logger.log(`Generated ${report.type} report for period ${report.period.startDate.toISOString()} to ${report.period.endDate.toISOString()}`);
+      await this.db.query(
+        `INSERT INTO generated_reports
+           (report_id, team_id, generated_by, type, period_start, period_end, summary, report)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          report.id,
+          teamId,
+          report.generatedBy ?? null,
+          report.type,
+          report.period.startDate,
+          report.period.endDate,
+          JSON.stringify(report.summary ?? null),
+          JSON.stringify(report),
+        ],
+      );
+      this.logger.log(
+        `Stored ${report.type} report ${report.id} for period ${report.period.startDate.toISOString()} to ${report.period.endDate.toISOString()}`,
+      );
     } catch (error: any) {
       this.logger.error('Failed to store report', error);
       // Don't throw - report generation should not fail if storage fails
     }
+  }
+
+  /**
+   * List saved reports the caller may see. Admins see all; otherwise scoped to
+   * the caller's team, or to reports they generated when they have no team.
+   */
+  async listReports(
+    teamId: string | null,
+    userId: string,
+    userRole: string,
+    limit = 50,
+  ): Promise<any[]> {
+    const isAdmin = userRole === 'admin';
+    const params: any[] = [];
+    let where = '';
+    if (!isAdmin) {
+      if (teamId) {
+        params.push(teamId);
+        where = `WHERE team_id = $${params.length}`;
+      } else {
+        params.push(userId);
+        where = `WHERE generated_by = $${params.length}`;
+      }
+    }
+    const safeLimit = Math.min(Math.max(1, limit), 200);
+    params.push(safeLimit);
+    const { rows } = await this.db.query(
+      `SELECT id, report_id AS "reportId", type,
+              period_start AS "periodStart", period_end AS "periodEnd",
+              generated_by AS "generatedBy", summary, created_at AS "createdAt"
+       FROM generated_reports
+       ${where}
+       ORDER BY created_at DESC
+       LIMIT $${params.length}`,
+      params,
+    );
+    return rows;
+  }
+
+  /**
+   * Fetch a single saved report, enforcing the same access scope as the list.
+   */
+  async getReportById(
+    id: string,
+    teamId: string | null,
+    userId: string,
+    userRole: string,
+  ): Promise<any> {
+    const { rows } = await this.db.query(
+      `SELECT id, report_id AS "reportId", type,
+              period_start AS "periodStart", period_end AS "periodEnd",
+              generated_by AS "generatedBy", team_id AS "teamId",
+              summary, report, created_at AS "createdAt"
+       FROM generated_reports
+       WHERE id = $1`,
+      [id],
+    );
+    const row = rows[0];
+    if (!row) throw new NotFoundException('Report not found');
+    if (userRole !== 'admin') {
+      const allowed = teamId
+        ? row.teamId === teamId
+        : row.generatedBy === userId;
+      if (!allowed) {
+        throw new ForbiddenException('You do not have access to this report');
+      }
+    }
+    return row;
   }
 }
 

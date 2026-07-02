@@ -1,11 +1,61 @@
 /**
- * Property-related API (images, media, team) using apiClient
+ * Property-related API (list, CRUD, images, media, team) using apiClient
  */
 import apiClient from './apiClient';
 
 const MAX_IMAGES_PER_PROPERTY = 20;
 
 export { MAX_IMAGES_PER_PROPERTY };
+
+/**
+ * List properties for the current user/team.
+ * Backend: GET /properties -> { items, total, limit, offset }.
+ * @param {{ type?, status?, search?, limit?, offset? }} [opts]
+ */
+export async function getProperties(opts = {}) {
+  const qs = new URLSearchParams();
+  ['type', 'status', 'search', 'limit', 'offset'].forEach((k) => {
+    if (opts[k] !== undefined && opts[k] !== null && opts[k] !== '') {
+      qs.append(k, opts[k]);
+    }
+  });
+  const query = qs.toString();
+  const res = await apiClient.request(`/properties${query ? `?${query}` : ''}`);
+  // Normalise: controller returns { items, total, limit, offset }
+  if (Array.isArray(res)) return { items: res, total: res.length, limit: res.length, offset: 0 };
+  return {
+    items: res?.items ?? res?.data ?? [],
+    total: res?.total ?? 0,
+    limit: res?.limit ?? 0,
+    offset: res?.offset ?? 0,
+  };
+}
+
+export async function getProperty(propertyId) {
+  return apiClient.request(`/properties/${propertyId}`);
+}
+
+export async function createProperty(payload) {
+  return apiClient.request('/properties', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateProperty(propertyId, payload) {
+  return apiClient.request(`/properties/${propertyId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function publishProperty(propertyId) {
+  return apiClient.request(`/properties/${propertyId}/publish`, { method: 'POST' });
+}
+
+export async function deleteProperty(propertyId) {
+  return apiClient.request(`/properties/${propertyId}`, { method: 'DELETE' });
+}
 
 export async function getPropertyMedia(propertyId) {
   const res = await apiClient.request(`/properties/${propertyId}/media`);

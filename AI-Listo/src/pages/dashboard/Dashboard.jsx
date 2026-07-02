@@ -1,4 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  useFeatureNotice,
+  FeatureNoticeBanner,
+} from "../../components/FeatureNotice";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -48,11 +53,46 @@ import {
 } from "lucide-react";
 
 import "./dashboard.css";
+import {
+  getDashboardSummary,
+  getAnalyticsDashboard,
+} from "../../api/analyticsApi";
+import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
+
+const money = (n) => {
+  const v = Number(n) || 0;
+  if (Math.abs(v) >= 1000)
+    return `$${(v / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 })}K`;
+  return `$${v.toLocaleString("en-US")}`;
+};
 
 export default function CortexaDashboard() {
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
+  const { handleError } = useApiErrorHandler();
+  const [summary, setSummary] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [s, a] = await Promise.all([
+          getDashboardSummary().catch(() => null),
+          getAnalyticsDashboard("30d").catch(() => null),
+        ]);
+        if (!active) return;
+        setSummary(s);
+        setAnalytics(a);
+      } catch (err) {
+        if (active) handleError(err, "Failed to load dashboard");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -66,205 +106,129 @@ export default function CortexaDashboard() {
   }, []);
 
   const [showFilters, setShowFilters] = useState(false);
-  const confidenceSparkData = [
-    { v: 50 },
-    { v: 65 },
-    { v: 55 },
-    { v: 78 },
-    { v: 70 },
-    { v: 92 },
-  ];
-  const riskSparkData = [
-    { v: 30 },
-    { v: 45 },
-    { v: 35 },
-    { v: 60 },
-    { v: 40 },
-    { v: 55 },
-  ];
+  const navigate = useNavigate();
+  const { notice, setNotice, notAvailable } = useFeatureNotice();
+  const [trendMode, setTrendMode] = useState("revenue");
+  // No backend source for these sparklines; empty rather than fabricated curves.
+  const confidenceSparkData = [];
+  const riskSparkData = [];
+
+  // Live figures from /crm/dashboard/summary + /analytics/dashboard.
+  const S = summary || {};
+  const A = analytics || {};
+  const sLeads = S.leads || {};
+  const sDeals = S.deals || {};
+  const sProps = S.properties || {};
+  const byStage = sDeals.byStage || {};
+  const convRate = A.leads?.conversionRate;
 
   const miniKpis = [
     {
       title: "New Leads",
-      value: "18",
-      delta: "12.4%",
-      positive: true,
-      subtext: "3 from WhatsApp • 2 from Website",
+      value: String(sLeads.new ?? 0),
+      subtext: `${sLeads.total ?? 0} total leads`,
       icon: <Users size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
-      intime: "vs last week",
+      intime: "last 7 days",
     },
     {
-      title: "Active Deals",
-      value: "$148K",
-      delta: "2",
-      positive: true,
-      subtext: "2 deals likely to close this week",
+      title: "Qualified Leads",
+      value: String(sLeads.qualified ?? 0),
+      subtext: `${sLeads.contacted ?? 0} contacted`,
+      icon: <CheckCircle2 size={16} className="text-green" />,
+      iconBg: "bg-light-green",
+      intime: "current",
+    },
+    {
+      title: "Pipeline Value",
+      value: money(sDeals.pipelineValue),
+      subtext: `${sDeals.total ?? 0} active deals`,
       icon: <Briefcase size={16} className="text-purple" />,
       iconBg: "bg-light-purple",
-      intime: "deals",
+      intime: "open",
     },
     {
-      title: "Revenue",
-      value: "$24.6K",
-      delta: "8.1%",
-      positive: true,
-      subtext: "1 closing scheduled today",
+      title: "Won Revenue",
+      value: money(sDeals.wonValue),
+      subtext: `${byStage.won ?? 0} closed won`,
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
-      intime: "vs last week",
+      intime: "to date",
     },
     {
       title: "Conversion Rate",
-      value: "21.8%",
-      delta: "1.3%",
-      positive: false,
-      subtext: "Warm leads need follow-up",
+      value: convRate != null ? `${convRate}%` : "—",
+      subtext: "leads to converted",
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
-      intime: "vs last week",
+      intime: "last 30 days",
     },
     {
-      title: "AI Conversations",
-      value: "327",
-      delta: "41",
-      positive: true,
-      subtext: "AI handled 142 replies today",
-      icon: <MessageCircle size={16} className="text-royal-blue" />,
+      title: "Properties",
+      value: String(sProps.total ?? 0),
+      subtext: `${sProps.published ?? 0} published`,
+      icon: <Layers size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
-      intime: "today",
-    },
-    {
-      title: "Appointments",
-      value: "18",
-      delta: "6",
-      positive: true,
-      subtext: "Showings & closings scheduled",
-      icon: <Calendar size={16} className="text-green" />,
-      iconBg: "bg-light-green",
-      intime: "this week",
+      intime: "listed",
     },
   ];
 
-  const secondaryKpis = [
-    {
-      title: "First Response Time",
-      value: "2m 34s",
-      delta: "18%",
-      positive: true,
-      icon: <Clock3 size={16} className="text-royal-blue" />,
-      intime: "vs last week",
-    },
-    {
-      title: "Follow-up Completion",
-      value: "78%",
-      delta: "11%",
-      positive: true,
-      icon: <CheckCircle2 size={16} className="text-green" />,
-      intime: "vs last week",
-    },
-    {
-      title: "Lead Quality Score",
-      value: "87/100",
-      delta: "9",
-      positive: true,
-      icon: <Award size={16} className="text-purple" />,
-      intime: "vs last week",
-    },
-    {
-      title: "Pipeline Velocity",
-      value: "1.42x",
-      delta: "15%",
-      positive: true,
-      icon: <Activity size={16} className="text-royal-blue" />,
-      intime: "vs last week",
-    },
-    {
-      title: "Revenue at Risk",
-      value: "$18.7K",
-      delta: "23%",
-      positive: true,
-      icon: <AlertTriangle size={16} className="text-orange" />,
-      intime: "vs last week",
-    },
-    {
-      title: "WhatsApp Response",
-      value: "94%",
-      delta: "8%",
-      positive: true,
-      icon: <MessageCircle size={16} className="text-green" />,
-      intime: "vs last week",
-    },
-  ];
+  // No backend source for these on /crm/dashboard/summary or /analytics/dashboard.
+  // Kept empty rather than showing fabricated figures; they render as empty sections.
+  const secondaryKpis = [];
+  const leadSources = [];
 
-  const revenueTrendData = [
-    { day: "Mon", trend: 18000 },
-    { day: "Tue", trend: 25000 },
-    { day: "Wed", trend: 20000 },
-    { day: "Thu", trend: 36000 },
-    { day: "Fri", trend: 28000 },
-    { day: "Sat", trend: 22000 },
-    { day: "Sun", trend: 32000 },
-  ];
+  // Trend chart: "Leads" mode has a real source (activity.eventsByDay from
+  // /analytics/dashboard); revenue/appointments have none yet and stay empty.
+  const eventsByDay = A.activity?.eventsByDay || [];
+  const revenueTrendData =
+    trendMode === "leads"
+      ? eventsByDay.map((d) => ({ day: d.date, trend: d.count }))
+      : [];
 
-  const leadSources = [
-    {
-      source: "WhatsApp",
-      leads: 96,
-      conversion: 28,
-      revenue: 920000,
-      color: "#2563eb",
-      icon: <MessageCircle size={12} className="text-green" />,
-    },
-    {
-      source: "Instagram",
-      leads: 62,
-      conversion: 19,
-      revenue: 410000,
-      color: "#7c3aed",
-      icon: <Camera size={12} style={{ color: "#d946ef" }} />,
-    },
-    {
-      source: "Website",
-      leads: 54,
-      conversion: 16,
-      revenue: 360000,
-      color: "#ea580c",
-      icon: <Globe size={12} className="text-royal-blue" />,
-    },
-    {
-      source: "Marketplace",
-      leads: 42,
-      conversion: 14,
-      revenue: 280000,
-      color: "#0d9488",
-      icon: <Briefcase size={12} className="text-orange" />,
-    },
-    {
-      source: "Referral",
-      leads: 36,
-      conversion: 31,
-      revenue: 510000,
-      color: "#16a34a",
-      icon: <Users size={12} className="text-purple" />,
-    },
-    {
-      source: "Google Ads",
-      leads: 28,
-      conversion: 17,
-      revenue: 300000,
-      color: "#eab308",
-      icon: <Search size={12} style={{ color: "#eab308" }} />,
-    },
-    {
-      source: "Meta Ads",
-      leads: 21,
-      conversion: 15,
-      revenue: 250000,
-      color: "#3b82f6",
-      icon: <SlidersHorizontal size={12} className="text-royal-blue" />,
-    },
+  // CSV export of the live dashboard figures (client-side)
+  const exportDashboardCsv = () => {
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = [["metric", "value"]];
+    miniKpis.forEach((k) => rows.push([k.title, k.value]));
+    rows.push(["Conversion Rate", convRate != null ? `${convRate}%` : ""]);
+    rows.push(["Pipeline Value", sDeals.pipelineValue ?? ""]);
+    Object.entries(byStage).forEach(([k, v]) => rows.push([`Deals: ${k}`, v]));
+    const blob = new Blob(
+      [rows.map((r) => r.map(esc).join(",")).join("\n")],
+      { type: "text/csv" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "dashboard-summary.csv";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  // Real deal-stage figures from summary.deals.byStage (counts only; no per-stage $).
+  const dealsByStageArr = [
+    { name: "New", count: String(byStage.new ?? 0), value: "" },
+    { name: "Qualified", count: String(byStage.qualified ?? 0), value: "" },
+    { name: "Proposal", count: String(byStage.proposal ?? 0), value: "" },
+    { name: "Negotiation", count: String(byStage.negotiation ?? 0), value: "" },
+    { name: "Won", count: String(byStage.won ?? 0), value: "" },
   ];
+  const _funnelTotal = Number(sLeads.total ?? 0) || 0;
+  const _pct = (n) =>
+    _funnelTotal > 0 ? Math.round(((Number(n) || 0) / _funnelTotal) * 100) : 0;
+  const pipelineFunnelArr = [
+    { stage: "Leads", count: String(sLeads.total ?? 0), percent: "100%", width: "100%" },
+    { stage: "Qualified", count: String(byStage.qualified ?? 0), percent: `${_pct(byStage.qualified)}%`, width: `${_pct(byStage.qualified)}%` },
+    { stage: "Proposal", count: String(byStage.proposal ?? 0), percent: `${_pct(byStage.proposal)}%`, width: `${_pct(byStage.proposal)}%` },
+    { stage: "Negotiation", count: String(byStage.negotiation ?? 0), percent: `${_pct(byStage.negotiation)}%`, width: `${_pct(byStage.negotiation)}%` },
+    { stage: "Won", count: String(byStage.won ?? 0), percent: `${_pct(byStage.won)}%`, width: `${_pct(byStage.won)}%` },
+  ];
+  // No backend source for these panels; empty rather than fabricated.
+  const aiPriorityQueue = [];
+  const riskAlerts = [];
+  const liveTracking = [];
+  const automationHealth = [];
+  const upcomingClosings = [];
 
   const CustomXAxisTick = ({ x, y, payload }) => {
     const matchedSource = leadSources.find(
@@ -347,7 +311,7 @@ export default function CortexaDashboard() {
                 <span className="notif-badge">8</span>
               </div>*/}
 
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -356,6 +320,7 @@ export default function CortexaDashboard() {
           )}
         </div>
       </header>
+      <FeatureNoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
       {isMobile && showFilters && (
         <>
           <div
@@ -394,7 +359,7 @@ export default function CortexaDashboard() {
                 <span>All Stages</span>
                 <ChevronDown size={14} />
               </div>
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportDashboardCsv}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -412,25 +377,22 @@ export default function CortexaDashboard() {
           <div className="ai-message-ctx">
             <span>AI Command Center</span>
             <h2>
-              You have <span className="highlight-blue">3</span> high-intent
-              leads ready to close.
+              You have{" "}
+              <span className="highlight-blue">{sLeads.qualified ?? 0}</span>{" "}
+              qualified leads in your pipeline.
             </h2>
             <p>
-              Next best action:{" "}
-              <span className="clickable-link">Call Maria Lopez</span> now
+              {sLeads.new ?? 0} new leads in the last 7 days.
             </p>
-            <div className="banner-alert-tag">
-              🔥 2 leads require immediate follow-up
-            </div>
           </div>
         </div>
 
         <div className="banner-right">
           <div className="banner-right-top">
             <div className="mini-insight-card">
-              <div className="card-lbl">AI Confidence</div>
+              <div className="card-lbl">Total Leads</div>
               <div className="card-val-group">
-                <h3 className="text-green">92%</h3>
+                <h3 className="text-green">{sLeads.total ?? 0}</h3>
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
@@ -450,9 +412,9 @@ export default function CortexaDashboard() {
               </div>
             </div>
             <div className="mini-insight-card">
-              <div className="card-lbl">Revenue at Risk</div>
+              <div className="card-lbl">Pipeline Value</div>
               <div className="card-val-group">
-                <h3 className="text-orange">$18.7K</h3>
+                <h3 className="text-orange">{money(sDeals.pipelineValue)}</h3>
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
@@ -472,24 +434,24 @@ export default function CortexaDashboard() {
               </div>
             </div>
             <div className="mini-insight-card next-action-card">
-              <Phone size={16} />
+              <Briefcase size={16} />
               <div>
-                <div className="card-lbl">Next Best Action</div>
-                <h4>Call Maria Lopez</h4>
+                <div className="card-lbl">Active Deals</div>
+                <h4>{sDeals.total ?? 0}</h4>
               </div>
             </div>
           </div>
           <div className="banner-action-row">
-            <button className="banner-btn text-dark">
+            <button className="banner-btn text-dark" onClick={() => notAvailable("Call")}>
               <Phone size={16} /> Call
             </button>
-            <button className="banner-btn btn-whatsapp-color">
+            <button className="banner-btn btn-whatsapp-color" onClick={() => navigate("/dashboard/whatsapp")}>
               <MessageCircle size={16} /> WhatsApp
             </button>
-            <button className="banner-btn btn-assign-color">
+            <button className="banner-btn btn-assign-color" onClick={() => notAvailable("Assign")}>
               <Users size={16} /> Assign
             </button>
-            <button className="banner-btn btn-followup-color">
+            <button className="banner-btn btn-followup-color" onClick={() => notAvailable("Follow-up")}>
               <Calendar size={16} /> Follow-up
             </button>
           </div>
@@ -505,12 +467,13 @@ export default function CortexaDashboard() {
               <div className="kpi-main-right">
                 <span className="kpi-lbl">{kpi.title}</span>
                 <h2 className="kpi-main-val">{kpi.value}</h2>
-                {/* ĐÃ FIX: Đổi class sang className ở dòng dưới đây */}
-                <span
-                  className={`kpi-indicator-badge ${kpi.positive ? "pos" : "neg"}`}
-                >
-                  {kpi.positive ? "↑" : "↓"} {kpi.delta}
-                </span>{" "}
+                {kpi.delta ? (
+                  <span
+                    className={`kpi-indicator-badge ${kpi.positive ? "pos" : "neg"}`}
+                  >
+                    {kpi.positive ? "↑" : "↓"} {kpi.delta}
+                  </span>
+                ) : null}{" "}
                 <span className="kpi-indicator-badge">{kpi.intime}</span>
               </div>
             </div>
@@ -556,9 +519,9 @@ export default function CortexaDashboard() {
               <h3>Revenue & Lead Trend</h3>
             </div>
             <div className="pill-toggles">
-              <button>Leads</button>
-              <button>Appointments</button>
-              <button className="active">Revenue</button>
+              <button className={trendMode === "leads" ? "active" : ""} onClick={() => setTrendMode("leads")}>Leads</button>
+              <button className={trendMode === "appointments" ? "active" : ""} onClick={() => notAvailable("Appointments trend")}>Appointments</button>
+              <button className={trendMode === "revenue" ? "active" : ""} onClick={() => setTrendMode("revenue")}>Revenue</button>
             </div>
           </div>
           <div className="chart-viewbox">
@@ -694,38 +657,7 @@ export default function CortexaDashboard() {
               <span className="text-left">Probability</span>
               <span>Next Action</span>
             </div>
-            {[
-              {
-                name: "Maria Lopez",
-                intent: "Luxury Buyer",
-                prob: "87%",
-                img: "https://i.pravatar.cc/150?img=41",
-              },
-              {
-                name: "Carlos Vega",
-                intent: "Appointment",
-                prob: "79%",
-                img: "https://i.pravatar.cc/150?img=60",
-              },
-              {
-                name: "Daniela Ortiz",
-                intent: "Financing Ready",
-                prob: "82%",
-                img: "https://i.pravatar.cc/150?img=45",
-              },
-              {
-                name: "Pablo Torres",
-                intent: "Property Interested",
-                prob: "76%",
-                img: "https://i.pravatar.cc/150?img=11",
-              },
-              {
-                name: "Sofia Reyes",
-                intent: "High Intent",
-                prob: "72%",
-                img: "https://i.pravatar.cc/150?img=23",
-              },
-            ].map((lead, idx) => (
+            {aiPriorityQueue.map((lead, idx) => (
               <div key={idx} className="queue-item-row">
                 <div className="lead-meta-profile">
                   <img src={lead.img} alt={lead.name} className="mini-avatar" />
@@ -765,28 +697,7 @@ export default function CortexaDashboard() {
             </a>
           </div>
           <div className="risk-alerts-list">
-            {[
-              {
-                title: "Leads going cold (no activity > 48h)",
-                count: 12,
-                icon: <Clock3 size={12} className="text-muted" />,
-              },
-              {
-                title: "Deals stuck in stage > 7 days",
-                count: 8,
-                icon: <Layers size={12} className="text-muted" />,
-              },
-              {
-                title: "Missed follow-ups",
-                count: 6,
-                icon: <AlertTriangle size={12} className="text-orange" />,
-              },
-              {
-                title: "Unanswered WhatsApp messages",
-                count: 27,
-                icon: <MessageCircle size={12} className="text-green" />,
-              },
-            ].map((risk, idx) => (
+            {riskAlerts.map((risk, idx) => (
               <div key={idx} className="risk-item-row">
                 <span className="risk-title-lbl">
                   {risk.icon} {risk.title}
@@ -809,16 +720,7 @@ export default function CortexaDashboard() {
             </a>
           </div>
           <div className="tracking-timeline-list">
-            {[
-              { text: "Maria Lopez viewed 3 new listings", time: "9m ago" },
-              { text: "Carlos Vega opened WhatsApp message", time: "22m ago" },
-              {
-                text: "AI qualified Daniela Ortiz as financing-ready",
-                time: "35m ago",
-              },
-              { text: "Pablo Torres moved to Offer stage", time: "1h ago" },
-              { text: "Sofia Reyes scheduled showing", time: "1h 20m ago" },
-            ].map((log, idx) => (
+            {liveTracking.map((log, idx) => (
               <div key={idx} className="timeline-item-row">
                 <div className="timeline-marker-dot"></div>
                 <span className="timeline-log-txt">{log.text}</span>
@@ -841,13 +743,7 @@ export default function CortexaDashboard() {
           </div>
           <div className="deals-by-stage-box">
             <div className="stage-stats-columns">
-              {[
-                { name: "New", count: "12", value: "$48K" },
-                { name: "Qualified", count: "9", value: "$67K" },
-                { name: "Showing", count: "5", value: "$91K" },
-                { name: "Offer", count: "3", value: "$114K" },
-                { name: "Closed", count: "2", value: "$24.6K" },
-              ].map((stage, idx) => (
+              {dealsByStageArr.map((stage, idx) => (
                 <div key={idx} className="stage-column-item">
                   <span className="stage-head-lbl">{stage.name}</span>
                 </div>
@@ -876,13 +772,7 @@ export default function CortexaDashboard() {
               ></div>
             </div>
             <div className="stage-stats-columns">
-              {[
-                { name: "New", count: "12", value: "$48K" },
-                { name: "Qualified", count: "9", value: "$67K" },
-                { name: "Showing", count: "5", value: "$91K" },
-                { name: "Offer", count: "3", value: "$114K" },
-                { name: "Closed", count: "2", value: "$24.6K" },
-              ].map((stage, idx) => (
+              {dealsByStageArr.map((stage, idx) => (
                 <div key={idx} className="stage-column-item">
                   <h4>{stage.count}</h4>
                   <span>{stage.value}</span>
@@ -902,13 +792,7 @@ export default function CortexaDashboard() {
             <h5>Pipeline Funnel</h5>
           </div>
           <div className="funnel-vertical-stack">
-            {[
-              { stage: "Leads", count: "120", percent: "100%", width: "100%" },
-              { stage: "Qualified", count: "82", percent: "68%", width: "80%" },
-              { stage: "Showings", count: "39", percent: "32%", width: "60%" },
-              { stage: "Offers", count: "19", percent: "16%", width: "40%" },
-              { stage: "Closed", count: "8", percent: "7%", width: "20%" },
-            ].map((item, idx) => (
+            {pipelineFunnelArr.map((item, idx) => (
               <div key={idx} className="funnel-layer-bar">
                 <span className="layer-name">{item.stage}</span>
                 <div className="layer-graphic-track">
@@ -933,38 +817,7 @@ export default function CortexaDashboard() {
             <h5>Automation Health</h5>
           </div>
           <div className="health-status-list">
-            {[
-              {
-                label: "WhatsApp Connected",
-                status: "Active",
-                color: "green",
-                icon: <MessageCircle size={12} className="text-green" />,
-              },
-              {
-                label: "AI Replies",
-                status: "Active",
-                color: "green",
-                icon: <CheckCircle2 size={12} className="text-green" />,
-              },
-              {
-                label: "Tasks Generated",
-                status: "156",
-                color: "gray",
-                icon: <FileText size={12} className="text-muted" />,
-              },
-              {
-                label: "Follow-ups Completed",
-                status: "78%",
-                color: "green",
-                icon: <Activity size={12} className="text-royal-blue" />,
-              },
-              {
-                label: "Missed Actions",
-                status: "5",
-                color: "orange",
-                icon: <AlertTriangle size={12} className="text-orange" />,
-              },
-            ].map((health, idx) => (
+            {automationHealth.map((health, idx) => (
               <div key={idx} className="health-row-item">
                 <span className="health-lbl">
                   {health.icon} {health.label}
@@ -983,35 +836,7 @@ export default function CortexaDashboard() {
             <Shuffle size={16} />
             <h5>Next Actions</h5>
           </div>
-          <div className="action-todo-list">
-            <div className="todo-row-item">
-              <div className="todo-details">
-                <span className="todo-txt">
-                  <CheckCircle2
-                    size={13}
-                    className="text-muted"
-                    style={{ marginRight: 4 }}
-                  />{" "}
-                  Call Maria Lopez
-                </span>
-                <span className="tag-urgent">Urgent</span>
-              </div>
-              <span className="todo-time">Today</span>
-            </div>
-            <div className="todo-row-item">
-              <span className="todo-txt">
-                <CheckCircle2
-                  size={13}
-                  className="text-muted"
-                  style={{ marginRight: 4 }}
-                />{" "}
-                Send property options to Carlos Vega
-              </span>
-              <span className="todo-time text-blue" style={{ fontSize: "9px" }}>
-                Today • 3:00 PM
-              </span>
-            </div>
-          </div>
+          <div className="action-todo-list"></div>
         </div>
 
         {/* Upcoming Closings */}
@@ -1021,28 +846,7 @@ export default function CortexaDashboard() {
             <h5>Upcoming Closings</h5>
           </div>
           <div className="closing-list-wrapper">
-            {[
-              {
-                label: "Showing — Maria Lopez",
-                time: "Today • 4:00 PM",
-                icon: <Calendar size={12} className="text-muted" />,
-              },
-              {
-                label: "Closing call — Sofia Reyes",
-                time: "Today • 6:30 PM",
-                icon: <Briefcase size={12} className="text-muted" />,
-              },
-              {
-                label: "Negotiation review — Pablo Torres",
-                time: "Tomorrow • 9:00 AM",
-                icon: <FileText size={12} className="text-muted" />,
-              },
-              {
-                label: "Final walk-through — Carlos Vega",
-                time: "Tomorrow • 2:00 PM",
-                icon: <CheckCircle2 size={12} className="text-muted" />,
-              },
-            ].map((item, idx) => (
+            {upcomingClosings.map((item, idx) => (
               <div key={idx} className="closing-row-item">
                 <div className="closing-details">
                   {item.icon}
@@ -1068,14 +872,14 @@ export default function CortexaDashboard() {
             <div className="dark-card-counter-row">
               <div className="counter-box">
                 <span>Recommends Actions</span>
-                <h3>14</h3>
+                <h3>—</h3>
               </div>
               <div className="counter-box urgent-border">
                 <span className="text-red">Urgent Tasks</span>
-                <h3 className="text-red">7</h3>
+                <h3 className="text-red">—</h3>
               </div>
             </div>
-            <button className="btn-run-analysis">
+            <button className="btn-run-analysis" onClick={() => notAvailable("Run AI Dashboard Review")}>
               Run AI Dashboard Review <Zap size={14} fill="currentColor" />
             </button>
           </div>
