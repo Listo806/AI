@@ -25,18 +25,32 @@ export class PipelineService {
   });
   constructor(private readonly db: DatabaseService) {}
 
-  private getScope(userId: string, teamId?: string | null) {
+  private getScope(userId: string, teamId?: string | null, agentId = "all") {
+    const params: any[] = [];
+
     if (teamId) {
-      return {
-        where: "d.team_id = $1",
-        params: [teamId],
-      };
+      params.push(teamId);
+
+      let where = `d.team_id = $1`;
+
+      if (agentId && agentId !== "all") {
+        params.push(agentId);
+        where += ` AND d.assigned_to = $2`;
+      }
+
+      return { where, params };
     }
 
-    return {
-      where: "d.created_by = $1",
-      params: [userId],
-    };
+    params.push(userId);
+
+    let where = `d.created_by = $1`;
+
+    if (agentId && agentId !== "all") {
+      params.push(agentId);
+      where += ` AND d.assigned_to = $2`;
+    }
+
+    return { where, params };
   }
 
   private formatMoney(value: any) {
@@ -483,8 +497,9 @@ export class PipelineService {
     userId: string,
     teamId?: string | null,
     forecastRange = "month",
+    agentId = "all",
   ) {
-    const scope = this.getScope(userId, teamId);
+    const scope = this.getScope(userId, teamId, agentId);
 
     const statsPeriod = this.getForecastPeriodSql("month");
     const forecastPeriod = this.getForecastPeriodSql(forecastRange);
@@ -1888,5 +1903,31 @@ Return ONLY valid JSON:
       success: true,
       ...result,
     };
+  }
+  async getPipelineAgents(userId: string, teamId?: string | null) {
+    if (!teamId) {
+      return [];
+    }
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      u.id,
+      COALESCE(u.name, u.email) AS name,
+      u.email,
+      COUNT(d.id)::int AS "totalDeals"
+    FROM users u
+    LEFT JOIN deals d
+      ON d.assigned_to = u.id
+      AND d.team_id = $1
+    WHERE u.team_id = $1
+      AND u.is_active = true
+    GROUP BY u.id, u.name, u.email
+    ORDER BY "totalDeals" DESC, name ASC
+    `,
+      [teamId],
+    );
+
+    return rows;
   }
 }

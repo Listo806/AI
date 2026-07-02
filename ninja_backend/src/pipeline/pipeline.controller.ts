@@ -24,10 +24,12 @@ import { MoveDealDto } from "./dto/move-deal.dto";
 @UseGuards(JwtAuthGuard, CrmAccessGuard)
 export class PipelineController {
   constructor(private readonly pipelineService: PipelineService) {}
+
   @Get("dashboard")
   getDashboard(
     @Req() req: any,
     @Query("forecastRange") forecastRange = "month",
+    @Query("agentId") agentId = "all",
   ) {
     const user = req.user;
 
@@ -35,6 +37,7 @@ export class PipelineController {
       user.id,
       user.teamId || user.team_id || null,
       forecastRange,
+      agentId,
     );
   }
   @Get()

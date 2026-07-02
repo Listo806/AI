@@ -50,6 +50,7 @@ import {
   AlertCircle,
   UserCheck,
 } from "lucide-react";
+import PipelineListModal from "./components/PipelineListModal";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
   const [pipelineStats, setPipelineStats] = useState([]);
@@ -64,7 +65,9 @@ export default function PipelinePage() {
   const [riskQueue, setRiskQueue] = useState([]);
   const [forecast, setForecast] = useState(null);
   const [automationHealth, setAutomationHealth] = useState([]);
-  const [forecastRange, setForecastRange] = useState("month");
+  cconst[(forecastRange, setForecastRange)] = useState(
+    localStorage.getItem("pipeline_forecast_range") || "month",
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [scoringDealId, setScoringDealId] = useState(null);
   const [analyzingPipeline, setAnalyzingPipeline] = useState(false);
@@ -91,6 +94,15 @@ export default function PipelinePage() {
   const [activityModalHasMore, setActivityModalHasMore] = useState(false);
   const [activityModalLoading, setActivityModalLoading] = useState(false);
 
+  const [riskModalOpen, setRiskModalOpen] = useState(false);
+  const [riskModalLimit, setRiskModalLimit] = useState(5);
+  const visibleRiskItems = riskQueue.slice(0, riskModalLimit);
+  const riskHasMore = riskQueue.length > riskModalLimit;
+
+  const [agents, setAgents] = useState([]);
+  const [agentFilter, setAgentFilter] = useState(
+    localStorage.getItem("pipeline_agent_filter") || "all",
+  );
   const [pipelineFilters, setPipelineFilters] = useState({
     stage: "all",
     risk: "all",
@@ -118,7 +130,7 @@ export default function PipelinePage() {
       setPipelineLoading(true);
 
       const response = await apiClient.request(
-        `/pipeline/dashboard?forecastRange=${forecastRange}`,
+        `/pipeline/dashboard?forecastRange=${forecastRange}&agentId=${agentFilter}`,
         {
           method: "GET",
         },
@@ -149,8 +161,25 @@ export default function PipelinePage() {
   };
 
   useEffect(() => {
+    fetchPipelineAgents();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("pipeline_forecast_range", forecastRange);
+    localStorage.setItem("pipeline_agent_filter", agentFilter);
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("forecast", forecastRange);
+    params.set("agent", agentFilter);
+
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}?${params.toString()}`,
+    );
+
     fetchPipelineDashboard();
-  }, [forecastRange]);
+  }, [forecastRange, agentFilter]);
 
   const moveDealToNextStage = async (deal, currentStage) => {
     const stageOrder = [
@@ -780,6 +809,19 @@ export default function PipelinePage() {
       setActivityModalLoading(false);
     }
   };
+  const fetchPipelineAgents = async () => {
+    try {
+      const response = await apiClient.request("/pipeline/agents", {
+        method: "GET",
+      });
+
+      const data = response?.data || response || [];
+      setAgents(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch pipeline agents error:", err);
+      setAgents([]);
+    }
+  };
   return (
     <div className="pipeline-container-layout pipeline-page">
       <div className="heading_page">
@@ -945,8 +987,17 @@ export default function PipelinePage() {
           <div className="secondary-btn dropdown-filter">
             <div>
               <UserCheck size={15} />
-              <select defaultValue="">
-                <option value="">All Agents</option>
+              <select
+                value={agentFilter}
+                onChange={(e) => setAgentFilter(e.target.value)}
+              >
+                <option value="all">All Agents</option>
+
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name} ({agent.totalDeals})
+                  </option>
+                ))}
               </select>
             </div>
             <ChevronDown size={14} />
@@ -955,6 +1006,7 @@ export default function PipelinePage() {
             className="secondary-btn filter-btn"
             onClick={() => {
               setSearch("");
+              setAgentFilter("all");
               setPipelineFilters({
                 stage: "all",
                 risk: "all",
@@ -1284,7 +1336,13 @@ export default function PipelinePage() {
                   {riskQueue.length} at-risk deals need attention
                 </span>
               </div>
-              <button className="intelligence-view-all-navigation-link">
+              <button
+                className="intelligence-view-all-navigation-link"
+                onClick={() => {
+                  setRiskModalLimit(5);
+                  setRiskModalOpen(true);
+                }}
+              >
                 View All <ArrowRight size={14} />
               </button>
             </div>
@@ -2011,54 +2069,57 @@ export default function PipelinePage() {
           </div>
         </div>
       )}
-      {activityModalOpen && (
-        <div className="pipeline-modal-overlay">
-          <div className="pipeline-modal command-output-modal">
-            <div className="pipeline-modal-header">
-              <h3>Deal Activity</h3>
-
-              <button
-                type="button"
-                className="pipeline-modal-close"
-                onClick={() => setActivityModalOpen(false)}
-              >
-                ✕
-              </button>
+      <PipelineListModal
+        open={riskModalOpen}
+        title="AI Deal Risk Queue"
+        subtitle={`${riskQueue.length} at-risk deals need attention`}
+        items={visibleRiskItems}
+        hasMore={riskHasMore}
+        onClose={() => setRiskModalOpen(false)}
+        onLoadMore={() => setRiskModalLimit((prev) => prev + 5)}
+        emptyText="No at-risk deals right now."
+        renderItem={(row) => (
+          <div className="activity-modal-row" key={row.id}>
+            <span className="activity-log-dot-indicator red-dot"></span>
+            <div>
+              <strong>{row.name}</strong>
+              <p>
+                {row.value} • {row.reason} • {row.status} risk
+              </p>
             </div>
-
-            <div className="pipeline-modal-body activity-modal-body">
-              {activityModalEvents.length ? (
-                activityModalEvents.map((event) => (
-                  <div className="activity-modal-row" key={event.id}>
-                    <span className="activity-log-dot-indicator blue-dot"></span>
-
-                    <div>
-                      <strong>
-                        {event.metadata?.title || "Deal activity"}
-                      </strong>
-                      <p>{event.metadata?.sub || event.eventType}</p>
-                    </div>
-
-                    <span>{event.timeAgo || "Recently updated"}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="activity-modal-empty">No activity yet.</div>
-              )}
-
-              {activityModalHasMore && (
-                <button
-                  className="pipeline-load-more-btn"
-                  onClick={() => loadMoreActivity(false)}
-                  disabled={activityModalLoading}
-                >
-                  {activityModalLoading ? "Loading..." : "Load More"}
-                </button>
-              )}
-            </div>
+            <button
+              className="risk-table-cell-action-review-trigger-btn"
+              onClick={() => {
+                setRiskModalOpen(false);
+                reviewRiskDeal(row.id);
+              }}
+            >
+              Review
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      />
+      <PipelineListModal
+        open={activityModalOpen}
+        title="Deal Activity"
+        subtitle={selectedDeal?.name}
+        items={activityModalEvents}
+        hasMore={activityModalHasMore}
+        loading={activityModalLoading}
+        onClose={() => setActivityModalOpen(false)}
+        onLoadMore={() => loadMoreActivity(false)}
+        emptyText="No activity yet."
+        renderItem={(event) => (
+          <div className="activity-modal-row" key={event.id}>
+            <span className="activity-log-dot-indicator blue-dot"></span>
+            <div>
+              <strong>{event.metadata?.title || "Deal activity"}</strong>
+              <p>{event.metadata?.sub || event.eventType}</p>
+            </div>
+            <span>{event.timeAgo || "Recently updated"}</span>
+          </div>
+        )}
+      />
     </div>
   );
 }
