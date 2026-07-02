@@ -9,10 +9,23 @@ to = "https://www.cortexaaicrm.com/:splat"
 status = 301
 force = true
 
+# Deploy previews call the API same-origin (see VITE_API_BASE_URL below),
+# proxied here to the real backend. The backend's CORS allowlist only
+# admits the production domain, so a preview origin can't call it directly.
+# Unused in production, where the frontend calls the backend absolutely.
+[[redirects]]
+from = "/api/*"
+to = "https://backend.cortexaaicrm.com/api/:splat"
+status = 200
+force = true
+
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
+
+[context.deploy-preview.environment]
+  VITE_API_BASE_URL = "/api"
 
 # ─────────────────────────────────────────────
 # Redirect root domain → vacation rentals page
