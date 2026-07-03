@@ -620,6 +620,34 @@ export class WhatsAppQrConversationService {
       [conv.lead_id],
     );
 
+    let property: any = null;
+
+    if (leadRows[0]?.property_id) {
+      const { rows: propertyRows } = await this.db.query(
+        `
+    SELECT
+      id,
+      title,
+      city,
+      state,
+      price,
+      type,
+      status,
+      bedrooms,
+      bathrooms,
+      square_feet,
+      property_type,
+      listing_type
+    FROM properties
+    WHERE id = $1
+    LIMIT 1
+    `,
+        [leadRows[0].property_id],
+      );
+
+      property = propertyRows[0] || null;
+    }
+
     const { rows: messageRows } = await this.db.query(
       `
     SELECT
@@ -641,6 +669,7 @@ export class WhatsAppQrConversationService {
     const context = {
       conversation: conv,
       lead: leadRows[0] || null,
+      property,
       messages,
     };
 

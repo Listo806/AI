@@ -147,6 +147,29 @@ export function useWhatsAppDashboard() {
     }
   }, [loadStatus, loadDashboard]);
 
+  const loadConversationIntelligence = useCallback(async (conversation) => {
+    if (!conversation?.contact_phone) {
+      setAiIntelligence(null);
+      return;
+    }
+
+    try {
+      setIntelligenceLoading(true);
+
+      const res = await whatsappService.getConversationIntelligence(
+        conversation.contact_phone,
+      );
+
+      const data = res?.data || res || null;
+      setAiIntelligence(data);
+    } catch (err) {
+      console.error("Load conversation intelligence error:", err);
+      setAiIntelligence(null);
+    } finally {
+      setIntelligenceLoading(false);
+    }
+  }, []);
+  
   useEffect(() => {
     refresh();
   }, [refresh]);
@@ -351,28 +374,7 @@ export function useWhatsAppDashboard() {
     }));
   }, [messages]);
 
-  const loadConversationIntelligence = useCallback(async (conversation) => {
-    if (!conversation?.contact_phone) {
-      setAiIntelligence(null);
-      return;
-    }
-
-    try {
-      setIntelligenceLoading(true);
-
-      const res = await whatsappService.getConversationIntelligence(
-        conversation.contact_phone,
-      );
-
-      const data = res?.data || res || null;
-      setAiIntelligence(data);
-    } catch (err) {
-      console.error("Load conversation intelligence error:", err);
-      setAiIntelligence(null);
-    } finally {
-      setIntelligenceLoading(false);
-    }
-  }, []);
+  
 
   return {
     loading,
