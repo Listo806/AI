@@ -490,7 +490,7 @@ export class DashboardExtendedService {
   private async getPriorityQueue(isGlobal: boolean, teamIds: string[], userId: string, f: ExtendedFilters) {
     const lw = this.leadWhere(isGlobal, teamIds, userId, f, 1);
     const sql = `
-      SELECT l.id, l.name, a.score, a.intent_label, a.priority AS ai_priority, l.priority,
+      SELECT l.id, l.name, l.phone, a.score, a.intent_label, a.priority AS ai_priority, l.priority,
              a.next_action_json->>'action' AS next_action
       FROM leads l
       LEFT JOIN lead_ai_analysis a ON a.lead_id = l.id
@@ -505,6 +505,7 @@ export class DashboardExtendedService {
     return rows.map((r: any) => ({
       id: r.id,
       name: r.name,
+      phone: r.phone || null,
       score: r.score != null ? Number(r.score) : null,
       intent: r.intent_label || null,
       priority: r.ai_priority || r.priority || null,

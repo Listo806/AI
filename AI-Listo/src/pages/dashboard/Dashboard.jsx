@@ -525,7 +525,18 @@ export default function CortexaDashboard() {
             </div>
           </div>
           <div className="banner-action-row">
-            <button className="banner-btn text-dark" onClick={() => notAvailable("Call")}>
+            <button
+              className="banner-btn text-dark"
+              title={aiPriorityQueue.find((l) => l.phone) ? `Call ${aiPriorityQueue.find((l) => l.phone).name}` : undefined}
+              onClick={() => {
+                const target = aiPriorityQueue.find((l) => l.phone);
+                if (target) {
+                  window.location.href = `tel:${target.phone}`;
+                } else {
+                  notAvailable("Call");
+                }
+              }}
+            >
               <Phone size={16} /> Call
             </button>
             <button className="banner-btn btn-whatsapp-color" onClick={() => navigate("/dashboard/whatsapp")}>
