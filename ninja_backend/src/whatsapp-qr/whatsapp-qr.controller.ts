@@ -8,27 +8,27 @@ import {
   UseGuards,
   BadRequestException,
   NotFoundException,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { WhatsAppQrSessionService } from './whatsapp-qr-session.service';
-import { BaileysSocketService } from './baileys-socket.service';
-import { BaileysRedisAuthService } from './baileys-redis-auth.service';
-import { WhatsAppQrConversationService } from './whatsapp-qr-conversation.service';
-import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
-import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
-import { SendQrMessageDto } from './dto/send-qr-message.dto';
-import { SendQrVoiceDto } from './dto/send-qr-voice.dto';
-import { ToggleAiDto } from './dto/toggle-ai.dto';
-import { normalizeToE164 } from './utils/phone-normalize.util';
-import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
+} from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
+import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { WhatsAppQrSessionService } from "./whatsapp-qr-session.service";
+import { BaileysSocketService } from "./baileys-socket.service";
+import { BaileysRedisAuthService } from "./baileys-redis-auth.service";
+import { WhatsAppQrConversationService } from "./whatsapp-qr-conversation.service";
+import { WhatsAppQrMessageService } from "./whatsapp-qr-message.service";
+import { WhatsAppQrOutboundService } from "./whatsapp-qr-outbound.service";
+import { SendQrMessageDto } from "./dto/send-qr-message.dto";
+import { SendQrVoiceDto } from "./dto/send-qr-voice.dto";
+import { ToggleAiDto } from "./dto/toggle-ai.dto";
+import { normalizeToE164 } from "./utils/phone-normalize.util";
+import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
 
-@ApiTags('whatsapp-qr')
-@Controller('whatsapp-qr')
+@ApiTags("whatsapp-qr")
+@Controller("whatsapp-qr")
 @UseGuards(JwtAuthGuard, CrmAccessGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth("JWT-auth")
 export class WhatsAppQrController {
   constructor(
     private readonly sessions: WhatsAppQrSessionService,
@@ -40,21 +40,24 @@ export class WhatsAppQrController {
     private readonly outbound: WhatsAppQrOutboundService,
   ) {}
 
-  @Get('pending-qr')
-  @ApiOperation({ summary: 'Get pending QR if any (fallback when socket event missed)' })
+  @Get("pending-qr")
+  @ApiOperation({
+    summary: "Get pending QR if any (fallback when socket event missed)",
+  })
   async pendingQr(@CurrentUser() user: any) {
     const qr = this.realtime.getLastQr(user.id);
     return { data: { qr: qr ?? null } };
   }
 
-  @Get('status')
-  @ApiOperation({ summary: 'WhatsApp QR connection status (scoped to current user)' })
+  @Get("status")
+  @ApiOperation({
+    summary: "WhatsApp QR connection status (scoped to current user)",
+  })
   async status(@CurrentUser() user: any) {
     const row = await this.sessions.findByUserId(user.id);
     const handle = this.sockets.getHandle(user.id);
-    const dbStatus = row?.status ?? 'disconnected';
-    const connected =
-      dbStatus === 'connected' && handle?.connected === true;
+    const dbStatus = row?.status ?? "disconnected";
+    const connected = dbStatus === "connected" && handle?.connected === true;
     return {
       data: {
         enabled: this.sockets.isQrEnabled(),
@@ -67,8 +70,8 @@ export class WhatsAppQrController {
     };
   }
 
-  @Post('connect')
-  @ApiOperation({ summary: 'Start or resume QR connection' })
+  @Post("connect")
+  @ApiOperation({ summary: "Start or resume QR connection" })
   async connect(@CurrentUser() user: any) {
     const row = await this.sessions.getOrCreateByUserId(user.id);
     await this.sessions.touchLastQrAt(row.id);
@@ -78,50 +81,53 @@ export class WhatsAppQrController {
       data: {
         sessionId: row.id,
         message: this.sockets.isQrEnabled()
-          ? 'Session ready; connect Socket.IO namespace /whatsapp-qr with JWT to receive qr/connected/message events'
-          : 'Set WHATSAPP_QR_ENABLED=true and REDIS_URL for auth persistence',
+          ? "Session ready; connect Socket.IO namespace /whatsapp-qr with JWT to receive qr/connected/message events"
+          : "Set WHATSAPP_QR_ENABLED=true and REDIS_URL for auth persistence",
       },
     };
   }
 
-  @Post('disconnect')
-  @ApiOperation({ summary: 'Disconnect and clear Redis auth' })
+  @Post("disconnect")
+  @ApiOperation({ summary: "Disconnect and clear Redis auth" })
   async disconnect(@CurrentUser() user: any) {
     const row = await this.sessions.findByUserId(user.id);
-    if (row) await this.sessions.setStatus(row.id, 'disconnected');
+    if (row) await this.sessions.setStatus(row.id, "disconnected");
     await this.redisAuth.clearAuth(user.id);
     await this.sockets.disconnectUser(user.id);
     return { success: true };
   }
 
-  @Get('conversations')
+  @Get("conversations")
   @ApiOperation({
     summary:
-      'List QR conversations (role-scoped): admin = site-wide, owner = all their teams, agent = own team. No message bodies.',
+      "List QR conversations (role-scoped): admin = site-wide, owner = all their teams, agent = own team. No message bodies.",
   })
   async listConversations(@CurrentUser() user: any) {
     const data = await this.conversations.listScopedForUser(user);
     return { data };
   }
 
-  @Get('conversations/:contactPhone/messages')
+  @Get("conversations/:contactPhone/messages")
   @ApiOperation({
     summary:
-      'Messages for contact (E.164). Pagination: limit (default 50, max 200), before (ISO timestamp — older messages)',
+      "Messages for contact (E.164). Pagination: limit (default 50, max 200), before (ISO timestamp — older messages)",
   })
   async listMessages(
     @CurrentUser() user: any,
-    @Param('contactPhone') contactPhoneParam: string,
-    @Query('limit') limitRaw?: string,
-    @Query('before') before?: string,
+    @Param("contactPhone") contactPhoneParam: string,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
   ) {
     const contactPhone = normalizeToE164(
-      decodeURIComponent(contactPhoneParam || ''),
+      decodeURIComponent(contactPhoneParam || ""),
     );
     if (!contactPhone) {
-      throw new BadRequestException('Invalid contactPhone; use E.164');
+      throw new BadRequestException("Invalid contactPhone; use E.164");
     }
-    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(
+      user,
+      contactPhone,
+    );
     if (!conv) {
       return { data: [] };
     }
@@ -134,20 +140,25 @@ export class WhatsAppQrController {
     return { data, conversationId: conv.id };
   }
 
-  @Post('send')
-  @ApiOperation({ summary: 'Agent send outbound via Baileys' })
+  @Post("send")
+  @ApiOperation({ summary: "Agent send outbound via Baileys" })
   async send(@CurrentUser() user: any, @Body() dto: SendQrMessageDto) {
     const contactPhone = normalizeToE164(dto.contactPhone);
     if (!contactPhone) {
-      throw new BadRequestException('Invalid contactPhone; use E.164');
+      throw new BadRequestException("Invalid contactPhone; use E.164");
     }
-    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(
+      user,
+      contactPhone,
+    );
     if (!conv) {
-      throw new NotFoundException('No conversation for this contact');
+      throw new NotFoundException("No conversation for this contact");
     }
     const handle = this.sockets.getHandle(conv.user_id);
     if (!handle?.connected) {
-      throw new BadRequestException('WhatsApp QR session for this conversation is not connected');
+      throw new BadRequestException(
+        "WhatsApp QR session for this conversation is not connected",
+      );
     }
     await this.outbound.sendAgentText({
       userId: conv.user_id,
@@ -161,20 +172,27 @@ export class WhatsAppQrController {
     return { success: true };
   }
 
-  @Post('send-voice')
-  @ApiOperation({ summary: 'Send voice message (audio/ogg base64) via Baileys' })
+  @Post("send-voice")
+  @ApiOperation({
+    summary: "Send voice message (audio/ogg base64) via Baileys",
+  })
   async sendVoice(@CurrentUser() user: any, @Body() dto: SendQrVoiceDto) {
     const contactPhone = normalizeToE164(dto.contactPhone);
     if (!contactPhone) {
-      throw new BadRequestException('Invalid contactPhone; use E.164');
+      throw new BadRequestException("Invalid contactPhone; use E.164");
     }
-    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(
+      user,
+      contactPhone,
+    );
     if (!conv) {
-      throw new NotFoundException('No conversation for this contact');
+      throw new NotFoundException("No conversation for this contact");
     }
     const handle = this.sockets.getHandle(conv.user_id);
     if (!handle?.connected) {
-      throw new BadRequestException('WhatsApp QR session for this conversation is not connected');
+      throw new BadRequestException(
+        "WhatsApp QR session for this conversation is not connected",
+      );
     }
     await this.outbound.sendAgentVoice({
       userId: conv.user_id,
@@ -188,27 +206,39 @@ export class WhatsAppQrController {
     return { success: true };
   }
 
-  @Post('conversations/:contactPhone/toggle-ai')
-  @ApiOperation({ summary: 'Toggle AI for conversation' })
+  @Post("conversations/:contactPhone/toggle-ai")
+  @ApiOperation({ summary: "Toggle AI for conversation" })
   async toggleAi(
     @CurrentUser() user: any,
-    @Param('contactPhone') contactPhoneParam: string,
+    @Param("contactPhone") contactPhoneParam: string,
     @Body() dto: ToggleAiDto,
   ) {
     const contactPhone = normalizeToE164(
-      decodeURIComponent(contactPhoneParam || ''),
+      decodeURIComponent(contactPhoneParam || ""),
     );
     if (!contactPhone) {
-      throw new BadRequestException('Invalid contactPhone');
+      throw new BadRequestException("Invalid contactPhone");
     }
-    const conv = await this.conversations.findScopedByContactPhone(user, contactPhone);
+    const conv = await this.conversations.findScopedByContactPhone(
+      user,
+      contactPhone,
+    );
     if (!conv) {
-      throw new NotFoundException('Conversation not found');
+      throw new NotFoundException("Conversation not found");
     }
-    const ok = await this.conversations.setAiEnabledByConversationId(conv.id, dto.aiEnabled);
+    const ok = await this.conversations.setAiEnabledByConversationId(
+      conv.id,
+      dto.aiEnabled,
+    );
     if (!ok) {
-      throw new NotFoundException('Conversation not found');
+      throw new NotFoundException("Conversation not found");
     }
     return { success: true, aiEnabled: dto.aiEnabled };
+  }
+
+  @Get("dashboard")
+  @ApiOperation({ summary: "WhatsApp dashboard overview" })
+  async dashboard(@CurrentUser() user: any) {
+    return this.conversations.getDashboardForUser(user);
   }
 }

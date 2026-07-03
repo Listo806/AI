@@ -73,6 +73,8 @@ export default function WhatsAppPage() {
     disconnectDevice,
     sendMessage,
     toggleSelectedAi,
+    dashboardStats,
+    dashboardSegments,
   } = useWhatsAppDashboard();
   return (
     <div className="leads-page whatsapp-page">
@@ -136,94 +138,49 @@ export default function WhatsAppPage() {
       </div>
       {/* TOP STATS COUNTERS */}
       <div className="top-stats-row-grid">
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-green">
-            <Smartphone size={18} color="#16a34a" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">Connected Accounts</span>
-            <h3 className="metric-value">{stats.connectedAccounts}</h3>
-            <span className="metric-subtext text-green">
-              ● Device connected
-            </span>
-          </div>
-        </div>
+        {dashboardStats.map((item, index) => (
+          <div className="stat-metric-box" key={index}>
+            <div
+              className={`metric-icon-wrap ${
+                index === 0
+                  ? "bg-light-green"
+                  : index === 1
+                    ? "bg-light-blue"
+                    : index === 2
+                      ? "bg-light-orange"
+                      : index === 3
+                        ? "bg-light-purple"
+                        : index === 4
+                          ? "bg-light-amber"
+                          : index === 5
+                            ? "bg-light-teal"
+                            : "bg-light-indigo"
+              }`}
+            >
+              {item.iconKey === "smartphone" ? (
+                <Smartphone size={18} color="#16a34a" />
+              ) : item.iconKey === "bot" ? (
+                <Bot size={18} color="#9333ea" />
+              ) : item.iconKey === "calendar" ? (
+                <Calendar size={18} color="#d97706" />
+              ) : item.iconKey === "clock" ? (
+                <Clock3 size={18} color="#0d9488" />
+              ) : item.iconKey === "trend" ? (
+                <TrendingUp size={18} color="#4f46e5" />
+              ) : (
+                <MessageCircle size={18} color="#2563eb" />
+              )}
+            </div>
 
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-blue">
-            <MessageCircle size={18} color="#2563eb" />
+            <div className="metric-details">
+              <span className="metric-label">{item.label}</span>
+              <h3 className="metric-value">{item.value}</h3>
+              <span className={`metric-subtext ${item.className}`}>
+                {item.subtext}
+              </span>
+            </div>
           </div>
-          <div className="metric-details">
-            <span className="metric-label">Active Conversations</span>
-            <h3 className="metric-value">{stats.activeConversations}</h3>
-            <span className="metric-subtext text-green">
-              WhatsApp + CRM ↗ 18%
-            </span>
-          </div>
-        </div>
-
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-orange">
-            <MessageCircle size={18} color="#ea580c" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">Unread Conversations</span>
-            <h3 className="metric-value">{stats.unreadConversations}</h3>
-            <span className="metric-subtext text-red">
-              Need attention ↗ 12%
-            </span>
-          </div>
-        </div>
-
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-purple">
-            <Bot size={18} color="#9333ea" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">AI Replies Today</span>
-            <h3 className="metric-value">{stats.aiRepliesToday}</h3>
-            <span className="metric-subtext text-green">
-              Auto-reply activity ↗ 24%
-            </span>
-          </div>
-        </div>
-
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-amber">
-            <Calendar size={18} color="#d97706" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">Appointments Booked</span>
-            <h3 className="metric-value">{stats.appointmentsBooked}</h3>
-            <span className="metric-subtext text-green">This week ↗ 15%</span>
-          </div>
-        </div>
-
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-teal">
-            <Clock3 size={18} color="#0d9488" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">Avg Response Time</span>
-            <h3 className="metric-value">{stats.avgResponseTime}</h3>
-            <span className="metric-subtext text-green">
-              AI-assisted replies ↓ 8%
-            </span>
-          </div>
-        </div>
-
-        <div className="stat-metric-box">
-          <div className="metric-icon-wrap bg-light-indigo">
-            <TrendingUp size={18} color="#4f46e5" />
-          </div>
-          <div className="metric-details">
-            <span className="metric-label">WhatsApp Close Rate</span>
-            <h3 className="metric-value">{stats.closeRate}</h3>
-            <span className="metric-subtext text-green">
-              Lead-to-close ↗ 6%
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* STATUS & SEGMENTATION ROW */}
@@ -231,23 +188,23 @@ export default function WhatsAppPage() {
         <div className="priority-bar-line-layout">
           <div className="segment-line-item text-red">
             <span className="segment-label">🔥 Urgent WhatsApp Leads</span>
-            <h2 className="segment-count">{segments.urgent}</h2>
+            <h2 className="segment-count">{dashboardSegments?.urgent || 0}</h2>
           </div>
           <div className="segment-line-item text-orange">
             <span className="segment-label">🔔 Unread Conversations</span>
-            <h2 className="segment-count">{segments.unread}</h2>
+            <h2 className="segment-count">{dashboardSegments?.unread || 0}</h2>
           </div>
           <div className="segment-line-item text-blue">
             <span className="segment-label">⏳ Need Follow-Up</span>
-            <h2 className="segment-count">{segments.needFollowUp}</h2>
+            <h2 className="segment-count">{dashboardSegments?.needFollowUp || 0}</h2>
           </div>
           <div className="segment-line-item text-green">
             <span className="segment-label">📅 Ready To Book</span>
-            <h2 className="segment-count">{segments.readyToBook}</h2>
+            <h2 className="segment-count">{dashboardSegments?.readyToBook || 0}</h2>
           </div>
           <div className="segment-line-item text-purple">
             <span className="segment-label">💜 AI Replies Pending Review</span>
-            <h2 className="segment-count">{segments.aiPending}</h2>
+            <h2 className="segment-count">{dashboardSegments?.aiPending || 0}</h2>
           </div>
         </div>
         <div className="device-wrap">

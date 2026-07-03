@@ -54,6 +54,9 @@ export function useWhatsAppDashboard() {
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
 
+  const [dashboardStats, setDashboardStats] = useState([]);
+  const [dashboardSegments, setDashboardSegments] = useState(null);
+
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -74,42 +77,36 @@ export function useWhatsAppDashboard() {
     }
   }, []);
 
-  const loadConversations = useCallback(async () => {
+  const loadDashboard = useCallback(async () => {
     try {
-      const res = await whatsappService.getConversations();
-      const data = res?.data || res || [];
+      const res = await whatsappService.getDashboard();
+      const data = res?.data || res || {};
 
-      const normalized = Array.isArray(data)
-        ? data.map((conv) => {
-            const score = scoreFromConversation(conv);
-            const tag = tagFromScore(score);
-
-            return {
-              ...conv,
-              displayName: conv.lead_name || conv.contact_phone || "WhatsApp Lead",
-              initials: initials(conv.lead_name || conv.contact_phone),
-              timeAgo: timeAgo(conv.last_activity_at),
-              score,
-              tag,
-              lastMessage:
-                conv.last_action_label ||
-                (conv.last_message_type
-                  ? `${conv.last_message_type} message`
-                  : "No recent action"),
-            };
-          })
+      const normalized = Array.isArray(data.conversations)
+        ? data.conversations.map((conv) => ({
+            ...conv,
+            initials: initials(conv.displayName || conv.contact_phone),
+          }))
         : [];
 
+      setDashboardStats(Array.isArray(data.stats) ? data.stats : []);
+      setDashboardSegments(data.segments || null);
       setConversations(normalized);
 
       setSelectedConversation((prev) => {
         if (prev) {
-          return normalized.find((item) => item.id === prev.id) || normalized[0] || null;
+          return (
+            normalized.find((item) => item.id === prev.id) ||
+            normalized[0] ||
+            null
+          );
         }
         return normalized[0] || null;
       });
     } catch (err) {
-      console.error("Load conversations error:", err);
+      console.error("Load WhatsApp dashboard error:", err);
+      setDashboardStats([]);
+      setDashboardSegments(null);
       setConversations([]);
     }
   }, []);
@@ -123,7 +120,10 @@ export function useWhatsAppDashboard() {
     try {
       setMessagesLoading(true);
 
-      const res = await whatsappService.getMessages(conversation.contact_phone, 80);
+      const res = await whatsappService.getMessages(
+        conversation.contact_phone,
+        80,
+      );
       const data = res?.data || res || [];
 
       setMessages(Array.isArray(data) ? data : []);
@@ -138,15 +138,11 @@ export function useWhatsAppDashboard() {
   const refresh = useCallback(async () => {
     try {
       setLoading(true);
-      await Promise.all([loadStatus(), loadConversations()]);
+      await Promise.all([loadStatus(), loadDashboard()]);
     } finally {
       setLoading(false);
     }
-  }, [loadStatus, loadConversations]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  }, [loadStatus, loadDashboard]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -185,11 +181,14 @@ export function useWhatsAppDashboard() {
     try {
       setSending(true);
 
-      await whatsappService.sendMessage(selectedConversation.contact_phone, text);
+      await whatsappService.sendMessage(
+        selectedConversation.contact_phone,
+        text,
+      );
 
       setMessageText("");
       await loadMessages(selectedConversation);
-      await loadConversations();
+      await loadDashboard();
     } catch (err) {
       console.error("Send WhatsApp message error:", err);
     } finally {
@@ -206,10 +205,12 @@ export function useWhatsAppDashboard() {
       await whatsappService.toggleAi(selectedConversation.contact_phone, next);
 
       setSelectedConversation((prev) =>
-        prev ? { ...prev, ai_enabled: next, owner_type: next ? "ai" : "human" } : prev,
+        prev
+          ? { ...prev, ai_enabled: next, owner_type: next ? "ai" : "human" }
+          : prev,
       );
 
-      await loadConversations();
+      await loadDashboard();
     } catch (err) {
       console.error("Toggle AI error:", err);
     }
@@ -266,7 +267,8 @@ export function useWhatsAppDashboard() {
       0,
     );
     const needFollowUp = conversations.filter(
-      (conv) => conv.last_message_type === "human" || conv.owner_type === "human",
+      (conv) =>
+        conv.last_message_type === "human" || conv.owner_type === "human",
     ).length;
     const aiPending = conversations.filter((conv) => conv.ai_enabled).length;
 
@@ -307,10 +309,9 @@ export function useWhatsAppDashboard() {
       budget: "Unknown",
       timeline: "Unknown",
       ghostRisk: `${Math.max(5, 100 - score)}%`,
-      recommendedAction:
-        selectedConversation.ai_enabled
-          ? "Let AI handle the next reply or send property options."
-          : "Human owner selected. Review conversation and reply manually.",
+      recommendedAction: selectedConversation.ai_enabled
+        ? "Let AI handle the next reply or send property options."
+        : "Human owner selected. Review conversation and reply manually.",
     };
   }, [selectedConversation]);
 
@@ -366,7 +367,7 @@ export function useWhatsAppDashboard() {
 
     refresh,
     loadStatus,
-    loadConversations,
+    loadDashboard,
     loadMessages,
     connectDevice,
     disconnectDevice,

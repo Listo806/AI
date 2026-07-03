@@ -79,4 +79,12 @@ export const whatsappService = {
       ),
     );
   },
+
+  async getDashboard() {
+    return unwrap(
+      await apiClient.request("/whatsapp-qr/dashboard", {
+        method: "GET",
+      }),
+    );
+  },
 };
