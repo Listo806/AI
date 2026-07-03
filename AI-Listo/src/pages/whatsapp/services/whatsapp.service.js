@@ -87,4 +87,17 @@ export const whatsappService = {
       }),
     );
   },
+
+  async getConversationIntelligence(contactPhone) {
+    return unwrap(
+      await apiClient.request(
+        `/whatsapp-qr/conversations/${encodeURIComponent(
+          contactPhone,
+        )}/intelligence`,
+        {
+          method: "GET",
+        },
+      ),
+    );
+  },
 };

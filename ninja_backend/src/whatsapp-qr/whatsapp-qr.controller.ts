@@ -241,4 +241,21 @@ export class WhatsAppQrController {
   async dashboard(@CurrentUser() user: any) {
     return this.conversations.getDashboardForUser(user);
   }
+
+  @Get("conversations/:contactPhone/intelligence")
+  @ApiOperation({ summary: "AI intelligence for WhatsApp QR conversation" })
+  async conversationIntelligence(
+    @CurrentUser() user: any,
+    @Param("contactPhone") contactPhoneParam: string,
+  ) {
+    const contactPhone = normalizeToE164(
+      decodeURIComponent(contactPhoneParam || ""),
+    );
+
+    if (!contactPhone) {
+      throw new BadRequestException("Invalid contactPhone");
+    }
+
+    return this.conversations.getConversationIntelligence(user, contactPhone);
+  }
 }

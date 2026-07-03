@@ -74,6 +74,8 @@ export default function WhatsAppPage() {
     disconnectDevice,
     sendMessage,
     toggleSelectedAi,
+    intelligenceLoading,
+    aiIntelligence,
   } = useWhatsAppDashboard();
   return (
     <div className="leads-page whatsapp-page">
@@ -501,9 +503,10 @@ export default function WhatsAppPage() {
                   AI Summary <span className="beta-tag-pill">Beta</span>
                 </h4>
                 <p>
-                  {selectedConversation
-                    ? `Latest context: ${selectedConversation.lastMessage || "No recent activity."}`
-                    : "Select a WhatsApp conversation to view AI summary."}
+                  {intelligenceLoading
+                    ? "Analyzing conversation..."
+                    : selectedIntelligence.summary ||
+                      "Select a WhatsApp conversation to view AI summary."}
                 </p>
                 <div className="summary-pills-row-footer">
                   <span className="badge-pill bg-light-green text-green">
@@ -652,18 +655,32 @@ export default function WhatsAppPage() {
 
             {/* AI CONTEXT SUGGESTED UTILITIES CHIPS */}
             <div className="suggested-chips-scroll panel-mid-utilities-row">
-              <button className="utility-chip-action-btn">
-                <Home size={12} /> Send Property Options
-              </button>
-              <button className="utility-chip-action-btn">
-                <Calendar size={12} /> Book Appointment
-              </button>
-              <button className="utility-chip-action-btn">
-                <Brain size={12} /> Ask Budget
-              </button>
-              <button className="utility-chip-action-btn">
-                <Share2 size={12} /> Share Location
-              </button>
+              {(selectedIntelligence.suggestedReplies || []).length ? (
+                selectedIntelligence.suggestedReplies.map((reply, index) => (
+                  <button
+                    className="utility-chip-action-btn"
+                    key={index}
+                    onClick={() => setMessageText(reply)}
+                  >
+                    <Sparkles size={12} /> {reply}
+                  </button>
+                ))
+              ) : (
+                <>
+                  <button className="utility-chip-action-btn">
+                    <Home size={12} /> Send Property Options
+                  </button>
+                  <button className="utility-chip-action-btn">
+                    <Calendar size={12} /> Book Appointment
+                  </button>
+                  <button className="utility-chip-action-btn">
+                    <Brain size={12} /> Ask Budget
+                  </button>
+                  <button className="utility-chip-action-btn">
+                    <Share2 size={12} /> Share Location
+                  </button>
+                </>
+              )}
               <button className="utility-chip-arrow-nav-btn">❯</button>
             </div>
 

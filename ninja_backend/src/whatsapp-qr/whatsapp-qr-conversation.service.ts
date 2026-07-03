@@ -3,6 +3,7 @@ import { DatabaseService } from "../database/database.service";
 import { CrmService } from "../crm/crm.service";
 import { ActivityFeedService } from "../crm/activity-feed.service";
 import { leadScopeWhereClause } from "../crm/dashboard-scope-sql";
+import OpenAI from "openai";
 
 export type QrConversationRow = {
   id: string;
@@ -50,6 +51,10 @@ export class WhatsAppQrConversationService {
     private readonly crm: CrmService,
     private readonly activityFeed: ActivityFeedService,
   ) {}
+
+  private openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   async findBySessionAndPhone(
     sessionId: string,
@@ -563,5 +568,187 @@ export class WhatsAppQrConversationService {
         messagesToday: Number(messageStats.messagesToday || 0),
       },
     };
+  }
+
+  async getConversationIntelligence(
+    user: { id: string; teamId: string | null; role: string },
+    contactPhone: string,
+  ) {
+    const conv = await this.findScopedByContactPhone(user, contactPhone);
+
+    if (!conv) {
+      return {
+        score: 0,
+        sentiment: "Unknown",
+        intent: "Unknown",
+        responseLikelihood: "0%",
+        closeProbability: "0%",
+        expectedRevenue: "$0",
+        budget: "Unknown",
+        timeline: "Unknown",
+        ghostRisk: "0%",
+        summary: "Conversation not found.",
+        recommendedAction: "Select another conversation.",
+        suggestedReplies: [],
+      };
+    }
+
+    const { rows: leadRows } = await this.db.query(
+      `
+    SELECT
+      id,
+      name,
+      email,
+      phone,
+      status,
+      priority,
+      source,
+      notes,
+      property_id,
+      lead_metadata,
+      parsed_city,
+      parsed_country,
+      parsed_budget_min,
+      parsed_budget_max,
+      parsed_intent,
+      created_at,
+      updated_at
+    FROM leads
+    WHERE id = $1
+    LIMIT 1
+    `,
+      [conv.lead_id],
+    );
+
+    const { rows: messageRows } = await this.db.query(
+      `
+    SELECT
+      direction,
+      sender_type,
+      message_type,
+      body,
+      created_at
+    FROM whatsapp_qr_messages
+    WHERE conversation_id = $1
+    ORDER BY created_at DESC
+    LIMIT 30
+    `,
+      [conv.id],
+    );
+
+    const messages = messageRows.reverse();
+
+    const context = {
+      conversation: conv,
+      lead: leadRows[0] || null,
+      messages,
+    };
+
+    const systemPrompt = `
+You are CORTEXA AI, a real estate WhatsApp conversation intelligence analyst.
+
+Analyze this WhatsApp conversation and return ONLY valid JSON.
+
+Return this exact shape:
+{
+  "score": 88,
+  "sentiment": "Positive | Neutral | Negative",
+  "intent": "Very High | High | Medium | Low",
+  "responseLikelihood": "92%",
+  "closeProbability": "78%",
+  "expectedRevenue": "$325K",
+  "budget": "$250K - $400K",
+  "timeline": "Within 30 days",
+  "ghostRisk": "12%",
+  "summary": "Short useful summary",
+  "recommendedAction": "One clear next best action",
+  "suggestedReplies": [
+    "Short WhatsApp reply option 1",
+    "Short WhatsApp reply option 2",
+    "Short WhatsApp reply option 3"
+  ]
+}
+
+Rules:
+- Use only the CRM and message data provided.
+- If budget or revenue is missing, infer conservatively or return "Unknown".
+- Keep suggested replies short, friendly, and professional.
+- Same language as the lead if obvious.
+`;
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `WHATSAPP CRM DATA:\n${JSON.stringify(context)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const parsed = JSON.parse(response.output_text || "{}");
+
+      return {
+        score: Number(parsed.score || 0),
+        sentiment: parsed.sentiment || "Unknown",
+        intent: parsed.intent || "Unknown",
+        responseLikelihood: parsed.responseLikelihood || "0%",
+        closeProbability: parsed.closeProbability || "0%",
+        expectedRevenue: parsed.expectedRevenue || "$0",
+        budget: parsed.budget || "Unknown",
+        timeline: parsed.timeline || "Unknown",
+        ghostRisk: parsed.ghostRisk || "0%",
+        summary: parsed.summary || "No summary available.",
+        recommendedAction:
+          parsed.recommendedAction || "Review the conversation and follow up.",
+        suggestedReplies: Array.isArray(parsed.suggestedReplies)
+          ? parsed.suggestedReplies.slice(0, 3)
+          : [],
+      };
+    } catch (err) {
+      console.error("WhatsApp intelligence AI error:", err);
+
+      const fallbackScore = this.getConversationScore({
+        unread_count: conv.unread_count,
+        ai_enabled: conv.ai_enabled,
+        last_activity_at: new Date().toISOString(),
+      });
+
+      return {
+        score: fallbackScore,
+        sentiment: fallbackScore >= 60 ? "Positive" : "Neutral",
+        intent:
+          fallbackScore >= 80
+            ? "Very High"
+            : fallbackScore >= 60
+              ? "Medium"
+              : "Low",
+        responseLikelihood: `${Math.min(95, fallbackScore + 4)}%`,
+        closeProbability: `${Math.max(8, fallbackScore - 10)}%`,
+        expectedRevenue: "$0",
+        budget: "Unknown",
+        timeline: "Unknown",
+        ghostRisk: `${Math.max(5, 100 - fallbackScore)}%`,
+        summary: "Fallback intelligence generated from conversation activity.",
+        recommendedAction: conv.ai_enabled
+          ? "Let AI handle the next reply or send property options."
+          : "Human owner selected. Review conversation and reply manually.",
+        suggestedReplies: [
+          "Thanks for your message. I can help you with the next steps.",
+          "Would you like me to send more property details?",
+          "What time works best for a quick follow-up?",
+        ],
+      };
+    }
   }
 }

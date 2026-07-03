@@ -57,6 +57,9 @@ export function useWhatsAppDashboard() {
   const [dashboardStats, setDashboardStats] = useState([]);
   const [dashboardSegments, setDashboardSegments] = useState(null);
 
+  const [intelligenceLoading, setIntelligenceLoading] = useState(false);
+  const [aiIntelligence, setAiIntelligence] = useState(null);
+
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -145,10 +148,15 @@ export function useWhatsAppDashboard() {
   }, [loadStatus, loadDashboard]);
 
   useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
+      loadConversationIntelligence(selectedConversation);
     }
-  }, [selectedConversation, loadMessages]);
+  }, [selectedConversation, loadMessages, loadConversationIntelligence]);
 
   const connectDevice = async () => {
     try {
@@ -282,6 +290,10 @@ export function useWhatsAppDashboard() {
   }, [conversations]);
 
   const selectedIntelligence = useMemo(() => {
+    if (aiIntelligence) {
+      return aiIntelligence;
+    }
+
     if (!selectedConversation) {
       return {
         score: 0,
@@ -293,7 +305,9 @@ export function useWhatsAppDashboard() {
         budget: "Unknown",
         timeline: "Unknown",
         ghostRisk: "0%",
+        summary: "Select a conversation to see AI summary.",
         recommendedAction: "Select a conversation to see AI recommendations.",
+        suggestedReplies: [],
       };
     }
 
@@ -309,11 +323,13 @@ export function useWhatsAppDashboard() {
       budget: "Unknown",
       timeline: "Unknown",
       ghostRisk: `${Math.max(5, 100 - score)}%`,
+      summary: selectedConversation.lastMessage || "No recent activity.",
       recommendedAction: selectedConversation.ai_enabled
         ? "Let AI handle the next reply or send property options."
         : "Human owner selected. Review conversation and reply manually.",
+      suggestedReplies: [],
     };
-  }, [selectedConversation]);
+  }, [aiIntelligence, selectedConversation]);
 
   const timeline = useMemo(() => {
     return messages.slice(-5).map((msg) => ({
@@ -334,6 +350,29 @@ export function useWhatsAppDashboard() {
       type: msg.direction,
     }));
   }, [messages]);
+
+  const loadConversationIntelligence = useCallback(async (conversation) => {
+    if (!conversation?.contact_phone) {
+      setAiIntelligence(null);
+      return;
+    }
+
+    try {
+      setIntelligenceLoading(true);
+
+      const res = await whatsappService.getConversationIntelligence(
+        conversation.contact_phone,
+      );
+
+      const data = res?.data || res || null;
+      setAiIntelligence(data);
+    } catch (err) {
+      console.error("Load conversation intelligence error:", err);
+      setAiIntelligence(null);
+    } finally {
+      setIntelligenceLoading(false);
+    }
+  }, []);
 
   return {
     loading,
@@ -370,5 +409,7 @@ export function useWhatsAppDashboard() {
     disconnectDevice,
     sendMessage,
     toggleSelectedAi,
+    intelligenceLoading,
+    aiIntelligence,
   };
 }
