@@ -58,3 +58,14 @@ export async function setPropertyThumbnail(propertyId, thumbnailUrl) {
     body: JSON.stringify({ thumbnailUrl: thumbnailUrl || null }),
   });
 }
+
+export async function getProperties(params = {}) {
+  const res = await apiClient.get("/properties", { params });
+  return res.data;
+}
+
+export async function getPropertiesDashboard(params = {}) {
+  const res = await apiClient.get("/properties/dashboard", { params });
+  return res.data;
+}
+

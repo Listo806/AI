@@ -3,8 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-} from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
+} from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
 import {
   Property,
   PropertyStatus,
@@ -12,18 +12,25 @@ import {
   UpdatePropertyDto,
   PropertyMedia,
   ListingCategory,
-} from './entities/property.entity';
-import { sanitizeAmenities } from './amenities.constants';
-import { EventLoggerService } from '../analytics/events/event-logger.service';
-import { StorageService } from '../integrations/storage/storage.service';
-import { WebhooksService } from '../integrations/webhooks/webhooks.service';
+} from "./entities/property.entity";
+import { sanitizeAmenities } from "./amenities.constants";
+import { EventLoggerService } from "../analytics/events/event-logger.service";
+import { StorageService } from "../integrations/storage/storage.service";
+import { WebhooksService } from "../integrations/webhooks/webhooks.service";
 
 const MAX_IMAGES_PER_PROPERTY = 20;
 const DEFAULT_PAGE_LIMIT = 20;
 const MAX_PAGE_LIMIT = 100;
 
 /** Allowed values for property_type (marketplace filter and validation) */
-const PROPERTY_TYPE_VALUES = ['house', 'apartment', 'land', 'commercial', 'villa', 'office'] as const;
+const PROPERTY_TYPE_VALUES = [
+  "house",
+  "apartment",
+  "land",
+  "commercial",
+  "villa",
+  "office",
+] as const;
 
 @Injectable()
 export class PropertiesService {
@@ -35,7 +42,10 @@ export class PropertiesService {
   ) {}
 
   /** User can assign to team only if they belong to it (member or owner). */
-  private async ensureUserBelongsToTeam(userId: string, teamId: string): Promise<void> {
+  private async ensureUserBelongsToTeam(
+    userId: string,
+    teamId: string,
+  ): Promise<void> {
     const { rows } = await this.db.query(
       `SELECT 1 FROM teams t WHERE t.id = $1 AND t.owner_id = $2
        UNION ALL
@@ -44,12 +54,16 @@ export class PropertiesService {
       [teamId, userId],
     );
     if (!rows.length) {
-      throw new ForbiddenException('You can only assign properties to teams you belong to');
+      throw new ForbiddenException(
+        "You can only assign properties to teams you belong to",
+      );
     }
   }
 
   /** Thumbnail fallback: primary image, else first by display_order. */
-  private async getThumbnailFallback(propertyId: string): Promise<string | null> {
+  private async getThumbnailFallback(
+    propertyId: string,
+  ): Promise<string | null> {
     const { rows } = await this.db.query(
       `SELECT url FROM property_media
        WHERE property_id = $1 AND type = 'image'
@@ -60,13 +74,22 @@ export class PropertiesService {
     return rows[0]?.url ?? null;
   }
 
-  private async attachThumbnailUrl<T extends { id: string; thumbnailUrl?: string | null }>(p: T): Promise<T & { thumbnailUrl: string | null }> {
-    const url = p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : await this.getThumbnailFallback(p.id);
+  private async attachThumbnailUrl<
+    T extends { id: string; thumbnailUrl?: string | null },
+  >(p: T): Promise<T & { thumbnailUrl: string | null }> {
+    const url =
+      p.thumbnailUrl != null && p.thumbnailUrl !== ""
+        ? p.thumbnailUrl
+        : await this.getThumbnailFallback(p.id);
     return { ...p, thumbnailUrl: url || null };
   }
 
-  private async attachThumbnailUrlList<T extends { id: string; thumbnailUrl?: string | null }>(list: T[]): Promise<(T & { thumbnailUrl: string | null })[]> {
-    const idsNeedingFallback = list.filter((p) => p.thumbnailUrl == null || p.thumbnailUrl === '').map((p) => p.id);
+  private async attachThumbnailUrlList<
+    T extends { id: string; thumbnailUrl?: string | null },
+  >(list: T[]): Promise<(T & { thumbnailUrl: string | null })[]> {
+    const idsNeedingFallback = list
+      .filter((p) => p.thumbnailUrl == null || p.thumbnailUrl === "")
+      .map((p) => p.id);
     let fallbackMap: Record<string, string> = {};
     if (idsNeedingFallback.length > 0) {
       const { rows } = await this.db.query(
@@ -76,48 +99,68 @@ export class PropertiesService {
          ORDER BY property_id, is_primary DESC, display_order ASC`,
         [idsNeedingFallback],
       );
-      fallbackMap = rows.reduce((acc, r) => ({ ...acc, [r.propertyId]: r.url }), {});
+      fallbackMap = rows.reduce(
+        (acc, r) => ({ ...acc, [r.propertyId]: r.url }),
+        {},
+      );
     }
     return list.map((p) => ({
       ...p,
-      thumbnailUrl: (p.thumbnailUrl != null && p.thumbnailUrl !== '' ? p.thumbnailUrl : fallbackMap[p.id]) || null,
+      thumbnailUrl:
+        (p.thumbnailUrl != null && p.thumbnailUrl !== ""
+          ? p.thumbnailUrl
+          : fallbackMap[p.id]) || null,
     }));
   }
 
-  async create(createPropertyDto: CreatePropertyDto, userId: string, teamId: string | null, userRole?: string): Promise<Property> {
+  async create(
+    createPropertyDto: CreatePropertyDto,
+    userId: string,
+    teamId: string | null,
+    userRole?: string,
+  ): Promise<Property> {
     const status = createPropertyDto.status || PropertyStatus.DRAFT;
     // Lock teamId to JWT for non-admin; only admin/super_admin can override
-    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
-    const resolvedTeamId = isAdmin && createPropertyDto.teamId !== undefined && createPropertyDto.teamId !== null
-      ? createPropertyDto.teamId
-      : teamId;
+    const isAdmin = userRole === "super_admin" || userRole === "admin";
+    const resolvedTeamId =
+      isAdmin &&
+      createPropertyDto.teamId !== undefined &&
+      createPropertyDto.teamId !== null
+        ? createPropertyDto.teamId
+        : teamId;
     if (resolvedTeamId) {
       await this.ensureUserBelongsToTeam(userId, resolvedTeamId);
     }
 
-    const category = createPropertyDto.listingType ?? ListingCategory.MARKETPLACE;
+    const category =
+      createPropertyDto.listingType ?? ListingCategory.MARKETPLACE;
     let insertListingType: string;
     let insertType: string | null;
     if (category === ListingCategory.VACATION) {
       if (createPropertyDto.type != null) {
-        throw new BadRequestException('type must not be set for vacation listings');
+        throw new BadRequestException(
+          "type must not be set for vacation listings",
+        );
       }
       insertListingType = ListingCategory.VACATION;
       insertType = null;
     } else {
       if (!createPropertyDto.type) {
-        throw new BadRequestException('type (sale or rent) is required for marketplace listings');
+        throw new BadRequestException(
+          "type (sale or rent) is required for marketplace listings",
+        );
       }
       insertListingType = ListingCategory.MARKETPLACE;
       insertType = createPropertyDto.type;
     }
 
     // Auto-derive max_guests for vacation listings if not provided
-    const resolvedMaxGuests = createPropertyDto.maxGuests != null
-      ? createPropertyDto.maxGuests
-      : (insertListingType === ListingCategory.VACATION
+    const resolvedMaxGuests =
+      createPropertyDto.maxGuests != null
+        ? createPropertyDto.maxGuests
+        : insertListingType === ListingCategory.VACATION
           ? Math.max(1, (createPropertyDto.bedrooms || 1) * 2)
-          : null);
+          : null;
 
     const cleanAmenities = sanitizeAmenities(createPropertyDto.amenities);
 
@@ -165,16 +208,21 @@ export class PropertiesService {
 
     const property = await this.attachThumbnailUrl(rows[0]);
 
-    await this.eventLogger.logPropertyCreated(property.id, userId, resolvedTeamId, {
-      title: property.title,
-      type: property.type,
-      status: property.status,
-      price: property.price,
-    });
+    await this.eventLogger.logPropertyCreated(
+      property.id,
+      userId,
+      resolvedTeamId,
+      {
+        title: property.title,
+        type: property.type,
+        status: property.status,
+        price: property.price,
+      },
+    );
 
     // Fire webhooks (async, never blocks)
     if (resolvedTeamId) {
-      this.webhooksService.triggerWebhooks('property.created', resolvedTeamId, {
+      this.webhooksService.triggerWebhooks("property.created", resolvedTeamId, {
         id: property.id,
         title: property.title,
         type: property.type,
@@ -193,7 +241,12 @@ export class PropertiesService {
     teamId: string | null,
     filters?: { type?: string; status?: string; search?: string },
     pagination?: { limit?: number; offset?: number },
-  ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
+  ): Promise<{
+    items: Property[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
     let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
                         bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
                         created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
@@ -239,7 +292,7 @@ export class PropertiesService {
     }
 
     if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
+      query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     const limit = Math.min(
@@ -249,7 +302,7 @@ export class PropertiesService {
     const offset = Math.max(0, pagination?.offset ?? 0);
 
     const { rows: countRows } = await this.db.query(
-      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''}`,
+      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
       params,
     );
     const total = countRows[0]?.c ?? 0;
@@ -276,11 +329,18 @@ export class PropertiesService {
       priceMax?: number;
     },
     pagination?: { limit?: number; offset?: number },
-  ): Promise<{ items: Property[]; total: number; limit: number; offset: number }> {
+  ): Promise<{
+    items: Property[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
     if (filters?.country?.trim()) {
       const c = filters.country.trim().toLowerCase();
-      if (c !== 'ecuador') {
-        throw new BadRequestException('Only country=ecuador is supported for marketplace listings.');
+      if (c !== "ecuador") {
+        throw new BadRequestException(
+          "Only country=ecuador is supported for marketplace listings.",
+        );
       }
     }
 
@@ -305,7 +365,7 @@ export class PropertiesService {
 
     // Marketplace: Ecuador only (query-level; do not rely on frontend)
     conditions.push(`LOWER(TRIM(country)) = $${paramCount++}`);
-    params.push('ecuador');
+    params.push("ecuador");
 
     // Map-ready rows: require coordinates
     conditions.push(`latitude IS NOT NULL AND longitude IS NOT NULL`);
@@ -323,8 +383,8 @@ export class PropertiesService {
       }
     }
     const modeRaw = filters?.mode?.trim()?.toLowerCase();
-    const modeNorm = modeRaw === 'buy' ? 'sale' : modeRaw;
-    if (modeNorm === 'sale' || modeNorm === 'rent') {
+    const modeNorm = modeRaw === "buy" ? "sale" : modeRaw;
+    if (modeNorm === "sale" || modeNorm === "rent") {
       conditions.push(`type = $${paramCount++}`);
       params.push(modeNorm);
     }
@@ -354,7 +414,7 @@ export class PropertiesService {
     }
 
     if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
+      query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     const limit = Math.min(
@@ -364,7 +424,7 @@ export class PropertiesService {
     const offset = Math.max(0, pagination?.offset ?? 0);
 
     const { rows: countRows } = await this.db.query(
-      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : ''}`,
+      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
       params,
     );
     const total = countRows[0]?.c ?? 0;
@@ -449,7 +509,7 @@ export class PropertiesService {
     }
 
     if (conditions.length > 0) {
-      query += ` WHERE ${conditions.join(' AND ')}`;
+      query += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     query += ` ORDER BY created_at DESC`;
@@ -485,38 +545,61 @@ export class PropertiesService {
     return this.attachThumbnailUrl(rows[0]);
   }
 
-  async update(id: string, updatePropertyDto: UpdatePropertyDto, userId: string, teamId: string | null): Promise<Property> {
+  async update(
+    id: string,
+    updatePropertyDto: UpdatePropertyDto,
+    userId: string,
+    teamId: string | null,
+  ): Promise<Property> {
     const property = await this.findById(id);
     if (!property) {
-      throw new NotFoundException('Property not found');
+      throw new NotFoundException("Property not found");
     }
 
     // Check permissions: user must be creator or team member
     const isCreator = String(property.createdBy) === String(userId);
-    const isTeamMember = property.teamId && teamId && String(property.teamId) === String(teamId);
-    
+    const isTeamMember =
+      property.teamId && teamId && String(property.teamId) === String(teamId);
+
     if (!isCreator && !isTeamMember) {
-      throw new ForbiddenException('You do not have permission to update this property');
+      throw new ForbiddenException(
+        "You do not have permission to update this property",
+      );
     }
 
-    if (updatePropertyDto.teamId !== undefined && updatePropertyDto.teamId !== null) {
+    if (
+      updatePropertyDto.teamId !== undefined &&
+      updatePropertyDto.teamId !== null
+    ) {
       await this.ensureUserBelongsToTeam(userId, updatePropertyDto.teamId);
     }
 
     const curListingType =
-      (property as Property & { listingType?: string }).listingType ?? ListingCategory.MARKETPLACE;
+      (property as Property & { listingType?: string }).listingType ??
+      ListingCategory.MARKETPLACE;
     const nextListingType =
-      updatePropertyDto.listingType !== undefined ? updatePropertyDto.listingType : curListingType;
+      updatePropertyDto.listingType !== undefined
+        ? updatePropertyDto.listingType
+        : curListingType;
     const nextType =
-      updatePropertyDto.type !== undefined ? updatePropertyDto.type : property.type;
+      updatePropertyDto.type !== undefined
+        ? updatePropertyDto.type
+        : property.type;
 
     if (nextListingType === ListingCategory.VACATION) {
-      if (updatePropertyDto.type !== undefined && updatePropertyDto.type !== null) {
-        throw new BadRequestException('type must not be set for vacation listings');
+      if (
+        updatePropertyDto.type !== undefined &&
+        updatePropertyDto.type !== null
+      ) {
+        throw new BadRequestException(
+          "type must not be set for vacation listings",
+        );
       }
     } else if (nextListingType === ListingCategory.MARKETPLACE) {
       if (!nextType) {
-        throw new BadRequestException('type (sale or rent) is required for marketplace listings');
+        throw new BadRequestException(
+          "type (sale or rent) is required for marketplace listings",
+        );
       }
     }
 
@@ -562,7 +645,10 @@ export class PropertiesService {
         updates.push(`type = NULL`);
       }
     }
-    if (updatePropertyDto.type !== undefined && nextListingType !== ListingCategory.VACATION) {
+    if (
+      updatePropertyDto.type !== undefined &&
+      nextListingType !== ListingCategory.VACATION
+    ) {
       updates.push(`type = $${paramCount++}`);
       values.push(updatePropertyDto.type);
     }
@@ -573,9 +659,12 @@ export class PropertiesService {
     if (updatePropertyDto.status !== undefined) {
       updates.push(`status = $${paramCount++}`);
       values.push(updatePropertyDto.status);
-      
+
       // Set published_at when status changes to published
-      if (updatePropertyDto.status === PropertyStatus.PUBLISHED && property.status !== PropertyStatus.PUBLISHED) {
+      if (
+        updatePropertyDto.status === PropertyStatus.PUBLISHED &&
+        property.status !== PropertyStatus.PUBLISHED
+      ) {
         updates.push(`published_at = NOW()`);
       }
     }
@@ -593,7 +682,9 @@ export class PropertiesService {
     }
     if (updatePropertyDto.amenities !== undefined) {
       updates.push(`amenities = $${paramCount++}::jsonb`);
-      values.push(JSON.stringify(sanitizeAmenities(updatePropertyDto.amenities)));
+      values.push(
+        JSON.stringify(sanitizeAmenities(updatePropertyDto.amenities)),
+      );
     }
     if (updatePropertyDto.squareFeet !== undefined) {
       updates.push(`square_feet = $${paramCount++}`);
@@ -635,7 +726,7 @@ export class PropertiesService {
     values.push(id);
 
     const { rows } = await this.db.query(
-      `UPDATE properties SET ${updates.join(', ')} WHERE id = $${paramCount}
+      `UPDATE properties SET ${updates.join(", ")} WHERE id = $${paramCount}
        RETURNING id, title, description, address, city, country, state, zip_code as "zipCode", price, type, status,
                  listing_type as "listingType",
                  bedrooms, bathrooms, max_guests as "maxGuests", amenities,
@@ -650,26 +741,51 @@ export class PropertiesService {
     const updatedProperty = await this.attachThumbnailUrl(rows[0]);
 
     // Log status change if status was updated
-    if (updatePropertyDto.status !== undefined && updatePropertyDto.status !== oldStatus) {
-      await this.eventLogger.logPropertyStatusChanged(updatedProperty.id, userId, teamId, oldStatus, updatePropertyDto.status);
-      
+    if (
+      updatePropertyDto.status !== undefined &&
+      updatePropertyDto.status !== oldStatus
+    ) {
+      await this.eventLogger.logPropertyStatusChanged(
+        updatedProperty.id,
+        userId,
+        teamId,
+        oldStatus,
+        updatePropertyDto.status,
+      );
+
       // Log publish event if status changed to published
-      if (updatePropertyDto.status === PropertyStatus.PUBLISHED && !wasPublished) {
-        await this.eventLogger.logPropertyPublished(updatedProperty.id, userId, teamId);
+      if (
+        updatePropertyDto.status === PropertyStatus.PUBLISHED &&
+        !wasPublished
+      ) {
+        await this.eventLogger.logPropertyPublished(
+          updatedProperty.id,
+          userId,
+          teamId,
+        );
       }
     }
 
     return updatedProperty as Property;
   }
 
-  async publish(id: string, userId: string, teamId: string | null): Promise<Property> {
+  async publish(
+    id: string,
+    userId: string,
+    teamId: string | null,
+  ): Promise<Property> {
     const property = await this.findById(id);
     if (!property) {
-      throw new NotFoundException('Property not found');
+      throw new NotFoundException("Property not found");
     }
 
-    const result = await this.update(id, { status: PropertyStatus.PUBLISHED }, userId, teamId);
-    
+    const result = await this.update(
+      id,
+      { status: PropertyStatus.PUBLISHED },
+      userId,
+      teamId,
+    );
+
     // Log publish event (update method already logs status change, but we also want explicit publish event)
     if (property.status !== PropertyStatus.PUBLISHED) {
       await this.eventLogger.logPropertyPublished(result.id, userId, teamId);
@@ -678,18 +794,26 @@ export class PropertiesService {
     return result;
   }
 
-  async delete(id: string, userId: string, teamId: string | null, userRole?: string): Promise<void> {
+  async delete(
+    id: string,
+    userId: string,
+    teamId: string | null,
+    userRole?: string,
+  ): Promise<void> {
     const property = await this.findById(id);
     if (!property) {
-      throw new NotFoundException('Property not found');
+      throw new NotFoundException("Property not found");
     }
 
     // Authorization: admin/super_admin OR creator OR team member (matches update scope)
-    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+    const isAdmin = userRole === "super_admin" || userRole === "admin";
     const isCreator = String(property.createdBy) === String(userId);
-    const isTeamMember = property.teamId && teamId && String(property.teamId) === String(teamId);
+    const isTeamMember =
+      property.teamId && teamId && String(property.teamId) === String(teamId);
     if (!isAdmin && !isCreator && !isTeamMember) {
-      throw new ForbiddenException('You do not have permission to delete this property');
+      throw new ForbiddenException(
+        "You do not have permission to delete this property",
+      );
     }
 
     // Fetch media URLs (after auth pass)
@@ -707,46 +831,58 @@ export class PropertiesService {
     // 2. Transaction: stored_files + property (atomic)
     const client = await this.db.getClient();
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
       if (urls.length > 0) {
         await client.query(
           `DELETE FROM stored_files WHERE url = ANY($1::text[])`,
           [urls],
         );
       }
-      await client.query('DELETE FROM properties WHERE id = $1', [id]);
-      await client.query('COMMIT');
+      await client.query("DELETE FROM properties WHERE id = $1", [id]);
+      await client.query("COMMIT");
     } catch (err) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw err;
     } finally {
       client.release();
     }
   }
 
-  async addMedia(propertyId: string, url: string, type: 'image' | 'video' | 'document' = 'image', isPrimary: boolean = false, userId: string, teamId: string | null): Promise<PropertyMedia> {
+  async addMedia(
+    propertyId: string,
+    url: string,
+    type: "image" | "video" | "document" = "image",
+    isPrimary: boolean = false,
+    userId: string,
+    teamId: string | null,
+  ): Promise<PropertyMedia> {
     // Verify property exists and user has permission
     const property = await this.findById(propertyId);
     if (!property) {
-      throw new NotFoundException('Property not found');
+      throw new NotFoundException("Property not found");
     }
 
     // Check permissions: user must be creator or team member
     const isCreator = String(property.createdBy) === String(userId);
-    const isTeamMember = property.teamId && teamId && String(property.teamId) === String(teamId);
-    
+    const isTeamMember =
+      property.teamId && teamId && String(property.teamId) === String(teamId);
+
     if (!isCreator && !isTeamMember) {
-      throw new ForbiddenException('You do not have permission to add media to this property');
+      throw new ForbiddenException(
+        "You do not have permission to add media to this property",
+      );
     }
 
-    if (type === 'image') {
+    if (type === "image") {
       const { rows: countRows } = await this.db.query(
         `SELECT COUNT(*) as c FROM property_media WHERE property_id = $1 AND type = 'image'`,
         [propertyId],
       );
-      const count = parseInt(countRows[0]?.c ?? '0', 10);
+      const count = parseInt(countRows[0]?.c ?? "0", 10);
       if (count >= MAX_IMAGES_PER_PROPERTY) {
-        throw new BadRequestException(`Maximum ${MAX_IMAGES_PER_PROPERTY} images per property. Cannot add more.`);
+        throw new BadRequestException(
+          `Maximum ${MAX_IMAGES_PER_PROPERTY} images per property. Cannot add more.`,
+        );
       }
     }
 
@@ -767,8 +903,10 @@ export class PropertiesService {
       );
       return rows[0];
     } catch (err: any) {
-      if (err.code === '23505') {
-        throw new BadRequestException('Another image was set as primary. Please try again.');
+      if (err.code === "23505") {
+        throw new BadRequestException(
+          "Another image was set as primary. Please try again.",
+        );
       }
       throw err;
     }
@@ -785,7 +923,12 @@ export class PropertiesService {
     return rows;
   }
 
-  async updateMedia(mediaId: string, updateData: { isPrimary?: boolean; displayOrder?: number }, userId: string, teamId: string | null): Promise<PropertyMedia> {
+  async updateMedia(
+    mediaId: string,
+    updateData: { isPrimary?: boolean; displayOrder?: number },
+    userId: string,
+    teamId: string | null,
+  ): Promise<PropertyMedia> {
     // Get media to find property
     const { rows } = await this.db.query(
       `SELECT pm.*, p.created_by as "propertyCreatedBy", p.team_id as "propertyTeamId"
@@ -796,17 +939,22 @@ export class PropertiesService {
     );
 
     if (rows.length === 0) {
-      throw new NotFoundException('Media not found');
+      throw new NotFoundException("Media not found");
     }
 
     const media = rows[0];
 
     // Check permissions: user must be creator or team member
     const isCreator = String(media.propertyCreatedBy) === String(userId);
-    const isTeamMember = media.propertyTeamId && teamId && String(media.propertyTeamId) === String(teamId);
-    
+    const isTeamMember =
+      media.propertyTeamId &&
+      teamId &&
+      String(media.propertyTeamId) === String(teamId);
+
     if (!isCreator && !isTeamMember) {
-      throw new ForbiddenException('You do not have permission to update this media');
+      throw new ForbiddenException(
+        "You do not have permission to update this media",
+      );
     }
 
     const updates: string[] = [];
@@ -847,20 +995,26 @@ export class PropertiesService {
 
     try {
       const { rows: updatedRows } = await this.db.query(
-        `UPDATE property_media SET ${updates.join(', ')} WHERE id = $${paramCount}
+        `UPDATE property_media SET ${updates.join(", ")} WHERE id = $${paramCount}
          RETURNING id, property_id as "propertyId", url, type, is_primary as "isPrimary", display_order as "displayOrder", created_at as "createdAt"`,
         values,
       );
       return updatedRows[0];
     } catch (err: any) {
-      if (err.code === '23505') {
-        throw new BadRequestException('Another image was set as primary. Please try again.');
+      if (err.code === "23505") {
+        throw new BadRequestException(
+          "Another image was set as primary. Please try again.",
+        );
       }
       throw err;
     }
   }
 
-  async deleteMedia(mediaId: string, userId: string, teamId: string | null): Promise<void> {
+  async deleteMedia(
+    mediaId: string,
+    userId: string,
+    teamId: string | null,
+  ): Promise<void> {
     // Get media to find property and check permissions
     const { rows } = await this.db.query(
       `SELECT pm.*, p.created_by as "propertyCreatedBy", p.team_id as "propertyTeamId"
@@ -871,23 +1025,361 @@ export class PropertiesService {
     );
 
     if (rows.length === 0) {
-      throw new NotFoundException('Media not found');
+      throw new NotFoundException("Media not found");
     }
 
     const media = rows[0];
 
     // Check permissions: user must be creator or team member
     const isCreator = String(media.propertyCreatedBy) === String(userId);
-    const isTeamMember = media.propertyTeamId && teamId && String(media.propertyTeamId) === String(teamId);
-    
+    const isTeamMember =
+      media.propertyTeamId &&
+      teamId &&
+      String(media.propertyTeamId) === String(teamId);
+
     if (!isCreator && !isTeamMember) {
-      throw new ForbiddenException('You do not have permission to delete this media');
+      throw new ForbiddenException(
+        "You do not have permission to delete this media",
+      );
     }
 
     // Delete S3 object and stored_files record before removing property_media
     await this.storageService.deleteFileByUrl(media.url);
 
-    await this.db.query('DELETE FROM property_media WHERE id = $1', [mediaId]);
+    await this.db.query("DELETE FROM property_media WHERE id = $1", [mediaId]);
+  }
+
+  async getDashboard(userId: string, teamId: string | null, range = "all") {
+    const scope = this.getScope(userId, teamId);
+    const period = this.getPropertiesPeriodSql(range);
+
+    const summary = await this.getPropertiesDashboardSummary(scope, period);
+
+    const totalProperties = Number(summary.currentTotalProperties || 0);
+    const previousTotalProperties = Number(
+      summary.previousTotalProperties || 0,
+    );
+
+    const activeListings = Number(summary.currentActiveListings || 0);
+    const previousActiveListings = Number(summary.previousActiveListings || 0);
+
+    const totalValue = Number(summary.currentTotalValue || 0);
+    const previousTotalValue = Number(summary.previousTotalValue || 0);
+
+    const draftListings = Number(summary.currentDraftListings || 0);
+    const underReviewListings = Number(summary.currentUnderReviewListings || 0);
+    const inactiveListings = Number(summary.currentInactiveListings || 0);
+
+    const conversionRate = totalProperties
+      ? Math.round((activeListings / totalProperties) * 1000) / 10
+      : 0;
+
+    const previousConversionRate = previousTotalProperties
+      ? Math.round((previousActiveListings / previousTotalProperties) * 1000) /
+        10
+      : 0;
+
+    const totalTrend = this.getTrend(
+      totalProperties,
+      previousTotalProperties,
+      period.trendLabel,
+    );
+
+    const activeTrend = this.getTrend(
+      activeListings,
+      previousActiveListings,
+      period.trendLabel,
+    );
+
+    const valueTrend = this.getTrend(
+      totalValue,
+      previousTotalValue,
+      period.trendLabel,
+      true,
+      1000,
+    );
+
+    const conversionTrend = this.getTrend(
+      conversionRate,
+      previousConversionRate,
+      period.trendLabel,
+    );
+
+    return {
+      range: period.range,
+      rangeLabel: period.label,
+
+      totalProperties: {
+        value: totalProperties,
+        trend: totalTrend,
+      },
+
+      activeListings: {
+        value: activeListings,
+        trend: activeTrend,
+      },
+
+      totalValue: {
+        value: totalValue,
+        trend: valueTrend,
+      },
+
+      hotProperties: {
+        value: 0,
+        trend: {
+          direction: "flat",
+          icon: "→",
+          value: 0,
+          text: "→ 0% coming soon",
+          className: "text-slate",
+        },
+      },
+
+      aiOptimized: {
+        value: 0,
+        trend: {
+          direction: "flat",
+          icon: "→",
+          value: 0,
+          text: "→ 0% coming soon",
+          className: "text-slate",
+        },
+      },
+
+      conversionRate: {
+        value: conversionRate,
+        trend: conversionTrend,
+      },
+
+      inventoryHealth: {
+        total: totalProperties,
+        active: activeListings,
+        draft: draftListings,
+        underReview: underReviewListings,
+        inactive: inactiveListings,
+        inventoryScore: totalProperties
+          ? Math.round((activeListings / totalProperties) * 100)
+          : 0,
+      },
+    };
+  }
+
+  private getScope(userId: string, teamId?: string | null) {
+    const params: any[] = [];
+
+    if (teamId) {
+      params.push(teamId);
+      return {
+        where: `team_id = $1`,
+        params,
+      };
+    }
+
+    params.push(userId);
+    return {
+      where: `created_by = $1`,
+      params,
+    };
+  }
+
+  private calcGrowth(current: number, previous: number) {
+    if (!previous && current > 0) return 100;
+    if (!previous) return 0;
+
+    return Math.round(((current - previous) / previous) * 100);
+  }
+
+  private getTrend(
+    current: number,
+    previous: number,
+    compareLabel: string,
+    positiveGood = true,
+    minPreviousForPercent = 1,
+  ) {
+    if (previous < minPreviousForPercent && current > 0) {
+      return {
+        direction: "up",
+        icon: "↑",
+        value: null,
+        compareLabel,
+        text: "New this period",
+        className: positiveGood ? "text-green" : "text-red",
+      };
+    }
+
+    if (current > previous) {
+      const value = Math.abs(this.calcGrowth(current, previous));
+
+      return {
+        direction: "up",
+        icon: "↑",
+        value,
+        compareLabel,
+        text: `↑ ${value}% ${compareLabel}`,
+        className: positiveGood ? "text-green" : "text-red",
+      };
+    }
+
+    if (current < previous) {
+      const value = Math.abs(this.calcGrowth(current, previous));
+
+      return {
+        direction: "down",
+        icon: "↓",
+        value,
+        compareLabel,
+        text: `↓ ${value}% ${compareLabel}`,
+        className: positiveGood ? "text-red" : "text-green",
+      };
+    }
+
+    return {
+      direction: "flat",
+      icon: "→",
+      value: 0,
+      compareLabel,
+      text: `→ 0% ${compareLabel}`,
+      className: "text-slate",
+    };
+  }
+
+  private getPropertiesPeriodSql(range = "all") {
+    switch (range) {
+      case "today":
+        return {
+          range: "today",
+          label: "Today",
+          currentWhere: `created_at >= date_trunc('day', NOW())`,
+          previousWhere: `
+          created_at >= date_trunc('day', NOW() - interval '1 day')
+          AND created_at < date_trunc('day', NOW())
+        `,
+          trendLabel: "vs yesterday",
+        };
+
+      case "last_7_days":
+        return {
+          range: "last_7_days",
+          label: "Last 7 days",
+          currentWhere: `created_at >= NOW() - interval '7 days'`,
+          previousWhere: `
+          created_at >= NOW() - interval '14 days'
+          AND created_at < NOW() - interval '7 days'
+        `,
+          trendLabel: "vs previous 7 days",
+        };
+
+      case "last_30_days":
+        return {
+          range: "last_30_days",
+          label: "Last 30 days",
+          currentWhere: `created_at >= NOW() - interval '30 days'`,
+          previousWhere: `
+          created_at >= NOW() - interval '60 days'
+          AND created_at < NOW() - interval '30 days'
+        `,
+          trendLabel: "vs previous 30 days",
+        };
+
+      case "this_month":
+        return {
+          range: "this_month",
+          label: "This month",
+          currentWhere: `created_at >= date_trunc('month', NOW())`,
+          previousWhere: `
+          created_at >= date_trunc('month', NOW() - interval '1 month')
+          AND created_at < date_trunc('month', NOW())
+        `,
+          trendLabel: "vs last month",
+        };
+
+      case "all":
+      default:
+        return {
+          range: "all",
+          label: "All time",
+          currentWhere: `TRUE`,
+          previousWhere: `FALSE`,
+          trendLabel: "all time",
+        };
+    }
+  }
+
+  private async getPropertiesDashboardSummary(
+    scope: { where: string; params: any[] },
+    period: any,
+  ) {
+    const { rows } = await this.db.query(
+      `
+    WITH scoped_properties AS (
+      SELECT *
+      FROM properties
+      WHERE ${scope.where}
+    ),
+    current_period AS (
+      SELECT *
+      FROM scoped_properties
+      WHERE ${period.currentWhere}
+    ),
+    previous_period AS (
+      SELECT *
+      FROM scoped_properties
+      WHERE ${period.previousWhere}
+    )
+    SELECT
+      (
+        SELECT COUNT(*)::int
+        FROM current_period
+      ) AS "currentTotalProperties",
+
+      (
+        SELECT COUNT(*)::int
+        FROM previous_period
+      ) AS "previousTotalProperties",
+
+      (
+        SELECT COUNT(*)::int
+        FROM current_period
+        WHERE status = 'published'
+      ) AS "currentActiveListings",
+
+      (
+        SELECT COUNT(*)::int
+        FROM previous_period
+        WHERE status = 'published'
+      ) AS "previousActiveListings",
+
+      (
+        SELECT COALESCE(SUM(price), 0)::numeric
+        FROM current_period
+      ) AS "currentTotalValue",
+
+      (
+        SELECT COALESCE(SUM(price), 0)::numeric
+        FROM previous_period
+      ) AS "previousTotalValue",
+
+      (
+        SELECT COUNT(*)::int
+        FROM current_period
+        WHERE status = 'draft'
+      ) AS "currentDraftListings",
+
+      (
+        SELECT COUNT(*)::int
+        FROM current_period
+        WHERE status = 'under_review'
+      ) AS "currentUnderReviewListings",
+
+      (
+        SELECT COUNT(*)::int
+        FROM current_period
+        WHERE status = 'inactive'
+      ) AS "currentInactiveListings"
+    `,
+      scope.params,
+    );
+
+    return rows[0] || {};
   }
 }
-

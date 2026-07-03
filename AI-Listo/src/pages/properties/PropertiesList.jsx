@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./properties.css";
-
+import { getProperties, getPropertiesDashboard } from "../../api/propertiesApi";
 import {
   Search,
   ChevronDown,
@@ -34,53 +34,109 @@ import {
 
 export default function PropertiesPage() {
   const [viewMode, setViewMode] = useState("grid");
+  const [loading, setLoading] = useState(false);
+  const [properties, setProperties] = useState([]);
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
+  const [total, setTotal] = useState(0);
+  const [dashboard, setDashboard] = useState(null);
+  const [dateRange, setDateRange] = useState("all");
+
+  const loadDashboard = async () => {
+    try {
+      const data = await getPropertiesDashboard({
+        range: dateRange,
+      });
+
+      setDashboard(data);
+    } catch (error) {
+      console.error("Load properties dashboard failed:", error);
+    }
+  };
+
+  const loadProperties = async () => {
+    try {
+      setLoading(true);
+
+      const data = await getProperties({
+        search: search || undefined,
+        type: type || undefined,
+        status: status || undefined,
+        limit: 50,
+        offset: 0,
+      });
+
+      setProperties(Array.isArray(data?.items) ? data.items : []);
+      setTotal(Number(data?.total || 0));
+    } catch (error) {
+      console.error("Load properties failed:", error);
+      setProperties([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
+    loadProperties();
+  }, [dateRange]);
+
+  const formatTrend = (item) => {
+    const trend = item?.trend;
+
+    if (!trend) return "—";
+
+    return `${trend.symbol} ${trend.changePercent}% vs ${dashboard?.compareLabel || "previous period"}`;
+  };
 
   const metrics = [
     {
       title: "Total Properties",
-      value: "248",
-      trend: "↑ 12% vs last month",
-      trendType: "up",
+      value: dashboard?.totalProperties?.value ?? 0,
+      trend: dashboard?.totalProperties?.trend?.text || "→ 0% all time",
+      trendType: dashboard?.totalProperties?.trend?.direction || "flat",
       icon: <Home size={20} />,
       className: "blue",
     },
     {
       title: "Active Listings",
-      value: "186",
-      trend: "↑ 8% vs last month",
-      trendType: "up",
+      value: dashboard?.activeListings?.value ?? 0,
+      trend: dashboard?.activeListings?.trend?.text || "→ 0% all time",
+      trendType: dashboard?.activeListings?.trend?.direction || "flat",
       icon: <CheckCircle2 size={20} />,
       className: "green",
     },
     {
       title: "Total Value",
-      value: "$24.8M",
-      trend: "↑ 15% vs last month",
-      trendType: "up",
+      value: `$${Number(dashboard?.totalValue?.value || 0).toLocaleString()}`,
+      trend: dashboard?.totalValue?.trend?.text || "→ 0% all time",
+      trendType: dashboard?.totalValue?.trend?.direction || "flat",
       icon: <DollarSign size={20} />,
       className: "purple",
     },
     {
       title: "Hot Properties",
-      value: "32",
-      trend: "↑ 18% vs last month",
-      trendType: "up",
+      value: dashboard?.hotProperties?.value ?? 0,
+      trend: dashboard?.hotProperties?.trend?.text || "→ 0% coming soon",
+      trendType: dashboard?.hotProperties?.trend?.direction || "flat",
       icon: <Flame size={20} />,
       className: "orange",
     },
     {
       title: "AI Optimized",
-      value: "142",
-      trend: "↑ 22% vs last month",
-      trendType: "up",
+      value: dashboard?.aiOptimized?.value ?? 0,
+      trend: dashboard?.aiOptimized?.trend?.text || "→ 0% coming soon",
+      trendType: dashboard?.aiOptimized?.trend?.direction || "flat",
       icon: <Bot size={20} />,
       className: "cyan",
     },
     {
       title: "Conversion Rate",
-      value: "24.8%",
-      trend: "↑ 6% vs last month",
-      trendType: "up",
+      value: `${dashboard?.conversionRate?.value ?? 0}%`,
+      trend: dashboard?.conversionRate?.trend?.text || "→ 0% all time",
+      trendType: dashboard?.conversionRate?.trend?.direction || "flat",
       icon: <Percent size={20} />,
       className: "green",
     },
@@ -230,12 +286,24 @@ export default function PropertiesPage() {
       <div className="filters-row">
         <div className="search-box">
           <Search size={16} color="#94a3b8" />
-          <input placeholder="Search properties, addresses, MLS ID..." />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search properties, addresses, MLS ID..."
+          />
         </div>
 
         <div className="filter-select-wrapper search-date">
-          <select className="filter-select" defaultValue="may">
-            <option value="may">May 1, 2024 - May 31, 2024</option>
+          <select
+            className="filter-select"
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+          >
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="last_7_days">Last 7 days</option>
+            <option value="last_30_days">Last 30 days</option>
+            <option value="this_month">This month</option>
           </select>
           <Calendar size={14} className="select-icon" />
         </div>
@@ -282,13 +350,23 @@ export default function PropertiesPage() {
           <ChevronDown size={14} className="select-icon" />
         </div>
 
-        <button className="btn btn-secondary" style={{ height: "38px" }}>
+        <button
+          className="btn btn-secondary"
+          style={{ height: "38px" }}
+          onClick={() => {
+            setSearch("");
+            setType("");
+            setStatus("");
+            setTimeout(loadProperties, 0);
+          }}
+        >
           <RotateCcw size={14} />
           Clear Filters
         </button>
         <button
           className="btn btn-primary"
           style={{ height: "38px", padding: "0 20px" }}
+          onClick={loadProperties}
         >
           <Search size={14} />
           Search
@@ -317,95 +395,137 @@ export default function PropertiesPage() {
       <div className="main-layout">
         {/* LEFT COMPONENT: PROPERTIES LIST */}
         <div className="properties-grid">
-          {propertiesList.map((property, idx) => (
-            <div className="property-card" key={idx}>
-              <div className="card-image-wrapper">
-                {/* Fallback pattern representing images in mockup */}
-                <div
-                  style={{
-                    background: "#e2e8f0",
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#94a3b8",
-                  }}
-                >
-                  Property Image Layout
-                </div>
-                <span className={`badge-status ${property.statusClass}`}>
-                  {property.status}
-                </span>
-                <button className="card-actions-trigger">
-                  <MoreVertical size={16} />
-                </button>
-              </div>
-
-              <div className="card-body">
-                <div className="price-row">
-                  <h3>{property.price}</h3>
-                  <div className="ai-score-badge">
-                    <strong
-                      className={`score-number ${parseInt(property.aiScore) > 80 ? "high" : "medium"}`}
-                    >
-                      {property.aiScore}
-                    </strong>
-                    <span>AI Score</span>
-                  </div>
-                </div>
-
-                <p className="property-address">{property.address}</p>
-
-                <div className="property-specs">
-                  <div className="spec-item">
-                    <BedDouble size={14} /> {property.beds}
-                  </div>
-                  <div className="spec-item">
-                    <Bath size={14} /> {property.baths}
-                  </div>
-                  <div className="spec-item">
-                    <Maximize size={14} /> {property.sqft}
-                  </div>
-                </div>
-
-                <div className="financials-row">
-                  <div className="financial-item">
-                    <span>Revenue Potential</span>
-                    <strong className="green-text">{property.revenue}</strong>
-                  </div>
-                  <div
-                    className="financial-item"
-                    style={{ textAlign: "right" }}
-                  >
-                    <span>Matched Leads</span>
-                    <strong className="text-align-right">
-                      {property.leads} ↗
-                    </strong>
-                  </div>
-                </div>
-
-                <div className="agent-footer">
-                  <div className="agent-info">
+          {loading ? (
+            <div className="property-card">
+              <div className="card-body">Loading properties...</div>
+            </div>
+          ) : properties.length === 0 ? (
+            <div className="property-card">
+              <div className="card-body">No properties found.</div>
+            </div>
+          ) : (
+            properties.map((property) => (
+              <div className="property-card" key={idx}>
+                <div className="card-image-wrapper">
+                  {/* Fallback pattern representing images in mockup */}
+                  {property.thumbnailUrl ? (
                     <img
-                      src={property.agentAvatar}
-                      alt={property.agentName}
-                      className="agent-avatar"
+                      src={property.thumbnailUrl}
+                      alt={property.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
-                    <div>
-                      <h5>{property.agentName}</h5>
-                      <p>{property.agentTeam}</p>
+                  ) : (
+                    <div
+                      style={{
+                        background: "#e2e8f0",
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#94a3b8",
+                      }}
+                    >
+                      Property Image Layout
+                    </div>
+                  )}
+                  <span
+                    className={`badge-status ${property.status === "published" ? "active" : "under-review"}`}
+                  >
+                    {(property.status || "draft")
+                      .replace("_", " ")
+                      .toUpperCase()}
+                  </span>
+                  <button className="card-actions-trigger">
+                    <MoreVertical size={16} />
+                  </button>
+                </div>
+
+                <div className="card-body">
+                  <div className="price-row">
+                    <h3>
+                      {property.price
+                        ? `$${Number(property.price).toLocaleString()}`
+                        : "No price"}
+                    </h3>
+                    <div className="ai-score-badge">
+                      <strong
+                        className={`score-number ${parseInt(property.aiScore) > 80 ? "high" : "medium"}`}
+                      >
+                        {property.aiScore}
+                      </strong>
+                      <span>AI Score</span>
                     </div>
                   </div>
-                  <span
-                    className={`listing-status-tag ${property.listingStatus === "Active" ? "active" : "review"}`}
-                  >
-                    {property.listingStatus}
-                  </span>
+
+                  <p className="property-address">
+                    {[
+                      property.address,
+                      property.city,
+                      property.state,
+                      property.zipCode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "No address"}
+                  </p>
+
+                  <div className="property-specs">
+                    <div className="spec-item">
+                      <BedDouble size={14} /> {property.bedrooms || 0}
+                    </div>
+                    <div className="spec-item">
+                      <Bath size={14} /> {property.bathrooms || 0}
+                    </div>
+                    <div className="spec-item">
+                      <Maximize size={14} />{" "}
+                      {property.squareFeet
+                        ? `${property.squareFeet} sqft`
+                        : "—"}
+                    </div>
+                  </div>
+
+                  <div className="financials-row">
+                    <div className="financial-item">
+                      <span>Revenue Potential</span>
+                      <strong className="green-text">{property.revenue}</strong>
+                    </div>
+                    <div
+                      className="financial-item"
+                      style={{ textAlign: "right" }}
+                    >
+                      <span>Matched Leads</span>
+                      <strong className="text-align-right">
+                        {property.leads} ↗
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="agent-footer">
+                    <div className="agent-info">
+                      <img
+                        src={property.agentAvatar}
+                        alt={property.agentName}
+                        className="agent-avatar"
+                      />
+                      <div>
+                        <h5>{property.agentName}</h5>
+                        <p>{property.agentTeam}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`listing-status-tag ${property.listingStatus === "Active" ? "active" : "review"}`}
+                    >
+                      {property.listingStatus}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* RIGHT COMPONENT: SIDEBAR PLATFORM PANEL */}
