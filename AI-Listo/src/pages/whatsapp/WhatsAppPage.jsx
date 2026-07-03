@@ -47,16 +47,17 @@ export default function WhatsAppPage() {
 
     status,
     qr,
-    stats,
-    segments,
 
-    filteredConversations,
+    dashboardStats = [],
+    dashboardSegments = {},
+
+    filteredConversations = [],
     selectedConversation,
     setSelectedConversation,
 
-    messages,
-    selectedIntelligence,
-    timeline,
+    messages = [],
+    selectedIntelligence = {},
+    timeline = [],
 
     search,
     setSearch,
@@ -73,8 +74,6 @@ export default function WhatsAppPage() {
     disconnectDevice,
     sendMessage,
     toggleSelectedAi,
-    dashboardStats,
-    dashboardSegments,
   } = useWhatsAppDashboard();
   return (
     <div className="leads-page whatsapp-page">
@@ -138,7 +137,7 @@ export default function WhatsAppPage() {
       </div>
       {/* TOP STATS COUNTERS */}
       <div className="top-stats-row-grid">
-        {dashboardStats.map((item, index) => (
+        {(dashboardStats || []).map((item, index) => (
           <div className="stat-metric-box" key={index}>
             <div
               className={`metric-icon-wrap ${
@@ -196,15 +195,21 @@ export default function WhatsAppPage() {
           </div>
           <div className="segment-line-item text-blue">
             <span className="segment-label">⏳ Need Follow-Up</span>
-            <h2 className="segment-count">{dashboardSegments?.needFollowUp || 0}</h2>
+            <h2 className="segment-count">
+              {dashboardSegments?.needFollowUp || 0}
+            </h2>
           </div>
           <div className="segment-line-item text-green">
             <span className="segment-label">📅 Ready To Book</span>
-            <h2 className="segment-count">{dashboardSegments?.readyToBook || 0}</h2>
+            <h2 className="segment-count">
+              {dashboardSegments?.readyToBook || 0}
+            </h2>
           </div>
           <div className="segment-line-item text-purple">
             <span className="segment-label">💜 AI Replies Pending Review</span>
-            <h2 className="segment-count">{dashboardSegments?.aiPending || 0}</h2>
+            <h2 className="segment-count">
+              {dashboardSegments?.aiPending || 0}
+            </h2>
           </div>
         </div>
         <div className="device-wrap">

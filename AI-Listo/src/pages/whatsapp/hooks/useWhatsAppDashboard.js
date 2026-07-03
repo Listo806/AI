@@ -343,10 +343,10 @@ export function useWhatsAppDashboard() {
 
     status,
     qr,
-    stats,
-    segments,
 
-    conversations,
+    dashboardStats,
+    dashboardSegments,
+
     filteredConversations,
     selectedConversation,
     setSelectedConversation,
@@ -366,9 +366,6 @@ export function useWhatsAppDashboard() {
     setMessageText,
 
     refresh,
-    loadStatus,
-    loadDashboard,
-    loadMessages,
     connectDevice,
     disconnectDevice,
     sendMessage,
