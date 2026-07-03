@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./properties.css";
-import { getProperties, getPropertiesDashboard } from "../../api/propertiesApi";
+import {
+  getProperties,
+  getPropertiesDashboard,
+  createProperty,
+} from "../../api/propertiesApi";
 import {
   Search,
   ChevronDown,
@@ -42,6 +46,79 @@ export default function PropertiesPage() {
   const [total, setTotal] = useState(0);
   const [dashboard, setDashboard] = useState(null);
   const [dateRange, setDateRange] = useState("all");
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [savingProperty, setSavingProperty] = useState(false);
+
+  const [propertyForm, setPropertyForm] = useState({
+    title: "",
+    description: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    price: "",
+    type: "sale",
+    propertyType: "house",
+    status: "draft",
+    bedrooms: "",
+    bathrooms: "",
+    squareFeet: "",
+  });
+
+  const handleCreateProperty = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSavingProperty(true);
+
+      await createProperty({
+        title: propertyForm.title,
+        description: propertyForm.description || null,
+        address: propertyForm.address || null,
+        city: propertyForm.city || null,
+        state: propertyForm.state || null,
+        zipCode: propertyForm.zipCode || null,
+        price: propertyForm.price ? Number(propertyForm.price) : null,
+        type: propertyForm.type,
+        propertyType: propertyForm.propertyType,
+        status: propertyForm.status,
+        bedrooms: propertyForm.bedrooms ? Number(propertyForm.bedrooms) : null,
+        bathrooms: propertyForm.bathrooms
+          ? Number(propertyForm.bathrooms)
+          : null,
+        squareFeet: propertyForm.squareFeet
+          ? Number(propertyForm.squareFeet)
+          : null,
+        listingType: "marketplace",
+      });
+
+      setShowAddModal(false);
+
+      setPropertyForm({
+        title: "",
+        description: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        price: "",
+        type: "sale",
+        propertyType: "house",
+        status: "draft",
+        bedrooms: "",
+        bathrooms: "",
+        squareFeet: "",
+      });
+
+      await loadProperties();
+      await loadDashboard();
+    } catch (error) {
+      console.error("Create property failed:", error);
+    } finally {
+      setSavingProperty(false);
+    }
+  };
 
   const loadDashboard = async () => {
     try {
@@ -262,6 +339,13 @@ export default function PropertiesPage() {
           </button>
           <button className="btn btn-secondary">
             <Download size={16} className="blue" /> Export Property Report
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowAddModal(true)}
+          >
+            <Plus size={16} />
+            Add Property
           </button>
         </div>
       </div>
@@ -646,6 +730,189 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="property-modal">
+            <div className="modal-header">
+              <h3>Add Property</h3>
+              <button onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleCreateProperty} className="property-form">
+              <input
+                required
+                placeholder="Property title"
+                value={propertyForm.title}
+                onChange={(e) =>
+                  setPropertyForm((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+              />
+
+              <input
+                placeholder="Address"
+                value={propertyForm.address}
+                onChange={(e) =>
+                  setPropertyForm((prev) => ({
+                    ...prev,
+                    address: e.target.value,
+                  }))
+                }
+              />
+
+              <div className="form-grid-2">
+                <input
+                  placeholder="City"
+                  value={propertyForm.city}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      city: e.target.value,
+                    }))
+                  }
+                />
+
+                <input
+                  placeholder="State"
+                  value={propertyForm.state}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      state: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="form-grid-2">
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={propertyForm.price}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      price: e.target.value,
+                    }))
+                  }
+                />
+
+                <input
+                  placeholder="Zip code"
+                  value={propertyForm.zipCode}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      zipCode: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="form-grid-2">
+                <select
+                  value={propertyForm.type}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      type: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="sale">For Sale</option>
+                  <option value="rent">For Rent</option>
+                </select>
+
+                <select
+                  value={propertyForm.propertyType}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      propertyType: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="house">House</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="land">Land</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="villa">Villa</option>
+                  <option value="office">Office</option>
+                </select>
+              </div>
+
+              <div className="form-grid-3">
+                <input
+                  type="number"
+                  placeholder="Beds"
+                  value={propertyForm.bedrooms}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      bedrooms: e.target.value,
+                    }))
+                  }
+                />
+
+                <input
+                  type="number"
+                  placeholder="Baths"
+                  value={propertyForm.bathrooms}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      bathrooms: e.target.value,
+                    }))
+                  }
+                />
+
+                <input
+                  type="number"
+                  placeholder="Sqft"
+                  value={propertyForm.squareFeet}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      squareFeet: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <textarea
+                placeholder="Description"
+                value={propertyForm.description}
+                onChange={(e) =>
+                  setPropertyForm((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+              />
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={savingProperty}
+                >
+                  {savingProperty ? "Saving..." : "Create Property"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

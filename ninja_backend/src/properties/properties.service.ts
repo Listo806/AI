@@ -241,6 +241,7 @@ export class PropertiesService {
     teamId: string | null,
     filters?: { type?: string; status?: string; search?: string },
     pagination?: { limit?: number; offset?: number },
+    userRole?: string,
   ): Promise<{
     items: Property[];
     total: number;
@@ -258,12 +259,19 @@ export class PropertiesService {
     const params: any[] = [];
     let paramCount = 1;
 
-    if (teamId) {
-      conditions.push(`team_id = $${paramCount++}`);
-      params.push(teamId);
-    } else {
-      conditions.push(`created_by = $${paramCount++}`);
-      params.push(userId);
+    const canViewAll =
+      userRole === "admin" ||
+      userRole === "super_admin" ||
+      userRole === "developer";
+
+    if (!canViewAll) {
+      if (teamId) {
+        conditions.push(`team_id = $${paramCount++}`);
+        params.push(teamId);
+      } else {
+        conditions.push(`created_by = $${paramCount++}`);
+        params.push(userId);
+      }
     }
 
     if (filters?.type) {
@@ -1049,8 +1057,13 @@ export class PropertiesService {
     await this.db.query("DELETE FROM property_media WHERE id = $1", [mediaId]);
   }
 
-  async getDashboard(userId: string, teamId: string | null, range = "all") {
-    const scope = this.getScope(userId, teamId);
+  async getDashboard(
+    userId: string,
+    teamId: string | null,
+    range = "all",
+    userRole?: string,
+  ) {
+    const scope = this.getScope(userId, teamId, userRole);
     const period = this.getPropertiesPeriodSql(range);
 
     const summary = await this.getPropertiesDashboardSummary(scope, period);
@@ -1164,22 +1177,28 @@ export class PropertiesService {
     };
   }
 
-  private getScope(userId: string, teamId?: string | null) {
+  private getScope(userId: string, teamId?: string | null, userRole?: string) {
+    const canViewAll =
+      userRole === "admin" ||
+      userRole === "super_admin" ||
+      userRole === "developer";
+
+    if (canViewAll) {
+      return {
+        where: `TRUE`,
+        params: [],
+      };
+    }
+
     const params: any[] = [];
 
     if (teamId) {
       params.push(teamId);
-      return {
-        where: `team_id = $1`,
-        params,
-      };
+      return { where: `team_id = $1`, params };
     }
 
     params.push(userId);
-    return {
-      where: `created_by = $1`,
-      params,
-    };
+    return { where: `created_by = $1`, params };
   }
 
   private calcGrowth(current: number, previous: number) {

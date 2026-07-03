@@ -208,6 +208,7 @@ export class PropertiesController {
       user.teamId,
       { type, status, search },
       pagination,
+      user.role,
     );
   }
 
@@ -216,7 +217,7 @@ export class PropertiesController {
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Get properties dashboard metrics" })
   async getDashboard(@CurrentUser() user: any, @Query("range") range = "all") {
-    return this.propertiesService.getDashboard(user.id, user.teamId, range);
+    return this.propertiesService.getDashboard(user.id, user.teamId, range, user.role);
   }
 
   @Get(":id")
