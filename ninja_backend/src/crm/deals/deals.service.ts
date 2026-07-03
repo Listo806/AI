@@ -59,7 +59,7 @@ export class DealsService {
     }
   }
 
-  private selectColumns = `id, team_id AS "teamId", name, value, stage, position, lead_id AS "leadId",
+  private selectColumns = `id, team_id AS "teamId", name, value, stage, position, lead_id AS "leadId", lost_reason AS "lostReason", expected_close_date AS "expectedCloseDate",
     created_by AS "createdBy", assigned_to AS "assignedTo", notes, created_at AS "createdAt", updated_at AS "updatedAt"`;
 
   async findAll(
@@ -191,6 +191,14 @@ export class DealsService {
     if (dto.notes !== undefined) {
       updates.push(`notes = $${paramIndex++}`);
       values.push(dto.notes);
+    }
+    if (dto.lostReason !== undefined) {
+      updates.push(`lost_reason = $${paramIndex++}`);
+      values.push(dto.lostReason);
+    }
+    if (dto.expectedCloseDate !== undefined) {
+      updates.push(`expected_close_date = $${paramIndex++}`);
+      values.push(dto.expectedCloseDate);
     }
     if (updates.length === 0) return this.findOne(id, userId, userTeamId, role);
     updates.push(`updated_at = NOW()`);

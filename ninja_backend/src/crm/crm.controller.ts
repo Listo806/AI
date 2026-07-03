@@ -10,6 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CrmService } from './crm.service';
 import { DashboardAggregationService } from './dashboard-aggregation.service';
+import { DashboardExtendedService } from './dashboard-extended.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -23,7 +24,47 @@ export class CrmController {
   constructor(
     private readonly crmService: CrmService,
     private readonly dashboardAggregation: DashboardAggregationService,
+    private readonly dashboardExtended: DashboardExtendedService,
   ) {}
+
+  /**
+   * GET /api/crm/dashboard/extended
+   * Full Dashboard + Analytics dataset (KPIs, trends, sources, leakage,
+   * WhatsApp, lost reasons, team performance, priority queue, risk, health,
+   * upcoming closings) — role-scoped, filterable by date/source/agent/stage.
+   */
+  @Get('dashboard/extended')
+  @ApiOperation({ summary: 'Extended dashboard/analytics metrics (filterable)' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'ISO date; default 30 days ago' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'ISO date; default now' })
+  @ApiQuery({ name: 'source', required: false, description: 'Lead source filter' })
+  @ApiQuery({ name: 'agentId', required: false, description: 'Assigned agent filter (user id)' })
+  @ApiQuery({ name: 'stage', required: false, description: 'Deal stage filter' })
+  @ApiQuery({ name: 'teamId', required: false, description: 'Narrow to one team within the caller scope' })
+  @ApiResponse({ status: 200, description: 'Extended metrics retrieved successfully' })
+  async getDashboardExtended(
+    @CurrentUser() user: any,
+    @Query('startDate') startDateStr?: string,
+    @Query('endDate') endDateStr?: string,
+    @Query('source') source?: string,
+    @Query('agentId') agentId?: string,
+    @Query('stage') stage?: string,
+    @Query('teamId') teamFilterId?: string,
+  ) {
+    const endDate = endDateStr && !isNaN(new Date(endDateStr).getTime()) ? new Date(endDateStr) : new Date();
+    const startDate =
+      startDateStr && !isNaN(new Date(startDateStr).getTime())
+        ? new Date(startDateStr)
+        : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return this.dashboardExtended.getExtended(user.id, user.teamId, user.role, {
+      startDate,
+      endDate,
+      source: source || null,
+      agentId: agentId || null,
+      stage: stage || null,
+      teamFilterId: teamFilterId || null,
+    });
+  }
 
   /**
    * GET /api/crm/dashboard/summary

@@ -65,3 +65,39 @@ export async function getOwnerLeads(limit = 500) {
   const items = res?.items ?? res?.data ?? (Array.isArray(res) ? res : []);
   return Array.isArray(items) ? items : [];
 }
+
+/**
+ * Extended dashboard/analytics dataset — every panel's real figures.
+ * filters: { startDate, endDate, source, agentId, stage, teamId } (all optional)
+ */
+export async function getDashboardExtended(filters = {}) {
+  const qs = new URLSearchParams();
+  ['startDate', 'endDate', 'source', 'agentId', 'stage', 'teamId'].forEach((k) => {
+    if (filters[k]) qs.set(k, filters[k]);
+  });
+  const q = qs.toString();
+  return apiClient.request(`/crm/dashboard/extended${q ? `?${q}` : ''}`);
+}
+
+/** Date range helpers shared by Dashboard and Analytics filter bars */
+export const DATE_RANGES = [
+  { key: 'today', label: 'Today', days: 1 },
+  { key: '7d', label: 'This Week', days: 7 },
+  { key: '30d', label: 'Last 30 Days', days: 30 },
+  { key: '90d', label: 'Last 90 Days', days: 90 },
+];
+
+export function rangeToDates(key) {
+  const r = DATE_RANGES.find((x) => x.key === key) || DATE_RANGES[2];
+  const end = new Date();
+  const start = new Date(end.getTime() - r.days * 24 * 60 * 60 * 1000);
+  return { startDate: start.toISOString(), endDate: end.toISOString() };
+}
+
+/** Previous period of same length (for "vs Previous Period") */
+export function prevRangeToDates(key) {
+  const r = DATE_RANGES.find((x) => x.key === key) || DATE_RANGES[2];
+  const end = new Date(Date.now() - r.days * 24 * 60 * 60 * 1000);
+  const start = new Date(end.getTime() - r.days * 24 * 60 * 60 * 1000);
+  return { startDate: start.toISOString(), endDate: end.toISOString() };
+}

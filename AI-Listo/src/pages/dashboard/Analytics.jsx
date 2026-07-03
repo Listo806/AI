@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -7,10 +7,6 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -19,34 +15,17 @@ import {
 import {
   BarChart3,
   DollarSign,
-  TrendingUp,
   Users,
   AlertTriangle,
   Sparkles,
   Zap,
-  Bot,
   CalendarCheck,
   Globe,
-  Clock3,
   Target,
   Download,
   MessageCircle,
-  Megaphone,
-  FileDown,
-  RefreshCw,
   Percent,
-  LayoutDashboard,
-  Briefcase,
-  Home,
-  Contact,
-  ShieldCheck,
-  CheckSquare,
   Calendar,
-  Layers,
-  Settings,
-  LogOut,
-  Bell,
-  HelpCircle,
   ChevronDown,
   User,
   Filter,
@@ -57,248 +36,224 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+import {
+  useFeatureNotice,
+  FeatureNoticeBanner,
+} from "../../components/FeatureNotice";
 import "./analytics.css";
+import {
+  getDashboardSummary,
+  getDashboardExtended,
+  rangeToDates,
+  prevRangeToDates,
+  DATE_RANGES,
+} from "../../api/analyticsApi";
+import { useApiErrorHandler } from "../../utils/useApiErrorHandler";
+import {
+  EmptyState,
+  FilterDropdown,
+  InitialsAvatar,
+  downloadCsv,
+  fmtMoney,
+  fmtHours,
+  SOURCE_COLORS,
+} from "./dashboardShared";
 
-function money(value) {
-  const amount = Number(value || 0);
-  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`;
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-  return `$${amount.toLocaleString()}`;
-}
+const money = fmtMoney;
 
 export default function CortexaAnalyticsDashboard() {
+  const { handleError } = useApiErrorHandler();
+  const navigate = useNavigate();
+  const { notice, setNotice, notAvailable } = useFeatureNotice();
+
+  const [range, setRange] = useState("30d");
+  const [compare, setCompare] = useState(true);
+  const [ext, setExt] = useState(null);
+  const [prevExt, setPrevExt] = useState(null);
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const cur = rangeToDates(range);
+        const prev = prevRangeToDates(range);
+        const [e, pe, s] = await Promise.all([
+          getDashboardExtended(cur).catch(() => null),
+          compare ? getDashboardExtended(prev).catch(() => null) : Promise.resolve(null),
+          getDashboardSummary().catch(() => null),
+        ]);
+        if (active) {
+          setExt(e);
+          setPrevExt(pe);
+          setSummary(s);
+        }
+      } catch (err) {
+        if (active) handleError(err, "Failed to load analytics");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [range, compare]);
+
+  const E = ext || {};
+  const P = prevExt || {};
+  const K = E.kpis || {};
+  const PK = P.kpis || {};
+  const WA = E.whatsapp || {};
+  const trends = E.trends || {};
+  const sDeals = (summary || {}).deals || {};
+
+  const leadsInPeriod = (trends.leadsByDay || []).reduce((s, d) => s + d.count, 0);
+  const prevLeads = ((P.trends || {}).leadsByDay || []).reduce((s, d) => s + d.count, 0);
+  const srcs = E.leadSources || [];
+  const convertedInPeriod = srcs.reduce((s, x) => s + x.converted, 0);
+  const convRate = leadsInPeriod > 0 ? Math.round((convertedInPeriod / leadsInPeriod) * 100) : null;
+
+  const delta = (cur, prev) => {
+    if (!compare || cur == null || prev == null || prev === 0) return null;
+    const d = Math.round(((cur - prev) / Math.abs(prev)) * 100);
+    return { text: `${Math.abs(d)}%`, up: d >= 0 };
+  };
+
+  // Approved KPI layout: all eight cards stay visible; every metric now has a
+  // backend source (/crm/dashboard/extended). Missing data shows a neutral state.
   const kpisRow1 = [
     {
       title: "Projected Revenue",
-      value: "$2.48M",
-      delta: "18.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: DollarSign,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
+      value: money(K.projectedRevenue),
+      subtext: "stage-weighted open pipeline",
+      icon: DollarSign, iconBg: "bg-green-light", iconColor: "text-green-strong",
+      delta: delta(K.projectedRevenue, PK.projectedRevenue),
     },
     {
       title: "New Leads",
-      value: "248",
-      delta: "15.7%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: User,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
+      value: String(leadsInPeriod),
+      subtext: (DATE_RANGES.find((r) => r.key === range) || {}).label?.toLowerCase() || "period",
+      icon: User, iconBg: "bg-blue-light", iconColor: "text-blue-strong",
+      delta: delta(leadsInPeriod, prevLeads),
     },
     {
       title: "Conversion Rate",
-      value: "21.8%",
-      delta: "3.2%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: Filter,
-      iconBg: "bg-cyan-light",
-      iconColor: "text-cyan-strong",
+      value: convRate != null ? `${convRate}%` : "0%",
+      subtext: "leads to converted",
+      icon: Filter, iconBg: "bg-cyan-light", iconColor: "text-cyan-strong",
+      delta: delta(
+        convRate,
+        prevLeads > 0
+          ? Math.round((((P.leadSources || []).reduce((s, x) => s + x.converted, 0)) / prevLeads) * 100)
+          : null,
+      ),
     },
     {
       title: "Appointments Booked",
-      value: "148",
-      delta: "16.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: CalendarCheck,
-      iconBg: "bg-pink-light",
-      iconColor: "text-pink-strong",
+      value: String(K.appointmentsBooked ?? 0),
+      subtext: K.appointmentsBooked ? "meetings logged" : "No data available",
+      icon: CalendarCheck, iconBg: "bg-pink-light", iconColor: "text-pink-strong",
+      delta: delta(K.appointmentsBooked, PK.appointmentsBooked),
     },
     {
       title: "Avg Speed to Lead",
-      value: "2m 34s",
-      delta: "8.6%",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
-      icon: Timer,
-      iconBg: "bg-orange-light",
-      iconColor: "text-orange-strong",
+      value: fmtHours(K.speedToLeadHours),
+      subtext: K.speedToLeadHours != null ? "first contact time" : "No data available",
+      icon: Timer, iconBg: "bg-orange-light", iconColor: "text-orange-strong",
+      delta: delta(K.speedToLeadHours, PK.speedToLeadHours),
     },
     {
       title: "Avg Time to Close",
-      value: "18 Days",
-      delta: "4 days",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
-      icon: Clock,
-      iconBg: "bg-red-light",
-      iconColor: "text-red-strong",
+      value: K.avgTimeToCloseDays != null ? `${Math.round(K.avgTimeToCloseDays)} Days` : "—",
+      subtext: K.avgTimeToCloseDays != null ? "deal open to won" : "No data available",
+      icon: Clock, iconBg: "bg-red-light", iconColor: "text-red-strong",
+      delta: delta(K.avgTimeToCloseDays, PK.avgTimeToCloseDays),
     },
     {
       title: "Pipeline Value",
-      value: "$5.72M",
-      delta: "12.1%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
-      icon: PieChartIcon,
-      iconBg: "bg-blue-light",
-      iconColor: "text-blue-strong",
+      value: money(sDeals.pipelineValue),
+      subtext: "open deals",
+      icon: PieChartIcon, iconBg: "bg-blue-light", iconColor: "text-blue-strong",
     },
     {
       title: "Follow-Up Completion",
-      value: "68%",
-      delta: "9.3%",
-      type: "up-good", 
-      subtext: "vs May 5 – May 11",
-      icon: CheckCircle,
-      iconBg: "bg-green-light",
-      iconColor: "text-green-strong",
+      value: K.followUp && K.followUp.pct != null ? `${K.followUp.pct}%` : "0%",
+      subtext:
+        K.followUp && K.followUp.total
+          ? `${K.followUp.completed}/${K.followUp.total} tasks`
+          : "No data available",
+      icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong",
+      delta: delta(K.followUp && K.followUp.pct, PK.followUp && PK.followUp.pct),
     },
   ];
+  const kpisRow1Ref = useRef([]);
+  kpisRow1Ref.current = kpisRow1;
 
-  const kpisRow2 = [
-    {
-      title: "Ad Spend",
-      value: "$53,420",
-      delta: "6.2%",
-      positive: true,
-      subtext: "Total campaign spend",
-      icon: Megaphone,
-      iconColor: "text-blue-spend",
-      iconBg: "bg-blue-light",
-    },
-    {
-      title: "Cost Per Lead",
-      value: "$12.48",
-      delta: "8.5%",
-      positive: false,
-      subtext: "Average CPL",
-      icon: Target,
-      iconColor: "text-red-cpl",
-      iconBg: "bg-red-light",
-    },
-    {
-      title: "Cost Per Appointment",
-      value: "$48.21",
-      delta: "5.1%",
-      positive: true,
-      subtext: "Cost to book a showing",
-      icon: Calendar,
-      iconColor: "text-purple-cpa",
-      iconBg: "bg-purple-light",
-    },
-    {
-      title: "Cost Per Closing",
-      value: "$342.65",
-      delta: "7.7%",
-      positive: true,
-      subtext: "Cost to close a deal",
-      icon: DollarSign,
-      iconColor: "text-darkblue-cpc",
-      iconBg: "bg-cyan-light",
-    },
-  ];
+  // CSV export of the full live dataset (client-side), honoring filters
+  const exportAnalyticsCsv = () => {
+    const rows = [["metric", "value", "note"]].concat(
+      kpisRow1Ref.current.map((k) => [k.title, k.value, k.subtext || ""])
+    );
+    rows.push([]);
+    rows.push(["Lead source", "leads", "conversion %"]);
+    srcs.forEach((s) => rows.push([s.source, s.leads, s.conversionRate]));
+    rows.push([]);
+    rows.push(["Pipeline stage", "deals", "conversion %"]);
+    (E.pipelineLeakage || []).forEach((s) => rows.push([s.stage, s.deals, s.conversionPct ?? ""]));
+    rows.push([]);
+    rows.push(["Agent", "deals", "won", "close rate %", "revenue", "avg response h"]);
+    (E.teamPerformance || []).forEach((a) =>
+      rows.push([a.name, a.deals, a.won, a.closeRatePct ?? "", a.revenue, a.avgResponseHours ?? ""])
+    );
+    downloadCsv("analytics-kpis.csv", rows);
+  };
 
-  const revenueTrend = [
-    { month: "Jan", revenue: 180000 },
-    { month: "Feb", revenue: 240000 },
-    { month: "Mar", revenue: 210000 },
-    { month: "Apr", revenue: 310000 },
-    { month: "May", revenue: 510000 },
-    { month: "Jun", revenue: 600000 },
-  ];
+  const leadSources = srcs.map((s, i) => ({
+    name: s.source,
+    value: s.leads,
+    percentage:
+      leadsInPeriod > 0 ? `${Math.round((s.leads / leadsInPeriod) * 100)}%` : "0%",
+    fill: SOURCE_COLORS[i % SOURCE_COLORS.length],
+  }));
 
-  const leadSources = [
-    { name: "WhatsApp", value: 96, percentage: "38.7%", fill: "#0ea5e9" },
-    { name: "Instagram", value: 52, percentage: "21.0%", fill: "#d946ef" },
-    { name: "Website", value: 46, percentage: "18.5%", fill: "#3b82f6" },
-    { name: "Marketplace", value: 28, percentage: "11.3%", fill: "#f97316" },
-    { name: "Referrals", value: 26, percentage: "10.5%", fill: "#64748b" },
-  ];
+  const pipelineStages = (E.pipelineLeakage || []).map((s) => ({
+    name: s.stage.charAt(0).toUpperCase() + s.stage.slice(1),
+    count: s.reached ?? s.deals,
+    conversion: s.conversionPct != null ? `${s.conversionPct}%` : "—",
+    drop:
+      s.deltaPct != null ? `${s.deltaPct > 0 ? "+" : ""}${s.deltaPct}%` : "—",
+    width: s.conversionPct != null ? `${Math.max(4, s.conversionPct)}%` : "4%",
+  }));
 
-  const pipelineStages = [
-    { name: "Leeds", count: 218, conversion: "156%", drop: "-" },
-    { name: "Qualified", count: 218, conversion: "68%", drop: "-32%" },
-    { name: "Showings", count: 216, conversion: "37%", drop: "-32%" },
-    { name: "Offers", count: 54, conversion: "17%", drop: "-22%" },
-    { name: "Closings", count: 16, conversion: "6%", drop: "-11%" },
-  ];
+  const lostReasons = (E.lostReasons || []).map((r) => ({
+    reason: r.reason,
+    count: r.count,
+    percentage: r.pct,
+    width: `${Math.max(4, r.pct)}%`,
+  }));
 
-  const aiPerformance = [
-    { day: "Mon", replies: 42, appointments: 8 },
-    { day: "Tue", replies: 51, appointments: 11 },
-    { day: "Wed", replies: 67, appointments: 15 },
-    { day: "Thu", replies: 74, appointments: 18 },
-    { day: "Fri", replies: 83, appointments: 21 },
-    { day: "Sat", replies: 58, appointments: 12 },
-    { day: "Sun", replies: 63, appointments: 14 },
-  ];
+  const teamPerformance = (E.teamPerformance || []).map((a) => ({
+    name: a.name,
+    rate: a.closeRatePct != null ? `${a.closeRatePct}%` : "—",
+    width: a.closeRatePct != null ? `${a.closeRatePct}%` : "0%",
+    color: (a.closeRatePct || 0) >= 50 ? "green" : "blue",
+    time: a.avgResponseHours != null ? fmtHours(a.avgResponseHours) : "—",
+    deals: a.deals,
+    revenue: money(a.revenue),
+  }));
 
-  const lostReasons = [
-    { reason: "No response", count: 42, percentage: 28, width: "85%" },
-    { reason: "Price too high", count: 31, percentage: 20, width: "65%" },
-    { reason: "Wrong location", count: 22, percentage: 15, width: "45%" },
-    { reason: "Financing issue", count: 18, percentage: 12, width: "35%" },
-    { reason: "Bought elsewhere", count: 15, percentage: 10, width: "30%" },
-    { reason: "Not qualified", count: 12, percentage: 8, width: "20%" },
-    {
-      reason: "Agent did not follow up",
-      count: 10,
-      percentage: 7,
-      width: "15%",
-    },
-  ];
+  const whatsappChartData = (WA.byDay || []).map((d) => ({
+    day: d.date,
+    conversations: d.conversations,
+  }));
 
-  const teamPerformance = [
-    {
-      name: "Sofia Reyes",
-      rate: "27%",
-      time: "5m",
-      deals: 18,
-      revenue: "$640,000",
-      color: "bg-green-strong",
-      width: "80%",
-    },
-    {
-      name: "Carlos Vega",
-      rate: "27%",
-      time: "4m",
-      deals: 14,
-      revenue: "$450,000",
-      color: "bg-green-strong",
-      width: "70%",
-    },
-    {
-      name: "Maria Lopez",
-      rate: "24%",
-      time: "5m",
-      deals: 11,
-      revenue: "$310,000",
-      color: "bg-green-strong",
-      width: "60%",
-    },
-    {
-      name: "Diego Ruiz",
-      rate: "21%",
-      time: "6m",
-      deals: 9,
-      revenue: "$270,000",
-      color: "bg-green-strong",
-      width: "50%",
-    },
-    {
-      name: "Ana Torres",
-      rate: "19%",
-      time: "8m",
-      deals: 7,
-      revenue: "$210,000",
-      color: "bg-green-strong",
-      width: "40%",
-    },
-  ];
-  const whatsappChartData = [
-    { day: "Mon", conversations: 34 },
-    { day: "Tue", conversations: 49 },
-    { day: "Wed", conversations: 44 },
-    { day: "Thu", conversations: 55 },
-    { day: "Fri", conversations: 78 },
-    { day: "Sat", conversations: 69 },
-    { day: "Sun", conversations: 84 },
-  ];
+  const dateLabel = (() => {
+    const p = E.period;
+    if (!p) return (DATE_RANGES.find((r) => r.key === range) || {}).label || "";
+    const f = (x) =>
+      new Date(x).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return `${f(p.startDate)} – ${f(p.endDate)}`;
+  })();
+
   return (
     <div className="analytics-page">
       <div className="heading_page">
@@ -311,37 +266,40 @@ export default function CortexaAnalyticsDashboard() {
       </p>
       <header className="main-header">
         <div className="header-controls">
-          <div className="date-picker-wrapper">
-            <span>May 12 – May 18, 2025</span>
-            <Calendar size={16} className="text-gray-icon" />
-          </div>
+          <FilterDropdown
+            icon={<Calendar size={16} className="text-gray-icon" />}
+            label={dateLabel}
+            value={range}
+            options={DATE_RANGES.map((r) => ({ value: r.key, label: r.label }))}
+            onChange={(v) => setRange(v || "30d")}
+          />
 
           <div className="select-wrapper">
-            <select className="control-select">
-              <option>vs Previous Period</option>
+            <select
+              className="control-select"
+              value={compare ? "on" : "off"}
+              onChange={(e) => setCompare(e.target.value === "on")}
+            >
+              <option value="on">vs Previous Period</option>
+              <option value="off">No comparison</option>
             </select>
             <ChevronDown size={14} className="select-arrow" />
           </div>
 
-          <button className="btn-secondary">
+          <button className="btn-secondary" onClick={exportAnalyticsCsv}>
             <Download size={15} /> Export
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => notAvailable("Run AI Revenue Analysis")}>
             <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
           </button>
         </div>
       </header>
+      <FeatureNoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* KPI ROW 1 */}
       <div className="kpi-grid-row1">
         {kpisRow1.map((kpi, i) => {
           const Icon = kpi.icon;
-
-          const isUp = kpi.type.startsWith("up");
-          const arrow = isUp ? "↑" : "↓";
-
-          const badgeClass = "kpi-badge pos";
-
           return (
             <div key={i} className="kpi-card-mini">
               <div className="kpi-header">
@@ -355,9 +313,11 @@ export default function CortexaAnalyticsDashboard() {
               <div className="kpi-body">
                 <span className="kpi-value">{kpi.value}</span>
                 <div className="kpi-footer-meta">
-                  <span className={badgeClass}>
-                    {arrow} {kpi.delta}
-                  </span>
+                  {kpi.delta ? (
+                    <span className={`kpi-badge ${kpi.delta.up ? "pos" : "neg"}`}>
+                      {kpi.delta.up ? "↑" : "↓"} {kpi.delta.text}
+                    </span>
+                  ) : null}
                   <span className="kpi-subtext">{kpi.subtext}</span>
                 </div>
               </div>
@@ -368,7 +328,7 @@ export default function CortexaAnalyticsDashboard() {
 
       {/* ROW 3: REVENUE + LEAD SOURCE + PIPELINE LEAKAGE */}
       <div className="charts-grid-3col">
-        
+
         {/* Lead Source Intelligence */}
         <div className="dashboard-card">
           <div className="card-header">
@@ -383,33 +343,37 @@ export default function CortexaAnalyticsDashboard() {
 
           <div className="lead-source-layout">
             <div className="chart-container-donut">
-              <ResponsiveContainer width="100%" height={190}>
-                <PieChart>
-                  <Pie
-                    data={leadSources}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={
-                      50
-                    }
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {leadSources.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              {leadSources.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <ResponsiveContainer width="100%" height={190}>
+                  <PieChart>
+                    <Pie
+                      data={leadSources}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {leadSources.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
 
               <div className="donut-center-text">
-                <span className="total-number">248</span>
+                <span className="total-number">{leadsInPeriod}</span>
                 <span className="total-label">Total Leads</span>
               </div>
             </div>
 
             <div className="lead-source-list-v2">
+              {leadSources.length === 0 ? <EmptyState /> : null}
               {leadSources.map((src, i) => (
                 <div key={i} className="list-item-row-v2">
                   <div className="src-name-dot">
@@ -430,7 +394,7 @@ export default function CortexaAnalyticsDashboard() {
 
           {/* Footer Link */}
           <div className="card-footer-action">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => navigate("/dashboard/leads")}>
               View all sources <ArrowRight size={14} />
             </button>
           </div>
@@ -445,7 +409,7 @@ export default function CortexaAnalyticsDashboard() {
             </div>
           </div>
           <p className="card-subtitle">
-            Identtfy dently deals ine shopping in the pipeline
+            Identify deals slipping in the pipeline
           </p>
 
           <div className="pipeline-funnel-wrapper">
@@ -456,35 +420,30 @@ export default function CortexaAnalyticsDashboard() {
               <span className="text-right">vs Prev.</span>
             </div>
             <div className="funnel-bars-container">
-              {pipelineStages.map((stage, i) => {
-                const widths = ["100%", "100%", "98%", "35%", "12%"];
-                return (
-                  <div key={i} className="funnel-row">
-                    <div className="funnel-label-bar">
-                      <span className="stage-name">{stage.name}</span>
-                      <div className="funnel-bar-bg">
-                        <div
-                          className="funnel-bar-fill"
-                          style={{
-                            width: widths[i],
-                            backgroundColor: i === 4 ? "#2563eb" : "#2563eb",
-                          }}
-                        ></div>
-                      </div>
-                      <span className="stage-count">{stage.count}</span>
+              {pipelineStages.length === 0 ? <EmptyState /> : null}
+              {pipelineStages.map((stage, i) => (
+                <div key={i} className="funnel-row">
+                  <div className="funnel-label-bar">
+                    <span className="stage-name">{stage.name}</span>
+                    <div className="funnel-bar-bg">
+                      <div
+                        className="funnel-bar-fill"
+                        style={{ width: stage.width, backgroundColor: "#2563eb" }}
+                      ></div>
                     </div>
-                    <span className="funnel-percent">{stage.conversion}</span>
-                    <span
-                      className={`funnel-drop ${stage.drop !== "-" ? "text-red-strong" : "text-gray-400"}`}
-                    >
-                      {stage.drop}
-                    </span>
+                    <span className="stage-count">{stage.count}</span>
                   </div>
-                );
-              })}
+                  <span className="funnel-percent">{stage.conversion}</span>
+                  <span
+                    className={`funnel-drop ${stage.drop !== "—" && stage.drop.startsWith("-") ? "text-red-strong" : "text-gray-400"}`}
+                  >
+                    {stage.drop}
+                  </span>
+                </div>
+              ))}
             </div>
             <div className="funnel-footer">
-              <button className="btn-view-all">
+              <button className="btn-view-all" onClick={() => navigate("/dashboard/pipeline")}>
                 View full pipeline <ArrowRight size={14} />
               </button>
             </div>
@@ -504,93 +463,94 @@ export default function CortexaAnalyticsDashboard() {
           </p>
           <div className="wa-analytics-layout">
             <div className="wa-chart-container">
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart
-                  data={whatsappChartData}
-                  margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="colorConversations"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor="#10b981"
-                        stopOpacity={0.15}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#10b981"
-                        stopOpacity={0.01}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                  />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="conversations"
-                    stroke="#10b981"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#colorConversations)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {whatsappChartData.length === 0 ? (
+                <EmptyState label="No WhatsApp activity in this period" />
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart
+                    data={whatsappChartData}
+                    margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorConversations"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.15}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0.01}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                    />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="conversations"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#colorConversations)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="wa-metrics-grid">
               {/* Card 1 */}
-              <div className="wa-metric-card">
+              <div className="wa-metric-card no-badge">
                 <span className="metric-title">Conversations</span>
-                <span className="metric-value">246</span>
-                <span className="metric-badge pos">↑ 14.6%</span>
+                <span className="metric-value">{WA.conversations ?? "—"}</span>
               </div>
 
               {/* Card 2 */}
-              <div className="wa-metric-card">
+              <div className="wa-metric-card no-badge">
                 <span className="metric-title">Replies Sent</span>
-                <span className="metric-value">382</span>
-                <span className="metric-badge pos">↑ 12.1%</span>
+                <span className="metric-value">{WA.repliesSent ?? "—"}</span>
               </div>
 
               {/* Card 3 */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Replies This Period</span>
-                <span className="metric-value">438</span>
+                <span className="metric-value">{WA.repliesPeriod ?? "—"}</span>
               </div>
 
               {/* Card 4 */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Appointments Booked</span>
-                <span className="metric-value">101</span>
+                <span className="metric-value">{K.appointmentsBooked ?? "—"}</span>
               </div>
             </div>
           </div>
 
           {/* Footer Action Link */}
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => navigate("/dashboard/whatsapp")}>
               Open WhatsApp Workspace <ArrowRight size={14} />
             </button>
           </div>
@@ -607,14 +567,17 @@ export default function CortexaAnalyticsDashboard() {
               <h3>Lost Deal Reasons</h3>
             </div>
           </div>
-          <p className="card-subtitle">Why deals didnot close</p>
+          <p className="card-subtitle">Why deals did not close</p>
           <div className="lost-reasons-list">
             <div className="lost-header-row">
               <span>Reason</span>
               <span></span>
-              <span className="text-right">Last Deals</span>
+              <span className="text-right">Lost Deals</span>
               <span className="text-right">% of Total</span>
             </div>
+            {lostReasons.length === 0 ? (
+              <EmptyState label="No lost deals in this period" />
+            ) : null}
             {lostReasons.map((item, i) => (
               <div key={i} className="lost-item-row">
                 <span className="reason-text">{item.reason}</span>
@@ -629,7 +592,7 @@ export default function CortexaAnalyticsDashboard() {
             ))}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => navigate("/dashboard/pipeline")}>
               View all reasons <ArrowRight size={14} />
             </button>
           </div>
@@ -643,7 +606,7 @@ export default function CortexaAnalyticsDashboard() {
               <h3>Team Performance</h3>
             </div>
           </div>
-          <p className="card-subtitle">How your team is performance</p>
+          <p className="card-subtitle">How your team is performing</p>
           <div className="team-performance-list">
             <div className="team-header-row">
               <span>Agent</span>
@@ -652,13 +615,11 @@ export default function CortexaAnalyticsDashboard() {
               <span>Deals</span>
               <span className="text-right">Revenue</span>
             </div>
+            {teamPerformance.length === 0 ? <EmptyState /> : null}
             {teamPerformance.map((agent, i) => (
               <div key={i} className="team-item-row">
                 <span className="agent-name">
-                  <img
-                    src="https://i.pravatar.cc/150"
-                    className="team-avatar"
-                  />
+                  <InitialsAvatar name={agent.name} size={24} />
                   <span>{agent.name}</span>
                 </span>
                 <div className="rate-progress-wrapper">
@@ -679,7 +640,7 @@ export default function CortexaAnalyticsDashboard() {
             ))}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button className="btn-view-all" onClick={() => navigate("/dashboard/team")}>
               View full team report <ArrowRight size={14} />
             </button>
           </div>
@@ -692,12 +653,12 @@ export default function CortexaAnalyticsDashboard() {
                 <Sparkles size={18} className="text-royal-blue" />
                 <h3>AI Revenue Insights</h3>
               </div>
-              <button className="btn-view-all">
+              <button className="btn-view-all" onClick={() => navigate("/dashboard/ai-center")}>
                 View all insights <ArrowRight size={14} />
               </button>
             </div>
             <p className="card-subtitle">
-              Actionable insights generated by Cortesa AI
+              Actionable insights generated by Cortexa AI
             </p>
 
             <div className="insights-list-row">
@@ -708,11 +669,11 @@ export default function CortexaAnalyticsDashboard() {
                       <MessageCircle size={16} className="text-green-strong" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>WhatsApp is outperforming of other sources</h4>
-                      <p>You're converting 2.4x higher than Instagram traffic.</p>
+                      <h4>Compare performance across your lead sources</h4>
+                      <p>Review which channels convert best for your team.</p>
                   </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/whatsapp" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/whatsapp"); }}>
                     Open WhatsApp Leads →
                   </a>
                 </div>
@@ -725,13 +686,13 @@ export default function CortexaAnalyticsDashboard() {
                       <Target size={20} className="text-orange-strong" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>41% of showing are not converting</h4>
+                      <h4>Keep showings moving to a close</h4>
                       <p>
                         Follow up within 24 hours to increase your close rate.
                       </p>
                     </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/pipeline" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/pipeline"); }}>
                     Reviewing Showings →
                   </a>
                 </div>
@@ -750,7 +711,7 @@ export default function CortexaAnalyticsDashboard() {
                       </p>
                     </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
+                  <a href="/dashboard/ai-auto-reply" className="text-royal-blue" onClick={(e) => { e.preventDefault(); navigate("/dashboard/ai-auto-reply"); }}>
                     Open AI Automation →
                   </a>
                 </div>
@@ -771,15 +732,15 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="forecast-metrics">
                 <div className="m-box">
-                  <h3>$1.25M</h3>
+                  <h3>—</h3>
                 </div>
-                <p className="forecast-desc">Estimated revenue next 30 days</p>
-                <p className="top-opp">
-                  Top Opportunity: Conerotau Agortment – $420K
+                <p className="forecast-desc">
+                  Revenue forecasting connects once historical deal data is
+                  available.
                 </p>
               </div>
 
-              <button className="btn-forecast-action">
+              <button className="btn-forecast-action" onClick={() => notAvailable("AI Forecast")}>
                 Generate AI Forecast →
               </button>
             </div>
@@ -800,7 +761,7 @@ export default function CortexaAnalyticsDashboard() {
       </div>
 
       {/* ROW 5: AI INSIGHTS & FORECAST */}
-      <div className="insights-forecast-grid"><span class="dot-bottom"></span>All data is updated in real-time</div>
+      <div className="insights-forecast-grid"><span className="dot-bottom"></span>All data is updated in real-time</div>
     </div>
   );
 }

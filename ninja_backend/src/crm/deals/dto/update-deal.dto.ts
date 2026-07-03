@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsUUID, Min, IsIn } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsUUID, Min, IsIn, IsDateString } from 'class-validator';
 
 const STAGES = ['new', 'qualified', 'proposal', 'negotiation', 'won', 'lost'] as const;
 
@@ -41,4 +41,14 @@ export class UpdateDealDto {
   @IsOptional()
   @IsString()
   notes?: string | null;
+
+  @ApiPropertyOptional({ description: 'Why the deal was lost (used by Analytics lost-reason breakdown)' })
+  @IsOptional()
+  @IsString()
+  lostReason?: string | null;
+
+  @ApiPropertyOptional({ description: 'Expected close date (YYYY-MM-DD; used by Upcoming Closings)' })
+  @IsOptional()
+  @IsDateString()
+  expectedCloseDate?: string | null;
 }

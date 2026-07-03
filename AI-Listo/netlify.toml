@@ -9,10 +9,26 @@ to = "https://www.cortexaaicrm.com/:splat"
 status = 301
 force = true
 
+# Deploy previews call the API same-origin (see VITE_API_BASE_URL below),
+# proxied here to the backend. The backend's CORS allowlist only
+# admits the production domain, so a preview origin can't call it directly.
+# Unused in production, where the frontend calls the backend absolutely.
+# REVIEW ONLY: temporarily pointed at the PR7 staging backend so the new
+# endpoints can be reviewed before merge. Revert to
+# https://backend.cortexaaicrm.com/api/:splat before merging.
+[[redirects]]
+from = "/api/*"
+to = "https://cortexa-staging.178-104-123-181.sslip.io/api/:splat"
+status = 200
+force = true
+
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
+
+[context.deploy-preview.environment]
+  VITE_API_BASE_URL = "/api"
 
 # ─────────────────────────────────────────────
 # Redirect root domain → vacation rentals page

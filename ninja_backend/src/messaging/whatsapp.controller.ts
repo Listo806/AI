@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
+import { TwilioWebhookSignatureGuard } from './guards/twilio-webhook-signature.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { SendWhatsAppDto } from './dto/send-whatsapp.dto';
@@ -32,6 +33,7 @@ export class WhatsAppController {
 
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(TwilioWebhookSignatureGuard)
   @ApiExcludeEndpoint()
   async webhook(@Req() req: Request, @Res() res: Response) {
     const payload = (req.body || {}) as Record<string, string>;
@@ -42,6 +44,7 @@ export class WhatsAppController {
 
   @Post('inbound')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(TwilioWebhookSignatureGuard)
   @ApiExcludeEndpoint()
   async inbound(@Req() req: Request, @Res() res: Response) {
     const payload = (req.body || {}) as Record<string, string>;
@@ -52,6 +55,7 @@ export class WhatsAppController {
 
   @Post('status-callback')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(TwilioWebhookSignatureGuard)
   @ApiExcludeEndpoint()
   async statusCallback(@Req() req: Request, @Res() res: Response) {
     const payload = (req.body || {}) as Record<string, string>;
