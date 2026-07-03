@@ -140,6 +140,12 @@ export default function CortexaAnalyticsDashboard() {
       value: convRate != null ? `${convRate}%` : "0%",
       subtext: "leads to converted",
       icon: Filter, iconBg: "bg-cyan-light", iconColor: "text-cyan-strong",
+      delta: delta(
+        convRate,
+        prevLeads > 0
+          ? Math.round((((P.leadSources || []).reduce((s, x) => s + x.converted, 0)) / prevLeads) * 100)
+          : null,
+      ),
     },
     {
       title: "Appointments Booked",
@@ -153,12 +159,14 @@ export default function CortexaAnalyticsDashboard() {
       value: fmtHours(K.speedToLeadHours),
       subtext: K.speedToLeadHours != null ? "first contact time" : "No data available",
       icon: Timer, iconBg: "bg-orange-light", iconColor: "text-orange-strong",
+      delta: delta(K.speedToLeadHours, PK.speedToLeadHours),
     },
     {
       title: "Avg Time to Close",
       value: K.avgTimeToCloseDays != null ? `${Math.round(K.avgTimeToCloseDays)} Days` : "—",
       subtext: K.avgTimeToCloseDays != null ? "deal open to won" : "No data available",
       icon: Clock, iconBg: "bg-red-light", iconColor: "text-red-strong",
+      delta: delta(K.avgTimeToCloseDays, PK.avgTimeToCloseDays),
     },
     {
       title: "Pipeline Value",
@@ -174,6 +182,7 @@ export default function CortexaAnalyticsDashboard() {
           ? `${K.followUp.completed}/${K.followUp.total} tasks`
           : "No data available",
       icon: CheckCircle, iconBg: "bg-green-light", iconColor: "text-green-strong",
+      delta: delta(K.followUp && K.followUp.pct, PK.followUp && PK.followUp.pct),
     },
   ];
   const kpisRow1Ref = useRef([]);
@@ -208,7 +217,7 @@ export default function CortexaAnalyticsDashboard() {
 
   const pipelineStages = (E.pipelineLeakage || []).map((s) => ({
     name: s.stage.charAt(0).toUpperCase() + s.stage.slice(1),
-    count: s.deals,
+    count: s.reached ?? s.deals,
     conversion: s.conversionPct != null ? `${s.conversionPct}%` : "—",
     drop:
       s.deltaPct != null ? `${s.deltaPct > 0 ? "+" : ""}${s.deltaPct}%` : "—",

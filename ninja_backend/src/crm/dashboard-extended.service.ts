@@ -375,15 +375,21 @@ export class DashboardExtendedService {
     const by: { [s: string]: { cur: number; prev: number } } = {};
     rows.forEach((r: any) => { by[r.stage] = { cur: Number(r.cur), prev: Number(r.prev) }; });
     const order = ['new', 'qualified', 'proposal', 'negotiation', 'won'];
-    const base = by['new']?.cur || 0;
-    return order.map((stage) => {
-      const cur = by[stage]?.cur || 0;
-      const prev = by[stage]?.prev || 0;
+    // Funnel semantics: a deal sitting in a later stage has passed through every
+    // earlier one, so each row counts deals at that stage OR BEYOND. Percentages
+    // are against all deals in the period and can only decrease down the funnel.
+    const reached = (idx: number, key: 'cur' | 'prev') =>
+      order.slice(idx).reduce((sum, s) => sum + (by[s]?.[key] || 0), 0);
+    const base = reached(0, 'cur');
+    return order.map((stage, i) => {
+      const cur = reached(i, 'cur');
+      const prev = reached(i, 'prev');
       return {
         stage,
-        deals: cur,
+        deals: by[stage]?.cur || 0,
+        reached: cur,
         conversionPct: base > 0 ? Math.round((cur / base) * 100) : null,
-        prevDeals: prev,
+        prevDeals: by[stage]?.prev || 0,
         deltaPct: prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null,
       };
     });

@@ -69,6 +69,7 @@ export default function CortexaDashboard() {
   const { handleError } = useApiErrorHandler();
   const [summary, setSummary] = useState(null);
   const [ext, setExt] = useState(null);
+  const [prevExt, setPrevExt] = useState(null);
 
   // Filters (date / team / source / agent / stage) — drive every panel below.
   const [range, setRange] = useState("7d");
@@ -82,20 +83,23 @@ export default function CortexaDashboard() {
     (async () => {
       try {
         const { startDate, endDate } = rangeToDates(range);
-        const [s, e] = await Promise.all([
+        const periodMs = new Date(endDate).getTime() - new Date(startDate).getTime();
+        const prevStart = new Date(new Date(startDate).getTime() - periodMs).toISOString();
+        const filterArgs = {
+          teamId: teamFilter,
+          source: sourceFilter,
+          agentId: agentFilter,
+          stage: stageFilter,
+        };
+        const [s, e, pe] = await Promise.all([
           getDashboardSummary().catch(() => null),
-          getDashboardExtended({
-            startDate,
-            endDate,
-            teamId: teamFilter,
-            source: sourceFilter,
-            agentId: agentFilter,
-            stage: stageFilter,
-          }).catch(() => null),
+          getDashboardExtended({ startDate, endDate, ...filterArgs }).catch(() => null),
+          getDashboardExtended({ startDate: prevStart, endDate: startDate, ...filterArgs }).catch(() => null),
         ]);
         if (!active) return;
         setSummary(s);
         setExt(e);
+        setPrevExt(pe);
       } catch (err) {
         if (active) handleError(err, "Failed to load dashboard");
       }
@@ -135,7 +139,27 @@ export default function CortexaDashboard() {
   const leadSourcesData = E.leadSources || [];
   const filterOptions = E.filterOptions || {};
 
+  const openDealsCount = ["new", "qualified", "proposal", "negotiation"].reduce(
+    (sum, s) => sum + (Number(byStage[s]) || 0),
+    0,
+  );
   const totalLeadsInPeriod = (trendsData.leadsByDay || []).reduce((s, d) => s + d.count, 0);
+
+  // vs-previous-period comparisons (approved design shows a delta under each KPI)
+  const P = prevExt || {};
+  const prevByStage = (P.dealsByStage && P.dealsByStage.counts) || {};
+  const prevStageValues = (P.dealsByStage && P.dealsByStage.values) || {};
+  const prevLeadsInPeriod = ((P.trends || {}).leadsByDay || []).reduce((s, d) => s + d.count, 0);
+  const prevWonInPeriod = ((P.trends || {}).revenueByDay || []).reduce((s, d) => s + d.value, 0);
+  const prevConvRate =
+    prevLeadsInPeriod > 0 && (P.leadSources || []).length
+      ? Math.round(((P.leadSources || []).reduce((s, x) => s + x.converted, 0) / prevLeadsInPeriod) * 100)
+      : null;
+  const vsPrev = (cur, prev) => {
+    if (cur == null || prev == null || prev === 0) return {};
+    const d = Math.round(((cur - prev) / Math.abs(prev)) * 100);
+    return { delta: `${Math.abs(d)}% vs prev`, positive: d >= 0 };
+  };
   const wonInPeriod = (trendsData.revenueByDay || []).reduce((s, d) => s + d.value, 0);
   const convRate =
     totalLeadsInPeriod > 0 && leadSourcesData.length
@@ -152,6 +176,7 @@ export default function CortexaDashboard() {
       icon: <Users size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
       intime: (DATE_RANGES.find((r) => r.key === range) || {}).label?.toLowerCase() || "period",
+      ...vsPrev(totalLeadsInPeriod, prevLeadsInPeriod),
     },
     {
       title: "Qualified Leads",
@@ -160,14 +185,19 @@ export default function CortexaDashboard() {
       icon: <CheckCircle2 size={16} className="text-green" />,
       iconBg: "bg-light-green",
       intime: "current",
+      ...vsPrev(Number(byStage.qualified) || null, Number(prevByStage.qualified) || null),
     },
     {
       title: "Pipeline Value",
       value: money(sDeals.pipelineValue),
-      subtext: `${sDeals.total ?? 0} active deals`,
+      subtext: `${openDealsCount} active deals`,
       icon: <Briefcase size={16} className="text-purple" />,
       iconBg: "bg-light-purple",
       intime: "open",
+      ...vsPrev(
+        ["new", "qualified", "proposal", "negotiation"].reduce((s, k) => s + (Number(stageValues[k]) || 0), 0) || null,
+        ["new", "qualified", "proposal", "negotiation"].reduce((s, k) => s + (Number(prevStageValues[k]) || 0), 0) || null,
+      ),
     },
     {
       title: "Won Revenue",
@@ -176,6 +206,7 @@ export default function CortexaDashboard() {
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
       intime: wonInPeriod ? "this period" : "to date",
+      ...vsPrev(wonInPeriod || null, prevWonInPeriod || null),
     },
     {
       title: "Conversion Rate",
@@ -184,6 +215,7 @@ export default function CortexaDashboard() {
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
       intime: "period",
+      ...vsPrev(convRate, prevConvRate),
     },
     {
       title: "Properties",
@@ -285,22 +317,38 @@ export default function CortexaDashboard() {
     stageTotal > 0 ? `${Math.max(2, Math.round(((Number(byStage[s]) || 0) / stageTotal) * 100))}%` : "20%";
 
   const _funnelTotal = Number(sLeads.total ?? 0) || 0;
+  // A deal in a later stage has passed through every earlier one, so each funnel
+  // row counts deals at that stage or beyond — percentages only narrow downward.
+  const _reachedFrom = (stage) => {
+    const idx = stageOrder.indexOf(stage);
+    return stageOrder.slice(idx).reduce((sum, s) => sum + (Number(byStage[s]) || 0), 0);
+  };
   const _pct = (n) =>
     _funnelTotal > 0 ? Math.round(((Number(n) || 0) / _funnelTotal) * 100) : 0;
   const pipelineFunnelArr = [
     { stage: "Leads", count: String(sLeads.total ?? 0), percent: "100%", width: "100%" },
-    { stage: "Qualified", count: String(byStage.qualified ?? 0), percent: `${_pct(byStage.qualified)}%`, width: `${_pct(byStage.qualified)}%` },
-    { stage: "Proposal", count: String(byStage.proposal ?? 0), percent: `${_pct(byStage.proposal)}%`, width: `${_pct(byStage.proposal)}%` },
-    { stage: "Negotiation", count: String(byStage.negotiation ?? 0), percent: `${_pct(byStage.negotiation)}%`, width: `${_pct(byStage.negotiation)}%` },
-    { stage: "Won", count: String(byStage.won ?? 0), percent: `${_pct(byStage.won)}%`, width: `${_pct(byStage.won)}%` },
+    ...["qualified", "proposal", "negotiation", "won"].map((s) => {
+      const reached = _reachedFrom(s);
+      return {
+        stage: s.charAt(0).toUpperCase() + s.slice(1),
+        count: String(reached),
+        percent: `${_pct(reached)}%`,
+        width: `${Math.max(2, _pct(reached))}%`,
+      };
+    }),
   ];
 
   const aiPriorityQueue = E.priorityQueue || [];
+  const _queueScores = aiPriorityQueue.map((l) => Number(l.score)).filter((n) => !Number.isNaN(n) && n > 0);
+  const aiConfidence = _queueScores.length
+    ? Math.round(_queueScores.reduce((s, n) => s + n, 0) / _queueScores.length)
+    : null;
+  const nextBestLead = aiPriorityQueue.find((l) => l.phone) || aiPriorityQueue[0] || null;
   const riskAlertsData = E.riskAlerts || {};
   const riskAlerts = [
-    { icon: "⏰", title: "Overdue follow-up tasks", count: riskAlertsData.overdueTasks ?? 0 },
-    { icon: "📭", title: "New leads uncontacted 48h+", count: riskAlertsData.uncontacted48h ?? 0 },
-    { icon: "🧊", title: "Deals stalled 14 days+", count: riskAlertsData.stalledDeals14d ?? 0 },
+    { icon: <Clock3 size={14} className="text-orange" />, title: "Overdue follow-up tasks", count: riskAlertsData.overdueTasks ?? 0 },
+    { icon: <Users size={14} className="text-blue-strong" />, title: "New leads uncontacted 48h+", count: riskAlertsData.uncontacted48h ?? 0 },
+    { icon: <Briefcase size={14} className="text-cyan-strong" />, title: "Deals stalled 14 days+", count: riskAlertsData.stalledDeals14d ?? 0 },
   ];
   const liveTracking = (E.liveTracking || []).map((a) => ({
     text: a.label || a.title || a.type || "Activity",
@@ -473,9 +521,9 @@ export default function CortexaDashboard() {
         <div className="banner-right">
           <div className="banner-right-top">
             <div className="mini-insight-card">
-              <div className="card-lbl">Total Leads</div>
+              <div className="card-lbl">AI Confidence</div>
               <div className="card-val-group">
-                <h3 className="text-green">{sLeads.total ?? 0}</h3>
+                <h3 className="text-green">{aiConfidence != null ? `${aiConfidence}%` : "—"}</h3>
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
@@ -495,9 +543,9 @@ export default function CortexaDashboard() {
               </div>
             </div>
             <div className="mini-insight-card">
-              <div className="card-lbl">Pipeline Value</div>
+              <div className="card-lbl">Revenue at Risk</div>
               <div className="card-val-group">
-                <h3 className="text-orange">{money(sDeals.pipelineValue)}</h3>
+                <h3 className="text-orange">{money(K.revenueAtRisk ?? 0)}</h3>
                 <div className="mini-sparkline-container">
                   <ResponsiveContainer width="100%" height={25}>
                     <AreaChart
@@ -517,10 +565,10 @@ export default function CortexaDashboard() {
               </div>
             </div>
             <div className="mini-insight-card next-action-card">
-              <Briefcase size={16} />
+              <Phone size={16} />
               <div>
-                <div className="card-lbl">Active Deals</div>
-                <h4>{sDeals.total ?? 0}</h4>
+                <div className="card-lbl">Next Best Action</div>
+                <h4>{nextBestLead ? `Call ${nextBestLead.name}` : "—"}</h4>
               </div>
             </div>
           </div>
