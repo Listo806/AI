@@ -258,13 +258,45 @@ export class PropertiesService {
     limit: number;
     offset: number;
   }> {
-    let query = `SELECT id, title, description, address, city, state, zip_code as "zipCode", price, type, status,
-                        bedrooms, bathrooms, square_feet as "squareFeet", lot_size as "lotSize", year_built as "yearBuilt",
-                        created_by as "createdBy", edited_by as "editedBy", team_id as "teamId", zone_id as "zoneId",
-                        thumbnail_url as "thumbnailUrl", latitude, longitude,
-                        property_type as "propertyType", listing_type as "listingType",
-                        created_at as "createdAt", updated_at as "updatedAt", published_at as "publishedAt"
-                 FROM properties`;
+    let query = `
+  SELECT
+    p.id,
+    p.title,
+    p.description,
+    p.address,
+    p.city,
+    p.state,
+    p.zip_code as "zipCode",
+    p.price,
+    p.type,
+    p.status,
+    p.bedrooms,
+    p.bathrooms,
+    p.square_feet as "squareFeet",
+    p.lot_size as "lotSize",
+    p.year_built as "yearBuilt",
+    p.created_by as "createdBy",
+    p.edited_by as "editedBy",
+    p.team_id as "teamId",
+    p.assigned_agent_id as "assignedAgentId",
+    p.zone_id as "zoneId",
+    p.thumbnail_url as "thumbnailUrl",
+    p.latitude,
+    p.longitude,
+    p.property_type as "propertyType",
+    p.listing_type as "listingType",
+    p.created_at as "createdAt",
+    p.updated_at as "updatedAt",
+    p.published_at as "publishedAt",
+    creator.name as "createdByName",
+    agent.name as "agentName",
+    agent.email as "agentEmail",
+    t.name as "teamName"
+  FROM properties p
+  LEFT JOIN users creator ON creator.id = p.created_by
+  LEFT JOIN users agent ON agent.id = p.assigned_agent_id
+  LEFT JOIN teams t ON t.id = p.team_id
+`;
     const conditions: string[] = [];
     const params: any[] = [];
     let paramCount = 1;
@@ -276,21 +308,21 @@ export class PropertiesService {
 
     if (!canViewAll) {
       if (teamId) {
-        conditions.push(`team_id = $${paramCount++}`);
+        conditions.push(`p.team_id = $${paramCount++}`);
         params.push(teamId);
       } else {
-        conditions.push(`created_by = $${paramCount++}`);
+        conditions.push(`p.created_by = $${paramCount++}`);
         params.push(userId);
       }
     }
 
     if (filters?.type) {
-      conditions.push(`type = $${paramCount++}`);
+      conditions.push(`p.type = $${paramCount++}`);
       params.push(filters.type);
     }
 
     if (filters?.status) {
-      conditions.push(`status = $${paramCount++}`);
+      conditions.push(`p.status = $${paramCount++}`);
       params.push(filters.status);
     }
 
@@ -298,35 +330,47 @@ export class PropertiesService {
     if (filters?.search) {
       const searchTerm = `%${filters.search}%`;
       conditions.push(`(
-        address ILIKE $${paramCount} OR
-        city ILIKE $${paramCount} OR
-        state ILIKE $${paramCount} OR
-        title ILIKE $${paramCount} OR
-        description ILIKE $${paramCount} OR
-        zip_code ILIKE $${paramCount}
+        p.address ILIKE $${paramCount} OR
+        p.city ILIKE $${paramCount} OR
+        p.state ILIKE $${paramCount} OR
+        p.title ILIKE $${paramCount} OR
+        p.description ILIKE $${paramCount} OR
+        p.zip_code ILIKE $${paramCount} OR
+        agent.name ILIKE $${paramCount} OR
+        t.name ILIKE $${paramCount}
       )`);
       params.push(searchTerm);
       paramCount++;
     }
 
     if (filters?.city) {
-      conditions.push(`LOWER(TRIM(city)) = LOWER(TRIM($${paramCount++}))`);
+      conditions.push(`LOWER(TRIM(p.city)) = LOWER(TRIM($${paramCount++}))`);
       params.push(filters.city);
     }
 
     if (filters?.propertyType) {
-      conditions.push(`property_type = $${paramCount++}`);
+      conditions.push(`p.property_type = $${paramCount++}`);
       params.push(filters.propertyType);
     }
 
     if (filters?.minPrice !== undefined) {
-      conditions.push(`price >= $${paramCount++}`);
+      conditions.push(`p.price >= $${paramCount++}`);
       params.push(filters.minPrice);
     }
 
     if (filters?.maxPrice !== undefined) {
-      conditions.push(`price <= $${paramCount++}`);
+      conditions.push(`p.price <= $${paramCount++}`);
       params.push(filters.maxPrice);
+    }
+
+    if (filters?.agentId) {
+      conditions.push(`p.assigned_agent_id = $${paramCount++}`);
+      params.push(filters.agentId);
+    }
+
+    if (filters?.teamId) {
+      conditions.push(`p.team_id = $${paramCount++}`);
+      params.push(filters.teamId);
     }
 
     if (conditions.length > 0) {
@@ -340,12 +384,19 @@ export class PropertiesService {
     const offset = Math.max(0, pagination?.offset ?? 0);
 
     const { rows: countRows } = await this.db.query(
-      `SELECT COUNT(*)::int as c FROM properties${conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : ""}`,
+      `
+      SELECT COUNT(*)::int as c
+      FROM properties p
+      LEFT JOIN users creator ON creator.id = p.created_by
+      LEFT JOIN users agent ON agent.id = p.assigned_agent_id
+      LEFT JOIN teams t ON t.id = p.team_id
+      ${conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""}
+      `,
       params,
     );
     const total = countRows[0]?.c ?? 0;
 
-    query += ` ORDER BY created_at DESC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
+    query += ` ORDER BY p.created_at DESC LIMIT $${paramCount++} OFFSET $${paramCount++}`;
     params.push(limit, offset);
 
     const { rows } = await this.db.query(query, params);

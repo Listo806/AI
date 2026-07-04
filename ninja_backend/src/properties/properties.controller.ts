@@ -191,6 +191,8 @@ export class PropertiesController {
     @Query("propertyType") propertyType?: string,
     @Query("minPrice") minPrice?: string,
     @Query("maxPrice") maxPrice?: string,
+    @Query("agentId") agentId?: string,
+    @Query("teamId") filterTeamId?: string,
     @Query("west") west?: string,
     @Query("south") south?: string,
     @Query("east") east?: string,
@@ -211,6 +213,8 @@ export class PropertiesController {
       propertyType,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      agentId,
+      teamId: filterTeamId,
     };
 
     if (west && south && east && north) {

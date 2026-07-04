@@ -54,8 +54,8 @@ export default function PropertiesPage() {
   const [propertyType, setPropertyType] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [aiScore, setAiScore] = useState("");
-  const [agentTeam, setAgentTeam] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const [teamId, setTeamId] = useState("");
 
   const [propertyForm, setPropertyForm] = useState({
     title: "",
@@ -73,12 +73,33 @@ export default function PropertiesPage() {
     squareFeet: "",
   });
 
-  const cityOptions = useMemo(() => {
-    return [...new Set(properties.map((p) => p.city).filter(Boolean))];
+  const cityOptions = useMemo(
+    () => [...new Set(properties.map((p) => p.city).filter(Boolean))],
+    [properties],
+  );
+
+  const agentOptions = useMemo(() => {
+    const map = new Map();
+
+    properties.forEach((p) => {
+      if (p.assignedAgentId && p.agentName) {
+        map.set(p.assignedAgentId, p.agentName);
+      }
+    });
+
+    return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [properties]);
 
-  const agentTeamOptions = useMemo(() => {
-    return [...new Set(properties.map((p) => p.teamName).filter(Boolean))];
+  const teamOptions = useMemo(() => {
+    const map = new Map();
+
+    properties.forEach((p) => {
+      if (p.teamId && p.teamName) {
+        map.set(p.teamId, p.teamName);
+      }
+    });
+
+    return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [properties]);
 
   const handleCreateProperty = async (e) => {
@@ -159,8 +180,8 @@ export default function PropertiesPage() {
         propertyType: propertyType || undefined,
         minPrice: minPrice || undefined,
         maxPrice: maxPrice || undefined,
-        aiScore: aiScore || undefined,
-        agentTeam: agentTeam || undefined,
+        agentId: agentId || undefined,
+        teamId: teamId || undefined,
         limit: 50,
         offset: 0,
       });
@@ -370,13 +391,24 @@ export default function PropertiesPage() {
             onChange={(e) => setCity(e.target.value)}
           >
             <option value="">All Cities</option>
-            {[...new Set(properties.map((p) => p.city).filter(Boolean))].map(
-              (item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ),
-            )}
+            {cityOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={14} className="select-icon" />
+        </div>
+
+        <div className="filter-select-wrapper">
+          <select
+            className="filter-select"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option value="">All Listing Types</option>
+            <option value="sale">For Sale</option>
+            <option value="rent">For Rent</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -387,7 +419,7 @@ export default function PropertiesPage() {
             value={propertyType}
             onChange={(e) => setPropertyType(e.target.value)}
           >
-            <option value="">All Types</option>
+            <option value="">All Property Types</option>
             <option value="house">House</option>
             <option value="apartment">Apartment</option>
             <option value="land">Land</option>
@@ -406,9 +438,14 @@ export default function PropertiesPage() {
           >
             <option value="">All Status</option>
             <option value="draft">Draft</option>
+            <option value="pending_review">Pending Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
             <option value="published">Published</option>
-            <option value="under_review">Under Review</option>
-            <option value="inactive">Inactive</option>
+            <option value="reserved">Reserved</option>
+            <option value="sold">Sold</option>
+            <option value="rented">Rented</option>
+            <option value="archived">Archived</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -421,6 +458,7 @@ export default function PropertiesPage() {
             onChange={(e) => setMinPrice(e.target.value)}
           />
         </div>
+
         <div className="search-box price" style={{ maxWidth: "120px" }}>
           <input
             type="number"
@@ -433,13 +471,15 @@ export default function PropertiesPage() {
         <div className="filter-select-wrapper">
           <select
             className="filter-select"
-            value={aiScore}
-            onChange={(e) => setAiScore(e.target.value)}
+            value={agentId}
+            onChange={(e) => setAgentId(e.target.value)}
           >
-            <option value="">All AI Scores</option>
-            <option value="high">High 80+</option>
-            <option value="medium">Medium 50-79</option>
-            <option value="low">Low under 50</option>
+            <option value="">All Agents</option>
+            {agentOptions.map((agent) => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name}
+              </option>
+            ))}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -447,13 +487,13 @@ export default function PropertiesPage() {
         <div className="filter-select-wrapper">
           <select
             className="filter-select"
-            value={agentTeam}
-            onChange={(e) => setAgentTeam(e.target.value)}
+            value={teamId}
+            onChange={(e) => setTeamId(e.target.value)}
           >
-            <option value="">All Agents/Teams</option>
-            {agentTeamOptions.map((item) => (
-              <option key={item} value={item}>
-                {item}
+            <option value="">All Teams</option>
+            {teamOptions.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
               </option>
             ))}
           </select>
@@ -471,8 +511,8 @@ export default function PropertiesPage() {
             setPropertyType("");
             setMinPrice("");
             setMaxPrice("");
-            setAiScore("");
-            setAgentTeam("");
+            setAgentId("");
+            setTeamId("");
             setDateRange("all");
 
             setTimeout(() => {
@@ -631,13 +671,17 @@ export default function PropertiesPage() {
                   <div className="agent-footer">
                     <div className="agent-info">
                       <div className="agent-avatar fallback-avatar">
-                        {(property.createdBy || "U")
+                        {(property.agentName || property.createdByName || "U")
                           .toString()
                           .slice(0, 1)
                           .toUpperCase()}
                       </div>
                       <div>
-                        <h5>{property.createdByName || "Unassigned"}</h5>
+                        <h5>
+                          {property.agentName ||
+                            property.createdByName ||
+                            "Unassigned"}
+                        </h5>
                         <p>{property.teamName || "No team"}</p>
                       </div>
                     </div>
