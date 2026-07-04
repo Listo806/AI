@@ -113,3 +113,34 @@ export async function createProperty(payload) {
 
   return res?.data || res;
 }
+
+export async function publishProperty(propertyId) {
+  const res = await apiClient.request(`/properties/${propertyId}/publish`, {
+    method: "POST",
+  });
+  return res?.data || res;
+}
+
+export async function deleteProperty(propertyId) {
+  const res = await apiClient.request(`/properties/${propertyId}`, {
+    method: "DELETE",
+  });
+  return res?.data || res;
+}
+
+export async function updateProperty(propertyId, payload) {
+  const res = await apiClient.request(`/properties/${propertyId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+
+  return res?.data || res;
+}
+
+export async function getPropertyById(propertyId) {
+  const res = await apiClient.request(`/properties/${propertyId}`, {
+    method: "GET",
+  });
+
+  return res?.data || res;
+}

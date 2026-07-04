@@ -1816,8 +1816,8 @@ body.crm-dark .crm-error {
 .crm-dark #root .full-width-center-btn, .crm-dark #root .circle-btn,
 .crm-dark .contacts-page .form-group textarea,
 .crm-dark .whatsapp-page .full-timeline-btn, .crm-dark .generator-page .channels-chips-group,
-.crm-dark .team-workspace .team-card{
-  border: 1px solid #202733;
+.crm-dark .team-workspace .team-card, .crm-dark .properties-page .sidebar-section{
+  border: 1px solid #202733; 
 }
 .crm-dark #root .revenue-forecast-metric-quad-card::after, .crm-dark #root .metric-card:not(:last-child)::after,
 .crm-dark #root textarea, .crm-dark #root .circle-btn,

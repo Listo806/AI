@@ -4,7 +4,12 @@ import {
   getProperties,
   getPropertiesDashboard,
   createProperty,
+  publishProperty,
+  deleteProperty,
+  updateProperty,
+  getPropertyById,
 } from "../../api/propertiesApi";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   ChevronDown,
@@ -47,7 +52,8 @@ export default function PropertiesPage() {
   const [dashboard, setDashboard] = useState(null);
   const [dateRange, setDateRange] = useState("all");
 
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [propertyModalOpen, setPropertyModalOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
   const [savingProperty, setSavingProperty] = useState(false);
 
   const [city, setCity] = useState("");
@@ -57,8 +63,21 @@ export default function PropertiesPage() {
   const [agentId, setAgentId] = useState("");
   const [teamId, setTeamId] = useState("");
   const [aiScore, setAiScore] = useState("");
+  const [openActionId, setOpenActionId] = useState(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [selectedAnalysisProperty, setSelectedAnalysisProperty] =
+    useState(null);
+  const navigate = useNavigate();
+  const [reportOpen, setReportOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(12);
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const currentOffset = (page - 1) * perPage;
 
-  const [propertyForm, setPropertyForm] = useState({
+  const defaultPropertyForm = {
     title: "",
     description: "",
     address: "",
@@ -72,7 +91,8 @@ export default function PropertiesPage() {
     bedrooms: "",
     bathrooms: "",
     squareFeet: "",
-  });
+  };
+  const [propertyForm, setPropertyForm] = useState(defaultPropertyForm);
 
   const cityOptions = useMemo(
     () => [...new Set(properties.map((p) => p.city).filter(Boolean))],
@@ -103,55 +123,79 @@ export default function PropertiesPage() {
     return [...map.entries()].map(([id, name]) => ({ id, name }));
   }, [properties]);
 
-  const handleCreateProperty = async (e) => {
+  const openAddPropertyModal = () => {
+    setEditingProperty(null);
+    setPropertyForm(defaultPropertyForm);
+    setPropertyModalOpen(true);
+  };
+
+  const openEditPropertyModal = (property) => {
+    setEditingProperty(property);
+
+    setPropertyForm({
+      title: property.title || "",
+      description: property.description || "",
+      address: property.address || "",
+      city: property.city || "",
+      state: property.state || "",
+      zipCode: property.zipCode || "",
+      price: property.price || "",
+      type: property.type || "sale",
+      propertyType: property.propertyType || "house",
+      status: property.status || "draft",
+      bedrooms: property.bedrooms || "",
+      bathrooms: property.bathrooms || "",
+      squareFeet: property.squareFeet || "",
+    });
+
+    setPropertyModalOpen(true);
+  };
+
+  const closePropertyModal = () => {
+    setPropertyModalOpen(false);
+    setEditingProperty(null);
+    setPropertyForm(defaultPropertyForm);
+  };
+
+  const handleSubmitProperty = async (e) => {
     e.preventDefault();
+
+    const payload = {
+      title: propertyForm.title,
+      description: propertyForm.description || null,
+      address: propertyForm.address || null,
+      city: propertyForm.city || null,
+      state: propertyForm.state || null,
+      zipCode: propertyForm.zipCode || null,
+      price: propertyForm.price ? Number(propertyForm.price) : null,
+      type: propertyForm.type,
+      propertyType: propertyForm.propertyType,
+      status: propertyForm.status,
+      bedrooms: propertyForm.bedrooms ? Number(propertyForm.bedrooms) : null,
+      bathrooms: propertyForm.bathrooms ? Number(propertyForm.bathrooms) : null,
+      squareFeet: propertyForm.squareFeet
+        ? Number(propertyForm.squareFeet)
+        : null,
+      listingType: "marketplace",
+    };
 
     try {
       setSavingProperty(true);
 
-      await createProperty({
-        title: propertyForm.title,
-        description: propertyForm.description || null,
-        address: propertyForm.address || null,
-        city: propertyForm.city || null,
-        state: propertyForm.state || null,
-        zipCode: propertyForm.zipCode || null,
-        price: propertyForm.price ? Number(propertyForm.price) : null,
-        type: propertyForm.type,
-        propertyType: propertyForm.propertyType,
-        status: propertyForm.status,
-        bedrooms: propertyForm.bedrooms ? Number(propertyForm.bedrooms) : null,
-        bathrooms: propertyForm.bathrooms
-          ? Number(propertyForm.bathrooms)
-          : null,
-        squareFeet: propertyForm.squareFeet
-          ? Number(propertyForm.squareFeet)
-          : null,
-        listingType: "marketplace",
-      });
+      if (editingProperty?.id) {
+        await updateProperty(editingProperty.id, payload);
+      } else {
+        await createProperty(payload);
+      }
 
-      setShowAddModal(false);
-
-      setPropertyForm({
-        title: "",
-        description: "",
-        address: "",
-        city: "",
-        state: "",
-        zipCode: "",
-        price: "",
-        type: "sale",
-        propertyType: "house",
-        status: "draft",
-        bedrooms: "",
-        bathrooms: "",
-        squareFeet: "",
-      });
-
-      await loadProperties();
+      closePropertyModal();
+      await loadProperties(null, page);
       await loadDashboard();
     } catch (error) {
-      console.error("Create property failed:", error);
+      console.error(
+        editingProperty ? "Update property failed:" : "Create property failed:",
+        error,
+      );
     } finally {
       setSavingProperty(false);
     }
@@ -169,23 +213,36 @@ export default function PropertiesPage() {
     }
   };
 
-  const loadProperties = async () => {
+  const loadProperties = async (overrideFilters = null, nextPage = page) => {
     try {
       setLoading(true);
 
+      const filters = overrideFilters || {
+        search,
+        type,
+        status,
+        city,
+        propertyType,
+        minPrice,
+        maxPrice,
+        agentId,
+        teamId,
+        aiScore,
+      };
+
       const data = await getProperties({
-        search: search || undefined,
-        type: type || undefined,
-        status: status || undefined,
-        city: city || undefined,
-        propertyType: propertyType || undefined,
-        minPrice: minPrice || undefined,
-        maxPrice: maxPrice || undefined,
-        agentId: agentId || undefined,
-        teamId: teamId || undefined,
-        aiScore: aiScore || undefined,
-        limit: 50,
-        offset: 0,
+        search: filters.search || undefined,
+        type: filters.type || undefined,
+        status: filters.status || undefined,
+        city: filters.city || undefined,
+        propertyType: filters.propertyType || undefined,
+        minPrice: filters.minPrice || undefined,
+        maxPrice: filters.maxPrice || undefined,
+        agentId: filters.agentId || undefined,
+        teamId: filters.teamId || undefined,
+        aiScore: filters.aiScore || undefined,
+        limit: perPage,
+        offset: (nextPage - 1) * perPage,
       });
 
       setProperties(Array.isArray(data?.items) ? data.items : []);
@@ -201,8 +258,8 @@ export default function PropertiesPage() {
 
   useEffect(() => {
     loadDashboard();
-    loadProperties();
-  }, [dateRange]);
+    loadProperties(null, page);
+  }, [dateRange, page, perPage]);
 
   const formatTrend = (item) => {
     const trend = item?.trend;
@@ -284,32 +341,265 @@ export default function PropertiesPage() {
     return "Poor";
   };
 
-  const matchedLeads = [
+  const exportPropertiesCsv = () => {
+    const rows = properties.map((p) => ({
+      title: p.title || "",
+      price: p.price || "",
+      type: p.type || "",
+      propertyType: p.propertyType || "",
+      status: p.status || "",
+      city: p.city || "",
+      state: p.state || "",
+      address: p.address || "",
+      bedrooms: p.bedrooms || "",
+      bathrooms: p.bathrooms || "",
+      squareFeet: p.squareFeet || "",
+      aiScore: p.aiScore || 0,
+      agent: p.agentName || p.createdByName || "",
+      team: p.teamName || "",
+    }));
+
+    const headers = Object.keys(
+      rows[0] || {
+        title: "",
+        price: "",
+        type: "",
+        propertyType: "",
+        status: "",
+        city: "",
+        state: "",
+        address: "",
+        bedrooms: "",
+        bathrooms: "",
+        squareFeet: "",
+        aiScore: "",
+        agent: "",
+        team: "",
+      },
+    );
+
+    const csv = [headers, ...rows.map((row) => headers.map((key) => row[key]))]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "properties-report.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPropertyReport = () => {
+    const report = {
+      generatedAt: new Date().toISOString(),
+      range: dashboard?.rangeLabel || "All time",
+      metrics,
+      inventoryHealth: dashboard?.inventoryHealth || {},
+      matchedLeads: dashboard?.matchedLeads || [],
+      properties: properties.map((p) => ({
+        id: p.id,
+        title: p.title,
+        price: p.price,
+        status: p.status,
+        city: p.city,
+        type: p.type,
+        propertyType: p.propertyType,
+        aiScore: p.aiScore,
+        revenuePotential: p.revenuePotential,
+        matchedLeads: p.matchedLeads,
+        agentName: p.agentName,
+        teamName: p.teamName,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "property-inventory-report.json";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const matchedLeads = dashboard?.matchedLeads || [];
+
+  const weakProperties = useMemo(() => {
+    return properties
+      .filter((p) => Number(p.aiScore || 0) < 80)
+      .sort((a, b) => Number(a.aiScore || 0) - Number(b.aiScore || 0));
+  }, [properties]);
+
+  const reportMetrics = [
     {
-      name: "John Smith",
-      location: "Miami, FL",
-      budget: "$800K - $1.2M",
-      count: 5,
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80",
+      title: "Total Properties",
+      value: dashboard?.totalProperties?.value ?? 0,
+      trend: dashboard?.totalProperties?.trend?.text || "→ 0% all time",
     },
     {
-      name: "Sarah Williams",
-      location: "Austin, TX",
-      budget: "$500K - $750K",
-      count: 3,
-      avatar:
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+      title: "Active Listings",
+      value: dashboard?.activeListings?.value ?? 0,
+      trend: dashboard?.activeListings?.trend?.text || "→ 0% all time",
     },
     {
-      name: "Michael Brown",
-      location: "Seattle, WA",
-      budget: "$400K - $600K",
-      count: 4,
-      avatar:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80",
+      title: "Total Value",
+      value: `$${Number(dashboard?.totalValue?.value || 0).toLocaleString()}`,
+      trend: dashboard?.totalValue?.trend?.text || "→ 0% all time",
+    },
+    {
+      title: "Hot Properties",
+      value: dashboard?.hotProperties?.value ?? 0,
+      trend: dashboard?.hotProperties?.trend?.text || "→ 0% coming soon",
+    },
+    {
+      title: "AI Optimized",
+      value: dashboard?.aiOptimized?.value ?? 0,
+      trend: dashboard?.aiOptimized?.trend?.text || "→ 0% coming soon",
+    },
+    {
+      title: "Conversion Rate",
+      value: `${dashboard?.conversionRate?.value ?? 0}%`,
+      trend: dashboard?.conversionRate?.trend?.text || "→ 0% all time",
     },
   ];
+
+  const printPropertyReport = () => {
+    setReportOpen(true);
+
+    setTimeout(() => {
+      window.print();
+    }, 300);
+  };
+
+  const openPropertyDrawer = async (property) => {
+    try {
+      setDrawerOpen(true);
+      setDrawerLoading(true);
+
+      setSelectedProperty(property);
+
+      const detail = await getPropertyById(property.id);
+
+      setSelectedProperty({
+        ...property,
+        ...detail,
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDrawerLoading(false);
+    }
+  };
+
+  const closePropertyDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedProperty(null);
+  };
+
+  const getPropertyAiIssues = (property) => {
+    if (!property) return [];
+
+    const issues = [];
+
+    if (!property.thumbnailUrl) issues.push("Missing property images");
+
+    if (!property.description || property.description.length < 120)
+      issues.push("Description is too short");
+
+    if (!property.address) issues.push("Address incomplete");
+
+    if (!property.price) issues.push("Price missing");
+
+    if (!property.bedrooms && !property.bathrooms && !property.squareFeet)
+      issues.push("Missing property specifications");
+
+    if (property.status !== "published") issues.push("Property not published");
+
+    return issues;
+  };
+
+  const getPropertyRecommendations = (property) => {
+    const issues = getPropertyAiIssues(property);
+
+    return issues.map((issue) => {
+      switch (issue) {
+        case "Missing property images":
+          return "Upload high-quality images";
+
+        case "Description is too short":
+          return "Generate AI description";
+
+        case "Address incomplete":
+          return "Complete address";
+
+        case "Price missing":
+          return "Set listing price";
+
+        case "Missing property specifications":
+          return "Add bedrooms, bathrooms and square feet";
+
+        case "Property not published":
+          return "Publish listing";
+
+        default:
+          return issue;
+      }
+    });
+  };
+
+  const getPropertyTimeline = (property) => {
+    if (!property) return [];
+
+    return [
+      {
+        title: "Property Created",
+        time: property.createdAt,
+        description: "Listing created",
+      },
+
+      property.updatedAt && {
+        title: "Last Updated",
+        time: property.updatedAt,
+        description: "Listing updated",
+      },
+
+      property.publishedAt && {
+        title: "Published",
+        time: property.publishedAt,
+        description: "Published successfully",
+      },
+
+      {
+        title: "AI Analysis",
+        time: new Date().toISOString(),
+        description: `AI Score ${property.aiScore || 0}/100`,
+      },
+
+      {
+        title: "Lead Matching",
+        time: new Date().toISOString(),
+        description: `${property.matchedLeads || 0} matched leads`,
+      },
+    ].filter(Boolean);
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "—";
+
+    return new Date(value).toLocaleString();
+  };
 
   return (
     <div className="properties-page">
@@ -324,20 +614,26 @@ export default function PropertiesPage() {
       </p>
       <div className="page-header">
         <div className="header-actions">
-          <button className="btn btn-secondary">
+          <button
+            className="btn btn-secondary"
+            onClick={() => setAnalysisOpen(true)}
+          >
             <Sparkles size={16} color="#2563eb" /> Analyze Properties
-          </button>
-          <button className="btn btn-primary">
-            <Pipette size={16} />
-            Auto-Optimize Listings
-          </button>
-          <button className="btn btn-secondary">
-            <Download size={16} className="blue" /> Export Property Report
           </button>
           <button
             className="btn btn-primary"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setSelectedAnalysisProperty(null);
+              setAnalysisOpen(true);
+            }}
           >
+            <Pipette size={16} />
+            Auto-Optimize Listings
+          </button>
+          <button className="btn btn-secondary" onClick={printPropertyReport}>
+            <Download size={16} className="blue" /> Export Property Report
+          </button>
+          <button className="btn btn-primary" onClick={openAddPropertyModal}>
             <Plus size={16} />
             Add Property
           </button>
@@ -518,6 +814,19 @@ export default function PropertiesPage() {
           className="btn btn-secondary"
           style={{ height: "38px" }}
           onClick={() => {
+            const emptyFilters = {
+              search: "",
+              type: "",
+              status: "",
+              city: "",
+              propertyType: "",
+              minPrice: "",
+              maxPrice: "",
+              agentId: "",
+              teamId: "",
+              aiScore: "",
+            };
+
             setSearch("");
             setType("");
             setStatus("");
@@ -527,12 +836,13 @@ export default function PropertiesPage() {
             setMaxPrice("");
             setAgentId("");
             setTeamId("");
-            setDateRange("all");
             setAiScore("");
-            setTimeout(() => {
-              loadProperties();
-              loadDashboard();
-            }, 0);
+            setDateRange("all");
+            setPage(1);
+            loadProperties(emptyFilters, 1);
+            getPropertiesDashboard({ range: "all" }).then(setDashboard);
+            loadProperties(emptyFilters);
+            getPropertiesDashboard({ range: "all" }).then(setDashboard);
           }}
         >
           <RotateCcw size={14} />
@@ -540,16 +850,21 @@ export default function PropertiesPage() {
         </button>
         <button
           className="btn btn-primary"
-          style={{ height: "38px", padding: "0 20px" }}
+          style={{ height: "38px", padding: "0 12px" }}
           onClick={() => {
-            loadProperties();
+            setPage(1);
+            loadProperties(null, 1);
             loadDashboard();
           }}
         >
           <Search size={14} />
           Search
         </button>
-        <button className="btn btn-secondary export" style={{ height: "38px" }}>
+        <button
+          className="btn btn-secondary export"
+          style={{ height: "38px" }}
+          onClick={exportPropertiesCsv}
+        >
           <Download size={15} className="blue" /> Export
         </button>
 
@@ -572,7 +887,13 @@ export default function PropertiesPage() {
       {/* MAIN CONTENT AREA */}
       <div className="main-layout">
         {/* LEFT COMPONENT: PROPERTIES LIST */}
-        <div className="properties-grid">
+        <div
+          className={
+            viewMode === "grid"
+              ? "properties-grid"
+              : "properties-grid properties-list-view"
+          }
+        >
           {loading ? (
             <div className="property-card">
               <div className="card-body">Loading properties...</div>
@@ -583,7 +904,11 @@ export default function PropertiesPage() {
             </div>
           ) : (
             properties.map((property, idx) => (
-              <div className="property-card" key={idx}>
+              <div
+                className="property-card"
+                key={property.id || idx}
+                onClick={() => openPropertyDrawer(property)}
+              >
                 <div className="card-image-wrapper">
                   {/* Fallback pattern representing images in mockup */}
                   {property.thumbnailUrl ? (
@@ -618,9 +943,69 @@ export default function PropertiesPage() {
                       .replace("_", " ")
                       .toUpperCase()}
                   </span>
-                  <button className="card-actions-trigger">
-                    <MoreVertical size={16} />
-                  </button>
+                  <div className="property-card-actions">
+                    <button
+                      className="card-actions-trigger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenActionId(
+                          openActionId === property.id ? null : property.id,
+                        );
+                      }}
+                    >
+                      <MoreVertical size={16} />
+                    </button>
+
+                    {openActionId === property.id && (
+                      <div className="property-actions-menu">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAnalysisProperty(property);
+                            setAnalysisOpen(true);
+                            setOpenActionId(null);
+                          }}
+                        >
+                          View Analysis
+                        </button>
+
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await publishProperty(property.id);
+                            setOpenActionId(null);
+                            await loadProperties();
+                            await loadDashboard();
+                          }}
+                        >
+                          Publish
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditPropertyModal(property);
+                            setOpenActionId(null);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="danger"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!window.confirm("Delete this property?"))
+                              return;
+                            await deleteProperty(property.id);
+                            setOpenActionId(null);
+                            await loadProperties();
+                            await loadDashboard();
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="card-body">
@@ -675,7 +1060,12 @@ export default function PropertiesPage() {
                   <div className="financials-row">
                     <div className="financial-item">
                       <span>Revenue Potential</span>
-                      <strong className="green-text">{property.revenue}</strong>
+                      <strong className="green-text">
+                        $
+                        {Number(
+                          property.revenuePotential || 0,
+                        ).toLocaleString()}
+                      </strong>
                     </div>
                     <div
                       className="financial-item"
@@ -683,7 +1073,7 @@ export default function PropertiesPage() {
                     >
                       <span>Matched Leads</span>
                       <strong className="text-align-right">
-                        {property.leads} ↗
+                        {Number(property.matchedLeads || 0)} ↗
                       </strong>
                     </div>
                   </div>
@@ -713,18 +1103,51 @@ export default function PropertiesPage() {
                     >
                       {property.status || "draft"}
                     </span>
-                    <span
-                      className={`listing-status-tag ${property.listingStatus === "Active" ? "active" : "review"}`}
-                    >
-                      {property.listingStatus}
-                    </span>
                   </div>
                 </div>
               </div>
             ))
           )}
         </div>
+        <div className="properties-pagination">
+          <div className="pagination-info">
+            Showing {properties.length} of {total} properties
+          </div>
 
+          <div className="pagination-controls">
+            <select
+              value={perPage}
+              onChange={(e) => {
+                setPerPage(Number(e.target.value));
+                setPage(1);
+              }}
+            >
+              <option value={8}>8 / page</option>
+              <option value={12}>12 / page</option>
+              <option value={24}>24 / page</option>
+            </select>
+
+            <button
+              className="btn btn-secondary"
+              disabled={page <= 1}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            >
+              Previous
+            </button>
+
+            <span>
+              Page {page} / {totalPages}
+            </span>
+
+            <button
+              className="btn btn-secondary"
+              disabled={page >= totalPages}
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
         {/* RIGHT COMPONENT: SIDEBAR PLATFORM PANEL */}
         <div className="sidebar-panel">
           {/* SECTION 1: INVENTORY HEALTH */}
@@ -738,7 +1161,31 @@ export default function PropertiesPage() {
 
             <div className="health-chart-wrapper">
               <div className="chart-wrap">
-                <div className="donut-chart-mock">
+                <div
+                  className="donut-chart-mock"
+                  style={{
+                    background: `conic-gradient(
+      #16a34a 0 ${getPercent(healthActive, healthTotal)}%,
+      #ea580c ${getPercent(healthActive, healthTotal)}% ${
+        getPercent(healthActive, healthTotal) +
+        getPercent(healthUnderReview, healthTotal)
+      }%,
+      #64748b ${
+        getPercent(healthActive, healthTotal) +
+        getPercent(healthUnderReview, healthTotal)
+      }% ${
+        getPercent(healthActive, healthTotal) +
+        getPercent(healthUnderReview, healthTotal) +
+        getPercent(healthDraft, healthTotal)
+      }%,
+      #dc2626 ${
+        getPercent(healthActive, healthTotal) +
+        getPercent(healthUnderReview, healthTotal) +
+        getPercent(healthDraft, healthTotal)
+      }% 100%
+    )`,
+                  }}
+                >
                   <div className="chart-center">
                     <h4>{healthTotal}</h4>
                     <span>Total</span>
@@ -794,12 +1241,16 @@ export default function PropertiesPage() {
                   <span className="trend-up-text">
                     {dashboard?.activeListings?.trend?.text || "→ 0% all time"}
                   </span>
-                  <p>{dashboard?.rangeLabel || "All time"}</p>
+                  {/*<p>{dashboard?.rangeLabel || "All time"}</p>*/}
                 </div>
               </div>
             </div>
             <div className="section-footer-link">
-              <a href="#view-analysis" className="section-link">
+              <a
+                href="#view-analysis"
+                className="section-link"
+                onClick={() => setAnalysisOpen(true)}
+              >
                 View Full Analysis <ArrowRight size={13} />
               </a>
             </div>
@@ -812,54 +1263,217 @@ export default function PropertiesPage() {
                 <Users size={18} className="blue" />
                 Matched Leads
               </h3>
-              <a href="#view-all-leads" className="section-link">
+              <a
+                href="#view-all-leads"
+                className="section-link"
+                onClick={() => navigate("/dashboard/leads")}
+              >
                 View All Leads
                 <ArrowRight size={13} />
               </a>
             </div>
 
             <div className="matched-leads-list">
-              {matchedLeads.map((lead, index) => (
-                <div className="matched-lead-item" key={index}>
-                  <div className="lead-left-content">
-                    <img
-                      src={lead.avatar}
-                      alt={lead.name}
-                      className="lead-avatar-img"
-                    />
-                    <div className="lead-details">
-                      <h4>{lead.name}</h4>
-                      <p>
-                        <MapPin size={12} color="#94a3b8" /> {lead.location}
-                      </p>
-                    </div>
+              {matchedLeads.length === 0 ? (
+                <div className="matched-lead-item">
+                  <div className="lead-details">
+                    <h4>No matched leads yet</h4>
+                    <p>
+                      Matching will appear when leads have city, budget, or
+                      property interest.
+                    </p>
                   </div>
-
-                  <div className="lead-right-meta">
-                    <span className="budget">Budget: {lead.budget}</span>
-                    <span className="matches-count">
-                      Matched properties: <strong>{lead.count}</strong>
-                    </span>
-                  </div>
-                  <button className="btn-match-view">
-                    View Matches
-                    <ArrowUpRight size={12} />
-                  </button>
                 </div>
-              ))}
+              ) : (
+                matchedLeads.map((lead) => (
+                  <div className="matched-lead-item" key={lead.id}>
+                    <div className="lead-left-content">
+                      <div className="lead-avatar-img fallback-avatar">
+                        {(lead.name || "L").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="lead-details">
+                        <h4>{lead.name}</h4>
+                        <p>
+                          <MapPin size={12} color="#94a3b8" /> {lead.location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="lead-right-meta">
+                      <span className="budget">Budget: {lead.budget}</span>
+                      <span className="matches-count">
+                        Matched properties: <strong>{lead.count}</strong>
+                      </span>
+                    </div>
+
+                    <button className="btn-match-view">
+                      View Matches
+                      <ArrowUpRight size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
       </div>
-      {showAddModal && (
+      {drawerOpen && (
+        <div className="property-drawer-backdrop" onClick={closePropertyDrawer}>
+          <aside
+            className="property-detail-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="drawer-header">
+              <div>
+                <div className="drawer-label">Property Detail</div>
+
+                <h2>{selectedProperty?.title}</h2>
+
+                <p>
+                  {[
+                    selectedProperty?.address,
+                    selectedProperty?.city,
+                    selectedProperty?.state,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              </div>
+
+              <button onClick={closePropertyDrawer}>×</button>
+            </div>
+
+            {drawerLoading ? (
+              <div className="drawer-loading">Loading...</div>
+            ) : (
+              <>
+                <div className="drawer-image">
+                  {selectedProperty?.thumbnailUrl ? (
+                    <img src={selectedProperty.thumbnailUrl} alt="" />
+                  ) : (
+                    <div className="drawer-placeholder">No Image</div>
+                  )}
+                </div>
+
+                <div className="drawer-kpis">
+                  <div>
+                    <span>Price</span>
+
+                    <strong>
+                      ${Number(selectedProperty?.price || 0).toLocaleString()}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>AI Score</span>
+
+                    <strong>{selectedProperty?.aiScore || 0}/100</strong>
+                  </div>
+
+                  <div>
+                    <span>Revenue Potential</span>
+
+                    <strong>
+                      $
+                      {Number(
+                        selectedProperty?.revenuePotential || 0,
+                      ).toLocaleString()}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Matched Leads</span>
+
+                    <strong>{selectedProperty?.matchedLeads || 0}</strong>
+                  </div>
+                </div>
+
+                <div className="drawer-section">
+                  <h3>AI Suggestions</h3>
+
+                  <div className="drawer-list">
+                    {getPropertyRecommendations(selectedProperty).map(
+                      (item) => (
+                        <div className="drawer-list-item" key={item}>
+                          <Sparkles size={14} />
+
+                          <span>{item}</span>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+
+                <div className="drawer-section">
+                  <h3>Activity Feed</h3>
+
+                  <div className="drawer-list">
+                    {[
+                      {
+                        title: "Viewed by agent",
+                        time: "Today",
+                      },
+                      {
+                        title: "AI analysis completed",
+                        time: "Today",
+                      },
+                      {
+                        title: "Lead matching completed",
+                        time: "Today",
+                      },
+                      {
+                        title: "Property synchronized",
+                        time: "Today",
+                      },
+                    ].map((item, index) => (
+                      <div className="drawer-activity" key={index}>
+                        <div className="activity-dot" />
+
+                        <div>
+                          <strong>{item.title}</strong>
+
+                          <span>{item.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="drawer-section">
+                  <h3>Timeline</h3>
+
+                  <div className="timeline">
+                    {getPropertyTimeline(selectedProperty).map(
+                      (item, index) => (
+                        <div className="timeline-item" key={index}>
+                          <div className="timeline-dot" />
+
+                          <div>
+                            <strong>{item.title}</strong>
+
+                            <p>{item.description}</p>
+
+                            <span>{formatDateTime(item.time)}</span>
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+      {propertyModalOpen && (
         <div className="modal-overlay">
           <div className="property-modal">
             <div className="modal-header">
-              <h3>Add Property</h3>
-              <button onClick={() => setShowAddModal(false)}>×</button>
+              <h3>{editingProperty ? "Edit Property" : "Add Property"}</h3>
+              <button onClick={closePropertyModal}>×</button>
             </div>
 
-            <form onSubmit={handleCreateProperty} className="property-form">
+            <form onSubmit={handleSubmitProperty} className="property-form">
               <input
                 required
                 placeholder="Property title"
@@ -964,7 +1578,40 @@ export default function PropertiesPage() {
                 </select>
               </div>
 
-              <div className="form-grid-3">
+              <div className="form-grid-2">
+                <select
+                  value={propertyForm.status}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="draft">Draft</option>
+                  <option value="pending_review">Pending Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="published">Published</option>
+                  <option value="reserved">Reserved</option>
+                  <option value="sold">Sold</option>
+                  <option value="rented">Rented</option>
+                  <option value="archived">Archived</option>
+                </select>
+
+                <input
+                  type="number"
+                  placeholder="Sqft"
+                  value={propertyForm.squareFeet}
+                  onChange={(e) =>
+                    setPropertyForm((prev) => ({
+                      ...prev,
+                      squareFeet: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div className="form-grid-2">
                 <input
                   type="number"
                   placeholder="Beds"
@@ -988,18 +1635,6 @@ export default function PropertiesPage() {
                     }))
                   }
                 />
-
-                <input
-                  type="number"
-                  placeholder="Sqft"
-                  value={propertyForm.squareFeet}
-                  onChange={(e) =>
-                    setPropertyForm((prev) => ({
-                      ...prev,
-                      squareFeet: e.target.value,
-                    }))
-                  }
-                />
               </div>
 
               <textarea
@@ -1017,7 +1652,7 @@ export default function PropertiesPage() {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={closePropertyModal}
                 >
                   Cancel
                 </button>
@@ -1027,10 +1662,235 @@ export default function PropertiesPage() {
                   className="btn btn-primary"
                   disabled={savingProperty}
                 >
-                  {savingProperty ? "Saving..." : "Create Property"}
+                  {savingProperty
+                    ? "Saving..."
+                    : editingProperty
+                      ? "Save Changes"
+                      : "Create Property"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {analysisOpen && (
+        <div className="modal-overlay">
+          <div className="property-modal">
+            <div className="modal-header">
+              <h3>
+                {selectedAnalysisProperty
+                  ? selectedAnalysisProperty.title
+                  : "Inventory Analysis"}
+              </h3>
+              <button
+                onClick={() => {
+                  setAnalysisOpen(false);
+                  setSelectedAnalysisProperty(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            {weakProperties.length > 0 && (
+              <div className="analysis-section">
+                <h4>Listings to optimize</h4>
+
+                {weakProperties.slice(0, 8).map((item) => (
+                  <div className="analysis-row" key={item.id}>
+                    <div>
+                      <strong>{item.title || "Untitled property"}</strong>
+                      <p>
+                        {item.city || "No city"} • AI Score {item.aiScore || 0}
+                        /100
+                      </p>
+                    </div>
+                    <span>
+                      {Number(item.aiScore || 0) < 50
+                        ? "Needs content + media"
+                        : "Can be improved"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {selectedAnalysisProperty ? (
+              <div className="analysis-grid">
+                <div>
+                  <span>AI Score</span>
+                  <strong>{selectedAnalysisProperty.aiScore || 0}/100</strong>
+                </div>
+                <div>
+                  <span>Revenue Potential</span>
+                  <strong>
+                    $
+                    {Number(
+                      selectedAnalysisProperty.revenuePotential || 0,
+                    ).toLocaleString()}
+                  </strong>
+                </div>
+                <div>
+                  <span>Matched Leads</span>
+                  <strong>{selectedAnalysisProperty.matchedLeads || 0}</strong>
+                </div>
+                <div>
+                  <span>Status</span>
+                  <strong>{selectedAnalysisProperty.status}</strong>
+                </div>
+              </div>
+            ) : (
+              <div className="analysis-grid">
+                <div>
+                  <span>Total Properties</span>
+                  <strong>{healthTotal}</strong>
+                </div>
+                <div>
+                  <span>Active</span>
+                  <strong>{healthActive}</strong>
+                </div>
+                <div>
+                  <span>Under Review</span>
+                  <strong>{healthUnderReview}</strong>
+                </div>
+                <div>
+                  <span>Inventory Score</span>
+                  <strong>{inventoryScore}/100</strong>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {reportOpen && (
+        <div className="property-print-report">
+          <div className="report-header">
+            <div>
+              <h1>Cortex AI CRM</h1>
+              <p>Property Inventory Report</p>
+            </div>
+
+            <div className="report-meta">
+              <strong>{dashboard?.rangeLabel || "All time"}</strong>
+              <span>{new Date().toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div className="report-section">
+            <h2>Summary Metrics</h2>
+
+            <div className="report-metrics-grid">
+              {reportMetrics.map((item) => (
+                <div className="report-metric-card" key={item.title}>
+                  <span>{item.title}</span>
+                  <strong>{item.value}</strong>
+                  <p>{item.trend}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="report-section">
+            <h2>Inventory Health</h2>
+
+            <div className="report-health-grid">
+              <div>
+                <span>Total</span>
+                <strong>{healthTotal}</strong>
+              </div>
+              <div>
+                <span>Active</span>
+                <strong>{healthActive}</strong>
+              </div>
+              <div>
+                <span>Under Review</span>
+                <strong>{healthUnderReview}</strong>
+              </div>
+              <div>
+                <span>Draft</span>
+                <strong>{healthDraft}</strong>
+              </div>
+              <div>
+                <span>Inactive</span>
+                <strong>{healthInactive}</strong>
+              </div>
+              <div>
+                <span>Inventory Score</span>
+                <strong>{inventoryScore}/100</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="report-section">
+            <h2>Top Properties</h2>
+
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Price</th>
+                  <th>AI Score</th>
+                  <th>Revenue Potential</th>
+                  <th>Matched Leads</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {properties.slice(0, 20).map((property) => (
+                  <tr key={property.id}>
+                    <td>{property.title || "Untitled"}</td>
+                    <td>{property.city || "—"}</td>
+                    <td>{(property.status || "draft").replace("_", " ")}</td>
+                    <td>
+                      {property.price
+                        ? `$${Number(property.price).toLocaleString()}`
+                        : "$0"}
+                    </td>
+                    <td>{Number(property.aiScore || 0)}/100</td>
+                    <td>
+                      ${Number(property.revenuePotential || 0).toLocaleString()}
+                    </td>
+                    <td>{Number(property.matchedLeads || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="report-section">
+            <h2>Matched Leads</h2>
+
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Lead</th>
+                  <th>Location</th>
+                  <th>Budget</th>
+                  <th>Matched Properties</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {(dashboard?.matchedLeads || []).length === 0 ? (
+                  <tr>
+                    <td colSpan="4">No matched leads yet.</td>
+                  </tr>
+                ) : (
+                  dashboard.matchedLeads.map((lead) => (
+                    <tr key={lead.id}>
+                      <td>{lead.name}</td>
+                      <td>{lead.location}</td>
+                      <td>{lead.budget}</td>
+                      <td>{lead.count}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="report-footer">
+            Generated by Cortex AI CRM Property Intelligence
           </div>
         </div>
       )}

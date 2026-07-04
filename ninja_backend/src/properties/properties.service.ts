@@ -307,6 +307,15 @@ export class PropertiesService {
     )
   )
 `;
+    const revenuePotentialSql = `
+  CASE
+    WHEN p.price IS NULL THEN 0
+    WHEN p.type = 'sale' THEN p.price * 0.03
+    WHEN p.type = 'rent' THEN p.price
+    ELSE 0
+  END
+`;
+
     let query = `
   SELECT
     p.id,
@@ -341,11 +350,36 @@ export class PropertiesService {
     agent.name as "agentName",
     agent.email as "agentEmail",
     t.name as "teamName",
-    ${aiScoreSql}::int as "aiScore"
+    ${aiScoreSql}::int as "aiScore",
+    ROUND((${revenuePotentialSql})::numeric, 2) as "revenuePotential",
+    COALESCE(match_stats."matchedLeads", 0)::int as "matchedLeads",
+    creator.name as "createdByName",
+    agent.name as "agentName",
+    agent.email as "agentEmail",
+    t.name as "teamName"
   FROM properties p
   LEFT JOIN users creator ON creator.id = p.created_by
   LEFT JOIN users agent ON agent.id = p.assigned_agent_id
   LEFT JOIN teams t ON t.id = p.team_id
+  LEFT JOIN LATERAL (
+  SELECT COUNT(*)::int as "matchedLeads"
+  FROM leads l
+  WHERE
+    (l.team_id = p.team_id OR l.created_by = p.created_by)
+    AND (
+      l.property_id = p.id
+      OR (
+        p.city IS NOT NULL
+        AND l.parsed_city IS NOT NULL
+        AND LOWER(TRIM(l.parsed_city)) = LOWER(TRIM(p.city))
+      )
+      OR (
+        p.price IS NOT NULL
+        AND (l.parsed_budget_min IS NULL OR p.price >= l.parsed_budget_min)
+        AND (l.parsed_budget_max IS NULL OR p.price <= l.parsed_budget_max)
+      )
+    )
+) match_stats ON true
 `;
     const conditions: string[] = [];
     const params: any[] = [];
@@ -1260,6 +1294,43 @@ export class PropertiesService {
       period.trendLabel,
     );
 
+    const { rows: matchedLeadRows } = await this.db.query(
+      `
+  SELECT
+    l.id,
+    l.name,
+    COALESCE(l.parsed_city, '') as location,
+    l.parsed_budget_min as "budgetMin",
+    l.parsed_budget_max as "budgetMax",
+    COUNT(p.id)::int as count
+  FROM leads l
+  LEFT JOIN properties p
+    ON (
+      p.team_id = l.team_id
+      OR p.created_by = l.created_by
+    )
+    AND (
+      l.property_id = p.id
+      OR (
+        p.city IS NOT NULL
+        AND l.parsed_city IS NOT NULL
+        AND LOWER(TRIM(p.city)) = LOWER(TRIM(l.parsed_city))
+      )
+      OR (
+        p.price IS NOT NULL
+        AND (l.parsed_budget_min IS NULL OR p.price >= l.parsed_budget_min)
+        AND (l.parsed_budget_max IS NULL OR p.price <= l.parsed_budget_max)
+      )
+    )
+  WHERE ${scope.where.replaceAll("team_id", "l.team_id").replaceAll("created_by", "l.created_by")}
+  GROUP BY l.id
+  HAVING COUNT(p.id) > 0
+  ORDER BY count DESC, l.created_at DESC
+  LIMIT 5
+  `,
+      scope.params,
+    );
+
     return {
       range: period.range,
       rangeLabel: period.label,
@@ -1316,6 +1387,16 @@ export class PropertiesService {
           ? Math.round((activeListings / totalProperties) * 100)
           : 0,
       },
+      matchedLeads: matchedLeadRows.map((lead) => ({
+        id: lead.id,
+        name: lead.name,
+        location: lead.location || "Unknown location",
+        budget:
+          lead.budgetMin || lead.budgetMax
+            ? `$${Number(lead.budgetMin || 0).toLocaleString()} - $${Number(lead.budgetMax || 0).toLocaleString()}`
+            : "No budget",
+        count: Number(lead.count || 0),
+      })),
     };
   }
 
