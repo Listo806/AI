@@ -247,8 +247,9 @@ export class PropertiesService {
       propertyType?: string;
       minPrice?: number;
       maxPrice?: number;
+      agentId?: string;
+      teamId?: string;
       aiScore?: string;
-      agentTeam?: string;
     },
     pagination?: { limit?: number; offset?: number },
     userRole?: string,
@@ -258,6 +259,54 @@ export class PropertiesService {
     limit: number;
     offset: number;
   }> {
+    const aiScoreSql = `
+  LEAST(100,
+    (
+      CASE
+        WHEN p.title IS NOT NULL AND LENGTH(TRIM(p.title)) >= 20 THEN 15
+        WHEN p.title IS NOT NULL AND LENGTH(TRIM(p.title)) > 0 THEN 8
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.description IS NOT NULL AND LENGTH(TRIM(p.description)) >= 120 THEN 20
+        WHEN p.description IS NOT NULL AND LENGTH(TRIM(p.description)) >= 40 THEN 10
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.thumbnail_url IS NOT NULL AND p.thumbnail_url <> '' THEN 15
+        WHEN EXISTS (
+          SELECT 1 FROM property_media pm
+          WHERE pm.property_id = p.id AND pm.type = 'image'
+        ) THEN 12
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.price IS NOT NULL AND p.price > 0 THEN 15
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.address IS NOT NULL AND p.city IS NOT NULL THEN 15
+        WHEN p.city IS NOT NULL THEN 8
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.bedrooms IS NOT NULL AND p.bathrooms IS NOT NULL AND p.square_feet IS NOT NULL THEN 10
+        WHEN p.bedrooms IS NOT NULL OR p.bathrooms IS NOT NULL OR p.square_feet IS NOT NULL THEN 5
+        ELSE 0
+      END
+      +
+      CASE
+        WHEN p.status IN ('published', 'approved', 'active') THEN 10
+        ELSE 0
+      END
+    )
+  )
+`;
     let query = `
   SELECT
     p.id,
@@ -291,7 +340,8 @@ export class PropertiesService {
     creator.name as "createdByName",
     agent.name as "agentName",
     agent.email as "agentEmail",
-    t.name as "teamName"
+    t.name as "teamName",
+    ${aiScoreSql}::int as "aiScore"
   FROM properties p
   LEFT JOIN users creator ON creator.id = p.created_by
   LEFT JOIN users agent ON agent.id = p.assigned_agent_id
@@ -371,6 +421,17 @@ export class PropertiesService {
     if (filters?.teamId) {
       conditions.push(`p.team_id = $${paramCount++}`);
       params.push(filters.teamId);
+    }
+    if (filters?.aiScore === "high") {
+      conditions.push(`(${aiScoreSql}) >= 80`);
+    }
+
+    if (filters?.aiScore === "medium") {
+      conditions.push(`(${aiScoreSql}) >= 50 AND (${aiScoreSql}) < 80`);
+    }
+
+    if (filters?.aiScore === "low") {
+      conditions.push(`(${aiScoreSql}) < 50`);
     }
 
     if (conditions.length > 0) {

@@ -56,6 +56,7 @@ export default function PropertiesPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [agentId, setAgentId] = useState("");
   const [teamId, setTeamId] = useState("");
+  const [aiScore, setAiScore] = useState("");
 
   const [propertyForm, setPropertyForm] = useState({
     title: "",
@@ -182,6 +183,7 @@ export default function PropertiesPage() {
         maxPrice: maxPrice || undefined,
         agentId: agentId || undefined,
         teamId: teamId || undefined,
+        aiScore: aiScore || undefined,
         limit: 50,
         offset: 0,
       });
@@ -467,7 +469,19 @@ export default function PropertiesPage() {
             onChange={(e) => setMaxPrice(e.target.value)}
           />
         </div>
-
+        <div className="filter-select-wrapper">
+          <select
+            className="filter-select"
+            value={aiScore}
+            onChange={(e) => setAiScore(e.target.value)}
+          >
+            <option value="">All AI Scores</option>
+            <option value="high">High 80+</option>
+            <option value="medium">Medium 50-79</option>
+            <option value="low">Low under 50</option>
+          </select>
+          <ChevronDown size={14} className="select-icon" />
+        </div>
         <div className="filter-select-wrapper">
           <select
             className="filter-select"
@@ -514,7 +528,7 @@ export default function PropertiesPage() {
             setAgentId("");
             setTeamId("");
             setDateRange("all");
-
+            setAiScore("");
             setTimeout(() => {
               loadProperties();
               loadDashboard();
@@ -618,9 +632,15 @@ export default function PropertiesPage() {
                     </h3>
                     <div className="ai-score-badge">
                       <strong
-                        className={`score-number ${parseInt(property.aiScore) > 80 ? "high" : "medium"}`}
+                        className={`score-number ${
+                          Number(property.aiScore || 0) >= 80
+                            ? "high"
+                            : Number(property.aiScore || 0) >= 50
+                              ? "medium"
+                              : "low"
+                        }`}
                       >
-                        {property.aiScore}
+                        {Number(property.aiScore || 0)}
                       </strong>
                       <span>AI Score</span>
                     </div>

@@ -193,6 +193,7 @@ export class PropertiesController {
     @Query("maxPrice") maxPrice?: string,
     @Query("agentId") agentId?: string,
     @Query("teamId") filterTeamId?: string,
+    @Query("aiScore") aiScore?: string,
     @Query("west") west?: string,
     @Query("south") south?: string,
     @Query("east") east?: string,
@@ -215,6 +216,7 @@ export class PropertiesController {
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
       agentId,
       teamId: filterTeamId,
+      aiScore,
     };
 
     if (west && south && east && north) {
