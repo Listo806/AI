@@ -50,6 +50,13 @@ export default function PropertiesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [savingProperty, setSavingProperty] = useState(false);
 
+  const [city, setCity] = useState("");
+  const [propertyType, setPropertyType] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [aiScore, setAiScore] = useState("");
+  const [agentTeam, setAgentTeam] = useState("");
+
   const [propertyForm, setPropertyForm] = useState({
     title: "",
     description: "",
@@ -65,6 +72,14 @@ export default function PropertiesPage() {
     bathrooms: "",
     squareFeet: "",
   });
+
+  const cityOptions = useMemo(() => {
+    return [...new Set(properties.map((p) => p.city).filter(Boolean))];
+  }, [properties]);
+
+  const agentTeamOptions = useMemo(() => {
+    return [...new Set(properties.map((p) => p.teamName).filter(Boolean))];
+  }, [properties]);
 
   const handleCreateProperty = async (e) => {
     e.preventDefault();
@@ -140,6 +155,12 @@ export default function PropertiesPage() {
         search: search || undefined,
         type: type || undefined,
         status: status || undefined,
+        city: city || undefined,
+        propertyType: propertyType || undefined,
+        minPrice: minPrice || undefined,
+        maxPrice: maxPrice || undefined,
+        aiScore: aiScore || undefined,
+        agentTeam: agentTeam || undefined,
         limit: 50,
         offset: 0,
       });
@@ -343,43 +364,98 @@ export default function PropertiesPage() {
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Cities</option>
+          <select
+            className="filter-select"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+          >
+            <option value="">All Cities</option>
+            {[...new Set(properties.map((p) => p.city).filter(Boolean))].map(
+              (item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ),
+            )}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Types</option>
+          <select
+            className="filter-select"
+            value={propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
+          >
+            <option value="">All Types</option>
+            <option value="house">House</option>
+            <option value="apartment">Apartment</option>
+            <option value="land">Land</option>
+            <option value="commercial">Commercial</option>
+            <option value="villa">Villa</option>
+            <option value="office">Office</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Status</option>
+          <select
+            className="filter-select"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+          >
+            <option value="">All Status</option>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+            <option value="under_review">Under Review</option>
+            <option value="inactive">Inactive</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="search-box price" style={{ maxWidth: "120px" }}>
-          <input placeholder="Min Price" />
+          <input
+            type="number"
+            placeholder="Min Price"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
         </div>
         <div className="search-box price" style={{ maxWidth: "120px" }}>
-          <input placeholder="Max Price" />
+          <input
+            type="number"
+            placeholder="Max Price"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All AI Scores</option>
+          <select
+            className="filter-select"
+            value={aiScore}
+            onChange={(e) => setAiScore(e.target.value)}
+          >
+            <option value="">All AI Scores</option>
+            <option value="high">High 80+</option>
+            <option value="medium">Medium 50-79</option>
+            <option value="low">Low under 50</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
 
         <div className="filter-select-wrapper">
-          <select className="filter-select" defaultValue="all">
-            <option value="all">All Agents/Teams</option>
+          <select
+            className="filter-select"
+            value={agentTeam}
+            onChange={(e) => setAgentTeam(e.target.value)}
+          >
+            <option value="">All Agents/Teams</option>
+            {agentTeamOptions.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -391,7 +467,18 @@ export default function PropertiesPage() {
             setSearch("");
             setType("");
             setStatus("");
-            setTimeout(loadProperties, 0);
+            setCity("");
+            setPropertyType("");
+            setMinPrice("");
+            setMaxPrice("");
+            setAiScore("");
+            setAgentTeam("");
+            setDateRange("all");
+
+            setTimeout(() => {
+              loadProperties();
+              loadDashboard();
+            }, 0);
           }}
         >
           <RotateCcw size={14} />
@@ -400,7 +487,10 @@ export default function PropertiesPage() {
         <button
           className="btn btn-primary"
           style={{ height: "38px", padding: "0 20px" }}
-          onClick={loadProperties}
+          onClick={() => {
+            loadProperties();
+            loadDashboard();
+          }}
         >
           <Search size={14} />
           Search

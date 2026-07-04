@@ -143,6 +143,15 @@ export class PropertiesController {
     required: false,
     description: "Bounding box west longitude",
   })
+  @ApiQuery({ name: "city", required: false, description: "Filter by city" })
+  @ApiQuery({
+    name: "propertyType",
+    required: false,
+    description:
+      "Filter by property type: house, apartment, land, commercial, villa, office",
+  })
+  @ApiQuery({ name: "minPrice", required: false, description: "Minimum price" })
+  @ApiQuery({ name: "maxPrice", required: false, description: "Maximum price" })
   @ApiQuery({
     name: "south",
     required: false,
@@ -178,6 +187,10 @@ export class PropertiesController {
     @Query("type") type?: string,
     @Query("status") status?: string,
     @Query("search") search?: string,
+    @Query("city") city?: string,
+    @Query("propertyType") propertyType?: string,
+    @Query("minPrice") minPrice?: string,
+    @Query("maxPrice") maxPrice?: string,
     @Query("west") west?: string,
     @Query("south") south?: string,
     @Query("east") east?: string,
@@ -189,7 +202,17 @@ export class PropertiesController {
       limit: limit != null ? parseInt(limit, 10) : undefined,
       offset: offset != null ? parseInt(offset, 10) : undefined,
     };
-    // If bbox parameters are provided, use bbox query
+
+    const filters = {
+      type,
+      status,
+      search,
+      city,
+      propertyType,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    };
+
     if (west && south && east && north) {
       const bbox = {
         west: parseFloat(west),
@@ -197,16 +220,19 @@ export class PropertiesController {
         east: parseFloat(east),
         north: parseFloat(north),
       };
-      return this.propertiesService.findByBbox(user.id, user.teamId, bbox, {
-        type,
-        status,
-        search,
-      });
+
+      return this.propertiesService.findByBbox(
+        user.id,
+        user.teamId,
+        bbox,
+        filters,
+      );
     }
+
     return this.propertiesService.findAll(
       user.id,
       user.teamId,
-      { type, status, search },
+      filters,
       pagination,
       user.role,
     );
@@ -217,7 +243,12 @@ export class PropertiesController {
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Get properties dashboard metrics" })
   async getDashboard(@CurrentUser() user: any, @Query("range") range = "all") {
-    return this.propertiesService.getDashboard(user.id, user.teamId, range, user.role);
+    return this.propertiesService.getDashboard(
+      user.id,
+      user.teamId,
+      range,
+      user.role,
+    );
   }
 
   @Get(":id")

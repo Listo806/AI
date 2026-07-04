@@ -239,7 +239,17 @@ export class PropertiesService {
   async findAll(
     userId: string,
     teamId: string | null,
-    filters?: { type?: string; status?: string; search?: string },
+    filters?: {
+      type?: string;
+      status?: string;
+      search?: string;
+      city?: string;
+      propertyType?: string;
+      minPrice?: number;
+      maxPrice?: number;
+      aiScore?: string;
+      agentTeam?: string;
+    },
     pagination?: { limit?: number; offset?: number },
     userRole?: string,
   ): Promise<{
@@ -297,6 +307,26 @@ export class PropertiesService {
       )`);
       params.push(searchTerm);
       paramCount++;
+    }
+
+    if (filters?.city) {
+      conditions.push(`LOWER(TRIM(city)) = LOWER(TRIM($${paramCount++}))`);
+      params.push(filters.city);
+    }
+
+    if (filters?.propertyType) {
+      conditions.push(`property_type = $${paramCount++}`);
+      params.push(filters.propertyType);
+    }
+
+    if (filters?.minPrice !== undefined) {
+      conditions.push(`price >= $${paramCount++}`);
+      params.push(filters.minPrice);
+    }
+
+    if (filters?.maxPrice !== undefined) {
+      conditions.push(`price <= $${paramCount++}`);
+      params.push(filters.maxPrice);
     }
 
     if (conditions.length > 0) {
