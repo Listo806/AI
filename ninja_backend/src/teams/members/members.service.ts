@@ -53,12 +53,7 @@ export class MembersService {
 
     console.log("FOUND USER", user);
 
-    await this.teamsService.addMember(
-      teamId,
-      user.id,
-      userId,
-      dto.role,
-    );
+    await this.teamsService.addMember(teamId, user.id, userId, dto.role);
 
     return {
       success: true,
@@ -93,5 +88,61 @@ export class MembersService {
     });
 
     return parser.parse(members.data);
+  }
+
+  async streamExportMembers(teamId: string, res: any) {
+    res.write(
+      [
+        "Name",
+        "Email",
+        "Role",
+        "Status",
+        "Total Leads",
+        "Deals Won",
+        "Pipeline Value",
+        "AI Score",
+        "Last Active",
+      ].join(",") + "\n",
+    );
+
+    const batchSize = 5000;
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const result = await this.repository.findMembers(teamId, {
+        page,
+        limit: batchSize,
+        filter: "active",
+        search: "",
+        role: "",
+        sort: "createdAt:desc",
+      });
+
+      const rows = result.data || [];
+
+      for (const m of rows) {
+        const line = [
+          m.name || "",
+          m.email || "",
+          m.role || "",
+          m.isActive ? "Active" : "Inactive",
+          m.totalLeads || 0,
+          m.dealsWon || 0,
+          m.pipelineValue || 0,
+          m.aiScore || 0,
+          m.lastSeenAt || "",
+        ]
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",");
+
+        res.write(line + "\n");
+      }
+
+      hasMore = rows.length === batchSize;
+      page++;
+    }
+
+    res.end();
   }
 }

@@ -48,11 +48,14 @@ export default function TeamMembersPage() {
     inviteEmail,
     setInviteEmail,
 
+    pagination,
+    page,
+    setPage,
     toast,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
-    mode: 'members',
+    mode: "members",
   });
 
   /* =====================================================
@@ -85,37 +88,58 @@ export default function TeamMembersPage() {
   };
 
   const handleExport = () => {
-    const headers = ["Name", "Email", "Role"];
+    const headers = [
+      "Name",
+      "Email",
+      "Role",
+      "Status",
+      "Assigned Leads",
+      "Deals Won",
+      "Pipeline Value",
+      "AI Score",
+      "Last Active",
+      "Seat Usage",
+    ];
 
     const rows = members.map((m) => [
       m.name || "",
       m.email || "",
       m.role || "",
+      m.isActive ? "Active" : "Inactive",
+      m.totalLeads || 0,
+      m.dealsWon || 0,
+      m.pipelineValue || 0,
+      `${m.aiScore || 0}%`,
+      m.lastSeenAt || "Recently",
+      "1 Seat",
     ]);
 
     const csvContent = [
       headers.join(","),
-      ...rows.map((r) => r.join(",")),
+      ...rows.map((r) =>
+        r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      ),
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
 
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
 
     link.href = url;
-
     link.download = "team-members.csv";
-
     link.click();
 
     URL.revokeObjectURL(url);
   };
-
-  /* =====================================================
-    RENDER
-  ===================================================== */
+  const pages = Array.from(
+    {
+      length: pagination.totalPages,
+    },
+    (_, i) => i + 1,
+  );
 
   return (
     <div className="team-members-page team-workspace">
@@ -168,23 +192,23 @@ export default function TeamMembersPage() {
           className="team-filter-select"
         >
           <option value="all">All Members</option>
-
           <option value="active">Active</option>
-
           <option value="pending">Pending</option>
-
           <option value="manager">Manager</option>
-
           <option value="agent">Agent</option>
           <option value="viewer">Viewer</option>
-
           <option value="high-performers">High Performers</option>
         </select>
-
-        <button type="button" className="team-secondary-btn">
-          <SlidersHorizontal size={16} />
-          Filters
-        </button>
+        <select
+          value={limit}
+          onChange={(e) => setLimit(Number(e.target.value))}
+          className="team-filter-select"
+        >
+          <option value={10}>10 / page</option>
+          <option value={20}>20 / page</option>
+          <option value={50}>50 / page</option>
+          <option value={100}>100 / page</option>
+        </select>
       </div>
 
       {/* =================================================
@@ -294,6 +318,54 @@ export default function TeamMembersPage() {
               )}
             </tbody>
           </table>
+          {pagination && pagination.totalPages > 1 && (
+            <div className="team-pagination">
+              <button
+                disabled={!pagination.hasPrevPage}
+                onClick={() => setPage(1)}
+              >
+                «
+              </button>
+
+              <button
+                disabled={!pagination.hasPrevPage}
+                onClick={() => setPage(page - 1)}
+              >
+                ‹
+              </button>
+
+              {pages.map((p) => (
+                <button
+                  key={p}
+                  className={page === p ? "active" : ""}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                disabled={!pagination.hasNextPage}
+                onClick={() => setPage(page + 1)}
+              >
+                ›
+              </button>
+
+              <button
+                disabled={!pagination.hasNextPage}
+                onClick={() => setPage(pagination.totalPages)}
+              >
+                »
+              </button>
+            </div>
+          )}
+          <div className="team-table-info">
+            Showing
+            <b>{members.length}</b>
+            of
+            <b>{pagination.total}</b>
+            members
+          </div>
         </div>
       </div>
 

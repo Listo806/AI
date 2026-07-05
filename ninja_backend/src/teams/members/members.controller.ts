@@ -16,19 +16,23 @@ import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { MembersService } from "./members.service";
 import { GetTeamMembersDto } from "./dto/get-team-members.dto";
 import { InviteTeamMemberDto } from "./dto/invite-team-member.dto";
+import { TeamsService } from "../teams.service";
 
 @Controller("teams/members/:teamId")
 @UseGuards(JwtAuthGuard)
 export class MembersController {
-  constructor(private readonly membersService: MembersService) {}
+  constructor(
+    private readonly membersService: MembersService,
+    private readonly teamsService: TeamsService,
+  ) {}
 
   @Get()
   async getMembers(
     @Param("teamId") teamId: string,
-
-    @Query()
-    query: GetTeamMembersDto,
-  ) { console.log('controller check:');console.log(query);
+    @Query() query: GetTeamMembersDto,
+    @CurrentUser() user: any,
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
     return this.membersService.getMembers(teamId, query);
   }
 
@@ -47,22 +51,19 @@ export class MembersController {
 
   @Get("export")
   async exportMembers(
-    @Param("teamId")
-    teamId: string,
-
-    @Res()
-    res: Response,
+    @Param("teamId") teamId: string,
+    @Res() res: Response,
+    @CurrentUser() user: any,
   ) {
-    const csv = await this.membersService.exportMembers(teamId);
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
-    res.setHeader("Content-Type", "text/csv");
-
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="team-members.csv"`,
     );
 
-    return res.status(200).send(csv);
+    return this.membersService.streamExportMembers(teamId, res);
   }
 
   @Delete(":memberId")

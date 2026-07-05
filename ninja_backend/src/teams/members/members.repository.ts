@@ -36,12 +36,12 @@ export class MembersRepository {
 
     /* FILTER */
 
-    if (filter === "active") {
-      where.push(`tm.status = 'active'`);
-    }
-
     if (filter === "pending") {
       where.push(`tm.status = 'pending'`);
+    } else if (filter === "removed") {
+      where.push(`tm.status = 'removed'`);
+    } else {
+      where.push(`tm.status = 'active'`);
     }
     if (filter === "manager") {
       where.push(`LOWER(tm.role) = 'manager'`);
@@ -183,6 +183,7 @@ export class MembersRepository {
             assigned_to,
             COUNT(*) as total_leads
           FROM leads
+          WHERE team_id = $1
           GROUP BY assigned_to
         ) lead_stats
           ON lead_stats.assigned_to = u.id
@@ -210,7 +211,7 @@ export class MembersRepository {
             ) as pipeline_value
 
           FROM deals
-
+          WHERE team_id = $1
           GROUP BY assigned_to
         ) deal_stats
           ON deal_stats.assigned_to = u.id

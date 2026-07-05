@@ -337,7 +337,6 @@ export class TeamsService {
           ON u.id = tm.user_id
         WHERE tm.team_id = $1
         AND tm.status = 'active'
-        AND tm.role != 'owner'
         AND u.is_active = true
         `,
         [teamId],

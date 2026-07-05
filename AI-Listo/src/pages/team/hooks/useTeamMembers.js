@@ -1,75 +1,49 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  useCallback,
-} from 'react';
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 import {
   fetchTeamMembers,
   fetchTeamMembersDashboard,
   inviteMember,
   removeMember,
-} from '../services/team.service';
+} from "../services/team.service";
 
-export default function useTeamMembers({
-  teamId,
-  onReload,
-  mode = 'members',
-}) {
-
+export default function useTeamMembers({ teamId, onReload, mode = "members" }) {
   /* =====================================================
     STATE
   ===================================================== */
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [inviting, setInviting] =
-    useState(false);
+  const [inviting, setInviting] = useState(false);
 
-  const [removing, setRemoving] =
-    useState(false);
+  const [removing, setRemoving] = useState(false);
 
-  const [search, setSearch] =
-    useState('');
-  const [debouncedSearch, setDebouncedSearch] =
-    useState('');
-  const [filter, setFilter] =
-    useState('all');
-  
-  const [filterDashboard, setFilterDashboard] =
-    useState('all');
-  const [inviteEmail, setInviteEmail] =
-    useState('');
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
-  const [allMembers, setAllMembers] =
-    useState([]);
+  const [filterDashboard, setFilterDashboard] = useState("all");
+  const [inviteEmail, setInviteEmail] = useState("");
 
-  const [toast, setToast] =
-    useState(null);
+  const [allMembers, setAllMembers] = useState([]);
 
-  const [page, setPage] =
-    useState(1);
+  const [toast, setToast] = useState(null);
+
+  const [page, setPage] = useState(1);
 
   const [limit, setLimit] = useState(10);
   const [dashboardLimit, setDashboardLimit] = useState(5);
-  const [pagination, setPagination] =
-    useState({
-      total: 0,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false,
-    });
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   /* =====================================================
     TOAST
   ===================================================== */
 
-  const showToast = (
-    message,
-    type = 'success'
-  ) => {
-
+  const showToast = (message, type = "success") => {
     setToast({
       message,
       type,
@@ -91,324 +65,210 @@ export default function useTeamMembers({
   ===================================================== */
 
   const loadMembers = useCallback(async () => {
-      try {
-
-        if (!teamId) {
-          setAllMembers([]);
-          return;
-        }
-
-        setLoading(true);
-
-        console.log("CURRENT FILTER", filter);
-
-        const response =
-          await fetchTeamMembers(
-            teamId,
-            {
-              page,
-              limit,
-              search: debouncedSearch,
-              filter,
-            }
-          );
-
-        console.log('HOOK RESPONSE', response);
-
-        const membersData = Array.isArray(response)
-          ? response
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-
-        setAllMembers(membersData);
-
-        setPagination({
-          total:
-            response?.pagination?.total ||
-            membersData.length,
-
-          totalPages:
-            response?.pagination?.totalPages || 1,
-
-          hasNextPage:
-            response?.pagination?.hasNextPage || false,
-
-          hasPrevPage:
-            response?.pagination?.hasPrevPage || false,
-        });
-
-      } catch (error) {
-
-        console.error(
-          'LOAD MEMBERS ERROR',
-          error
-        );
-
-      } finally {
-
-        setLoading(false);
+    try {
+      if (!teamId) {
+        setAllMembers([]);
+        return;
       }
-    }, [
-      teamId,
-      page,
-      limit,
-      debouncedSearch,
-      filter,
-    ]);
-    
-    const loadMembersDashboard = useCallback(async () => {
-      try {
-        if (!teamId) {
-          setAllMembers([]);
-          return;
-        }
 
-        setLoading(true);
+      setLoading(true);
 
-        console.log(
-          'DASHBOARD FILTER',
-          filterDashboard
-        );
-        const response =
-          await fetchTeamMembersDashboard(
-            teamId,
-            {
-              page,
-              limit: dashboardLimit,
-              search: debouncedSearch,
-              filter: filterDashboard,
-            }
-          );
+      console.log("CURRENT FILTER", filter);
 
-        const membersData = Array.isArray(response)
-          ? response
-          : Array.isArray(response?.data)
-            ? response.data
-            : [];
-        
-        setAllMembers(membersData);
+      const response = await fetchTeamMembers(teamId, {
+        page,
+        limit,
+        search: debouncedSearch,
+        filter,
+      });
 
-        setPagination({
-          total:
-            response?.pagination?.total ||
-            membersData.length,
+      console.log("HOOK RESPONSE", response);
 
-          totalPages:
-            response?.pagination?.totalPages || 1,
+      const membersData = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
 
-          hasNextPage:
-            response?.pagination?.hasNextPage || false,
+      setAllMembers(membersData);
 
-          hasPrevPage:
-            response?.pagination?.hasPrevPage || false,
-        });
+      setPagination({
+        total: response?.pagination?.total || membersData.length,
 
-      } catch (error) {
+        totalPages: response?.pagination?.totalPages || 1,
 
-        console.error(
-          'LOAD MEMBERS db',
-          error
-        );
+        hasNextPage: response?.pagination?.hasNextPage || false,
 
-      } finally {
+        hasPrevPage: response?.pagination?.hasPrevPage || false,
+      });
+    } catch (error) {
+      console.error("LOAD MEMBERS ERROR", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [teamId, page, limit, debouncedSearch, filter]);
 
-        setLoading(false);
+  const loadMembersDashboard = useCallback(async () => {
+    try {
+      if (!teamId) {
+        setAllMembers([]);
+        return;
       }
-    }, [
-      teamId,
-      page,
-      dashboardLimit,
-      debouncedSearch,
-      filterDashboard,
-    ]);
+
+      setLoading(true);
+
+      console.log("DASHBOARD FILTER", filterDashboard);
+      const response = await fetchTeamMembersDashboard(teamId, {
+        page,
+        limit: dashboardLimit,
+        search: debouncedSearch,
+        filter: filterDashboard,
+      });
+
+      const membersData = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+      setAllMembers(membersData);
+
+      setPagination({
+        total: response?.pagination?.total || membersData.length,
+
+        totalPages: response?.pagination?.totalPages || 1,
+
+        hasNextPage: response?.pagination?.hasNextPage || false,
+
+        hasPrevPage: response?.pagination?.hasPrevPage || false,
+      });
+    } catch (error) {
+      console.error("LOAD MEMBERS db", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [teamId, page, dashboardLimit, debouncedSearch, filterDashboard]);
   /* =====================================================
     INVITE MEMBER
   ===================================================== */
 
-  const handleInviteMember =
-      async (payload = {}) => {
+  const handleInviteMember = async (payload = {}) => {
+    const email = payload.email || inviteEmail;
 
-      const email =
-        payload.email || inviteEmail;
+    const role = payload.role || "agent";
 
-      const role =
-        payload.role || 'agent';
+    if (!teamId) {
+      showToast("No team selected", "error");
 
-      if (!teamId) {
+      return false;
+    }
 
-        showToast(
-          'No team selected',
-          'error'
-        );
+    if (!email?.trim()) {
+      showToast("Email is required", "error");
 
-        return false;
-      }
+      return false;
+    }
 
-      if (!email?.trim()) {
+    try {
+      setInviting(true);
 
-        showToast(
-          'Email is required',
-          'error'
-        );
+      await inviteMember(teamId, {
+        email,
+        role,
+      });
 
-        return false;
-      }
+      showToast("Invitation sent successfully");
 
-      try {
+      setInviteEmail("");
 
-        setInviting(true);
+      await Promise.all([loadMembers(), onReload?.()]);
 
-        await inviteMember(
-          teamId,
-          {
-            email,
-            role,
-          }
-        );
+      return true;
+    } catch (error) {
+      console.error("INVITE MEMBER ERROR", error);
 
-        showToast(
-          'Invitation sent successfully'
-        );
+      showToast(error?.message || "Failed to invite member", "error");
 
-        setInviteEmail('');
-
-        await Promise.all([
-          loadMembers(),
-          onReload?.(),
-        ]);
-
-        return true;
-
-      } catch (error) {
-
-        console.error(
-          'INVITE MEMBER ERROR',
-          error
-        );
-
-        showToast(
-          error?.message ||
-          'Failed to invite member',
-          'error'
-        );
-
-        return false;
-
-      } finally {
-
-        setInviting(false);
-      }
-    };
+      return false;
+    } finally {
+      setInviting(false);
+    }
+  };
 
   /* =====================================================
     REMOVE MEMBER
   ===================================================== */
 
-  const handleRemoveMember =
-    async (memberId) => {
+  const handleRemoveMember = async (memberId) => {
+    if (!teamId) {
+      showToast("No team selected", "error");
 
-      if (!teamId) {
+      return false;
+    }
 
-        showToast(
-          'No team selected',
-          'error'
-        );
+    try {
+      setRemoving(true);
+      console.log("REMOVE", teamId, memberId);
+      await removeMember(teamId, memberId);
 
-        return false;
-      }
+      showToast("Member removed successfully");
 
-      try {
+      await Promise.all([loadMembers(), onReload?.()]);
 
-        setRemoving(true);
-        console.log('REMOVE', teamId, memberId);
-        await removeMember(
-          teamId,
-          memberId
-        );
+      return true;
+    } catch (error) {
+      console.error("REMOVE MEMBER ERROR", error);
 
-        showToast(
-          'Member removed successfully'
-        );
+      showToast(error?.message || "Failed to remove member", "error");
 
-        await Promise.all([
-          loadMembers(),
-          onReload?.(),
-        ]);
-
-        return true;
-
-      } catch (error) {
-
-        console.error(
-          'REMOVE MEMBER ERROR',
-          error
-        );
-
-        showToast(
-          error?.message ||
-          'Failed to remove member',
-          'error'
-        );
-
-        return false;
-
-      } finally {
-
-        setRemoving(false);
-      }
-    };
+      return false;
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   /* =====================================================
     EFFECT
   ===================================================== */
   useEffect(() => {
-      const timer = setTimeout(() => {
-        setDebouncedSearch(search);
-      }, 400);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
 
-      return () => clearTimeout(timer);
-    }, [search]);
- 
-    
-    useEffect(() => {
-      if (page !== 1) {
-        setPage(1);
-      }
-    }, [
-      debouncedSearch,
-      filter,
-    ]);
-    
-    useEffect(() => {
-      if (!teamId) return;
+    return () => clearTimeout(timer);
+  }, [search]);
 
-      if (mode === 'members') {
-        loadMembers();
-      }
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filter, filterDashboard]);
 
-      if (mode === 'dashboard') {
-        loadMembersDashboard();
-      }
+  useEffect(() => {
+    if (!teamId) return;
 
-    }, [
-      teamId,
-      page,
-      limit,
-      dashboardLimit,
-      debouncedSearch,
-      filter,
-      filterDashboard,
-      mode,
-      loadMembersDashboard,
-      loadMembers,
-    ]);
+    if (mode === "members") {
+      loadMembers();
+    }
+
+    if (mode === "dashboard") {
+      loadMembersDashboard();
+    }
+  }, [
+    teamId,
+    page,
+    limit,
+    dashboardLimit,
+    debouncedSearch,
+    filter,
+    filterDashboard,
+    mode,
+    loadMembersDashboard,
+    loadMembers,
+  ]);
   /* =====================================================
     RETURN
   ===================================================== */
 
   return {
-
     members,
 
     allMembers,
@@ -424,10 +284,10 @@ export default function useTeamMembers({
 
     filter,
     setFilter,
-    
+
     filterDashboard,
     setFilterDashboard,
-    
+
     inviteEmail,
     setInviteEmail,
 
@@ -438,20 +298,16 @@ export default function useTeamMembers({
 
     limit,
     setLimit,
-    
+
     dashboardLimit,
     setDashboardLimit,
 
     pagination,
 
-    inviteMember:
-    handleInviteMember,
+    inviteMember: handleInviteMember,
 
-    removeMember:
-      handleRemoveMember,
+    removeMember: handleRemoveMember,
 
-    reloadMembers:
-      loadMembers,
-      loadMembersDashboard,
+    reloadMembers: mode === "dashboard" ? loadMembersDashboard : loadMembers,
   };
 }
