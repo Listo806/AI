@@ -9,7 +9,10 @@ import {
   UseGuards,
   Delete,
   Patch,
+  Res,
 } from "@nestjs/common";
+
+import { Response } from "express";
 import {
   ApiTags,
   ApiOperation,
@@ -273,6 +276,39 @@ export class TeamsController {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
 
     return this.teamsService.refreshAIInsights(teamId, user.id);
+  }
+
+  @Get(":id/activities/export")
+  async exportActivities(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Res() res: Response,
+    @Query("search") search = "",
+    @Query("type") type = "all",
+    @Query("userId") userId = "",
+    @Query("dateFrom") dateFrom = "",
+    @Query("dateTo") dateTo = "",
+    @Query("sort") sort = "createdAt:desc",
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    const csv = await this.teamsService.exportActivitiesCsv({
+      teamId,
+      search,
+      type,
+      userId,
+      dateFrom,
+      dateTo,
+      sort,
+    });
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="team-activities.csv"`,
+    );
+
+    return res.status(200).send(csv);
   }
 
   @Get(":id/activities")

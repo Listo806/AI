@@ -133,21 +133,47 @@ export default function TeamActivityPage() {
     sort,
   ]);
 
-  const handleExport = () => {
-    const qs = new URLSearchParams({
-      search,
-      type,
-      userId,
-      dateFrom,
-      dateTo,
-      sort,
+  const exportActivitiesCsv = () => {
+    const headers = [
+      "User Name",
+      "User Email",
+      "Event Type",
+      "Entity Type",
+      "Activity",
+      "Time",
+      "Created At",
+    ];
+
+    const rows = activities.map((activity) => [
+      activity.userName || "Unknown User",
+      activity.userEmail || "",
+      formatActivityLabel(activity.eventType),
+      formatActivityLabel(activity.entityType),
+      activity.message || "",
+      activity.time || "",
+      activity.createdAt ? new Date(activity.createdAt).toLocaleString() : "",
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => `"${String(value).replaceAll('"', '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
     });
 
-    window.open(
-      `${import.meta.env.VITE_API_URL}/teams/${selectedTeamId}/activities/export?${qs}`,
+    const url = URL.createObjectURL(blob);
 
-      "_blank",
-    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "team-activities.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
   };
   return (
     <div className="team-activity-page">
@@ -167,26 +193,26 @@ export default function TeamActivityPage() {
           />
         </div>
         <div className="team-search-box">
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => {
-            setDateFrom(e.target.value);
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => {
+              setDateFrom(e.target.value);
 
-            setPage(1);
-          }}
-        />
+              setPage(1);
+            }}
+          />
         </div>
         <div className="team-search-box">
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => {
-            setDateTo(e.target.value);
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => {
+              setDateTo(e.target.value);
 
-            setPage(1);
-          }}
-        />
+              setPage(1);
+            }}
+          />
         </div>
         <select
           value={sort}
@@ -232,7 +258,7 @@ export default function TeamActivityPage() {
           <option value={50}>50 / page</option>
           <option value={100}>100 / page</option>
         </select>
-        <button className="team-primary-btn" onClick={handleExport}>
+        <button className="team-primary-btn" onClick={exportActivitiesCsv}>
           <Download size={16} />
           Export CSV
         </button>
@@ -313,7 +339,9 @@ export default function TeamActivityPage() {
                         </div>
 
                         <div className="team-activity-user-role">
-                          {formatActivityLabel(activity.entityType || activity.eventType)}
+                          {formatActivityLabel(
+                            activity.entityType || activity.eventType,
+                          )}
                         </div>
                       </div>
                     </div>

@@ -1464,6 +1464,187 @@ export class TeamsService {
       },
     };
   }
+
+  private buildActivityMessage(item: any) {
+    switch (item.eventType) {
+      case "team.member_added":
+        return `${item.userName || "Someone"} invited a new team member`;
+
+      case "team.member_removed":
+        return `${item.userName || "Someone"} removed a team member`;
+
+      case "user.logged_in":
+        return `${item.userName || "Someone"} logged in`;
+
+      case "property.created":
+        return `${item.userName || "Someone"} created a new property`;
+
+      case "lead.updated":
+        return `${item.userName || "Someone"} updated a lead`;
+
+      case "lead.status_changed":
+        return `${item.userName || "Someone"} changed the lead status`;
+
+      default:
+        return `${item.userName || "Someone"} ${String(
+          item.eventType || "updated activity",
+        )
+          .replaceAll("_", " ")
+          .replaceAll(".", " ")
+          .toLowerCase()}`;
+    }
+  }
+
+  private csvEscape(value: any) {
+    if (value === null || value === undefined) return "";
+
+    return `"${String(value).replace(/"/g, '""')}"`;
+  }
+
+  async exportActivitiesCsv({
+    teamId,
+    search = "",
+    type = "all",
+    userId = "",
+    dateFrom = "",
+    dateTo = "",
+    sort = "createdAt:desc",
+  }: {
+    teamId: string;
+    search?: string;
+    type?: string;
+    userId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    sort?: string;
+  }) {
+    const conditions: string[] = [`e.team_id = $1`];
+    const values: any[] = [teamId];
+
+    let paramIndex = 2;
+
+    if (userId) {
+      conditions.push(`e.user_id = $${paramIndex}`);
+      values.push(userId);
+      paramIndex++;
+    }
+
+    if (dateFrom) {
+      conditions.push(`e.created_at >= $${paramIndex}`);
+      values.push(dateFrom);
+      paramIndex++;
+    }
+
+    if (dateTo) {
+      conditions.push(`e.created_at <= $${paramIndex}`);
+      values.push(dateTo);
+      paramIndex++;
+    }
+
+    if (search) {
+      conditions.push(`
+      (
+        u.name ILIKE $${paramIndex}
+        OR u.email ILIKE $${paramIndex}
+        OR e.event_type ILIKE $${paramIndex}
+        OR e.entity_type ILIKE $${paramIndex}
+      )
+    `);
+
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    if (type && type !== "all") {
+      conditions.push(`
+      (
+        e.event_type ILIKE $${paramIndex}
+        OR e.entity_type ILIKE $${paramIndex}
+      )
+    `);
+
+      values.push(`%${type}%`);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.join(" AND ");
+
+    let orderBy = "e.created_at DESC";
+
+    switch (sort) {
+      case "createdAt:asc":
+        orderBy = "e.created_at ASC";
+        break;
+
+      case "user:asc":
+        orderBy = "u.name ASC NULLS LAST";
+        break;
+
+      case "user:desc":
+        orderBy = "u.name DESC NULLS LAST";
+        break;
+
+      case "type:asc":
+        orderBy = "e.event_type ASC";
+        break;
+
+      case "type:desc":
+        orderBy = "e.event_type DESC";
+        break;
+
+      default:
+        orderBy = "e.created_at DESC";
+    }
+
+    const result = await this.db.query(
+      `
+    SELECT
+      e.id,
+      e.event_type as "eventType",
+      e.entity_type as "entityType",
+      e.metadata,
+      e.created_at as "createdAt",
+      u.name as "userName",
+      u.email as "userEmail"
+    FROM events e
+    LEFT JOIN users u ON u.id = e.user_id
+    WHERE ${whereClause}
+    ORDER BY ${orderBy}
+    LIMIT 10000
+    `,
+      values,
+    );
+
+    const headers = [
+      "ID",
+      "User Name",
+      "User Email",
+      "Event Type",
+      "Entity Type",
+      "Message",
+      "Created At",
+      "Metadata",
+    ];
+
+    const rows = result.rows.map((item: any) => {
+      const message = this.buildActivityMessage(item);
+
+      return [
+        item.id,
+        item.userName || "",
+        item.userEmail || "",
+        item.eventType || "",
+        item.entityType || "",
+        message,
+        item.createdAt ? new Date(item.createdAt).toISOString() : "",
+        JSON.stringify(item.metadata || {}),
+      ]
+        .map((value) => this.csvEscape(value))
+        .join(",");
+    });
+
+    return [headers.join(","), ...rows].join("\n");
+  }
   async getAIInsights(teamId: string) {
     return this.aiInsightsService.generate(teamId);
   }

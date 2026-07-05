@@ -2005,7 +2005,7 @@ TEAM QUICK ACTIONS
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 24px;
+  margin-top: 24px;
 }
 
 .team-search-box {
