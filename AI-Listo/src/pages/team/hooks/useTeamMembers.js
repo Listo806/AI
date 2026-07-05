@@ -84,22 +84,33 @@ export default function useTeamMembers({ teamId, onReload, mode = "members" }) {
 
       console.log("HOOK RESPONSE", response);
 
-      const membersData = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.data)
-          ? response.data
+      const payload = response?.data?.pagination ? response.data : response;
+
+      const membersData = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)
+          ? payload.data
           : [];
+
+      const paginationData = payload?.pagination || {};
+
+      const total = Number(paginationData.total || membersData.length || 0);
+      const currentPage = Number(paginationData.page || page || 1);
+      const currentLimit = Number(paginationData.limit || limit || 10);
+      const totalPages = Math.max(
+        1,
+        Number(paginationData.totalPages || Math.ceil(total / currentLimit)),
+      );
 
       setAllMembers(membersData);
 
       setPagination({
-        total: response?.pagination?.total || membersData.length,
-
-        totalPages: response?.pagination?.totalPages || 1,
-
-        hasNextPage: response?.pagination?.hasNextPage || false,
-
-        hasPrevPage: response?.pagination?.hasPrevPage || false,
+        page: currentPage,
+        limit: currentLimit,
+        total,
+        totalPages,
+        hasNextPage: paginationData.hasNextPage ?? currentPage < totalPages,
+        hasPrevPage: paginationData.hasPrevPage ?? currentPage > 1,
       });
     } catch (error) {
       console.error("LOAD MEMBERS ERROR", error);

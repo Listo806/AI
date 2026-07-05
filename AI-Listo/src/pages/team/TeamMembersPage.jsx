@@ -48,6 +48,9 @@ export default function TeamMembersPage() {
     inviteEmail,
     setInviteEmail,
 
+    limit,
+    setLimit,
+
     pagination,
     page,
     setPage,
@@ -140,6 +143,42 @@ export default function TeamMembersPage() {
     },
     (_, i) => i + 1,
   );
+  const formatLastActive = (value) => {
+    if (!value) return "No recent activity";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "No recent activity";
+
+    return date.toLocaleString();
+  };
+
+  const getMemberPermissions = (member) => {
+    const role = String(member?.role || "").toLowerCase();
+
+    if (role === "owner") {
+      return [
+        "Full workspace access",
+        "Manage team",
+        "Billing access",
+        "AI workspace",
+      ];
+    }
+
+    if (role === "manager") {
+      return ["Manage leads", "View team activity", "AI workspace"];
+    }
+
+    if (role === "viewer") {
+      return ["View CRM", "View leads", "Limited workspace access"];
+    }
+
+    return ["CRM access", "Manage assigned leads", "AI workspace"];
+  };
+
+  const getMemberStatus = (member) => {
+    if (member?.isActive) return "Active";
+    return "Inactive";
+  };
 
   return (
     <div className="team-members-page team-workspace">
@@ -296,7 +335,7 @@ export default function TeamMembersPage() {
                     </td>
 
                     {/* LAST ACTIVE */}
-                    <td>Recently</td>
+                    <td>{formatLastActive(member.lastSeenAt)}</td>
 
                     {/* SEAT */}
                     <td>1 Seat</td>
@@ -318,55 +357,53 @@ export default function TeamMembersPage() {
               )}
             </tbody>
           </table>
-          {pagination && pagination.totalPages > 1 && (
-            <div className="team-pagination">
-              <button
-                disabled={!pagination.hasPrevPage}
-                onClick={() => setPage(1)}
-              >
-                «
-              </button>
-
-              <button
-                disabled={!pagination.hasPrevPage}
-                onClick={() => setPage(page - 1)}
-              >
-                ‹
-              </button>
-
-              {pages.map((p) => (
-                <button
-                  key={p}
-                  className={page === p ? "active" : ""}
-                  onClick={() => setPage(p)}
-                >
-                  {p}
-                </button>
-              ))}
-
-              <button
-                disabled={!pagination.hasNextPage}
-                onClick={() => setPage(page + 1)}
-              >
-                ›
-              </button>
-
-              <button
-                disabled={!pagination.hasNextPage}
-                onClick={() => setPage(pagination.totalPages)}
-              >
-                »
-              </button>
-            </div>
-          )}
-          <div className="team-table-info">
-            Showing
-            <b>{members.length}</b>
-            of
-            <b>{pagination.total}</b>
-            members
-          </div>
         </div>
+      </div>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="team-pagination">
+          <button disabled={!pagination.hasPrevPage} onClick={() => setPage(1)}>
+            «
+          </button>
+
+          <button
+            disabled={!pagination.hasPrevPage}
+            onClick={() => setPage(page - 1)}
+          >
+            ‹
+          </button>
+
+          {pages.map((p) => (
+            <button
+              key={p}
+              className={page === p ? "active" : ""}
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            disabled={!pagination.hasNextPage}
+            onClick={() => setPage(page + 1)}
+          >
+            ›
+          </button>
+
+          <button
+            disabled={!pagination.hasNextPage}
+            onClick={() => setPage(pagination.totalPages)}
+          >
+            »
+          </button>
+        </div>
+      )}
+      <div className="team-table-info">
+        Showing
+        <b> {members.length} </b>
+        of
+        <b> {pagination.total} </b>
+        members
       </div>
 
       {/* =================================================
@@ -401,9 +438,7 @@ export default function TeamMembersPage() {
                 src={selectedMember.avatar || "https://i.pravatar.cc/150"}
                 alt=""
               />
-
               <h2>{selectedMember.name}</h2>
-
               <p>{selectedMember.email}</p>
             </div>
 
@@ -414,20 +449,12 @@ export default function TeamMembersPage() {
                 Permissions
               </h4>
 
-              <label>
-                <input type="checkbox" defaultChecked />
-                Manage Leads
-              </label>
-
-              <label>
-                <input type="checkbox" defaultChecked />
-                Access Billing
-              </label>
-
-              <label>
-                <input type="checkbox" defaultChecked />
-                AI Workspace
-              </label>
+              {getMemberPermissions(selectedMember).map((permission) => (
+                <label key={permission}>
+                  <input type="checkbox" checked readOnly />
+                  {permission}
+                </label>
+              ))}
             </div>
 
             {/* ACTIVITY */}
@@ -436,12 +463,21 @@ export default function TeamMembersPage() {
                 <Activity size={16} />
                 Activity Logs
               </h4>
+              <div className="team-log-item">
+                Status: {getMemberStatus(selectedMember)}
+              </div>
 
-              <div className="team-log-item">Updated CRM pipeline</div>
+              <div className="team-log-item">
+                Assigned leads: {selectedMember.totalLeads || 0}
+              </div>
 
-              <div className="team-log-item">Closed a lead</div>
+              <div className="team-log-item">
+                Deals won: {selectedMember.dealsWon || 0}
+              </div>
 
-              <div className="team-log-item">Exported report</div>
+              <div className="team-log-item">
+                Last active: {formatLastActive(selectedMember.lastSeenAt)}
+              </div>
             </div>
 
             {/* AI */}
@@ -452,7 +488,8 @@ export default function TeamMembersPage() {
               </h4>
 
               <div className="team-ai-usage">
-                AI Score: {selectedMember.aiScore}%
+                AI Score: $
+                {Number(selectedMember.pipelineValue || 0).toLocaleString()}
               </div>
             </div>
 
@@ -460,7 +497,15 @@ export default function TeamMembersPage() {
             <div className="team-member-section">
               <h4>Billing Seat</h4>
 
-              <div className="team-log-item">1 Active Seat Attached</div>
+              <div className="team-log-item">
+                {selectedMember.isActive
+                  ? "1 Active Seat Attached"
+                  : "No active seat"}
+              </div>
+
+              <div className="team-log-item">
+                Role: {selectedMember.role || "agent"}
+              </div>
             </div>
 
             {/* REMOVE */}

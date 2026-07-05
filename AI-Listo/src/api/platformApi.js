@@ -293,79 +293,25 @@ export async function getTeamNotifications(
   return res?.data ?? res;
 }
 
-export async function getTeamMembers(
-  teamId,
-  params = {}
-) {
+export async function getTeamMembers(teamId, params = {}) {
+  const qs = new URLSearchParams();
 
-  const qs =
-    new URLSearchParams();
+  if (params.page) qs.append("page", String(params.page));
+  if (params.limit) qs.append("limit", String(params.limit));
+  if (params.search) qs.append("search", params.search);
+  if (params.filter) qs.append("filter", params.filter);
+  if (params.role) qs.append("role", params.role);
+  if (params.sort) qs.append("sort", params.sort);
 
-  if (params.page) {
-    qs.append(
-      'page',
-      String(params.page)
-    );
-  }
+  const queryString = qs.toString();
 
-  if (params.limit) {
-    qs.append(
-      'limit',
-      String(params.limit)
-    );
-  }
+  const res = await apiClient.request(
+    `/teams/members/${teamId}${queryString ? `?${queryString}` : ""}`
+  );
 
-  if (params.search) {
-    qs.append(
-      'search',
-      params.search
-    );
-  }
+  console.log("TEAM MEMBERS API RAW", res);
 
-  if (params.filter) {
-    qs.append(
-      'filter',
-      params.filter
-    );
-  }
-
-  if (params.role) {
-    qs.append(
-      'role',
-      params.role
-    );
-  }
-
-  if (params.sort) {
-    qs.append(
-      'sort',
-      params.sort
-    );
-  }
-
-  const queryString =
-    qs.toString();
-
-  const res =
-    await apiClient.request(
-      `/teams/members/${teamId}${
-        queryString
-          ? `?${queryString}`
-          : ''
-      }`
-    );
-
-  console.log('TEAM MEMBERS API RAW', res);
-
-  /*
-    backend return:
-    {
-      data: [],
-      pagination: {}
-    }
-  */
-
-  return res?.data || res;
+  return res;
 }
 
 export async function getTeamMembersDashboard(
