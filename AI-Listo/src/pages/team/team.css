@@ -313,7 +313,7 @@
   align-items: center;
   gap: 5px;
   min-width: 150px;
-  height: 40px;
+  height: 38px;
   padding: 0 12px;
   border: 1px solid #f3f4f6;
   border-radius: 10px;
@@ -2017,7 +2017,7 @@ TEAM QUICK ACTIONS
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 0 14px;
-  height: 48px;
+  height: 38px;
 }
 
 .team-search-box input {
@@ -2027,7 +2027,7 @@ TEAM QUICK ACTIONS
 }
 
 .team-filter-select {
-  height: 48px;
+  height: 38px;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
   padding: 0 14px;

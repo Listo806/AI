@@ -283,15 +283,22 @@ export class TeamsController {
     @Query("limit") limit = "20",
     @Query("search") search = "",
     @Query("type") type = "all",
+    @Query("userId") userId = "",
+    @Query("dateFrom") dateFrom = "",
+    @Query("dateTo") dateTo = "",
+    @Query("sort") sort = "createdAt:desc",
   ) {
     await this.teamsService.ensureCanAccessTeam(teamId, user.id);
-
     return this.teamsService.getActivitiesPaginated({
       teamId,
       page: Number(page),
       limit: Number(limit),
       search,
       type,
+      userId,
+      dateFrom,
+      dateTo,
+      sort,
     });
   }
 }

@@ -2,20 +2,20 @@
  * Platform API - Marketplace, VA, and Admin endpoints
  * Used for platform authentication and admin controls (separate from CRM).
  */
-import apiClient from './apiClient';
+import apiClient from "./apiClient";
 
 // ============================================================================
 // PLATFORM LISTINGS (Agent/Owner/User - submit without CRM)
 // ============================================================================
 
 export async function getMyPlatformListings() {
-  const res = await apiClient.request('/platform/listings');
+  const res = await apiClient.request("/platform/listings");
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
 export async function createPlatformListing(data) {
-  const res = await apiClient.request('/platform/listings', {
-    method: 'POST',
+  const res = await apiClient.request("/platform/listings", {
+    method: "POST",
     body: JSON.stringify(data),
   });
   return res?.data || res;
@@ -26,13 +26,13 @@ export async function createPlatformListing(data) {
 // ============================================================================
 
 export async function getMyVaListings() {
-  const res = await apiClient.request('/va/listings');
+  const res = await apiClient.request("/va/listings");
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
 export async function createVaListing(data) {
-  const res = await apiClient.request('/va/listings', {
-    method: 'POST',
+  const res = await apiClient.request("/va/listings", {
+    method: "POST",
     body: JSON.stringify(data),
   });
   return res?.data || res;
@@ -40,7 +40,7 @@ export async function createVaListing(data) {
 
 export async function updateVaListing(id, data) {
   const res = await apiClient.request(`/va/listings/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(data),
   });
   return res?.data || res;
@@ -52,13 +52,14 @@ export async function updateVaListing(id, data) {
 
 export async function getAdminListings(filters = {}) {
   const params = new URLSearchParams();
-  if (filters.status) params.append('status', filters.status);
-  if (filters.origin) params.append('origin', filters.origin);
-  if (filters.createdBy) params.append('createdBy', filters.createdBy);
-  if (filters.title) params.append('title', filters.title);
-  if (filters.uploaderEmail) params.append('uploaderEmail', filters.uploaderEmail);
+  if (filters.status) params.append("status", filters.status);
+  if (filters.origin) params.append("origin", filters.origin);
+  if (filters.createdBy) params.append("createdBy", filters.createdBy);
+  if (filters.title) params.append("title", filters.title);
+  if (filters.uploaderEmail)
+    params.append("uploaderEmail", filters.uploaderEmail);
   const qs = params.toString();
-  const res = await apiClient.request(`/admin/listings${qs ? '?' + qs : ''}`);
+  const res = await apiClient.request(`/admin/listings${qs ? "?" + qs : ""}`);
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
@@ -67,11 +68,15 @@ export async function getAdminListingById(id) {
   return res?.data || res;
 }
 
-export async function updateAdminListingStatus(id, status, rejectionReason = null) {
+export async function updateAdminListingStatus(
+  id,
+  status,
+  rejectionReason = null,
+) {
   const body = { status };
   if (rejectionReason != null) body.rejectionReason = rejectionReason;
   const res = await apiClient.request(`/admin/listings/${id}/status`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(body),
   });
   return res?.data || res;
@@ -79,7 +84,7 @@ export async function updateAdminListingStatus(id, status, rejectionReason = nul
 
 export async function updateAdminListing(id, { teamId }) {
   const res = await apiClient.request(`/admin/listings/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify({ teamId: teamId || null }),
   });
   return res?.data || res;
@@ -90,7 +95,7 @@ export async function updateAdminListing(id, { teamId }) {
 // ============================================================================
 
 export async function getAdminUsers(role = null) {
-  const qs = role ? `?role=${encodeURIComponent(role)}` : '';
+  const qs = role ? `?role=${encodeURIComponent(role)}` : "";
   const res = await apiClient.request(`/admin/users${qs}`);
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
@@ -101,8 +106,8 @@ export async function getAdminUserById(id) {
 }
 
 export async function createAdminUser(payload) {
-  const res = await apiClient.request('/admin/users', {
-    method: 'POST',
+  const res = await apiClient.request("/admin/users", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   return res?.data || res;
@@ -110,7 +115,7 @@ export async function createAdminUser(payload) {
 
 export async function updateAdminUser(id, payload) {
   const res = await apiClient.request(`/admin/users/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(payload),
   });
   return res?.data || res;
@@ -118,7 +123,7 @@ export async function updateAdminUser(id, payload) {
 
 export async function updateAdminUserRole(id, role) {
   const res = await apiClient.request(`/admin/users/${id}/role`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify({ role }),
   });
   return res?.data || res;
@@ -126,7 +131,7 @@ export async function updateAdminUserRole(id, role) {
 
 export async function deleteAdminUser(id) {
   const res = await apiClient.request(`/admin/users/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
   return res?.data || res;
 }
@@ -136,7 +141,7 @@ export async function deleteAdminUser(id) {
 // ============================================================================
 
 export async function getAdminTeams() {
-  const res = await apiClient.request('/admin/teams');
+  const res = await apiClient.request("/admin/teams");
   return Array.isArray(res?.data) ? res.data : res?.data || [];
 }
 
@@ -146,8 +151,8 @@ export async function getAdminTeamById(id) {
 }
 
 export async function createAdminTeam(payload) {
-  const res = await apiClient.request('/admin/teams', {
-    method: 'POST',
+  const res = await apiClient.request("/admin/teams", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   return res?.data || res;
@@ -155,7 +160,7 @@ export async function createAdminTeam(payload) {
 
 export async function updateAdminTeam(id, payload) {
   const res = await apiClient.request(`/admin/teams/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(payload),
   });
   return res?.data || res;
@@ -163,22 +168,28 @@ export async function updateAdminTeam(id, payload) {
 
 export async function deleteAdminTeam(id) {
   const res = await apiClient.request(`/admin/teams/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
   return res?.data || res;
 }
 
 export async function addAdminTeamMember(teamId, userId) {
-  const res = await apiClient.request(`/admin/teams/${teamId}/members/${userId}`, {
-    method: 'POST',
-  });
+  const res = await apiClient.request(
+    `/admin/teams/${teamId}/members/${userId}`,
+    {
+      method: "POST",
+    },
+  );
   return res?.data || res;
 }
 
 export async function removeAdminTeamMember(teamId, userId) {
-  const res = await apiClient.request(`/admin/teams/${teamId}/members/${userId}`, {
-    method: 'DELETE',
-  });
+  const res = await apiClient.request(
+    `/admin/teams/${teamId}/members/${userId}`,
+    {
+      method: "DELETE",
+    },
+  );
   return res?.data || res;
 }
 /* ======================================================
@@ -186,49 +197,36 @@ export async function removeAdminTeamMember(teamId, userId) {
 ====================================================== */
 
 export async function getTeamDashboard(teamId) {
-  const res = await apiClient.request(
-    `/teams/${teamId}/dashboard`
-  );
+  const res = await apiClient.request(`/teams/${teamId}/dashboard`);
 
-  console.log(
-    'getTeamDashboard RAW',
-    res
-  );
+  console.log("getTeamDashboard RAW", res);
 
   return res;
 }
 
 export async function getMyTeams() {
-  const res = await apiClient.request('/teams');
+  const res = await apiClient.request("/teams");
 
-  console.log('getMyTeams RAW', res);
+  console.log("getMyTeams RAW", res);
 
-  return Array.isArray(res)
-    ? res
-    : res?.data || [];
+  return Array.isArray(res) ? res : res?.data || [];
 }
 
 export async function getTeam(id) {
-  const res = await apiClient.request(
-    `/teams/${id}`
-  );
+  const res = await apiClient.request(`/teams/${id}`);
 
   return res?.data || res;
 }
 
-export async function getTeamSeats(
-  teamId
-) {
-  const res = await apiClient.request(
-    `/teams/${teamId}/seats`
-  );
+export async function getTeamSeats(teamId) {
+  const res = await apiClient.request(`/teams/${teamId}/seats`);
 
   return res?.data || res;
 }
 
 export async function createTeam(payload) {
-  const res = await apiClient.request('/teams', {
-    method: 'POST',
+  const res = await apiClient.request("/teams", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   return res?.data ?? res;
@@ -236,59 +234,50 @@ export async function createTeam(payload) {
 
 export async function updateTeam(teamId, payload) {
   const res = await apiClient.request(`/teams/${teamId}`, {
-    method: 'PUT',
+    method: "PUT",
     body: JSON.stringify(payload),
   });
   return res?.data ?? res;
 }
 
-export async function inviteTeamMemberByEmail(
-  teamId,
-  payload
-) {
-
+export async function inviteTeamMemberByEmail(teamId, payload) {
   const body = {
-    email: payload?.email?.trim?.() || '',
-    role: payload?.role || 'agent',
+    email: payload?.email?.trim?.() || "",
+    role: payload?.role || "agent",
   };
 
-  const res = await apiClient.request(
-    `/teams/${teamId}/members/invite`,
-    {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }
-  );
+  const res = await apiClient.request(`/teams/${teamId}/members/invite`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 
   return res?.data ?? res;
 }
 
 export async function addTeamMember(teamId, userId) {
   const res = await apiClient.request(`/teams/${teamId}/members/${userId}`, {
-    method: 'POST',
+    method: "POST",
   });
   return res?.data ?? res;
 }
 
 export async function removeTeamMember(teamId, userId) {
   const res = await apiClient.request(`/teams/${teamId}/members/${userId}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
   return res?.data ?? res;
 }
 
 export async function deleteTeam(teamId) {
   const res = await apiClient.request(`/teams/${teamId}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
   return res?.data ?? res;
 }
 
-export async function getTeamNotifications(
-  teamId
-) {
+export async function getTeamNotifications(teamId) {
   const res = await apiClient.request(`/teams/${teamId}/notifications`, {
-    method: 'GET',
+    method: "GET",
   });
   return res?.data ?? res;
 }
@@ -306,7 +295,7 @@ export async function getTeamMembers(teamId, params = {}) {
   const queryString = qs.toString();
 
   const res = await apiClient.request(
-    `/teams/members/${teamId}${queryString ? `?${queryString}` : ""}`
+    `/teams/members/${teamId}${queryString ? `?${queryString}` : ""}`,
   );
 
   console.log("TEAM MEMBERS API RAW", res);
@@ -314,72 +303,40 @@ export async function getTeamMembers(teamId, params = {}) {
   return res;
 }
 
-export async function getTeamMembersDashboard(
-  teamId,
-  params = {}
-) {
-
-  const qs =
-    new URLSearchParams();
+export async function getTeamMembersDashboard(teamId, params = {}) {
+  const qs = new URLSearchParams();
 
   if (params.page) {
-    qs.append(
-      'page',
-      String(params.page)
-    );
+    qs.append("page", String(params.page));
   }
 
   if (params.limit) {
-    qs.append(
-      'limit',
-      String(params.limit)
-    );
+    qs.append("limit", String(params.limit));
   }
 
   if (params.search) {
-    qs.append(
-      'search',
-      params.search
-    );
+    qs.append("search", params.search);
   }
 
-  if (
-      params.filter &&
-      params.filter !== 'all'
-    ) {
-      qs.append(
-        'filter',
-        params.filter
-      );
-    }
+  if (params.filter && params.filter !== "all") {
+    qs.append("filter", params.filter);
+  }
 
   if (params.role) {
-    qs.append(
-      'role',
-      params.role
-    );
+    qs.append("role", params.role);
   }
 
   if (params.sort) {
-    qs.append(
-      'sort',
-      params.sort
-    );
+    qs.append("sort", params.sort);
   }
 
-  const queryString =
-    qs.toString();
+  const queryString = qs.toString();
 
-  const res =
-    await apiClient.request(
-      `/teams/${teamId}/members${
-        queryString
-          ? `?${queryString}`
-          : ''
-      }`
-    );
+  const res = await apiClient.request(
+    `/teams/${teamId}/members${queryString ? `?${queryString}` : ""}`,
+  );
 
-  console.log('member Dashboard:', res);
+  console.log("member Dashboard:", res);
 
   /*
     backend return:
@@ -393,10 +350,31 @@ export async function getTeamMembersDashboard(
 }
 
 export async function getTeamAIInsights(teamId) {
-
-  const res = await apiClient.request(
-    `/teams/${teamId}/ai-insights`
-  );
+  const res = await apiClient.request(`/teams/${teamId}/ai-insights`);
 
   return res?.data || res;
+}
+
+export async function getTeamActivities(teamId, params = {}) {
+  const qs = new URLSearchParams();
+
+  if (params.page) qs.append("page", String(params.page));
+  if (params.limit) qs.append("limit", String(params.limit));
+  if (params.search) qs.append("search", params.search);
+  if (params.type) qs.append("type", params.type);
+  if (params.userId) qs.append("userId", params.userId);
+
+  if (params.dateFrom) qs.append("dateFrom", params.dateFrom);
+
+  if (params.dateTo) qs.append("dateTo", params.dateTo);
+
+  if (params.sort) qs.append("sort", params.sort);
+
+  const queryString = qs.toString();
+
+  const res = await apiClient.request(
+    `/teams/${teamId}/activities${queryString ? `?${queryString}` : ""}`,
+  );
+
+  return res;
 }

@@ -907,6 +907,45 @@ export class TeamsService {
     return "Just now";
   }
 
+  private async getActivityStats(teamId: string) {
+    const result = await this.db.query(
+      `
+    SELECT
+
+      COUNT(*)::int as "totalActivities",
+
+      COUNT(*) FILTER (
+        WHERE event_type ILIKE '%message%'
+           OR event_type ILIKE '%email%'
+           OR event_type ILIKE '%sms%'
+           OR event_type ILIKE '%whatsapp%'
+      )::int as messages,
+
+      COUNT(*) FILTER (
+        WHERE event_type ILIKE '%call%'
+      )::int as calls,
+
+      COUNT(*) FILTER (
+        WHERE event_type ILIKE '%ai%'
+      )::int as "aiActions"
+
+    FROM events
+
+    WHERE team_id = $1
+    `,
+      [teamId],
+    );
+
+    return (
+      result.rows[0] || {
+        totalActivities: 0,
+        messages: 0,
+        calls: 0,
+        aiActions: 0,
+      }
+    );
+  }
+
   async getSubscription(teamId: string) {
     const result = await this.db.query(
       `
@@ -1220,12 +1259,20 @@ export class TeamsService {
     limit = 20,
     search = "",
     type = "all",
+    userId = "",
+    dateFrom = "",
+    dateTo = "",
+    sort = "createdAt:desc",
   }: {
     teamId: string;
     page?: number;
     limit?: number;
     search?: string;
     type?: string;
+    userId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    sort?: string;
   }) {
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(100, Math.max(1, limit));
@@ -1237,6 +1284,23 @@ export class TeamsService {
     let paramIndex = 2;
 
     if (search) {
+      if (userId) {
+        conditions.push(`e.user_id=$${paramIndex}`);
+        values.push(userId);
+        paramIndex++;
+      }
+
+      if (dateFrom) {
+        conditions.push(`e.created_at >= $${paramIndex}`);
+        values.push(dateFrom);
+        paramIndex++;
+      }
+
+      if (dateTo) {
+        conditions.push(`e.created_at <= $${paramIndex}`);
+        values.push(dateTo);
+        paramIndex++;
+      }
       conditions.push(`
       (
         u.name ILIKE $${paramIndex}
@@ -1268,7 +1332,7 @@ export class TeamsService {
     );
 
     const total = Number(totalResult.rows[0]?.total || 0);
-
+    const stats = await this.getActivityStats(teamId);
     values.push(safeLimit);
     values.push(offset);
 
@@ -1286,7 +1350,22 @@ export class TeamsService {
     FROM events e
     LEFT JOIN users u ON u.id = e.user_id
     WHERE ${whereClause}
-    ORDER BY e.created_at DESC
+      let orderBy="e.created_at DESC";
+      switch(sort){
+      case "createdAt:asc":
+      orderBy="e.created_at ASC";
+      break;
+      case "user:asc":
+      orderBy="u.name ASC";
+      break;
+      case "user:desc":
+      orderBy="u.name DESC";
+      break;
+      case "type:asc":
+      orderBy="e.event_type ASC";
+      break;
+      }
+    ORDER BY ${orderBy}
     LIMIT $${paramIndex}
     OFFSET $${paramIndex + 1}
     `,
@@ -1330,14 +1409,30 @@ export class TeamsService {
             .toLowerCase()}`;
       }
 
+      const metadata = item.metadata || {};
+
       return {
-        ...item,
+        id: item.id,
+        avatar: item.avatar,
+        userName: item.userName,
+        userEmail: item.userEmail,
+        eventType: item.eventType,
+        entityType: item.entityType,
+        createdAt: item.createdAt,
+        metadata,
+        oldValue: metadata.oldValue || metadata.old || null,
+        newValue: metadata.newValue || metadata.new || null,
+        entityId: metadata.entityId || null,
+        ip: metadata.ip || null,
+        browser: metadata.browser || null,
+        device: metadata.device || null,
         message,
         time: this.formatTimeAgo(item.createdAt),
       };
     });
 
     return {
+      stats,
       data,
       pagination: {
         total,

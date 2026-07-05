@@ -13,6 +13,7 @@ import {
   getTeamNotifications,
   getTeamMembersDashboard,
   getTeamAIInsights,
+  getTeamActivities,
 } from '../../../api/platformApi';
 
 /* ======================================================
@@ -131,4 +132,8 @@ export async function fetchTeamMembersDashboard(
 
 export async function fetchTeamAIInsights(teamId) {
   return await getTeamAIInsights(teamId);
+}
+
+export async function fetchTeamActivities(teamId, params) {
+  return await getTeamActivities(teamId, params);
 }
