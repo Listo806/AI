@@ -1335,7 +1335,32 @@ export class TeamsService {
     const stats = await this.getActivityStats(teamId);
     values.push(safeLimit);
     values.push(offset);
+    let orderBy = "e.created_at DESC";
 
+    switch (sort) {
+      case "createdAt:asc":
+        orderBy = "e.created_at ASC";
+        break;
+
+      case "user:asc":
+        orderBy = "u.name ASC NULLS LAST";
+        break;
+
+      case "user:desc":
+        orderBy = "u.name DESC NULLS LAST";
+        break;
+
+      case "type:asc":
+        orderBy = "e.event_type ASC";
+        break;
+
+      case "type:desc":
+        orderBy = "e.event_type DESC";
+        break;
+
+      default:
+        orderBy = "e.created_at DESC";
+    }
     const result = await this.db.query(
       `
     SELECT
