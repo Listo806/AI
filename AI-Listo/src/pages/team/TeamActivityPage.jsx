@@ -17,6 +17,14 @@ import "./activity.css";
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
 
+const formatActivityLabel = (value) => {
+  if (!value) return "Activity";
+
+  return String(value)
+    .replaceAll(".", " ")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
 const getActivityIcon = (activity) => {
   const text =
     `${activity?.eventType || ""} ${activity?.message || ""}`.toLowerCase();
@@ -305,9 +313,7 @@ export default function TeamActivityPage() {
                         </div>
 
                         <div className="team-activity-user-role">
-                          {String(activity.entityType || "")
-                            .replaceAll("_", " ")
-                            .replace(/\b\w/g, (c) => c.toUpperCase())}
+                          {formatActivityLabel(activity.entityType || activity.eventType)}
                         </div>
                       </div>
                     </div>
@@ -406,13 +412,13 @@ export default function TeamActivityPage() {
             <div className="team-drawer-section">
               <label>Event Type</label>
 
-              <div>{selectedActivity.eventType}</div>
+              <div>{formatActivityLabel(selectedActivity.eventType)}</div>
             </div>
 
             <div className="team-drawer-section">
               <label>Entity</label>
 
-              <div>{selectedActivity.entityType}</div>
+              <div>{formatActivityLabel(selectedActivity.entityType)}</div>
             </div>
 
             <div className="team-drawer-section">
@@ -437,7 +443,7 @@ export default function TeamActivityPage() {
                   <div>
                     <strong>Event</strong>
 
-                    <p>{selectedActivity.eventType}</p>
+                    <p>{formatActivityLabel(selectedActivity.eventType)}</p>
                   </div>
                 </div>
 
