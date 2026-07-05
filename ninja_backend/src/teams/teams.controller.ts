@@ -274,4 +274,24 @@ export class TeamsController {
 
     return this.teamsService.refreshAIInsights(teamId, user.id);
   }
+
+  @Get(":id/activities")
+  async getActivities(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Query("page") page = "1",
+    @Query("limit") limit = "20",
+    @Query("search") search = "",
+    @Query("type") type = "all",
+  ) {
+    await this.teamsService.ensureCanAccessTeam(teamId, user.id);
+
+    return this.teamsService.getActivitiesPaginated({
+      teamId,
+      page: Number(page),
+      limit: Number(limit),
+      search,
+      type,
+    });
+  }
 }

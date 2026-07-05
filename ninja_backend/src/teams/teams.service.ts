@@ -1214,6 +1214,141 @@ export class TeamsService {
     };
   }
 
+  async getActivitiesPaginated({
+    teamId,
+    page = 1,
+    limit = 20,
+    search = "",
+    type = "all",
+  }: {
+    teamId: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    type?: string;
+  }) {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(100, Math.max(1, limit));
+    const offset = (safePage - 1) * safeLimit;
+
+    const conditions: string[] = [`e.team_id = $1`];
+    const values: any[] = [teamId];
+
+    let paramIndex = 2;
+
+    if (search) {
+      conditions.push(`
+      (
+        u.name ILIKE $${paramIndex}
+        OR e.event_type ILIKE $${paramIndex}
+        OR e.entity_type ILIKE $${paramIndex}
+      )
+    `);
+
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    if (type && type !== "all") {
+      conditions.push(`e.event_type ILIKE $${paramIndex}`);
+      values.push(`%${type}%`);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.join(" AND ");
+
+    const totalResult = await this.db.query(
+      `
+    SELECT COUNT(*) as total
+    FROM events e
+    LEFT JOIN users u ON u.id = e.user_id
+    WHERE ${whereClause}
+    `,
+      values,
+    );
+
+    const total = Number(totalResult.rows[0]?.total || 0);
+
+    values.push(safeLimit);
+    values.push(offset);
+
+    const result = await this.db.query(
+      `
+    SELECT
+      e.id,
+      e.event_type as "eventType",
+      e.entity_type as "entityType",
+      e.metadata,
+      e.created_at as "createdAt",
+      u.name as "userName",
+      u.email as "userEmail",
+      u.avatar_url as avatar
+    FROM events e
+    LEFT JOIN users u ON u.id = e.user_id
+    WHERE ${whereClause}
+    ORDER BY e.created_at DESC
+    LIMIT $${paramIndex}
+    OFFSET $${paramIndex + 1}
+    `,
+      values,
+    );
+
+    const data = result.rows.map((item: any) => {
+      let message = "";
+
+      switch (item.eventType) {
+        case "team.member_added":
+          message = `${item.userName || "Someone"} invited a new team member`;
+          break;
+
+        case "team.member_removed":
+          message = `${item.userName || "Someone"} removed a team member`;
+          break;
+
+        case "user.logged_in":
+          message = `${item.userName || "Someone"} logged in`;
+          break;
+
+        case "property.created":
+          message = `${item.userName || "Someone"} created a new property`;
+          break;
+
+        case "lead.updated":
+          message = `${item.userName || "Someone"} updated a lead`;
+          break;
+
+        case "lead.status_changed":
+          message = `${item.userName || "Someone"} changed the lead status`;
+          break;
+
+        default:
+          message = `${item.userName || "Someone"} ${String(
+            item.eventType || "updated activity",
+          )
+            .replaceAll("_", " ")
+            .replaceAll(".", " ")
+            .toLowerCase()}`;
+      }
+
+      return {
+        ...item,
+        message,
+        time: this.formatTimeAgo(item.createdAt),
+      };
+    });
+
+    return {
+      data,
+      pagination: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+        hasNextPage: safePage < Math.ceil(total / safeLimit),
+        hasPrevPage: safePage > 1,
+      },
+    };
+  }
   async getAIInsights(teamId: string) {
     return this.aiInsightsService.generate(teamId);
   }
