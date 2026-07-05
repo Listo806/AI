@@ -1274,8 +1274,8 @@ export class TeamsService {
     dateTo?: string;
     sort?: string;
   }) {
-    const safePage = Math.max(1, page);
-    const safeLimit = Math.min(100, Math.max(1, limit));
+    const safePage = Math.max(1, Number(page || 1));
+    const safeLimit = Math.min(100, Math.max(1, Number(limit || 20)));
     const offset = (safePage - 1) * safeLimit;
 
     const conditions: string[] = [`e.team_id = $1`];
@@ -1283,58 +1283,50 @@ export class TeamsService {
 
     let paramIndex = 2;
 
+    if (userId) {
+      conditions.push(`e.user_id = $${paramIndex}`);
+      values.push(userId);
+      paramIndex++;
+    }
+
+    if (dateFrom) {
+      conditions.push(`e.created_at >= $${paramIndex}`);
+      values.push(dateFrom);
+      paramIndex++;
+    }
+
+    if (dateTo) {
+      conditions.push(`e.created_at <= $${paramIndex}`);
+      values.push(dateTo);
+      paramIndex++;
+    }
+
     if (search) {
-      if (userId) {
-        conditions.push(`e.user_id=$${paramIndex}`);
-        values.push(userId);
-        paramIndex++;
-      }
-
-      if (dateFrom) {
-        conditions.push(`e.created_at >= $${paramIndex}`);
-        values.push(dateFrom);
-        paramIndex++;
-      }
-
-      if (dateTo) {
-        conditions.push(`e.created_at <= $${paramIndex}`);
-        values.push(dateTo);
-        paramIndex++;
-      }
       conditions.push(`
       (
         u.name ILIKE $${paramIndex}
+        OR u.email ILIKE $${paramIndex}
         OR e.event_type ILIKE $${paramIndex}
         OR e.entity_type ILIKE $${paramIndex}
       )
     `);
-
       values.push(`%${search}%`);
       paramIndex++;
     }
 
     if (type && type !== "all") {
-      conditions.push(`e.event_type ILIKE $${paramIndex}`);
+      conditions.push(`
+      (
+        e.event_type ILIKE $${paramIndex}
+        OR e.entity_type ILIKE $${paramIndex}
+      )
+    `);
       values.push(`%${type}%`);
       paramIndex++;
     }
 
     const whereClause = conditions.join(" AND ");
 
-    const totalResult = await this.db.query(
-      `
-    SELECT COUNT(*) as total
-    FROM events e
-    LEFT JOIN users u ON u.id = e.user_id
-    WHERE ${whereClause}
-    `,
-      values,
-    );
-
-    const total = Number(totalResult.rows[0]?.total || 0);
-    const stats = await this.getActivityStats(teamId);
-    values.push(safeLimit);
-    values.push(offset);
     let orderBy = "e.created_at DESC";
 
     switch (sort) {
@@ -1361,6 +1353,22 @@ export class TeamsService {
       default:
         orderBy = "e.created_at DESC";
     }
+
+    const totalResult = await this.db.query(
+      `
+    SELECT COUNT(*) as total
+    FROM events e
+    LEFT JOIN users u ON u.id = e.user_id
+    WHERE ${whereClause}
+    `,
+      values,
+    );
+
+    const total = Number(totalResult.rows[0]?.total || 0);
+    const stats = await this.getActivityStats(teamId);
+
+    const queryValues = [...values, safeLimit, offset];
+
     const result = await this.db.query(
       `
     SELECT
@@ -1375,26 +1383,11 @@ export class TeamsService {
     FROM events e
     LEFT JOIN users u ON u.id = e.user_id
     WHERE ${whereClause}
-      let orderBy="e.created_at DESC";
-      switch(sort){
-      case "createdAt:asc":
-      orderBy="e.created_at ASC";
-      break;
-      case "user:asc":
-      orderBy="u.name ASC";
-      break;
-      case "user:desc":
-      orderBy="u.name DESC";
-      break;
-      case "type:asc":
-      orderBy="e.event_type ASC";
-      break;
-      }
     ORDER BY ${orderBy}
     LIMIT $${paramIndex}
     OFFSET $${paramIndex + 1}
     `,
-      values,
+      queryValues,
     );
 
     const data = result.rows.map((item: any) => {
@@ -1456,6 +1449,8 @@ export class TeamsService {
       };
     });
 
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+
     return {
       stats,
       data,
@@ -1463,8 +1458,8 @@ export class TeamsService {
         total,
         page: safePage,
         limit: safeLimit,
-        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
-        hasNextPage: safePage < Math.ceil(total / safeLimit),
+        totalPages,
+        hasNextPage: safePage < totalPages,
         hasPrevPage: safePage > 1,
       },
     };
