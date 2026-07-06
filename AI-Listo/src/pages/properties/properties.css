@@ -1326,7 +1326,102 @@ body #root .properties-page .card-actions-trigger {
 .properties-page .properties-list-view .agent-footer {
   margin-top: 16px;
 }
+.properties-page .property-image-uploader {
+  border: 1px dashed #cbd5e1;
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 14px;
+}
 
+.properties-page .image-uploader-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.properties-page .image-uploader-header h4 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.properties-page .image-uploader-header p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.properties-page .image-upload-btn {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.properties-page .image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.properties-page .image-preview-item {
+  position: relative;
+  height: 105px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #e2e8f0;
+  border: 1px solid #e2e8f0;
+}
+
+.properties-page .image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.properties-page .image-preview-actions {
+  position: absolute;
+  inset: auto 6px 6px 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.properties-page .image-preview-actions button {
+  flex: 1;
+  border: 0;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 4px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.properties-page .image-preview-actions button.danger {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.properties-page .cover-badge,
+.properties-page .new-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  border-radius: 999px;
+  padding: 4px 7px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.properties-page .cover-badge {
+  background: #2563eb;
+}
+
+.properties-page .new-badge {
+  background: #16a34a;
+}
 @media (max-width: 768px) {
   .properties-page .properties-list-view .property-card {
     grid-template-columns: 1fr;

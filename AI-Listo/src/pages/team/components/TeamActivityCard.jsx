@@ -35,9 +35,6 @@ export default function TeamActivityCard({ activity }) {
           <div className="team-empty-state">No recent activity</div>
         )}
       </div>
-      <div className="team-activity-footer">
-        <button className="team-activity-view-btn">View All Activity</button>
-      </div>
     </div>
   );
 }

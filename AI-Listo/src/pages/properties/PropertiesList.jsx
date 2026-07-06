@@ -8,6 +8,10 @@ import {
   deleteProperty,
   updateProperty,
   getPropertyById,
+  getPropertyMedia,
+  uploadPropertyImage,
+  deletePropertyMedia,
+  setPropertyThumbnail,
 } from "../../api/propertiesApi";
 import { useNavigate } from "react-router-dom";
 import {
@@ -55,6 +59,9 @@ export default function PropertiesPage() {
   const [propertyModalOpen, setPropertyModalOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState(null);
   const [savingProperty, setSavingProperty] = useState(false);
+  const [propertyImages, setPropertyImages] = useState([]);
+  const [existingMedia, setExistingMedia] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   const [city, setCity] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -126,10 +133,12 @@ export default function PropertiesPage() {
   const openAddPropertyModal = () => {
     setEditingProperty(null);
     setPropertyForm(defaultPropertyForm);
+    setPropertyImages([]);
+    setExistingMedia([]);
     setPropertyModalOpen(true);
   };
 
-  const openEditPropertyModal = (property) => {
+  const openEditPropertyModal = async (property) => {
     setEditingProperty(property);
 
     setPropertyForm({
@@ -148,13 +157,97 @@ export default function PropertiesPage() {
       squareFeet: property.squareFeet || "",
     });
 
+    setPropertyImages([]);
+    setExistingMedia([]);
     setPropertyModalOpen(true);
+
+    try {
+      const media = await getPropertyMedia(property.id);
+      setExistingMedia(Array.isArray(media) ? media : []);
+    } catch (error) {
+      console.error("Load property media failed:", error);
+    }
   };
 
   const closePropertyModal = () => {
     setPropertyModalOpen(false);
     setEditingProperty(null);
     setPropertyForm(defaultPropertyForm);
+    setPropertyImages([]);
+    setExistingMedia([]);
+  };
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+
+    const imageFiles = files.filter((file) =>
+      ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+    );
+
+    setPropertyImages((prev) => [...prev, ...imageFiles].slice(0, 20));
+  };
+
+  const removeSelectedImage = (index) => {
+    setPropertyImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadImagesForProperty = async (propertyId) => {
+    if (!propertyImages.length) return null;
+
+    setUploadingImages(true);
+
+    try {
+      let firstUploadedUrl = null;
+
+      for (const file of propertyImages) {
+        const media = await uploadPropertyImage(propertyId, file);
+        const mediaUrl = media?.url || media?.data?.url;
+
+        if (!firstUploadedUrl && mediaUrl) {
+          firstUploadedUrl = mediaUrl;
+        }
+      }
+
+      if (firstUploadedUrl) {
+        await setPropertyThumbnail(propertyId, firstUploadedUrl);
+      }
+
+      return firstUploadedUrl;
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleDeleteExistingMedia = async (media) => {
+    if (!editingProperty?.id || !media?.id) return;
+
+    if (!window.confirm("Delete this image?")) return;
+
+    try {
+      await deletePropertyMedia(editingProperty.id, media.id);
+
+      setExistingMedia((prev) => prev.filter((item) => item.id !== media.id));
+
+      if (editingProperty.thumbnailUrl === media.url) {
+        await setPropertyThumbnail(editingProperty.id, null);
+      }
+
+      await loadProperties(null, page);
+    } catch (error) {
+      console.error("Delete property media failed:", error);
+    }
+  };
+
+  const handleSetThumbnail = async (media) => {
+    if (!editingProperty?.id || !media?.url) return;
+
+    try {
+      await setPropertyThumbnail(editingProperty.id, media.url);
+      setEditingProperty((prev) => ({ ...prev, thumbnailUrl: media.url }));
+      await loadProperties(null, page);
+    } catch (error) {
+      console.error("Set thumbnail failed:", error);
+    }
   };
 
   const handleSubmitProperty = async (e) => {
@@ -182,10 +275,16 @@ export default function PropertiesPage() {
     try {
       setSavingProperty(true);
 
+      let savedProperty;
+
       if (editingProperty?.id) {
-        await updateProperty(editingProperty.id, payload);
+        savedProperty = await updateProperty(editingProperty.id, payload);
       } else {
-        await createProperty(payload);
+        savedProperty = await createProperty(payload);
+      }
+
+      if (savedProperty?.id && propertyImages.length) {
+        await uploadImagesForProperty(savedProperty.id);
       }
 
       closePropertyModal();
@@ -1647,7 +1746,82 @@ export default function PropertiesPage() {
                   }))
                 }
               />
+              <div className="property-image-uploader">
+                <div className="image-uploader-header">
+                  <div>
+                    <h4>Property Images</h4>
+                    <p>Upload JPG, PNG, or WebP images. Max 20 images.</p>
+                  </div>
 
+                  <label className="btn btn-secondary image-upload-btn">
+                    <Plus size={14} />
+                    Add Images
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      hidden
+                      onChange={handleImageSelect}
+                    />
+                  </label>
+                </div>
+
+                {existingMedia.length > 0 && (
+                  <div className="image-preview-grid">
+                    {existingMedia.map((media) => (
+                      <div className="image-preview-item" key={media.id}>
+                        <img src={media.url} alt="Property media" />
+
+                        <div className="image-preview-actions">
+                          <button
+                            type="button"
+                            onClick={() => handleSetThumbnail(media)}
+                          >
+                            Set Cover
+                          </button>
+
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => handleDeleteExistingMedia(media)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+
+                        {editingProperty?.thumbnailUrl === media.url && (
+                          <span className="cover-badge">Cover</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {propertyImages.length > 0 && (
+                  <div className="image-preview-grid">
+                    {propertyImages.map((file, index) => (
+                      <div
+                        className="image-preview-item"
+                        key={`${file.name}-${index}`}
+                      >
+                        <img src={URL.createObjectURL(file)} alt={file.name} />
+
+                        <div className="image-preview-actions">
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => removeSelectedImage(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+
+                        <span className="new-badge">New</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="modal-actions">
                 <button
                   type="button"
@@ -1660,9 +1834,9 @@ export default function PropertiesPage() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={savingProperty}
+                  disabled={savingProperty || uploadingImages}
                 >
-                  {savingProperty
+                  {savingProperty || uploadingImages
                     ? "Saving..."
                     : editingProperty
                       ? "Save Changes"
