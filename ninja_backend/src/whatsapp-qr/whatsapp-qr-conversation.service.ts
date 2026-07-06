@@ -491,31 +491,11 @@ export class WhatsAppQrConversationService {
 
     const stats = [
       {
-        label: "Connected Accounts",
-        value: Number(connectedAccounts.rows[0]?.total || 0),
-        subtext:
-          Number(connectedAccounts.rows[0]?.total || 0) > 0
-            ? "● Device connected"
-            : "● No device",
-        className:
-          Number(connectedAccounts.rows[0]?.total || 0) > 0
-            ? "text-green"
-            : "text-red",
-        iconKey: "smartphone",
-      },
-      {
         label: "Active Conversations",
         value: totalConversations,
         subtext: weeklyTrend.text,
         className: weeklyTrend.className,
         iconKey: "message",
-      },
-      {
-        label: "Unread Conversations",
-        value: unreadConversations,
-        subtext: unreadConversations > 0 ? "Need attention" : "Inbox clear",
-        className: unreadConversations > 0 ? "text-red" : "text-green",
-        iconKey: "unread",
       },
       {
         label: "AI Replies Today",
@@ -537,13 +517,6 @@ export class WhatsAppQrConversationService {
         subtext: "AI-assisted replies",
         className: "text-green",
         iconKey: "clock",
-      },
-      {
-        label: "WhatsApp Close Rate",
-        value: totalConversations ? "28.6%" : "0%",
-        subtext: "Lead-to-close",
-        className: "text-green",
-        iconKey: "trend",
       },
     ];
 
