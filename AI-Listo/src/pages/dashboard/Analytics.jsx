@@ -113,7 +113,12 @@ export default function CortexaAnalyticsDashboard() {
   const convRate = leadsInPeriod > 0 ? Math.round((convertedInPeriod / leadsInPeriod) * 100) : null;
 
   const delta = (cur, prev) => {
-    if (!compare || cur == null || prev == null || prev === 0) return null;
+    if (!compare || cur == null) return null;
+    // No comparable value in the previous period: still show a comparison marker
+    // for the selected range rather than leaving the card without one.
+    if (prev == null || prev === 0) {
+      return cur > 0 ? { text: "new", up: true } : null;
+    }
     const d = Math.round(((cur - prev) / Math.abs(prev)) * 100);
     return { text: `${Math.abs(d)}%`, up: d >= 0 };
   };

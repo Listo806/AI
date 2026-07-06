@@ -156,7 +156,12 @@ export default function CortexaDashboard() {
       ? Math.round(((P.leadSources || []).reduce((s, x) => s + x.converted, 0) / prevLeadsInPeriod) * 100)
       : null;
   const vsPrev = (cur, prev) => {
-    if (cur == null || prev == null || prev === 0) return {};
+    if (cur == null) return {};
+    // No comparable value in the previous period: still surface a comparison
+    // marker per selected range instead of rendering the tile without one.
+    if (prev == null || prev === 0) {
+      return cur > 0 ? { delta: "new vs prev", positive: true } : {};
+    }
     const d = Math.round(((cur - prev) / Math.abs(prev)) * 100);
     return { delta: `${Math.abs(d)}% vs prev`, positive: d >= 0 };
   };
