@@ -170,12 +170,15 @@ export default function CortexaDashboard() {
     return { delta: `${Math.abs(d)}% vs prev`, positive: invert ? d <= 0 : d >= 0 };
   };
   const wonInPeriod = (trendsData.revenueByDay || []).reduce((s, d) => s + d.value, 0);
-  // Conversion Rate = closed-won deals / total leads in the period, matching the
-  // "N closed won" figure shown on the Won Revenue card. (Previously used
-  // lead-source "converted" counts, which didn't match the won-deal count.)
+  // Conversion Rate = closed-won deals / total leads. Uses the cumulative total
+  // lead count (not the period's new-lead count) as the denominator: won deals
+  // are a cumulative figure, so dividing by a short period's new leads can
+  // exceed 100% (e.g. 8 won / 2 new-this-week = 400%). Total leads keeps it a
+  // real 0-100% lead-to-customer rate that matches the "N closed won" figure.
   const wonCountInPeriod = Number(byStage.won) || 0;
+  const totalLeadsAll = Number(sLeads.total) || totalLeadsInPeriod || 0;
   const convRate =
-    totalLeadsInPeriod > 0 ? Math.round((wonCountInPeriod / totalLeadsInPeriod) * 100) : null;
+    totalLeadsAll > 0 ? Math.round((wonCountInPeriod / totalLeadsAll) * 100) : null;
   // Single consistent label for every period-based figure, so cards don't mix
   // "current" / "this period" / "last 30 days". Snapshot cards (current pipeline
   // etc.) keep "current" on purpose.
@@ -224,11 +227,10 @@ export default function CortexaDashboard() {
     {
       title: "Conversion Rate",
       value: convRate != null ? `${convRate}%` : "—",
-      subtext: `${wonCountInPeriod} won / ${totalLeadsInPeriod} leads`,
+      subtext: `${wonCountInPeriod} won / ${totalLeadsAll} leads`,
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
-      intime: periodLabel,
-      ...vsPrev(convRate, prevConvRate),
+      intime: "overall",
     },
     {
       title: "Properties",
