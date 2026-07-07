@@ -42,6 +42,19 @@ export interface QrConversationListItem {
   lead_name: string | null;
   last_message_type: "ai" | "human" | "system" | null;
   last_action_label: string | null;
+    last_message: string | null;
+
+  lead_status: string | null;
+  lead_priority: string | null;
+  lead_source: string | null;
+
+  assigned_agent_name: string | null;
+  assigned_agent_email: string | null;
+
+  property_title: string | null;
+  property_city: string | null;
+  property_state: string | null;
+  property_price: number | string | null;
 }
 
 @Injectable()
@@ -158,14 +171,41 @@ export class WhatsAppQrConversationService {
     );
 
     const { rows } = await this.db.query(
-      `SELECT c.id, c.session_id, c.lead_id, c.contact_phone, c.owner_type, c.ai_enabled,
-              c.last_message_at, c.unread_count, c.status, c.property_id, c.user_id AS qr_user_id,
-              l.name AS lead_name
-       FROM whatsapp_qr_conversations c
-       INNER JOIN leads l ON l.id = c.lead_id
-       WHERE ${clause}
-       ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC
-       LIMIT 200`,
+      `SELECT
+              c.id,
+              c.session_id,
+              c.lead_id,
+              c.contact_phone,
+              c.owner_type,
+              c.ai_enabled,
+              c.last_message_at,
+              c.last_message,
+              c.last_message_type,
+              c.unread_count,
+              c.status,
+              c.property_id,
+              c.user_id AS qr_user_id,
+
+              l.name AS lead_name,
+              l.status AS lead_status,
+              l.priority AS lead_priority,
+              l.source AS lead_source,
+
+              u.name AS assigned_agent_name,
+              u.email AS assigned_agent_email,
+
+              p.title AS property_title,
+              p.city AS property_city,
+              p.state AS property_state,
+              p.price AS property_price
+
+      FROM whatsapp_qr_conversations c
+      INNER JOIN leads l ON l.id = c.lead_id
+      LEFT JOIN users u ON u.id = l.assigned_to
+      LEFT JOIN properties p ON p.id = COALESCE(c.property_id, l.property_id)
+      WHERE ${clause}
+      ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC
+      LIMIT 200`,
       params,
     );
 
@@ -199,24 +239,44 @@ export class WhatsAppQrConversationService {
       senderByConv.set(r.conversation_id, r.sender_type);
     }
 
-    return rows.map((r: any) => ({
-      id: r.id,
-      session_id: r.session_id,
-      lead_id: r.lead_id,
-      contact_phone: r.contact_phone,
-      owner_type: r.owner_type,
-      ai_enabled: r.ai_enabled,
-      last_activity_at: r.last_message_at
-        ? new Date(r.last_message_at).toISOString()
-        : null,
-      unread_count: r.unread_count,
-      status: r.status,
-      property_id: r.property_id ?? null,
-      qr_user_id: r.qr_user_id,
-      lead_name: r.lead_name ?? null,
-      last_message_type: mapSenderToLastMessageType(senderByConv.get(r.id)),
-      last_action_label: labels.get(r.lead_id) ?? null,
-    }));
+    return rows.map((r: any) => {
+      const mappedSenderType = mapSenderToLastMessageType(
+        senderByConv.get(r.id),
+      );
+
+      return {
+        id: r.id,
+        session_id: r.session_id,
+        lead_id: r.lead_id,
+        contact_phone: r.contact_phone,
+        owner_type: r.owner_type,
+        ai_enabled: r.ai_enabled,
+        last_activity_at: r.last_message_at
+          ? new Date(r.last_message_at).toISOString()
+          : null,
+        unread_count: Number(r.unread_count || 0),
+        status: r.status,
+        property_id: r.property_id ?? null,
+        qr_user_id: r.qr_user_id,
+
+        lead_name: r.lead_name ?? null,
+        lead_status: r.lead_status ?? null,
+        lead_priority: r.lead_priority ?? null,
+        lead_source: r.lead_source ?? null,
+
+        assigned_agent_name: r.assigned_agent_name ?? "Unassigned",
+        assigned_agent_email: r.assigned_agent_email ?? null,
+
+        property_title: r.property_title ?? null,
+        property_city: r.property_city ?? null,
+        property_state: r.property_state ?? null,
+        property_price: r.property_price ?? null,
+
+        last_message: r.last_message ?? null,
+        last_message_type: mappedSenderType,
+        last_action_label: labels.get(r.lead_id) ?? null,
+      };
+    });
   }
 
   async findByUserAndPhone(
@@ -482,6 +542,7 @@ export class WhatsAppQrConversationService {
         score,
         tag,
         lastMessage:
+          item.last_message ||
           item.last_action_label ||
           (item.last_message_type
             ? `${item.last_message_type} message`
@@ -538,25 +599,18 @@ export class WhatsAppQrConversationService {
         iconKey: "bot",
       },
       {
-        label: "Appointments",
+        label: "Appointments Booked",
         value: appointmentsBooked.rows[0].total,
         subtext: "Booked today",
         className: "text-green",
         iconKey: "calendar",
       },
       {
-        label: "Avg Response",
+        label: "Avg Response Time",
         value: `${avgResponseSeconds.rows[0].avg || 0}s`,
         subtext: "AI + Human",
         className: "text-green",
         iconKey: "clock",
-      },
-      {
-        label: "AI Status",
-        value: aiHandled,
-        subtext: `${humanHandled} Human`,
-        className: "text-purple",
-        iconKey: "bot",
       },
     ];
 
