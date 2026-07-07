@@ -42,7 +42,7 @@ export interface QrConversationListItem {
   lead_name: string | null;
   last_message_type: "ai" | "human" | "system" | null;
   last_action_label: string | null;
-    last_message: string | null;
+  last_message: string | null;
 
   lead_status: string | null;
   lead_priority: string | null;
@@ -649,7 +649,18 @@ export class WhatsAppQrConversationService {
     contactPhone: string,
   ) {
     const conv = await this.findScopedByContactPhone(user, contactPhone);
+    const { rows: convRows } = await this.db.query(
+      `
+      SELECT
+          property_id
+      FROM whatsapp_qr_conversations
+      WHERE id = $1
+      LIMIT 1
+      `,
+      [conv.id],
+    );
 
+    const conversationPropertyId = convRows[0]?.property_id ?? null;
     if (!conv) {
       return {
         score: 0,
@@ -696,7 +707,9 @@ export class WhatsAppQrConversationService {
 
     let property: any = null;
 
-    if (leadRows[0]?.property_id) {
+    const propertyId = leadRows[0]?.property_id || conversationPropertyId;
+
+    if (propertyId) {
       const { rows: propertyRows } = await this.db.query(
         `
     SELECT
@@ -716,7 +729,7 @@ export class WhatsAppQrConversationService {
     WHERE id = $1
     LIMIT 1
     `,
-        [leadRows[0].property_id],
+        [propertyId],
       );
 
       property = propertyRows[0] || null;
@@ -802,6 +815,26 @@ Rules:
       const parsed = JSON.parse(response.output_text || "{}");
 
       return {
+        lead: {
+          id: leadRows[0]?.id ?? null,
+          name: leadRows[0]?.name ?? null,
+          phone: leadRows[0]?.phone ?? null,
+          email: leadRows[0]?.email ?? null,
+          status: leadRows[0]?.status ?? null,
+          priority: leadRows[0]?.priority ?? null,
+          source: leadRows[0]?.source ?? null,
+        },
+
+        property: property
+          ? {
+              id: property.id,
+              title: property.title,
+              city: property.city,
+              state: property.state,
+              price: property.price,
+              type: property.type,
+            }
+          : null,
         score: Number(parsed.score || 0),
         sentiment: parsed.sentiment || "Unknown",
         intent: parsed.intent || "Unknown",
@@ -828,6 +861,26 @@ Rules:
       });
 
       return {
+        lead: {
+          id: leadRows[0]?.id ?? null,
+          name: leadRows[0]?.name ?? null,
+          phone: leadRows[0]?.phone ?? null,
+          email: leadRows[0]?.email ?? null,
+          status: leadRows[0]?.status ?? null,
+          priority: leadRows[0]?.priority ?? null,
+          source: leadRows[0]?.source ?? null,
+        },
+
+        property: property
+          ? {
+              id: property.id,
+              title: property.title,
+              city: property.city,
+              state: property.state,
+              price: property.price,
+              type: property.type,
+            }
+          : null,
         score: fallbackScore,
         sentiment: fallbackScore >= 60 ? "Positive" : "Neutral",
         intent:

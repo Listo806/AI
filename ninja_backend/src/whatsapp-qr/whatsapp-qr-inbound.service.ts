@@ -1,14 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '../config/config.service';
-import { DatabaseService } from '../database/database.service';
-import { normalizeToE164 } from './utils/phone-normalize.util';
-import { parseWaMessage } from './utils/message-parser.util';
-import { WhatsAppQrConversationService } from './whatsapp-qr-conversation.service';
-import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
-import { WhatsAppQrIntentService } from './whatsapp-qr-intent.service';
-import { WhatsAppQrRoutingService } from './whatsapp-qr-routing.service';
-import { WhatsAppQrAiReplyService } from './whatsapp-qr-ai-reply.service';
-import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "../config/config.service";
+import { DatabaseService } from "../database/database.service";
+import { normalizeToE164 } from "./utils/phone-normalize.util";
+import { parseWaMessage } from "./utils/message-parser.util";
+import { WhatsAppQrConversationService } from "./whatsapp-qr-conversation.service";
+import { WhatsAppQrMessageService } from "./whatsapp-qr-message.service";
+import { WhatsAppQrIntentService } from "./whatsapp-qr-intent.service";
+import { WhatsAppQrRoutingService } from "./whatsapp-qr-routing.service";
+import { WhatsAppQrAiReplyService } from "./whatsapp-qr-ai-reply.service";
+import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
 
 /**
  * Baileys messages.upsert → normalize → lead find/create → QR conversation → message row
@@ -40,7 +40,7 @@ export class WhatsAppQrInboundService {
     type: string,
   ): Promise<void> {
     // notify = new messages; append = sometimes used for live — process both
-    if (type !== 'notify' && type !== 'append') return;
+    if (type !== "notify" && type !== "append") return;
     for (const msg of baileysMessages) {
       try {
         await this.handleOneMessage(userId, sessionId, msg);
@@ -48,6 +48,21 @@ export class WhatsAppQrInboundService {
         this.logger.warn(`QR inbound handle error: ${e?.message}`);
       }
     }
+  }
+
+  private extractPropertyIdFromMessage(
+    text: string | null | undefined,
+  ): string | null {
+    const match = String(text || "").match(/\[pid:([0-9a-fA-F-]{36})\]/);
+    return match?.[1] || null;
+  }
+
+  private cleanPropertyTags(text: string | null | undefined): string {
+    return String(text || "")
+      .replace(/\[flow:property\]/gi, "")
+      .replace(/\[pid:[0-9a-fA-F-]{36}\]/gi, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   private async handleOneMessage(
@@ -68,13 +83,30 @@ export class WhatsAppQrInboundService {
       userId,
     );
 
+    const propertyIdFromMessage = this.extractPropertyIdFromMessage(
+      parsed.body,
+    );
+    const cleanBody = this.cleanPropertyTags(parsed.body);
+
+    if (propertyIdFromMessage && !lead.property_id) {
+      await this.db.query(
+        `
+    UPDATE leads
+    SET property_id = $1, updated_at = NOW()
+    WHERE id = $2
+    `,
+        [propertyIdFromMessage, lead.id],
+      );
+
+      lead.property_id = propertyIdFromMessage;
+    }
     const { row: conv } = await this.conversations.getOrCreate({
       sessionId,
       userId,
       teamId: lead.team_id,
       leadId: lead.id,
       contactPhone: parsed.contactPhoneE164,
-      propertyId: lead.property_id ?? null,
+      propertyId: lead.property_id || propertyIdFromMessage || null,
     });
 
     const inserted = await this.messages.insertInbound({
@@ -83,7 +115,7 @@ export class WhatsAppQrInboundService {
       leadId: lead.id,
       teamId: lead.team_id,
       contactPhone: parsed.contactPhoneE164,
-      body: parsed.body || null,
+      body: cleanBody || parsed.body || null,
       messageId: parsed.messageId,
       messageType: parsed.messageType,
     });
@@ -93,14 +125,14 @@ export class WhatsAppQrInboundService {
       userId,
       conversationId: conv.id,
       contactPhone: parsed.contactPhoneE164,
-      direction: 'inbound',
-      senderType: 'lead',
-      body: parsed.body || null,
+      direction: "inbound",
+      senderType: "lead",
+      body: cleanBody || parsed.body || null,
       messageType: parsed.messageType,
       createdAt: new Date().toISOString(),
     });
 
-    const intent = this.intents.detectFromText(parsed.body);
+    const intent = this.intents.detectFromText(cleanBody);
     if (intent) {
       await this.intents.logIntent({
         qrConversationId: conv.id,
@@ -108,9 +140,9 @@ export class WhatsAppQrInboundService {
         intentType: intent.intent_type,
         confidence: intent.confidence,
       });
-      if (intent.intent_type === 'agent_request') {
+      if (intent.intent_type === "agent_request") {
         await this.conversations.setOwnerHuman(conv.id);
-        conv.owner_type = 'human';
+        conv.owner_type = "human";
         conv.ai_enabled = false;
       }
     }
@@ -121,16 +153,20 @@ export class WhatsAppQrInboundService {
       [lead.id],
     );
 
-    const { action } = await this.routing.route(conv, parsed.body);
-    if (action === 'reply_ai') {
-      await this.aiReply.replyIfEnabled(conv.id, lead.id, parsed.contactPhoneE164);
+    const { action } = await this.routing.route(conv, cleanBody);
+    if (action === "reply_ai") {
+      await this.aiReply.replyIfEnabled(
+        conv.id,
+        lead.id,
+        parsed.contactPhoneE164,
+      );
     } else if (lead.team_id) {
       await this.logAiActivity(
         lead.team_id,
-        'escalated',
+        "escalated",
         lead.id,
-        'whatsapp_qr',
-        'notify_agent',
+        "whatsapp_qr",
+        "notify_agent",
       );
     }
   }
@@ -143,17 +179,61 @@ export class WhatsAppQrInboundService {
     phone: string,
     profileName?: string,
     sessionUserId?: string,
-  ): Promise<{ id: string; team_id: string | null; property_id: string | null }> {
+  ): Promise<{
+    id: string;
+    team_id: string | null;
+    property_id: string | null;
+  }> {
     const { rows: existing } = await this.db.query(
-      `SELECT id, team_id, property_id FROM leads WHERE phone = $1 ORDER BY created_at DESC LIMIT 1`,
+      `SELECT
+
+      id,
+      team_id,
+      property_id
+      FROM leads
+      WHERE phone=$1
+      ORDER BY
+      CASE
+      WHEN property_id IS NOT NULL THEN 0
+      ELSE 1
+      END,
+      created_at DESC
+      LIMIT 1`,
       [phone],
     );
-    if (existing.length)
+    if (existing.length) {
+      if (!existing[0].property_id) {
+        const { rows: latestProperty } = await this.db.query(
+          `
+          SELECT property_id
+          FROM leads
+          WHERE phone=$1
+          AND property_id IS NOT NULL
+          ORDER BY created_at DESC
+          LIMIT 1
+          `,
+          [phone],
+        );
+
+        if (latestProperty.length) {
+          await this.db.query(
+            `
+            UPDATE leads
+            SET property_id=$1
+            WHERE id=$2
+            `,
+            [latestProperty[0].property_id, existing[0].id],
+          );
+          existing[0].property_id = latestProperty[0].property_id;
+        }
+      }
+
       return {
         id: existing[0].id,
         team_id: existing[0].team_id,
-        property_id: existing[0].property_id ?? null,
+        property_id: existing[0].property_id,
       };
+    }
 
     let createdBy: string | null = null;
     let teamId: string | null = null;
@@ -168,7 +248,7 @@ export class WhatsAppQrInboundService {
       }
     }
     if (!createdBy) {
-      createdBy = this.config.get('WHATSAPP_FIRST_LEAD_CREATED_BY') || null;
+      createdBy = this.config.get("WHATSAPP_FIRST_LEAD_CREATED_BY") || null;
       if (createdBy) {
         const { rows: userRows } = await this.db.query(
           `SELECT team_id FROM users WHERE id = $1`,
@@ -186,17 +266,19 @@ export class WhatsAppQrInboundService {
       }
     }
     if (!createdBy) {
-      throw new Error('QR lead creation requires session user, WHATSAPP_FIRST_LEAD_CREATED_BY, or at least one user');
+      throw new Error(
+        "QR lead creation requires session user, WHATSAPP_FIRST_LEAD_CREATED_BY, or at least one user",
+      );
     }
 
-    const name = (profileName || '').trim() || 'WhatsApp Lead';
+    const name = (profileName || "").trim() || "WhatsApp Lead";
     const { rows } = await this.db.query(
       `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at, property_id)
        VALUES ($1, $2, 'new', $3, $4, 'whatsapp', 'whatsapp', NOW(), NOW(), NULL)
        RETURNING id, team_id`,
       [name, phone, createdBy, teamId],
     );
-    if (!rows.length) throw new Error('Failed to create lead');
+    if (!rows.length) throw new Error("Failed to create lead");
     const leadId = rows[0].id;
     if (teamId) {
       try {
