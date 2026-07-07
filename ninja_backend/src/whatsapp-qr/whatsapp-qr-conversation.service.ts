@@ -489,34 +489,74 @@ export class WhatsAppQrConversationService {
       };
     });
 
+    const appointmentsBooked = await this.db
+      .query(
+        `
+    SELECT COUNT(*)::int total
+    FROM appointments
+    WHERE team_id IS NOT DISTINCT FROM $1
+      AND created_at >= date_trunc('day', now())
+  `,
+        [user.teamId],
+      )
+      .catch(() => ({ rows: [{ total: 0 }] }));
+
+    const avgResponseSeconds = await this.db
+      .query(
+        `
+  SELECT
+  COALESCE(
+      ROUND(AVG(
+        EXTRACT(EPOCH FROM (
+            agent.created_at - lead.created_at
+        ))
+      )),0
+  ) avg
+  FROM whatsapp_qr_messages lead
+  JOIN whatsapp_qr_messages agent
+       ON agent.conversation_id=lead.conversation_id
+      AND agent.direction='outbound'
+      AND lead.direction='inbound'
+      AND agent.created_at>lead.created_at
+  `,
+      )
+      .catch(() => ({ rows: [{ avg: 0 }] }));
+
     const stats = [
       {
         label: "Active Conversations",
         value: totalConversations,
-        subtext: weeklyTrend.text,
-        className: weeklyTrend.className,
+        subtext: `${unreadConversations} unread`,
+        className: "text-blue",
         iconKey: "message",
       },
       {
         label: "AI Replies Today",
         value: Number(messageStats.aiRepliesToday || 0),
-        subtext: "Auto-reply activity",
-        className: "text-green",
+        subtext: weeklyTrend.text,
+        className: weeklyTrend.className,
         iconKey: "bot",
       },
       {
-        label: "Appointments Booked",
-        value: 0,
-        subtext: "Calendar sync pending",
-        className: "text-slate",
+        label: "Appointments",
+        value: appointmentsBooked.rows[0].total,
+        subtext: "Booked today",
+        className: "text-green",
         iconKey: "calendar",
       },
       {
-        label: "Avg Response Time",
-        value: totalConversations ? "14s" : "-",
-        subtext: "AI-assisted replies",
+        label: "Avg Response",
+        value: `${avgResponseSeconds.rows[0].avg || 0}s`,
+        subtext: "AI + Human",
         className: "text-green",
         iconKey: "clock",
+      },
+      {
+        label: "AI Status",
+        value: aiHandled,
+        subtext: `${humanHandled} Human`,
+        className: "text-purple",
+        iconKey: "bot",
       },
     ];
 
@@ -539,6 +579,13 @@ export class WhatsAppQrConversationService {
         aiHandled,
         humanHandled,
         messagesToday: Number(messageStats.messagesToday || 0),
+      },
+      aiStatus: {
+        active: aiHandled,
+        human: humanHandled,
+        conversationsToday: totalConversations,
+        appointmentsToday: appointmentsBooked.rows[0].total,
+        averageResponseTime: `${avgResponseSeconds.rows[0].avg || 0}s`,
       },
     };
   }

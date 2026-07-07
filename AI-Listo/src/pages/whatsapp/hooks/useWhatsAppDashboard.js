@@ -59,7 +59,7 @@ export function useWhatsAppDashboard() {
 
   const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiIntelligence, setAiIntelligence] = useState(null);
-
+  const [aiStatus,setAiStatus]=useState(null);
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -95,7 +95,7 @@ export function useWhatsAppDashboard() {
       setDashboardStats(Array.isArray(data.stats) ? data.stats : []);
       setDashboardSegments(data.segments || null);
       setConversations(normalized);
-
+      setAiStatus(data.aiStatus || null);    
       setSelectedConversation((prev) => {
         if (prev) {
           return (
@@ -413,5 +413,6 @@ export function useWhatsAppDashboard() {
     toggleSelectedAi,
     intelligenceLoading,
     aiIntelligence,
+    aiStatus,
   };
 }
