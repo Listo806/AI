@@ -152,8 +152,8 @@ export default function CortexaDashboard() {
   const prevLeadsInPeriod = ((P.trends || {}).leadsByDay || []).reduce((s, d) => s + d.count, 0);
   const prevWonInPeriod = ((P.trends || {}).revenueByDay || []).reduce((s, d) => s + d.value, 0);
   const prevConvRate =
-    prevLeadsInPeriod > 0 && (P.leadSources || []).length
-      ? Math.round(((P.leadSources || []).reduce((s, x) => s + x.converted, 0) / prevLeadsInPeriod) * 100)
+    prevLeadsInPeriod > 0
+      ? Math.round(((Number(prevByStage.won) || 0) / prevLeadsInPeriod) * 100)
       : null;
   const prevK = P.kpis || {};
   const prevWA = P.whatsapp || {};
@@ -170,12 +170,12 @@ export default function CortexaDashboard() {
     return { delta: `${Math.abs(d)}% vs prev`, positive: invert ? d <= 0 : d >= 0 };
   };
   const wonInPeriod = (trendsData.revenueByDay || []).reduce((s, d) => s + d.value, 0);
+  // Conversion Rate = closed-won deals / total leads in the period, matching the
+  // "N closed won" figure shown on the Won Revenue card. (Previously used
+  // lead-source "converted" counts, which didn't match the won-deal count.)
+  const wonCountInPeriod = Number(byStage.won) || 0;
   const convRate =
-    totalLeadsInPeriod > 0 && leadSourcesData.length
-      ? Math.round(
-          (leadSourcesData.reduce((s, x) => s + x.converted, 0) / totalLeadsInPeriod) * 100,
-        )
-      : null;
+    totalLeadsInPeriod > 0 ? Math.round((wonCountInPeriod / totalLeadsInPeriod) * 100) : null;
 
   const miniKpis = [
     {
@@ -220,7 +220,7 @@ export default function CortexaDashboard() {
     {
       title: "Conversion Rate",
       value: convRate != null ? `${convRate}%` : "—",
-      subtext: "leads to converted",
+      subtext: `${wonCountInPeriod} won / ${totalLeadsInPeriod} leads`,
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
       intime: "period",
