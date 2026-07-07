@@ -176,6 +176,10 @@ export default function CortexaDashboard() {
   const wonCountInPeriod = Number(byStage.won) || 0;
   const convRate =
     totalLeadsInPeriod > 0 ? Math.round((wonCountInPeriod / totalLeadsInPeriod) * 100) : null;
+  // Single consistent label for every period-based figure, so cards don't mix
+  // "current" / "this period" / "last 30 days". Snapshot cards (current pipeline
+  // etc.) keep "current" on purpose.
+  const periodLabel = (DATE_RANGES.find((r) => r.key === range) || {}).label?.toLowerCase() || "this period";
 
   const miniKpis = [
     {
@@ -184,7 +188,7 @@ export default function CortexaDashboard() {
       subtext: `${sLeads.total ?? 0} total leads`,
       icon: <Users size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
-      intime: (DATE_RANGES.find((r) => r.key === range) || {}).label?.toLowerCase() || "period",
+      intime: periodLabel,
       ...vsPrev(totalLeadsInPeriod, prevLeadsInPeriod),
     },
     {
@@ -214,7 +218,7 @@ export default function CortexaDashboard() {
       subtext: `${byStage.won ?? 0} closed won`,
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
-      intime: wonInPeriod ? "this period" : "to date",
+      intime: wonInPeriod ? periodLabel : "to date",
       ...vsPrev(wonInPeriod || null, prevWonInPeriod || null),
     },
     {
@@ -223,7 +227,7 @@ export default function CortexaDashboard() {
       subtext: `${wonCountInPeriod} won / ${totalLeadsInPeriod} leads`,
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
-      intime: "period",
+      intime: periodLabel,
       ...vsPrev(convRate, prevConvRate),
     },
     {
@@ -241,7 +245,7 @@ export default function CortexaDashboard() {
     {
       title: "First Response Time",
       value: fmtHours(K.speedToLeadHours),
-      intime: K.speedToLeadHours != null ? "avg this period" : "No data available",
+      intime: K.speedToLeadHours != null ? `avg, ${periodLabel}` : "No data available",
       icon: <Timer size={16} className="text-orange" />,
       ...vsPrev(K.speedToLeadHours, prevK.speedToLeadHours, true),
     },
@@ -279,7 +283,7 @@ export default function CortexaDashboard() {
     {
       title: "WhatsApp Response",
       value: String(WA.repliesPeriod ?? 0),
-      intime: "replies this period",
+      intime: `replies, ${periodLabel}`,
       icon: <MessageCircle size={16} className="text-green" />,
       ...vsPrev(WA.repliesPeriod, prevWA.repliesPeriod),
     },
