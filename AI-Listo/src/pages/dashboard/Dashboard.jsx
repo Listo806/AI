@@ -155,15 +155,19 @@ export default function CortexaDashboard() {
     prevLeadsInPeriod > 0 && (P.leadSources || []).length
       ? Math.round(((P.leadSources || []).reduce((s, x) => s + x.converted, 0) / prevLeadsInPeriod) * 100)
       : null;
-  const vsPrev = (cur, prev) => {
+  const prevK = P.kpis || {};
+  const prevWA = P.whatsapp || {};
+  // invert=true for metrics where a lower value is better (response time,
+  // days-to-close, revenue at risk) so a decrease reads as a positive delta.
+  const vsPrev = (cur, prev, invert = false) => {
     if (cur == null) return {};
     // No comparable value in the previous period: still surface a comparison
     // marker per selected range instead of rendering the tile without one.
     if (prev == null || prev === 0) {
-      return cur > 0 ? { delta: "new vs prev", positive: true } : {};
+      return cur > 0 ? { delta: "new vs prev", positive: !invert } : {};
     }
     const d = Math.round(((cur - prev) / Math.abs(prev)) * 100);
-    return { delta: `${Math.abs(d)}% vs prev`, positive: d >= 0 };
+    return { delta: `${Math.abs(d)}% vs prev`, positive: invert ? d <= 0 : d >= 0 };
   };
   const wonInPeriod = (trendsData.revenueByDay || []).reduce((s, d) => s + d.value, 0);
   const convRate =
@@ -239,6 +243,7 @@ export default function CortexaDashboard() {
       value: fmtHours(K.speedToLeadHours),
       intime: K.speedToLeadHours != null ? "avg this period" : "No data available",
       icon: <Timer size={16} className="text-orange" />,
+      ...vsPrev(K.speedToLeadHours, prevK.speedToLeadHours, true),
     },
     {
       title: "Follow-up Completion",
@@ -248,30 +253,35 @@ export default function CortexaDashboard() {
           ? `${K.followUp.completed}/${K.followUp.total} tasks`
           : "No data available",
       icon: <CheckCircle2 size={16} className="text-green" />,
+      ...vsPrev(K.followUp && K.followUp.pct, prevK.followUp && prevK.followUp.pct),
     },
     {
       title: "Lead Quality Score",
       value: K.avgLeadScore != null ? String(K.avgLeadScore) : "—",
       intime: K.avgLeadScore != null ? "avg AI score / 100" : "No data available",
       icon: <Award size={16} className="text-royal-blue" />,
+      ...vsPrev(K.avgLeadScore, prevK.avgLeadScore),
     },
     {
       title: "Pipeline Velocity",
       value: K.avgTimeToCloseDays != null ? `${Math.round(K.avgTimeToCloseDays)}d` : "—",
       intime: K.avgTimeToCloseDays != null ? "avg open → won" : "No data available",
       icon: <Activity size={16} className="text-purple" />,
+      ...vsPrev(K.avgTimeToCloseDays, prevK.avgTimeToCloseDays, true),
     },
     {
       title: "Revenue at Risk",
       value: money(K.revenueAtRisk),
       intime: "deals stalled 14d+",
       icon: <AlertTriangle size={16} className="text-red" />,
+      ...vsPrev(K.revenueAtRisk, prevK.revenueAtRisk, true),
     },
     {
       title: "WhatsApp Response",
       value: String(WA.repliesPeriod ?? 0),
       intime: "replies this period",
       icon: <MessageCircle size={16} className="text-green" />,
+      ...vsPrev(WA.repliesPeriod, prevWA.repliesPeriod),
     },
   ];
 
