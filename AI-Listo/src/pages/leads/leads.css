@@ -667,6 +667,8 @@ body .leads-page {
 
 .leads-page .chat-body {
   padding-right: 36px;
+  max-height: 450px;
+  overflow: auto;
 }
 
 .leads-page .message.right span {
@@ -1667,6 +1669,24 @@ body .leads-page {
   padding: 6px 12px;
   font-size: 12px;
   cursor: pointer;
+}
+.lead-sidebar {
+  max-height: calc(100vh + 36px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lead-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.lead-list .view-all-btn {
+  width: 100%;
+  margin: 10px 0;
 }
 @keyframes recordingPulse {
   0% {

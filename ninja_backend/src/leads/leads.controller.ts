@@ -159,13 +159,20 @@ export class LeadsController {
   @Get("dashboard")
   @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth("JWT-auth")
-  getDashboard(@Req() req: any, @Query("range") range = "30days") {
+  getDashboard(
+    @Req() req: any,
+    @Query("range") range = "30days",
+    @Query("page") page = "1",
+    @Query("limit") limit = "20",
+  ) {
     const user = req.user;
 
     return this.leadsService.getDashboard(
       user.id,
       user.teamId || user.team_id || null,
       range,
+      Number(page),
+      Number(limit),
     );
   }
   @Get("stats")

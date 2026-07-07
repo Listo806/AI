@@ -108,6 +108,11 @@ export default function LeadsPage() {
     priority: "low",
     notes: "",
   });
+
+  const [leadPage, setLeadPage] = useState(1);
+  const [leadHasMore, setLeadHasMore] = useState(false);
+  const [leadLoadingMore, setLeadLoadingMore] = useState(false);
+
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -889,44 +894,65 @@ export default function LeadsPage() {
       matchesAiView
     );
   });
-  const fetchDashboard = async () => {
+
+  const fetchDashboard = async (page = 1, append = false) => {
     try {
-      setLeadsLoading(true);
+      if (append) setLeadLoadingMore(true);
+      else setLeadsLoading(true);
 
       const response = await apiClient.request(
-        `/leads/dashboard?range=${dateRange}`,
+        `/leads/dashboard?range=${dateRange}&page=${page}&limit=20`,
         { method: "GET" },
       );
 
       const data = response?.data || response;
+      const incomingLeads = Array.isArray(data?.leads) ? data.leads : [];
 
       setLeadDashboard(data);
       setLeadStats(data?.stats || null);
-      setLeadsData(Array.isArray(data?.leads) ? data.leads : []);
+      setLeadPage(data?.pagination?.page || page);
+      setLeadHasMore(Boolean(data?.pagination?.hasMore));
 
-      const list = Array.isArray(data?.leads) ? data.leads : [];
-      const params = new URLSearchParams(location.search);
-      const leadId = params.get("leadId");
+      setLeadsData((prev) => {
+        if (!append) return incomingLeads;
 
-      const matchedLead = leadId
-        ? list.find((item) => String(item.id) === String(leadId))
-        : null;
+        const map = new Map(prev.map((lead) => [lead.id, lead]));
+        incomingLeads.forEach((lead) => map.set(lead.id, lead));
+        return Array.from(map.values());
+      });
 
-      const activeLead = matchedLead || list[0] || null;
-      setSelectedLead(activeLead);
+      if (!append) {
+        const params = new URLSearchParams(location.search);
+        const leadId = params.get("leadId");
 
-      if (activeLead?.id) {
-        fetchLeadEvents(activeLead.id);
-        fetchLeadMessages(activeLead.id);
+        const matchedLead = leadId
+          ? incomingLeads.find((item) => String(item.id) === String(leadId))
+          : null;
+
+        const activeLead = matchedLead || incomingLeads[0] || null;
+        setSelectedLead(activeLead);
+
+        if (activeLead?.id) {
+          fetchLeadEvents(activeLead.id);
+          fetchLeadMessages(activeLead.id);
+        }
       }
     } catch (err) {
       console.error("Fetch dashboard error:", err);
     } finally {
       setLeadsLoading(false);
+      setLeadLoadingMore(false);
     }
   };
+
+  const loadMoreLeads = () => {
+    if (leadLoadingMore || !leadHasMore) return;
+    fetchDashboard(leadPage + 1, true);
+  };
   useEffect(() => {
-    fetchDashboard();
+    setLeadPage(1);
+    setLeadsData([]);
+    fetchDashboard(1, false);
   }, [location.search, dateRange]);
 
   const uploadLeadChatFile = async (file) => {
@@ -1420,76 +1446,105 @@ export default function LeadsPage() {
             </button>
           </div>
 
-          <div className="lead-list">
+          <div
+            className="lead-list"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const nearBottom =
+                el.scrollTop + el.clientHeight >= el.scrollHeight - 80;
+
+              if (nearBottom) {
+                loadMoreLeads();
+              }
+            }}
+          >
             {leadsLoading ? (
               <div className="lead-card">
                 <p className="lead-message">Loading leads...</p>
               </div>
             ) : visibleLeads.length ? (
-              visibleLeads.map((lead) => {
-                const isActive = selectedLead?.id === lead.id;
-                const temperature = getLeadTemperature(lead);
-                const score = getLeadScore(lead);
+              <>
+                {visibleLeads.map((lead) => {
+                  const isActive = selectedLead?.id === lead.id;
+                  const temperature = getLeadTemperature(lead);
+                  const score = getLeadScore(lead);
 
-                return (
-                  <div
-                    key={lead.id}
-                    className={`lead-card count-badge-container ${isActive ? "active" : ""}`}
-                    onClick={() => selectLead(lead)}
-                  >
-                    <div className="lead-card-top">
-                      <div className="avatar-wrapper">
-                        <div className="lead-avatar avatar-whatsapp">
-                          {getInitials(lead.name)}
+                  return (
+                    <div
+                      key={lead.id}
+                      className={`lead-card count-badge-container ${isActive ? "active" : ""}`}
+                      onClick={() => selectLead(lead)}
+                    >
+                      <div className="lead-card-top">
+                        <div className="avatar-wrapper">
+                          <div className="lead-avatar avatar-whatsapp">
+                            {getInitials(lead.name)}
+                          </div>
+                          <div className="avatar-icon-badge">
+                            <MessageCircle
+                              size={12}
+                              color="#16a34a"
+                              fill="#16a34a"
+                            />
+                          </div>
                         </div>
-                        <div className="avatar-icon-badge">
-                          <MessageCircle
-                            size={12}
-                            color="#16a34a"
-                            fill="#16a34a"
-                          />
+
+                        <div className="lead-meta">
+                          <h4>{lead.name || "Unnamed Lead"}</h4>
+                          <span>
+                            {lead.phone || lead.email || "No contact info"}
+                          </span>
+                        </div>
+
+                        <div className="lead-score">
+                          <strong>{score}%</strong>
+                          <p className={getScoreClass(lead)}>{temperature}</p>
                         </div>
                       </div>
 
-                      <div className="lead-meta">
-                        <h4>{lead.name || "Unnamed Lead"}</h4>
-                        <span>
-                          {lead.phone || lead.email || "No contact info"}
-                        </span>
+                      <div className="lead-message-wrap">
+                        <p className="lead-message">
+                          {lead.notes || lead.source || "New CRM lead"}
+                        </p>
+
+                        <div className="lead-card-financials">
+                          <span className="budget-range">
+                            {lead.source || "CRM"}
+                          </span>
+                          <span className="timestamp">
+                            {lead.status || "new"}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="lead-score">
-                        <strong>{score}%</strong>
-                        <p className={getScoreClass(lead)}>{temperature}</p>
-                      </div>
-                    </div>
-
-                    <div className="lead-message-wrap">
-                      <p className="lead-message">
-                        {lead.notes || lead.source || "New CRM lead"}
-                      </p>
-
-                      <div className="lead-card-financials">
-                        <span className="budget-range">
-                          {lead.source || "CRM"}
+                      <div className="lead-tags">
+                        <span className="tag-property">
+                          {lead.propertyTitle || "No property linked"}
                         </span>
-                        <span className="timestamp">
+                        <span className="tag-status status-new">
                           {lead.status || "new"}
                         </span>
                       </div>
                     </div>
+                  );
+                })}
 
-                    <div className="lead-tags">
-                      <span className="tag-property">
-                        {lead.propertyTitle || "No property linked"}
-                      </span>
-                      <span className="tag-status status-new">
-                        {lead.status || "new"}
-                      </span>
-                    </div>
+                {leadLoadingMore && (
+                  <div className="lead-card">
+                    <p className="lead-message">Loading more leads...</p>
                   </div>
-                );
-              })
+                )}
+
+                {leadHasMore && !leadLoadingMore && (
+                  <button
+                    type="button"
+                    className="view-all-btn"
+                    onClick={loadMoreLeads}
+                  >
+                    Load more leads <ArrowRight size={12} />
+                  </button>
+                )}
+              </>
             ) : (
               <div className="lead-card">
                 <p className="lead-message">No leads found.</p>
@@ -1497,7 +1552,7 @@ export default function LeadsPage() {
             )}
           </div>
 
-          {/* Footer of Sidebar */}
+          {/* Footer of Sidebar 
           <div className="sidebar-footer">
             <span className="footer-counter">
               Showing {leadsData.length} leads
@@ -1520,7 +1575,7 @@ export default function LeadsPage() {
             >
               View all leads <ArrowRight size={12} />
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* CENTER PANEL - CONVERSATION WORKSPACE */}

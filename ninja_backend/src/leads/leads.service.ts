@@ -953,50 +953,97 @@ export class LeadsService {
         return "";
     }
   }
-  async getDashboard(userId: string, teamId: string | null, range = "all") {
+  async getDashboard(
+    userId: string,
+    teamId: string | null,
+    range = "30days",
+    page = 1,
+    limit = 20,
+  ) {
     const params = teamId ? [teamId] : [userId];
     const scopeWhere = teamId ? `l.team_id = $1` : `l.created_by = $1`;
     const dateWhere = this.buildDateFilter(range);
-
-    const { rows: leads } = await this.db.query(
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(50, Math.max(10, Number(limit) || 20));
+    const offset = (safePage - 1) * safeLimit;
+    const { rows: allLeads } = await this.db.query(
       `
-    SELECT
-      l.id,
-      l.name,
-      l.email,
-      l.phone,
-      l.status,
-      l.priority,
-      l.assigned_to AS "assignedTo",
-      l.property_id AS "propertyId",
-      l.buyer_id AS "buyerId",
-      l.created_by AS "createdBy",
-      l.team_id AS "teamId",
-      l.notes,
-      l.source,
-      l.created_at AS "createdAt",
-      l.updated_at AS "updatedAt",
-      l.last_activity_at AS "lastActivityAt",
-      l.last_contacted_at AS "lastContactedAt",
-      d.id AS "dealId",
-      d.value AS "dealValue",
-      d.stage AS "dealStage",
-      d.notes AS "dealNotes"
-    FROM leads l
-    LEFT JOIN LATERAL (
-      SELECT id, value, stage, notes
-      FROM deals
-      WHERE lead_id = l.id
-      LIMIT 1
-    ) d ON true
-    WHERE ${scopeWhere}
-    ${dateWhere}
-    ORDER BY l.created_at DESC
-    `,
+  SELECT
+    l.id,
+    l.name,
+    l.email,
+    l.phone,
+    l.status,
+    l.priority,
+    l.assigned_to AS "assignedTo",
+    l.property_id AS "propertyId",
+    l.buyer_id AS "buyerId",
+    l.created_by AS "createdBy",
+    l.team_id AS "teamId",
+    l.notes,
+    l.source,
+    l.created_at AS "createdAt",
+    l.updated_at AS "updatedAt",
+    l.last_activity_at AS "lastActivityAt",
+    l.last_contacted_at AS "lastContactedAt",
+    d.id AS "dealId",
+    d.value AS "dealValue",
+    d.stage AS "dealStage",
+    d.notes AS "dealNotes"
+  FROM leads l
+  LEFT JOIN LATERAL (
+    SELECT id, value, stage, notes
+    FROM deals
+    WHERE lead_id = l.id
+    LIMIT 1
+  ) d ON true
+  WHERE ${scopeWhere}
+  ${dateWhere}
+  ORDER BY l.created_at DESC
+  `,
       params,
     );
 
-    const leadIds = leads.map((lead) => lead.id);
+    const { rows: pageLeads } = await this.db.query(
+      `
+  SELECT
+    l.id,
+    l.name,
+    l.email,
+    l.phone,
+    l.status,
+    l.priority,
+    l.assigned_to AS "assignedTo",
+    l.property_id AS "propertyId",
+    l.buyer_id AS "buyerId",
+    l.created_by AS "createdBy",
+    l.team_id AS "teamId",
+    l.notes,
+    l.source,
+    l.created_at AS "createdAt",
+    l.updated_at AS "updatedAt",
+    l.last_activity_at AS "lastActivityAt",
+    l.last_contacted_at AS "lastContactedAt",
+    d.id AS "dealId",
+    d.value AS "dealValue",
+    d.stage AS "dealStage",
+    d.notes AS "dealNotes"
+  FROM leads l
+  LEFT JOIN LATERAL (
+    SELECT id, value, stage, notes
+    FROM deals
+    WHERE lead_id = l.id
+    LIMIT 1
+  ) d ON true
+  WHERE ${scopeWhere}
+  ${dateWhere}
+  ORDER BY l.created_at DESC
+  LIMIT $2 OFFSET $3
+  `,
+      [...params, safeLimit, offset],
+    );
+
+    const leadIds = allLeads.map((lead) => lead.id);
 
     let eventRows: any[] = [];
 
@@ -1019,14 +1066,20 @@ export class LeadsService {
 
       eventRows = rows;
     }
-
+    const leads = pageLeads;
     return {
       range,
-      stats: this.calculateDashboardStats(leads, eventRows, range),
-      aiQueue: this.buildAiQueue(leads, eventRows),
-      intelligence: this.buildLeadIntelligence(leads),
-      revenue: this.buildRevenue(leads),
+      stats: this.calculateDashboardStats(allLeads, eventRows, range),
+      aiQueue: this.buildAiQueue(allLeads, eventRows),
+      intelligence: this.buildLeadIntelligence(allLeads),
+      revenue: this.buildRevenue(allLeads),
       leads,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total: allLeads.length,
+        hasMore: offset + leads.length < allLeads.length,
+      },
     };
   }
   private calculateDashboardStats(leads: any[], events: any[], range = "all") {
