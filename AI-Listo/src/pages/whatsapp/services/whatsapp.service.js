@@ -100,4 +100,15 @@ export const whatsappService = {
       ),
     );
   },
+
+  async getTimeline(phone) {
+    return unwrap(
+      await apiClient.request(
+        `/whatsapp-qr/timeline/${encodeURIComponent(phone)}`,
+        {
+          method: "GET",
+        },
+      ),
+    );
+  },
 };

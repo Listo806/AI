@@ -99,17 +99,20 @@ export class WhatsAppQrController {
   }
 
   @Get("timeline/:phone")
-  async getTimeline(@Req() req, @Param("phone") phone: string) {
-    const conv = await this.conversations.findScopedByContactPhone(
-      req.user,
-      phone,
-    );
+  async getTimeline(@CurrentUser() user: any, @Param("phone") phone: string) {
+    const conv = await this.conversations.findScopedByContactPhone(user, phone);
 
-    if (!conv) return [];
+    if (!conv) {
+      return { data: [] };
+    }
 
-    return this.conversations.getConversationTimeline(conv.id);
+    const timeline = await this.conversations.getConversationTimeline(conv.id);
+
+    return {
+      data: timeline,
+    };
   }
-  
+
   @Get("conversations")
   @ApiOperation({
     summary:
@@ -271,6 +274,4 @@ export class WhatsAppQrController {
 
     return this.conversations.getConversationIntelligence(user, contactPhone);
   }
-
-  
 }

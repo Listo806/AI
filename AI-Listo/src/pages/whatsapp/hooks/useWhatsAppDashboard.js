@@ -361,27 +361,39 @@ export function useWhatsAppDashboard() {
   const [timeline, setTimeline] = useState([]);
 
   const loadTimeline = useCallback(async (conversation) => {
+    console.log("LOAD TIMELINE", conversation);
+
     if (!conversation?.contact_phone) {
       setTimeline([]);
       return;
     }
 
     try {
-      const res = await whatsappService.getTimeline(conversation.contact_phone);
+      const data = await whatsappService.getTimeline(
+        conversation.contact_phone,
+      );
 
-      setTimeline(res.data || []);
-    } catch {
+      console.log("TIMELINE DATA", data);
+
+      setTimeline(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("TIMELINE ERROR", err);
       setTimeline([]);
     }
   }, []);
-  
+
   useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation);
-      loadConversationIntelligence(selectedConversation);
-      loadTimeline(selectedConversation);
-    }
-  }, [selectedConversation, loadMessages, loadConversationIntelligence, loadTimeline]);
+    if (!selectedConversation) return;
+
+    loadMessages(selectedConversation);
+    loadConversationIntelligence(selectedConversation);
+    loadTimeline(selectedConversation);
+  }, [
+    selectedConversation,
+    loadMessages,
+    loadConversationIntelligence,
+    loadTimeline,
+  ]);
 
   return {
     loading,
