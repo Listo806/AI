@@ -970,4 +970,123 @@ Rules:
       hasMore: offset + rows.length < total,
     };
   }
+
+  async generateAiAssistReply(
+    user: { id: string; teamId: string | null; role: string },
+    contactPhone: string,
+  ) {
+    const conv = await this.findScopedByContactPhone(user, contactPhone);
+
+    if (!conv) {
+      return {
+        text: "",
+        reason: "Conversation not found.",
+      };
+    }
+
+    const { rows: leadRows } = await this.db.query(
+      `
+    SELECT
+      id,
+      name,
+      phone,
+      email,
+      status,
+      priority,
+      source,
+      notes,
+      parsed_intent,
+      parsed_budget_min,
+      parsed_budget_max,
+      parsed_city,
+      parsed_country
+    FROM leads
+    WHERE id = $1
+    LIMIT 1
+    `,
+      [conv.lead_id],
+    );
+
+    const { rows: messageRows } = await this.db.query(
+      `
+    SELECT
+      direction,
+      sender_type,
+      message_type,
+      body,
+      created_at
+    FROM whatsapp_qr_messages
+    WHERE conversation_id = $1
+      AND body IS NOT NULL
+      AND TRIM(body) <> ''
+    ORDER BY created_at DESC
+    LIMIT 25
+    `,
+      [conv.id],
+    );
+
+    const messages = messageRows.reverse();
+
+    const systemPrompt = `
+You are CORTEXA AI, a real estate CRM WhatsApp copilot.
+
+Generate ONE helpful WhatsApp reply for the agent to send.
+
+Rules:
+- Do not send it yourself.
+- Keep it short, natural, and professional.
+- Same language as the lead if obvious.
+- Do not invent property details.
+- If missing information, ask one clear follow-up question.
+- Output ONLY the reply text. No JSON. No markdown.
+`;
+
+    const context = {
+      lead: leadRows[0] || null,
+      conversation: {
+        id: conv.id,
+        ai_enabled: conv.ai_enabled,
+        owner_type: conv.owner_type,
+        unread_count: conv.unread_count,
+      },
+      messages,
+    };
+
+    try {
+      const response = await this.openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: systemPrompt }],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: `CRM WHATSAPP CONTEXT:\n${JSON.stringify(context)}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const text = String(response.output_text || "").trim();
+
+      return {
+        text:
+          text ||
+          "Thanks for your message. I can help with that. What would be the best time to follow up?",
+        reason: "generated",
+      };
+    } catch (err) {
+      console.error("WhatsApp AI Assist error:", err);
+
+      return {
+        text: "Thanks for your message. I can help with that. What would be the best time to follow up?",
+        reason: "fallback",
+      };
+    }
+  }
 }

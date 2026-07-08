@@ -113,4 +113,15 @@ export const whatsappService = {
       ),
     );
   },
+
+  async generateAiReply(contactPhone) {
+    return unwrap(
+      await apiClient.request("/whatsapp-qr/ai-assist/reply", {
+        method: "POST",
+        body: JSON.stringify({
+          contactPhone,
+        }),
+      }),
+    );
+  },
 };

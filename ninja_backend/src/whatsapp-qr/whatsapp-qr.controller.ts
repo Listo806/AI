@@ -309,4 +309,24 @@ export class WhatsAppQrController {
 
     return this.conversations.getConversationIntelligence(user, contactPhone);
   }
+
+  @Post("ai-assist/reply")
+  @ApiOperation({ summary: "Generate AI assisted WhatsApp reply" })
+  async aiAssistReply(
+    @CurrentUser() user: any,
+    @Body() body: { contactPhone?: string },
+  ) {
+    const contactPhone = normalizeToE164(body.contactPhone);
+
+    if (!contactPhone) {
+      throw new BadRequestException("Invalid contactPhone");
+    }
+
+    const data = await this.conversations.generateAiAssistReply(
+      user,
+      contactPhone,
+    );
+
+    return { data };
+  }
 }

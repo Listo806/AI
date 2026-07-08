@@ -44,6 +44,8 @@ import {
 import qrImg from "../../assets/cortexa/qr.png";
 export default function WhatsAppPage() {
   const [showTimelineDrawer, setShowTimelineDrawer] = React.useState(false);
+  const [visibleConversations, setVisibleConversations] = React.useState(10);
+
   const {
     loading,
     statusLoading,
@@ -84,7 +86,56 @@ export default function WhatsAppPage() {
     timelineLoading,
     timelineHasMore,
     loadMoreTimeline,
+    conversations = [],
+    aiAssistLoading,
+    aiAssistReply,
+    setAiAssistReply,
+    generateAiAssistReply,
   } = useWhatsAppDashboard();
+
+  const [showAiAssist, setShowAiAssist] = React.useState(false);
+  React.useEffect(() => {
+    setVisibleConversations(10);
+  }, [search, statusFilter, aiFilter]);
+
+  const formatChatDateTime = (value) => {
+    if (!value) return "";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const now = new Date();
+
+    const isSameDay = date.toDateString() === now.toDateString();
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    const time = date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    if (isSameDay) return time;
+
+    if (isYesterday) return `Yesterday, ${time}`;
+
+    const dateText = date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+      ...(date.getFullYear() !== now.getFullYear() ? { year: "numeric" } : {}),
+    });
+
+    return `${dateText}, ${time}`;
+  };
+
+  const [showAiActivityDrawer, setShowAiActivityDrawer] = React.useState(false);
+  const aiActivityItems = (timeline || []).filter((item) =>
+    String(item.title || "")
+      .toLowerCase()
+      .includes("ai"),
+  );
   return (
     <div className="leads-page whatsapp-page">
       <div className="heading_page">
@@ -156,29 +207,37 @@ export default function WhatsAppPage() {
             {/* COLUMN 1: CONVERSATIONS LIST */}
             <div className="lead-sidebar conversations-inbox-column">
               <div className="inbox-tabs-navigation">
-                <button className="tab-item active">
-                  All{" "}
-                  <span className="tab-count">
-                    {filteredConversations.length}
-                  </span>
+                <button
+                  className={`tab-item ${statusFilter === "all" ? "active" : ""}`}
+                  onClick={() => setStatusFilter("all")}
+                >
+                  All <span className="tab-count">{conversations.length}</span>
                 </button>
-                <button className="tab-item">
+
+                <button
+                  className={`tab-item ${statusFilter === "unread" ? "active" : ""}`}
+                  onClick={() => setStatusFilter("unread")}
+                >
                   Unread{" "}
                   <span className="tab-count">
                     {
-                      filteredConversations.filter((i) => i.unread_count > 0)
-                        .length
+                      conversations.filter(
+                        (i) => Number(i.unread_count || 0) > 0,
+                      ).length
                     }
                   </span>
                 </button>
-                <button className="tab-item">
+
+                <button
+                  className={`tab-item ${statusFilter === "human" ? "active" : ""}`}
+                  onClick={() => setStatusFilter("human")}
+                >
                   Mine{" "}
                   <span className="tab-count">
-                    {filteredConversations.filter((i) => !i.ai_enabled).length}
+                    {conversations.filter((i) => !i.ai_enabled).length}
                   </span>
                 </button>
               </div>
-
               <div className="inbox-search-bar-wrapper">
                 <Search size={16} className="search-icon" />
                 <input
@@ -188,67 +247,78 @@ export default function WhatsAppPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
-              </div>
 
+                {search && (
+                  <button
+                    className="wa-search-clear-btn"
+                    onClick={() => setSearch("")}
+                    type="button"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
               <div className="lead-list inbox-cards-stack">
                 {filteredConversations.length ? (
-                  filteredConversations.map((conv) => (
-                    <div
-                      className={`lead-card ${
-                        selectedConversation?.id === conv.id
-                          ? "active-chat-card"
-                          : ""
-                      }`}
-                      key={conv.id}
-                      onClick={() => setSelectedConversation(conv)}
-                    >
-                      <div className="avatar-circle-frame">
-                        {conv.avatarUrl ? (
-                          <img
-                            src={conv.avatarUrl}
-                            alt={conv.displayName}
-                            className="avatar-img"
-                          />
-                        ) : (
-                          <div className="avatar-letters bg-orange-avatar">
-                            {conv.initials}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="lead-meta-details">
-                        <div className="meta-name-row">
-                          <h4>{conv.displayName}</h4>
-                          <span className="card-timestamp-meta">
-                            {conv.timeAgo}
-                          </span>
-                        </div>
-
-                        <div className="chat-card-score-strip">
-                          <p
-                            className={`last-message-snippet ${
-                              Number(conv.unread_count || 0) > 0
-                                ? "emphasis-unread"
-                                : ""
-                            }`}
-                          >
-                            {conv.lastMessage || "No recent message"}
-                          </p>
-                          <span
-                            className={`pill-tag-temp ${conv.tag?.toLowerCase()}`}
-                          >
-                            {conv.tag}
-                          </span>
-
-                          {Number(conv.unread_count || 0) > 0 && (
-                            <div className="unread-count-bubble-badge">
-                              {conv.unread_count}
+                  filteredConversations
+                    .slice(0, visibleConversations)
+                    .map((conv) => (
+                      <div
+                        className={`lead-card ${
+                          selectedConversation?.id === conv.id
+                            ? "active-chat-card"
+                            : ""
+                        }`}
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv)}
+                      >
+                        <div className="avatar-circle-frame">
+                          {conv.avatarUrl ? (
+                            <img
+                              src={conv.avatarUrl}
+                              alt={conv.displayName}
+                              className="avatar-img"
+                            />
+                          ) : (
+                            <div className="avatar-letters bg-orange-avatar">
+                              {conv.initials}
                             </div>
                           )}
                         </div>
+
+                        <div className="lead-meta-details">
+                          <div className="meta-name-row">
+                            <h4>{conv.displayName}</h4>
+                            <span className="card-timestamp-meta">
+                              {conv.timeAgo}
+                            </span>
+                          </div>
+
+                          <div className="chat-card-score-strip">
+                            <p
+                              className={`last-message-snippet ${
+                                Number(conv.unread_count || 0) > 0
+                                  ? "emphasis-unread"
+                                  : ""
+                              }`}
+                            >
+                              {conv.lastMessage || "No recent message"}
+                            </p>
+                            <span
+                              className={`pill-tag-temp ${conv.tag?.toLowerCase()}`}
+                            >
+                              {conv.tag}
+                            </span>
+
+                            {Number(conv.unread_count || 0) > 0 && (
+                              <div className="unread-count-bubble-badge">
+                                {conv.unread_count}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 ) : (
                   <div className="lead-card">
                     <p className="last-message-snippet">
@@ -259,9 +329,24 @@ export default function WhatsAppPage() {
               </div>
 
               <div className="sidebar-footer">
-                <button className="view-all-btn full-width-center-btn">
-                  View All Conversations
-                </button>
+                <div className="sidebar-footer">
+                  {filteredConversations.length > visibleConversations && (
+                    <div className="sidebar-footer">
+                      <button
+                        className="view-all-btn full-width-center-btn"
+                        onClick={() =>
+                          setVisibleConversations((prev) => prev + 10)
+                        }
+                      >
+                        Load More Conversations
+                        <span style={{ marginLeft: 6 }}>
+                          ({visibleConversations}/{filteredConversations.length}
+                          )
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -450,15 +535,7 @@ export default function WhatsAppPage() {
                           <span
                             className={`message-time-stamp ${!isInbound ? "text-right" : ""}`}
                           >
-                            {msg.created_at
-                              ? new Date(msg.created_at).toLocaleTimeString(
-                                  [],
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )
-                              : ""}
+                            {formatChatDateTime(msg.created_at)}
                             {!isInbound && (
                               <CheckCheck
                                 size={12}
@@ -569,22 +646,55 @@ export default function WhatsAppPage() {
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          sendMessage();
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+
+                          if (!sending && messageText.trim()) {
+                            sendMessage();
+                          }
                         }
                       }}
                     />
                   </div>
                   <div className="chat-input-right">
-                    <button className="ai-assist-spark-inline-btn">
-                      <Sparkles size={16} color="#2563eb" /> AI Assist
+                    <button
+                      className="ai-assist-spark-inline-btn"
+                      onClick={async () => {
+                        setShowAiAssist(true);
+                        if (!aiAssistReply) {
+                          await generateAiAssistReply();
+                        }
+                      }}
+                      disabled={
+                        !selectedConversation?.contact_phone || aiAssistLoading
+                      }
+                    >
+                      <Sparkles size={16} color="#2563eb" />
+                      {aiAssistLoading ? "Thinking..." : "AI Assist"}
                     </button>
                     <button
-                      className="send-message-main-submit-btn"
+                      className={`send-message-main-submit-btn ${
+                        sending ? "is-sending" : ""
+                      }`}
                       onClick={sendMessage}
-                      disabled={sending || !selectedConversation?.contact_phone}
+                      disabled={
+                        sending ||
+                        !selectedConversation?.contact_phone ||
+                        !messageText.trim()
+                      }
+                      title={
+                        !selectedConversation?.contact_phone
+                          ? "Select a conversation first"
+                          : !messageText.trim()
+                            ? "Type a message first"
+                            : "Send message"
+                      }
                     >
-                      <Send size={16} />
+                      {sending ? (
+                        <span className="wa-send-spinner" />
+                      ) : (
+                        <Send size={16} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -654,11 +764,19 @@ export default function WhatsAppPage() {
               </div>
             </div>
             <div className="action-buttons-stack">
-              <button className="btn-action btn-pause">
-                <Pause size={16} fill="currentColor" /> Pause AI
+              <button
+                className="btn-action btn-pause"
+                onClick={toggleSelectedAi}
+                disabled={!selectedConversation}
+              >
+                <Pause size={16} fill="currentColor" />
+                {selectedConversation?.ai_enabled ? "Pause AI" : "Resume AI"}
               </button>
 
-              <button className="btn-action btn-view-activity">
+              <button
+                className="btn-action btn-view-activity"
+                onClick={() => setShowAiActivityDrawer(true)}
+              >
                 <TrendingUp size={16} /> View AI Activity
               </button>
             </div>
@@ -793,10 +911,7 @@ export default function WhatsAppPage() {
                             {item.title}
                           </h5>
                           <span className="timeline-time time-stamp-meta">
-                            {new Date(item.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {formatChatDateTime(item.created_at)}
                           </span>
                         </div>
 
@@ -900,6 +1015,132 @@ export default function WhatsAppPage() {
                   {timelineLoading ? "Loading..." : "Load more"}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showAiActivityDrawer && (
+        <div
+          className="wa-drawer-overlay"
+          onClick={() => setShowAiActivityDrawer(false)}
+        >
+          <div
+            className="wa-timeline-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="wa-drawer-header">
+              <div>
+                <h3>AI Activity</h3>
+                <p>{selectedConversation?.displayName || "WhatsApp Lead"}</p>
+              </div>
+
+              <button
+                className="wa-drawer-close"
+                onClick={() => setShowAiActivityDrawer(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="wa-drawer-timeline-list">
+              {aiActivityItems.length ? (
+                aiActivityItems.map((item) => (
+                  <div className="timeline-item stepper-node" key={item.id}>
+                    <div className="timeline-dot node-dot-style dot-blue" />
+
+                    <div className="timeline-content box-content-layout">
+                      <div className="timeline-content-top text-row-space">
+                        <h5 className="timeline-title font-bold">
+                          {item.title}
+                        </h5>
+                        <span className="timeline-time time-stamp-meta">
+                          {formatChatDateTime(item.created_at)}
+                        </span>
+                      </div>
+
+                      <p className="timeline-desc desc-dim text-small">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="timeline-desc desc-dim text-small">
+                  No AI activity yet.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {showAiAssist && (
+        <div
+          className="wa-ai-assist-overlay"
+          onClick={() => setShowAiAssist(false)}
+        >
+          <div
+            className="wa-ai-assist-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="wa-ai-assist-header">
+              <div>
+                <h3>AI Assist</h3>
+                <p>Generate a suggested WhatsApp reply.</p>
+              </div>
+
+              <button
+                className="wa-drawer-close"
+                onClick={() => setShowAiAssist(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="wa-ai-assist-body">
+              {aiAssistLoading ? (
+                <div className="wa-ai-loading-box">
+                  <span className="wa-send-spinner" />
+                  <p>CORTEXA AI is writing a reply...</p>
+                </div>
+              ) : (
+                <textarea
+                  className="wa-ai-reply-textarea"
+                  value={aiAssistReply}
+                  onChange={(e) => setAiAssistReply(e.target.value)}
+                  placeholder="AI reply will appear here..."
+                />
+              )}
+            </div>
+
+            <div className="wa-ai-assist-actions">
+              <button
+                className="wa-ai-secondary-btn"
+                onClick={generateAiAssistReply}
+                disabled={aiAssistLoading}
+              >
+                Regenerate
+              </button>
+
+              <button
+                className="wa-ai-secondary-btn"
+                onClick={() =>
+                  navigator.clipboard?.writeText(aiAssistReply || "")
+                }
+                disabled={!aiAssistReply}
+              >
+                Copy
+              </button>
+
+              <button
+                className="wa-ai-primary-btn"
+                disabled={!aiAssistReply}
+                onClick={() => {
+                  setMessageText(aiAssistReply);
+                  setShowAiAssist(false);
+                }}
+              >
+                Insert Reply
+              </button>
             </div>
           </div>
         </div>

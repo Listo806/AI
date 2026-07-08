@@ -65,6 +65,9 @@ export function useWhatsAppDashboard() {
   const [timelinePage, setTimelinePage] = useState(1);
   const [timelineHasMore, setTimelineHasMore] = useState(false);
   const [timelineLoading, setTimelineLoading] = useState(false);
+
+  const [aiAssistLoading, setAiAssistLoading] = useState(false);
+  const [aiAssistReply, setAiAssistReply] = useState("");
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -221,14 +224,29 @@ export function useWhatsAppDashboard() {
     try {
       setSending(true);
 
+      const tempId = `temp-${Date.now()}`;
+
+      const optimisticMessage = {
+        id: tempId,
+        direction: "outbound",
+        sender_type: "agent",
+        message_type: "text",
+        body: text,
+        created_at: new Date().toISOString(),
+        optimistic: true,
+      };
+
+      setMessages((prev) => [...prev, optimisticMessage]);
+      setMessageText("");
+
       await whatsappService.sendMessage(
         selectedConversation.contact_phone,
         text,
       );
 
-      setMessageText("");
       await loadMessages(selectedConversation);
       await loadDashboard();
+      loadTimeline(selectedConversation, 1, false);
     } catch (err) {
       console.error("Send WhatsApp message error:", err);
     } finally {
@@ -409,6 +427,28 @@ export function useWhatsAppDashboard() {
     loadTimeline,
   ]);
 
+  const generateAiAssistReply = useCallback(async () => {
+    if (!selectedConversation?.contact_phone) return;
+
+    try {
+      setAiAssistLoading(true);
+
+      const res = await whatsappService.generateAiReply(
+        selectedConversation.contact_phone,
+      );
+
+      const text = res?.text || res?.data?.text || "";
+
+      setAiAssistReply(text);
+      return text;
+    } catch (err) {
+      console.error("Generate AI assist reply error:", err);
+      setAiAssistReply("");
+      return "";
+    } finally {
+      setAiAssistLoading(false);
+    }
+  }, [selectedConversation]);
   useEffect(() => {
     if (!selectedConversation) return;
 
@@ -463,5 +503,11 @@ export function useWhatsAppDashboard() {
     timelineLoading,
     timelineHasMore,
     loadMoreTimeline,
+
+    conversations,
+    aiAssistLoading,
+    aiAssistReply,
+    setAiAssistReply,
+    generateAiAssistReply,
   };
 }
