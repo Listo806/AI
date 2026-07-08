@@ -130,6 +130,29 @@ export default function WhatsAppPage() {
     return `${dateText}, ${time}`;
   };
 
+  const getMessageStatusIcon = (msg) => {
+    if (msg.direction === "inbound") return null;
+
+    const status = msg.status || "sent";
+
+    if (status === "pending") {
+      return <Clock3 size={12} className="ticks-inline" />;
+    }
+
+    if (status === "failed") {
+      return <span className="wa-message-failed">!</span>;
+    }
+
+    return (
+      <CheckCheck
+        size={12}
+        className={`ticks-inline ${
+          status === "read" ? "wa-read-tick" : "wa-sent-tick"
+        }`}
+      />
+    );
+  };
+
   const [showAiActivityDrawer, setShowAiActivityDrawer] = React.useState(false);
   const aiActivityItems = (timeline || []).filter((item) =>
     String(item.title || "")
@@ -536,13 +559,7 @@ export default function WhatsAppPage() {
                             className={`message-time-stamp ${!isInbound ? "text-right" : ""}`}
                           >
                             {formatChatDateTime(msg.created_at)}
-                            {!isInbound && (
-                              <CheckCheck
-                                size={12}
-                                color="#2563eb"
-                                className="ticks-inline"
-                              />
-                            )}
+                            {!isInbound && getMessageStatusIcon(msg)}
                           </span>
                         </div>
 

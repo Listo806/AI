@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
 
 @Injectable()
 export class WhatsAppQrMessageService {
@@ -49,8 +49,7 @@ export class WhatsAppQrMessageService {
         ],
       );
       const preview =
-        (params.body || '').trim().slice(0, 500) ||
-        `[${params.messageType}]`;
+        (params.body || "").trim().slice(0, 500) || `[${params.messageType}]`;
       await this.db.query(
         `UPDATE whatsapp_qr_conversations
          SET last_message_at = NOW(), last_message = $2, last_message_type = $3,
@@ -61,7 +60,7 @@ export class WhatsAppQrMessageService {
       return true;
     } catch (e: any) {
       // 23505 unique_violation on message_id
-      if (e?.code === '23505') return false;
+      if (e?.code === "23505") return false;
       throw e;
     }
   }
@@ -76,12 +75,24 @@ export class WhatsAppQrMessageService {
     const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
     const before = opts.before || null;
     const { rows } = await this.db.query(
-      `SELECT id, direction, sender_type, message_type, body, message_id, created_at
-       FROM whatsapp_qr_messages
-       WHERE conversation_id = $1
-         AND ($2::timestamptz IS NULL OR created_at < $2::timestamptz)
-       ORDER BY created_at DESC
-       LIMIT $3`,
+      `SELECT
+        id,
+        direction,
+        sender_type,
+        message_type,
+        body,
+        message_id,
+        status,
+        sent_at,
+        delivered_at,
+        read_at,
+        failed_at,
+        created_at
+      FROM whatsapp_qr_messages
+      WHERE conversation_id = $1
+        AND ($2::timestamptz IS NULL OR created_at < $2::timestamptz)
+      ORDER BY created_at DESC
+      LIMIT $3`,
       [conversationId, before, limit],
     );
     return rows.reverse();

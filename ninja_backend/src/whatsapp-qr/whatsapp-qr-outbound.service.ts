@@ -1,9 +1,9 @@
-import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
-import { BaileysSocketService } from './baileys-socket.service';
-import { OutboundThrottleService } from './outbound-throttle.service';
-import { WhatsAppQrConversationService } from './whatsapp-qr-conversation.service';
-import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
+import { Injectable, Logger, Inject, forwardRef } from "@nestjs/common";
+import { DatabaseService } from "../database/database.service";
+import { BaileysSocketService } from "./baileys-socket.service";
+import { OutboundThrottleService } from "./outbound-throttle.service";
+import { WhatsAppQrConversationService } from "./whatsapp-qr-conversation.service";
+import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
 
 @Injectable()
 export class WhatsAppQrOutboundService {
@@ -31,12 +31,16 @@ export class WhatsAppQrOutboundService {
     text: string;
   }): Promise<void> {
     await this.throttle.assertAllowed(params.sessionId);
-    await this.sockets.sendText(params.userId, params.contactPhone, params.text);
+    await this.sockets.sendText(
+      params.userId,
+      params.contactPhone,
+      params.text,
+    );
     await this.conversations.setOwnerHuman(params.conversationId);
     await this.db.query(
       `INSERT INTO whatsapp_qr_messages
-       (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id)
-       VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'text', $6, NULL)`,
+        (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id, status, sent_at)
+        VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'text', $6, NULL, 'sent', NOW())`,
       [
         params.sessionId,
         params.conversationId,
@@ -61,10 +65,10 @@ export class WhatsAppQrOutboundService {
       userId: params.userId,
       conversationId: params.conversationId,
       contactPhone: params.contactPhone,
-      direction: 'outbound',
-      senderType: 'agent',
+      direction: "outbound",
+      senderType: "agent",
       body: params.text,
-      messageType: 'text',
+      messageType: "text",
       createdAt: new Date().toISOString(),
     });
   }
@@ -79,11 +83,15 @@ export class WhatsAppQrOutboundService {
     text: string;
   }): Promise<void> {
     await this.throttle.assertAllowed(params.sessionId);
-    await this.sockets.sendText(params.userId, params.contactPhone, params.text);
+    await this.sockets.sendText(
+      params.userId,
+      params.contactPhone,
+      params.text,
+    );
     await this.db.query(
       `INSERT INTO whatsapp_qr_messages
-       (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id)
-       VALUES ($1, $2, $3, $4, $5, 'outbound', 'ai', 'text', $6, NULL)`,
+      (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id, status, sent_at)
+      VALUES ($1, $2, $3, $4, $5, 'outbound', 'ai', 'text', $6, NULL, 'sent', NOW())`,
       [
         params.sessionId,
         params.conversationId,
@@ -103,10 +111,10 @@ export class WhatsAppQrOutboundService {
       userId: params.userId,
       conversationId: params.conversationId,
       contactPhone: params.contactPhone,
-      direction: 'outbound',
-      senderType: 'ai',
+      direction: "outbound",
+      senderType: "ai",
       body: params.text,
-      messageType: 'text',
+      messageType: "text",
       createdAt: new Date().toISOString(),
     });
   }
@@ -124,12 +132,16 @@ export class WhatsAppQrOutboundService {
     audioBase64: string;
   }): Promise<void> {
     await this.throttle.assertAllowed(params.sessionId);
-    await this.sockets.sendVoice(params.userId, params.contactPhone, params.audioBase64);
+    await this.sockets.sendVoice(
+      params.userId,
+      params.contactPhone,
+      params.audioBase64,
+    );
     await this.conversations.setOwnerHuman(params.conversationId);
     await this.db.query(
       `INSERT INTO whatsapp_qr_messages
-       (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id)
-       VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'audio', '[Voice message]', NULL)`,
+      (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id, status, sent_at)
+      VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'audio', '[Voice message]', NULL, 'sent', NOW())`,
       [
         params.sessionId,
         params.conversationId,
@@ -153,10 +165,10 @@ export class WhatsAppQrOutboundService {
       userId: params.userId,
       conversationId: params.conversationId,
       contactPhone: params.contactPhone,
-      direction: 'outbound',
-      senderType: 'agent',
-      body: '[Voice message]',
-      messageType: 'audio',
+      direction: "outbound",
+      senderType: "agent",
+      body: "[Voice message]",
+      messageType: "audio",
       createdAt: new Date().toISOString(),
     });
   }

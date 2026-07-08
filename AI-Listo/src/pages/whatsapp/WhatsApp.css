@@ -1979,7 +1979,27 @@ body .whatsapp-page .send-message-main-submit-btn {
     opacity: 0.5;
     cursor: not-allowed;
 }
+.wa-sent-tick {
+  color: #94a3b8;
+}
 
+.wa-read-tick {
+  color: #2563eb;
+}
+
+.wa-message-failed {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  margin-left: 4px;
+}
 @keyframes waSpin {
     to {
         transform: rotate(360deg);
