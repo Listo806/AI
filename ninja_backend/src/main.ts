@@ -50,7 +50,7 @@ async function bootstrap() {
         "http://localhost:5174",
         "https://www.cortexaaicrm.com",
         "https://cortexaaicrm.com",
-        "https://listoqasa.com/",
+        "https://listoqasa.com",
       ];
 
   // Get the server's own origin (for Swagger UI)
