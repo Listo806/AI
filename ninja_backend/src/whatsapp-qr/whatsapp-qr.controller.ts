@@ -8,6 +8,7 @@ import {
   UseGuards,
   BadRequestException,
   NotFoundException,
+  Req,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
@@ -257,5 +258,17 @@ export class WhatsAppQrController {
     }
 
     return this.conversations.getConversationIntelligence(user, contactPhone);
+  }
+
+  @Get("timeline/:phone")
+  async getTimeline(@Req() req, @Param("phone") phone: string) {
+    const conv = await this.conversations.findScopedByContactPhone(
+      req.user,
+      phone,
+    );
+
+    if (!conv) return [];
+
+    return this.conversations.getConversationTimeline(conv.id);
   }
 }

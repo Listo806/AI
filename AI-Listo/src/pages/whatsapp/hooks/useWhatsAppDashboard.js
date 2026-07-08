@@ -59,7 +59,7 @@ export function useWhatsAppDashboard() {
 
   const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiIntelligence, setAiIntelligence] = useState(null);
-  const [aiStatus,setAiStatus]=useState(null);
+  const [aiStatus, setAiStatus] = useState(null);
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -95,7 +95,7 @@ export function useWhatsAppDashboard() {
       setDashboardStats(Array.isArray(data.stats) ? data.stats : []);
       setDashboardSegments(data.segments || null);
       setConversations(normalized);
-      setAiStatus(data.aiStatus || null);    
+      setAiStatus(data.aiStatus || null);
       setSelectedConversation((prev) => {
         if (prev) {
           return (
@@ -129,7 +129,18 @@ export function useWhatsAppDashboard() {
       );
       const data = res?.data || res || [];
 
-      setMessages(Array.isArray(data) ? data : []);
+      const cleanMessages = Array.isArray(data)
+        ? data.filter((msg) => {
+            const body = String(msg.body || "").trim();
+            const type = String(msg.message_type || "").toLowerCase();
+
+            if (!body && type === "text") return false;
+
+            return true;
+          })
+        : [];
+
+      setMessages(cleanMessages);
     } catch (err) {
       console.error("Load messages error:", err);
       setMessages([]);
@@ -169,17 +180,10 @@ export function useWhatsAppDashboard() {
       setIntelligenceLoading(false);
     }
   }, []);
-  
+
   useEffect(() => {
     refresh();
   }, [refresh]);
-
-  useEffect(() => {
-    if (selectedConversation) {
-      loadMessages(selectedConversation);
-      loadConversationIntelligence(selectedConversation);
-    }
-  }, [selectedConversation, loadMessages, loadConversationIntelligence]);
 
   const connectDevice = async () => {
     try {
@@ -354,27 +358,30 @@ export function useWhatsAppDashboard() {
     };
   }, [aiIntelligence, selectedConversation]);
 
-  const timeline = useMemo(() => {
-    return messages.slice(-5).map((msg) => ({
-      id: msg.id,
-      title:
-        msg.direction === "inbound"
-          ? "Message received"
-          : msg.sender_type === "ai"
-            ? "AI replied"
-            : "Agent replied",
-      description: msg.body || `[${msg.message_type}]`,
-      time: msg.created_at
-        ? new Date(msg.created_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-        : "",
-      type: msg.direction,
-    }));
-  }, [messages]);
+  const [timeline, setTimeline] = useState([]);
 
+  const loadTimeline = useCallback(async (conversation) => {
+    if (!conversation?.contact_phone) {
+      setTimeline([]);
+      return;
+    }
+
+    try {
+      const res = await whatsappService.getTimeline(conversation.contact_phone);
+
+      setTimeline(res.data || []);
+    } catch {
+      setTimeline([]);
+    }
+  }, []);
   
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation);
+      loadConversationIntelligence(selectedConversation);
+      loadTimeline(selectedConversation);
+    }
+  }, [selectedConversation, loadMessages, loadConversationIntelligence, loadTimeline]);
 
   return {
     loading,

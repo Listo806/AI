@@ -907,4 +907,67 @@ Rules:
       };
     }
   }
+
+  async getConversationTimeline(conversationId: string) {
+    const events: any[] = [];
+
+    // Conversation created
+    const { rows: convRows } = await this.db.query(
+      `
+    SELECT created_at
+    FROM whatsapp_qr_conversations
+    WHERE id = $1
+    `,
+      [conversationId],
+    );
+
+    if (convRows.length) {
+      events.push({
+        id: `conversation-${conversationId}`,
+        type: "system",
+        title: "Conversation created",
+        description: "WhatsApp conversation started.",
+        created_at: convRows[0].created_at,
+      });
+    }
+
+    // Messages
+    const { rows: messages } = await this.db.query(
+      `
+    SELECT
+      id,
+      direction,
+      sender_type,
+      body,
+      message_type,
+      created_at
+    FROM whatsapp_qr_messages
+    WHERE conversation_id = $1
+    ORDER BY created_at ASC
+    `,
+      [conversationId],
+    );
+
+    for (const msg of messages) {
+      events.push({
+        id: msg.id,
+        type: msg.direction,
+        title:
+          msg.direction === "inbound"
+            ? "Message received"
+            : msg.sender_type === "ai"
+              ? "AI replied"
+              : "Agent replied",
+        description: msg.body || `[${msg.message_type}]`,
+        created_at: msg.created_at,
+      });
+    }
+
+    events.sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+
+    return events;
+  }
 }
