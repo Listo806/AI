@@ -73,15 +73,23 @@ async function bootstrap() {
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+        console.log("Origin:", origin);
+        console.log("Allowed Origins:", allowedOrigins);
+
+        if (!origin) {
+          console.log("=> No origin, allow");
+          return callback(null, true);
+        }
 
       // Allow same-origin requests (for Swagger UI on the same server)
       if (serverOrigin && origin === serverOrigin) {
+        console.log("=> Server origin match");
         return callback(null, true);
       }
 
       // Allow requests from explicitly allowed origins
       if (allowedOrigins.includes(origin)) {
+        console.log("=> Allowed");
         return callback(null, true);
       }
 
@@ -97,6 +105,7 @@ async function bootstrap() {
       if (process.env.NODE_ENV !== "production") {
         console.log(`[CORS] Rejected origin: ${origin}`);
       }
+      console.log("=> Rejected");
       callback(null, false);
       //callback(new Error('Not allowed by CORS'));
     },
