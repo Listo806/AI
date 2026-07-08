@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import qrImg from "../../assets/cortexa/qr.png";
 export default function WhatsAppPage() {
+  const [showTimelineDrawer, setShowTimelineDrawer] = React.useState(false);
   const {
     loading,
     statusLoading,
@@ -80,6 +81,9 @@ export default function WhatsAppPage() {
     toggleSelectedAi,
     intelligenceLoading,
     aiIntelligence,
+    timelineLoading,
+    timelineHasMore,
+    loadMoreTimeline,
   } = useWhatsAppDashboard();
   return (
     <div className="leads-page whatsapp-page">
@@ -775,7 +779,7 @@ export default function WhatsAppPage() {
                 <div className="timeline-vertical-line axis-offset"></div>
 
                 {timeline.length ? (
-                  timeline.map((item) => (
+                  timeline.slice(0, 5).map((item) => (
                     <div className="timeline-item stepper-node" key={item.id}>
                       <div
                         className={`timeline-dot node-dot-style ${
@@ -815,7 +819,10 @@ export default function WhatsAppPage() {
               </div>
 
               <div className="timeline-footer link-footer-row">
-                <button className="full-timeline-btn centered-link-btn">
+                <button
+                  className="full-timeline-btn centered-link-btn"
+                  onClick={() => setShowTimelineDrawer(true)}
+                >
                   View Full Timeline
                 </button>
               </div>
@@ -823,6 +830,80 @@ export default function WhatsAppPage() {
           </div>
         </div>
       </div>
+      {showTimelineDrawer && (
+        <div
+          className="wa-drawer-overlay"
+          onClick={() => setShowTimelineDrawer(false)}
+        >
+          <div
+            className="wa-timeline-drawer"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="wa-drawer-header">
+              <div>
+                <h3>Conversation Timeline</h3>
+                <p>{selectedConversation?.displayName || "WhatsApp Lead"}</p>
+              </div>
+
+              <button
+                className="wa-drawer-close"
+                onClick={() => setShowTimelineDrawer(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="wa-drawer-timeline-list">
+              {timeline.length ? (
+                timeline.map((item) => (
+                  <div className="timeline-item stepper-node" key={item.id}>
+                    <div
+                      className={`timeline-dot node-dot-style ${
+                        item.type === "inbound"
+                          ? "dot-green"
+                          : item.type === "system"
+                            ? "dot-blue"
+                            : "dot-blue"
+                      }`}
+                    />
+
+                    <div className="timeline-content box-content-layout">
+                      <div className="timeline-content-top text-row-space">
+                        <h5 className="timeline-title font-bold">
+                          {item.title}
+                        </h5>
+                        <span className="timeline-time time-stamp-meta">
+                          {item.created_at
+                            ? new Date(item.created_at).toLocaleString()
+                            : ""}
+                        </span>
+                      </div>
+
+                      <p className="timeline-desc desc-dim text-small">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="timeline-desc desc-dim text-small">
+                  No timeline available.
+                </p>
+              )}
+
+              {timelineHasMore && (
+                <button
+                  className="wa-load-more-btn"
+                  onClick={loadMoreTimeline}
+                  disabled={timelineLoading}
+                >
+                  {timelineLoading ? "Loading..." : "Load more"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

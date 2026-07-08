@@ -99,18 +99,53 @@ export class WhatsAppQrController {
   }
 
   @Get("timeline/:phone")
-  async getTimeline(@CurrentUser() user: any, @Param("phone") phone: string) {
-    const conv = await this.conversations.findScopedByContactPhone(user, phone);
+  async getTimeline(
+    @CurrentUser() user: any,
+    @Param("phone") phone: string,
+    @Query("page") pageRaw?: string,
+    @Query("limit") limitRaw?: string,
+  ) {
+    const contactPhone = normalizeToE164(decodeURIComponent(phone || ""));
 
-    if (!conv) {
-      return { data: [] };
+    if (!contactPhone) {
+      return {
+        data: {
+          items: [],
+          page: 1,
+          limit: 20,
+          total: 0,
+          hasMore: false,
+        },
+      };
     }
 
-    const timeline = await this.conversations.getConversationTimeline(conv.id);
+    const conv = await this.conversations.findScopedByContactPhone(
+      user,
+      contactPhone,
+    );
 
-    return {
-      data: timeline,
-    };
+    if (!conv) {
+      return {
+        data: {
+          items: [],
+          page: 1,
+          limit: 20,
+          total: 0,
+          hasMore: false,
+        },
+      };
+    }
+
+    const page = pageRaw ? parseInt(pageRaw, 10) : 1;
+    const limit = limitRaw ? parseInt(limitRaw, 10) : 20;
+
+    const data = await this.conversations.getConversationTimeline(
+      conv.id,
+      Number.isFinite(page) ? page : 1,
+      Number.isFinite(limit) ? limit : 20,
+    );
+
+    return { data };
   }
 
   @Get("conversations")

@@ -101,10 +101,12 @@ export const whatsappService = {
     );
   },
 
-  async getTimeline(phone) {
+  async getTimeline(phone, page = 1, limit = 20) {
     return unwrap(
       await apiClient.request(
-        `/whatsapp-qr/timeline/${encodeURIComponent(phone)}`,
+        `/whatsapp-qr/timeline/${encodeURIComponent(
+          phone,
+        )}?page=${page}&limit=${limit}`,
         {
           method: "GET",
         },

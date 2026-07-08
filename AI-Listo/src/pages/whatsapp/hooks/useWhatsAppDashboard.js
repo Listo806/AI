@@ -60,6 +60,11 @@ export function useWhatsAppDashboard() {
   const [intelligenceLoading, setIntelligenceLoading] = useState(false);
   const [aiIntelligence, setAiIntelligence] = useState(null);
   const [aiStatus, setAiStatus] = useState(null);
+
+  const [timeline, setTimeline] = useState([]);
+  const [timelinePage, setTimelinePage] = useState(1);
+  const [timelineHasMore, setTimelineHasMore] = useState(false);
+  const [timelineLoading, setTimelineLoading] = useState(false);
   const loadStatus = useCallback(async () => {
     try {
       setStatusLoading(true);
@@ -358,36 +363,58 @@ export function useWhatsAppDashboard() {
     };
   }, [aiIntelligence, selectedConversation]);
 
-  const [timeline, setTimeline] = useState([]);
+  const loadTimeline = useCallback(
+    async (conversation, page = 1, append = false) => {
+      if (!conversation?.contact_phone) {
+        setTimeline([]);
+        setTimelinePage(1);
+        setTimelineHasMore(false);
+        return;
+      }
 
-  const loadTimeline = useCallback(async (conversation) => {
-    console.log("LOAD TIMELINE", conversation);
+      try {
+        setTimelineLoading(true);
 
-    if (!conversation?.contact_phone) {
-      setTimeline([]);
-      return;
-    }
+        const data = await whatsappService.getTimeline(
+          conversation.contact_phone,
+          page,
+          20,
+        );
 
-    try {
-      const data = await whatsappService.getTimeline(
-        conversation.contact_phone,
-      );
+        const items = Array.isArray(data?.items) ? data.items : [];
 
-      console.log("TIMELINE DATA", data);
+        setTimeline((prev) => (append ? [...prev, ...items] : items));
+        setTimelinePage(Number(data?.page || page));
+        setTimelineHasMore(Boolean(data?.hasMore));
+      } catch (err) {
+        console.error("Load WhatsApp timeline error:", err);
+        if (!append) setTimeline([]);
+        setTimelineHasMore(false);
+      } finally {
+        setTimelineLoading(false);
+      }
+    },
+    [],
+  );
 
-      setTimeline(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("TIMELINE ERROR", err);
-      setTimeline([]);
-    }
-  }, []);
+  const loadMoreTimeline = useCallback(() => {
+    if (!selectedConversation || timelineLoading || !timelineHasMore) return;
+
+    loadTimeline(selectedConversation, timelinePage + 1, true);
+  }, [
+    selectedConversation,
+    timelineLoading,
+    timelineHasMore,
+    timelinePage,
+    loadTimeline,
+  ]);
 
   useEffect(() => {
     if (!selectedConversation) return;
 
     loadMessages(selectedConversation);
     loadConversationIntelligence(selectedConversation);
-    loadTimeline(selectedConversation);
+    loadTimeline(selectedConversation, 1, false);
   }, [
     selectedConversation,
     loadMessages,
@@ -433,5 +460,8 @@ export function useWhatsAppDashboard() {
     intelligenceLoading,
     aiIntelligence,
     aiStatus,
+    timelineLoading,
+    timelineHasMore,
+    loadMoreTimeline,
   };
 }

@@ -908,66 +908,66 @@ Rules:
     }
   }
 
-  async getConversationTimeline(conversationId: string) {
-    const events: any[] = [];
+  async getConversationTimeline(conversationId: string, page = 1, limit = 20) {
+    const safePage = Math.max(Number(page || 1), 1);
+    const safeLimit = Math.min(Math.max(Number(limit || 20), 1), 50);
+    const offset = (safePage - 1) * safeLimit;
 
-    // Conversation created
-    const { rows: convRows } = await this.db.query(
+    const { rows: countRows } = await this.db.query(
       `
-    SELECT created_at
-    FROM whatsapp_qr_conversations
-    WHERE id = $1
+    SELECT COUNT(*)::int AS total
+    FROM (
+      SELECT id FROM whatsapp_qr_messages WHERE conversation_id = $1
+      UNION ALL
+      SELECT id FROM whatsapp_qr_conversations WHERE id = $1
+    ) x
     `,
       [conversationId],
     );
 
-    if (convRows.length) {
-      events.push({
-        id: `conversation-${conversationId}`,
-        type: "system",
-        title: "Conversation created",
-        description: "WhatsApp conversation started.",
-        created_at: convRows[0].created_at,
-      });
-    }
+    const total = Number(countRows[0]?.total || 0);
 
-    // Messages
-    const { rows: messages } = await this.db.query(
+    const { rows } = await this.db.query(
       `
-    SELECT
-      id,
-      direction,
-      sender_type,
-      body,
-      message_type,
-      created_at
-    FROM whatsapp_qr_messages
-    WHERE conversation_id = $1
-    ORDER BY created_at ASC
+    WITH events AS (
+      SELECT
+        ('conversation-' || c.id)::text AS id,
+        'system'::text AS type,
+        'Conversation created'::text AS title,
+        'WhatsApp conversation started.'::text AS description,
+        c.created_at AS created_at
+      FROM whatsapp_qr_conversations c
+      WHERE c.id = $1
+
+      UNION ALL
+
+      SELECT
+        m.id::text AS id,
+        m.direction::text AS type,
+        CASE
+          WHEN m.direction = 'inbound' THEN 'Message received'
+          WHEN m.sender_type = 'ai' THEN 'AI replied'
+          ELSE 'Agent replied'
+        END AS title,
+        COALESCE(NULLIF(TRIM(m.body), ''), '[' || m.message_type || ']') AS description,
+        m.created_at AS created_at
+      FROM whatsapp_qr_messages m
+      WHERE m.conversation_id = $1
+    )
+    SELECT *
+    FROM events
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
     `,
-      [conversationId],
+      [conversationId, safeLimit, offset],
     );
 
-    for (const msg of messages) {
-      events.push({
-        id: msg.id,
-        type: msg.direction,
-        title:
-          msg.direction === "inbound"
-            ? "Message received"
-            : msg.sender_type === "ai"
-              ? "AI replied"
-              : "Agent replied",
-        description: msg.body || `[${msg.message_type}]`,
-        created_at: msg.created_at,
-      });
-    }
-
-    events.sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-    );
-
-    return events;
+    return {
+      items: rows,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      hasMore: offset + rows.length < total,
+    };
   }
 }
