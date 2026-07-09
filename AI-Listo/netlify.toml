@@ -2,46 +2,14 @@
   command = "npm run build"
   publish = "dist"
 
-
+# Canonicalize the Netlify subdomain to the primary domain
 [[redirects]]
-from = "https://stirring-liger-864437.netlify.app/*"
-to = "https://www.cortexaaicrm.com/:splat"
-status = 301
-force = true
-
-[[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
-
-# ─────────────────────────────────────────────
-# Redirect root domain → vacation rentals page
-# ─────────────────────────────────────────────
-
-[[redirects]]
-  from = "/"
-  to = "/vacation-rentals/search"
-  status = 302
-
-[[redirects]]
-  from = "/vacation-rentals"
-  to = "/vacation-rentals/search"
-  status = 302
-
-# ─────────────────────────────────────────────
-# WWW → non-WWW redirect (recommended SEO standard)
-# ─────────────────────────────────────────────
-
-[[redirects]]
-  from = "https://www.listostays.com/*"
-  to = "https://listostays.com/:splat"
+  from = "https://stirring-liger-864437.netlify.app/*"
+  to = "https://www.cortexaaicrm.com/:splat"
   status = 301
   force = true
 
-# ─────────────────────────────────────────────
-# SPA fallback (IMPORTANT: must be last)
-# ─────────────────────────────────────────────
-
+# SPA fallback (must be last)
 [[redirects]]
   from = "/*"
   to = "/index.html"

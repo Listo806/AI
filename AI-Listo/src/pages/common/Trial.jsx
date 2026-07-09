@@ -233,7 +233,6 @@ export default function StartTrial() {
         localStorage.setItem("trialUserId", data.userId);
         localStorage.setItem("email", form.email);
         localStorage.setItem("name", form.name);
-        localStorage.setItem("password", form.password);
         navigate("/checkout");
       } else {
         alert(data.message);
