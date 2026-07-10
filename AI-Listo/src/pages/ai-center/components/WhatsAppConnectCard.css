@@ -1,0 +1,299 @@
+.cx-wa-connect-state {
+    min-height: 210px;
+    border: 1px solid #e2e7f3;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #26376d;
+    font-size: 13px;
+    background: #fff;
+}
+
+.cx-wa-connect-card {
+    margin: 6px 18px 16px;
+    padding: 16px;
+    border: 1px solid #e2e7f3;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.cx-wa-connect-error {
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 12px;
+    text-align: left;
+}
+
+.cx-wa-connect-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 270px;
+    gap: 28px;
+}
+
+/* Guide */
+
+.cx-wa-connect-guide {
+    padding-right: 28px;
+    border-right: 1px solid #e2e7f3;
+    text-align: left;
+}
+
+.cx-wa-connect-guide h4 {
+    margin: 0;
+    color: #08104f;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.cx-wa-connect-guide h4 span {
+    color: #3d22ff;
+    font-size: 12px;
+}
+
+.cx-wa-connect-guide>p {
+    margin: 9px 0 18px;
+    color: #53607f;
+    font-size: 13px;
+}
+
+/* Steps */
+
+.cx-wa-connect-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: wa-step;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.cx-wa-connect-steps li {
+    counter-increment: wa-step;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #26376d;
+    font-size: 13px;
+}
+
+.cx-wa-connect-steps li::before {
+    content: counter(wa-step);
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    border: 1.5px solid #4b2cff;
+    border-radius: 50%;
+    color: #4b2cff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Security */
+
+.cx-wa-connect-security {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+    padding: 12px;
+    border-radius: 9px;
+    background: #f7f8ff;
+    color: #4b2cff;
+}
+
+.cx-wa-connect-security strong {
+    display: block;
+    color: #08104f;
+    font-size: 12px;
+}
+
+.cx-wa-connect-security p {
+    margin: 4px 0 0;
+    color: #53607f;
+    font-size: 12px;
+}
+
+/* QR */
+
+.cx-wa-qr-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cx-wa-qr-frame {
+    width: 204px;
+    height: 204px;
+    padding: 13px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #dfe4f4;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.cx-wa-qr-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    color: #53607f;
+}
+
+.cx-wa-qr-placeholder svg {
+    color: #4b2cff;
+}
+
+.cx-wa-qr-placeholder strong {
+    color: #08104f;
+    font-size: 13px;
+}
+
+.cx-wa-qr-placeholder span {
+    max-width: 150px;
+    font-size: 11px;
+}
+
+/* Actions */
+
+.cx-wa-connect-actions {
+    display: flex;
+    gap: 9px;
+    width: 100%;
+    margin-top: 14px;
+}
+
+.cx-wa-secondary-btn,
+.cx-wa-primary-btn,
+.cx-wa-disconnect-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 13px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cx-wa-secondary-btn {
+    flex: 1;
+    border: 1px solid #ddd8ff;
+    background: #fff;
+    color: #4b2cff;
+}
+
+.cx-wa-primary-btn {
+    flex: 1.25;
+    border: 0;
+    background: linear-gradient(135deg, #6a52ff, #3918f6);
+    color: #fff;
+}
+
+/* Connected */
+
+.cx-wa-connected-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 112px;
+    margin: 6px 18px 16px;
+    padding: 16px;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+    text-align: left;
+}
+
+.cx-wa-connected-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.cx-wa-connected-copy {
+    flex: 1;
+}
+
+.cx-wa-connected-copy h4 {
+    margin: 0;
+    color: #14532d;
+    font-size: 14px;
+}
+
+.cx-wa-connected-copy p {
+    margin: 6px 0 10px;
+    color: #3f6650;
+    font-size: 12px;
+}
+
+.cx-wa-connected-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+}
+
+.cx-wa-connected-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.cx-wa-disconnect-btn {
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: #dc2626;
+}
+
+/* Animation */
+
+.cx-wa-spin {
+    animation: cx-wa-spin 0.9s linear infinite;
+}
+
+@keyframes cx-wa-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+
+@media (max-width: 780px) {
+    .cx-wa-connect-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cx-wa-connect-guide {
+        padding-right: 0;
+        padding-bottom: 20px;
+        border-right: 0;
+        border-bottom: 1px solid #e2e7f3;
+    }
+
+    .cx-wa-connected-card {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .cx-wa-disconnect-btn {
+        width: 100%;
+    }
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Bell,
   BookOpen,
@@ -50,6 +50,9 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
+import apiClient from "../../api/apiClient";
+import WhatsAppConnectCard from "./components/WhatsAppConnectCard";
+import { useWhatsAppSetup } from "./hooks/useWhatsAppSetup";
 import "./CortexaAI.css";
 
 export default function CortexaAI() {
@@ -57,6 +60,175 @@ export default function CortexaAI() {
   const [openStep, setOpenStep] = useState(1);
   const [message, setMessage] = useState("");
   const [controlTab, setControlTab] = useState("General");
+
+  const [setupData, setSetupData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [knowledgeData, setKnowledgeData] = useState(null);
+  const [activityData, setActivityData] = useState(null);
+  const [controlsData, setControlsData] = useState(null);
+
+  const [loadingSetup, setLoadingSetup] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [pageError, setPageError] = useState("");
+
+  const [messages, setMessages] = useState([]);
+  const [conversationId, setConversationId] = useState(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  const whatsappSetup = useWhatsAppSetup({
+    onConnected: () => {
+      loadSetup();
+    },
+  });
+
+  const request = async (path, options = {}) => {
+    return apiClient.request(path, options);
+  };
+
+  const loadSetup = async () => {
+    setLoadingSetup(true);
+    setPageError("");
+
+    try {
+      const data = await request("/ai-center/agent/setup");
+      setSetupData(data);
+
+      if (data?.isSetupComplete) {
+        setActivePage((current) => (current === "setup" ? "chat" : current));
+      }
+    } catch (error) {
+      console.error("LOAD AI SETUP FAILED:", error);
+      setPageError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load AI Agent setup.",
+      );
+    } finally {
+      setLoadingSetup(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSetup();
+  }, []);
+
+  useEffect(() => {
+    if (!setupData?.isSetupComplete || activePage === "setup") return;
+
+    let cancelled = false;
+
+    const loadPage = async () => {
+      setLoadingPage(true);
+      setPageError("");
+
+      try {
+        let data = null;
+
+        if (activePage === "chat") {
+          data = await request("/ai-center/agent/dashboard");
+          if (!cancelled) setDashboardData(data);
+        }
+
+        if (activePage === "knowledge") {
+          data = await request("/ai-center/agent/knowledge");
+          if (!cancelled) setKnowledgeData(data);
+        }
+
+        if (activePage === "activity") {
+          data = await request(
+            "/ai-center/agent/activity-feed?page=1&limit=25&type=all&status=all",
+          );
+          if (!cancelled) setActivityData(data);
+        }
+
+        if (activePage === "controls") {
+          data = await request("/ai-center/agent/controls");
+          if (!cancelled) setControlsData(data);
+        }
+      } catch (error) {
+        console.error(`LOAD ${activePage.toUpperCase()} FAILED:`, error);
+        if (!cancelled) {
+          setPageError(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Unable to load AI Agent data.",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoadingPage(false);
+      }
+    };
+
+    loadPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePage, setupData?.isSetupComplete]);
+
+  const sendChatMessage = async (text) => {
+    const cleanMessage = String(text || "").trim();
+    if (!cleanMessage || sendingMessage) return;
+
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: cleanMessage,
+    };
+
+    setMessages((current) => [...current, userMessage]);
+    setMessage("");
+    setSendingMessage(true);
+
+    try {
+      const response = await request("/ai-center/agent", {
+        method: "POST",
+        body: JSON.stringify({
+          message: cleanMessage,
+          conversationId,
+        }),
+      });
+
+      setConversationId(response?.conversationId || null);
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: response?.answer || "No response returned.",
+        },
+      ]);
+
+      const refreshed = await request("/ai-center/agent/dashboard");
+      setDashboardData(refreshed);
+    } catch (error) {
+      console.error("AI CHAT FAILED:", error);
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-error-${Date.now()}`,
+          role: "assistant",
+          content:
+            error?.response?.data?.message ||
+            error?.message ||
+            "AI request failed.",
+          error: true,
+        },
+      ]);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const saveControls = async (nextControls) => {
+    const response = await request("/ai-center/agent/controls", {
+      method: "PUT",
+      body: JSON.stringify(nextControls),
+    });
+
+    setControlsData(response);
+    return response;
+  };
 
   const agentMenus = [
     {
@@ -91,6 +263,29 @@ export default function CortexaAI() {
     },
   ];
 
+  if (loadingSetup) {
+    return (
+      <div className="cx-ai-loading-state">
+        <RefreshCw className="cx-ai-loading-spinner" size={22} />
+        Loading AI Agent...
+      </div>
+    );
+  }
+
+  if (!setupData?.isSetupComplete) {
+    return (
+      <>
+        {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
+        <SetupLayout
+          setupData={setupData}
+          openStep={openStep}
+          setOpenStep={setOpenStep}
+          onRefresh={loadSetup}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="cx-ai-shell">
       <aside className="cx-agent-sidebar">
@@ -101,7 +296,7 @@ export default function CortexaAI() {
           <div>
             <h2>AI Agent</h2>
             <span>
-              <i /> Active
+              <i /> {setupData?.agentStatus === "paused" ? "Paused" : "Active"}
             </span>
           </div>
         </div>
@@ -109,6 +304,7 @@ export default function CortexaAI() {
         <nav className="cx-agent-menu">
           {agentMenus.map((item) => {
             const Icon = item.icon;
+
             return (
               <button
                 key={item.key}
@@ -128,9 +324,13 @@ export default function CortexaAI() {
         <div className="cx-agent-status-card">
           <h3>AI Agent Status</h3>
           <p className="online">
-            <i /> Online
+            <i /> {setupData?.agentStatus === "paused" ? "Paused" : "Online"}
           </p>
-          <p>Your AI Agent is active and ready to help.</p>
+          <p>
+            {setupData?.agentStatus === "paused"
+              ? "Your AI Agent is temporarily paused."
+              : "Your AI Agent is active and ready to help."}
+          </p>
           <button onClick={() => setActivePage("activity")}>
             View Activity
           </button>
@@ -138,22 +338,52 @@ export default function CortexaAI() {
       </aside>
 
       <section className="cx-agent-content">
+        {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
+
+        {loadingPage && activePage !== "chat" && (
+          <div className="cx-ai-inline-loading">
+            <RefreshCw className="cx-ai-loading-spinner" size={18} />
+            Loading data...
+          </div>
+        )}
+
         {activePage === "setup" && (
-          <SetupLayout openStep={openStep} setOpenStep={setOpenStep} />
+          <SetupLayout
+            setupData={setupData}
+            openStep={openStep}
+            setOpenStep={setOpenStep}
+            onRefresh={loadSetup}
+          />
         )}
 
         {activePage === "chat" && (
-          <ChatLayout message={message} setMessage={setMessage} />
+          <ChatLayout
+            message={message}
+            setMessage={setMessage}
+            dashboardData={dashboardData}
+            messages={messages}
+            sendingMessage={sendingMessage}
+            onSend={sendChatMessage}
+          />
         )}
 
-        {activePage === "knowledge" && <KnowledgeLayout />}
+        {activePage === "knowledge" && (
+          <KnowledgeLayout knowledgeData={knowledgeData} />
+        )}
 
-        {activePage === "activity" && <ActivityLayout />}
+        {activePage === "activity" && (
+          <ActivityLayout
+            activityData={activityData}
+            onDataChange={setActivityData}
+          />
+        )}
 
         {activePage === "controls" && (
           <ControlsLayout
             controlTab={controlTab}
             setControlTab={setControlTab}
+            controlsData={controlsData}
+            onSave={saveControls}
           />
         )}
       </section>
@@ -161,94 +391,130 @@ export default function CortexaAI() {
   );
 }
 
-function SetupLayout({ openStep, setOpenStep }) {
-  const setupSteps = useMemo(
-    () => [
+function SetupLayout({ setupData, openStep, setOpenStep, onRefresh }) {
+  const setupSteps = useMemo(() => {
+    const data = setupData || {};
+
+    return [
       {
         id: 1,
+        key: "whatsapp",
         title: "Connect WhatsApp",
         desc: "Connect the WhatsApp number your AI Agent will use.",
         icon: MessageSquare,
-        status: "Connected",
-        statusType: "success",
-        action: "Connected",
+        status: whatsappSetup?.connected
+          ? "Connected"
+          : data?.whatsapp?.status || "Not connected",
+        statusType:
+          whatsappSetup?.connected || data?.whatsapp?.connected
+            ? "success"
+            : "danger",
+        action:
+          whatsappSetup?.connected || data?.whatsapp?.connected
+            ? "Connected"
+            : "Connect WhatsApp",
         accent: "green",
+        complete: Boolean(
+          whatsappSetup?.connected || data?.whatsapp?.connected,
+        ),
       },
       {
         id: 2,
+        key: "businessProfile",
         title: "Business Profile",
         desc: "Tell your AI Agent about your business.",
         icon: Building2,
-        status: "Complete",
-        statusType: "success",
-        action: "Edit",
+        status: data?.businessProfile?.status || "Incomplete",
+        statusType: data?.businessProfile?.completed ? "success" : "warning",
+        action: data?.businessProfile?.completed ? "Edit" : "Set up",
         accent: "blue",
+        complete: Boolean(data?.businessProfile?.completed),
       },
       {
         id: 3,
+        key: "properties",
         title: "Import Properties",
         desc: "Add properties your AI can recommend.",
         icon: Home,
-        status: "23 imported",
-        statusType: "success",
+        status:
+          data?.properties?.status ||
+          `${Number(data?.properties?.imported || 0)} imported`,
+        statusType:
+          Number(data?.properties?.imported || 0) > 0 ? "success" : "muted",
         action: "Import",
         accent: "orange",
+        complete: Number(data?.properties?.imported || 0) > 0,
       },
       {
         id: 4,
+        key: "appointmentRules",
         title: "Appointment Rules",
         desc: "Define when and how AI can book appointments.",
         icon: CalendarDays,
-        status: "Configured",
-        statusType: "success",
+        status: data?.appointmentRules?.status || "Not configured",
+        statusType: data?.appointmentRules?.configured ? "success" : "muted",
         action: "Configure",
         accent: "indigo",
+        complete: Boolean(data?.appointmentRules?.configured),
       },
       {
         id: 5,
+        key: "behavior",
         title: "AI Behavior",
         desc: "Define how your AI should talk and what to ask.",
         icon: MessageSquare,
-        status: "Configured",
-        statusType: "success",
+        status: data?.behavior?.status || "Not configured",
+        statusType: data?.behavior?.configured ? "success" : "muted",
         action: "Configure",
         accent: "green",
+        complete: Boolean(data?.behavior?.configured),
       },
       {
         id: 6,
+        key: "automations",
         title: "Automations",
         desc: "Choose what your AI Agent should do automatically.",
         icon: Zap,
-        status: "4 automations",
-        statusType: "success",
+        status:
+          data?.automations?.status ||
+          `${Number(data?.automations?.total || 0)} automations`,
+        statusType:
+          Number(data?.automations?.total || 0) > 0 ? "success" : "muted",
         action: "Set up",
         accent: "purple",
+        complete: Number(data?.automations?.total || 0) > 0,
       },
       {
         id: 7,
+        key: "testAi",
         title: "Test AI",
         desc: "Test your AI Agent in a safe environment.",
         icon: TestTube2,
-        status: "Tested",
-        statusType: "success",
+        status: data?.testAi?.status || "Not tested",
+        statusType: data?.testAi?.tested ? "success" : "muted",
         action: "Test",
         accent: "pink",
+        complete: Boolean(data?.testAi?.tested),
       },
       {
         id: 8,
+        key: "launch",
         title: "Launch AI Agent",
         desc: "Review and launch your AI Agent.",
         icon: Rocket,
-        status: "Ready",
-        statusType: "success",
-        action: "Launch",
+        status: data?.launch?.status || "Locked",
+        statusType: data?.launch?.unlocked ? "success" : "locked",
+        action: data?.launch?.unlocked ? "Launch" : "Locked",
         accent: "rose",
+        complete: Boolean(data?.launch?.launched),
+        locked: !data?.launch?.unlocked,
       },
-    ],
-    [],
-  );
+    ];
+  }, [setupData, whatsappSetup?.connected]);
 
-  const progress = 100;
+  const completedSteps = Number(setupData?.completedSteps || 0);
+  const totalSteps = Number(setupData?.totalSteps || 8);
+  const progress = Number(setupData?.progress || 0);
 
   return (
     <div className="cx-ai-setup-page">
@@ -315,55 +581,19 @@ function SetupLayout({ openStep, setOpenStep }) {
                   </div>
 
                   {isOpen && step.id === 1 && (
-                    <div className="cx-whatsapp-panel">
-                      <div className="cx-pairing-col">
-                        <h4>
-                          Pairing Code <span>(Recommended)</span>
-                        </h4>
-                        <p>Enter this code in your WhatsApp mobile app.</p>
-
-                        <div className="cx-pairing-code">
-                          <strong>729 - KDF - 913</strong>
-                          <button>
-                            <Copy size={22} />
-                          </button>
-                        </div>
-
-                        <ol className="cx-pairing-steps">
-                          <li>Open WhatsApp on your phone</li>
-                          <li>Go to Settings &gt; Linked Devices</li>
-                          <li>Tap “Link a Device” and enter the code above</li>
-                        </ol>
-
-                        <div className="cx-expire-box">
-                          <Clock3 size={18} />
-                          Code expires in <strong>04:58</strong>
-                        </div>
-                      </div>
-
-                      <div className="cx-qr-col">
-                        <h4>QR Code</h4>
-                        <p>Scan this QR code with your WhatsApp mobile app.</p>
-                        <div className="cx-qr-box">
-                          <div className="cx-qr-fake">
-                            <MessageSquare size={42} />
-                          </div>
-                        </div>
-                        <button className="cx-refresh-btn">
-                          <RefreshCw size={18} />
-                          Refresh QR
-                        </button>
-                      </div>
-
-                      <div className="cx-panel-actions">
-                        <button className="cx-secondary-btn">
-                          Save for later
-                        </button>
-                        <button className="cx-primary-btn">
-                          Connected WhatsApp
-                        </button>
-                      </div>
-                    </div>
+                    <WhatsAppConnectCard
+                      qr={whatsappSetup?.qr}
+                      connected={whatsappSetup?.connected}
+                      phone={whatsappSetup?.phone}
+                      loading={whatsappSetup?.loading}
+                      connecting={whatsappSetup?.connecting}
+                      disconnecting={whatsappSetup?.disconnecting}
+                      socketConnected={whatsappSetup?.socketConnected}
+                      error={whatsappSetup?.error}
+                      onConnect={whatsappSetup?.connect}
+                      onDisconnect={whatsappSetup?.disconnect}
+                      onRefreshQr={whatsappSetup?.refreshQr}
+                    />
                   )}
                 </article>
               );
@@ -382,9 +612,17 @@ function SetupLayout({ openStep, setOpenStep }) {
                 <span>{progress}%</span>
               </div>
               <div>
-                <strong>8 of 8 steps completed</strong>
-                <p>Great work!</p>
-                <p>Your AI Agent is ready.</p>
+                <strong>
+                  {completedSteps} of {totalSteps} steps completed
+                </strong>
+                <p>
+                  {progress === 100 ? "Great work!" : "You’re doing great!"}
+                </p>
+                <p>
+                  {progress === 100
+                    ? "Your AI Agent is ready."
+                    : "Let’s finish setting up your AI Agent."}
+                </p>
               </div>
             </div>
           </div>
@@ -399,8 +637,23 @@ function SetupLayout({ openStep, setOpenStep }) {
                     <Icon className={row.accent} size={22} />
                     <span>{row.title}</span>
                   </div>
-                  <div className="cx-status-value success">
-                    <CircleCheck size={15} /> Complete
+                  <div
+                    className={`cx-status-value ${
+                      row.complete
+                        ? "success"
+                        : row.locked
+                          ? "locked"
+                          : "pending"
+                    }`}
+                  >
+                    {row.complete ? (
+                      <CircleCheck size={15} />
+                    ) : row.locked ? (
+                      <Lock size={15} />
+                    ) : (
+                      <Clock3 size={15} />
+                    )}
+                    {row.status}
                   </div>
                 </div>
               );
@@ -433,7 +686,14 @@ function SetupLayout({ openStep, setOpenStep }) {
   );
 }
 
-function ChatLayout({ message, setMessage }) {
+function ChatLayout({
+  message,
+  setMessage,
+  dashboardData,
+  messages,
+  sendingMessage,
+  onSend,
+}) {
   const prompts = [
     {
       icon: MessageSquare,
@@ -517,7 +777,11 @@ function ChatLayout({ message, setMessage }) {
             {prompts.map((item) => {
               const Icon = item.icon;
               return (
-                <button key={item.title} className="cx-prompt-card">
+                <button
+                  key={item.title}
+                  className="cx-prompt-card"
+                  onClick={() => onSend(item.title)}
+                >
                   <div className="cx-promt-card-wrap">
                     <div className={`cx-small-icon ${item.accent}`}>
                       <Icon size={16} />
@@ -548,6 +812,24 @@ function ChatLayout({ message, setMessage }) {
             </button>
           </div>
 
+          {messages?.length > 0 && (
+            <div className="cx-chat-message-list">
+              {messages.map((item) => (
+                <div
+                  key={item.id}
+                  className={`cx-chat-message ${item.role} ${
+                    item.error ? "error" : ""
+                  }`}
+                >
+                  {item.content}
+                </div>
+              ))}
+              {sendingMessage && (
+                <div className="cx-chat-message assistant">Thinking...</div>
+              )}
+            </div>
+          )}
+
           <div className="cx-chat-input">
             <input
               value={message}
@@ -555,7 +837,10 @@ function ChatLayout({ message, setMessage }) {
               placeholder="Type your message here..."
             />
             <Mic size={24} />
-            <button>
+            <button
+              onClick={() => onSend(message)}
+              disabled={!message.trim() || sendingMessage}
+            >
               <Send size={22} />
             </button>
           </div>
@@ -566,16 +851,16 @@ function ChatLayout({ message, setMessage }) {
         </main>
 
         <aside className="cx-right-column">
-          <GlanceCard />
-          <PriorityTasks />
-          <RecentActivityMini />
+          <GlanceCard data={dashboardData?.glance} />
+          <PriorityTasks tasks={dashboardData?.priorityTasks} />
+          <RecentActivityMini items={dashboardData?.recentActivity} />
         </aside>
       </div>
     </div>
   );
 }
 
-function KnowledgeLayout() {
+function KnowledgeLayout({ knowledgeData }) {
   const categories = [
     [
       "Company Information",
@@ -656,29 +941,29 @@ function KnowledgeLayout() {
         <StatCard
           icon={BookOpen}
           title="Knowledge Items"
-          value="32"
+          value={knowledgeData?.stats?.knowledgeItems ?? 0}
           desc="Total items"
           accent="purple"
         />
         <StatCard
           icon={CircleCheck}
           title="Active Items"
-          value="28"
+          value={knowledgeData?.stats?.activeItems ?? 0}
           desc="Currently in use"
           accent="green"
         />
         <StatCard
           icon={Database}
           title="Data Sources"
-          value="8"
+          value={knowledgeData?.stats?.dataSources ?? 0}
           desc="Connected sources"
           accent="blue"
         />
         <StatCard
           icon={Sparkles}
           title="Last Updated"
-          value="2h ago"
-          desc="May 23, 2024"
+          value={knowledgeData?.stats?.lastUpdatedLabel || "Never"}
+          desc={knowledgeData?.stats?.lastUpdatedDate || "No updates yet"}
           accent="orange"
         />
       </div>
@@ -689,7 +974,16 @@ function KnowledgeLayout() {
           <p>Organize and manage what your AI knows.</p>
 
           <div className="cx-category-list">
-            {categories.map(([title, desc, count, Icon, accent]) => (
+            {(knowledgeData?.categories?.length
+              ? knowledgeData.categories.map((item) => [
+                  item.title,
+                  item.description,
+                  `${item.items} items`,
+                  item.key === "property_knowledge" ? Home : FileText,
+                  item.accent || "purple",
+                ])
+              : categories
+            ).map(([title, desc, count, Icon, accent]) => (
               <div className="cx-category-row" key={title}>
                 <div className={`cx-small-icon ${accent}`}>
                   <Icon size={22} />
@@ -714,7 +1008,9 @@ function KnowledgeLayout() {
           <div className="cx-white-card">
             <h2>Knowledge Health</h2>
             <div className="cx-health-row">
-              <div className="cx-big-score">87%</div>
+              <div className="cx-big-score">
+                {knowledgeData?.health?.score ?? 0}%
+              </div>
               <div className="cx-health-list">
                 <p>
                   <CheckCircle2 size={16} /> Complete <strong>28 / 32</strong>
@@ -759,7 +1055,7 @@ function KnowledgeLayout() {
   );
 }
 
-function ActivityLayout() {
+function ActivityLayout({ activityData, onDataChange }) {
   const rows = [
     [
       "9:45 AM",
@@ -894,6 +1190,33 @@ function ActivityLayout() {
       accent: "blue",
     },
   ];
+
+  const apiRows = (activityData?.items || []).map((item) => [
+    item.timeLabel || "",
+    item.title || "AI Activity",
+    item.description || "",
+    item.iconKey === "appointment"
+      ? CalendarDays
+      : item.iconKey === "property"
+        ? Home
+        : item.iconKey === "alert"
+          ? TriangleAlert
+          : item.iconKey === "data"
+            ? Database
+            : MessageCircle,
+    item.statusLabel || "Completed",
+    item.leadName || "",
+  ]);
+
+  const displayRows = apiRows.length ? apiRows : rows;
+  const overview = activityData?.overview || {};
+  const activityTypesData = activityData?.activityByType?.length
+    ? activityData.activityByType
+    : activityTypes;
+  const topActionsData = activityData?.topActions?.length
+    ? activityData.topActions
+    : topActions;
+
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
@@ -927,25 +1250,27 @@ function ActivityLayout() {
           <div className="cx-white-card cx-timeline-card">
             <h4>Today - May 23, 2024</h4>
 
-            {rows.map(([time, title, desc, Icon, status], index) => (
-              <div className="cx-activity-row" key={title}>
-                <time>{time}</time>
-                <div className="cx-line-dot" />
-                <div
-                  className={`cx-small-icon ${index % 3 === 0 ? "green" : index % 3 === 1 ? "orange" : "blue"}`}
-                >
-                  <Icon size={18} />
+            {displayRows.map(
+              ([time, title, desc, Icon, status, leadName], index) => (
+                <div className="cx-activity-row" key={title}>
+                  <time>{time}</time>
+                  <div className="cx-line-dot" />
+                  <div
+                    className={`cx-small-icon ${index % 3 === 0 ? "green" : index % 3 === 1 ? "orange" : "blue"}`}
+                  >
+                    <Icon size={18} />
+                  </div>
+                  <div>
+                    <strong>{title}</strong>
+                    <p>{desc}</p>
+                  </div>
+                  <span>{leadName ? `Lead: ${leadName}` : "AI Agent"}</span>
+                  <em className={status === "Escalated" ? "warning" : ""}>
+                    {status}
+                  </em>
                 </div>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{desc}</p>
-                </div>
-                <span>Lead: Maria Lopez</span>
-                <em className={status === "Escalated" ? "warning" : ""}>
-                  {status}
-                </em>
-              </div>
-            ))}
+              ),
+            )}
 
             <div className="cx-pagination">
               <span>Showing 1 to 25 of 156 activities</span>
@@ -969,22 +1294,27 @@ function ActivityLayout() {
               <StatMini
                 icon={Activity}
                 title="Total Activities"
-                value="156"
-                desc="↑ 18% vs last 7 days"
+                value={overview.total ?? activityData?.total ?? 0}
+                desc={overview.trendLabel || "Current period"}
               />
               <StatMini
                 icon={CircleCheck}
                 title="Completed"
-                value="142"
-                desc="91%"
+                value={overview.completed ?? 0}
+                desc={overview.completedPercentLabel || "0%"}
               />
               <StatMini
                 icon={TriangleAlert}
                 title="Escalated"
-                value="9"
-                desc="6%"
+                value={overview.escalated ?? 0}
+                desc={overview.escalatedPercentLabel || "0%"}
               />
-              <StatMini icon={CircleX} title="Failed" value="5" desc="3%" />
+              <StatMini
+                icon={CircleX}
+                title="Failed"
+                value={overview.failed ?? 0}
+                desc={overview.failedPercentLabel || "0%"}
+              />
             </div>
           </div>
 
@@ -992,7 +1322,7 @@ function ActivityLayout() {
             <h2>
               Activity by Type <button>View all</button>
             </h2>
-            {activityTypes.map((item) => {
+            {activityTypesData.map((item) => {
               const Icon = item.icon;
               return (
                 <div className="cx-bar-row has-icon" key={item.label}>
@@ -1019,7 +1349,7 @@ function ActivityLayout() {
             </h2>
 
             <div className="cx-top-actions-list">
-              {topActions.map((item) => {
+              {topActionsData.map((item) => {
                 const Icon = item.icon;
 
                 return (
@@ -1062,7 +1392,7 @@ function ActivityLayout() {
   );
 }
 
-function ControlsLayout({ controlTab, setControlTab }) {
+function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
   const tabs = [
     "General",
     "Lead Handling",
@@ -1134,6 +1464,57 @@ function ControlsLayout({ controlTab, setControlTab }) {
     ],
   ];
 
+  const capabilityState = controlsData?.capabilities || {};
+  const quickControlState = controlsData?.quickControls || {};
+  const [draft, setDraft] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (controlsData) setDraft(controlsData);
+  }, [controlsData]);
+
+  const current = draft || controlsData || {};
+
+  const toggleCapability = (key) => {
+    setDraft((previous) => ({
+      ...(previous || controlsData || {}),
+      capabilities: {
+        ...((previous || controlsData || {}).capabilities || {}),
+        [key]: !Boolean(
+          ((previous || controlsData || {}).capabilities || {})[key],
+        ),
+      },
+    }));
+  };
+
+  const toggleQuickControl = (key) => {
+    setDraft((previous) => ({
+      ...(previous || controlsData || {}),
+      quickControls: {
+        ...((previous || controlsData || {}).quickControls || {}),
+        [key]: !Boolean(
+          ((previous || controlsData || {}).quickControls || {})[key],
+        ),
+      },
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!current || saving) return;
+
+    setSaving(true);
+    try {
+      const saved = await onSave({
+        responseTone: current.responseTone,
+        capabilities: current.capabilities,
+        quickControls: current.quickControls,
+      });
+      setDraft(saved);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
@@ -1144,8 +1525,12 @@ function ControlsLayout({ controlTab, setControlTab }) {
             settings.
           </p>
         </div>
-        <button className="cx-primary-btn slim">
-          <Save size={16} /> Save Changes
+        <button
+          className="cx-primary-btn slim"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          <Save size={16} /> {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
 
@@ -1168,23 +1553,43 @@ function ControlsLayout({ controlTab, setControlTab }) {
             <p>Enable or disable features your AI Agent can perform.</p>
 
             <div className="cx-capability-list">
-              {capabilities.map(([title, desc, Icon, enabled], index) => (
-                <div className="cx-capability-row" key={title}>
-                  <div
-                    className={`cx-small-icon ${index % 4 === 0 ? "green" : index % 4 === 1 ? "purple" : index % 4 === 2 ? "orange" : "blue"}`}
-                  >
-                    <Icon size={21} />
+              {capabilities.map(([title, desc, Icon, enabled], index) => {
+                const capabilityKeys = [
+                  "autoReplyToLeads",
+                  "leadQualification",
+                  "appointmentBooking",
+                  "propertyRecommendations",
+                  "followUpAutomation",
+                  "leadScoring",
+                  "humanApprovalHighValue",
+                  "autoEscalationHotLeads",
+                  "marketingCampaigns",
+                  "smartInsights",
+                ];
+                const key = capabilityKeys[index];
+                const isEnabled = current?.capabilities?.[key] ?? enabled;
+
+                return (
+                  <div className="cx-capability-row" key={title}>
+                    <div
+                      className={`cx-small-icon ${index % 4 === 0 ? "green" : index % 4 === 1 ? "purple" : index % 4 === 2 ? "orange" : "blue"}`}
+                    >
+                      <Icon size={21} />
+                    </div>
+                    <div>
+                      <strong>{title}</strong>
+                      <p>{desc}</p>
+                    </div>
+                    <button
+                      className={`cx-switch ${isEnabled ? "on" : ""}`}
+                      onClick={() => toggleCapability(key)}
+                    >
+                      <i />
+                    </button>
+                    <ChevronRight size={18} />
                   </div>
-                  <div>
-                    <strong>{title}</strong>
-                    <p>{desc}</p>
-                  </div>
-                  <button className={`cx-switch ${enabled ? "on" : ""}`}>
-                    <i />
-                  </button>
-                  <ChevronRight size={18} />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1224,7 +1629,11 @@ function ControlsLayout({ controlTab, setControlTab }) {
             </h2>
             <div className="cx-overview-grid">
               <StatMini title="Responses Today" value="148" desc="↑ 24%" />
-              <StatMini title="Appointments Booked" value="8" desc="↑ 33%" />
+              <StatMini
+                title="Appointments Booked"
+                value={data?.appointmentsBooked ?? 0}
+                desc="↑ 33%"
+              />
               <StatMini title="Leads Handled" value="56" desc="↑ 18%" />
               <StatMini
                 title="Avg. Response Time"
@@ -1238,57 +1647,59 @@ function ControlsLayout({ controlTab, setControlTab }) {
             <h2>Response Tone</h2>
             <p>How your AI Agent communicates</p>
             <button className="cx-select-btn">
-              Professional & Friendly <ChevronDown size={18} />
+              {current?.responseToneLabel || "Professional & Friendly"}{" "}
+              <ChevronDown size={18} />
             </button>
           </div>
 
           <div className="cx-white-card">
             <h2>Quick Controls</h2>
-
             {[
               {
+                key: "pauseAiAgent",
                 title: "Pause AI Agent",
                 desc: "Temporarily pause all AI actions",
-                active: false,
                 icon: PauseCircle,
                 accent: "red",
               },
               {
+                key: "doNotDisturb",
                 title: "Do Not Disturb",
                 desc: "Silence notifications after hours",
-                active: true,
                 icon: Moon,
                 accent: "blue",
               },
               {
+                key: "workingHoursOnly",
                 title: "Working Hours Only",
                 desc: "9:00 AM - 6:00 PM (Mon - Fri)",
-                active: true,
                 icon: Timer,
                 accent: "green",
               },
               {
+                key: "weekendsActive",
                 title: "Weekends Active",
                 desc: "Allow AI to work on weekends",
-                active: false,
                 icon: CalendarDays,
                 accent: "orange",
               },
             ].map((item) => {
               const Icon = item.icon;
+              const active = Boolean(current?.quickControls?.[item.key]);
 
               return (
-                <div className="cx-quick-control" key={item.title}>
+                <div className="cx-quick-control" key={item.key}>
                   <div className={`cx-quick-control-icon ${item.accent}`}>
                     <Icon size={18} />
                   </div>
-
                   <div className="cx-quick-control-content">
                     <strong>{item.title}</strong>
                     <p>{item.desc}</p>
                   </div>
-
-                  <button className={`cx-switch ${item.active ? "on" : ""}`}>
+                  <button
+                    className={`cx-switch ${active ? "on" : ""}`}
+                    onClick={() => toggleQuickControl(item.key)}
+                  >
                     <i />
                   </button>
                 </div>
@@ -1319,7 +1730,7 @@ function ControlsLayout({ controlTab, setControlTab }) {
   );
 }
 
-function GlanceCard() {
+function GlanceCard({ data = {} }) {
   return (
     <div className="cx-white-card">
       <h2>
@@ -1358,7 +1769,7 @@ function GlanceCard() {
   );
 }
 
-function PriorityTasks() {
+function PriorityTasks({ tasks = [] }) {
   return (
     <div className="cx-white-card">
       <h2>
@@ -1385,7 +1796,7 @@ function PriorityTasks() {
   );
 }
 
-function RecentActivityMini() {
+function RecentActivityMini({ items = [] }) {
   return (
     <div className="cx-white-card">
       <h2>
