@@ -1,0 +1,426 @@
+.cx-property-import-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 10, 45, 0.5);
+    backdrop-filter: blur(3px);
+}
+
+.cx-property-import-modal {
+    display: flex;
+    flex-direction: column;
+    width: min(1040px, 100%);
+    max-height: 92vh;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #fff;
+    color: #08104f;
+    box-shadow: 0 28px 90px rgba(4, 10, 50, 0.26);
+}
+
+/* =========================
+   Header
+========================= */
+
+.cx-property-import-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px;
+    border-bottom: 1px solid #e7eaf4;
+}
+
+.cx-property-import-head > div {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cx-property-import-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #fff2e5;
+    color: #ff7a00;
+}
+
+.cx-property-import-head h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.cx-property-import-head p {
+    margin: 5px 0 0;
+    color: #5b6685;
+    font-size: 13px;
+}
+
+.cx-property-import-head > button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 8px;
+    background: #f5f6fb;
+    color: #53607f;
+    cursor: pointer;
+}
+
+/* =========================
+   Toolbar
+========================= */
+
+.cx-property-import-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid #edf0f7;
+}
+
+.cx-property-import-toolbar form {
+    display: flex;
+    align-items: center;
+    width: min(520px, 100%);
+    height: 40px;
+    padding-left: 12px;
+    border: 1px solid #dfe4f2;
+    border-radius: 9px;
+    color: #7180a8;
+}
+
+.cx-property-import-toolbar form input {
+    flex: 1;
+    min-width: 0;
+    padding: 0 10px;
+    border: 0;
+    outline: 0;
+    color: #071153;
+}
+
+.cx-property-import-toolbar form button {
+    align-self: stretch;
+    padding: 0 15px;
+    border: 0;
+    border-left: 1px solid #e3e7f1;
+    background: #f8f9fd;
+    color: #4225ff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cx-property-import-toolbar > div {
+    display: flex;
+    gap: 8px;
+}
+
+.cx-property-import-toolbar > div button {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid #ddd8ff;
+    border-radius: 8px;
+    background: #fff;
+    color: #4428ef;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* =========================
+   Error & Summary
+========================= */
+
+.cx-property-import-error {
+    margin: 14px 22px 0;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 12px;
+}
+
+.cx-property-import-summary {
+    padding: 12px 22px;
+    color: #53607f;
+    font-size: 12px;
+}
+
+.cx-property-import-summary strong {
+    color: #3d22ff;
+    font-size: 14px;
+}
+
+/* =========================
+   Content
+========================= */
+
+.cx-property-import-content {
+    min-height: 350px;
+    overflow: auto;
+    padding: 0 22px 18px;
+}
+
+.cx-property-import-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+/* =========================
+   Property Card
+========================= */
+
+.cx-property-import-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid #e2e6f1;
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.cx-property-import-card:hover {
+    border-color: #bfb4ff;
+}
+
+.cx-property-import-card.selected {
+    border-color: #6347ff;
+    background: #faf8ff;
+    box-shadow: 0 0 0 2px rgba(84, 52, 255, 0.08);
+}
+
+.cx-property-import-check {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #ccd2e4;
+    border-radius: 6px;
+    background: #fff;
+    color: #fff;
+}
+
+.cx-property-import-card.selected .cx-property-import-check {
+    border-color: #4d2fff;
+    background: #4d2fff;
+}
+
+.cx-property-import-thumb {
+    display: grid;
+    place-items: center;
+    height: 82px;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #eef2fb;
+    color: #7180a8;
+}
+
+.cx-property-import-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cx-property-import-copy {
+    min-width: 0;
+    padding-right: 22px;
+}
+
+.cx-property-import-copy > strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.cx-property-import-copy > p {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 8px 0;
+    color: #65708e;
+    font-size: 12px;
+}
+
+.cx-property-import-copy > div {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.cx-property-import-copy span {
+    color: #071153;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.cx-property-import-copy small {
+    color: #69738f;
+}
+
+/* =========================
+   Loading & Empty
+========================= */
+
+.cx-property-import-loading,
+.cx-property-import-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 340px;
+    color: #68728f;
+}
+
+.cx-property-import-loading svg,
+.cx-property-import-empty svg {
+    color: #5535ff;
+}
+
+.cx-property-import-loading svg,
+.cx-property-import-foot .spin {
+    animation: cx-property-spin 0.85s linear infinite;
+}
+
+.cx-property-import-empty strong {
+    color: #071153;
+}
+
+.cx-property-import-empty p {
+    margin: 0;
+    font-size: 12px;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.cx-property-import-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 22px;
+    border-top: 1px solid #e7eaf4;
+}
+
+.cx-property-import-pagination {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-right: auto;
+    color: #5d6785;
+    font-size: 12px;
+}
+
+.cx-property-import-pagination button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #dfe4f2;
+    border-radius: 8px;
+    background: #fff;
+    color: #34416c;
+    cursor: pointer;
+}
+
+.cx-property-import-foot > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cx-property-import-foot .secondary {
+    border: 1px solid #dfe4f2;
+    background: #fff;
+    color: #273363;
+}
+
+.cx-property-import-foot .primary {
+    border: 0;
+    background: linear-gradient(135deg, #6a52ff, #3918f6);
+    color: #fff;
+}
+
+.cx-property-import-foot button:disabled,
+.cx-property-import-pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =========================
+   Animation
+========================= */
+
+@keyframes cx-property-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+   Responsive
+========================= */
+
+@media (max-width: 760px) {
+    .cx-property-import-backdrop {
+        padding: 0;
+    }
+
+    .cx-property-import-modal {
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .cx-property-import-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cx-property-import-toolbar > div {
+        justify-content: flex-end;
+    }
+
+    .cx-property-import-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cx-property-import-foot {
+        flex-wrap: wrap;
+    }
+
+    .cx-property-import-pagination {
+        width: 100%;
+        margin: 0 0 4px;
+    }
+
+    .cx-property-import-foot > button {
+        flex: 1;
+        justify-content: center;
+    }
+}

@@ -159,7 +159,7 @@ export default function BusinessProfileModal({
             <h3>Business details</h3>
             <div className="cx-business-form-grid">
               <label>
-                Business name <b>*</b>
+                <span>Business name <b>*</b></span>
                 <div className="cx-business-input-wrap">
                   <Building2 size={17} />
                   <input
@@ -172,7 +172,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Business type <b>*</b>
+                <span>Business type <b>*</b></span>
                 <select
                   value={form.businessType}
                   onChange={update("businessType")}
@@ -189,7 +189,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label className="full">
-                Business description <b>*</b>
+                <span>Business description <b>*</b></span>
                 <textarea
                   value={form.description}
                   onChange={update("description")}
@@ -273,7 +273,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                City <b>*</b>
+                <span>City <b>*</b></span>
                 <input
                   value={form.city}
                   onChange={update("city")}
@@ -300,7 +300,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Country <b>*</b>
+                <span>Country <b>*</b></span>
                 <input
                   value={form.country}
                   onChange={update("country")}

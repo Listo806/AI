@@ -1,7 +1,7 @@
 .cx-business-modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1200;
+    z-index: 9999999999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -84,12 +84,11 @@
 }
 
 .cx-business-modal section {
-    padding: 18px 0;
-    border-bottom: 1px solid #edf0f7;
+    padding: 18px 0!important;
 }
 
 .cx-business-modal section h3 {
-    margin: 0 0 14px;
+    margin: 16px 0 14px;
     font-size: 14px;
 }
 
@@ -106,6 +105,7 @@
     color: #25315f;
     font-size: 12px;
     font-weight: 700;
+    text-align: left;
 }
 
 .cx-business-form-grid label.full {

@@ -56,6 +56,7 @@ import { useWhatsAppSetup } from "./hooks/useWhatsAppSetup";
 import "./CortexaAI.css";
 import BusinessProfileModal from "./components/BusinessProfileModal";
 import aiAgentSetupService from "./services/aiAgentSetup.service";
+import PropertyImportModal from "./components/PropertyImportModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -82,6 +83,13 @@ export default function CortexaAI() {
   const [businessProfileLoading, setBusinessProfileLoading] = useState(false);
   const [businessProfileSaving, setBusinessProfileSaving] = useState(false);
   const [businessProfileError, setBusinessProfileError] = useState("");
+
+  const [propertyImportOpen, setPropertyImportOpen] = useState(false);
+  const [propertyCatalog, setPropertyCatalog] = useState(null);
+  const [propertyCatalogLoading, setPropertyCatalogLoading] = useState(false);
+  const [propertyCatalogSaving, setPropertyCatalogSaving] = useState(false);
+  const [propertyCatalogError, setPropertyCatalogError] = useState("");
+  const [propertyCatalogSearch, setPropertyCatalogSearch] = useState("");
 
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
@@ -113,6 +121,71 @@ export default function CortexaAI() {
 
   const request = async (path, options = {}) => {
     return apiClient.request(path, options);
+  };
+
+  const loadPropertyCatalog = async ({
+    page = 1,
+    search = propertyCatalogSearch,
+  } = {}) => {
+    setPropertyCatalogLoading(true);
+    setPropertyCatalogError("");
+
+    try {
+      const data = await aiAgentSetupService.getPropertyCatalog({
+        page,
+        limit: 12,
+        search,
+      });
+
+      setPropertyCatalog(data);
+      setPropertyCatalogSearch(search);
+    } catch (error) {
+      console.error("LOAD PROPERTY CATALOG FAILED:", error);
+
+      setPropertyCatalogError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load properties.",
+      );
+    } finally {
+      setPropertyCatalogLoading(false);
+    }
+  };
+
+  const openPropertyImport = async () => {
+    setPropertyImportOpen(true);
+
+    await loadPropertyCatalog({
+      page: 1,
+      search: "",
+    });
+  };
+
+  const savePropertyCatalog = async (propertyIds) => {
+    setPropertyCatalogSaving(true);
+    setPropertyCatalogError("");
+
+    try {
+      await aiAgentSetupService.savePropertyCatalog(propertyIds);
+
+      setPropertyImportOpen(false);
+
+      await loadSetup();
+
+      setOpenStep(4);
+    } catch (error) {
+      console.error("SAVE PROPERTY CATALOG FAILED:", error);
+
+      setPropertyCatalogError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save property catalog.",
+      );
+
+      throw error;
+    } finally {
+      setPropertyCatalogSaving(false);
+    }
   };
 
   useEffect(() => {
@@ -340,6 +413,7 @@ export default function CortexaAI() {
           onRefresh={loadSetup}
           whatsappSetup={whatsappSetup}
           onBusinessProfile={openBusinessProfile}
+          onPropertyImport={openPropertyImport}
         />
 
         <BusinessProfileModal
@@ -353,6 +427,32 @@ export default function CortexaAI() {
             }
           }}
           onSave={saveBusinessProfile}
+        />
+
+        <PropertyImportModal
+          open={propertyImportOpen}
+          loading={propertyCatalogLoading}
+          saving={propertyCatalogSaving}
+          error={propertyCatalogError}
+          catalog={propertyCatalog}
+          onClose={() => {
+            if (!propertyCatalogSaving) {
+              setPropertyImportOpen(false);
+            }
+          }}
+          onSearch={(search) => {
+            loadPropertyCatalog({
+              page: 1,
+              search,
+            });
+          }}
+          onPageChange={(page) => {
+            loadPropertyCatalog({
+              page,
+              search: propertyCatalogSearch,
+            });
+          }}
+          onSave={savePropertyCatalog}
         />
       </>
     );
@@ -443,6 +543,7 @@ export default function CortexaAI() {
             onUpdate={updateSetup}
             whatsappSetup={whatsappSetup}
             onBusinessProfile={openBusinessProfile}
+            onPropertyImport={openPropertyImport}
           />
         )}
 
@@ -489,6 +590,7 @@ function SetupLayout({
   onUpdate,
   whatsappSetup,
   onBusinessProfile,
+  onPropertyImport,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -670,6 +772,10 @@ function SetupLayout({
                           onClick={() => {
                             if (step.key === "businessProfile") {
                               onBusinessProfile?.();
+                              return;
+                            }
+                            if (step.key === "properties") {
+                              onPropertyImport?.();
                               return;
                             }
                             setOpenStep(step.id);

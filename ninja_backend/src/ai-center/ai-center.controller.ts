@@ -282,4 +282,44 @@ export class AiCenterController {
       throw error;
     }
   }
+
+  @Get("agent/property-catalog")
+  @ApiOperation({ summary: "Get properties available to AI Agent" })
+  async getAgentPropertyCatalog(
+    @CurrentUser() user: any,
+
+    @Query("page", new DefaultValuePipe(1), ParseIntPipe)
+    page: number,
+
+    @Query("limit", new DefaultValuePipe(12), ParseIntPipe)
+    limit: number,
+
+    @Query("search")
+    search?: string,
+  ) {
+    return this.service.getAgentPropertyCatalog(user.teamId, {
+      page,
+      limit,
+      search,
+    });
+  }
+
+  @Put("agent/property-catalog")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({ summary: "Save AI Agent property catalog" })
+  async saveAgentPropertyCatalog(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      propertyIds: string[];
+    },
+  ) {
+    return this.service.saveAgentPropertyCatalog(
+      user.teamId,
+      user.id,
+      body.propertyIds,
+    );
+  }
 }

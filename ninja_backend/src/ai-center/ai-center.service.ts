@@ -299,9 +299,12 @@ export class AiCenterService {
         [teamId],
       ),
       this.db.query(
-        `SELECT COUNT(*)::int AS total
-         FROM properties
-         WHERE team_id = $1`,
+        `
+          SELECT COUNT(*)::int AS total
+          FROM ai_agent_property_catalog
+          WHERE team_id = $1
+            AND is_active = true
+          `,
         [teamId],
       ),
       this.db.query(
@@ -1706,5 +1709,274 @@ export class AiCenterService {
       String(row?.city || "").trim() &&
       String(row?.country || "").trim(),
     );
+  }
+
+  async getAgentPropertyCatalog(
+    teamId: string,
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+    },
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const page = Math.max(Number(params.page || 1), 1);
+
+    const limit = Math.min(Math.max(Number(params.limit || 12), 1), 100);
+
+    const offset = (page - 1) * limit;
+
+    const values: any[] = [teamId];
+    const where: string[] = ["p.team_id = $1"];
+
+    if (params.search?.trim()) {
+      values.push(`%${params.search.trim()}%`);
+
+      where.push(`
+      (
+        p.title ILIKE $${values.length}
+        OR COALESCE(p.city, '') ILIKE $${values.length}
+        OR COALESCE(p.state, '') ILIKE $${values.length}
+        OR COALESCE(p.address, '') ILIKE $${values.length}
+      )
+    `);
+    }
+
+    const whereSql = where.join(" AND ");
+
+    const [propertiesResult, countResult, selectedResult] = await Promise.all([
+      this.db.query(
+        `
+      SELECT
+        p.id,
+        p.title,
+        p.city,
+        p.state,
+        p.price,
+        p.currency,
+        p.bedrooms,
+        p.bathrooms,
+        p.status,
+
+        COALESCE(
+          p.image_url,
+          p.thumbnail_url,
+          NULL
+        ) AS image_url,
+
+        CASE
+          WHEN catalog.property_id IS NOT NULL
+          THEN true
+          ELSE false
+        END AS selected
+
+      FROM properties p
+
+      LEFT JOIN ai_agent_property_catalog catalog
+        ON catalog.property_id = p.id
+        AND catalog.team_id = p.team_id
+        AND catalog.is_active = true
+
+      WHERE ${whereSql}
+
+      ORDER BY
+        catalog.property_id IS NOT NULL DESC,
+        p.updated_at DESC,
+        p.created_at DESC
+
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+      `,
+        [...values, limit, offset],
+      ),
+
+      this.db.query(
+        `
+      SELECT COUNT(*)::int AS total
+      FROM properties p
+      WHERE ${whereSql}
+      `,
+        values,
+      ),
+
+      this.db.query(
+        `
+      SELECT property_id
+      FROM ai_agent_property_catalog
+      WHERE team_id = $1
+        AND is_active = true
+      `,
+        [teamId],
+      ),
+    ]);
+
+    const total = Number(countResult.rows[0]?.total || 0);
+
+    return {
+      page,
+      limit,
+      total,
+
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+
+      selectedCount: selectedResult.rows.length,
+
+      selectedPropertyIds: selectedResult.rows.map(
+        (row: any) => row.property_id,
+      ),
+
+      items: propertiesResult.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        city: row.city,
+        state: row.state,
+        price: row.price,
+        currency: row.currency || "USD",
+        bedrooms: row.bedrooms,
+        bathrooms: row.bathrooms,
+        status: row.status,
+        imageUrl: row.image_url,
+        selected: Boolean(row.selected),
+      })),
+    };
+  }
+
+  async saveAgentPropertyCatalog(
+    teamId: string,
+    userId: string,
+    propertyIds: string[],
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const uniquePropertyIds = Array.from(
+      new Set(
+        (Array.isArray(propertyIds) ? propertyIds : [])
+          .map((id) => String(id || "").trim())
+          .filter(Boolean),
+      ),
+    );
+
+    if (uniquePropertyIds.length > 5000) {
+      throw new ForbiddenException("Too many properties selected");
+    }
+
+    if (uniquePropertyIds.length > 0) {
+      const validResult = await this.db.query(
+        `
+      SELECT id
+      FROM properties
+      WHERE team_id = $1
+        AND id = ANY($2::uuid[])
+      `,
+        [teamId, uniquePropertyIds],
+      );
+
+      const validIds = new Set(validResult.rows.map((row: any) => row.id));
+
+      const invalidIds = uniquePropertyIds.filter((id) => !validIds.has(id));
+
+      if (invalidIds.length > 0) {
+        throw new ForbiddenException(
+          "One or more properties do not belong to this team",
+        );
+      }
+    }
+
+    await this.db.query("BEGIN");
+
+    try {
+      await this.db.query(
+        `
+      UPDATE ai_agent_property_catalog
+      SET
+        is_active = false,
+        updated_at = NOW()
+      WHERE team_id = $1
+      `,
+        [teamId],
+      );
+
+      if (uniquePropertyIds.length > 0) {
+        await this.db.query(
+          `
+        INSERT INTO ai_agent_property_catalog (
+          team_id,
+          property_id,
+          is_active,
+          added_by,
+          created_at,
+          updated_at
+        )
+
+        SELECT
+          $1,
+          property_id,
+          true,
+          $3,
+          NOW(),
+          NOW()
+
+        FROM unnest(
+          $2::uuid[]
+        ) AS property_id
+
+        ON CONFLICT (
+          team_id,
+          property_id
+        )
+
+        DO UPDATE SET
+          is_active = true,
+          added_by = EXCLUDED.added_by,
+          updated_at = NOW()
+        `,
+          [teamId, uniquePropertyIds, userId],
+        );
+      }
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'property_catalog_updated',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+          JSON.stringify({
+            userId,
+            propertyCount: uniquePropertyIds.length,
+          }),
+        ],
+      );
+
+      await this.db.query("COMMIT");
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+      throw error;
+    }
+
+    return {
+      success: true,
+      imported: uniquePropertyIds.length,
+      propertyIds: uniquePropertyIds,
+    };
   }
 }
