@@ -325,9 +325,24 @@ export default function WhatsAppPage() {
                                   : ""
                               }`}
                             >
-                              {conv.lastMessage?.trim()
-                                ? conv.lastMessage
-                                : "No messages yet"}
+                              {(() => {
+                                const value = String(
+                                  conv.lastMessage || "",
+                                ).trim();
+
+                                const invalidValues = [
+                                  "[text]",
+                                  "[message]",
+                                  "text",
+                                  "null",
+                                  "undefined",
+                                ];
+
+                                return value &&
+                                  !invalidValues.includes(value.toLowerCase())
+                                  ? value
+                                  : "No messages yet";
+                              })()}
                             </p>
                             <span
                               className={`pill-tag-temp ${conv.tag?.toLowerCase()}`}

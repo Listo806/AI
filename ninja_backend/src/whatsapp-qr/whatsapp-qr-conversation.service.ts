@@ -535,17 +535,27 @@ export class WhatsAppQrConversationService {
       const score = this.getConversationScore(item);
       const tag = this.getConversationTag(score);
 
+      const rawLastMessage = String(item.last_message || "").trim();
+
+      const invalidLastMessages = new Set([
+        "[text]",
+        "[message]",
+        "text",
+        "null",
+        "undefined",
+      ]);
+
+      const hasValidLastMessage =
+        rawLastMessage.length > 0 &&
+        !invalidLastMessages.has(rawLastMessage.toLowerCase());
+
       return {
         ...item,
         displayName: item.lead_name || item.contact_phone || "WhatsApp Lead",
         timeAgo: this.formatTimeAgo(item.last_activity_at),
         score,
         tag,
-        lastMessage: item.last_message?.trim()
-          ? item.last_message
-          : item.last_action_label?.trim()
-            ? item.last_action_label
-            : "No messages yet",
+        lastMessage: hasValidLastMessage ? rawLastMessage : "No messages yet",
       };
     });
 
