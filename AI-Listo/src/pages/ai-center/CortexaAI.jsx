@@ -54,6 +54,8 @@ import apiClient from "../../api/apiClient";
 import WhatsAppConnectCard from "./components/WhatsAppConnectCard";
 import { useWhatsAppSetup } from "./hooks/useWhatsAppSetup";
 import "./CortexaAI.css";
+import BusinessProfileModal from "./components/BusinessProfileModal";
+import aiAgentSetupService from "./services/aiAgentSetup.service";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -74,6 +76,12 @@ export default function CortexaAI() {
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
   const [sendingMessage, setSendingMessage] = useState(false);
+
+  const [businessProfileOpen, setBusinessProfileOpen] = useState(false);
+  const [businessProfile, setBusinessProfile] = useState(null);
+  const [businessProfileLoading, setBusinessProfileLoading] = useState(false);
+  const [businessProfileSaving, setBusinessProfileSaving] = useState(false);
+  const [businessProfileError, setBusinessProfileError] = useState("");
 
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
@@ -103,12 +111,9 @@ export default function CortexaAI() {
     onConnected: loadSetup,
   });
 
-  
-
   const request = async (path, options = {}) => {
     return apiClient.request(path, options);
   };
-
 
   useEffect(() => {
     loadSetup();
@@ -264,6 +269,55 @@ export default function CortexaAI() {
       icon: SlidersHorizontal,
     },
   ];
+  const openBusinessProfile = async () => {
+    setBusinessProfileOpen(true);
+    setBusinessProfileLoading(true);
+    setBusinessProfileError("");
+
+    try {
+      const data = await aiAgentSetupService.getBusinessProfile();
+
+      setBusinessProfile(data);
+    } catch (error) {
+      console.error("LOAD BUSINESS PROFILE FAILED:", error);
+
+      setBusinessProfileError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load Business Profile.",
+      );
+    } finally {
+      setBusinessProfileLoading(false);
+    }
+  };
+
+  const saveBusinessProfile = async (payload) => {
+    setBusinessProfileSaving(true);
+    setBusinessProfileError("");
+
+    try {
+      const saved = await aiAgentSetupService.saveBusinessProfile(payload);
+
+      setBusinessProfile(saved);
+      setBusinessProfileOpen(false);
+
+      await loadSetup();
+
+      setOpenStep(3);
+    } catch (error) {
+      console.error("SAVE BUSINESS PROFILE FAILED:", error);
+
+      setBusinessProfileError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save Business Profile.",
+      );
+
+      throw error;
+    } finally {
+      setBusinessProfileSaving(false);
+    }
+  };
 
   if (loadingSetup) {
     return (
@@ -278,17 +332,47 @@ export default function CortexaAI() {
     return (
       <>
         {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
+
         <SetupLayout
           setupData={setupData}
           openStep={openStep}
           setOpenStep={setOpenStep}
           onRefresh={loadSetup}
           whatsappSetup={whatsappSetup}
+          onBusinessProfile={openBusinessProfile}
+        />
+
+        <BusinessProfileModal
+          open={businessProfileOpen}
+          profile={businessProfile}
+          saving={businessProfileSaving || businessProfileLoading}
+          error={businessProfileError}
+          onClose={() => {
+            if (!businessProfileSaving) {
+              setBusinessProfileOpen(false);
+            }
+          }}
+          onSave={saveBusinessProfile}
         />
       </>
     );
   }
 
+  const businessProfileModal = (
+    <BusinessProfileModal
+      open={businessProfileOpen}
+      profile={businessProfile}
+      loading={businessProfileLoading}
+      saving={businessProfileSaving}
+      error={businessProfileError}
+      onClose={() => {
+        if (!businessProfileSaving) {
+          setBusinessProfileOpen(false);
+        }
+      }}
+      onSave={saveBusinessProfile}
+    />
+  );
   return (
     <div className="cx-ai-shell">
       <aside className="cx-agent-sidebar">
@@ -358,6 +442,7 @@ export default function CortexaAI() {
             onRefresh={loadSetup}
             onUpdate={updateSetup}
             whatsappSetup={whatsappSetup}
+            onBusinessProfile={openBusinessProfile}
           />
         )}
 
@@ -403,6 +488,7 @@ function SetupLayout({
   onRefresh,
   onUpdate,
   whatsappSetup,
+  onBusinessProfile,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -575,7 +661,20 @@ function SetupLayout({
                         {step.status}
                       </span>
                       {step.id !== 1 && (
-                        <button className="cx-step-action">
+                        <button
+                          type="button"
+                          className={`cx-step-action ${
+                            step.locked ? "disabled" : ""
+                          }`}
+                          disabled={step.locked}
+                          onClick={() => {
+                            if (step.key === "businessProfile") {
+                              onBusinessProfile?.();
+                              return;
+                            }
+                            setOpenStep(step.id);
+                          }}
+                        >
                           {step.action}
                         </button>
                       )}

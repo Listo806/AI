@@ -153,6 +153,46 @@ export class AiCenterController {
     return this.service.updateAgentSetup(user.teamId, body);
   }
 
+  @Get("agent/business-profile")
+  @ApiOperation({ summary: "Get AI Agent business profile" })
+  async getAgentBusinessProfile(@CurrentUser() user: any) {
+    return this.service.getAgentBusinessProfile(user.teamId);
+  }
+
+  @Put("agent/business-profile")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({ summary: "Create or update AI Agent business profile" })
+  async saveAgentBusinessProfile(
+    @CurrentUser() user: any,
+    @Body()
+    body: {
+      businessName: string;
+      businessType: string;
+      description: string;
+
+      website?: string | null;
+      email?: string | null;
+      phone?: string | null;
+
+      addressLine1?: string | null;
+      addressLine2?: string | null;
+      city: string;
+      state?: string | null;
+      postalCode?: string | null;
+      country: string;
+
+      serviceAreas?: string[];
+      specialties?: string[];
+      languages?: string[];
+
+      timezone?: string | null;
+      currency?: string;
+    },
+  ) {
+    return this.service.saveAgentBusinessProfile(user.teamId, user.id, body);
+  }
+
   @Get("agent/dashboard")
   @ApiOperation({ summary: "Get AI Agent chat dashboard data" })
   async getAgentDashboard(@CurrentUser() user: any) {

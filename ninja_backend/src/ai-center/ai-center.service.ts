@@ -223,6 +223,25 @@ export class AiCenterService {
       if (agentWa.length > 0) channels.push("whatsapp");
     }
 
+    if (!channels.includes("whatsapp")) {
+      const { rows: qrWhatsApp } = await this.db.query(
+        `
+        SELECT 1
+        FROM whatsapp_qr_sessions ws
+        INNER JOIN users u
+          ON u.id = ws.user_id
+        WHERE u.team_id = $1
+          AND ws.status = 'connected'
+        LIMIT 1
+        `,
+        [teamId],
+      );
+
+      if (qrWhatsApp.length > 0) {
+        channels.push("whatsapp");
+      }
+    }
+
     const { rows: agentIg } = await this.db.query(
       `SELECT 1 FROM agent_instagram_connections ai
        INNER JOIN users u ON u.id = ai.agent_id AND u.team_id = $1
@@ -269,6 +288,7 @@ export class AiCenterService {
       configResult,
       testResult,
       automationResult,
+      businessProfileResult,
     ] = await Promise.all([
       this.getActiveChannels(teamId),
       this.db.query(
@@ -314,6 +334,20 @@ export class AiCenterService {
            AND action LIKE 'automation_%'`,
         [teamId],
       ),
+      this.db.query(
+        `
+        SELECT
+          business_name,
+          business_type,
+          description,
+          city,
+          country
+        FROM ai_agent_business_profiles
+        WHERE team_id = $1
+        LIMIT 1
+        `,
+        [teamId],
+      ),
     ]);
 
     const team = teamResult.rows[0] || {};
@@ -325,8 +359,8 @@ export class AiCenterService {
     const whatsappConnected = channels.includes("whatsapp");
 
     const config = configResult.rows[0] || {};
-    const businessProfileCompleted = Boolean(
-      config.business_profile_completed || team.name,
+    const businessProfileCompleted = this.isBusinessProfileComplete(
+      businessProfileResult.rows[0],
     );
     const appointmentRulesConfigured = Boolean(
       config.appointment_rules_configured || team.ai_appointment_setter_enabled,
@@ -1322,5 +1356,355 @@ export class AiCenterService {
 
       throw err;
     }
+  }
+
+  async getAgentBusinessProfile(teamId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      business_name,
+      business_type,
+      description,
+      website,
+      email,
+      phone,
+
+      address_line1,
+      address_line2,
+      city,
+      state,
+      postal_code,
+      country,
+
+      service_areas,
+      specialties,
+      languages,
+
+      timezone,
+      currency,
+
+      created_at,
+      updated_at
+    FROM ai_agent_business_profiles
+    WHERE team_id = $1
+    LIMIT 1
+    `,
+      [teamId],
+    );
+
+    const row = rows[0];
+
+    if (!row) {
+      const teamResult = await this.db.query(
+        `
+      SELECT name, whatsapp_phone
+      FROM teams
+      WHERE id = $1
+      LIMIT 1
+      `,
+        [teamId],
+      );
+
+      const team = teamResult.rows[0] || {};
+
+      return {
+        exists: false,
+        completed: false,
+
+        businessName: team.name || "",
+        businessType: "real_estate",
+        description: "",
+
+        website: "",
+        email: "",
+        phone: team.whatsapp_phone || "",
+
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "",
+
+        serviceAreas: [],
+        specialties: [],
+        languages: [],
+
+        timezone: "",
+        currency: "USD",
+
+        createdAt: null,
+        updatedAt: null,
+      };
+    }
+
+    return {
+      exists: true,
+      completed: this.isBusinessProfileComplete(row),
+
+      businessName: row.business_name,
+      businessType: row.business_type,
+      description: row.description || "",
+
+      website: row.website || "",
+      email: row.email || "",
+      phone: row.phone || "",
+
+      addressLine1: row.address_line1 || "",
+      addressLine2: row.address_line2 || "",
+      city: row.city || "",
+      state: row.state || "",
+      postalCode: row.postal_code || "",
+      country: row.country || "",
+
+      serviceAreas: Array.isArray(row.service_areas) ? row.service_areas : [],
+
+      specialties: Array.isArray(row.specialties) ? row.specialties : [],
+
+      languages: Array.isArray(row.languages) ? row.languages : [],
+
+      timezone: row.timezone || "",
+      currency: row.currency || "USD",
+
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async saveAgentBusinessProfile(
+    teamId: string,
+    userId: string,
+    body: {
+      businessName: string;
+      businessType: string;
+      description: string;
+
+      website?: string | null;
+      email?: string | null;
+      phone?: string | null;
+
+      addressLine1?: string | null;
+      addressLine2?: string | null;
+      city: string;
+      state?: string | null;
+      postalCode?: string | null;
+      country: string;
+
+      serviceAreas?: string[];
+      specialties?: string[];
+      languages?: string[];
+
+      timezone?: string | null;
+      currency?: string;
+    },
+  ) {
+    const businessName = String(body.businessName || "").trim();
+    const businessType = String(body.businessType || "").trim();
+    const description = String(body.description || "").trim();
+    const city = String(body.city || "").trim();
+    const country = String(body.country || "").trim();
+
+    if (!businessName || !businessType || !description || !city || !country) {
+      throw new ForbiddenException(
+        "Business name, business type, description, city and country are required",
+      );
+    }
+
+    if (description.length > 2000) {
+      throw new ForbiddenException(
+        "Business description must not exceed 2000 characters",
+      );
+    }
+
+    const serviceAreas = this.cleanStringArray(body.serviceAreas);
+    const specialties = this.cleanStringArray(body.specialties);
+    const languages = this.cleanStringArray(body.languages);
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO ai_agent_business_profiles (
+      team_id,
+
+      business_name,
+      business_type,
+      description,
+
+      website,
+      email,
+      phone,
+
+      address_line1,
+      address_line2,
+      city,
+      state,
+      postal_code,
+      country,
+
+      service_areas,
+      specialties,
+      languages,
+
+      timezone,
+      currency,
+
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1,
+
+      $2,
+      $3,
+      $4,
+
+      $5,
+      $6,
+      $7,
+
+      $8,
+      $9,
+      $10,
+      $11,
+      $12,
+      $13,
+
+      $14::jsonb,
+      $15::jsonb,
+      $16::jsonb,
+
+      $17,
+      $18,
+
+      NOW(),
+      NOW()
+    )
+    ON CONFLICT (team_id)
+    DO UPDATE SET
+      business_name = EXCLUDED.business_name,
+      business_type = EXCLUDED.business_type,
+      description = EXCLUDED.description,
+
+      website = EXCLUDED.website,
+      email = EXCLUDED.email,
+      phone = EXCLUDED.phone,
+
+      address_line1 = EXCLUDED.address_line1,
+      address_line2 = EXCLUDED.address_line2,
+      city = EXCLUDED.city,
+      state = EXCLUDED.state,
+      postal_code = EXCLUDED.postal_code,
+      country = EXCLUDED.country,
+
+      service_areas = EXCLUDED.service_areas,
+      specialties = EXCLUDED.specialties,
+      languages = EXCLUDED.languages,
+
+      timezone = EXCLUDED.timezone,
+      currency = EXCLUDED.currency,
+
+      updated_at = NOW()
+
+    RETURNING *
+    `,
+      [
+        teamId,
+
+        businessName,
+        businessType,
+        description,
+
+        body.website?.trim() || null,
+        body.email?.trim() || null,
+        body.phone?.trim() || null,
+
+        body.addressLine1?.trim() || null,
+        body.addressLine2?.trim() || null,
+        city,
+        body.state?.trim() || null,
+        body.postalCode?.trim() || null,
+        country,
+
+        JSON.stringify(serviceAreas),
+        JSON.stringify(specialties),
+        JSON.stringify(languages),
+
+        body.timezone?.trim() || null,
+        body.currency?.trim() || "USD",
+      ],
+    );
+
+    await this.db.query(
+      `
+    INSERT INTO ai_agent_settings (
+      team_id,
+      business_profile_completed,
+      updated_at
+    )
+    VALUES ($1, true, NOW())
+
+    ON CONFLICT (team_id)
+    DO UPDATE SET
+      business_profile_completed = true,
+      updated_at = NOW()
+    `,
+      [teamId],
+    );
+
+    await this.db.query(
+      `
+    INSERT INTO ai_activity (
+      team_id,
+      action,
+      channel,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES (
+      $1,
+      'business_profile_updated',
+      'web',
+      'success',
+      $2::jsonb,
+      NOW()
+    )
+    `,
+      [
+        teamId,
+        JSON.stringify({
+          userId,
+          businessName,
+          businessType,
+          city,
+          country,
+        }),
+      ],
+    );
+
+    return this.getAgentBusinessProfile(teamId);
+  }
+
+  private cleanStringArray(value?: string[]) {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return Array.from(
+      new Set(value.map((item) => String(item || "").trim()).filter(Boolean)),
+    ).slice(0, 100);
+  }
+
+  private isBusinessProfileComplete(row: any) {
+    return Boolean(
+      String(row?.business_name || "").trim() &&
+      String(row?.business_type || "").trim() &&
+      String(row?.description || "").trim() &&
+      String(row?.city || "").trim() &&
+      String(row?.country || "").trim(),
+    );
   }
 }
