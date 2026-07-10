@@ -518,6 +518,7 @@ export default function Landing() {
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
       heroUnlock: "Unlock potential today!",
+      underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
       heroTag3: "Smart Nurturing That Converts",
@@ -1065,6 +1066,7 @@ export default function Landing() {
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza tu prueba gratuita",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
+      underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
       heroTag3: "Nutrición inteligente que convierte",
@@ -1607,6 +1609,7 @@ export default function Landing() {
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Inicie seu teste gratuito",
       heroUnlock: "Desbloqueie seu potencial hoje!",
+      underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
       heroTag3: "Nutrição inteligente que converte",
@@ -2000,7 +2003,7 @@ export default function Landing() {
                   <LockKeyhole size={16} /> {tr.heroUnlock}
                 </p>
               </div>
-
+              <p className="underCTA">{tr.underCTA}</p>
               <div className="hero-checks">
                 {[
                   tr.heroCheck6,
@@ -2042,7 +2045,7 @@ export default function Landing() {
                     ))}
                   </div>
                   <p className="badge-text">
-                    Trusted by 10,000+ real estate agents worldwide.
+                    Trusted by real estate agents worldwide.
                   </p>
                 </div>
               </div>
@@ -2687,6 +2690,7 @@ export default function Landing() {
               {tr.roiBtn}
             </a>
           </div>
+          <p className="underCTA">{tr.underCTA}</p>
           <div className="roi-grid">
             <div className="roi-item">
               <p className="roi-number">{tr.roiStat1Number}</p>
@@ -2723,6 +2727,7 @@ export default function Landing() {
                   {tr.stripBtn}
                 </a>
               </div>
+              <p className="underCTA">{tr.underCTA}</p>
               <p className="cta-trust">{tr.stripTrust}</p>
               <div className="cta-benefits">
                 <div>
@@ -2895,6 +2900,7 @@ export default function Landing() {
             <Zap size={22} />
             Start free trial
           </a>
+          <p className="underCTA">{tr.underCTA}</p>
           <div className="cx-final-shot">
             <img src={trialmobileImg} className="desktop-none" />
           </div>
@@ -2917,7 +2923,7 @@ export default function Landing() {
                 <a href="/trial" className="btn-primary">
                   {tr.startYourFreeTrial}
                 </a>
-
+                <p className="underCTA">{tr.underCTA}</p>
                 <div className="footer-tags">
                   <span>{tr.tagAiPowered}</span>
                   <span>{tr.tagSecure}</span>
