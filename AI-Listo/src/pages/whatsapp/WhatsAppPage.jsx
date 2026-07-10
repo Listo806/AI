@@ -325,7 +325,9 @@ export default function WhatsAppPage() {
                                   : ""
                               }`}
                             >
-                              {conv.lastMessage || "No recent message"}
+                              {conv.lastMessage?.trim()
+                                ? conv.lastMessage
+                                : "No messages yet"}
                             </p>
                             <span
                               className={`pill-tag-temp ${conv.tag?.toLowerCase()}`}

@@ -541,12 +541,11 @@ export class WhatsAppQrConversationService {
         timeAgo: this.formatTimeAgo(item.last_activity_at),
         score,
         tag,
-        lastMessage:
-          item.last_message ||
-          item.last_action_label ||
-          (item.last_message_type
-            ? `${item.last_message_type} message`
-            : "No recent action"),
+        lastMessage: item.last_message?.trim()
+          ? item.last_message
+          : item.last_action_label?.trim()
+            ? item.last_action_label
+            : "No messages yet",
       };
     });
 
@@ -949,7 +948,19 @@ Rules:
           WHEN m.sender_type = 'ai' THEN 'AI replied'
           ELSE 'Agent replied'
         END AS title,
-        COALESCE(NULLIF(TRIM(m.body), ''), '[' || m.message_type || ']') AS description,
+        CASE
+            WHEN NULLIF(TRIM(m.body), '') IS NOT NULL
+                THEN m.body
+            WHEN m.message_type = 'image'
+                THEN '📷 Photo'
+            WHEN m.message_type = 'audio'
+                THEN '🎤 Voice message'
+            WHEN m.message_type = 'video'
+                THEN '🎥 Video'
+            WHEN m.message_type = 'document'
+                THEN '📄 Document'
+            ELSE 'Message'
+        END AS description,
         m.created_at AS created_at
       FROM whatsapp_qr_messages m
       WHERE m.conversation_id = $1
