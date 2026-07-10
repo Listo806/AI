@@ -2684,7 +2684,7 @@ export default function Landing() {
           <p className="roi-sub">{tr.roiSub}</p>
           <div className="roi-cta">
             <a href="/trial" className="roi-btn">
-              {tr.roiBtn}
+              {tr.heroCTA}
             </a>
           </div>
           <p className="underCTA">{tr.underCTA}</p>

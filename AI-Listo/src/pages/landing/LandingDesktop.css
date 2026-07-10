@@ -107,8 +107,9 @@
 
  #cortexa-ai-crm-landing .cx-final .cx-btn {
    margin-top: 15px;
-   padding: 11px 41px;
+   padding: 10px 41px;
    margin-bottom: 0;
+   font-size: 19px;
  }
 
  #cortexa-ai-crm-landing .cx-btn {
@@ -1260,10 +1261,12 @@
    font-weight: 500;
    transition: 0.2s;
    text-decoration: none;
-   font-size: 13px;
+   font-size: 16px;
    display: inline-flex;
  }
-
+.cx-strip .cta-btn {
+  font-size: 18px;
+}
  .cta-btn:hover {
    opacity: 0.9;
  }
@@ -1571,9 +1574,9 @@
  .roi-btn {
    background: #2563eb;
    color: #fff;
-   padding: 14px 60px;
+   padding: 11px 60px;
    border-radius: 999px;
-   font-size: 16px;
+   font-size: 19px;
    font-weight: 500;
    border: none;
    cursor: pointer;
@@ -1816,13 +1819,13 @@
  }
  .underCTA{
   margin-top: 5px!important;
-  font-size: 14px;
+  font-size: 13px;
  }
  #cortexa-ai-crm-landing .hero-left .underCTA{
   margin-left: 40px;
  }
   #cortexa-ai-crm-landing .footer-brand .underCTA{
-  margin-left: 22px;
+  margin-left: 28px;
  }
  #cortexa-ai-crm-landing .hero-checks .check svg {
     fill: #fff;
@@ -2390,7 +2393,8 @@
    color: #fff;
    padding: 12px 20px;
    border-radius: 10px;
-   text-decoration: none
+   text-decoration: none;
+   font-size: 18px;
  }
 
  .footer-final .footer-tags {
