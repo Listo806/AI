@@ -75,17 +75,7 @@ export default function CortexaAI() {
   const [conversationId, setConversationId] = useState(null);
   const [sendingMessage, setSendingMessage] = useState(false);
 
-  const whatsappSetup = useWhatsAppSetup({
-    onConnected: () => {
-      loadSetup();
-    },
-  });
-
-  const request = async (path, options = {}) => {
-    return apiClient.request(path, options);
-  };
-
-  const loadSetup = async () => {
+  const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
 
@@ -98,6 +88,7 @@ export default function CortexaAI() {
       }
     } catch (error) {
       console.error("LOAD AI SETUP FAILED:", error);
+
       setPageError(
         error?.response?.data?.message ||
           error?.message ||
@@ -106,11 +97,22 @@ export default function CortexaAI() {
     } finally {
       setLoadingSetup(false);
     }
+  }, []);
+
+  const whatsappSetup = useWhatsAppSetup({
+    onConnected: loadSetup,
+  });
+
+  
+
+  const request = async (path, options = {}) => {
+    return apiClient.request(path, options);
   };
+
 
   useEffect(() => {
     loadSetup();
-  }, []);
+  }, [loadSetup]);
 
   useEffect(() => {
     if (!setupData?.isSetupComplete || activePage === "setup") return;
@@ -281,6 +283,7 @@ export default function CortexaAI() {
           openStep={openStep}
           setOpenStep={setOpenStep}
           onRefresh={loadSetup}
+          whatsappSetup={whatsappSetup}
         />
       </>
     );
@@ -353,6 +356,8 @@ export default function CortexaAI() {
             openStep={openStep}
             setOpenStep={setOpenStep}
             onRefresh={loadSetup}
+            onUpdate={updateSetup}
+            whatsappSetup={whatsappSetup}
           />
         )}
 
@@ -391,7 +396,14 @@ export default function CortexaAI() {
   );
 }
 
-function SetupLayout({ setupData, openStep, setOpenStep, onRefresh }) {
+function SetupLayout({
+  setupData,
+  openStep,
+  setOpenStep,
+  onRefresh,
+  onUpdate,
+  whatsappSetup,
+}) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
 

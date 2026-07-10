@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 import whatsappSetupService from "../services/whatsappSetup.service";
@@ -24,16 +19,14 @@ const normalizeStatus = (response) => {
     enabled: data.enabled !== false,
     connected: Boolean(data.connected),
     phone: data.phone ?? null,
-    status:
-      data.status ??
-      (data.connected ? "connected" : "disconnected"),
+    status: data.status ?? (data.connected ? "connected" : "disconnected"),
     connectedAt: data.connected_at ?? null,
     updatedAt: data.updated_at ?? null,
   };
 };
 
 const getStoredToken = () => {
-  const tokenKeys = [
+  const directKeys = [
     "token",
     "accessToken",
     "access_token",
@@ -41,62 +34,58 @@ const getStoredToken = () => {
     "jwt",
   ];
 
-  for (const key of tokenKeys) {
-    const localValue = localStorage.getItem(key);
+  for (const key of directKeys) {
+    const value = localStorage.getItem(key) || sessionStorage.getItem(key);
 
-    if (localValue) {
-      return localValue;
-    }
-
-    const sessionValue = sessionStorage.getItem(key);
-
-    if (sessionValue) {
-      return sessionValue;
-    }
+    if (value) return value;
   }
 
   const objectKeys = ["auth", "user", "authData"];
 
   for (const key of objectKeys) {
     try {
-      const raw =
-        localStorage.getItem(key) ||
-        sessionStorage.getItem(key);
+      const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
 
       if (!raw) continue;
 
       const parsed = JSON.parse(raw);
 
       const token =
-        parsed?.token ||
-        parsed?.accessToken ||
-        parsed?.access_token;
+        parsed?.token || parsed?.accessToken || parsed?.access_token;
 
-      if (token) {
-        return token;
-      }
+      if (token) return token;
     } catch {
-      // Ignore invalid JSON from unrelated storage values.
+      // Ignore unrelated invalid JSON.
     }
   }
 
   return null;
 };
 
-const getSocketBaseUrl = () => {
-  const configuredUrl =
-    import.meta.env.VITE_SOCKET_URL ||
-    import.meta.env.VITE_BACKEND_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    import.meta.env.VITE_API_URL;
+const normalizeBaseUrl = (value) => {
+  if (!value) return null;
 
-  if (configuredUrl) {
-    return String(configuredUrl)
-      .replace(/\/api\/?$/, "")
-      .replace(/\/$/, "");
+  const url = String(value).trim();
+
+  /*
+   * Relative URLs such as "/api" point to Vite localhost.
+   * We intentionally do not use them for Socket.IO.
+   */
+  if (!/^https?:\/\//i.test(url)) {
+    return null;
   }
 
-  return window.location.origin;
+  return url.replace(/\/api\/?$/i, "").replace(/\/$/, "");
+};
+
+const getSocketBaseUrl = () => {
+  return (
+    normalizeBaseUrl(import.meta.env.VITE_SOCKET_URL) ||
+    normalizeBaseUrl(import.meta.env.VITE_BACKEND_URL) ||
+    normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) ||
+    normalizeBaseUrl(import.meta.env.VITE_API_URL) ||
+    null
+  );
 };
 
 export function useWhatsAppSetup({ onConnected } = {}) {
@@ -105,16 +94,15 @@ export function useWhatsAppSetup({ onConnected } = {}) {
   const mountedRef = useRef(false);
   const connectedNotifiedRef = useRef(false);
   const onConnectedRef = useRef(onConnected);
+  const socketWarningShownRef = useRef(false);
 
   const [status, setStatus] = useState(DEFAULT_STATUS);
   const [qr, setQr] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
-  const [disconnecting, setDisconnecting] =
-    useState(false);
-  const [socketConnected, setSocketConnected] =
-    useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -132,31 +120,38 @@ export function useWhatsAppSetup({ onConnected } = {}) {
     if (!pollingTimerRef.current) return;
 
     window.clearInterval(pollingTimerRef.current);
+
     pollingTimerRef.current = null;
+  }, []);
+
+  const closeSocket = useCallback(() => {
+    const socket = socketRef.current;
+
+    if (!socket) return;
+
+    socket.removeAllListeners();
+    socket.disconnect();
+
+    socketRef.current = null;
+
+    if (mountedRef.current) {
+      setSocketConnected(false);
+    }
   }, []);
 
   const refreshQr = useCallback(async () => {
     try {
-      const response =
-        await whatsappSetupService.getPendingQr();
+      const response = await whatsappSetupService.getPendingQr();
 
-      const nextQr =
-        response?.qr ??
-        response?.data?.qr ??
-        null;
+      const nextQr = response?.qr ?? response?.data?.qr ?? null;
 
-      if (!mountedRef.current) {
-        return nextQr;
+      if (mountedRef.current) {
+        setQr(nextQr);
       }
-
-      setQr(nextQr);
 
       return nextQr;
     } catch (requestError) {
-      console.error(
-        "GET WHATSAPP PENDING QR FAILED:",
-        requestError,
-      );
+      console.warn("GET WHATSAPP PENDING QR FAILED:", requestError);
 
       return null;
     }
@@ -169,8 +164,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       }
 
       try {
-        const response =
-          await whatsappSetupService.getStatus();
+        const response = await whatsappSetupService.getStatus();
 
         const nextStatus = normalizeStatus(response);
 
@@ -184,7 +178,9 @@ export function useWhatsAppSetup({ onConnected } = {}) {
         if (nextStatus.connected) {
           setQr(null);
           setConnecting(false);
+
           stopPolling();
+          closeSocket();
           notifyConnected(nextStatus);
         } else {
           connectedNotifiedRef.current = false;
@@ -192,10 +188,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
 
         return nextStatus;
       } catch (requestError) {
-        console.error(
-          "GET WHATSAPP STATUS FAILED:",
-          requestError,
-        );
+        console.error("GET WHATSAPP STATUS FAILED:", requestError);
 
         if (mountedRef.current) {
           setError(
@@ -212,143 +205,58 @@ export function useWhatsAppSetup({ onConnected } = {}) {
         }
       }
     },
-    [notifyConnected, stopPolling],
+    [closeSocket, notifyConnected, stopPolling],
   );
 
   const startPolling = useCallback(() => {
     stopPolling();
 
-    pollingTimerRef.current = window.setInterval(
-      async () => {
-        const nextStatus = await refreshStatus({
-          silent: true,
-        });
+    pollingTimerRef.current = window.setInterval(async () => {
+      const nextStatus = await refreshStatus({
+        silent: true,
+      });
 
-        if (nextStatus?.connected) {
-          stopPolling();
-          return;
-        }
-
-        await refreshQr();
-      },
-      3000,
-    );
-  }, [refreshQr, refreshStatus, stopPolling]);
-
-  const connect = useCallback(async () => {
-    if (connecting || status.connected) return;
-
-    setConnecting(true);
-    setError("");
-    setQr(null);
-    connectedNotifiedRef.current = false;
-
-    try {
-      const response =
-        await whatsappSetupService.connect();
-
-      const data = response?.data ?? response ?? {};
-      const backendMessage = String(data.message || "");
-
-      if (
-        backendMessage.includes(
-          "WHATSAPP_QR_ENABLED=true",
-        ) ||
-        backendMessage.includes("REDIS_URL")
-      ) {
-        throw new Error(backendMessage);
+      if (nextStatus?.connected) {
+        stopPolling();
+        return;
       }
 
       await refreshQr();
+    }, 3000);
+  }, [refreshQr, refreshStatus, stopPolling]);
 
-      startPolling();
-    } catch (requestError) {
-      console.error(
-        "CONNECT WHATSAPP FAILED:",
-        requestError,
-      );
-
-      setConnecting(false);
-
-      setError(
-        requestError?.response?.data?.message ||
-          requestError?.message ||
-          "Unable to start WhatsApp connection.",
-      );
+  const openSocket = useCallback(() => {
+    if (socketRef.current || status.connected) {
+      return;
     }
-  }, [
-    connecting,
-    refreshQr,
-    startPolling,
-    status.connected,
-  ]);
 
-  const disconnect = useCallback(async () => {
-    if (disconnecting) return;
-
-    setDisconnecting(true);
-    setError("");
-
-    try {
-      await whatsappSetupService.disconnect();
-
-      stopPolling();
-      connectedNotifiedRef.current = false;
-
-      setQr(null);
-      setConnecting(false);
-      setStatus(DEFAULT_STATUS);
-
-      await refreshStatus({
-        silent: true,
-      });
-    } catch (requestError) {
-      console.error(
-        "DISCONNECT WHATSAPP FAILED:",
-        requestError,
-      );
-
-      setError(
-        requestError?.response?.data?.message ||
-          requestError?.message ||
-          "Unable to disconnect WhatsApp.",
-      );
-    } finally {
-      if (mountedRef.current) {
-        setDisconnecting(false);
-      }
-    }
-  }, [
-    disconnecting,
-    refreshStatus,
-    stopPolling,
-  ]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-
-    refreshStatus();
-
-    return () => {
-      mountedRef.current = false;
-      stopPolling();
-    };
-  }, [refreshStatus, stopPolling]);
-
-  useEffect(() => {
     const token = getStoredToken();
+    const baseUrl = getSocketBaseUrl();
+
+    /*
+     * Socket is optional because REST polling can still
+     * receive pending QR and verify connection status.
+     */
+    if (!baseUrl) {
+      if (!socketWarningShownRef.current) {
+        console.warn(
+          "VITE_SOCKET_URL is not configured. WhatsApp QR will use REST polling fallback.",
+        );
+
+        socketWarningShownRef.current = true;
+      }
+
+      setSocketConnected(false);
+      return;
+    }
 
     if (!token) {
-      setError(
-        "Authentication token was not found. Please sign in again.",
-      );
+      setError("Authentication token was not found. Please sign in again.");
 
-      return undefined;
+      return;
     }
 
-    const socketUrl = `${getSocketBaseUrl()}/whatsapp-qr`;
-
-    const socket = io(socketUrl, {
+    const socket = io(`${baseUrl}/whatsapp-qr`, {
       transports: ["websocket", "polling"],
 
       auth: {
@@ -360,8 +268,14 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       },
 
       withCredentials: true,
+
+      /*
+       * Do not retry forever. REST polling is
+       * the reliable fallback.
+       */
+      timeout: 8000,
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 2,
       reconnectionDelay: 1000,
     });
 
@@ -372,6 +286,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
 
       setSocketConnected(true);
       setError("");
+      socketWarningShownRef.current = false;
     });
 
     socket.on("disconnect", () => {
@@ -381,24 +296,28 @@ export function useWhatsAppSetup({ onConnected } = {}) {
     });
 
     socket.on("connect_error", (socketError) => {
-      console.error(
-        "WHATSAPP QR SOCKET ERROR:",
-        socketError,
-      );
-
       if (!mountedRef.current) return;
 
       setSocketConnected(false);
 
+      /*
+       * Do not display this as a setup failure.
+       * REST polling continues to handle QR/status.
+       */
+      if (!socketWarningShownRef.current) {
+        console.warn(
+          "WhatsApp realtime socket unavailable; using REST polling fallback:",
+          socketError?.message || socketError,
+        );
+
+        socketWarningShownRef.current = true;
+      }
     });
 
     socket.on("qr", (payload) => {
       if (!mountedRef.current) return;
 
-      const nextQr =
-        payload?.qr ??
-        payload?.data?.qr ??
-        null;
+      const nextQr = payload?.qr ?? payload?.data?.qr ?? null;
 
       if (!nextQr) return;
 
@@ -428,13 +347,17 @@ export function useWhatsAppSetup({ onConnected } = {}) {
         phone: payload?.phone ?? current.phone ?? null,
       }));
 
+      /*
+       * QR socket has completed its job.
+       * Close intentionally to avoid timeout/reconnect noise.
+       */
+      closeSocket();
+
       const verifiedStatus = await refreshStatus({
         silent: true,
       });
 
-      notifyConnected(
-        verifiedStatus || optimisticStatus,
-      );
+      notifyConnected(verifiedStatus || optimisticStatus);
     });
 
     const handleDisconnected = async (payload) => {
@@ -452,9 +375,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       }));
 
       if (payload?.reason) {
-        setError(
-          `WhatsApp disconnected: ${payload.reason}`,
-        );
+        setError(`WhatsApp disconnected: ${payload.reason}`);
       }
 
       await refreshStatus({
@@ -464,24 +385,127 @@ export function useWhatsAppSetup({ onConnected } = {}) {
 
     socket.on("disconnected", handleDisconnected);
 
-    socket.on(
-      "session-disconnected",
-      handleDisconnected,
-    );
-
-    return () => {
-      socket.removeAllListeners();
-      socket.disconnect();
-
-      if (socketRef.current === socket) {
-        socketRef.current = null;
-      }
-    };
+    socket.on("session-disconnected", handleDisconnected);
   }, [
+    closeSocket,
     notifyConnected,
     refreshStatus,
+    status.connected,
     stopPolling,
   ]);
+
+  const connect = useCallback(async () => {
+    if (connecting || status.connected) {
+      return;
+    }
+
+    setConnecting(true);
+    setError("");
+    setQr(null);
+
+    connectedNotifiedRef.current = false;
+
+    /*
+     * Open realtime before POST /connect so the browser
+     * does not miss the first QR event.
+     */
+    openSocket();
+
+    try {
+      const response = await whatsappSetupService.connect();
+
+      const data = response?.data ?? response ?? {};
+
+      const backendMessage = String(data.message || "");
+
+      if (
+        backendMessage.includes("WHATSAPP_QR_ENABLED=true") ||
+        backendMessage.includes("REDIS_URL")
+      ) {
+        throw new Error(backendMessage);
+      }
+
+      await refreshQr();
+      startPolling();
+    } catch (requestError) {
+      console.error("CONNECT WHATSAPP FAILED:", requestError);
+
+      setConnecting(false);
+
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          "Unable to start WhatsApp connection.",
+      );
+    }
+  }, [connecting, openSocket, refreshQr, startPolling, status.connected]);
+
+  const disconnect = useCallback(async () => {
+    if (disconnecting) return;
+
+    setDisconnecting(true);
+    setError("");
+
+    try {
+      await whatsappSetupService.disconnect();
+
+      stopPolling();
+      closeSocket();
+
+      connectedNotifiedRef.current = false;
+
+      setQr(null);
+      setConnecting(false);
+      setStatus(DEFAULT_STATUS);
+
+      await refreshStatus({
+        silent: true,
+      });
+    } catch (requestError) {
+      console.error("DISCONNECT WHATSAPP FAILED:", requestError);
+
+      setError(
+        requestError?.response?.data?.message ||
+          requestError?.message ||
+          "Unable to disconnect WhatsApp.",
+      );
+    } finally {
+      if (mountedRef.current) {
+        setDisconnecting(false);
+      }
+    }
+  }, [closeSocket, disconnecting, refreshStatus, stopPolling]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    refreshStatus();
+
+    return () => {
+      mountedRef.current = false;
+
+      stopPolling();
+      closeSocket();
+    };
+  }, [closeSocket, refreshStatus, stopPolling]);
+
+  /*
+   * Open Socket.IO only while the QR connection
+   * is not complete.
+   */
+  useEffect(() => {
+    if (loading || status.connected) {
+      if (status.connected) {
+        closeSocket();
+      }
+
+      return undefined;
+    }
+
+    openSocket();
+
+    return undefined;
+  }, [closeSocket, loading, openSocket, status.connected]);
 
   return {
     status,
@@ -498,19 +522,11 @@ export function useWhatsAppSetup({ onConnected } = {}) {
 
     connect,
     disconnect,
+
     refresh: refreshStatus,
     refreshStatus,
     refreshQr,
   };
 }
 
-/*
- * 2 import:
- *
- * import { useWhatsAppSetup } from "./hooks/useWhatsAppSetup";
- *
- * &:
- *
- * import useWhatsAppSetup from "./hooks/useWhatsAppSetup";
- */
 export default useWhatsAppSetup;
