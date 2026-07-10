@@ -1724,47 +1724,52 @@ export class AiCenterService {
     }
 
     const page = Math.max(Number(params.page || 1), 1);
-
     const limit = Math.min(Math.max(Number(params.limit || 12), 1), 100);
-
     const offset = (page - 1) * limit;
-
     const values: any[] = [teamId];
     const where: string[] = ["p.team_id = $1"];
 
     if (params.search?.trim()) {
       values.push(`%${params.search.trim()}%`);
 
+      const searchParam = `$${values.length}`;
+
       where.push(`
       (
-        p.title ILIKE $${values.length}
-        OR COALESCE(p.city, '') ILIKE $${values.length}
-        OR COALESCE(p.state, '') ILIKE $${values.length}
-        OR COALESCE(p.address, '') ILIKE $${values.length}
+        COALESCE(p.title, '') ILIKE ${searchParam}
+        OR COALESCE(p.city, '') ILIKE ${searchParam}
+        OR COALESCE(p.state, '') ILIKE ${searchParam}
+        OR COALESCE(p.address, '') ILIKE ${searchParam}
+        OR COALESCE(p.description, '') ILIKE ${searchParam}
+        OR COALESCE(p.zip_code, '') ILIKE ${searchParam}
       )
     `);
     }
 
     const whereSql = where.join(" AND ");
-
+    const limitParam = `$${values.length + 1}`;
+    const offsetParam = `$${values.length + 2}`;
     const [propertiesResult, countResult, selectedResult] = await Promise.all([
       this.db.query(
         `
       SELECT
         p.id,
         p.title,
+        p.description,
+        p.address,
         p.city,
         p.state,
+        p.zip_code,
         p.price,
-        p.currency,
+        p.type,
+        p.property_type,
+        p.status,
         p.bedrooms,
         p.bathrooms,
-        p.status,
 
         COALESCE(
-          p.image_url,
-          p.thumbnail_url,
-          NULL
+          NULLIF(p.thumbnail_url, ''),
+          media.url
         ) AS image_url,
 
         CASE
@@ -1777,18 +1782,34 @@ export class AiCenterService {
 
       LEFT JOIN ai_agent_property_catalog catalog
         ON catalog.property_id = p.id
-        AND catalog.team_id = p.team_id
+        AND catalog.team_id = $1
         AND catalog.is_active = true
+
+      LEFT JOIN LATERAL (
+        SELECT pm.url
+        FROM property_media pm
+        WHERE pm.property_id = p.id
+          AND pm.type = 'image'
+        ORDER BY
+          pm.is_primary DESC,
+          pm.display_order ASC,
+          pm.created_at ASC
+        LIMIT 1
+      ) media ON true
 
       WHERE ${whereSql}
 
       ORDER BY
-        catalog.property_id IS NOT NULL DESC,
+        CASE
+          WHEN catalog.property_id IS NOT NULL
+          THEN 0
+          ELSE 1
+        END,
         p.updated_at DESC,
         p.created_at DESC
 
-      LIMIT $${values.length + 1}
-      OFFSET $${values.length + 2}
+      LIMIT ${limitParam}
+      OFFSET ${offsetParam}
       `,
         [...values, limit, offset],
       ),
@@ -1808,37 +1829,40 @@ export class AiCenterService {
       FROM ai_agent_property_catalog
       WHERE team_id = $1
         AND is_active = true
+      ORDER BY created_at ASC
       `,
         [teamId],
       ),
     ]);
 
     const total = Number(countResult.rows[0]?.total || 0);
+    const selectedPropertyIds = selectedResult.rows.map((row: any) =>
+      String(row.property_id),
+    );
 
     return {
       page,
       limit,
       total,
-
       totalPages: Math.max(1, Math.ceil(total / limit)),
-
-      selectedCount: selectedResult.rows.length,
-
-      selectedPropertyIds: selectedResult.rows.map(
-        (row: any) => row.property_id,
-      ),
-
+      selectedCount: selectedPropertyIds.length,
+      selectedPropertyIds,
       items: propertiesResult.rows.map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        city: row.city,
-        state: row.state,
-        price: row.price,
-        currency: row.currency || "USD",
-        bedrooms: row.bedrooms,
-        bathrooms: row.bathrooms,
-        status: row.status,
-        imageUrl: row.image_url,
+        id: String(row.id),
+        title: row.title || "Untitled property",
+        description: row.description || "",
+        address: row.address || "",
+        city: row.city || "",
+        state: row.state || "",
+        zipCode: row.zip_code || "",
+        price: row.price != null ? Number(row.price) : null,
+        currency: "USD",
+        type: row.type || null,
+        propertyType: row.property_type || null,
+        status: row.status || "draft",
+        bedrooms: row.bedrooms != null ? Number(row.bedrooms) : null,
+        bathrooms: row.bathrooms != null ? Number(row.bathrooms) : null,
+        imageUrl: row.image_url || null,
         selected: Boolean(row.selected),
       })),
     };

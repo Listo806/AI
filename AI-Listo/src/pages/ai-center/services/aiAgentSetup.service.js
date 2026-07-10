@@ -6,43 +6,116 @@ const unwrapResponse = (response) => {
 
 const request = async (url, options = {}) => {
   const response = await apiClient.request(url, options);
-
   return unwrapResponse(response);
 };
 
+const buildQuery = (params = {}) => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const query = searchParams.toString();
+
+  return query ? `?${query}` : "";
+};
+
 export const aiAgentSetupService = {
-  async getBusinessProfile() {
-    return request("/ai-center/agent/business-profile", {
+  // ==========================
+  // AI Agent Setup
+  // ==========================
+
+  getSetup() {
+    return request("/ai-center/agent/setup", {
       method: "GET",
     });
   },
 
-  async saveBusinessProfile(payload) {
-    return request("/ai-center/agent/business-profile", {
+  updateSetup(payload) {
+    return request("/ai-center/agent/setup", {
       method: "PUT",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify(payload),
     });
   },
 
-  async getSetup() {
-    return request("/ai-center/agent/setup", {
+  // ==========================
+  // Business Profile
+  // ==========================
+
+  getBusinessProfile() {
+    return request("/ai-center/agent/business-profile", {
       method: "GET",
     });
   },
 
-  async updateSetup(payload) {
-    return request("/ai-center/agent/setup", {
+  saveBusinessProfile(payload) {
+    return request("/ai-center/agent/business-profile", {
       method: "PUT",
-
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify(payload),
+    });
+  },
 
+  // ==========================
+  // Property Catalog
+  // ==========================
+
+  getPropertyCatalog(params = {}) {
+    return request(`/ai-center/agent/property-catalog${buildQuery(params)}`, {
+      method: "GET",
+    });
+  },
+
+  savePropertyCatalog(propertyIds) {
+    return request("/ai-center/agent/property-catalog", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        propertyIds,
+      }),
+    });
+  },
+
+  // ==========================
+  // Knowledge Base
+  // ==========================
+
+  getKnowledgeBase() {
+    return request("/ai-center/agent/knowledge", {
+      method: "GET",
+    });
+  },
+
+  saveKnowledgeBase(payload) {
+    return request("/ai-center/agent/knowledge", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  // ==========================
+  // Test AI
+  // ==========================
+
+  testAgent(payload) {
+    return request("/ai-center/agent/test", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(payload),
     });
   },
