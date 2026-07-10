@@ -396,7 +396,6 @@ export default function Landing() {
       stripSub:
         "No extra hires. No missed leads. Just a smarter way to run your pipeline.",
       stripBtn: "Start Your Free Trial →",
-      stripTrust: "No risk. Cancel anytime.",
       stripBenefit1: "Get started in minutes",
       stripBenefit3: "Cancel anytime",
       stripCardTitle: "Pipeline Overview",
@@ -940,7 +939,6 @@ export default function Landing() {
       stripSub:
         "Sin contratar más personal. Sin perder leads. Solo una forma más inteligente de gestionar tu pipeline.",
       stripBtn: "Empieza tu prueba gratis →",
-      stripTrust: "Sin riesgo. Cancela en cualquier momento.",
       stripBenefit1: "Empieza en minutos",
       stripBenefit3: "Cancela en cualquier momento",
       stripCardTitle: "Resumen del pipeline",
@@ -1480,7 +1478,6 @@ export default function Landing() {
       stripSub:
         "Sem contratar mais pessoas. Sem perder leads. Apenas uma forma mais inteligente de gerenciar seu pipeline.",
       stripBtn: "Comece seu teste grátis →",
-      stripTrust: "Sem risco. Cancele a qualquer momento.",
       stripBenefit1: "Comece em minutos",
       stripBenefit3: "Cancele a qualquer momento",
       stripCardTitle: "Visão geral do pipeline",
@@ -2728,7 +2725,6 @@ export default function Landing() {
                 </a>
               </div>
               <p className="underCTA">{tr.underCTA}</p>
-              <p className="cta-trust">{tr.stripTrust}</p>
               <div className="cta-benefits">
                 <div>
                   ⚡ <span>{tr.stripBenefit1}</span>

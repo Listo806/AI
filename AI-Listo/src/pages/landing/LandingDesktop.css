@@ -1821,6 +1821,9 @@
  #cortexa-ai-crm-landing .hero-left .underCTA{
   margin-left: 40px;
  }
+  #cortexa-ai-crm-landing .footer-brand .underCTA{
+  margin-left: 22px;
+ }
  #cortexa-ai-crm-landing .hero-checks .check svg {
     fill: #fff;
 }
