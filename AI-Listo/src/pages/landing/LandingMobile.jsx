@@ -221,7 +221,7 @@ export default function LandingMobile() {
       finalCtaTitle2: "Close More Deals.",
       finalCtaTitle3: "Grow Your Business.",
       finalCtaDesc:
-        "Join 10,000+ real estate professionals who are growing with CORTEXA.",
+        "Join real estate professionals who are growing with CORTEXA.",
       finalCtaBtn: "Start Your Free Trial",
       finalCtaSubBtn: "No credit card required",
       finalCtaSubBtn1: "Unlock potential today",
@@ -490,7 +490,7 @@ export default function LandingMobile() {
       finalCtaTitle2: "Cierra Más Tratos.",
       finalCtaTitle3: "Haz Crecer Tu Negocio.",
       finalCtaDesc:
-        "Únete a más de 10,000 profesionales inmobiliarios que están creciendo con CORTEXA.",
+        "Únete a más de profesionales inmobiliarios que están creciendo con CORTEXA.",
       finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "No se requiere tarjeta de crédito",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
@@ -761,7 +761,7 @@ export default function LandingMobile() {
       finalCtaTitle2: "Feche Mais Negócios.",
       finalCtaTitle3: "Cresça Seu Negócio.",
       finalCtaDesc:
-        "Junte-se a mais de 10.000 profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
+        "Junte-se a mais de profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
       finalCtaBtn: "Inicie Seu Teste Grátis",
       finalCtaSubBtn: "Não é necessário cartão de crédito",
       finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
