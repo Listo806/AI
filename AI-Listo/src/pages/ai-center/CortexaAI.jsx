@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bell,
   BookOpen,
@@ -463,6 +463,7 @@ export default function CortexaAI() {
           whatsappSetup={whatsappSetup}
           onBusinessProfile={openBusinessProfile}
           onPropertyImport={openPropertyImport}
+          onAppointmentRules={openAppointmentRules}
         />
 
         <BusinessProfileModal
@@ -603,6 +604,7 @@ export default function CortexaAI() {
             whatsappSetup={whatsappSetup}
             onBusinessProfile={openBusinessProfile}
             onPropertyImport={openPropertyImport}
+            onAppointmentRules={openAppointmentRules}
           />
         )}
 
@@ -650,6 +652,7 @@ function SetupLayout({
   whatsappSetup,
   onBusinessProfile,
   onPropertyImport,
+  onAppointmentRules,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -838,7 +841,7 @@ function SetupLayout({
                               return;
                             }
                             if (step.key === "appointmentRules") {
-                              openAppointmentRules();
+                              onAppointmentRules?.();
                               return;
                             }
                             setOpenStep(step.id);
