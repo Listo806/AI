@@ -20,7 +20,8 @@ import {
   Home,
   XCircle,
   CheckCircle2,
-  TrendingUp, CheckCircle,
+  TrendingUp,
+  CheckCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
@@ -86,7 +87,7 @@ export default function LandingMobile() {
       ],
       pricing: "Pricing",
       watchDemo: "Watch Demo",
-      trusted: "Trusted by 10,000+ real estate agents worldwide.",
+      trusted: "Trusted by real estate agents worldwide.",
 
       benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
       benefitsTitle1: "Everything You Need.",
@@ -165,8 +166,9 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTS GROWING",
       ctaButtonText: "Start Your Free Trial",
 
-      reviewSubtitle: "PROOF THAT IT WORKS",
-      reviewTitle: "Real agents. Real results. Real revenue growth.",
+      reviewSubtitle: "HOW CORTEXA AI CRM HELPS",
+      reviewTitle:
+        "Powerful AI tools built for modern real estate professionals.",
       review1Text:
         "“CORTEXA helped me 3x my appointments in the first 60 days.”",
       review1Stat: "+320% more appointments",
@@ -319,10 +321,12 @@ export default function LandingMobile() {
       stageProposal: "Proposal",
       stageClosed: "Closed Won",
 
-      heroCheck6: "Your AI Agent finds, captures, and qualifies leads automatically",
+      heroCheck6:
+        "Your AI Agent finds, captures, and qualifies leads automatically",
       heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
       heroCheck8: "Automated follow-ups and appointment booking run 24/7",
-      heroCheck9: "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
+      heroCheck9:
+        "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
 
       powerbadge: "INTEGRATION",
       powertitle: "Connect your apps",
@@ -352,7 +356,7 @@ export default function LandingMobile() {
       ],
       pricing: "Precios",
       watchDemo: "Ver Demo",
-      trusted: "Más de 10.000 profesionales confían en nosotros",
+      trusted: "Más de profesionales confían en nosotros",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
@@ -431,8 +435,9 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTES CRECIENDO",
       ctaButtonText: "Comienza Tu Prueba Gratis",
 
-      reviewSubtitle: "PRUEBA DE QUE FUNCIONA",
-      reviewTitle: "Agentes reales. Resultados reales. Crecimiento real.",
+      reviewSubtitle: "CÓMO AYUDA CORTEXA AI CRM",
+      reviewTitle:
+        "Potentes herramientas de IA diseñadas para los profesionales inmobiliarios modernos.",
       review1Text:
         "“CORTEXA me ayudó a triplicar mis citas en los primeros 60 días.”",
       review1Stat: "+320% más de citas",
@@ -585,10 +590,14 @@ export default function LandingMobile() {
       stageProposal: "Propuesta",
       stageClosed: "Cerrado Ganado",
 
-      heroCheck6: "Tu agente de IA encuentra, captura y califica leads automáticamente.",
-      heroCheck7: "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
-      heroCheck8: "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
-      heroCheck9: "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
+      heroCheck6:
+        "Tu agente de IA encuentra, captura y califica leads automáticamente.",
+      heroCheck7:
+        "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
+      heroCheck8:
+        "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
+      heroCheck9:
+        "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
 
       powerbadge: "INTEGRACIÓN",
       powertitle: "Conecta tus aplicaciones",
@@ -618,7 +627,7 @@ export default function LandingMobile() {
       ],
       pricing: "Preços",
       watchDemo: "Ver Demo",
-      trusted: "Mais de 10.000 profissionais utilizam nossa plataforma",
+      trusted: "Mais de profissionais utilizam nossa plataforma",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
@@ -697,9 +706,9 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTES CRESCENDO",
       ctaButtonText: "Inicie Seu Teste Grátis",
 
-      reviewSubtitle: "PROVA DE QUE FUNCIONA",
+      reviewSubtitle: "COMO O CORTEXA AI CRM AJUDA",
       reviewTitle:
-        "Agentes reais. Resultados reais. Crescimento real de receita.",
+        "Ferramentas poderosas de IA desenvolvidas para profissionais do mercado imobiliário moderno.",
       review1Text:
         "“A CORTEXA me ajudou a triplicar minhas reuniões nos primeiros 60 dias.”",
       review1Stat: "+320% mais reuniões",
@@ -852,10 +861,14 @@ export default function LandingMobile() {
       stageProposal: "Proposta",
       stageClosed: "Ganho Fechado",
 
-      heroCheck6: "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
-      heroCheck7: "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
-      heroCheck8: "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
-      heroCheck9: "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
+      heroCheck6:
+        "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
+      heroCheck7:
+        "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
+      heroCheck8:
+        "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
+      heroCheck9:
+        "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
 
       powerbadge: "INTEGRAÇÃO",
       powertitle: "Conecte seus aplicativos",
@@ -872,7 +885,11 @@ export default function LandingMobile() {
   };
   const tr = t[lang];
   const workspace =
-    lang === "es" ? workspaceImgES : lang === "pt" ? workspaceImgPT : workspaceImg;
+    lang === "es"
+      ? workspaceImgES
+      : lang === "pt"
+        ? workspaceImgPT
+        : workspaceImg;
 
   const avatars = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
@@ -998,7 +1015,11 @@ export default function LandingMobile() {
       {/* HERO */}
 
       <section className="m-hero">
-        <div className="m-badge">{tr.badge}<br/>{tr.badge1}</div>
+        <div className="m-badge">
+          {tr.badge}
+          <br />
+          {tr.badge1}
+        </div>
         <h1 className="m-title">
           {tr.heroTitle1}
           <br />
@@ -1020,19 +1041,16 @@ export default function LandingMobile() {
             {tr.watchDemo}
           </button>*/}
           <div className="hero-checks">
-            {[
-              tr.heroCheck6,
-              tr.heroCheck7,
-              tr.heroCheck8,
-              tr.heroCheck9,
-            ].map((item, index) => (
-              <div className="check-item" key={index}>
-                <span className="check">
-                  <CheckCircle size={18} />
-                </span>
-                <span>{item}</span>
-              </div>
-            ))}
+            {[tr.heroCheck6, tr.heroCheck7, tr.heroCheck8, tr.heroCheck9].map(
+              (item, index) => (
+                <div className="check-item" key={index}>
+                  <span className="check">
+                    <CheckCircle size={18} />
+                  </span>
+                  <span>{item}</span>
+                </div>
+              ),
+            )}
           </div>
         </div>
 
@@ -2010,9 +2028,9 @@ export default function LandingMobile() {
       </section>
       <section id="m-workspace">
         <div className="aios-container">
-        <img src={workspace} alt="workspace" />         
+          <img src={workspace} alt="workspace" />
         </div>
-      </section>        
+      </section>
       {/* AI APPOINTMENT SETTER SECTION */}
       <section className="m-appointment-setter" id="ai-assistant">
         <div className="m-setter-header">
@@ -2181,7 +2199,6 @@ export default function LandingMobile() {
       </section>
       <section className="m-powerful">
         <div className="cx-mp-wrapper">
-          
           <div className="cx-mp-badge-container">
             <div className="cx-mp-badge-outline">
               <div className="cx-mp-icon-circle">
@@ -2191,98 +2208,12 @@ export default function LandingMobile() {
             </div>
           </div>
 
-          <h2 className="cx-mp-heading">
-            {tr.powertitle}
-          </h2>
-          <img src={powerfulM} alt="powerful" />  
-        </div>
-      </section>      
-      {/* TESTIMONIALS SECTION */}
-      <section className="m-testimonials" id="testimonials">
-        <div className="m-testimonials-header">
-          <p className="m-testimonials-subtitle">{tr.reviewSubtitle}</p>
-          <h2 className="m-testimonials-title">{tr.reviewTitle}</h2>
-        </div>
-
-        <div className="m-testimonials-list">
-          {/* Card 1 */}
-          <div className="m-testimonial-card">
-            <div className="m-avatar-row">
-              <img src={avatars[0]} alt="Sarah J." className="m-avatar-img" />
-              <div className="m-avatar-info">
-                <h3>Sarah J.</h3>
-                <span>Miami, FL</span>
-                <p className="m-testimonial-quote">{tr.review1Text}</p>
-                <span className="m-testimonial-stat">{tr.review1Stat}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="m-testimonial-card">
-            <div className="m-avatar-row">
-              <img src={avatars[1]} alt="Michael T." className="m-avatar-img" />
-              <div className="m-avatar-info">
-                <h3>Michael T.</h3>
-                <span>Austin, TX</span>
-                <p className="m-testimonial-quote">{tr.review2Text}</p>
-                <span className="m-testimonial-stat">{tr.review2Stat}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 3 */}
-          <div className="m-testimonial-card">
-            <div className="m-avatar-row">
-              <img src={avatars[2]} alt="Jessica L." className="m-avatar-img" />
-              <div className="m-avatar-info">
-                <h3>Jessica L.</h3>
-                <span>Phoenix, AZ</span>
-                <p className="m-testimonial-quote">{tr.review3Text}</p>
-                <span className="m-testimonial-stat">{tr.review3Stat}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="m-trust-footer">
-          <div className="m-trust-left">
-            <div className="m-avatars">
-              {avatars.map((url, index) => (
-                <img
-                  key={index}
-                  src={url}
-                  alt={`User avatar ${index + 1}`}
-                  className="badge-avatar"
-                />
-              ))}
-            </div>
-            <div className="m-trust-text">
-              {[...Array(5)].map((_, i) => (
-                <svg
-                  key={i}
-                  className="star-icon"
-                  viewBox="0 0 24 24"
-                  fill="#FFB800"
-                >
-                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                </svg>
-              ))}
-              <br />
-              {tr.trusted}
-            </div>
-          </div>
-        </div>
-
-        {/* Real Estate Logos */}
-        <div className="m-brand-logos">
-          <span className="m-logo-item exp">exp</span>
-          <span className="m-logo-item kw">kw</span>
-          <span className="m-logo-item compass">COMPASS</span>
-          <span className="m-logo-item remax">RE/MAX</span>
+          <h2 className="cx-mp-heading">{tr.powertitle}</h2>
+          <img src={powerfulM} alt="powerful" />
         </div>
       </section>
+      {/* TESTIMONIALS SECTION */}
+      
 
       {/* FAQ SECTION */}
       <section className="m-faq">

@@ -2016,36 +2016,7 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              <div className="social-badge-container">
-                <div className="avatar-group">
-                  {avatars.map((url, index) => (
-                    <img
-                      key={index}
-                      src={url}
-                      alt={`User avatar ${index + 1}`}
-                      className="badge-avatar"
-                    />
-                  ))}
-                </div>
-
-                <div className="badge-content">
-                  <div className="stars-row">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className="star-icon"
-                        viewBox="0 0 24 24"
-                        fill="#FFB800"
-                      >
-                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="badge-text">
-                    Trusted by real estate agents worldwide.
-                  </p>
-                </div>
-              </div>
+              
             </div>
           </div>
 
