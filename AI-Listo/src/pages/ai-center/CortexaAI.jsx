@@ -57,6 +57,7 @@ import "./CortexaAI.css";
 import BusinessProfileModal from "./components/BusinessProfileModal";
 import aiAgentSetupService from "./services/aiAgentSetup.service";
 import PropertyImportModal from "./components/PropertyImportModal";
+import AppointmentRulesModal from "./components/AppointmentRulesModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -91,6 +92,11 @@ export default function CortexaAI() {
   const [propertyCatalogError, setPropertyCatalogError] = useState("");
   const [propertyCatalogSearch, setPropertyCatalogSearch] = useState("");
 
+  const [appointmentRulesOpen, setAppointmentRulesOpen] = useState(false);
+  const [appointmentRulesLoading, setAppointmentRulesLoading] = useState(false);
+  const [appointmentRulesSaving, setAppointmentRulesSaving] = useState(false);
+  const [appointmentRulesError, setAppointmentRulesError] = useState("");
+  const [appointmentRules, setAppointmentRules] = useState(null);
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
@@ -101,6 +107,9 @@ export default function CortexaAI() {
 
       if (data?.isSetupComplete) {
         setActivePage((current) => (current === "setup" ? "chat" : current));
+      }
+      if (data?.appointmentRules) {
+        setAppointmentRules(data.appointmentRules);
       }
     } catch (error) {
       console.error("LOAD AI SETUP FAILED:", error);
@@ -185,6 +194,46 @@ export default function CortexaAI() {
       throw error;
     } finally {
       setPropertyCatalogSaving(false);
+    }
+  };
+
+  const loadAppointmentRules = useCallback(async () => {
+    try {
+      setAppointmentRulesLoading(true);
+      setAppointmentRulesError("");
+      const data = await aiAgentSetupService.getAppointmentRules();
+      setAppointmentRules(data);
+    } catch (error) {
+      console.error(error);
+
+      setAppointmentRulesError(
+        error?.message || "Unable to load appointment rules.",
+      );
+    } finally {
+      setAppointmentRulesLoading(false);
+    }
+  }, []);
+
+  const openAppointmentRules = async () => {
+    setAppointmentRulesOpen(true);
+    await loadAppointmentRules();
+  };
+
+  const saveAppointmentRules = async (payload) => {
+    try {
+      setAppointmentRulesSaving(true);
+      setAppointmentRulesError("");
+      const data = await aiAgentSetupService.saveAppointmentRules(payload);
+      setAppointmentRules(data);
+      setAppointmentRulesOpen(false);
+      await loadSetup();
+    } catch (error) {
+      console.error(error);
+      setAppointmentRulesError(
+        error?.message || "Unable to save appointment rules.",
+      );
+    } finally {
+      setAppointmentRulesSaving(false);
     }
   };
 
@@ -453,6 +502,16 @@ export default function CortexaAI() {
             });
           }}
           onSave={savePropertyCatalog}
+        />
+
+        <AppointmentRulesModal
+          open={appointmentRulesOpen}
+          rules={appointmentRules}
+          loading={appointmentRulesLoading}
+          saving={appointmentRulesSaving}
+          error={appointmentRulesError}
+          onClose={() => setAppointmentRulesOpen(false)}
+          onSave={saveAppointmentRules}
         />
       </>
     );
@@ -776,6 +835,10 @@ function SetupLayout({
                             }
                             if (step.key === "properties") {
                               onPropertyImport?.();
+                              return;
+                            }
+                            if (step.key === "appointmentRules") {
+                              openAppointmentRules();
                               return;
                             }
                             setOpenStep(step.id);

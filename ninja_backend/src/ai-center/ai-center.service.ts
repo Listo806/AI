@@ -286,6 +286,7 @@ export class AiCenterService {
       teamResult,
       propertiesResult,
       configResult,
+      appointmentRulesResult,
       testResult,
       automationResult,
       businessProfileResult,
@@ -321,6 +322,15 @@ export class AiCenterService {
                 updated_at
          FROM ai_agent_settings
          WHERE team_id = $1`,
+        [teamId],
+      ),
+      this.db.query(
+        `
+        SELECT id
+        FROM ai_agent_appointment_rules
+        WHERE team_id=$1
+        LIMIT 1
+        `,
         [teamId],
       ),
       this.db.query(
@@ -368,6 +378,7 @@ export class AiCenterService {
     const appointmentRulesConfigured = Boolean(
       config.appointment_rules_configured || team.ai_appointment_setter_enabled,
     );
+    const appointmentRulesCompleted = appointmentRulesResult.rows.length > 0;
     const behaviorConfigured = Boolean(
       config.behavior_configured || team.ai_auto_reply_tone,
     );
@@ -376,7 +387,7 @@ export class AiCenterService {
       whatsappConnected,
       businessProfileCompleted,
       propertyCount > 0,
-      appointmentRulesConfigured,
+      appointmentRulesCompleted,
       behaviorConfigured,
       automationCount > 0 || Boolean(config.automations_configured),
       tested,
@@ -412,8 +423,9 @@ export class AiCenterService {
           propertyCount > 0 ? `${propertyCount} imported` : "No properties",
       },
       appointmentRules: {
-        configured: appointmentRulesConfigured,
-        status: appointmentRulesConfigured ? "Configured" : "Not configured",
+        configured: appointmentRulesCompleted,
+        completed: appointmentRulesCompleted,
+        status: appointmentRulesCompleted ? "Configured" : "Not configured",
       },
       behavior: {
         configured: behaviorConfigured,
@@ -2002,5 +2014,435 @@ export class AiCenterService {
       imported: uniquePropertyIds.length,
       propertyIds: uniquePropertyIds,
     };
+  }
+
+  async getAppointmentRules(teamId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      id,
+      team_id,
+      timezone,
+      working_days,
+      start_time,
+      end_time,
+      booking_duration,
+      buffer_before,
+      buffer_after,
+      max_daily_bookings,
+      allow_weekends,
+      auto_confirm,
+      require_human_approval,
+      reminder_minutes,
+      google_calendar_enabled,
+      outlook_calendar_enabled,
+      intake_questions,
+      created_at,
+      updated_at
+    FROM ai_agent_appointment_rules
+    WHERE team_id = $1
+    LIMIT 1
+    `,
+      [teamId],
+    );
+
+    const row = rows[0];
+
+    if (!row) {
+      return {
+        exists: false,
+        configured: false,
+
+        timezone: "UTC",
+
+        workingDays: ["monday", "tuesday", "wednesday", "thursday", "friday"],
+
+        startTime: "09:00",
+        endTime: "18:00",
+
+        bookingDuration: 30,
+        bufferBefore: 0,
+        bufferAfter: 0,
+
+        maxDailyBookings: 20,
+
+        allowWeekends: false,
+        autoConfirm: true,
+        requireHumanApproval: false,
+
+        reminderMinutes: 30,
+
+        googleCalendarEnabled: false,
+        outlookCalendarEnabled: false,
+
+        intakeQuestions: [],
+
+        createdAt: null,
+        updatedAt: null,
+      };
+    }
+
+    return {
+      exists: true,
+      configured: true,
+      id: row.id,
+      timezone: row.timezone || "UTC",
+      workingDays: Array.isArray(row.working_days) ? row.working_days : [],
+      startTime: row.start_time ? String(row.start_time).slice(0, 5) : "09:00",
+      endTime: row.end_time ? String(row.end_time).slice(0, 5) : "18:00",
+      bookingDuration: Number(row.booking_duration || 30),
+      bufferBefore: Number(row.buffer_before || 0),
+      bufferAfter: Number(row.buffer_after || 0),
+      maxDailyBookings: Number(row.max_daily_bookings || 20),
+      allowWeekends: Boolean(row.allow_weekends),
+      autoConfirm: Boolean(row.auto_confirm),
+      requireHumanApproval: Boolean(row.require_human_approval),
+      reminderMinutes: Number(row.reminder_minutes || 30),
+      googleCalendarEnabled: Boolean(row.google_calendar_enabled),
+      outlookCalendarEnabled: Boolean(row.outlook_calendar_enabled),
+      intakeQuestions: Array.isArray(row.intake_questions)
+        ? row.intake_questions
+        : [],
+
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async saveAppointmentRules(
+    teamId: string,
+    userId: string,
+    body: {
+      timezone?: string;
+
+      workingDays?: string[];
+
+      startTime?: string;
+      endTime?: string;
+
+      bookingDuration?: number;
+      bufferBefore?: number;
+      bufferAfter?: number;
+
+      maxDailyBookings?: number;
+
+      allowWeekends?: boolean;
+      autoConfirm?: boolean;
+      requireHumanApproval?: boolean;
+
+      reminderMinutes?: number;
+
+      googleCalendarEnabled?: boolean;
+      outlookCalendarEnabled?: boolean;
+
+      intakeQuestions?: string[];
+    },
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const allowedDays = new Set([
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ]);
+
+    const timezone = String(body.timezone || "UTC").trim() || "UTC";
+
+    const workingDays = Array.from(
+      new Set(
+        (Array.isArray(body.workingDays) ? body.workingDays : [])
+          .map((day) =>
+            String(day || "")
+              .trim()
+              .toLowerCase(),
+          )
+          .filter((day) => allowedDays.has(day)),
+      ),
+    );
+
+    if (workingDays.length === 0) {
+      throw new ForbiddenException("Select at least one working day");
+    }
+
+    const startTime = String(body.startTime || "09:00").trim();
+    const endTime = String(body.endTime || "18:00").trim();
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+    if (!timePattern.test(startTime) || !timePattern.test(endTime)) {
+      throw new ForbiddenException(
+        "Start time and end time must use HH:mm format",
+      );
+    }
+
+    if (startTime >= endTime) {
+      throw new ForbiddenException("End time must be later than start time");
+    }
+
+    const bookingDuration = Math.min(
+      Math.max(Number(body.bookingDuration || 30), 15),
+      480,
+    );
+
+    const bufferBefore = Math.min(
+      Math.max(Number(body.bufferBefore || 0), 0),
+      240,
+    );
+
+    const bufferAfter = Math.min(
+      Math.max(Number(body.bufferAfter || 0), 0),
+      240,
+    );
+
+    const maxDailyBookings = Math.min(
+      Math.max(Number(body.maxDailyBookings || 20), 1),
+      100,
+    );
+
+    const reminderMinutes = Math.min(
+      Math.max(Number(body.reminderMinutes || 30), 0),
+      10080,
+    );
+
+    const intakeQuestions = Array.from(
+      new Set(
+        (Array.isArray(body.intakeQuestions) ? body.intakeQuestions : [])
+          .map((question) => String(question || "").trim())
+          .filter(Boolean),
+      ),
+    ).slice(0, 20);
+
+    const allowWeekends = Boolean(body.allowWeekends);
+    const autoConfirm = body.autoConfirm !== false;
+    const requireHumanApproval = Boolean(body.requireHumanApproval);
+    const googleCalendarEnabled = Boolean(body.googleCalendarEnabled);
+    const outlookCalendarEnabled = Boolean(body.outlookCalendarEnabled);
+
+    await this.db.query("BEGIN");
+
+    try {
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_appointment_rules (
+        team_id,
+
+        timezone,
+        working_days,
+
+        start_time,
+        end_time,
+
+        booking_duration,
+        buffer_before,
+        buffer_after,
+
+        max_daily_bookings,
+
+        allow_weekends,
+        auto_confirm,
+        require_human_approval,
+
+        reminder_minutes,
+
+        google_calendar_enabled,
+        outlook_calendar_enabled,
+
+        intake_questions,
+
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+
+        $2,
+        $3::jsonb,
+
+        $4,
+        $5,
+
+        $6,
+        $7,
+        $8,
+
+        $9,
+
+        $10,
+        $11,
+        $12,
+
+        $13,
+
+        $14,
+        $15,
+
+        $16::jsonb,
+
+        NOW(),
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        timezone =
+          EXCLUDED.timezone,
+
+        working_days =
+          EXCLUDED.working_days,
+
+        start_time =
+          EXCLUDED.start_time,
+
+        end_time =
+          EXCLUDED.end_time,
+
+        booking_duration =
+          EXCLUDED.booking_duration,
+
+        buffer_before =
+          EXCLUDED.buffer_before,
+
+        buffer_after =
+          EXCLUDED.buffer_after,
+
+        max_daily_bookings =
+          EXCLUDED.max_daily_bookings,
+
+        allow_weekends =
+          EXCLUDED.allow_weekends,
+
+        auto_confirm =
+          EXCLUDED.auto_confirm,
+
+        require_human_approval =
+          EXCLUDED.require_human_approval,
+
+        reminder_minutes =
+          EXCLUDED.reminder_minutes,
+
+        google_calendar_enabled =
+          EXCLUDED.google_calendar_enabled,
+
+        outlook_calendar_enabled =
+          EXCLUDED.outlook_calendar_enabled,
+
+        intake_questions =
+          EXCLUDED.intake_questions,
+
+        updated_at = NOW()
+      `,
+        [
+          teamId,
+
+          timezone,
+          JSON.stringify(workingDays),
+
+          startTime,
+          endTime,
+
+          bookingDuration,
+          bufferBefore,
+          bufferAfter,
+
+          maxDailyBookings,
+
+          allowWeekends,
+          autoConfirm,
+          requireHumanApproval,
+
+          reminderMinutes,
+
+          googleCalendarEnabled,
+          outlookCalendarEnabled,
+
+          JSON.stringify(intakeQuestions),
+        ],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_settings (
+        team_id,
+        appointment_rules_configured,
+        updated_at
+      )
+      VALUES (
+        $1,
+        true,
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        appointment_rules_configured = true,
+        updated_at = NOW()
+      `,
+        [teamId],
+      );
+
+      await this.db.query(
+        `
+      UPDATE teams
+      SET
+        ai_appointment_setter_enabled = true,
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+        [teamId],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'appointment_rules_updated',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+          JSON.stringify({
+            userId,
+            timezone,
+            workingDays,
+            startTime,
+            endTime,
+            bookingDuration,
+            maxDailyBookings,
+            autoConfirm,
+            requireHumanApproval,
+          }),
+        ],
+      );
+
+      await this.db.query("COMMIT");
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+      throw error;
+    }
+
+    return this.getAppointmentRules(teamId);
   }
 }

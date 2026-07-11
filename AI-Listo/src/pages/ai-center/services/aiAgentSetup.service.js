@@ -119,6 +119,24 @@ export const aiAgentSetupService = {
       body: JSON.stringify(payload),
     });
   },
+
+  getAppointmentRules() {
+    return request("/ai-center/agent/appointment-rules", {
+      method: "GET",
+    });
+  },
+
+  saveAppointmentRules(payload) {
+    return request("/ai-center/agent/appointment-rules", {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(payload),
+    });
+  },
 };
 
 export default aiAgentSetupService;

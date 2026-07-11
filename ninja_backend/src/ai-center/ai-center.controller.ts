@@ -322,4 +322,47 @@ export class AiCenterController {
       body.propertyIds,
     );
   }
+
+  @Get("agent/appointment-rules")
+  async getAppointmentRules(@CurrentUser() user: any) {
+    return this.service.getAppointmentRules(user.teamId);
+  }
+
+  @Put("agent/appointment-rules")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Create or update AI Agent appointment rules",
+  })
+  async saveAppointmentRules(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      timezone?: string;
+      workingDays?: string[];
+
+      startTime?: string;
+      endTime?: string;
+
+      bookingDuration?: number;
+      bufferBefore?: number;
+      bufferAfter?: number;
+
+      maxDailyBookings?: number;
+
+      allowWeekends?: boolean;
+      autoConfirm?: boolean;
+      requireHumanApproval?: boolean;
+
+      reminderMinutes?: number;
+
+      googleCalendarEnabled?: boolean;
+      outlookCalendarEnabled?: boolean;
+
+      intakeQuestions?: string[];
+    },
+  ) {
+    return this.service.saveAppointmentRules(user.teamId, user.id, body);
+  }
 }
