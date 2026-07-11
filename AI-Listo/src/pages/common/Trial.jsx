@@ -50,13 +50,12 @@ const t = {
     heroTitleMore: "More.",
 
     quoteText: `"CORTEXA AI Revenue OS completely transformed our business. The AI handles the follow-ups, our pipeline stays full and our closings are up. It's like having an entire team working 24/7."`,
-    quoteAuthor: "The Horizon Group",
+    quoteAuthor: "The Happy Client",
     quoteSub: "Real Estate Team",
-    quoteBadge: "Verified Customer",
 
-    statUsersVal: "10,000+",
+    statUsersVal: "",
     statUsersLbl: "Active Users",
-    statDealsVal: "3X",
+    statDealsVal: "",
     statDealsLbl: "More Deals Closed",
     statTimeVal: "24/7",
     statTimeLbl: "AI Working For You Nonstop",
@@ -98,13 +97,12 @@ const t = {
     heroTitleMore: "Más.",
 
     quoteText: `"CORTEXA AI Revenue OS transformó por completo nuestro negocio. La IA se encarga de los seguimientos, nuestro pipeline se mantiene lleno y nuestros cierres han aumentado. Es como tener un equipo entero trabajando 24/7."`,
-    quoteAuthor: "The Horizon Group",
+    quoteAuthor: "El Cliente Satisfecho",
     quoteSub: "Equipo Inmobiliario",
-    quoteBadge: "Cliente Verificado",
 
-    statUsersVal: "10,000+",
+    statUsersVal: "",
     statUsersLbl: "Usuarios Activos",
-    statDealsVal: "3X",
+    statDealsVal: "",
     statDealsLbl: "Más Tratos Cerrados",
     statTimeVal: "24/7",
     statTimeLbl: "IA Trabajando para Ti Sin Parar",
@@ -147,11 +145,10 @@ const t = {
     heroTitleMore: "Mais.",
 
     quoteText: `"O CORTEXA AI Revenue OS transformou completamente o nosso negócio. A IA cuida dos acompanhamentos, nosso pipeline permanece cheio e nossos fechamentos aumentaram. É como ter uma equipe inteira trabalhando 24/7."`,
-    quoteAuthor: "The Horizon Group",
+    quoteAuthor: "Cliente Satisfeito",
     quoteSub: "Equipe Imobiliária",
-    quoteBadge: "Cliente Verificado",
 
-    statUsersVal: "10,000+",
+    statUsersVal: "",
     statUsersLbl: "Usuários Ativos",
     statDealsVal: "3X",
     statDealsLbl: "Mais Negócios Fechados",
@@ -509,8 +506,6 @@ export default function StartTrial() {
                     <h4 className="cx-mob-author-name">{tr.quoteAuthor}</h4>
                     <p className="cx-mob-author-sub">{tr.quoteSub}</p>
                     <div className="cx-mob-verified-badge">
-                      <ShieldCheck size={12} className="cx-shield-icon" />
-                      <span>{tr.quoteBadge}</span>
                     </div>
                   </div>
                 </div>
