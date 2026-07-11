@@ -287,6 +287,7 @@ export class AiCenterService {
       propertiesResult,
       configResult,
       appointmentRulesResult,
+      behaviorResult,
       testResult,
       automationResult,
       businessProfileResult,
@@ -329,6 +330,15 @@ export class AiCenterService {
         SELECT id
         FROM ai_agent_appointment_rules
         WHERE team_id=$1
+        LIMIT 1
+        `,
+        [teamId],
+      ),
+      this.db.query(
+        `
+        SELECT team_id
+        FROM ai_agent_behavior
+        WHERE team_id = $1
         LIMIT 1
         `,
         [teamId],
@@ -379,9 +389,7 @@ export class AiCenterService {
       config.appointment_rules_configured || team.ai_appointment_setter_enabled,
     );
     const appointmentRulesCompleted = appointmentRulesResult.rows.length > 0;
-    const behaviorConfigured = Boolean(
-      config.behavior_configured || team.ai_auto_reply_tone,
-    );
+    const behaviorConfigured = behaviorResult.rows.length > 0;
 
     const requiredSteps = [
       whatsappConnected,
@@ -429,6 +437,7 @@ export class AiCenterService {
       },
       behavior: {
         configured: behaviorConfigured,
+        completed: behaviorConfigured,
         status: behaviorConfigured ? "Configured" : "Not configured",
       },
       automations: {
@@ -2444,5 +2453,374 @@ export class AiCenterService {
     }
 
     return this.getAppointmentRules(teamId);
+  }
+
+  async getAgentBehavior(teamId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const { rows } = await this.db.query(
+      `
+    SELECT *
+    FROM ai_agent_behavior
+    WHERE team_id = $1
+    LIMIT 1
+    `,
+      [teamId],
+    );
+
+    const row = rows[0];
+
+    if (!row) {
+      return {
+        exists: false,
+        configured: false,
+
+        tone: "professional",
+        personality: "helpful",
+        responseLength: "balanced",
+
+        greetingMessage:
+          "Hi! I’m the AI assistant for our real estate team. How can I help you today?",
+
+        fallbackMessage:
+          "I’m not fully certain about that. Let me connect you with a team member.",
+
+        escalationMessage:
+          "I’m bringing in a human agent who can help you further.",
+
+        qualificationQuestions: [
+          "What type of property are you looking for?",
+          "What is your preferred location?",
+          "What is your budget range?",
+        ],
+
+        forbiddenTopics: [],
+        customInstructions: "",
+
+        askOneQuestionAtATime: true,
+        confirmBeforeBooking: true,
+        mentionAiIdentity: false,
+        useEmojis: false,
+        proactiveFollowUp: true,
+        autoEscalateHotLeads: true,
+
+        createdAt: null,
+        updatedAt: null,
+      };
+    }
+
+    return {
+      exists: true,
+      configured: true,
+
+      tone: row.tone,
+      personality: row.personality,
+
+      responseLength: row.response_length,
+
+      greetingMessage: row.greeting_message || "",
+
+      fallbackMessage: row.fallback_message || "",
+
+      escalationMessage: row.escalation_message || "",
+
+      qualificationQuestions: Array.isArray(row.qualification_questions)
+        ? row.qualification_questions
+        : [],
+
+      forbiddenTopics: Array.isArray(row.forbidden_topics)
+        ? row.forbidden_topics
+        : [],
+
+      customInstructions: row.custom_instructions || "",
+
+      askOneQuestionAtATime: Boolean(row.ask_one_question_at_a_time),
+
+      confirmBeforeBooking: Boolean(row.confirm_before_booking),
+
+      mentionAiIdentity: Boolean(row.mention_ai_identity),
+
+      useEmojis: Boolean(row.use_emojis),
+
+      proactiveFollowUp: Boolean(row.proactive_follow_up),
+
+      autoEscalateHotLeads: Boolean(row.auto_escalate_hot_leads),
+
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async saveAgentBehavior(teamId: string, userId: string, body: any) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const allowedTones = ["professional", "friendly", "sales"];
+
+    const allowedPersonalities = [
+      "helpful",
+      "consultative",
+      "concise",
+      "luxury",
+      "investor_focused",
+    ];
+
+    const allowedResponseLengths = ["concise", "balanced", "detailed"];
+
+    const tone = String(body.tone || "professional").trim();
+
+    const personality = String(body.personality || "helpful").trim();
+
+    const responseLength = String(body.responseLength || "balanced").trim();
+
+    if (!allowedTones.includes(tone)) {
+      throw new ForbiddenException("Invalid AI tone");
+    }
+
+    if (!allowedPersonalities.includes(personality)) {
+      throw new ForbiddenException("Invalid AI personality");
+    }
+
+    if (!allowedResponseLengths.includes(responseLength)) {
+      throw new ForbiddenException("Invalid response length");
+    }
+
+    const greetingMessage = String(body.greetingMessage || "").trim();
+
+    if (!greetingMessage) {
+      throw new ForbiddenException("Greeting message is required");
+    }
+
+    const fallbackMessage = String(body.fallbackMessage || "").trim();
+
+    const escalationMessage = String(body.escalationMessage || "").trim();
+
+    const customInstructions = String(body.customInstructions || "").trim();
+
+    const qualificationQuestions = this.cleanStringArray(
+      body.qualificationQuestions,
+    ).slice(0, 30);
+
+    const forbiddenTopics = this.cleanStringArray(body.forbiddenTopics).slice(
+      0,
+      30,
+    );
+
+    await this.db.query("BEGIN");
+
+    try {
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_behavior (
+        team_id,
+
+        tone,
+        personality,
+        response_length,
+
+        greeting_message,
+        fallback_message,
+        escalation_message,
+
+        qualification_questions,
+        forbidden_topics,
+        custom_instructions,
+
+        ask_one_question_at_a_time,
+        confirm_before_booking,
+        mention_ai_identity,
+        use_emojis,
+        proactive_follow_up,
+        auto_escalate_hot_leads,
+
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+
+        $2,
+        $3,
+        $4,
+
+        $5,
+        $6,
+        $7,
+
+        $8::jsonb,
+        $9::jsonb,
+        $10,
+
+        $11,
+        $12,
+        $13,
+        $14,
+        $15,
+        $16,
+
+        NOW(),
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        tone =
+          EXCLUDED.tone,
+
+        personality =
+          EXCLUDED.personality,
+
+        response_length =
+          EXCLUDED.response_length,
+
+        greeting_message =
+          EXCLUDED.greeting_message,
+
+        fallback_message =
+          EXCLUDED.fallback_message,
+
+        escalation_message =
+          EXCLUDED.escalation_message,
+
+        qualification_questions =
+          EXCLUDED.qualification_questions,
+
+        forbidden_topics =
+          EXCLUDED.forbidden_topics,
+
+        custom_instructions =
+          EXCLUDED.custom_instructions,
+
+        ask_one_question_at_a_time =
+          EXCLUDED.ask_one_question_at_a_time,
+
+        confirm_before_booking =
+          EXCLUDED.confirm_before_booking,
+
+        mention_ai_identity =
+          EXCLUDED.mention_ai_identity,
+
+        use_emojis =
+          EXCLUDED.use_emojis,
+
+        proactive_follow_up =
+          EXCLUDED.proactive_follow_up,
+
+        auto_escalate_hot_leads =
+          EXCLUDED.auto_escalate_hot_leads,
+
+        updated_at = NOW()
+      `,
+        [
+          teamId,
+
+          tone,
+          personality,
+          responseLength,
+
+          greetingMessage,
+          fallbackMessage || null,
+          escalationMessage || null,
+
+          JSON.stringify(qualificationQuestions),
+
+          JSON.stringify(forbiddenTopics),
+
+          customInstructions || null,
+
+          body.askOneQuestionAtATime !== false,
+
+          body.confirmBeforeBooking !== false,
+
+          Boolean(body.mentionAiIdentity),
+
+          Boolean(body.useEmojis),
+
+          body.proactiveFollowUp !== false,
+
+          body.autoEscalateHotLeads !== false,
+        ],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_settings (
+        team_id,
+        behavior_configured,
+        response_tone,
+        updated_at
+      )
+      VALUES (
+        $1,
+        true,
+        $2,
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        behavior_configured = true,
+        response_tone = EXCLUDED.response_tone,
+        updated_at = NOW()
+      `,
+        [teamId, tone],
+      );
+
+      await this.db.query(
+        `
+      UPDATE teams
+      SET
+        ai_auto_reply_tone = $2,
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+        [teamId, tone],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'ai_behavior_updated',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+
+          JSON.stringify({
+            userId,
+            tone,
+            personality,
+            responseLength,
+            qualificationQuestionCount: qualificationQuestions.length,
+            forbiddenTopicCount: forbiddenTopics.length,
+          }),
+        ],
+      );
+
+      await this.db.query("COMMIT");
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+      throw error;
+    }
+
+    return this.getAgentBehavior(teamId);
   }
 }

@@ -58,6 +58,7 @@ import BusinessProfileModal from "./components/BusinessProfileModal";
 import aiAgentSetupService from "./services/aiAgentSetup.service";
 import PropertyImportModal from "./components/PropertyImportModal";
 import AppointmentRulesModal from "./components/AppointmentRulesModal";
+import AIBehaviorModal from "./components/AIBehaviorModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -97,6 +98,12 @@ export default function CortexaAI() {
   const [appointmentRulesSaving, setAppointmentRulesSaving] = useState(false);
   const [appointmentRulesError, setAppointmentRulesError] = useState("");
   const [appointmentRules, setAppointmentRules] = useState(null);
+
+  const [behaviorOpen, setBehaviorOpen] = useState(false);
+  const [behavior, setBehavior] = useState(null);
+  const [behaviorLoading, setBehaviorLoading] = useState(false);
+  const [behaviorSaving, setBehaviorSaving] = useState(false);
+  const [behaviorError, setBehaviorError] = useState("");
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
@@ -234,6 +241,60 @@ export default function CortexaAI() {
       );
     } finally {
       setAppointmentRulesSaving(false);
+    }
+  };
+
+  const loadBehavior = useCallback(async () => {
+    setBehaviorLoading(true);
+    setBehaviorError("");
+
+    try {
+      const data = await aiAgentSetupService.getBehavior();
+
+      setBehavior(data);
+    } catch (error) {
+      console.error("LOAD AI BEHAVIOR FAILED:", error);
+
+      setBehaviorError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load AI behavior.",
+      );
+    } finally {
+      setBehaviorLoading(false);
+    }
+  }, []);
+
+  const openBehavior = async () => {
+    setBehaviorOpen(true);
+    await loadBehavior();
+  };
+
+  const saveBehavior = async (payload) => {
+    setBehaviorSaving(true);
+    setBehaviorError("");
+
+    try {
+      const saved = await aiAgentSetupService.saveBehavior(payload);
+
+      setBehavior(saved);
+      setBehaviorOpen(false);
+
+      await loadSetup();
+
+      setOpenStep(6);
+    } catch (error) {
+      console.error("SAVE AI BEHAVIOR FAILED:", error);
+
+      setBehaviorError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save AI behavior.",
+      );
+
+      throw error;
+    } finally {
+      setBehaviorSaving(false);
     }
   };
 
@@ -464,6 +525,7 @@ export default function CortexaAI() {
           onBusinessProfile={openBusinessProfile}
           onPropertyImport={openPropertyImport}
           onAppointmentRules={openAppointmentRules}
+          onBehavior={openBehavior}
         />
 
         <BusinessProfileModal
@@ -513,6 +575,20 @@ export default function CortexaAI() {
           error={appointmentRulesError}
           onClose={() => setAppointmentRulesOpen(false)}
           onSave={saveAppointmentRules}
+        />
+
+        <AIBehaviorModal
+          open={behaviorOpen}
+          behavior={behavior}
+          loading={behaviorLoading}
+          saving={behaviorSaving}
+          error={behaviorError}
+          onClose={() => {
+            if (!behaviorSaving) {
+              setBehaviorOpen(false);
+            }
+          }}
+          onSave={saveBehavior}
         />
       </>
     );
@@ -605,6 +681,7 @@ export default function CortexaAI() {
             onBusinessProfile={openBusinessProfile}
             onPropertyImport={openPropertyImport}
             onAppointmentRules={openAppointmentRules}
+            onBehavior={openBehavior}
           />
         )}
 
@@ -653,6 +730,7 @@ function SetupLayout({
   onBusinessProfile,
   onPropertyImport,
   onAppointmentRules,
+  onBehavior,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -842,6 +920,10 @@ function SetupLayout({
                             }
                             if (step.key === "appointmentRules") {
                               onAppointmentRules?.();
+                              return;
+                            }
+                            if (step.key === "behavior") {
+                              onBehavior?.();
                               return;
                             }
                             setOpenStep(step.id);

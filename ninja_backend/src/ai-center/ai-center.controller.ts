@@ -365,4 +365,45 @@ export class AiCenterController {
   ) {
     return this.service.saveAppointmentRules(user.teamId, user.id, body);
   }
+  
+  @Get("agent/behavior")
+  @ApiOperation({
+    summary: "Get AI Agent behavior",
+  })
+  async getAgentBehavior(@CurrentUser() user: any) {
+    return this.service.getAgentBehavior(user.teamId);
+  }
+
+  @Put("agent/behavior")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Create or update AI Agent behavior",
+  })
+  async saveAgentBehavior(
+    @CurrentUser() user: any,
+    @Body()
+    body: {
+      tone?: string;
+      personality?: string;
+      responseLength?: string;
+
+      greetingMessage?: string;
+      fallbackMessage?: string;
+      escalationMessage?: string;
+
+      qualificationQuestions?: string[];
+      forbiddenTopics?: string[];
+      customInstructions?: string;
+
+      askOneQuestionAtATime?: boolean;
+      confirmBeforeBooking?: boolean;
+      mentionAiIdentity?: boolean;
+      useEmojis?: boolean;
+      proactiveFollowUp?: boolean;
+      autoEscalateHotLeads?: boolean;
+    },
+  ) {
+    return this.service.saveAgentBehavior(user.teamId, user.id, body);
+  }
 }
