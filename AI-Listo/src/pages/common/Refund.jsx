@@ -17,7 +17,7 @@ const Refund = () => {
 
           <p>To activate your account:</p>
           <ul style={styles.ul}>
-            <li>A one-time activation fee of $27 may be charged at signup</li>
+            <li>A one-time activation fee of $97 may be charged at signup</li>
           </ul>
 
           <p>During the 14-day trial:</p>
@@ -29,7 +29,7 @@ const Refund = () => {
           <p>At the end of the trial:</p>
           <ul style={styles.ul}>
             <li>Your account will automatically convert to a paid subscription</li>
-            <li>You will be charged the applicable plan fee (e.g., $2.99/month or selected plan)</li>
+            <li>You will be charged the applicable plan fee (selected plan)</li>
             <li>Billing will continue on a recurring basis unless canceled</li>
           </ul>
 

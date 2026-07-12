@@ -5,7 +5,9 @@
  body {
    margin: 0;
  }
-
+i{
+  font-size: 13px;
+}
  #cortexa-ai-crm-landing {
    --bg: #f7f9fc;
    --card: #ffffff;

@@ -170,7 +170,7 @@ export default function Landing() {
         "Testimonials",
       ],
 
-      trial: "Start Free Trial",
+      trial: "Get Started",
       login: "Log in",
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
@@ -350,7 +350,7 @@ export default function Landing() {
         "Capture leads, follow up instantly, and move every opportunity forward automatically inside one intelligent operating system.",
       footer: {
         desc: "The AI-powered CRM that helps teams close more deals, faster.",
-        btn: "Start Your Free Trial →",
+        btn: "Get Started →",
         product: "Product",
         solutions: "Solutions",
         resources: "Resources",
@@ -363,7 +363,7 @@ export default function Landing() {
       strip: {
         title: "Your CRM shouldn’t slow you down.",
         sub: "Join teams using CORTEXA...",
-        btn: "Start Free Trial",
+        btn: "Get Started",
       },
       aiTitle: "AI Setter — Your 24/7 Appointment Engine",
       aisubTitle:
@@ -395,7 +395,7 @@ export default function Landing() {
       stripTitle: "Start closing more deals — with AI working for you 24/7.",
       stripSub:
         "No extra hires. No missed leads. Just a smarter way to run your pipeline.",
-      stripBtn: "Start Your Free Trial →",
+      stripBtn: "Get Started →",
       stripBenefit1: "Get started in minutes",
       stripBenefit3: "Cancel anytime",
       stripCardTitle: "Pipeline Overview",
@@ -409,7 +409,7 @@ export default function Landing() {
       roiTitle: "Cut Payroll. Scale With Your AI Agent.",
       roiSub:
         "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
-      roiBtn: "Start Free Trial",
+      roiBtn: "Get Started",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
       roiStat1Desc:
@@ -515,7 +515,7 @@ export default function Landing() {
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
-      heroCTA: "Start Your Free Trial",
+      heroCTA: "Get Started",
       heroUnlock: "Unlock potential today!",
       underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
@@ -576,8 +576,8 @@ export default function Landing() {
       footerDescription:
         "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
 
-      startFreeTrial: "Start Free Trial",
-      startYourFreeTrial: "Start Your Free Trial →",
+      startFreeTrial: "Get Started",
+      startYourFreeTrial: "Get Started →",
 
       tagAiPowered: "✨ AI-Powered",
       tagSecure: "🛡 Secure",
@@ -658,9 +658,9 @@ export default function Landing() {
       nodeIntegrationsSub: "Connect Your Tools",
       rightStat1Up: "UP TO",
       rightStat1Main: "3X",
-      rightStat1Title: "INCREASE IN LEAD CONVERSIONS",
+      rightStat1Title: "",
       rightStat1Desc:
-        "Our customers see up to 3X more leads converted into deals — by running their entire business in one connected workspace.",
+        "Everything you need to manage leads, listings, and clients in one place.",
       rightStat2Up: "UP TO",
       rightStat2Main: "20X",
       rightStat2Title: "LESS EXPENSIVE TO IMPLEMENT",
@@ -706,7 +706,7 @@ export default function Landing() {
         "Análisis",
         "Testimonios",
       ],
-      trial: "Prueba gratis",
+      trial: "Comenzar",
       login: "Iniciar sesión",
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
@@ -884,7 +884,7 @@ export default function Landing() {
         "CORTEXA capta clientes potenciales, automatiza los seguimientos, actualiza tu pipeline y mantiene a tu equipo en movimiento, para que puedas concentrarte en cerrar más negocios.",
       footer: {
         desc: "El CRM con IA que ayuda a los equipos a cerrar más ventas más rápido.",
-        btn: "Empieza tu prueba gratuita →",
+        btn: "Comenzar →",
         product: "Producto",
         solutions: "Soluciones",
         resources: "Recursos",
@@ -898,7 +898,7 @@ export default function Landing() {
       strip: {
         title: "Tu CRM no debería ralentizarte.",
         sub: "Únete a equipos que usan CORTEXA...",
-        btn: "Prueba gratis",
+        btn: "Comenzar",
       },
       aiTitle:
         "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
@@ -938,7 +938,7 @@ export default function Landing() {
         "Empieza a cerrar más ventas — con IA trabajando para ti 24/7.",
       stripSub:
         "Sin contratar más personal. Sin perder leads. Solo una forma más inteligente de gestionar tu pipeline.",
-      stripBtn: "Empieza tu prueba gratis →",
+      stripBtn: "Comenzar →",
       stripBenefit1: "Empieza en minutos",
       stripBenefit3: "Cancela en cualquier momento",
       stripCardTitle: "Resumen del pipeline",
@@ -953,7 +953,7 @@ export default function Landing() {
       roiTitle: "Reduce los costos de nómina. Escala con tu agente de IA.",
       roiSub:
         "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
-      roiBtn: "Prueba gratis",
+      roiBtn: "Comenzar",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
       roiStat1Desc:
@@ -1062,7 +1062,7 @@ export default function Landing() {
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
-      heroCTA: "Comienza tu prueba gratuita",
+      heroCTA: "Comenzar",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
@@ -1121,8 +1121,8 @@ export default function Landing() {
       footerDescription:
         "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
 
-      startFreeTrial: "Comenzar prueba gratuita",
-      startYourFreeTrial: "Comienza tu prueba gratuita →",
+      startFreeTrial: "Comenzar",
+      startYourFreeTrial: "Comenzar →",
 
       tagAiPowered: "✨ Impulsado por IA",
       tagSecure: "🛡 Seguro",
@@ -1203,9 +1203,9 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecta tus Herramientas",
       rightStat1Up: "HASTA",
       rightStat1Main: "3X",
-      rightStat1Title: "INCREMENTO EN CONVERSIÓN DE LEADS",
+      rightStat1Title: "",
       rightStat1Desc:
-        "Nuestros clientes ven hasta 3X más leads convertidos en acuerdos al ejecutar todo su negocio en un solo espacio de trabajo conectado.",
+        "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
       rightStat2Up: "HASTA",
       rightStat2Main: "20X",
       rightStat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
@@ -1251,7 +1251,7 @@ export default function Landing() {
         "Análises",
         "Testemunhos",
       ],
-      trial: "Teste grátis",
+      trial: "Começar",
       login: "Entrar",
 
       stripTitlebk: "Seu CRM não deve te atrasar.",
@@ -1427,7 +1427,7 @@ export default function Landing() {
         "Capture leads, faça acompanhamentos instantaneamente e avance cada oportunidade automaticamente dentro de um sistema operacional inteligente.",
       footer: {
         desc: "O CRM com IA que ajuda equipes a fechar mais negócios rapidamente.",
-        btn: "Comece seu teste gratuito →",
+        btn: "Começar →",
         product: "Produto",
         solutions: "Soluções",
         resources: "Recursos",
@@ -1440,7 +1440,7 @@ export default function Landing() {
       strip: {
         title: "Seu CRM não deve te atrasar.",
         sub: "Junte-se a equipes usando CORTEXA...",
-        btn: "Teste grátis",
+        btn: "Começar",
       },
       aiTitle:
         "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
@@ -1477,7 +1477,7 @@ export default function Landing() {
         "Comece a fechar mais negócios — com IA trabalhando para você 24/7.",
       stripSub:
         "Sem contratar mais pessoas. Sem perder leads. Apenas uma forma mais inteligente de gerenciar seu pipeline.",
-      stripBtn: "Comece seu teste grátis →",
+      stripBtn: "Começar →",
       stripBenefit1: "Comece em minutos",
       stripBenefit3: "Cancele a qualquer momento",
       stripCardTitle: "Visão geral do pipeline",
@@ -1493,7 +1493,7 @@ export default function Landing() {
         "Reduza os custos da folha de pagamento. Escale com seu agente de IA.",
       roiSub:
         "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
-      roiBtn: "Teste grátis",
+      roiBtn: "Começar",
       roiStat1Number: "+312%",
       roiStat1Label: "ROI",
       roiStat1Desc:
@@ -1604,7 +1604,7 @@ export default function Landing() {
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
-      heroCTA: "Inicie seu teste gratuito",
+      heroCTA: "Começar",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
@@ -1665,8 +1665,8 @@ export default function Landing() {
       footerDescription:
         "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",
 
-      startFreeTrial: "Iniciar teste gratuito",
-      startYourFreeTrial: "Comece seu teste gratuito →",
+      startFreeTrial: "Começar",
+      startYourFreeTrial: "Começar →",
 
       tagAiPowered: "✨ Com tecnologia de IA",
       tagSecure: "🛡 Seguro",
@@ -1747,9 +1747,9 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecte Suas Ferramentas",
       rightStat1Up: "ATÉ",
       rightStat1Main: "3X",
-      rightStat1Title: "AUMENTO NA CONVERSÃO DE LEADS",
+      rightStat1Title: "",
       rightStat1Desc:
-        "Nossos clientes veem até 3X mais leads convertidos em negócios ao gerenciar toda a sua empresa em um único espaço de trabalho conectado.",
+        "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
       rightStat2Up: "ATÉ",
       rightStat2Main: "20X",
       rightStat2Title: "MAIS BARATO PARA IMPLEMENTAR",
@@ -2023,6 +2023,7 @@ export default function Landing() {
           <div className="hero-right">
             <div className="hero-image">
               <img src={herorightImg} />
+              <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
             </div>
           </div>
         </div>
@@ -2081,7 +2082,7 @@ export default function Landing() {
             <div className="cx-sidebar-stat-block-top">
               <span className="cx-stat-up-tag">{tr.rightStat1Up}</span>
               <img src={x3xImg} alt="iamge" />
-              <h4 className="cx-stat-title-label">{tr.rightStat1Title}</h4>
+              <h4 className="cx-stat-title-label"></h4>
               <div className="cx-stat-blue-bar"></div>
               <p className="cx-stat-description-text">{tr.rightStat1Desc}</p>
             </div>
@@ -2209,6 +2210,7 @@ export default function Landing() {
       </section>
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="" />
+        <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
       </section>
       <section id="workspace">
         <div className="aios-container">
@@ -2647,6 +2649,7 @@ export default function Landing() {
 
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
+        <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
       </section>
 
       <section className="roi-section pt-50">
@@ -2851,6 +2854,7 @@ export default function Landing() {
       <section id="testimonials" className="cx-hero pt-50">
         <div className="img-container">
           <img src={currenttestimonialsImg} alt="" />
+          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
         </div>
       </section>
       {/* FINAL */}
@@ -2865,9 +2869,10 @@ export default function Landing() {
 
           <a href="/trial" className="cx-btn cx-btn-secondary">
             <Zap size={22} />
-            Start free trial
+            {tr.trial}
           </a>
           <p className="underCTA">{tr.underCTA}</p>
+          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
           <div className="cx-final-shot">
             <img src={trialmobileImg} className="desktop-none" />
           </div>

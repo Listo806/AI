@@ -295,7 +295,7 @@ export default function Billing() {
                   <Info size={14} /> <span>Extra user price</span>
                 </div>
                 <span className="metric-value-output font-medium-dark">
-                  $27 / user / month
+                  $97 / user / month
                 </span>
               </div>
               <div className="metric-row-item">
@@ -310,7 +310,7 @@ export default function Billing() {
               <div className="add-user-content-text">
                 <h4>Add a user</h4>
                 <p>
-                  Add additional users to your workspace. $27 / user / month
+                  Add additional users to your workspace. $97 / user / month
                   will be added to your billing.
                 </p>
               </div>

@@ -76,7 +76,7 @@ export default function LandingMobile() {
       heroDesc:
         "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
       login: "Log in",
-      trial: "Start Free Trial",
+      trial: "Get Started",
       nav: [
         "Features",
         "AI Assistant",
@@ -164,7 +164,7 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
-      ctaButtonText: "Start Your Free Trial",
+      ctaButtonText: "Get Started",
 
       reviewSubtitle: "HOW CORTEXA AI CRM HELPS",
       reviewTitle:
@@ -222,8 +222,8 @@ export default function LandingMobile() {
       finalCtaTitle3: "Grow Your Business.",
       finalCtaDesc:
         "Join real estate professionals who are growing with CORTEXA.",
-      finalCtaBtn: "Start Your Free Trial",
-      finalCtaSubBtn: "No credit card required",
+      finalCtaBtn: "Get Started",
+      finalCtaSubBtn: "",
       finalCtaSubBtn1: "Unlock potential today",
 
       marketsSubtitle: "EXPLORE OUR MARKETS",
@@ -282,9 +282,9 @@ export default function LandingMobile() {
       nodeLeads: "LEADS",
       nodeContacts: "CONTACTS",
       nodeProperties: "PROPERTIES",
-      stat1Title: "INCREASE IN LEAD CONVERSIONS",
+      stat1Title: "",
       stat1Desc:
-        "Our customers see up to 3X more leads converted into deals — by running their entire business in one connected workspace.",
+        "Everything you need to manage leads, listings, and clients in one place.",
       vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
       leftCost1: "High setup fees",
       leftCost2: "Add-ons and upgrades you pay for separately",
@@ -345,7 +345,7 @@ export default function LandingMobile() {
       heroDesc:
         "Plataforma de IA todo en uno que te ayuda a captar más clientes potenciales, dar seguimiento al instante, cerrar más ventas y aumentar los ingresos en piloto automático.",
       login: "Iniciar sesión",
-      trial: "Prueba Gratis",
+      trial: "Comenzar",
       nav: [
         "Funciones",
         "Asistente IA",
@@ -356,7 +356,7 @@ export default function LandingMobile() {
       ],
       pricing: "Precios",
       watchDemo: "Ver Demo",
-      trusted: "Más de profesionales confían en nosotros",
+      trusted: "Con la confianza de agentes inmobiliarios de todo el mundo",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
@@ -433,7 +433,7 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
-      ctaButtonText: "Comienza Tu Prueba Gratis",
+      ctaButtonText: "Comenzar",
 
       reviewSubtitle: "CÓMO AYUDA CORTEXA AI CRM",
       reviewTitle:
@@ -491,8 +491,8 @@ export default function LandingMobile() {
       finalCtaTitle3: "Haz Crecer Tu Negocio.",
       finalCtaDesc:
         "Únete a más de profesionales inmobiliarios que están creciendo con CORTEXA.",
-      finalCtaBtn: "Comienza Tu Prueba Gratis",
-      finalCtaSubBtn: "No se requiere tarjeta de crédito",
+      finalCtaBtn: "Comenzar",
+      finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
 
       marketsSubtitle: "EXPLORA NUESTROS MERCADOS",
@@ -551,9 +551,9 @@ export default function LandingMobile() {
       nodeLeads: "CLIENTES POTENCIALES",
       nodeContacts: "CONTACTOS",
       nodeProperties: "PROPIEDADES",
-      stat1Title: "INCREMENTO EN CONVERSIÓN DE LEADS",
+      stat1Title: "",
       stat1Desc:
-        "Nuestros clientes ven hasta 3X más leads convertidos en acuerdos al ejecutar todo su negocio en un solo espacio de trabajo conectado.",
+        "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
       vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
       leftCost1: "Altas tarifas de configuración",
       leftCost2: "Complementos y actualizaciones que pagas por separado",
@@ -616,7 +616,7 @@ export default function LandingMobile() {
       heroDesc:
         "Plataforma de IA tudo-em-um que ajuda você a captar mais leads, fazer o acompanhamento instantaneamente, fechar mais negócios e aumentar a receita no piloto automático.",
       login: "Entrar",
-      trial: "Teste Grátis",
+      trial: "Começar",
       nav: [
         "Recursos",
         "Assistente IA",
@@ -627,7 +627,7 @@ export default function LandingMobile() {
       ],
       pricing: "Preços",
       watchDemo: "Ver Demo",
-      trusted: "Mais de profissionais utilizam nossa plataforma",
+      trusted: "A confiança de agentes imobiliários em todo o mundo",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
@@ -704,7 +704,7 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
-      ctaButtonText: "Inicie Seu Teste Grátis",
+      ctaButtonText: "Começar",
 
       reviewSubtitle: "COMO O CORTEXA AI CRM AJUDA",
       reviewTitle:
@@ -762,8 +762,8 @@ export default function LandingMobile() {
       finalCtaTitle3: "Cresça Seu Negócio.",
       finalCtaDesc:
         "Junte-se a mais de profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
-      finalCtaBtn: "Inicie Seu Teste Grátis",
-      finalCtaSubBtn: "Não é necessário cartão de crédito",
+      finalCtaBtn: "Começar",
+      finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
 
       marketsSubtitle: "EXPLORE NOSSOS MERCADOS",
@@ -822,9 +822,9 @@ export default function LandingMobile() {
       nodeLeads: "LEADS",
       nodeContacts: "CONTATOS",
       nodeProperties: "PROPRIEDADES",
-      stat1Title: "AUMENTO NA CONVERSÃO DE LEADS",
+      stat1Title: "",
       stat1Desc:
-        "Nossos clientes veem até 3X mais leads convertidos em negócios ao gerenciar toda a sua empresa em um único espaço de trabalho conectado.",
+        "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
       vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
       leftCost1: "Altas taxas de configuração",
       leftCost2: "Adicionais e atualizações pagos separadamente",
@@ -1084,6 +1084,7 @@ export default function LandingMobile() {
         {/* dashboard image */}
         <div className="m-dashboard">
           <img src={landingDashImg} alt="" />
+          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
         </div>
       </section>
 
@@ -1472,6 +1473,7 @@ export default function LandingMobile() {
         </div>
         <div className="m-platform-dashboard">
           <img src={landingDashImg} alt="Dashboard mockup" />
+          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
         </div>
       </section>
 

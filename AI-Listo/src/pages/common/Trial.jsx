@@ -50,8 +50,8 @@ const t = {
     heroTitleMore: "More.",
 
     quoteText: `"CORTEXA AI Revenue OS completely transformed our business. The AI handles the follow-ups, our pipeline stays full and our closings are up. It's like having an entire team working 24/7."`,
-    quoteAuthor: "The Happy Client",
-    quoteSub: "Real Estate Team",
+    quoteAuthor: "Customer Story",
+    quoteSub: "*****",
 
     statUsersVal: "",
     statUsersLbl: "Active Users",
@@ -97,8 +97,8 @@ const t = {
     heroTitleMore: "Más.",
 
     quoteText: `"CORTEXA AI Revenue OS transformó por completo nuestro negocio. La IA se encarga de los seguimientos, nuestro pipeline se mantiene lleno y nuestros cierres han aumentado. Es como tener un equipo entero trabajando 24/7."`,
-    quoteAuthor: "El Cliente Satisfecho",
-    quoteSub: "Equipo Inmobiliario",
+    quoteAuthor: "Historia de un cliente",
+    quoteSub: "*****",
 
     statUsersVal: "",
     statUsersLbl: "Usuarios Activos",
@@ -145,8 +145,8 @@ const t = {
     heroTitleMore: "Mais.",
 
     quoteText: `"O CORTEXA AI Revenue OS transformou completamente o nosso negócio. A IA cuida dos acompanhamentos, nosso pipeline permanece cheio e nossos fechamentos aumentaram. É como ter uma equipe inteira trabalhando 24/7."`,
-    quoteAuthor: "Cliente Satisfeito",
-    quoteSub: "Equipe Imobiliária",
+    quoteAuthor: "História de um cliente",
+    quoteSub: "*****",
 
     statUsersVal: "",
     statUsersLbl: "Usuários Ativos",
