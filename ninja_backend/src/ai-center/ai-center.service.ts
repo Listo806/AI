@@ -4624,4 +4624,214 @@ export class AiCenterService {
       usage: aiResponse?.usage || null,
     };
   }
+
+  async importAgentKnowledge(teamId: string, userId: string, items: any[]) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    if (!Array.isArray(items)) {
+      throw new ForbiddenException("Knowledge items must be an array");
+    }
+
+    if (items.length === 0) {
+      throw new ForbiddenException("At least one knowledge item is required");
+    }
+
+    if (items.length > 500) {
+      throw new ForbiddenException("Maximum 500 knowledge items per import");
+    }
+
+    const validItems: any[] = [];
+    const rejectedItems: Array<{
+      index: number;
+      title: string;
+      reason: string;
+    }> = [];
+
+    items.forEach((item, index) => {
+      try {
+        const payload = this.validateKnowledgePayload({
+          category: item?.category || "company_information",
+
+          sourceType: item?.sourceType || "text",
+
+          title: item?.title,
+
+          content: item?.content,
+
+          sourceUrl: item?.sourceUrl,
+
+          status: item?.status || "active",
+
+          priority: item?.priority || 0,
+
+          metadata: item?.metadata || {},
+        });
+
+        validItems.push({
+          ...payload,
+          originalIndex: index,
+        });
+      } catch (error: any) {
+        rejectedItems.push({
+          index,
+          title: String(item?.title || "").trim() || `Item ${index + 1}`,
+
+          reason: error?.message || "Invalid knowledge item",
+        });
+      }
+    });
+
+    if (validItems.length === 0) {
+      return {
+        success: false,
+        imported: 0,
+        rejected: rejectedItems.length,
+        rejectedItems,
+      };
+    }
+
+    await this.db.query("BEGIN");
+
+    try {
+      const importedItems: any[] = [];
+
+      for (const item of validItems) {
+        const { rows } = await this.db.query(
+          `
+          INSERT INTO ai_agent_knowledge_items (
+            team_id,
+            created_by,
+
+            category,
+            source_type,
+
+            title,
+            content,
+
+            source_url,
+            metadata,
+
+            status,
+            priority,
+
+            created_at,
+            updated_at
+          )
+          VALUES (
+            $1,
+            $2,
+
+            $3,
+            $4,
+
+            $5,
+            $6,
+
+            $7,
+            $8::jsonb,
+
+            $9,
+            $10,
+
+            NOW(),
+            NOW()
+          )
+          RETURNING
+            id,
+            category,
+            source_type,
+            title,
+            content,
+            source_url,
+            metadata,
+            status,
+            priority,
+            created_at,
+            updated_at
+          `,
+          [
+            teamId,
+            userId,
+
+            item.category,
+            item.sourceType,
+
+            item.title,
+            item.content,
+
+            item.sourceUrl,
+
+            JSON.stringify({
+              ...(item.metadata || {}),
+              imported: true,
+              importedAt: new Date().toISOString(),
+            }),
+
+            item.status,
+            item.priority,
+          ],
+        );
+
+        importedItems.push(rows[0]);
+      }
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'knowledge_bulk_imported',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+
+          JSON.stringify({
+            userId,
+
+            imported: importedItems.length,
+
+            rejected: rejectedItems.length,
+
+            categories: Array.from(
+              new Set(importedItems.map((item) => item.category)),
+            ),
+          }),
+        ],
+      );
+
+      await this.db.query("COMMIT");
+
+      return {
+        success: true,
+
+        imported: importedItems.length,
+
+        rejected: rejectedItems.length,
+
+        rejectedItems,
+
+        items: importedItems.map((row: any) => this.mapKnowledgeItem(row)),
+      };
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+
+      console.error("IMPORT AI KNOWLEDGE ERROR:", error);
+
+      throw error;
+    }
+  }
 }

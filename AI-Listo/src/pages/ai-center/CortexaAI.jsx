@@ -63,6 +63,7 @@ import AIBehaviorModal from "./components/AIBehaviorModal";
 import AutomationModal from "./components/AutomationModal";
 import TestAgentModal from "./components/TestAgentModal";
 import KnowledgeItemModal from "./components/KnowledgeItemModal";
+import KnowledgeImportModal from "./components/KnowledgeImportModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -140,6 +141,9 @@ export default function CortexaAI() {
     search: "",
   });
 
+  const [knowledgeImportOpen, setKnowledgeImportOpen] = useState(false);
+  const [knowledgeImportSaving, setKnowledgeImportSaving] = useState(false);
+  const [knowledgeImportError, setKnowledgeImportError] = useState("");
   const [agentSidebarCollapsed, setAgentSidebarCollapsed] = useState(() => {
     return localStorage.getItem("cx-agent-sidebar-collapsed") === "true";
   });
@@ -796,6 +800,43 @@ export default function CortexaAI() {
     }
   };
 
+  const importKnowledgeItems = async (items) => {
+    setKnowledgeImportSaving(true);
+    setKnowledgeImportError("");
+    try {
+      const result = await aiAgentSetupService.importKnowledge(items);
+      if (Number(result?.imported || 0) === 0) {
+        setKnowledgeImportError(
+          result?.rejectedItems
+            ?.map((item) => `${item.title}: ${item.reason}`)
+            .join("\n") || "No knowledge items were imported.",
+        );
+        return;
+      }
+      setKnowledgeImportOpen(false);
+      await loadKnowledge(
+        {
+          ...knowledgeFilters,
+          page: 1,
+        },
+        {
+          silent: true,
+        },
+      );
+    } catch (error) {
+      console.error("IMPORT KNOWLEDGE FAILED:", error);
+      setKnowledgeImportError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to import knowledge.",
+      );
+
+      throw error;
+    } finally {
+      setKnowledgeImportSaving(false);
+    }
+  };
+
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -1299,6 +1340,10 @@ export default function CortexaAI() {
               onAdd={openCreateKnowledge}
               onEdit={openEditKnowledge}
               onDelete={deleteKnowledgeItem}
+              onImport={() => {
+                setKnowledgeImportError("");
+                setKnowledgeImportOpen(true);
+              }}
               onFilterChange={(patch) => {
                 const nextFilters = {
                   ...knowledgeFilters,
@@ -1446,6 +1491,24 @@ export default function CortexaAI() {
           }
         }}
         onSave={saveKnowledgeItem}
+      />
+
+      <KnowledgeImportModal
+        open={knowledgeImportOpen}
+        saving={knowledgeImportSaving}
+        error={knowledgeImportError}
+        defaultCategory={
+          knowledgeFilters.category !== "all"
+            ? knowledgeFilters.category
+            : "company_information"
+        }
+        onClose={() => {
+          if (!knowledgeImportSaving) {
+            setKnowledgeImportOpen(false);
+            setKnowledgeImportError("");
+          }
+        }}
+        onImport={importKnowledgeItems}
       />
     </>
   );
@@ -2082,69 +2145,11 @@ function KnowledgeLayout({
   error,
   deletingId,
   onAdd,
+  onImport,
   onEdit,
   onDelete,
   onFilterChange,
 }) {
-  const categories = [
-    [
-      "Company Information",
-      "Your company details, mission, values and offices",
-      "6 items",
-      Building2,
-      "purple",
-    ],
-    [
-      "Office Hours & Availability",
-      "Business hours, holidays and availability rules",
-      "4 items",
-      Clock3,
-      "green",
-    ],
-    [
-      "Service Areas",
-      "Areas, neighborhoods and coverage information",
-      "5 items",
-      Home,
-      "blue",
-    ],
-    [
-      "Property Knowledge",
-      "Property types, features and market expertise",
-      "7 items",
-      Home,
-      "orange",
-    ],
-    [
-      "Sales Scripts & Templates",
-      "Scripts, email templates and messaging guides",
-      "6 items",
-      MessageCircle,
-      "purple",
-    ],
-    [
-      "Financing & Partners",
-      "Lenders, partners and financing information",
-      "3 items",
-      Database,
-      "green",
-    ],
-    [
-      "FAQs",
-      "Frequently asked questions and answers",
-      "4 items",
-      HelpCircle,
-      "blue",
-    ],
-    [
-      "Policies & Processes",
-      "Business policies and internal processes",
-      "3 items",
-      FileText,
-      "purple",
-    ],
-  ];
-
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
@@ -2153,8 +2158,13 @@ function KnowledgeLayout({
           <p>Manage what your AI Agent knows about your business.</p>
         </div>
         <div className="cx-head-buttons">
-          <button className="cx-primary-outline">
-            <Upload size={17} /> Import Knowledge
+          <button
+            type="button"
+            className="cx-primary-outline"
+            onClick={onImport}
+          >
+            <Upload size={17} />
+            Import Knowledge
           </button>
           <button
             type="button"
@@ -2205,37 +2215,132 @@ function KnowledgeLayout({
 
           <div className="cx-category-list">
             {(knowledgeData?.categories?.length
-              ? knowledgeData.categories.map((item) => [
-                  item.title,
-                  item.description,
-                  `${item.items} items`,
-                  item.key === "property_knowledge" ? Home : FileText,
-                  item.accent || "purple",
-                ])
-              : categories
-            ).map(([title, desc, count, Icon, accent]) => (
-              <button
-                type="button"
-                className="cx-category-row"
-                key={item.key}
-                onClick={() =>
-                  onFilterChange({
-                    category: item.key,
-                  })
-                }
-              >
-                <div className={`cx-small-icon ${accent}`}>
-                  <Icon size={22} />
+              ? knowledgeData.categories
+              : [
+                  {
+                    key: "company_information",
+                    title: "Company Information",
+                    description:
+                      "Your company details, mission, values and offices",
+                    items: 0,
+                    status: "Empty",
+                    accent: "purple",
+                  },
+                  {
+                    key: "office_hours",
+                    title: "Office Hours & Availability",
+                    description:
+                      "Business hours, holidays and availability rules",
+                    items: 0,
+                    status: "Empty",
+                    accent: "green",
+                  },
+                  {
+                    key: "service_areas",
+                    title: "Service Areas",
+                    description:
+                      "Areas, neighborhoods and coverage information",
+                    items: 0,
+                    status: "Empty",
+                    accent: "blue",
+                  },
+                  {
+                    key: "property_knowledge",
+                    title: "Property Knowledge",
+                    description:
+                      "Property types, features and market expertise",
+                    items: 0,
+                    status: "Empty",
+                    accent: "orange",
+                  },
+                  {
+                    key: "sales_scripts",
+                    title: "Sales Scripts & Templates",
+                    description:
+                      "Scripts, email templates and messaging guides",
+                    items: 0,
+                    status: "Empty",
+                    accent: "purple",
+                  },
+                  {
+                    key: "financing_partners",
+                    title: "Financing & Partners",
+                    description: "Lenders, partners and financing information",
+                    items: 0,
+                    status: "Empty",
+                    accent: "green",
+                  },
+                  {
+                    key: "faqs",
+                    title: "FAQs",
+                    description: "Frequently asked questions and answers",
+                    items: 0,
+                    status: "Empty",
+                    accent: "blue",
+                  },
+                  {
+                    key: "policies_processes",
+                    title: "Policies & Processes",
+                    description: "Business policies and internal processes",
+                    items: 0,
+                    status: "Empty",
+                    accent: "purple",
+                  },
+                ]
+            ).map((item) => {
+              const Icon =
+                item.key === "company_information"
+                  ? Building2
+                  : item.key === "office_hours"
+                    ? Clock3
+                    : item.key === "service_areas"
+                      ? Home
+                      : item.key === "property_knowledge"
+                        ? Home
+                        : item.key === "sales_scripts"
+                          ? MessageCircle
+                          : item.key === "financing_partners"
+                            ? Database
+                            : item.key === "faqs"
+                              ? HelpCircle
+                              : FileText;
+
+              return (
+                <div
+                  type="button"
+                  className={`cx-category-row ${
+                    filters?.category === item.key ? "active" : ""
+                  }`}
+                  key={item.key}
+                  onClick={() =>
+                    onFilterChange({
+                      category: item.key,
+                    })
+                  }
+                >
+                  <div className={`cx-small-icon ${item.accent || "purple"}`}>
+                    <Icon size={22} />
+                  </div>
+
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>{item.description}</p>
+                  </div>
+
+                  <span>{Number(item.items || 0)} items</span>
+
+                  <em
+                    className={String(item.status || "")
+                      .toLowerCase()
+                      .replace(/\s+/g, "-")}
+                  >
+                    {item.status || "Empty"}
+                  </em>
+
+                  <ChevronRight size={18} />
                 </div>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{desc}</p>
-                </div>
-                <span>{count}</span>
-                <em>Active</em>
-                <ChevronRight size={18} />
-              </button>
-            ))}
+              );
+            })}
           </div>
 
           <div className="cx-knowledge-toolbar">

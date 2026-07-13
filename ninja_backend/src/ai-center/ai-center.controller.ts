@@ -624,4 +624,34 @@ export class AiCenterController {
   ) {
     return this.service.sendAgentChatMessage(user.teamId, user.id, body);
   }
+
+  @Post("agent/knowledge/import")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Bulk import AI knowledge items",
+  })
+  async importAgentKnowledge(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      items?: Array<{
+        category?: string;
+        sourceType?: string;
+        title?: string;
+        content?: string;
+        sourceUrl?: string | null;
+        status?: string;
+        priority?: number;
+        metadata?: Record<string, any>;
+      }>;
+    },
+  ) {
+    return this.service.importAgentKnowledge(
+      user.teamId,
+      user.id,
+      body.items || [],
+    );
+  }
 }

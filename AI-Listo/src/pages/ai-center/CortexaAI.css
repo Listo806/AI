@@ -2435,7 +2435,25 @@
   font-size: 11px;
   line-height: 1.5;
 }
+.cx-category-row.active {
+  background: #e4d8e440;
+}
 
+.cx-category-row em.empty {
+  color: #8a92aa;
+}
+
+.cx-category-row em.active {
+  color: #159147;
+}
+
+.cx-category-row em.needs-review {
+  color: #d97706;
+}
+
+.cx-category-row em.inactive {
+  color: #6b7280;
+}
 @media (max-width: 1350px) {
   .cx-chat-layout.has-history {
     grid-template-columns:

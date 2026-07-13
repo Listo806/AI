@@ -282,6 +282,18 @@ export const aiAgentSetupService = {
       },
     );
   },
+
+  importKnowledge(items) {
+    return request("/ai-center/agent/knowledge/import", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items,
+      }),
+    });
+  },
 };
 
 export default aiAgentSetupService;
