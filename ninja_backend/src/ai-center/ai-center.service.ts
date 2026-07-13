@@ -371,15 +371,16 @@ export class AiCenterService {
 
       this.db.query(
         `
-        SELECT COUNT(*)::int AS total
-        FROM ai_activity
-        WHERE team_id = $1
-          AND action IN (
-            'cortexa_chat',
-            'ai_test',
-            'test_ai'
-          )
-        `,
+          SELECT COUNT(*)::int AS total
+          FROM ai_agent_test_sessions
+          WHERE team_id = $1
+            AND EXISTS (
+              SELECT 1
+              FROM ai_agent_test_messages message
+              WHERE message.session_id = ai_agent_test_sessions.id
+                AND message.role = 'assistant'
+            )
+          `,
         [teamId],
       ),
 
@@ -401,9 +402,7 @@ export class AiCenterService {
 
     const team = teamResult.rows[0] || {};
     const propertyCount = Number(propertiesResult.rows[0]?.total || 0);
-    const tested =
-      Boolean(configResult.rows[0]?.tested) ||
-      Number(testResult.rows[0]?.total || 0) > 0;
+    const tested = Number(testResult.rows[0]?.total || 0) > 0;
     const whatsappConnected = channels.includes("whatsapp");
 
     const config = configResult.rows[0] || {};

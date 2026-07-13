@@ -23,7 +23,7 @@
 }
 
 .cx-test-agent-head {
-    padding: 20px 22px;
+    padding: 14px 22px;
     border-bottom: 1px solid #e7eaf4;
     background: #fff;
     display: flex;
@@ -136,7 +136,7 @@
 }
 
 .cx-test-agent-body {
-    min-height: 434px;
+    max-height: 434px;
     overflow: hidden;
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
@@ -206,6 +206,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
+    max-height: 384px;
 }
 
 .cx-test-agent-messages {
@@ -321,7 +322,7 @@
 
 .cx-test-agent-disclaimer {
     margin: 0;
-    padding: 0 18px 13px;
+    padding-left: 13px;
     color: #7a839e;
     font-size: 10px;
 }
@@ -350,7 +351,7 @@
 }
 
 .cx-test-agent-foot button {
-    height: 40px;
+    height: 34px;
     border-radius: 8px;
     padding: 0 16px;
     font-weight: 700;

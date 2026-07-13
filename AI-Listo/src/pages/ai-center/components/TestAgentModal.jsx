@@ -272,7 +272,7 @@ export default function TestAgentModal({
                     send();
                   }
                 }}
-                rows={3}
+                rows={2}
                 placeholder="Type a test message..."
                 maxLength={2000}
               />
