@@ -48,6 +48,7 @@ import {
   Moon,
   Timer,
   MoreHorizontal,
+  Trash2,
 } from "lucide-react";
 
 import apiClient from "../../api/apiClient";
@@ -61,6 +62,7 @@ import AppointmentRulesModal from "./components/AppointmentRulesModal";
 import AIBehaviorModal from "./components/AIBehaviorModal";
 import AutomationModal from "./components/AutomationModal";
 import TestAgentModal from "./components/TestAgentModal";
+import KnowledgeItemModal from "./components/KnowledgeItemModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -124,6 +126,20 @@ export default function CortexaAI() {
   const [testAgentSending, setTestAgentSending] = useState(false);
   const [testAgentError, setTestAgentError] = useState("");
   const [testAgentSessionId, setTestAgentSessionId] = useState(null);
+
+  const [knowledgeModalOpen, setKnowledgeModalOpen] = useState(false);
+  const [knowledgeEditingItem, setKnowledgeEditingItem] = useState(null);
+  const [knowledgeSaving, setKnowledgeSaving] = useState(false);
+  const [knowledgeDeletingId, setKnowledgeDeletingId] = useState(null);
+  const [knowledgeError, setKnowledgeError] = useState("");
+  const [knowledgeFilters, setKnowledgeFilters] = useState({
+    page: 1,
+    limit: 20,
+    category: "all",
+    status: "all",
+    search: "",
+  });
+
   const [agentSidebarCollapsed, setAgentSidebarCollapsed] = useState(() => {
     return localStorage.getItem("cx-agent-sidebar-collapsed") === "true";
   });
@@ -648,6 +664,138 @@ export default function CortexaAI() {
     }
   };
 
+  const loadKnowledge = useCallback(
+    async (nextFilters = knowledgeFilters, { silent = false } = {}) => {
+      if (!silent) {
+        setLoadingPage(true);
+      }
+      setKnowledgeError("");
+      try {
+        const data = await aiAgentSetupService.getKnowledge(nextFilters);
+        setKnowledgeData(data);
+        setKnowledgeFilters(nextFilters);
+        return data;
+      } catch (error) {
+        console.error("LOAD KNOWLEDGE FAILED:", error);
+        setKnowledgeError(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Unable to load AI knowledge.",
+        );
+
+        return null;
+      } finally {
+        if (!silent) {
+          setLoadingPage(false);
+        }
+      }
+    },
+    [knowledgeFilters],
+  );
+
+  const openCreateKnowledge = (category = "company_information") => {
+    setKnowledgeEditingItem({
+      category,
+      sourceType: "text",
+      status: "active",
+      priority: 0,
+    });
+
+    setKnowledgeError("");
+    setKnowledgeModalOpen(true);
+  };
+
+  const openEditKnowledge = async (item) => {
+    setKnowledgeError("");
+    try {
+      const fullItem = await aiAgentSetupService.getKnowledgeItem(item.id);
+
+      setKnowledgeEditingItem(fullItem);
+      setKnowledgeModalOpen(true);
+    } catch (error) {
+      console.error("LOAD KNOWLEDGE ITEM FAILED:", error);
+      setKnowledgeError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load knowledge item.",
+      );
+    }
+  };
+
+  const saveKnowledgeItem = async (payload) => {
+    setKnowledgeSaving(true);
+    setKnowledgeError("");
+    try {
+      if (knowledgeEditingItem?.id) {
+        await aiAgentSetupService.updateKnowledgeItem(
+          knowledgeEditingItem.id,
+          payload,
+        );
+      } else {
+        await aiAgentSetupService.createKnowledgeItem(payload);
+      }
+      setKnowledgeModalOpen(false);
+      setKnowledgeEditingItem(null);
+      await loadKnowledge(
+        {
+          ...knowledgeFilters,
+          page: 1,
+        },
+        {
+          silent: true,
+        },
+      );
+    } catch (error) {
+      console.error("SAVE KNOWLEDGE ITEM FAILED:", error);
+
+      setKnowledgeError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save knowledge item.",
+      );
+      throw error;
+    } finally {
+      setKnowledgeSaving(false);
+    }
+  };
+
+  const deleteKnowledgeItem = async (item) => {
+    const confirmed = window.confirm(`Delete "${item.title}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+    setKnowledgeDeletingId(item.id);
+    setKnowledgeError("");
+    try {
+      await aiAgentSetupService.deleteKnowledgeItem(item.id);
+      const currentItems = knowledgeData?.items || [];
+      const nextPage =
+        currentItems.length === 1 && knowledgeFilters.page > 1
+          ? knowledgeFilters.page - 1
+          : knowledgeFilters.page;
+
+      await loadKnowledge(
+        {
+          ...knowledgeFilters,
+          page: nextPage,
+        },
+        {
+          silent: true,
+        },
+      );
+    } catch (error) {
+      console.error("DELETE KNOWLEDGE ITEM FAILED:", error);
+      setKnowledgeError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to delete knowledge item.",
+      );
+    } finally {
+      setKnowledgeDeletingId(null);
+    }
+  };
+
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -677,8 +825,10 @@ export default function CortexaAI() {
         }
 
         if (activePage === "knowledge") {
-          data = await request("/ai-center/agent/knowledge");
-          if (!cancelled) setKnowledgeData(data);
+          data = await aiAgentSetupService.getKnowledge(knowledgeFilters);
+          if (!cancelled) {
+            setKnowledgeData(data);
+          }
         }
 
         if (activePage === "activity") {
@@ -711,7 +861,12 @@ export default function CortexaAI() {
     return () => {
       cancelled = true;
     };
-  }, [activePage, setupData?.isSetupComplete, loadChatSessions]);
+  }, [
+    activePage,
+    setupData?.isSetupComplete,
+    loadChatSessions,
+    knowledgeFilters,
+  ]);
 
   const sendChatMessage = async (text) => {
     const cleanMessage = String(text || "").trim();
@@ -1135,7 +1290,32 @@ export default function CortexaAI() {
           )}
 
           {setupData?.isSetupComplete && activePage === "knowledge" && (
-            <KnowledgeLayout knowledgeData={knowledgeData} />
+            <KnowledgeLayout
+              knowledgeData={knowledgeData}
+              filters={knowledgeFilters}
+              loading={loadingPage}
+              error={knowledgeError}
+              deletingId={knowledgeDeletingId}
+              onAdd={openCreateKnowledge}
+              onEdit={openEditKnowledge}
+              onDelete={deleteKnowledgeItem}
+              onFilterChange={(patch) => {
+                const nextFilters = {
+                  ...knowledgeFilters,
+                  ...patch,
+                };
+
+                if (
+                  patch.category !== undefined ||
+                  patch.status !== undefined ||
+                  patch.search !== undefined
+                ) {
+                  nextFilters.page = 1;
+                }
+
+                loadKnowledge(nextFilters);
+              }}
+            />
           )}
 
           {setupData?.isSetupComplete && activePage === "activity" && (
@@ -1251,6 +1431,21 @@ export default function CortexaAI() {
         onRefresh={loadAgentTest}
         onNewSession={createNewAgentTest}
         onSend={runAgentTest}
+      />
+
+      <KnowledgeItemModal
+        open={knowledgeModalOpen}
+        item={knowledgeEditingItem}
+        saving={knowledgeSaving}
+        error={knowledgeError}
+        onClose={() => {
+          if (!knowledgeSaving) {
+            setKnowledgeModalOpen(false);
+            setKnowledgeEditingItem(null);
+            setKnowledgeError("");
+          }
+        }}
+        onSave={saveKnowledgeItem}
       />
     </>
   );
@@ -1880,7 +2075,17 @@ function ChatLayout({
   );
 }
 
-function KnowledgeLayout({ knowledgeData }) {
+function KnowledgeLayout({
+  knowledgeData,
+  filters,
+  loading,
+  error,
+  deletingId,
+  onAdd,
+  onEdit,
+  onDelete,
+  onFilterChange,
+}) {
   const categories = [
     [
       "Company Information",
@@ -1951,8 +2156,13 @@ function KnowledgeLayout({ knowledgeData }) {
           <button className="cx-primary-outline">
             <Upload size={17} /> Import Knowledge
           </button>
-          <button className="cx-primary-btn slim">
-            <Plus size={17} /> Add Knowledge
+          <button
+            type="button"
+            className="cx-primary-btn slim"
+            onClick={() => onAdd()}
+          >
+            <Plus size={17} />
+            Add Knowledge
           </button>
         </div>
       </div>
@@ -2004,7 +2214,16 @@ function KnowledgeLayout({ knowledgeData }) {
                 ])
               : categories
             ).map(([title, desc, count, Icon, accent]) => (
-              <div className="cx-category-row" key={title}>
+              <button
+                type="button"
+                className="cx-category-row"
+                key={item.key}
+                onClick={() =>
+                  onFilterChange({
+                    category: item.key,
+                  })
+                }
+              >
                 <div className={`cx-small-icon ${accent}`}>
                   <Icon size={22} />
                 </div>
@@ -2015,10 +2234,180 @@ function KnowledgeLayout({ knowledgeData }) {
                 <span>{count}</span>
                 <em>Active</em>
                 <ChevronRight size={18} />
-              </div>
+              </button>
             ))}
           </div>
 
+          <div className="cx-knowledge-toolbar">
+            <input
+              className="cx-knowledge-search"
+              value={filters?.search || ""}
+              onChange={(event) =>
+                onFilterChange({
+                  search: event.target.value,
+                })
+              }
+              placeholder="Search knowledge..."
+            />
+
+            <select
+              value={filters?.category || "all"}
+              onChange={(event) =>
+                onFilterChange({
+                  category: event.target.value,
+                })
+              }
+            >
+              <option value="all">All categories</option>
+
+              {(knowledgeData?.categories || []).map((category) => (
+                <option key={category.key} value={category.key}>
+                  {category.title}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters?.status || "all"}
+              onChange={(event) =>
+                onFilterChange({
+                  status: event.target.value,
+                })
+              }
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="needs_review">Needs Review</option>
+            </select>
+          </div>
+
+          {error && <div className="cx-ai-error-banner">{error}</div>}
+
+          <div className="cx-knowledge-item-list">
+            {loading ? (
+              <div className="cx-knowledge-empty">
+                <RefreshCw className="cx-ai-loading-spinner" size={20} />
+                Loading knowledge...
+              </div>
+            ) : knowledgeData?.items?.length ? (
+              knowledgeData.items.map((item) => (
+                <div className="cx-knowledge-item-row" key={item.id}>
+                  <div className="cx-knowledge-item-icon">
+                    <BookOpen size={19} />
+                  </div>
+
+                  <div className="cx-knowledge-item-copy">
+                    <strong>{item.title}</strong>
+
+                    <p>{item.preview}</p>
+
+                    <div className="cx-knowledge-item-meta">
+                      <span>{item.categoryTitle}</span>
+
+                      <span>{item.sourceType}</span>
+
+                      <span className={item.status}>
+                        {item.status === "needs_review"
+                          ? "Needs Review"
+                          : item.status === "active"
+                            ? "Active"
+                            : "Inactive"}
+                      </span>
+
+                      <span>Priority {item.priority}</span>
+                    </div>
+                  </div>
+
+                  <div className="cx-knowledge-item-actions">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(item)}
+                      title="Edit"
+                    >
+                      <PenLine size={16} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="danger"
+                      disabled={deletingId === item.id}
+                      onClick={() => onDelete(item)}
+                      title="Delete"
+                    >
+                      {deletingId === item.id ? (
+                        <RefreshCw
+                          className="cx-ai-loading-spinner"
+                          size={16}
+                        />
+                      ) : (
+                        <Trash2 size={16} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="cx-knowledge-empty">
+                <BookOpen size={28} />
+
+                <strong>No knowledge items found</strong>
+
+                <p>
+                  Add your first knowledge item so your AI Agent can use it.
+                </p>
+
+                <button
+                  type="button"
+                  className="cx-primary-btn slim"
+                  onClick={() =>
+                    onAdd(
+                      filters?.category !== "all"
+                        ? filters.category
+                        : "company_information",
+                    )
+                  }
+                >
+                  <Plus size={16} />
+                  Add Knowledge
+                </button>
+              </div>
+            )}
+          </div>
+          {Number(knowledgeData?.totalPages || 1) > 1 && (
+            <div className="cx-knowledge-pagination">
+              <button
+                type="button"
+                disabled={Number(knowledgeData?.page || 1) <= 1}
+                onClick={() =>
+                  onFilterChange({
+                    page: Number(knowledgeData.page) - 1,
+                  })
+                }
+              >
+                Previous
+              </button>
+
+              <button type="button" disabled>
+                {knowledgeData.page} / {knowledgeData.totalPages}
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  Number(knowledgeData?.page || 1) >=
+                  Number(knowledgeData?.totalPages || 1)
+                }
+                onClick={() =>
+                  onFilterChange({
+                    page: Number(knowledgeData.page) + 1,
+                  })
+                }
+              >
+                Next
+              </button>
+            </div>
+          )}
           <button className="cx-show-more">
             Show inactive categories <ChevronDown size={16} />
           </button>

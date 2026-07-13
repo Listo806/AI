@@ -10,6 +10,7 @@ import {
   DefaultValuePipe,
   Req,
   Param,
+  Delete,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -201,9 +202,136 @@ export class AiCenterController {
   }
 
   @Get("agent/knowledge")
-  @ApiOperation({ summary: "Get AI Agent knowledge dashboard" })
-  async getAgentKnowledge(@CurrentUser() user: any) {
-    return this.service.getAgentKnowledge(user.teamId);
+  @ApiOperation({
+    summary: "Get AI Agent knowledge dashboard",
+  })
+  async getAgentKnowledge(
+    @CurrentUser() user: any,
+
+    @Query("page", new DefaultValuePipe(1), ParseIntPipe)
+    page: number,
+
+    @Query("limit", new DefaultValuePipe(20), ParseIntPipe)
+    limit: number,
+
+    @Query("category")
+    category?: string,
+
+    @Query("status")
+    status?: string,
+
+    @Query("search")
+    search?: string,
+  ) {
+    return this.service.getAgentKnowledge(user.teamId, {
+      page,
+      limit,
+      category,
+      status,
+      search,
+    });
+  }
+
+  @Get("agent/knowledge/search")
+  @ApiOperation({
+    summary: "Search active AI Agent knowledge",
+  })
+  async searchAgentKnowledge(
+    @CurrentUser() user: any,
+
+    @Query("query")
+    query: string,
+
+    @Query("limit", new DefaultValuePipe(8), ParseIntPipe)
+    limit: number,
+  ) {
+    return this.service.searchAgentKnowledge(user.teamId, query, limit);
+  }
+
+  @Get("agent/knowledge/items/:id")
+  @ApiOperation({
+    summary: "Get one AI knowledge item",
+  })
+  async getAgentKnowledgeItem(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+  ) {
+    return this.service.getAgentKnowledgeItem(user.teamId, id);
+  }
+
+  @Post("agent/knowledge/items")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Create AI knowledge item",
+  })
+  async createAgentKnowledgeItem(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      category: string;
+      sourceType?: string;
+
+      title: string;
+      content: string;
+
+      sourceUrl?: string | null;
+
+      status?: string;
+      priority?: number;
+
+      metadata?: Record<string, any>;
+    },
+  ) {
+    return this.service.createAgentKnowledgeItem(user.teamId, user.id, body);
+  }
+
+  @Put("agent/knowledge/items/:id")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Update AI knowledge item",
+  })
+  async updateAgentKnowledgeItem(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+
+    @Body()
+    body: {
+      category?: string;
+      sourceType?: string;
+
+      title?: string;
+      content?: string;
+
+      sourceUrl?: string | null;
+
+      status?: string;
+      priority?: number;
+
+      metadata?: Record<string, any>;
+    },
+  ) {
+    return this.service.updateAgentKnowledgeItem(
+      user.teamId,
+      user.id,
+      id,
+      body,
+    );
+  }
+
+  @Delete("agent/knowledge/items/:id")
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
+  @ApiOperation({
+    summary: "Delete AI knowledge item",
+  })
+  async deleteAgentKnowledgeItem(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+  ) {
+    return this.service.deleteAgentKnowledgeItem(user.teamId, user.id, id);
   }
 
   @Get("agent/activity-feed")

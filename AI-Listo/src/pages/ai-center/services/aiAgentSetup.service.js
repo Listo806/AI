@@ -228,6 +228,60 @@ export const aiAgentSetupService = {
       body: JSON.stringify(payload),
     });
   },
+
+  getKnowledge(params = {}) {
+    return request(`/ai-center/agent/knowledge${buildQuery(params)}`, {
+      method: "GET",
+    });
+  },
+
+  getKnowledgeItem(id) {
+    return request(`/ai-center/agent/knowledge/items/${id}`, {
+      method: "GET",
+    });
+  },
+
+  createKnowledgeItem(payload) {
+    return request("/ai-center/agent/knowledge/items", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateKnowledgeItem(id, payload) {
+    return request(`/ai-center/agent/knowledge/items/${id}`, {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteKnowledgeItem(id) {
+    return request(`/ai-center/agent/knowledge/items/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  searchKnowledge(query, limit = 8) {
+    return request(
+      `/ai-center/agent/knowledge/search${buildQuery({
+        query,
+        limit,
+      })}`,
+      {
+        method: "GET",
+      },
+    );
+  },
 };
 
 export default aiAgentSetupService;

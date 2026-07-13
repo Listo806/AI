@@ -39,6 +39,83 @@ export interface AppointmentSetterStatusResponse {
   connected_calendars: string[];
 }
 
+const AI_KNOWLEDGE_CATEGORIES = [
+  "company_information",
+  "office_hours",
+  "service_areas",
+  "property_knowledge",
+  "sales_scripts",
+  "financing_partners",
+  "faqs",
+  "policies_processes",
+] as const;
+
+const AI_KNOWLEDGE_SOURCE_TYPES = [
+  "text",
+  "qa",
+  "website",
+  "document",
+  "system",
+] as const;
+
+const AI_KNOWLEDGE_STATUSES = ["active", "inactive", "needs_review"] as const;
+
+const AI_KNOWLEDGE_CATEGORY_META: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    accent: string;
+  }
+> = {
+  company_information: {
+    title: "Company Information",
+    description: "Your company details, mission, values and offices",
+    accent: "purple",
+  },
+
+  office_hours: {
+    title: "Office Hours & Availability",
+    description: "Business hours, holidays and availability rules",
+    accent: "green",
+  },
+
+  service_areas: {
+    title: "Service Areas",
+    description: "Areas, neighborhoods and coverage information",
+    accent: "blue",
+  },
+
+  property_knowledge: {
+    title: "Property Knowledge",
+    description: "Property types, features and market expertise",
+    accent: "orange",
+  },
+
+  sales_scripts: {
+    title: "Sales Scripts & Templates",
+    description: "Scripts, email templates and messaging guides",
+    accent: "purple",
+  },
+
+  financing_partners: {
+    title: "Financing & Partners",
+    description: "Lenders, partners and financing information",
+    accent: "green",
+  },
+
+  faqs: {
+    title: "FAQs",
+    description: "Frequently asked questions and answers",
+    accent: "blue",
+  },
+
+  policies_processes: {
+    title: "Policies & Processes",
+    description: "Business policies and internal processes",
+    accent: "purple",
+  },
+};
 @Injectable()
 export class AiCenterService {
   private openai = new OpenAI({
@@ -568,100 +645,219 @@ export class AiCenterService {
     };
   }
 
-  async getAgentKnowledge(teamId: string) {
-    const [properties, team, config, lastActivity] = await Promise.all([
-      this.db.query(
-        `SELECT COUNT(*)::int AS total,
-                MAX(updated_at) AS last_updated
-         FROM properties
-         WHERE team_id = $1`,
-        [teamId],
-      ),
-      this.db.query(
-        `SELECT name, whatsapp_phone, updated_at
-         FROM teams
-         WHERE id = $1`,
-        [teamId],
-      ),
-      this.db.query(
-        `SELECT business_profile_completed,
-                appointment_rules_configured,
-                behavior_configured,
-                automations_configured,
-                tested,
-                launched,
-                paused,
-                response_tone,
-                capabilities,
-                quick_controls,
-                updated_at
-         FROM ai_agent_settings
-         WHERE team_id = $1`,
-        [teamId],
-      ),
-      this.db.query(
-        `SELECT MAX(created_at) AS last_updated
-         FROM ai_activity
-         WHERE team_id = $1`,
-        [teamId],
-      ),
-    ]);
+  async getAgentKnowledge(
+    teamId: string,
+    params: {
+      page?: number;
+      limit?: number;
+      category?: string;
+      status?: string;
+      search?: string;
+    } = {},
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
 
-    const propertyCount = Number(properties.rows[0]?.total || 0);
-    const businessItems = team.rows[0]?.name ? 1 : 0;
-    const categories = [
-      {
-        key: "company_information",
-        title: "Company Information",
-        description: "Your company details, mission, values and offices",
-        items: businessItems,
-        status: businessItems ? "Active" : "Needs review",
-        accent: "purple",
-      },
-      {
-        key: "property_knowledge",
-        title: "Property Knowledge",
-        description: "Property types, features and market expertise",
-        items: propertyCount,
-        status: propertyCount ? "Active" : "Needs review",
-        accent: "orange",
-      },
-    ];
+    const page = Math.max(Number(params.page || 1), 1);
 
-    const knowledgeItems = categories.reduce(
-      (sum, item) => sum + item.items,
-      0,
+    const limit = Math.min(Math.max(Number(params.limit || 20), 1), 100);
+
+    const offset = (page - 1) * limit;
+
+    const values: any[] = [teamId];
+
+    const where: string[] = ["team_id = $1"];
+
+    if (params.category && params.category !== "all") {
+      this.validateKnowledgeCategory(params.category);
+
+      values.push(params.category);
+
+      where.push(`category = $${values.length}`);
+    }
+
+    if (params.status && params.status !== "all") {
+      this.validateKnowledgeStatus(params.status);
+
+      values.push(params.status);
+
+      where.push(`status = $${values.length}`);
+    }
+
+    if (params.search?.trim()) {
+      values.push(`%${params.search.trim()}%`);
+
+      const searchParam = `$${values.length}`;
+
+      where.push(`
+      (
+        title ILIKE ${searchParam}
+        OR content ILIKE ${searchParam}
+      )
+    `);
+    }
+
+    const whereSql = where.join(" AND ");
+
+    const [itemsResult, countResult, summaryResult, categoryResult] =
+      await Promise.all([
+        this.db.query(
+          `
+      SELECT
+        id,
+        category,
+        source_type,
+        title,
+        content,
+        source_url,
+        metadata,
+        status,
+        priority,
+        last_reviewed_at,
+        created_at,
+        updated_at
+
+      FROM ai_agent_knowledge_items
+
+      WHERE ${whereSql}
+
+      ORDER BY
+        priority DESC,
+        updated_at DESC
+
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+      `,
+          [...values, limit, offset],
+        ),
+
+        this.db.query(
+          `
+      SELECT COUNT(*)::int AS total
+      FROM ai_agent_knowledge_items
+      WHERE ${whereSql}
+      `,
+          values,
+        ),
+
+        this.db.query(
+          `
+      SELECT
+        COUNT(*)::int AS total,
+
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+        )::int AS active,
+
+        COUNT(*) FILTER (
+          WHERE status = 'needs_review'
+        )::int AS needs_review,
+
+        COUNT(
+          DISTINCT source_type
+        )::int AS data_sources,
+
+        MAX(updated_at) AS last_updated
+
+      FROM ai_agent_knowledge_items
+
+      WHERE team_id = $1
+      `,
+          [teamId],
+        ),
+
+        this.db.query(
+          `
+      SELECT
+        category,
+
+        COUNT(*)::int AS total,
+
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+        )::int AS active,
+
+        COUNT(*) FILTER (
+          WHERE status = 'needs_review'
+        )::int AS needs_review
+
+      FROM ai_agent_knowledge_items
+
+      WHERE team_id = $1
+
+      GROUP BY category
+      `,
+          [teamId],
+        ),
+      ]);
+
+    const total = Number(countResult.rows[0]?.total || 0);
+    const summary = summaryResult.rows[0] || {};
+    const knowledgeItems = Number(summary.total || 0);
+    const activeItems = Number(summary.active || 0);
+    const needsReview = Number(summary.needs_review || 0);
+    const categoryMap = new Map<string, any>(
+      categoryResult.rows.map((row: any) => [String(row.category), row]),
     );
-    const activeItems = categories
-      .filter((item) => item.status === "Active")
-      .reduce((sum, item) => sum + item.items, 0);
-    const dataSources = [
-      propertyCount > 0,
-      Boolean(team.rows[0]?.name),
-      Boolean(team.rows[0]?.whatsapp_phone),
-    ].filter(Boolean).length;
+    const categories = AI_KNOWLEDGE_CATEGORIES.map((key) => {
+      const row = categoryMap.get(key);
+      const meta = AI_KNOWLEDGE_CATEGORY_META[key];
+      const items = Number(row?.total || 0);
+      const active = Number(row?.active || 0);
+      const categoryNeedsReview = Number(row?.needs_review || 0);
 
-    const lastUpdated =
-      properties.rows[0]?.last_updated ||
-      config.rows[0]?.updated_at ||
-      lastActivity.rows[0]?.last_updated ||
-      team.rows[0]?.updated_at ||
-      null;
+      return {
+        key,
+        title: meta.title,
+        description: meta.description,
+        accent: meta.accent,
 
-    const score =
+        items,
+        active,
+
+        needsReview: categoryNeedsReview,
+
+        status:
+          items === 0
+            ? "Empty"
+            : categoryNeedsReview > 0
+              ? "Needs review"
+              : active > 0
+                ? "Active"
+                : "Inactive",
+      };
+    });
+
+    const lastUpdated = summary.last_updated || null;
+
+    const healthScore =
       knowledgeItems > 0
-        ? Math.min(100, Math.round((activeItems / knowledgeItems) * 100))
+        ? Math.max(
+            0,
+            Math.min(100, Math.round((activeItems / knowledgeItems) * 100)),
+          )
         : 0;
 
     return {
+      page,
+      limit,
+      total,
+
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+
       stats: {
         knowledgeItems,
         activeItems,
-        dataSources,
+
+        dataSources: Number(summary.data_sources || 0),
+
         lastUpdated,
+
         lastUpdatedLabel: lastUpdated
           ? this.relativeTime(lastUpdated)
           : "Never",
+
         lastUpdatedDate: lastUpdated
           ? new Date(lastUpdated).toLocaleDateString("en-US", {
               month: "short",
@@ -670,16 +866,466 @@ export class AiCenterService {
             })
           : "No updates yet",
       },
-      categories,
+
       health: {
-        score,
+        score: healthScore,
+
         complete: activeItems,
+
         total: knowledgeItems,
-        upToDate: activeItems,
+
+        upToDate: knowledgeItems - needsReview,
+
         wellStructured: activeItems,
-        needsReview: Math.max(knowledgeItems - activeItems, 0),
+
+        needsReview,
       },
+      categories,
+      items: itemsResult.rows.map((row: any) => this.mapKnowledgeItem(row)),
     };
+  }
+
+  async getAgentKnowledgeItem(teamId: string, id: string) {
+    const { rows } = await this.db.query(
+      `
+      SELECT *
+      FROM ai_agent_knowledge_items
+      WHERE id = $1
+        AND team_id = $2
+      LIMIT 1
+      `,
+      [id, teamId],
+    );
+
+    if (!rows[0]) {
+      throw new ForbiddenException("Knowledge item not found");
+    }
+
+    return this.mapKnowledgeItem(rows[0]);
+  }
+
+  async createAgentKnowledgeItem(teamId: string, userId: string, body: any) {
+    const payload = this.validateKnowledgePayload(body);
+
+    const { rows } = await this.db.query(
+      `
+      INSERT INTO ai_agent_knowledge_items (
+        team_id,
+        created_by,
+
+        category,
+        source_type,
+
+        title,
+        content,
+
+        source_url,
+        metadata,
+
+        status,
+        priority,
+
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+        $2,
+
+        $3,
+        $4,
+
+        $5,
+        $6,
+
+        $7,
+        $8::jsonb,
+
+        $9,
+        $10,
+
+        NOW(),
+        NOW()
+      )
+
+      RETURNING *
+      `,
+      [
+        teamId,
+        userId,
+
+        payload.category,
+        payload.sourceType,
+
+        payload.title,
+        payload.content,
+
+        payload.sourceUrl,
+
+        JSON.stringify(payload.metadata),
+
+        payload.status,
+        payload.priority,
+      ],
+    );
+
+    await this.logKnowledgeActivity(
+      teamId,
+      userId,
+      "knowledge_item_created",
+      rows[0],
+    );
+
+    return this.mapKnowledgeItem(rows[0]);
+  }
+
+  async updateAgentKnowledgeItem(
+    teamId: string,
+    userId: string,
+    id: string,
+    body: any,
+  ) {
+    const existing = await this.getAgentKnowledgeItem(teamId, id);
+
+    const payload = this.validateKnowledgePayload({
+      category: body.category ?? existing.category,
+
+      sourceType: body.sourceType ?? existing.sourceType,
+
+      title: body.title ?? existing.title,
+
+      content: body.content ?? existing.content,
+
+      sourceUrl:
+        body.sourceUrl !== undefined ? body.sourceUrl : existing.sourceUrl,
+
+      status: body.status ?? existing.status,
+
+      priority: body.priority ?? existing.priority,
+
+      metadata: body.metadata ?? existing.metadata,
+    });
+
+    const { rows } = await this.db.query(
+      `
+      UPDATE ai_agent_knowledge_items
+
+      SET
+        category = $1,
+        source_type = $2,
+
+        title = $3,
+        content = $4,
+
+        source_url = $5,
+        metadata = $6::jsonb,
+
+        status = $7,
+        priority = $8,
+
+        updated_at = NOW()
+
+      WHERE id = $9
+        AND team_id = $10
+
+      RETURNING *
+      `,
+      [
+        payload.category,
+        payload.sourceType,
+
+        payload.title,
+        payload.content,
+
+        payload.sourceUrl,
+
+        JSON.stringify(payload.metadata),
+
+        payload.status,
+        payload.priority,
+
+        id,
+        teamId,
+      ],
+    );
+
+    await this.logKnowledgeActivity(
+      teamId,
+      userId,
+      "knowledge_item_updated",
+      rows[0],
+    );
+
+    return this.mapKnowledgeItem(rows[0]);
+  }
+
+  async deleteAgentKnowledgeItem(teamId: string, userId: string, id: string) {
+    const { rows } = await this.db.query(
+      `
+      DELETE FROM ai_agent_knowledge_items
+
+      WHERE id = $1
+        AND team_id = $2
+
+      RETURNING
+        id,
+        category,
+        title
+      `,
+      [id, teamId],
+    );
+
+    if (!rows[0]) {
+      throw new ForbiddenException("Knowledge item not found");
+    }
+
+    await this.logKnowledgeActivity(
+      teamId,
+      userId,
+      "knowledge_item_deleted",
+      rows[0],
+    );
+
+    return {
+      success: true,
+      id,
+    };
+  }
+
+  async searchAgentKnowledge(teamId: string, query: string, limit = 8) {
+    const cleanQuery = String(query || "").trim();
+
+    if (!cleanQuery) {
+      return {
+        query: "",
+        items: [],
+      };
+    }
+
+    const safeLimit = Math.min(Math.max(Number(limit || 8), 1), 30);
+
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        id,
+        category,
+        source_type,
+        title,
+        content,
+        source_url,
+        metadata,
+        status,
+        priority,
+        created_at,
+        updated_at,
+
+        (
+          ts_rank(
+            search_vector,
+            websearch_to_tsquery(
+              'simple',
+              $2
+            )
+          )
+          +
+          similarity(
+            title,
+            $2
+          )
+        ) AS relevance
+
+      FROM ai_agent_knowledge_items
+
+      WHERE team_id = $1
+        AND status = 'active'
+
+        AND (
+          search_vector @@
+            websearch_to_tsquery(
+              'simple',
+              $2
+            )
+
+          OR title % $2
+
+          OR content ILIKE
+            '%' || $2 || '%'
+        )
+
+      ORDER BY
+        priority DESC,
+        relevance DESC,
+        updated_at DESC
+
+      LIMIT $3
+      `,
+      [teamId, cleanQuery, safeLimit],
+    );
+
+    return {
+      query: cleanQuery,
+
+      items: rows.map((row: any) => ({
+        ...this.mapKnowledgeItem(row),
+
+        relevance: Number(row.relevance || 0),
+      })),
+    };
+  }
+
+  private validateKnowledgeCategory(value: string) {
+    if (!AI_KNOWLEDGE_CATEGORIES.includes(value as any)) {
+      throw new ForbiddenException("Invalid knowledge category");
+    }
+  }
+
+  private validateKnowledgeSourceType(value: string) {
+    if (!AI_KNOWLEDGE_SOURCE_TYPES.includes(value as any)) {
+      throw new ForbiddenException("Invalid knowledge source type");
+    }
+  }
+
+  private validateKnowledgeStatus(value: string) {
+    if (!AI_KNOWLEDGE_STATUSES.includes(value as any)) {
+      throw new ForbiddenException("Invalid knowledge status");
+    }
+  }
+
+  private validateKnowledgePayload(body: any) {
+    const category = String(body.category || "").trim();
+
+    const sourceType = String(body.sourceType || "text").trim();
+
+    const title = String(body.title || "").trim();
+
+    const content = String(body.content || "").trim();
+
+    const status = String(body.status || "active").trim();
+
+    const priority = Math.min(Math.max(Number(body.priority || 0), 0), 100);
+
+    this.validateKnowledgeCategory(category);
+
+    this.validateKnowledgeSourceType(sourceType);
+
+    this.validateKnowledgeStatus(status);
+
+    if (title.length < 3) {
+      throw new ForbiddenException(
+        "Knowledge title must contain at least 3 characters",
+      );
+    }
+
+    if (title.length > 255) {
+      throw new ForbiddenException(
+        "Knowledge title must not exceed 255 characters",
+      );
+    }
+
+    if (content.length < 10) {
+      throw new ForbiddenException(
+        "Knowledge content must contain at least 10 characters",
+      );
+    }
+
+    if (content.length > 20000) {
+      throw new ForbiddenException(
+        "Knowledge content must not exceed 20000 characters",
+      );
+    }
+
+    return {
+      category,
+      sourceType,
+      title,
+      content,
+
+      sourceUrl: body.sourceUrl ? String(body.sourceUrl).trim() : null,
+
+      status,
+      priority,
+
+      metadata:
+        body.metadata && typeof body.metadata === "object" ? body.metadata : {},
+    };
+  }
+
+  private mapKnowledgeItem(row: any) {
+    return {
+      id: row.id,
+
+      category: row.category,
+
+      categoryTitle:
+        AI_KNOWLEDGE_CATEGORY_META[row.category]?.title || row.category,
+
+      sourceType: row.source_type,
+
+      title: row.title,
+
+      content: row.content,
+
+      preview:
+        String(row.content || "").length > 180
+          ? `${String(row.content).slice(0, 180)}...`
+          : row.content,
+
+      sourceUrl: row.source_url || null,
+
+      metadata: row.metadata || {},
+
+      status: row.status,
+
+      priority: Number(row.priority || 0),
+
+      lastReviewedAt: row.last_reviewed_at || null,
+
+      createdAt: row.created_at,
+
+      updatedAt: row.updated_at,
+    };
+  }
+
+  private async logKnowledgeActivity(
+    teamId: string,
+    userId: string,
+    action: string,
+    item: any,
+  ) {
+    await this.db.query(
+      `
+    INSERT INTO ai_activity (
+      team_id,
+      action,
+      channel,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES (
+      $1,
+      $2,
+      'web',
+      'success',
+      $3::jsonb,
+      NOW()
+    )
+    `,
+      [
+        teamId,
+        action,
+
+        JSON.stringify({
+          userId,
+
+          knowledgeItemId: item?.id,
+
+          category: item?.category,
+
+          title: item?.title,
+        }),
+      ],
+    );
   }
 
   async getAgentActivityFeed(
