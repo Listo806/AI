@@ -288,6 +288,7 @@ export class AiCenterService {
       configResult,
       appointmentRulesResult,
       behaviorResult,
+      automationsResult,
       testResult,
       automationResult,
       businessProfileResult,
@@ -344,17 +345,19 @@ export class AiCenterService {
         [teamId],
       ),
       this.db.query(
-        `SELECT COUNT(*)::int AS total
-         FROM ai_activity
-         WHERE team_id = $1
-           AND action IN ('cortexa_chat', 'ai_test', 'test_ai')`,
+        `
+        SELECT team_id
+        FROM ai_agent_automations
+        WHERE team_id = $1
+        LIMIT 1
+        `,
         [teamId],
       ),
       this.db.query(
         `SELECT COUNT(*)::int AS total
          FROM ai_activity
          WHERE team_id = $1
-           AND action LIKE 'automation_%'`,
+           AND action IN ('cortexa_chat', 'ai_test', 'test_ai')`,
         [teamId],
       ),
       this.db.query(
@@ -390,6 +393,7 @@ export class AiCenterService {
     );
     const appointmentRulesCompleted = appointmentRulesResult.rows.length > 0;
     const behaviorConfigured = behaviorResult.rows.length > 0;
+    const automationsConfigured = automationsResult.rows.length > 0;
 
     const requiredSteps = [
       whatsappConnected,
@@ -397,7 +401,7 @@ export class AiCenterService {
       propertyCount > 0,
       appointmentRulesCompleted,
       behaviorConfigured,
-      automationCount > 0 || Boolean(config.automations_configured),
+      automationsConfigured,
       tested,
     ];
 
@@ -441,8 +445,10 @@ export class AiCenterService {
         status: behaviorConfigured ? "Configured" : "Not configured",
       },
       automations: {
-        total: automationCount,
-        status: `${automationCount} automations`,
+        configured: automationsConfigured,
+        completed: automationsConfigured,
+        total: automationsConfigured ? 1 : 0,
+        status: automationsConfigured ? "Configured" : "Not configured",
       },
       testAi: {
         tested,
@@ -2822,5 +2828,313 @@ export class AiCenterService {
     }
 
     return this.getAgentBehavior(teamId);
+  }
+
+  async getAutomations(teamId: string) {
+    const { rows } = await this.db.query(
+      `
+        SELECT *
+        FROM ai_agent_automations
+        WHERE team_id=$1
+        LIMIT 1
+        `,
+      [teamId],
+    );
+
+    if (!rows.length) {
+      return {
+        configured: false,
+        autoReply: true,
+        autoFollowUp: true,
+        autoBookAppointment: true,
+        autoAssignAgent: false,
+        autoCreateTask: true,
+        autoSendPropertyMatches: true,
+        autoSendMarketReport: false,
+        autoCollectContactInfo: true,
+        autoCollectBudget: true,
+        autoCollectTimeline: true,
+        followUpAfterMinutes: 30,
+        reminderAfterHours: 24,
+        hotLeadScore: 80,
+      };
+    }
+
+    const row = rows[0];
+
+    return {
+      configured: true,
+      autoReply: row.auto_reply,
+      autoFollowUp: row.auto_follow_up,
+      autoBookAppointment: row.auto_book_appointment,
+      autoAssignAgent: row.auto_assign_agent,
+      autoCreateTask: row.auto_create_task,
+      autoSendPropertyMatches: row.auto_send_property_matches,
+      autoSendMarketReport: row.auto_send_market_report,
+      autoCollectContactInfo: row.auto_collect_contact_info,
+      autoCollectBudget: row.auto_collect_budget,
+      autoCollectTimeline: row.auto_collect_timeline,
+      followUpAfterMinutes: row.follow_up_after_minutes,
+      reminderAfterHours: row.reminder_after_hours,
+      hotLeadScore: row.hot_lead_score,
+    };
+  }
+
+  async saveAutomations(
+    teamId: string,
+    userId: string,
+    body: {
+      autoReply?: boolean;
+      autoFollowUp?: boolean;
+      autoBookAppointment?: boolean;
+      autoAssignAgent?: boolean;
+      autoCreateTask?: boolean;
+      autoSendPropertyMatches?: boolean;
+      autoSendMarketReport?: boolean;
+      autoCollectContactInfo?: boolean;
+      autoCollectBudget?: boolean;
+      autoCollectTimeline?: boolean;
+
+      followUpAfterMinutes?: number;
+      reminderAfterHours?: number;
+      hotLeadScore?: number;
+    },
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const autoReply = body.autoReply !== false;
+
+    const autoFollowUp = body.autoFollowUp !== false;
+
+    const autoBookAppointment = body.autoBookAppointment !== false;
+
+    const autoAssignAgent = Boolean(body.autoAssignAgent);
+
+    const autoCreateTask = body.autoCreateTask !== false;
+
+    const autoSendPropertyMatches = body.autoSendPropertyMatches !== false;
+
+    const autoSendMarketReport = Boolean(body.autoSendMarketReport);
+
+    const autoCollectContactInfo = body.autoCollectContactInfo !== false;
+
+    const autoCollectBudget = body.autoCollectBudget !== false;
+
+    const autoCollectTimeline = body.autoCollectTimeline !== false;
+
+    const followUpAfterMinutes = Math.min(
+      Math.max(Number(body.followUpAfterMinutes ?? 30), 5),
+      10080,
+    );
+
+    const reminderAfterHours = Math.min(
+      Math.max(Number(body.reminderAfterHours ?? 24), 1),
+      720,
+    );
+
+    const hotLeadScore = Math.min(
+      Math.max(Number(body.hotLeadScore ?? 80), 1),
+      100,
+    );
+
+    await this.db.query("BEGIN");
+
+    try {
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_automations (
+        team_id,
+
+        auto_reply,
+        auto_follow_up,
+        auto_book_appointment,
+        auto_assign_agent,
+        auto_create_task,
+        auto_send_property_matches,
+        auto_send_market_report,
+        auto_collect_contact_info,
+        auto_collect_budget,
+        auto_collect_timeline,
+
+        follow_up_after_minutes,
+        reminder_after_hours,
+        hot_lead_score,
+
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+
+        $12,
+        $13,
+        $14,
+
+        NOW(),
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        auto_reply =
+          EXCLUDED.auto_reply,
+
+        auto_follow_up =
+          EXCLUDED.auto_follow_up,
+
+        auto_book_appointment =
+          EXCLUDED.auto_book_appointment,
+
+        auto_assign_agent =
+          EXCLUDED.auto_assign_agent,
+
+        auto_create_task =
+          EXCLUDED.auto_create_task,
+
+        auto_send_property_matches =
+          EXCLUDED.auto_send_property_matches,
+
+        auto_send_market_report =
+          EXCLUDED.auto_send_market_report,
+
+        auto_collect_contact_info =
+          EXCLUDED.auto_collect_contact_info,
+
+        auto_collect_budget =
+          EXCLUDED.auto_collect_budget,
+
+        auto_collect_timeline =
+          EXCLUDED.auto_collect_timeline,
+
+        follow_up_after_minutes =
+          EXCLUDED.follow_up_after_minutes,
+
+        reminder_after_hours =
+          EXCLUDED.reminder_after_hours,
+
+        hot_lead_score =
+          EXCLUDED.hot_lead_score,
+
+        updated_at = NOW()
+      `,
+        [
+          teamId,
+
+          autoReply,
+          autoFollowUp,
+          autoBookAppointment,
+          autoAssignAgent,
+          autoCreateTask,
+          autoSendPropertyMatches,
+          autoSendMarketReport,
+          autoCollectContactInfo,
+          autoCollectBudget,
+          autoCollectTimeline,
+
+          followUpAfterMinutes,
+          reminderAfterHours,
+          hotLeadScore,
+        ],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_settings (
+        team_id,
+        automations_configured,
+        updated_at
+      )
+      VALUES (
+        $1,
+        true,
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        automations_configured = true,
+        updated_at = NOW()
+      `,
+        [teamId],
+      );
+
+      await this.db.query(
+        `
+      UPDATE teams
+      SET
+        ai_auto_reply_enabled = $2,
+        ai_appointment_setter_enabled = $3,
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+        [teamId, autoReply, autoBookAppointment],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'automations_updated',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+          JSON.stringify({
+            userId,
+
+            enabledAutomations: [
+              autoReply && "auto_reply",
+              autoFollowUp && "auto_follow_up",
+              autoBookAppointment && "auto_book_appointment",
+              autoAssignAgent && "auto_assign_agent",
+              autoCreateTask && "auto_create_task",
+              autoSendPropertyMatches && "auto_send_property_matches",
+              autoSendMarketReport && "auto_send_market_report",
+              autoCollectContactInfo && "auto_collect_contact_info",
+              autoCollectBudget && "auto_collect_budget",
+              autoCollectTimeline && "auto_collect_timeline",
+            ].filter(Boolean),
+
+            followUpAfterMinutes,
+            reminderAfterHours,
+            hotLeadScore,
+          }),
+        ],
+      );
+
+      await this.db.query("COMMIT");
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+      throw error;
+    }
+
+    return this.getAutomations(teamId);
   }
 }

@@ -155,6 +155,24 @@ export const aiAgentSetupService = {
       body: JSON.stringify(payload),
     });
   },
+
+  getAutomations() {
+    return request("/ai-center/agent/automations", {
+      method: "GET",
+    });
+  },
+
+  saveAutomations(payload) {
+    return request("/ai-center/agent/automations", {
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify(payload),
+    });
+  },
 };
 
 export default aiAgentSetupService;

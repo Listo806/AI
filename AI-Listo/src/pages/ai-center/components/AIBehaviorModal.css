@@ -80,13 +80,14 @@
 }
 
 .cx-behavior-modal section {
-    padding: 18px 0;
+    padding: 18px 0!important;
     border-bottom: 1px solid #edf0f7;
 }
 
 .cx-behavior-modal section h3 {
     margin: 0 0 14px;
     font-size: 14px;
+    text-align: left;
 }
 
 /* States */
@@ -124,6 +125,7 @@
     color: #25315f;
     font-size: 12px;
     font-weight: 700;
+    text-align: left;
 }
 
 .cx-behavior-grid label.full {
@@ -177,6 +179,7 @@
     gap: 16px;
     padding: 14px;
     border-bottom: 1px solid #edf0f7;
+    text-align: left;
 }
 
 .cx-behavior-toggle-row:last-child {
@@ -254,6 +257,7 @@
     margin: 0;
     color: #33406c;
     font-size: 12px;
+    text-align: left;
 }
 
 .cx-behavior-list button {

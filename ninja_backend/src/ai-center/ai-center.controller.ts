@@ -365,7 +365,7 @@ export class AiCenterController {
   ) {
     return this.service.saveAppointmentRules(user.teamId, user.id, body);
   }
-  
+
   @Get("agent/behavior")
   @ApiOperation({
     summary: "Get AI Agent behavior",
@@ -405,5 +405,20 @@ export class AiCenterController {
     },
   ) {
     return this.service.saveAgentBehavior(user.teamId, user.id, body);
+  }
+
+  @Get("agent/automations")
+  async getAutomations(@CurrentUser() user: any) {
+    return this.service.getAutomations(user.teamId);
+  }
+
+  @Put("agent/automations")
+  async saveAutomations(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: any,
+  ) {
+    return this.service.saveAutomations(user.teamId, user.id, body);
   }
 }

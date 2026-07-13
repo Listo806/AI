@@ -59,6 +59,7 @@ import aiAgentSetupService from "./services/aiAgentSetup.service";
 import PropertyImportModal from "./components/PropertyImportModal";
 import AppointmentRulesModal from "./components/AppointmentRulesModal";
 import AIBehaviorModal from "./components/AIBehaviorModal";
+import AutomationModal from "./components/AutomationModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -104,6 +105,12 @@ export default function CortexaAI() {
   const [behaviorLoading, setBehaviorLoading] = useState(false);
   const [behaviorSaving, setBehaviorSaving] = useState(false);
   const [behaviorError, setBehaviorError] = useState("");
+
+  const [automationsOpen, setAutomationsOpen] = useState(false);
+  const [automations, setAutomations] = useState(null);
+  const [automationsLoading, setAutomationsLoading] = useState(false);
+  const [automationsSaving, setAutomationsSaving] = useState(false);
+  const [automationsError, setAutomationsError] = useState("");
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
@@ -298,6 +305,59 @@ export default function CortexaAI() {
     }
   };
 
+  const loadAutomations = useCallback(async () => {
+    setAutomationsLoading(true);
+    setAutomationsError("");
+
+    try {
+      const data = await aiAgentSetupService.getAutomations();
+
+      setAutomations(data);
+    } catch (error) {
+      console.error("LOAD AUTOMATIONS FAILED:", error);
+
+      setAutomationsError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load automations.",
+      );
+    } finally {
+      setAutomationsLoading(false);
+    }
+  }, []);
+
+  const openAutomations = async () => {
+    setAutomationsOpen(true);
+    await loadAutomations();
+  };
+
+  const saveAutomations = async (payload) => {
+    setAutomationsSaving(true);
+    setAutomationsError("");
+
+    try {
+      const saved = await aiAgentSetupService.saveAutomations(payload);
+
+      setAutomations(saved);
+      setAutomationsOpen(false);
+
+      await loadSetup();
+
+      setOpenStep(7);
+    } catch (error) {
+      console.error("SAVE AUTOMATIONS FAILED:", error);
+
+      setAutomationsError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save automations.",
+      );
+
+      throw error;
+    } finally {
+      setAutomationsSaving(false);
+    }
+  };
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -526,6 +586,7 @@ export default function CortexaAI() {
           onPropertyImport={openPropertyImport}
           onAppointmentRules={openAppointmentRules}
           onBehavior={openBehavior}
+          onAutomations={openAutomations}
         />
 
         <BusinessProfileModal
@@ -589,6 +650,20 @@ export default function CortexaAI() {
             }
           }}
           onSave={saveBehavior}
+        />
+
+        <AutomationModal
+          open={automationsOpen}
+          automations={automations}
+          loading={automationsLoading}
+          saving={automationsSaving}
+          error={automationsError}
+          onClose={() => {
+            if (!automationsSaving) {
+              setAutomationsOpen(false);
+            }
+          }}
+          onSave={saveAutomations}
         />
       </>
     );
@@ -682,6 +757,7 @@ export default function CortexaAI() {
             onPropertyImport={openPropertyImport}
             onAppointmentRules={openAppointmentRules}
             onBehavior={openBehavior}
+            onAutomations={openAutomations}
           />
         )}
 
@@ -731,6 +807,7 @@ function SetupLayout({
   onPropertyImport,
   onAppointmentRules,
   onBehavior,
+  onAutomations,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -815,14 +892,11 @@ function SetupLayout({
         title: "Automations",
         desc: "Choose what your AI Agent should do automatically.",
         icon: Zap,
-        status:
-          data?.automations?.status ||
-          `${Number(data?.automations?.total || 0)} automations`,
-        statusType:
-          Number(data?.automations?.total || 0) > 0 ? "success" : "muted",
-        action: "Set up",
+        status: data?.automations?.status || "Not configured",
+        statusType: data?.automations?.configured ? "success" : "muted",
+        action: data?.automations?.configured ? "Edit" : "Set up",
         accent: "purple",
-        complete: Number(data?.automations?.total || 0) > 0,
+        complete: Boolean(data?.automations?.configured),
       },
       {
         id: 7,
@@ -924,6 +998,10 @@ function SetupLayout({
                             }
                             if (step.key === "behavior") {
                               onBehavior?.();
+                              return;
+                            }
+                            if (step.key === "automations") {
+                              onAutomations?.();
                               return;
                             }
                             setOpenStep(step.id);
