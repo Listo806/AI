@@ -79,8 +79,13 @@ export default function CortexaAI() {
   const [pageError, setPageError] = useState("");
 
   const [messages, setMessages] = useState([]);
-  const [conversationId, setConversationId] = useState(null);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [activeChatSessionId, setActiveChatSessionId] = useState(null);
+  const [chatSessionsLoading, setChatSessionsLoading] = useState(false);
+  const [chatSessionLoading, setChatSessionLoading] = useState(false);
+  const [creatingChatSession, setCreatingChatSession] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [chatError, setChatError] = useState("");
 
   const [businessProfileOpen, setBusinessProfileOpen] = useState(false);
   const [businessProfile, setBusinessProfile] = useState(null);
@@ -522,6 +527,127 @@ export default function CortexaAI() {
       setLaunchingAgent(false);
     }
   };
+
+  const normalizeChatMessages = (items = []) => {
+    return (Array.isArray(items) ? items : []).map((item) => ({
+      id: item.id,
+      role: item.role,
+      content: item.content || "",
+      metadata: item.metadata || {},
+      createdAt: item.createdAt || null,
+      error: Boolean(item?.metadata?.error),
+    }));
+  };
+
+  const loadChatSession = useCallback(async (sessionId) => {
+    if (!sessionId) {
+      setActiveChatSessionId(null);
+      setMessages([]);
+      return null;
+    }
+    setChatSessionLoading(true);
+    setChatError("");
+    try {
+      const session = await aiAgentSetupService.getChatSession(sessionId);
+      setActiveChatSessionId(session.id);
+      setMessages(normalizeChatMessages(session.messages));
+      return session;
+    } catch (error) {
+      console.error("LOAD CHAT SESSION FAILED:", error);
+      setChatError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load this AI chat.",
+      );
+
+      return null;
+    } finally {
+      setChatSessionLoading(false);
+    }
+  }, []);
+
+  const loadChatSessions = useCallback(
+    async ({ openLatest = true, silent = false } = {}) => {
+      if (!silent) {
+        setChatSessionsLoading(true);
+      }
+      setChatError("");
+
+      try {
+        const response = await aiAgentSetupService.getChatSessions(20);
+        const items = Array.isArray(response?.items) ? response.items : [];
+        setChatSessions(items);
+        if (openLatest && items.length > 0) {
+          const currentExists =
+            activeChatSessionId &&
+            items.some((item) => item.id === activeChatSessionId);
+          const targetId = currentExists ? activeChatSessionId : items[0].id;
+          await loadChatSession(targetId);
+        }
+
+        if (openLatest && items.length === 0) {
+          setActiveChatSessionId(null);
+          setMessages([]);
+        }
+
+        return items;
+      } catch (error) {
+        console.error("LOAD CHAT SESSIONS FAILED:", error);
+
+        setChatError(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Unable to load AI chat history.",
+        );
+
+        return [];
+      } finally {
+        if (!silent) {
+          setChatSessionsLoading(false);
+        }
+      }
+    },
+    [activeChatSessionId, loadChatSession],
+  );
+
+  const createNewChat = async () => {
+    if (creatingChatSession) return;
+    setCreatingChatSession(true);
+    setChatError("");
+
+    try {
+      const session = await aiAgentSetupService.createChatSession();
+      setActiveChatSessionId(session.id);
+      setMessages([]);
+      setMessage("");
+      setChatSessions((current) => [
+        {
+          id: session.id,
+          title: session.title || "New Chat",
+          status: session.status || "active",
+          lastMessage: "",
+          messageCount: 0,
+          createdAt: session.createdAt,
+          updatedAt: session.updatedAt,
+        },
+        ...current.filter((item) => item.id !== session.id),
+      ]);
+
+      return session;
+    } catch (error) {
+      console.error("CREATE CHAT SESSION FAILED:", error);
+      setChatError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to create a new chat.",
+      );
+
+      return null;
+    } finally {
+      setCreatingChatSession(false);
+    }
+  };
+
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -539,8 +665,15 @@ export default function CortexaAI() {
         let data = null;
 
         if (activePage === "chat") {
-          data = await request("/ai-center/agent/dashboard");
-          if (!cancelled) setDashboardData(data);
+          const [dashboardResponse] = await Promise.all([
+            request("/ai-center/agent/dashboard"),
+            loadChatSessions({
+              openLatest: true,
+            }),
+          ]);
+          if (!cancelled) {
+            setDashboardData(dashboardResponse);
+          }
         }
 
         if (activePage === "knowledge") {
@@ -578,47 +711,78 @@ export default function CortexaAI() {
     return () => {
       cancelled = true;
     };
-  }, [activePage, setupData?.isSetupComplete]);
+  }, [activePage, setupData?.isSetupComplete, loadChatSessions]);
 
   const sendChatMessage = async (text) => {
     const cleanMessage = String(text || "").trim();
-    if (!cleanMessage || sendingMessage) return;
-
-    const userMessage = {
-      id: `user-${Date.now()}`,
+    if (!cleanMessage || sendingMessage) {
+      return;
+    }
+    const temporaryUserMessage = {
+      id: `temporary-user-${Date.now()}`,
       role: "user",
       content: cleanMessage,
+      createdAt: new Date().toISOString(),
+      temporary: true,
     };
-
-    setMessages((current) => [...current, userMessage]);
+    setMessages((current) => [...current, temporaryUserMessage]);
     setMessage("");
     setSendingMessage(true);
-
+    setChatError("");
     try {
-      const response = await request("/ai-center/agent", {
-        method: "POST",
-        body: JSON.stringify({
-          message: cleanMessage,
-          conversationId,
-        }),
+      const response = await aiAgentSetupService.sendChatMessage({
+        message: cleanMessage,
+        sessionId: activeChatSessionId || undefined,
+        attachments: [],
       });
-
-      setConversationId(response?.conversationId || null);
+      setActiveChatSessionId(response.sessionId);
       setMessages((current) => [
-        ...current,
+        ...current.filter((item) => item.id !== temporaryUserMessage.id),
         {
-          id: `assistant-${Date.now()}`,
+          ...response.userMessage,
+          role: "user",
+        },
+        {
+          ...response.assistantMessage,
           role: "assistant",
-          content: response?.answer || "No response returned.",
         },
       ]);
+      setChatSessions((current) => {
+        const existing = current.find((item) => item.id === response.sessionId);
+        const title =
+          existing?.title && existing.title !== "New Chat"
+            ? existing.title
+            : cleanMessage.length > 60
+              ? `${cleanMessage.slice(0, 60)}...`
+              : cleanMessage;
+        const nextSession = {
+          id: response.sessionId,
+          title,
+          status: "active",
+          lastMessage:
+            response.assistantMessage?.content || response.answer || "",
+          messageCount: Number(existing?.messageCount || 0) + 2,
+          updatedAt: new Date().toISOString(),
+        };
 
+        return [
+          nextSession,
+          ...current.filter((item) => item.id !== response.sessionId),
+        ];
+      });
       const refreshed = await request("/ai-center/agent/dashboard");
       setDashboardData(refreshed);
+      return response;
     } catch (error) {
       console.error("AI CHAT FAILED:", error);
       setMessages((current) => [
-        ...current,
+        ...current.filter((item) => item.id !== temporaryUserMessage.id),
+
+        {
+          ...temporaryUserMessage,
+          temporary: false,
+        },
+
         {
           id: `assistant-error-${Date.now()}`,
           role: "assistant",
@@ -629,6 +793,14 @@ export default function CortexaAI() {
           error: true,
         },
       ]);
+
+      setChatError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to send your message.",
+      );
+
+      throw error;
     } finally {
       setSendingMessage(false);
     }
@@ -843,37 +1015,75 @@ export default function CortexaAI() {
             })}
           </nav>
 
-          <div className="cx-agent-status-card">
-            <h3>AI Agent Status</h3>
-
-            <p className={setupData?.isSetupComplete ? "online" : "setup"}>
-              <i />
-
-              {setupData?.agentStatus === "paused"
-                ? "Paused"
-                : setupData?.isSetupComplete
-                  ? "Online"
-                  : "Setup in progress"}
-            </p>
-
-            <p>
-              {setupData?.isSetupComplete
-                ? "Your AI Agent is active and ready to help."
-                : `${Number(setupData?.completedSteps || 0)} of ${Number(
-                    setupData?.totalSteps || 8,
-                  )} setup steps completed.`}
-            </p>
-
+          {agentSidebarCollapsed ? (
             <button
+              type="button"
+              className="cx-agent-status-collapsed"
+              title={
+                setupData?.isSetupComplete
+                  ? "AI Agent Online"
+                  : "Setup in progress"
+              }
               onClick={() => {
                 setActivePage(
                   setupData?.isSetupComplete ? "activity" : "setup",
                 );
               }}
             >
-              {setupData?.isSetupComplete ? "View Activity" : "Continue Setup"}
+              <span
+                className={`cx-agent-status-dot ${
+                  setupData?.agentStatus === "paused"
+                    ? "paused"
+                    : setupData?.isSetupComplete
+                      ? "online"
+                      : "setup"
+                }`}
+              />
+
+              {setupData?.agentStatus === "paused" ? (
+                <PauseCircle size={20} />
+              ) : setupData?.isSetupComplete ? (
+                <Activity size={20} />
+              ) : (
+                <Settings2 size={20} />
+              )}
             </button>
-          </div>
+          ) : (
+            <div className="cx-agent-status-card">
+              <h3>AI Agent Status</h3>
+
+              <p className={setupData?.isSetupComplete ? "online" : "setup"}>
+                <i />
+
+                {setupData?.agentStatus === "paused"
+                  ? "Paused"
+                  : setupData?.isSetupComplete
+                    ? "Online"
+                    : "Setup in progress"}
+              </p>
+
+              <p>
+                {setupData?.isSetupComplete
+                  ? "Your AI Agent is active and ready to help."
+                  : `${Number(setupData?.completedSteps || 0)} of ${Number(
+                      setupData?.totalSteps || 8,
+                    )} setup steps completed.`}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActivePage(
+                    setupData?.isSetupComplete ? "activity" : "setup",
+                  );
+                }}
+              >
+                {setupData?.isSetupComplete
+                  ? "View Activity"
+                  : "Continue Setup"}
+              </button>
+            </div>
+          )}
         </aside>
 
         <section className="cx-agent-content">
@@ -911,8 +1121,16 @@ export default function CortexaAI() {
               setMessage={setMessage}
               dashboardData={dashboardData}
               messages={messages}
+              sessions={chatSessions}
+              activeSessionId={activeChatSessionId}
+              sessionsLoading={chatSessionsLoading}
+              sessionLoading={chatSessionLoading}
+              creatingSession={creatingChatSession}
               sendingMessage={sendingMessage}
+              error={chatError}
               onSend={sendChatMessage}
+              onNewChat={createNewChat}
+              onSelectSession={loadChatSession}
             />
           )}
 
@@ -1395,8 +1613,20 @@ function ChatLayout({
   setMessage,
   dashboardData,
   messages,
+
+  sessions,
+  activeSessionId,
+
+  sessionsLoading,
+  sessionLoading,
+  creatingSession,
+
   sendingMessage,
+  error,
+
   onSend,
+  onNewChat,
+  onSelectSession,
 }) {
   const prompts = [
     {
@@ -1446,12 +1676,79 @@ function ChatLayout({
             Ask anything. Your AI Agent is here to help you close more deals.
           </p>
         </div>
-        <button className="cx-primary-outline">
-          <Plus size={18} /> New Chat
+        <button
+          type="button"
+          className="cx-primary-outline"
+          onClick={onNewChat}
+          disabled={creatingSession}
+        >
+          {creatingSession ? (
+            <RefreshCw size={18} className="cx-ai-loading-spinner" />
+          ) : (
+            <Plus size={18} />
+          )}
+
+          {creatingSession ? "Creating..." : "New Chat"}
         </button>
       </div>
 
-      <div className="cx-chat-layout">
+      <div className="cx-chat-layout has-history">
+        <aside className="cx-chat-history">
+          <div className="cx-chat-history-head">
+            <div>
+              <h3>Chat History</h3>
+              <p>Your recent AI conversations</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onNewChat}
+              disabled={creatingSession}
+              title="New Chat"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          <div className="cx-chat-history-list">
+            {sessionsLoading ? (
+              <div className="cx-chat-history-empty">
+                <RefreshCw size={17} className="cx-ai-loading-spinner" />
+                Loading chats...
+              </div>
+            ) : sessions?.length ? (
+              sessions.map((session) => (
+                <button
+                  type="button"
+                  key={session.id}
+                  className={activeSessionId === session.id ? "active" : ""}
+                  onClick={() => onSelectSession(session.id)}
+                >
+                  <MessageSquare size={17} />
+
+                  <div>
+                    <strong>{session.title || "New Chat"}</strong>
+
+                    <p>{session.lastMessage || "No messages yet"}</p>
+                  </div>
+
+                  <span>{Number(session.messageCount || 0)}</span>
+                </button>
+              ))
+            ) : (
+              <div className="cx-chat-history-empty">
+                <MessageSquare size={22} />
+
+                <p>No chats yet</p>
+
+                <button type="button" onClick={onNewChat}>
+                  Start a new chat
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
         <main className="cx-chat-main-card">
           <div className="cx-chat-hero">
             <div className="cx-hero-bot">
@@ -1516,7 +1813,14 @@ function ChatLayout({
             </button>
           </div>
 
-          {messages?.length > 0 && (
+          {error && <div className="cx-ai-error-banner">{error}</div>}
+
+          {sessionLoading ? (
+            <div className="cx-chat-session-loading">
+              <RefreshCw className="cx-ai-loading-spinner" size={18} />
+              Loading conversation...
+            </div>
+          ) : messages?.length > 0 ? (
             <div className="cx-chat-message-list">
               {messages.map((item) => (
                 <div
@@ -1528,9 +1832,21 @@ function ChatLayout({
                   {item.content}
                 </div>
               ))}
+
               {sendingMessage && (
-                <div className="cx-chat-message assistant">Thinking...</div>
+                <div className="cx-chat-message assistant">
+                  AI Agent is thinking...
+                </div>
               )}
+            </div>
+          ) : (
+            <div className="cx-chat-empty-conversation">
+              <Bot size={34} />
+              <strong>Start a conversation</strong>
+              <p>
+                Ask your AI Agent about leads, properties, pipeline,
+                appointments, or follow-ups.
+              </p>
             </div>
           )}
 
@@ -1914,13 +2230,87 @@ function ActivityLayout({ activityData, onDataChange }) {
 
   const displayRows = apiRows.length ? apiRows : rows;
   const overview = activityData?.overview || {};
-  const activityTypesData = activityData?.activityByType?.length
-    ? activityData.activityByType
-    : activityTypes;
-  const topActionsData = activityData?.topActions?.length
-    ? activityData.topActions
-    : topActions;
+  const activityTypesData =
+    Array.isArray(activityData?.activityByType) &&
+    activityData.activityByType.length > 0
+      ? activityData.activityByType
+      : activityTypes;
+  const topActionsData =
+    Array.isArray(activityData?.topActions) &&
+    activityData.topActions.length > 0
+      ? activityData.topActions
+      : topActions;
 
+  const getActivityTypeIcon = (label = "") => {
+    const normalized = String(label).trim().toLowerCase();
+
+    if (normalized.includes("appointment")) {
+      return CalendarDays;
+    }
+
+    if (normalized.includes("lead")) {
+      return UserRoundCheck;
+    }
+
+    if (normalized.includes("property")) {
+      return Home;
+    }
+
+    if (normalized.includes("data")) {
+      return Database;
+    }
+
+    if (normalized.includes("alert")) {
+      return TriangleAlert;
+    }
+
+    if (normalized.includes("message")) {
+      return MessageCircle;
+    }
+
+    return MoreHorizontal;
+  };
+
+  const getTopActionIcon = (title = "") => {
+    const normalized = String(title).trim().toLowerCase();
+
+    if (
+      normalized.includes("qualification") ||
+      normalized.includes("qualified")
+    ) {
+      return UserRoundCheck;
+    }
+
+    if (normalized.includes("appointment") || normalized.includes("book")) {
+      return CalendarDays;
+    }
+
+    if (normalized.includes("property")) {
+      return Home;
+    }
+
+    if (
+      normalized.includes("follow-up") ||
+      normalized.includes("follow up") ||
+      normalized.includes("sent")
+    ) {
+      return Send;
+    }
+
+    if (
+      normalized.includes("reply") ||
+      normalized.includes("message") ||
+      normalized.includes("chat")
+    ) {
+      return MessageCircle;
+    }
+
+    if (normalized.includes("score")) {
+      return Star;
+    }
+
+    return Sparkles;
+  };
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
@@ -1956,7 +2346,10 @@ function ActivityLayout({ activityData, onDataChange }) {
 
             {displayRows.map(
               ([time, title, desc, Icon, status, leadName], index) => (
-                <div className="cx-activity-row" key={title}>
+                <div
+                  className="cx-activity-row"
+                  key={`${title}-${time}-${index}`}
+                >
                   <time>{time}</time>
                   <div className="cx-line-dot" />
                   <div
@@ -2026,10 +2419,14 @@ function ActivityLayout({ activityData, onDataChange }) {
             <h2>
               Activity by Type <button>View all</button>
             </h2>
-            {activityTypesData.map((item) => {
-              const Icon = item.icon;
+            {activityTypesData.map((item, index) => {
+              const Icon = item.icon || getActivityTypeIcon(item.label);
+
               return (
-                <div className="cx-bar-row has-icon" key={item.label}>
+                <div
+                  className="cx-bar-row has-icon"
+                  key={`${item.label}-${index}`}
+                >
                   <div className={`cx-bar-icon ${item.accent}`}>
                     <Icon size={14} />
                   </div>
@@ -2053,11 +2450,14 @@ function ActivityLayout({ activityData, onDataChange }) {
             </h2>
 
             <div className="cx-top-actions-list">
-              {topActionsData.map((item) => {
-                const Icon = item.icon;
+              {topActionsData.map((item, index) => {
+                const Icon = item.icon || getTopActionIcon(item.title);
 
                 return (
-                  <div className="cx-top-action-row" key={item.title}>
+                  <div
+                    className="cx-top-action-row"
+                    key={`${item.title}-${index}`}
+                  >
                     <div className={`cx-bar-icon ${item.accent}`}>
                       <Icon size={15} />
                     </div>
@@ -2332,17 +2732,28 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
               AI Agent Status <em>Active</em>
             </h2>
             <div className="cx-overview-grid">
-              <StatMini title="Responses Today" value="148" desc="↑ 24%" />
+              <StatMini
+                title="Responses Today"
+                value={current?.metrics?.responsesToday ?? 0}
+                desc="Today"
+              />
+
               <StatMini
                 title="Appointments Booked"
-                value={data?.appointmentsBooked ?? 0}
-                desc="↑ 33%"
+                value={current?.metrics?.appointmentsBooked ?? 0}
+                desc="Today"
               />
-              <StatMini title="Leads Handled" value="56" desc="↑ 18%" />
+
+              <StatMini
+                title="Leads Handled"
+                value={current?.metrics?.leadsHandled ?? 0}
+                desc="Today"
+              />
+
               <StatMini
                 title="Avg. Response Time"
-                value="1m 24s"
-                desc="↓ 12%"
+                value={current?.metrics?.avgResponseTime || "—"}
+                desc="Current average"
               />
             </div>
           </div>

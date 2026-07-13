@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Req,
+  Param,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -448,5 +449,51 @@ export class AiCenterController {
       body.message,
       body.sessionId,
     );
+  }
+
+  @Get("agent/chat/sessions")
+  @ApiOperation({
+    summary: "Get AI Agent chat sessions",
+  })
+  async getAgentChatSessions(
+    @CurrentUser() user: any,
+
+    @Query("limit", new DefaultValuePipe(20), ParseIntPipe)
+    limit: number,
+  ) {
+    return this.service.getAgentChatSessions(user.teamId, limit);
+  }
+
+  @Post("agent/chat/sessions")
+  @ApiOperation({
+    summary: "Create AI Agent chat session",
+  })
+  async createAgentChatSession(@CurrentUser() user: any) {
+    return this.service.createAgentChatSession(user.teamId, user.id);
+  }
+
+  @Get("agent/chat/sessions/:id")
+  @ApiOperation({
+    summary: "Get AI Agent chat session",
+  })
+  async getAgentChatSession(@CurrentUser() user: any, @Param("id") id: string) {
+    return this.service.getAgentChatSession(user.teamId, id);
+  }
+
+  @Post("agent/chat/messages")
+  @ApiOperation({
+    summary: "Send message to AI Agent",
+  })
+  async sendAgentChatMessage(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      message: string;
+      sessionId?: string;
+      attachments?: any[];
+    },
+  ) {
+    return this.service.sendAgentChatMessage(user.teamId, user.id, body);
   }
 }

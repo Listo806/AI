@@ -200,6 +200,34 @@ export const aiAgentSetupService = {
       }),
     });
   },
+
+  getChatSessions(limit = 20) {
+    return request(`/ai-center/agent/chat/sessions?limit=${limit}`, {
+      method: "GET",
+    });
+  },
+
+  createChatSession() {
+    return request("/ai-center/agent/chat/sessions", {
+      method: "POST",
+    });
+  },
+
+  getChatSession(sessionId) {
+    return request(`/ai-center/agent/chat/sessions/${sessionId}`, {
+      method: "GET",
+    });
+  },
+
+  sendChatMessage(payload) {
+    return request("/ai-center/agent/chat/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  },
 };
 
 export default aiAgentSetupService;

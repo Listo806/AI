@@ -3643,4 +3643,339 @@ export class AiCenterService {
       throw error;
     }
   }
+
+  async getAgentChatSessions(teamId: string, limit = 20) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const safeLimit = Math.min(Math.max(Number(limit || 20), 1), 100);
+
+    const { rows } = await this.db.query(
+      `
+    SELECT
+      session.id,
+      session.title,
+      session.status,
+      session.created_at,
+      session.updated_at,
+
+      (
+        SELECT message.content
+        FROM ai_agent_chat_messages message
+        WHERE message.session_id = session.id
+        ORDER BY message.created_at DESC
+        LIMIT 1
+      ) AS last_message,
+
+      (
+        SELECT COUNT(*)::int
+        FROM ai_agent_chat_messages message
+        WHERE message.session_id = session.id
+      ) AS message_count
+
+    FROM ai_agent_chat_sessions session
+
+    WHERE session.team_id = $1
+      AND session.status = 'active'
+
+    ORDER BY session.updated_at DESC
+
+    LIMIT $2
+    `,
+      [teamId, safeLimit],
+    );
+
+    return {
+      items: rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        status: row.status,
+
+        lastMessage: row.last_message || "",
+
+        messageCount: Number(row.message_count || 0),
+
+        createdAt: row.created_at,
+
+        updatedAt: row.updated_at,
+      })),
+    };
+  }
+
+  async createAgentChatSession(teamId: string, userId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO ai_agent_chat_sessions (
+      team_id,
+      created_by,
+      title,
+      status,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1,
+      $2,
+      'New Chat',
+      'active',
+      NOW(),
+      NOW()
+    )
+    RETURNING
+      id,
+      title,
+      status,
+      created_at,
+      updated_at
+    `,
+      [teamId, userId],
+    );
+
+    const row = rows[0];
+
+    return {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      messages: [],
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    };
+  }
+
+  async getAgentChatSession(teamId: string, sessionId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const sessionResult = await this.db.query(
+      `
+      SELECT
+        id,
+        title,
+        status,
+        created_at,
+        updated_at
+      FROM ai_agent_chat_sessions
+      WHERE id = $1
+        AND team_id = $2
+      LIMIT 1
+      `,
+      [sessionId, teamId],
+    );
+
+    const session = sessionResult.rows[0];
+    if (!session) {
+      throw new ForbiddenException("Chat session not found");
+    }
+    const messagesResult = await this.db.query(
+      `
+      SELECT
+        id,
+        role,
+        content,
+        metadata,
+        created_at
+      FROM ai_agent_chat_messages
+      WHERE session_id = $1
+      ORDER BY created_at ASC
+      `,
+      [sessionId],
+    );
+
+    return {
+      id: session.id,
+      title: session.title,
+      status: session.status,
+
+      messages: messagesResult.rows.map((row: any) => ({
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        metadata: row.metadata || {},
+        createdAt: row.created_at,
+      })),
+
+      createdAt: session.created_at,
+      updatedAt: session.updated_at,
+    };
+  }
+
+  async sendAgentChatMessage(
+    teamId: string,
+    userId: string,
+    body: {
+      message: string;
+      sessionId?: string;
+      attachments?: any[];
+    },
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+    const message = String(body.message || "").trim();
+    const attachments = Array.isArray(body.attachments) ? body.attachments : [];
+    if (!message && attachments.length === 0) {
+      throw new ForbiddenException("Message or attachment is required");
+    }
+    let sessionId = String(body.sessionId || "").trim();
+    if (sessionId) {
+      const validSession = await this.db.query(
+        `
+        SELECT id
+        FROM ai_agent_chat_sessions
+        WHERE id = $1
+          AND team_id = $2
+          AND status = 'active'
+        LIMIT 1
+        `,
+        [sessionId, teamId],
+      );
+
+      if (!validSession.rows[0]) {
+        sessionId = "";
+      }
+    }
+    if (!sessionId) {
+      const session = await this.createAgentChatSession(teamId, userId);
+      sessionId = session.id;
+    }
+    const userMessageResult = await this.db.query(
+      `
+      INSERT INTO ai_agent_chat_messages (
+        session_id,
+        role,
+        content,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'user',
+        $2,
+        $3::jsonb,
+        NOW()
+      )
+      RETURNING
+        id,
+        role,
+        content,
+        metadata,
+        created_at
+      `,
+      [
+        sessionId,
+        message || "Analyze the attached files.",
+
+        JSON.stringify({
+          attachments,
+        }),
+      ],
+    );
+
+    const aiResponse = await this.cortexaAgent({
+      user: {
+        id: userId,
+        teamId,
+      },
+
+      body: {
+        message,
+        attachments,
+        conversationId: sessionId,
+      },
+    });
+    const assistantContent = String(
+      aiResponse?.answer || "No response returned.",
+    );
+    const assistantMessageResult = await this.db.query(
+      `
+      INSERT INTO ai_agent_chat_messages (
+        session_id,
+        role,
+        content,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'assistant',
+        $2,
+        $3::jsonb,
+        NOW()
+      )
+      RETURNING
+        id,
+        role,
+        content,
+        metadata,
+        created_at
+      `,
+      [
+        sessionId,
+        assistantContent,
+        JSON.stringify({
+          usage: aiResponse?.usage || null,
+        }),
+      ],
+    );
+    const sessionMessageCount = await this.db.query(
+      `
+      SELECT COUNT(*)::int AS total
+      FROM ai_agent_chat_messages
+      WHERE session_id = $1
+      `,
+      [sessionId],
+    );
+
+    if (Number(sessionMessageCount.rows[0]?.total || 0) <= 2) {
+      const title =
+        message.length > 60
+          ? `${message.slice(0, 60)}...`
+          : message || "Attachment Chat";
+
+      await this.db.query(
+        `
+      UPDATE ai_agent_chat_sessions
+      SET
+        title = $2,
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+        [sessionId, title],
+      );
+    } else {
+      await this.db.query(
+        `
+      UPDATE ai_agent_chat_sessions
+      SET updated_at = NOW()
+      WHERE id = $1
+      `,
+        [sessionId],
+      );
+    }
+
+    const mapMessage = (row: any) => ({
+      id: row.id,
+      role: row.role,
+      content: row.content,
+      metadata: row.metadata || {},
+      createdAt: row.created_at,
+    });
+
+    return {
+      success: true,
+      sessionId,
+      conversationId: sessionId,
+      answer: assistantContent,
+      userMessage: mapMessage(userMessageResult.rows[0]),
+      assistantMessage: mapMessage(assistantMessageResult.rows[0]),
+      usage: aiResponse?.usage || null,
+    };
+  }
 }
