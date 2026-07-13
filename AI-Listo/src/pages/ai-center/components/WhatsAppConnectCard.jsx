@@ -121,7 +121,7 @@ export default function WhatsAppConnectCard({
               disabled={!connecting}
               type="button"
             >
-              <RefreshCw size={16} /> Refresh QR
+              Refresh QR
             </button>
 
             <button
@@ -130,7 +130,6 @@ export default function WhatsAppConnectCard({
               disabled={connecting}
               type="button"
             >
-              <MessageSquare size={16} />
               {connecting ? "Waiting for scan..." : "Connect WhatsApp"}
             </button>
           </div>

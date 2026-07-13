@@ -119,30 +119,31 @@ export default function CortexaAI() {
   const [testAgentSending, setTestAgentSending] = useState(false);
   const [testAgentError, setTestAgentError] = useState("");
   const [testAgentSessionId, setTestAgentSessionId] = useState(null);
-  const loadSetup = React.useCallback(async () => {
-    setLoadingSetup(true);
+  const loadSetup = React.useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoadingSetup(true);
+    }
     setPageError("");
-
     try {
       const data = await request("/ai-center/agent/setup");
       setSetupData(data);
-
-      if (data?.isSetupComplete) {
-        setActivePage((current) => (current === "setup" ? "chat" : current));
-      }
       if (data?.appointmentRules) {
         setAppointmentRules(data.appointmentRules);
       }
+      return data;
     } catch (error) {
       console.error("LOAD AI SETUP FAILED:", error);
-
       setPageError(
         error?.response?.data?.message ||
           error?.message ||
           "Unable to load AI Agent setup.",
       );
+
+      return null;
     } finally {
-      setLoadingSetup(false);
+      if (!silent) {
+        setLoadingSetup(false);
+      }
     }
   }, []);
 
@@ -198,11 +199,10 @@ export default function CortexaAI() {
 
     try {
       await aiAgentSetupService.savePropertyCatalog(propertyIds);
-
       setPropertyImportOpen(false);
-
-      await loadSetup();
-
+      await loadSetup({
+        silent: true,
+      });
       setOpenStep(4);
     } catch (error) {
       console.error("SAVE PROPERTY CATALOG FAILED:", error);
@@ -248,7 +248,9 @@ export default function CortexaAI() {
       const data = await aiAgentSetupService.saveAppointmentRules(payload);
       setAppointmentRules(data);
       setAppointmentRulesOpen(false);
-      await loadSetup();
+      await loadSetup({
+        silent: true,
+      });
     } catch (error) {
       console.error(error);
       setAppointmentRulesError(
@@ -291,12 +293,11 @@ export default function CortexaAI() {
 
     try {
       const saved = await aiAgentSetupService.saveBehavior(payload);
-
       setBehavior(saved);
       setBehaviorOpen(false);
-
-      await loadSetup();
-
+      await loadSetup({
+        silent: true,
+      });
       setOpenStep(6);
     } catch (error) {
       console.error("SAVE AI BEHAVIOR FAILED:", error);
@@ -347,7 +348,9 @@ export default function CortexaAI() {
       const saved = await aiAgentSetupService.saveAutomations(payload);
       setAutomations(saved);
       setAutomationsOpen(false);
-      await loadSetup();
+      await loadSetup({
+        silent: true,
+      });
       setOpenStep(7);
     } catch (error) {
       console.error("SAVE AUTOMATIONS FAILED:", error);
@@ -459,7 +462,9 @@ export default function CortexaAI() {
         };
       });
 
-      await loadSetup();
+      await loadSetup({
+        silent: true,
+      });
       setOpenStep(8);
       return response;
     } catch (error) {
@@ -660,9 +665,9 @@ export default function CortexaAI() {
 
       setBusinessProfile(saved);
       setBusinessProfileOpen(false);
-
-      await loadSetup();
-
+      await loadSetup({
+        silent: true,
+      });
       setOpenStep(3);
     } catch (error) {
       console.error("SAVE BUSINESS PROFILE FAILED:", error);
@@ -688,121 +693,6 @@ export default function CortexaAI() {
     );
   }
 
-  if (!setupData?.isSetupComplete) {
-    return (
-      <>
-        {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
-
-        <SetupLayout
-          setupData={setupData}
-          openStep={openStep}
-          setOpenStep={setOpenStep}
-          onRefresh={loadSetup}
-          whatsappSetup={whatsappSetup}
-          onBusinessProfile={openBusinessProfile}
-          onPropertyImport={openPropertyImport}
-          onAppointmentRules={openAppointmentRules}
-          onBehavior={openBehavior}
-          onAutomations={openAutomations}
-          onTestAgent={openAgentTest}
-        />
-
-        <BusinessProfileModal
-          open={businessProfileOpen}
-          profile={businessProfile}
-          saving={businessProfileSaving || businessProfileLoading}
-          error={businessProfileError}
-          onClose={() => {
-            if (!businessProfileSaving) {
-              setBusinessProfileOpen(false);
-            }
-          }}
-          onSave={saveBusinessProfile}
-        />
-
-        <PropertyImportModal
-          open={propertyImportOpen}
-          loading={propertyCatalogLoading}
-          saving={propertyCatalogSaving}
-          error={propertyCatalogError}
-          catalog={propertyCatalog}
-          onClose={() => {
-            if (!propertyCatalogSaving) {
-              setPropertyImportOpen(false);
-            }
-          }}
-          onSearch={(search) => {
-            loadPropertyCatalog({
-              page: 1,
-              search,
-            });
-          }}
-          onPageChange={(page) => {
-            loadPropertyCatalog({
-              page,
-              search: propertyCatalogSearch,
-            });
-          }}
-          onSave={savePropertyCatalog}
-        />
-
-        <AppointmentRulesModal
-          open={appointmentRulesOpen}
-          rules={appointmentRules}
-          loading={appointmentRulesLoading}
-          saving={appointmentRulesSaving}
-          error={appointmentRulesError}
-          onClose={() => setAppointmentRulesOpen(false)}
-          onSave={saveAppointmentRules}
-        />
-
-        <AIBehaviorModal
-          open={behaviorOpen}
-          behavior={behavior}
-          loading={behaviorLoading}
-          saving={behaviorSaving}
-          error={behaviorError}
-          onClose={() => {
-            if (!behaviorSaving) {
-              setBehaviorOpen(false);
-            }
-          }}
-          onSave={saveBehavior}
-        />
-
-        <AutomationModal
-          open={automationsOpen}
-          automations={automations}
-          loading={automationsLoading}
-          saving={automationsSaving}
-          error={automationsError}
-          onClose={() => {
-            if (!automationsSaving) {
-              setAutomationsOpen(false);
-            }
-          }}
-          onSave={saveAutomations}
-        />
-
-        <TestAgentModal
-          open={testAgentOpen}
-          status={testAgentStatus}
-          loading={testAgentLoading}
-          sending={testAgentSending}
-          error={testAgentError}
-          onClose={() => {
-            if (!testAgentSending) {
-              setTestAgentOpen(false);
-            }
-          }}
-          onRefresh={loadAgentTest}
-          onNewSession={createNewAgentTest}
-          onSend={runAgentTest}
-        />
-      </>
-    );
-  }
-
   const businessProfileModal = (
     <BusinessProfileModal
       open={businessProfileOpen}
@@ -819,115 +709,252 @@ export default function CortexaAI() {
     />
   );
   return (
-    <div className="cx-ai-shell">
-      <aside className="cx-agent-sidebar">
-        <div className="cx-agent-brand">
-          <div className="cx-agent-bot">
-            <Bot size={24} />
+    <>
+      <div className="cx-ai-shell">
+        <aside className="cx-agent-sidebar">
+          <div className="cx-agent-brand">
+            <div className="cx-agent-bot">
+              <Bot size={24} />
+            </div>
+
+            <div>
+              <h2>AI Agent</h2>
+
+              <span>
+                <i />
+
+                {setupData?.agentStatus === "paused"
+                  ? "Paused"
+                  : setupData?.isSetupComplete
+                    ? "Active"
+                    : "Setup"}
+              </span>
+            </div>
           </div>
-          <div>
-            <h2>AI Agent</h2>
-            <span>
-              <i /> {setupData?.agentStatus === "paused" ? "Paused" : "Active"}
-            </span>
+
+          <nav className="cx-agent-menu">
+            {agentMenus.map((item) => {
+              const Icon = item.icon;
+
+              const locked =
+                !setupData?.isSetupComplete && item.key !== "setup";
+
+              return (
+                <button
+                  key={item.key}
+                  className={`${activePage === item.key ? "active" : ""} ${
+                    locked ? "locked" : ""
+                  }`}
+                  disabled={locked}
+                  onClick={() => {
+                    if (locked) return;
+
+                    setActivePage(item.key);
+                  }}
+                >
+                  <Icon size={18} />
+
+                  <div>
+                    <strong>{item.title}</strong>
+
+                    <small>{locked ? "Complete setup first" : item.desc}</small>
+                  </div>
+
+                  {locked && <Lock className="cx-agent-menu-lock" size={14} />}
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="cx-agent-status-card">
+            <h3>AI Agent Status</h3>
+
+            <p className={setupData?.isSetupComplete ? "online" : "setup"}>
+              <i />
+
+              {setupData?.agentStatus === "paused"
+                ? "Paused"
+                : setupData?.isSetupComplete
+                  ? "Online"
+                  : "Setup in progress"}
+            </p>
+
+            <p>
+              {setupData?.isSetupComplete
+                ? "Your AI Agent is active and ready to help."
+                : `${Number(setupData?.completedSteps || 0)} of ${Number(
+                    setupData?.totalSteps || 8,
+                  )} setup steps completed.`}
+            </p>
+
+            <button
+              onClick={() => {
+                setActivePage(
+                  setupData?.isSetupComplete ? "activity" : "setup",
+                );
+              }}
+            >
+              {setupData?.isSetupComplete ? "View Activity" : "Continue Setup"}
+            </button>
           </div>
-        </div>
+        </aside>
 
-        <nav className="cx-agent-menu">
-          {agentMenus.map((item) => {
-            const Icon = item.icon;
+        <section className="cx-agent-content">
+          {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
 
-            return (
-              <button
-                key={item.key}
-                className={activePage === item.key ? "active" : ""}
-                onClick={() => setActivePage(item.key)}
-              >
-                <Icon size={18} />
-                <div>
-                  <strong>{item.title}</strong>
-                  <small>{item.desc}</small>
-                </div>
-              </button>
-            );
-          })}
-        </nav>
+          {loadingPage && activePage !== "chat" && (
+            <div className="cx-ai-inline-loading">
+              <RefreshCw className="cx-ai-loading-spinner" size={18} />
+              Loading data...
+            </div>
+          )}
 
-        <div className="cx-agent-status-card">
-          <h3>AI Agent Status</h3>
-          <p className="online">
-            <i /> {setupData?.agentStatus === "paused" ? "Paused" : "Online"}
-          </p>
-          <p>
-            {setupData?.agentStatus === "paused"
-              ? "Your AI Agent is temporarily paused."
-              : "Your AI Agent is active and ready to help."}
-          </p>
-          <button onClick={() => setActivePage("activity")}>
-            View Activity
-          </button>
-        </div>
-      </aside>
+          {activePage === "setup" && (
+            <SetupLayout
+              setupData={setupData}
+              openStep={openStep}
+              setOpenStep={setOpenStep}
+              onRefresh={loadSetup}
+              whatsappSetup={whatsappSetup}
+              onBusinessProfile={openBusinessProfile}
+              onPropertyImport={openPropertyImport}
+              onAppointmentRules={openAppointmentRules}
+              onBehavior={openBehavior}
+              onAutomations={openAutomations}
+              onTestAgent={openAgentTest}
+            />
+          )}
 
-      <section className="cx-agent-content">
-        {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
+          {setupData?.isSetupComplete && activePage === "chat" && (
+            <ChatLayout
+              message={message}
+              setMessage={setMessage}
+              dashboardData={dashboardData}
+              messages={messages}
+              sendingMessage={sendingMessage}
+              onSend={sendChatMessage}
+            />
+          )}
 
-        {loadingPage && activePage !== "chat" && (
-          <div className="cx-ai-inline-loading">
-            <RefreshCw className="cx-ai-loading-spinner" size={18} />
-            Loading data...
-          </div>
-        )}
+          {setupData?.isSetupComplete && activePage === "knowledge" && (
+            <KnowledgeLayout knowledgeData={knowledgeData} />
+          )}
 
-        {activePage === "setup" && (
-          <SetupLayout
-            setupData={setupData}
-            openStep={openStep}
-            setOpenStep={setOpenStep}
-            onRefresh={loadSetup}
-            onUpdate={updateSetup}
-            whatsappSetup={whatsappSetup}
-            onBusinessProfile={openBusinessProfile}
-            onPropertyImport={openPropertyImport}
-            onAppointmentRules={openAppointmentRules}
-            onBehavior={openBehavior}
-            onAutomations={openAutomations}
-            onTestAgent={openAgentTest}
-          />
-        )}
+          {setupData?.isSetupComplete && activePage === "activity" && (
+            <ActivityLayout
+              activityData={activityData}
+              onDataChange={setActivityData}
+            />
+          )}
 
-        {activePage === "chat" && (
-          <ChatLayout
-            message={message}
-            setMessage={setMessage}
-            dashboardData={dashboardData}
-            messages={messages}
-            sendingMessage={sendingMessage}
-            onSend={sendChatMessage}
-          />
-        )}
+          {setupData?.isSetupComplete && activePage === "controls" && (
+            <ControlsLayout
+              controlTab={controlTab}
+              setControlTab={setControlTab}
+              controlsData={controlsData}
+              onSave={saveControls}
+            />
+          )}
+        </section>
+      </div>
 
-        {activePage === "knowledge" && (
-          <KnowledgeLayout knowledgeData={knowledgeData} />
-        )}
+      <BusinessProfileModal
+        open={businessProfileOpen}
+        profile={businessProfile}
+        saving={businessProfileSaving || businessProfileLoading}
+        error={businessProfileError}
+        onClose={() => {
+          if (!businessProfileSaving) {
+            setBusinessProfileOpen(false);
+          }
+        }}
+        onSave={saveBusinessProfile}
+      />
 
-        {activePage === "activity" && (
-          <ActivityLayout
-            activityData={activityData}
-            onDataChange={setActivityData}
-          />
-        )}
+      <PropertyImportModal
+        open={propertyImportOpen}
+        loading={propertyCatalogLoading}
+        saving={propertyCatalogSaving}
+        error={propertyCatalogError}
+        catalog={propertyCatalog}
+        onClose={() => {
+          if (!propertyCatalogSaving) {
+            setPropertyImportOpen(false);
+          }
+        }}
+        onSearch={(search) => {
+          loadPropertyCatalog({
+            page: 1,
+            search,
+          });
+        }}
+        onPageChange={(page) => {
+          loadPropertyCatalog({
+            page,
+            search: propertyCatalogSearch,
+          });
+        }}
+        onSave={savePropertyCatalog}
+      />
 
-        {activePage === "controls" && (
-          <ControlsLayout
-            controlTab={controlTab}
-            setControlTab={setControlTab}
-            controlsData={controlsData}
-            onSave={saveControls}
-          />
-        )}
-      </section>
-    </div>
+      <AppointmentRulesModal
+        open={appointmentRulesOpen}
+        rules={appointmentRules}
+        loading={appointmentRulesLoading}
+        saving={appointmentRulesSaving}
+        error={appointmentRulesError}
+        onClose={() => {
+          if (!appointmentRulesSaving) {
+            setAppointmentRulesOpen(false);
+          }
+        }}
+        onSave={saveAppointmentRules}
+      />
+
+      <AIBehaviorModal
+        open={behaviorOpen}
+        behavior={behavior}
+        loading={behaviorLoading}
+        saving={behaviorSaving}
+        error={behaviorError}
+        onClose={() => {
+          if (!behaviorSaving) {
+            setBehaviorOpen(false);
+          }
+        }}
+        onSave={saveBehavior}
+      />
+
+      <AutomationModal
+        open={automationsOpen}
+        automations={automations}
+        loading={automationsLoading}
+        saving={automationsSaving}
+        error={automationsError}
+        onClose={() => {
+          if (!automationsSaving) {
+            setAutomationsOpen(false);
+          }
+        }}
+        onSave={saveAutomations}
+      />
+
+      <TestAgentModal
+        open={testAgentOpen}
+        status={testAgentStatus}
+        loading={testAgentLoading}
+        sending={testAgentSending}
+        error={testAgentError}
+        onClose={() => {
+          if (!testAgentSending) {
+            setTestAgentOpen(false);
+          }
+        }}
+        onRefresh={loadAgentTest}
+        onNewSession={createNewAgentTest}
+        onSend={runAgentTest}
+      />
+    </>
   );
 }
 
@@ -936,7 +963,6 @@ function SetupLayout({
   openStep,
   setOpenStep,
   onRefresh,
-  onUpdate,
   whatsappSetup,
   onBusinessProfile,
   onPropertyImport,
@@ -1145,7 +1171,6 @@ function SetupLayout({
                               return;
                             }
                             setOpenStep(step.id);
-                            onTestAgent;
                           }}
                         >
                           {step.action}

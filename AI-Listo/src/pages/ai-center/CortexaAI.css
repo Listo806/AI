@@ -47,7 +47,7 @@
 
 .cx-ai-setup-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 20px;
   padding-top: 50px;
 }
@@ -2028,6 +2028,27 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
+}
+.cx-agent-menu button {
+  position: relative;
+}
+
+.cx-agent-menu button.locked {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.cx-agent-menu button.locked:hover {
+  background: transparent;
+}
+
+.cx-agent-menu-lock {
+  margin-left: auto;
+  color: #8b94ad;
+}
+
+.cx-agent-status-card .setup {
+  color: #d97706;
 }
 @media (max-width: 1280px) {
   .cx-ai-shell {
