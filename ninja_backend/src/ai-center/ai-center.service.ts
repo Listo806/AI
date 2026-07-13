@@ -290,51 +290,65 @@ export class AiCenterService {
       behaviorResult,
       automationsResult,
       testResult,
-      automationResult,
       businessProfileResult,
     ] = await Promise.all([
       this.getActiveChannels(teamId),
-      this.db.query(
-        `SELECT id, name, whatsapp_phone, ai_auto_reply_enabled,
-                ai_auto_reply_tone, ai_appointment_setter_enabled
-         FROM teams
-         WHERE id = $1`,
-        [teamId],
-      ),
+
       this.db.query(
         `
-          SELECT COUNT(*)::int AS total
-          FROM ai_agent_property_catalog
-          WHERE team_id = $1
-            AND is_active = true
-          `,
+        SELECT
+          id,
+          name,
+          whatsapp_phone,
+          ai_auto_reply_enabled,
+          ai_auto_reply_tone,
+          ai_appointment_setter_enabled
+        FROM teams
+        WHERE id = $1
+        `,
         [teamId],
       ),
+
       this.db.query(
-        `SELECT business_profile_completed,
-                appointment_rules_configured,
-                behavior_configured,
-                automations_configured,
-                tested,
-                launched,
-                paused,
-                response_tone,
-                capabilities,
-                quick_controls,
-                updated_at
-         FROM ai_agent_settings
-         WHERE team_id = $1`,
+        `
+        SELECT COUNT(*)::int AS total
+        FROM ai_agent_property_catalog
+        WHERE team_id = $1
+          AND is_active = true
+        `,
         [teamId],
       ),
+
+      this.db.query(
+        `
+        SELECT
+          business_profile_completed,
+          appointment_rules_configured,
+          behavior_configured,
+          automations_configured,
+          tested,
+          launched,
+          paused,
+          response_tone,
+          capabilities,
+          quick_controls,
+          updated_at
+        FROM ai_agent_settings
+        WHERE team_id = $1
+        `,
+        [teamId],
+      ),
+
       this.db.query(
         `
         SELECT id
         FROM ai_agent_appointment_rules
-        WHERE team_id=$1
+        WHERE team_id = $1
         LIMIT 1
         `,
         [teamId],
       ),
+
       this.db.query(
         `
         SELECT team_id
@@ -344,6 +358,7 @@ export class AiCenterService {
         `,
         [teamId],
       ),
+
       this.db.query(
         `
         SELECT team_id
@@ -353,13 +368,21 @@ export class AiCenterService {
         `,
         [teamId],
       ),
+
       this.db.query(
-        `SELECT COUNT(*)::int AS total
-         FROM ai_activity
-         WHERE team_id = $1
-           AND action IN ('cortexa_chat', 'ai_test', 'test_ai')`,
+        `
+        SELECT COUNT(*)::int AS total
+        FROM ai_activity
+        WHERE team_id = $1
+          AND action IN (
+            'cortexa_chat',
+            'ai_test',
+            'test_ai'
+          )
+        `,
         [teamId],
       ),
+
       this.db.query(
         `
         SELECT
@@ -378,7 +401,6 @@ export class AiCenterService {
 
     const team = teamResult.rows[0] || {};
     const propertyCount = Number(propertiesResult.rows[0]?.total || 0);
-    const automationCount = Number(automationResult.rows[0]?.total || 0);
     const tested =
       Boolean(configResult.rows[0]?.tested) ||
       Number(testResult.rows[0]?.total || 0) > 0;
