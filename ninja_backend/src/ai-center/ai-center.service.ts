@@ -842,78 +842,196 @@ export class AiCenterService {
       launched?: boolean;
     },
   ) {
-    const current = await this.getAgentSetup(teamId);
-
-    if (body.launched === true && !current.launch.unlocked) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+    const currentSetup = await this.getAgentSetup(teamId);
+    if (body.launched === true && !currentSetup.launch.unlocked) {
       throw new ForbiddenException(
         "Complete all required setup steps before launching the AI Agent",
       );
     }
 
-    await this.db.query(
-      `INSERT INTO ai_agent_settings (
-         team_id,
-         business_profile_completed,
-         appointment_rules_configured,
-         behavior_configured,
-         automations_configured,
-         tested,
-         launched,
-         updated_at
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-       ON CONFLICT (team_id)
-       DO UPDATE SET
-         business_profile_completed = COALESCE(
-           $2,
-           ai_agent_settings.business_profile_completed
-         ),
-         appointment_rules_configured = COALESCE(
-           $3,
-           ai_agent_settings.appointment_rules_configured
-         ),
-         behavior_configured = COALESCE(
-           $4,
-           ai_agent_settings.behavior_configured
-         ),
-         automations_configured = COALESCE(
-           $5,
-           ai_agent_settings.automations_configured
-         ),
-         tested = COALESCE($6, ai_agent_settings.tested),
-         launched = COALESCE($7, ai_agent_settings.launched),
-         updated_at = NOW()`,
-      [
-        teamId,
-        body.businessProfileCompleted ?? null,
-        body.appointmentRulesConfigured ?? null,
-        body.behaviorConfigured ?? null,
-        body.automationsConfigured ?? null,
-        body.tested ?? null,
-        body.launched ?? null,
-      ],
+    const currentConfigResult = await this.db.query(
+      `
+      SELECT
+        business_profile_completed,
+        appointment_rules_configured,
+        behavior_configured,
+        automations_configured,
+        tested,
+        launched
+      FROM ai_agent_settings
+      WHERE team_id = $1
+      LIMIT 1
+      `,
+      [teamId],
     );
 
-    if (body.tested === true) {
-      await this.db.query(
-        `INSERT INTO ai_activity (
-           team_id, action, outcome, metadata, created_at
-         )
-         VALUES ($1, 'ai_test', 'success', '{}'::jsonb, NOW())`,
-        [teamId],
-      );
-    }
+    const currentConfig = currentConfigResult.rows[0] || {};
 
-    if (body.launched === true) {
-      await this.db.query(
-        `INSERT INTO ai_activity (
-           team_id, action, outcome, metadata, created_at
-         )
-         VALUES ($1, 'agent_launched', 'success', '{}'::jsonb, NOW())`,
-        [teamId],
-      );
-    }
+    const businessProfileCompleted =
+      body.businessProfileCompleted ??
+      currentConfig.business_profile_completed ??
+      Boolean(currentSetup.businessProfile?.completed);
 
+    const appointmentRulesConfigured =
+      body.appointmentRulesConfigured ??
+      currentConfig.appointment_rules_configured ??
+      Boolean(currentSetup.appointmentRules?.configured);
+
+    const behaviorConfigured =
+      body.behaviorConfigured ??
+      currentConfig.behavior_configured ??
+      Boolean(currentSetup.behavior?.configured);
+
+    const automationsConfigured =
+      body.automationsConfigured ??
+      currentConfig.automations_configured ??
+      Boolean(currentSetup.automations?.configured);
+
+    const tested =
+      body.tested ??
+      currentConfig.tested ??
+      Boolean(currentSetup.testAi?.tested);
+
+    const launched =
+      body.launched ??
+      currentConfig.launched ??
+      Boolean(currentSetup.launch?.launched);
+
+    await this.db.query("BEGIN");
+
+    try {
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_settings (
+        team_id,
+        business_profile_completed,
+        appointment_rules_configured,
+        behavior_configured,
+        automations_configured,
+        tested,
+        launched,
+        updated_at
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        business_profile_completed =
+          EXCLUDED.business_profile_completed,
+
+        appointment_rules_configured =
+          EXCLUDED.appointment_rules_configured,
+
+        behavior_configured =
+          EXCLUDED.behavior_configured,
+
+        automations_configured =
+          EXCLUDED.automations_configured,
+
+        tested =
+          EXCLUDED.tested,
+
+        launched =
+          EXCLUDED.launched,
+
+        updated_at = NOW()
+      `,
+        [
+          teamId,
+          businessProfileCompleted,
+          appointmentRulesConfigured,
+          behaviorConfigured,
+          automationsConfigured,
+          tested,
+          launched,
+        ],
+      );
+
+      if (body.tested === true) {
+        await this.db.query(
+          `
+        INSERT INTO ai_activity (
+          team_id,
+          action,
+          channel,
+          outcome,
+          metadata,
+          created_at
+        )
+        VALUES (
+          $1,
+          'ai_test',
+          'web',
+          'success',
+          '{}'::jsonb,
+          NOW()
+        )
+        `,
+          [teamId],
+        );
+      }
+
+      if (body.launched === true && !currentSetup.launch.launched) {
+        await this.db.query(
+          `
+        INSERT INTO ai_activity (
+          team_id,
+          action,
+          channel,
+          outcome,
+          metadata,
+          created_at
+        )
+        VALUES (
+          $1,
+          'agent_launched',
+          'web',
+          'success',
+          $2::jsonb,
+          NOW()
+        )
+        `,
+          [
+            teamId,
+            JSON.stringify({
+              completedSteps: currentSetup.completedSteps,
+              launchedAt: new Date().toISOString(),
+            }),
+          ],
+        );
+
+        await this.db.query(
+          `
+        UPDATE teams
+        SET
+          ai_auto_reply_enabled = true,
+          ai_appointment_setter_enabled = true,
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+          [teamId],
+        );
+      }
+
+      await this.db.query("COMMIT");
+    } catch (error) {
+      await this.db.query("ROLLBACK");
+      console.error("UPDATE AGENT SETUP ERROR:", error);
+      throw error;
+    }
     return this.getAgentSetup(teamId);
   }
 

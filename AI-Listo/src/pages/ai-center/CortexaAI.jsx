@@ -119,6 +119,17 @@ export default function CortexaAI() {
   const [testAgentSending, setTestAgentSending] = useState(false);
   const [testAgentError, setTestAgentError] = useState("");
   const [testAgentSessionId, setTestAgentSessionId] = useState(null);
+  const [agentSidebarCollapsed, setAgentSidebarCollapsed] = useState(() => {
+    return localStorage.getItem("cx-agent-sidebar-collapsed") === "true";
+  });
+
+  const toggleAgentSidebar = () => {
+    setAgentSidebarCollapsed((current) => {
+      const next = !current;
+      localStorage.setItem("cx-agent-sidebar-collapsed", String(next));
+      return next;
+    });
+  };
   const loadSetup = React.useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
       setLoadingSetup(true);
@@ -480,6 +491,37 @@ export default function CortexaAI() {
       setTestAgentSending(false);
     }
   };
+
+  const [launchingAgent, setLaunchingAgent] = useState(false);
+  const [launchError, setLaunchError] = useState("");
+  const launchAgent = async () => {
+    if (launchingAgent || !setupData?.launch?.unlocked) {
+      return;
+    }
+
+    setLaunchingAgent(true);
+    setLaunchError("");
+
+    try {
+      const updated = await aiAgentSetupService.updateSetup({
+        launched: true,
+      });
+      setSetupData(updated);
+      await loadSetup({
+        silent: true,
+      });
+    } catch (error) {
+      console.error("LAUNCH AI AGENT FAILED:", error);
+
+      setLaunchError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to launch AI Agent.",
+      );
+    } finally {
+      setLaunchingAgent(false);
+    }
+  };
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -710,26 +752,54 @@ export default function CortexaAI() {
   );
   return (
     <>
-      <div className="cx-ai-shell">
-        <aside className="cx-agent-sidebar">
+      <div
+        className={`cx-ai-shell ${
+          agentSidebarCollapsed ? "agent-sidebar-collapsed" : ""
+        }`}
+      >
+        <aside
+          className={`cx-agent-sidebar ${
+            agentSidebarCollapsed ? "collapsed" : ""
+          }`}
+        >
+          <button
+            type="button"
+            className="cx-agent-sidebar-toggle-inside"
+            onClick={toggleAgentSidebar}
+            aria-label={
+              agentSidebarCollapsed
+                ? "Expand AI Agent sidebar"
+                : "Collapse AI Agent sidebar"
+            }
+            title={
+              agentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
+          >
+            <ChevronRight
+              size={18}
+              className={agentSidebarCollapsed ? "" : "is-expanded"}
+            />
+          </button>
           <div className="cx-agent-brand">
             <div className="cx-agent-bot">
               <Bot size={24} />
             </div>
 
-            <div>
-              <h2>AI Agent</h2>
+            {!agentSidebarCollapsed && (
+              <div>
+                <h2>AI Agent</h2>
 
-              <span>
-                <i />
+                <span>
+                  <i />
 
-                {setupData?.agentStatus === "paused"
-                  ? "Paused"
-                  : setupData?.isSetupComplete
-                    ? "Active"
-                    : "Setup"}
-              </span>
-            </div>
+                  {setupData?.agentStatus === "paused"
+                    ? "Paused"
+                    : setupData?.isSetupComplete
+                      ? "Active"
+                      : "Setup"}
+                </span>
+              </div>
+            )}
           </div>
 
           <nav className="cx-agent-menu">
@@ -742,25 +812,32 @@ export default function CortexaAI() {
               return (
                 <button
                   key={item.key}
-                  className={`${activePage === item.key ? "active" : ""} ${
-                    locked ? "locked" : ""
-                  }`}
+                  title={agentSidebarCollapsed ? item.title : undefined}
+                  className={`${
+                    activePage === item.key ? "active" : ""
+                  } ${locked ? "locked" : ""}`}
                   disabled={locked}
                   onClick={() => {
                     if (locked) return;
-
                     setActivePage(item.key);
                   }}
                 >
                   <Icon size={18} />
-
-                  <div>
-                    <strong>{item.title}</strong>
-
-                    <small>{locked ? "Complete setup first" : item.desc}</small>
-                  </div>
-
-                  {locked && <Lock className="cx-agent-menu-lock" size={14} />}
+                  {!agentSidebarCollapsed && (
+                    <>
+                      <div className="cx-agent-status-card">
+                        <div>
+                          <strong>{item.title}</strong>
+                          <small>
+                            {locked ? "Complete setup first" : item.desc}
+                          </small>
+                        </div>
+                      </div>
+                      {locked && (
+                        <Lock className="cx-agent-menu-lock" size={14} />
+                      )}
+                    </>
+                  )}
                 </button>
               );
             })}
@@ -822,6 +899,9 @@ export default function CortexaAI() {
               onBehavior={openBehavior}
               onAutomations={openAutomations}
               onTestAgent={openAgentTest}
+              onLaunch={launchAgent}
+              launchingAgent={launchingAgent}
+              launchError={launchError}
             />
           )}
 
@@ -970,6 +1050,9 @@ function SetupLayout({
   onBehavior,
   onAutomations,
   onTestAgent,
+  onLaunch,
+  launchingAgent,
+  launchError,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};
@@ -1144,7 +1227,10 @@ function SetupLayout({
                           className={`cx-step-action ${
                             step.locked ? "disabled" : ""
                           }`}
-                          disabled={step.locked}
+                          disabled={
+                            step.locked ||
+                            (step.key === "launch" && launchingAgent)
+                          }
                           onClick={() => {
                             if (step.key === "businessProfile") {
                               onBusinessProfile?.();
@@ -1170,10 +1256,16 @@ function SetupLayout({
                               onTestAgent?.();
                               return;
                             }
+                            if (step.key === "launch") {
+                              onLaunch?.();
+                              return;
+                            }
                             setOpenStep(step.id);
                           }}
                         >
-                          {step.action}
+                          {step.key === "launch" && launchingAgent
+                            ? "Launching..."
+                            : step.action}
                         </button>
                       )}
                       <button
@@ -1207,6 +1299,9 @@ function SetupLayout({
                 </article>
               );
             })}
+            {launchError && (
+              <div className="cx-ai-error-banner">{launchError}</div>
+            )}
           </div>
         </section>
 
