@@ -60,6 +60,7 @@ import PropertyImportModal from "./components/PropertyImportModal";
 import AppointmentRulesModal from "./components/AppointmentRulesModal";
 import AIBehaviorModal from "./components/AIBehaviorModal";
 import AutomationModal from "./components/AutomationModal";
+import TestAgentModal from "./components/TestAgentModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -111,6 +112,12 @@ export default function CortexaAI() {
   const [automationsLoading, setAutomationsLoading] = useState(false);
   const [automationsSaving, setAutomationsSaving] = useState(false);
   const [automationsError, setAutomationsError] = useState("");
+
+  const [testAgentOpen, setTestAgentOpen] = useState(false);
+  const [testAgentStatus, setTestAgentStatus] = useState(null);
+  const [testAgentLoading, setTestAgentLoading] = useState(false);
+  const [testAgentSending, setTestAgentSending] = useState(false);
+  const [testAgentError, setTestAgentError] = useState("");
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
@@ -358,6 +365,64 @@ export default function CortexaAI() {
       setAutomationsSaving(false);
     }
   };
+
+  const loadAgentTest = useCallback(async () => {
+    setTestAgentLoading(true);
+    setTestAgentError("");
+
+    try {
+      const data = await aiAgentSetupService.getAgentTest();
+
+      setTestAgentStatus(data);
+
+      return data;
+    } catch (error) {
+      console.error("LOAD AI TEST STATUS FAILED:", error);
+
+      setTestAgentError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load AI test status.",
+      );
+
+      return null;
+    } finally {
+      setTestAgentLoading(false);
+    }
+  }, []);
+
+  const openAgentTest = async () => {
+    setTestAgentOpen(true);
+    await loadAgentTest();
+  };
+
+  const runAgentTest = async (message) => {
+    setTestAgentSending(true);
+    setTestAgentError("");
+
+    try {
+      const response = await aiAgentSetupService.runAgentTest(message);
+
+      await loadAgentTest();
+      await loadSetup();
+
+      setOpenStep(8);
+
+      return response;
+    } catch (error) {
+      console.error("RUN AI TEST FAILED:", error);
+
+      setTestAgentError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to test AI Agent.",
+      );
+
+      throw error;
+    } finally {
+      setTestAgentSending(false);
+    }
+  };
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -587,6 +652,7 @@ export default function CortexaAI() {
           onAppointmentRules={openAppointmentRules}
           onBehavior={openBehavior}
           onAutomations={openAutomations}
+          onTestAgent={openAgentTest}
         />
 
         <BusinessProfileModal
@@ -664,6 +730,21 @@ export default function CortexaAI() {
             }
           }}
           onSave={saveAutomations}
+        />
+
+        <TestAgentModal
+          open={testAgentOpen}
+          status={testAgentStatus}
+          loading={testAgentLoading}
+          sending={testAgentSending}
+          error={testAgentError}
+          onClose={() => {
+            if (!testAgentSending) {
+              setTestAgentOpen(false);
+            }
+          }}
+          onRefresh={loadAgentTest}
+          onSend={runAgentTest}
         />
       </>
     );
@@ -758,6 +839,7 @@ export default function CortexaAI() {
             onAppointmentRules={openAppointmentRules}
             onBehavior={openBehavior}
             onAutomations={openAutomations}
+            onTestAgent={openAgentTest}
           />
         )}
 
@@ -808,6 +890,7 @@ function SetupLayout({
   onAppointmentRules,
   onBehavior,
   onAutomations,
+  onTestAgent,
 }) {
   const setupSteps = useMemo(() => {
     const data = setupData || {};

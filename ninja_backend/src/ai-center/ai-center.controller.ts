@@ -421,4 +421,21 @@ export class AiCenterController {
   ) {
     return this.service.saveAutomations(user.teamId, user.id, body);
   }
+
+  @Get("agent/test")
+  async getTestStatus(@CurrentUser() user: any) {
+    return this.service.getAgentTest(user.teamId);
+  }
+
+  @Post("agent/test")
+  async runAgentTest(
+    @CurrentUser() user: any,
+
+    @Body()
+    body: {
+      message: string;
+    },
+  ) {
+    return this.service.runAgentTest(user.teamId, user.id, body.message);
+  }
 }

@@ -173,6 +173,26 @@ export const aiAgentSetupService = {
       body: JSON.stringify(payload),
     });
   },
+
+  getAgentTest() {
+    return request("/ai-center/agent/test", {
+      method: "GET",
+    });
+  },
+
+  runAgentTest(message) {
+    return request("/ai-center/agent/test", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        message,
+      }),
+    });
+  },
 };
 
 export default aiAgentSetupService;

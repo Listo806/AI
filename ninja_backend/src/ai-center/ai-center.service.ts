@@ -3159,4 +3159,90 @@ export class AiCenterService {
 
     return this.getAutomations(teamId);
   }
+
+  async getAgentTest(teamId: string) {
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        id,
+        metadata,
+        created_at
+      FROM ai_activity
+      WHERE team_id = $1
+        AND action = 'ai_test'
+      ORDER BY created_at DESC
+      LIMIT 10
+      `,
+      [teamId],
+    );
+
+    return {
+      tested: rows.length > 0,
+
+      total: rows.length,
+
+      history: rows.map((row: any) => ({
+        id: row.id,
+        createdAt: row.created_at,
+        metadata: row.metadata || {},
+      })),
+    };
+  }
+
+  async runAgentTest(teamId: string, userId: string, message: string) {
+    if (!message?.trim()) {
+      throw new ForbiddenException("Message is required");
+    }
+
+    const response = await this.cortexaAgent({
+      user: {
+        id: userId,
+        teamId,
+      },
+
+      body: {
+        message,
+      },
+    });
+
+    await this.db.query(
+      `
+    INSERT INTO ai_activity(
+      team_id,
+      action,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES(
+      $1,
+      'ai_test',
+      'success',
+      $2::jsonb,
+      NOW()
+    )
+    `,
+      [
+        teamId,
+
+        JSON.stringify({
+          prompt: message,
+          answer: response.answer,
+        }),
+      ],
+    );
+
+    await this.db.query(
+      `
+    UPDATE ai_agent_settings
+    SET
+      tested = true,
+      updated_at = NOW()
+    WHERE team_id = $1
+    `,
+      [teamId],
+    );
+
+    return response;
+  }
 }
