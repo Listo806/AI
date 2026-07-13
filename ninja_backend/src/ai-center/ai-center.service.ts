@@ -3161,88 +3161,369 @@ export class AiCenterService {
   }
 
   async getAgentTest(teamId: string) {
-    const { rows } = await this.db.query(
-      `
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const [sessionsResult, latestSessionResult] = await Promise.all([
+      this.db.query(
+        `
+      SELECT COUNT(*)::int AS total
+      FROM ai_agent_test_sessions
+      WHERE team_id = $1
+      `,
+        [teamId],
+      ),
+
+      this.db.query(
+        `
       SELECT
         id,
-        metadata,
-        created_at
-      FROM ai_activity
+        title,
+        status,
+        created_at,
+        updated_at
+      FROM ai_agent_test_sessions
       WHERE team_id = $1
-        AND action = 'ai_test'
-      ORDER BY created_at DESC
-      LIMIT 10
+      ORDER BY updated_at DESC
+      LIMIT 1
       `,
-      [teamId],
-    );
+        [teamId],
+      ),
+    ]);
+
+    const latestSession = latestSessionResult.rows[0];
+
+    let messages: any[] = [];
+
+    if (latestSession) {
+      const messagesResult = await this.db.query(
+        `
+        SELECT
+          id,
+          role,
+          content,
+          metadata,
+          created_at
+        FROM ai_agent_test_messages
+        WHERE session_id = $1
+        ORDER BY created_at ASC
+        `,
+        [latestSession.id],
+      );
+
+      messages = messagesResult.rows.map((row: any) => ({
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        metadata: row.metadata || {},
+        createdAt: row.created_at,
+      }));
+    }
+
+    const total = Number(sessionsResult.rows[0]?.total || 0);
 
     return {
-      tested: rows.length > 0,
+      tested: total > 0,
+      total,
 
-      total: rows.length,
-
-      history: rows.map((row: any) => ({
-        id: row.id,
-        createdAt: row.created_at,
-        metadata: row.metadata || {},
-      })),
+      latestSession: latestSession
+        ? {
+            id: latestSession.id,
+            title: latestSession.title,
+            status: latestSession.status,
+            createdAt: latestSession.created_at,
+            updatedAt: latestSession.updated_at,
+            messages,
+          }
+        : null,
     };
   }
 
-  async runAgentTest(teamId: string, userId: string, message: string) {
-    if (!message?.trim()) {
+  async createAgentTestSession(teamId: string, userId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const { rows } = await this.db.query(
+      `
+      INSERT INTO ai_agent_test_sessions (
+        team_id,
+        created_by,
+        title,
+        status,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,
+        $2,
+        'AI Agent Test',
+        'active',
+        NOW(),
+        NOW()
+      )
+      RETURNING
+        id,
+        title,
+        status,
+        created_at,
+        updated_at
+      `,
+      [teamId, userId],
+    );
+
+    const session = rows[0];
+
+    return {
+      id: session.id,
+      title: session.title,
+      status: session.status,
+      createdAt: session.created_at,
+      updatedAt: session.updated_at,
+      messages: [],
+    };
+  }
+
+  async runAgentTest(
+    teamId: string,
+    userId: string,
+    message: string,
+    sessionId?: string,
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const cleanMessage = String(message || "").trim();
+
+    if (!cleanMessage) {
       throw new ForbiddenException("Message is required");
     }
 
-    const response = await this.cortexaAgent({
-      user: {
-        id: userId,
-        teamId,
-      },
+    let activeSessionId = String(sessionId || "").trim();
 
-      body: {
-        message,
-      },
-    });
+    if (activeSessionId) {
+      const sessionResult = await this.db.query(
+        `
+        SELECT id
+        FROM ai_agent_test_sessions
+        WHERE id = $1
+          AND team_id = $2
+        LIMIT 1
+        `,
+        [activeSessionId, teamId],
+      );
 
-    await this.db.query(
+      if (!sessionResult.rows[0]) {
+        activeSessionId = "";
+      }
+    }
+
+    if (!activeSessionId) {
+      const session = await this.createAgentTestSession(teamId, userId);
+
+      activeSessionId = session.id;
+    }
+
+    const userMessageResult = await this.db.query(
       `
-    INSERT INTO ai_activity(
-      team_id,
-      action,
-      outcome,
-      metadata,
-      created_at
-    )
-    VALUES(
-      $1,
-      'ai_test',
-      'success',
-      $2::jsonb,
-      NOW()
-    )
-    `,
-      [
-        teamId,
-
-        JSON.stringify({
-          prompt: message,
-          answer: response.answer,
-        }),
-      ],
+      INSERT INTO ai_agent_test_messages (
+        session_id,
+        role,
+        content,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'user',
+        $2,
+        '{}'::jsonb,
+        NOW()
+      )
+      RETURNING
+        id,
+        role,
+        content,
+        metadata,
+        created_at
+      `,
+      [activeSessionId, cleanMessage],
     );
 
-    await this.db.query(
-      `
-    UPDATE ai_agent_settings
-    SET
-      tested = true,
-      updated_at = NOW()
-    WHERE team_id = $1
-    `,
-      [teamId],
-    );
+    try {
+      const response = await this.cortexaAgent({
+        user: {
+          id: userId,
+          teamId,
+        },
 
-    return response;
+        body: {
+          message: cleanMessage,
+          conversationId: activeSessionId,
+        },
+      });
+
+      const answer = String(
+        response?.answer || "The AI Agent returned no response.",
+      );
+
+      const assistantMessageResult = await this.db.query(
+        `
+        INSERT INTO ai_agent_test_messages (
+          session_id,
+          role,
+          content,
+          metadata,
+          created_at
+        )
+        VALUES (
+          $1,
+          'assistant',
+          $2,
+          $3::jsonb,
+          NOW()
+        )
+        RETURNING
+          id,
+          role,
+          content,
+          metadata,
+          created_at
+        `,
+        [
+          activeSessionId,
+          answer,
+
+          JSON.stringify({
+            usage: response?.usage || null,
+          }),
+        ],
+      );
+
+      await this.db.query(
+        `
+      UPDATE ai_agent_test_sessions
+      SET updated_at = NOW()
+      WHERE id = $1
+      `,
+        [activeSessionId],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_settings (
+        team_id,
+        tested,
+        updated_at
+      )
+      VALUES (
+        $1,
+        true,
+        NOW()
+      )
+
+      ON CONFLICT (team_id)
+
+      DO UPDATE SET
+        tested = true,
+        updated_at = NOW()
+      `,
+        [teamId],
+      );
+
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'ai_test',
+        'web',
+        'success',
+        $2::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+
+          JSON.stringify({
+            userId,
+            sessionId: activeSessionId,
+            prompt: cleanMessage,
+          }),
+        ],
+      );
+
+      const mapMessage = (row: any) => ({
+        id: row.id,
+        role: row.role,
+        content: row.content,
+        metadata: row.metadata || {},
+        createdAt: row.created_at,
+      });
+
+      return {
+        success: true,
+        answer,
+
+        sessionId: activeSessionId,
+
+        conversationId: activeSessionId,
+
+        userMessage: mapMessage(userMessageResult.rows[0]),
+
+        assistantMessage: mapMessage(assistantMessageResult.rows[0]),
+
+        usage: response?.usage || null,
+      };
+    } catch (error: any) {
+      await this.db.query(
+        `
+      INSERT INTO ai_agent_test_messages (
+        session_id,
+        role,
+        content,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'assistant',
+        $2,
+        $3::jsonb,
+        NOW()
+      )
+      `,
+        [
+          activeSessionId,
+
+          "The AI test could not be completed.",
+
+          JSON.stringify({
+            error: error?.message || "Unknown AI error",
+          }),
+        ],
+      );
+
+      await this.db.query(
+        `
+      UPDATE ai_agent_test_sessions
+      SET updated_at = NOW()
+      WHERE id = $1
+      `,
+        [activeSessionId],
+      );
+
+      throw error;
+    }
   }
 }

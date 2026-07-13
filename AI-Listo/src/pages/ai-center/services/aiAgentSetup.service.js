@@ -180,7 +180,13 @@ export const aiAgentSetupService = {
     });
   },
 
-  runAgentTest(message) {
+  createAgentTestSession() {
+    return request("/ai-center/agent/test/sessions", {
+      method: "POST",
+    });
+  },
+
+  runAgentTest(message, sessionId) {
     return request("/ai-center/agent/test", {
       method: "POST",
 
@@ -190,6 +196,7 @@ export const aiAgentSetupService = {
 
       body: JSON.stringify({
         message,
+        sessionId: sessionId || undefined,
       }),
     });
   },

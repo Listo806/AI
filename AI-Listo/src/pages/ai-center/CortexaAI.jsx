@@ -118,6 +118,7 @@ export default function CortexaAI() {
   const [testAgentLoading, setTestAgentLoading] = useState(false);
   const [testAgentSending, setTestAgentSending] = useState(false);
   const [testAgentError, setTestAgentError] = useState("");
+  const [testAgentSessionId, setTestAgentSessionId] = useState(null);
   const loadSetup = React.useCallback(async () => {
     setLoadingSetup(true);
     setPageError("");
@@ -344,12 +345,9 @@ export default function CortexaAI() {
 
     try {
       const saved = await aiAgentSetupService.saveAutomations(payload);
-
       setAutomations(saved);
       setAutomationsOpen(false);
-
       await loadSetup();
-
       setOpenStep(7);
     } catch (error) {
       console.error("SAVE AUTOMATIONS FAILED:", error);
@@ -372,9 +370,8 @@ export default function CortexaAI() {
 
     try {
       const data = await aiAgentSetupService.getAgentTest();
-
       setTestAgentStatus(data);
-
+      setTestAgentSessionId(data?.latestSession?.id || null);
       return data;
     } catch (error) {
       console.error("LOAD AI TEST STATUS FAILED:", error);
@@ -391,6 +388,34 @@ export default function CortexaAI() {
     }
   }, []);
 
+  const createNewAgentTest = async () => {
+    setTestAgentLoading(true);
+    setTestAgentError("");
+
+    try {
+      const session = await aiAgentSetupService.createAgentTestSession();
+      setTestAgentSessionId(session.id);
+      setTestAgentStatus((current) => ({
+        ...(current || {}),
+        latestSession: session,
+      }));
+
+      return session;
+    } catch (error) {
+      console.error("CREATE AI TEST SESSION FAILED:", error);
+
+      setTestAgentError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to start a new test.",
+      );
+
+      throw error;
+    } finally {
+      setTestAgentLoading(false);
+    }
+  };
+
   const openAgentTest = async () => {
     setTestAgentOpen(true);
     await loadAgentTest();
@@ -401,17 +426,44 @@ export default function CortexaAI() {
     setTestAgentError("");
 
     try {
-      const response = await aiAgentSetupService.runAgentTest(message);
+      const response = await aiAgentSetupService.runAgentTest(
+        message,
+        testAgentSessionId,
+      );
 
-      await loadAgentTest();
+      setTestAgentSessionId(response.sessionId);
+
+      setTestAgentStatus((current) => {
+        const currentMessages = current?.latestSession?.messages || [];
+
+        return {
+          ...(current || {}),
+          tested: true,
+          total: Math.max(
+            Number(current?.total || 0),
+            response.sessionId &&
+              current?.latestSession?.id !== response.sessionId
+              ? Number(current?.total || 0) + 1
+              : Number(current?.total || 0),
+          ),
+
+          latestSession: {
+            id: response.sessionId,
+            status: "active",
+            messages: [
+              ...currentMessages,
+              response.userMessage,
+              response.assistantMessage,
+            ],
+          },
+        };
+      });
+
       await loadSetup();
-
       setOpenStep(8);
-
       return response;
     } catch (error) {
       console.error("RUN AI TEST FAILED:", error);
-
       setTestAgentError(
         error?.response?.data?.message ||
           error?.message ||
@@ -744,6 +796,7 @@ export default function CortexaAI() {
             }
           }}
           onRefresh={loadAgentTest}
+          onNewSession={createNewAgentTest}
           onSend={runAgentTest}
         />
       </>
@@ -1087,7 +1140,12 @@ function SetupLayout({
                               onAutomations?.();
                               return;
                             }
+                            if (step.key === "testAi") {
+                              onTestAgent?.();
+                              return;
+                            }
                             setOpenStep(step.id);
+                            onTestAgent;
                           }}
                         >
                           {step.action}

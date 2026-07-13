@@ -3,6 +3,7 @@ import {
   Bot,
   Check,
   MessageSquare,
+  Plus,
   RefreshCw,
   Send,
   Sparkles,
@@ -28,25 +29,50 @@ export default function TestAgentModal({
   onClose,
   onSend,
   onRefresh,
+  onNewSession,
 }) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const listRef = useRef(null);
+  const initializedSessionRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      initializedSessionRef.current = null;
 
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        content:
-          "Your AI Agent is ready for a safe test. Send a message to verify its behavior before launch.",
-      },
-    ]);
+      return;
+    }
+    const sessionId = status?.latestSession?.id || "empty";
+    if (initializedSessionRef.current === sessionId) {
+      return;
+    }
+    initializedSessionRef.current = sessionId;
+    const storedMessages = Array.isArray(status?.latestSession?.messages)
+      ? status.latestSession.messages
+      : [];
+
+    if (storedMessages.length > 0) {
+      setMessages(
+        storedMessages.map((item) => ({
+          id: item.id,
+          role: item.role,
+          content: item.content,
+          error: Boolean(item?.metadata?.error),
+        })),
+      );
+    } else {
+      setMessages([
+        {
+          id: "welcome",
+          role: "assistant",
+          content:
+            "Your AI Agent is ready for a safe test. Send a message to verify its behavior before launch.",
+        },
+      ]);
+    }
 
     setMessage("");
-  }, [open]);
+  }, [open, status?.latestSession?.id]);
 
   useEffect(() => {
     const element = listRef.current;
@@ -77,13 +103,15 @@ export default function TestAgentModal({
 
     try {
       const response = await onSend(clean);
-
       setMessages((current) => [
         ...current,
         {
-          id: `assistant-${Date.now()}`,
+          id: response?.assistantMessage?.id || `assistant-${Date.now()}`,
           role: "assistant",
-          content: response?.answer || "The AI Agent returned no response.",
+          content:
+            response?.assistantMessage?.content ||
+            response?.answer ||
+            "The AI Agent returned no response.",
         },
       ]);
     } catch (requestError) {
@@ -149,7 +177,27 @@ export default function TestAgentModal({
                 : "No previous test runs"}
             </p>
           </div>
-
+          <button
+            type="button"
+            className="cx-test-agent-new-btn"
+            disabled={sending || loading}
+            onClick={async () => {
+              const session = await onNewSession?.();
+              initializedSessionRef.current = session?.id || null;
+              setMessages([
+                {
+                  id: "welcome",
+                  role: "assistant",
+                  content:
+                    "A new safe test session is ready. Send your first message.",
+                },
+              ]);
+              setMessage("");
+            }}
+          >
+            <Plus size={16} />
+            New Test
+          </button>
           <button type="button" onClick={onRefresh} disabled={loading}>
             <RefreshCw size={16} className={loading ? "spin" : ""} />
             Refresh

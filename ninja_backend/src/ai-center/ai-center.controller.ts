@@ -427,6 +427,11 @@ export class AiCenterController {
     return this.service.getAgentTest(user.teamId);
   }
 
+  @Post("agent/test/sessions")
+  async createTestSession(@CurrentUser() user: any) {
+    return this.service.createAgentTestSession(user.teamId, user.id);
+  }
+
   @Post("agent/test")
   async runAgentTest(
     @CurrentUser() user: any,
@@ -434,8 +439,14 @@ export class AiCenterController {
     @Body()
     body: {
       message: string;
+      sessionId?: string;
     },
   ) {
-    return this.service.runAgentTest(user.teamId, user.id, body.message);
+    return this.service.runAgentTest(
+      user.teamId,
+      user.id,
+      body.message,
+      body.sessionId,
+    );
   }
 }
