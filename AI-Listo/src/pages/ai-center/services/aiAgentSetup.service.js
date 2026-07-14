@@ -294,6 +294,31 @@ export const aiAgentSetupService = {
       }),
     });
   },
+
+  getActivityFeed(params = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        query.append(key, value);
+      }
+    });
+
+    return request(`/ai-center/agent/activity-feed?${query.toString()}`);
+  },
+
+  getActivityDetail(id) {
+    return request(`/ai-center/agent/activity-feed/${id}`);
+  },
+
+  exportActivityCsv(params = {}) {
+    return request(
+      `/ai-center/agent/activity-feed/export${buildQuery(params)}`,
+      {
+        method: "GET",
+      },
+    );
+  },
 };
 
 export default aiAgentSetupService;

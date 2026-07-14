@@ -940,16 +940,20 @@
   align-items: center;
   gap: 6px;
 }
-.cx-chat-badges span{
+
+.cx-chat-badges span {
   font-size: 12px;
 }
-.cx-chat-filter-pills{
+
+.cx-chat-filter-pills {
   gap: 3px;
 }
-.cx-chat-filter-pills button{
+
+.cx-chat-filter-pills button {
   padding: 0 10px;
   font-size: 12px;
 }
+
 .cx-chat-badges .lucide-sparkles {
   color: #3d22ff;
 }
@@ -1171,6 +1175,7 @@
   display: block;
   font-size: 18px;
   color: #071153;
+  text-align: left;
 }
 
 .cx-stat-mini span {
@@ -1452,11 +1457,44 @@
   font-size: 14px;
 }
 
+.cx-activity-filters select {
+  height: 40px;
+  border: 1px solid #dfe4f2;
+  border-radius: 9px;
+  background: #fff;
+  color: #273363;
+  padding: 0 12px;
+}
+
+.cx-activity-search {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dfe4f2;
+  border-radius: 9px;
+  background: #fff;
+  color: #071153;
+  outline: none;
+  align-items: center;
+  display: flex;
+}
+
+.cx-activity-search input {
+  height: 38px;
+  width: 92%;
+  padding: 0 5px;
+  border: 0;
+  outline: none;
+}
+.cx-activity-pagination-info{
+  font-size: 13px;
+  color: #26376d;
+}
 .cx-activity-row {
   min-height: 76px;
   border-top: 1px solid #e8ebf5;
   display: grid;
-  grid-template-columns: 50px 7px 32px minmax(0, 1fr) 106px 70px;
+  grid-template-columns: 50px 7px 32px minmax(0, 1fr) 106px 15px;
   gap: 10px;
   align-items: center;
   padding: 0 12px;
@@ -1520,6 +1558,7 @@
   border-radius: 7px;
   margin-left: 5px;
   color: #071153;
+  cursor: pointer;
 }
 
 .cx-pagination button.active {
@@ -1898,7 +1937,9 @@
   text-align: left;
   margin-top: -20px;
 }
-
+.cx-activity-layout .cx-ai-error-banner {
+  margin: 0 10px 20px 10px;
+}
 .cx-chat-message-list {
   max-height: 320px;
   overflow-y: auto;
@@ -2438,6 +2479,7 @@
   font-size: 11px;
   line-height: 1.5;
 }
+
 .cx-category-row.active {
   background: #e4d8e440;
 }
@@ -2457,6 +2499,7 @@
 .cx-category-row em.inactive {
   color: #6b7280;
 }
+
 .cx-knowledge-health-content {
   margin-top: 18px;
   display: grid;
@@ -2502,7 +2545,7 @@
     stroke-dashoffset 0.35s ease;
 }
 
-.cx-knowledge-score-ring > strong {
+.cx-knowledge-score-ring>strong {
   position: absolute;
   color: #11194f;
   font-size: 29px;
@@ -2525,7 +2568,7 @@
   text-align: left;
 }
 
-.cx-knowledge-health-list > div {
+.cx-knowledge-health-list>div {
   display: grid;
   grid-template-columns:
     18px minmax(0, 1fr) auto;
@@ -2547,18 +2590,17 @@
   font-size: 11px;
 }
 
-.cx-knowledge-health-list
-  .warning svg {
+.cx-knowledge-health-list .warning svg {
   color: #f59e0b;
 }
 
-.cx-knowledge-health-card
-  > .cx-full-btn {
+.cx-knowledge-health-card>.cx-full-btn {
   width: 100%;
   margin-top: 20px;
   justify-content: center;
   gap: 8px;
 }
+
 .cx-quick-row {
   width: 100%;
   padding: 13px 4px;
@@ -2585,7 +2627,7 @@
   background: #faf9ff;
 }
 
-.cx-quick-row > div {
+.cx-quick-row>div {
   min-width: 0;
 }
 
@@ -2602,7 +2644,7 @@
   line-height: 1.4;
 }
 
-.cx-quick-row > svg {
+.cx-quick-row>svg {
   color: #5e6887;
 }
 
@@ -2634,6 +2676,7 @@
   background: #f3eaff;
   color: #8b3fe6;
 }
+
 .cx-task-avatar-fallback {
   width: 34px;
   height: 34px;
@@ -2685,11 +2728,13 @@
 .cx-white-card h2 em.paused i {
   background: #dc2626;
 }
+
 @media (max-width: 1200px) {
   .cx-knowledge-health-content {
     grid-template-columns: 1fr;
   }
 }
+
 @media (max-width: 1350px) {
   .cx-chat-layout.has-history {
     grid-template-columns:

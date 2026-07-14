@@ -4798,40 +4798,240 @@ export class AiCenterService {
       `,
         [
           teamId,
-
           JSON.stringify({
             userId,
-
             imported: importedItems.length,
-
             rejected: rejectedItems.length,
-
             categories: Array.from(
               new Set(importedItems.map((item) => item.category)),
             ),
           }),
         ],
       );
-
       await this.db.query("COMMIT");
-
       return {
         success: true,
-
         imported: importedItems.length,
-
         rejected: rejectedItems.length,
-
         rejectedItems,
-
         items: importedItems.map((row: any) => this.mapKnowledgeItem(row)),
       };
     } catch (error) {
       await this.db.query("ROLLBACK");
-
       console.error("IMPORT AI KNOWLEDGE ERROR:", error);
-
       throw error;
     }
+  }
+
+  private escapeCsvValue(value: unknown) {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    const text =
+      typeof value === "object" ? JSON.stringify(value) : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  async exportAgentActivityCsv(
+    teamId: string,
+
+    params: {
+      type?: string;
+      status?: string;
+      search?: string;
+    } = {},
+  ) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+
+    const values: any[] = [teamId];
+
+    const where: string[] = ["activity.team_id = $1"];
+
+    const type = String(params.type || "all")
+      .trim()
+      .toLowerCase();
+
+    const status = String(params.status || "all")
+      .trim()
+      .toLowerCase();
+
+    const search = String(params.search || "").trim();
+
+    if (type && type !== "all") {
+      values.push(type);
+
+      const typeParam = `$${values.length}`;
+
+      where.push(`
+      (
+        LOWER(
+          COALESCE(
+            activity.action,
+            ''
+          )
+        ) LIKE '%' || ${typeParam} || '%'
+
+        OR LOWER(
+          COALESCE(
+            activity.channel,
+            ''
+          )
+        ) = ${typeParam}
+
+        OR LOWER(
+          COALESCE(
+            activity.metadata->>'type',
+            ''
+          )
+        ) = ${typeParam}
+
+        OR LOWER(
+          COALESCE(
+            activity.metadata->>'category',
+            ''
+          )
+        ) = ${typeParam}
+      )
+    `);
+    }
+
+    if (status && status !== "all") {
+      values.push(status);
+
+      const statusParam = `$${values.length}`;
+
+      where.push(`
+      LOWER(
+        COALESCE(
+          activity.outcome,
+          ''
+        )
+      ) = ${statusParam}
+    `);
+    }
+
+    if (search) {
+      values.push(`%${search}%`);
+
+      const searchParam = `$${values.length}`;
+
+      where.push(`
+      (
+        activity.action
+          ILIKE ${searchParam}
+
+        OR activity.channel
+          ILIKE ${searchParam}
+
+        OR activity.outcome
+          ILIKE ${searchParam}
+
+        OR activity.metadata::text
+          ILIKE ${searchParam}
+      )
+    `);
+    }
+
+    const result = await this.db.query(
+      `
+      SELECT
+        activity.id,
+        activity.action,
+        activity.channel,
+        activity.outcome,
+        activity.metadata,
+        activity.created_at
+
+      FROM ai_activity activity
+
+      WHERE ${where.join(" AND ")}
+
+      ORDER BY
+        activity.created_at DESC
+      `,
+      values,
+    );
+
+    const headers = [
+      "ID",
+      "Date",
+      "Time",
+      "Action",
+      "Type",
+      "Channel",
+      "Status",
+      "Title",
+      "Description",
+      "Lead",
+      "Contact",
+      "Property",
+      "Prompt",
+      "AI Response",
+      "Execution Time",
+      "Tokens",
+      "Confidence",
+    ];
+
+    const rows = result.rows.map((row: any) => {
+      const metadata =
+        row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+      const createdAt = row.created_at ? new Date(row.created_at) : null;
+      const date =
+        createdAt && !Number.isNaN(createdAt.getTime())
+          ? createdAt.toISOString().slice(0, 10)
+          : "";
+
+      const time =
+        createdAt && !Number.isNaN(createdAt.getTime())
+          ? createdAt.toISOString().slice(11, 19)
+          : "";
+
+      const itemType =
+        metadata.type ||
+        metadata.category ||
+        metadata.iconKey ||
+        row.channel ||
+        "";
+
+      const values = [
+        row.id,
+        date,
+        time,
+        row.action,
+        itemType,
+        row.channel,
+        row.outcome,
+        metadata.title || metadata.label || "",
+        metadata.description || metadata.summary || "",
+        metadata.leadName || metadata.lead_name || "",
+        metadata.contactName || metadata.contact_name || "",
+        metadata.propertyTitle ||
+          metadata.property_title ||
+          metadata.propertyAddress ||
+          "",
+
+        metadata.prompt || metadata.userMessage || "",
+        metadata.response || metadata.aiResponse || metadata.answer || "",
+        metadata.executionTimeMs || metadata.durationMs || "",
+        metadata.tokens || metadata.totalTokens || "",
+        metadata.confidence || metadata.confidenceScore || "",
+      ];
+      return values.map((value) => this.escapeCsvValue(value)).join(",");
+    });
+
+    const csv = [
+      headers.map((header) => this.escapeCsvValue(header)).join(","),
+      ...rows,
+    ].join("\r\n");
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    return {
+      filename: `ai-agent-activity-${timestamp}.csv`,
+      mimeType: "text/csv;charset=utf-8",
+      total: result.rows.length,
+      csv,
+    };
   }
 }

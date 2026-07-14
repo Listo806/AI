@@ -77,7 +77,6 @@ export default function CortexaAI() {
   const [setupData, setSetupData] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [knowledgeData, setKnowledgeData] = useState(null);
-  const [activityData, setActivityData] = useState(null);
   const [controlsData, setControlsData] = useState(null);
 
   const [loadingSetup, setLoadingSetup] = useState(true);
@@ -851,6 +850,100 @@ export default function CortexaAI() {
     }
   };
 
+  const [activityData, setActivityData] = useState(null);
+  const [activityFilters, setActivityFilters] = useState({
+    page: 1,
+    limit: 20,
+    type: "all",
+    status: "all",
+    search: "",
+  });
+
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState("");
+  const [activityDrawer, setActivityDrawer] = useState(null);
+  const [activityDetailLoading, setActivityDetailLoading] = useState(false);
+  const [activityExporting, setActivityExporting] = useState(false);
+  const loadActivity = useCallback(
+    async (nextFilters, { silent = false } = {}) => {
+      const resolvedFilters = {
+        page: 1,
+        limit: 20,
+        type: "all",
+        status: "all",
+        search: "",
+        ...(nextFilters || {}),
+      };
+      if (!silent) {
+        setActivityLoading(true);
+      }
+      setActivityError("");
+      try {
+        const data = await aiAgentSetupService.getActivityFeed(resolvedFilters);
+        setActivityData(data);
+        setActivityFilters(resolvedFilters);
+        return data;
+      } catch (error) {
+        console.error("LOAD ACTIVITY FAILED:", error);
+        setActivityError(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Unable to load AI activity.",
+        );
+        return null;
+      } finally {
+        if (!silent) {
+          setActivityLoading(false);
+        }
+      }
+    },
+    [],
+  );
+
+  const exportActivityCsv = async () => {
+    if (activityExporting) {
+      return;
+    }
+    setActivityExporting(true);
+    setActivityError("");
+
+    try {
+      const response = await aiAgentSetupService.exportActivityCsv({
+        type: activityFilters.type,
+        status: activityFilters.status,
+        search: activityFilters.search,
+      });
+      const csv = String(response?.csv || "");
+
+      if (!csv) {
+        throw new Error("No activity data available to export.");
+      }
+
+      const blob = new Blob(["\uFEFF", csv], {
+        type: response?.mimeType || "text/csv;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download =
+        response?.filename || `ai-agent-activity-${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("EXPORT ACTIVITY CSV FAILED:", error);
+      setActivityError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to export AI activity.",
+      );
+    } finally {
+      setActivityExporting(false);
+    }
+  };
+
   useEffect(() => {
     loadSetup();
   }, [loadSetup]);
@@ -887,10 +980,13 @@ export default function CortexaAI() {
         }
 
         if (activePage === "activity") {
-          data = await request(
-            "/ai-center/agent/activity-feed?page=1&limit=25&type=all&status=all",
-          );
-          if (!cancelled) setActivityData(data);
+          await loadActivity({
+            page: 1,
+            limit: activityFilters.limit,
+            type: activityFilters.type,
+            status: activityFilters.status,
+            search: activityFilters.search,
+          });
         }
 
         if (activePage === "controls") {
@@ -921,6 +1017,7 @@ export default function CortexaAI() {
     setupData?.isSetupComplete,
     loadChatSessions,
     knowledgeFilters,
+    loadActivity,
   ]);
 
   const sendChatMessage = async (text) => {
@@ -1016,12 +1113,32 @@ export default function CortexaAI() {
     }
   };
 
+  const openActivity = async (item) => {
+    if (!item?.id) {
+      return;
+    }
+    setActivityDetailLoading(true);
+    setActivityError("");
+    try {
+      const detail = await aiAgentSetupService.getActivityDetail(item.id);
+      setActivityDrawer(detail);
+    } catch (error) {
+      console.error("LOAD ACTIVITY DETAIL FAILED:", error);
+      setActivityError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to load activity details.",
+      );
+    } finally {
+      setActivityDetailLoading(false);
+    }
+  };
+
   const saveControls = async (nextControls) => {
     const response = await request("/ai-center/agent/controls", {
       method: "PUT",
       body: JSON.stringify(nextControls),
     });
-
     setControlsData(response);
     return response;
   };
@@ -1428,7 +1545,43 @@ export default function CortexaAI() {
           {setupData?.isSetupComplete && activePage === "activity" && (
             <ActivityLayout
               activityData={activityData}
-              onDataChange={setActivityData}
+              loading={activityLoading}
+              error={activityError}
+              filters={activityFilters}
+              exporting={activityExporting}
+              onExport={exportActivityCsv}
+              onFilterChange={(patch) => {
+                const nextFilters = {
+                  ...activityFilters,
+                  ...patch,
+                };
+                if (
+                  patch.type !== undefined ||
+                  patch.status !== undefined ||
+                  patch.search !== undefined
+                ) {
+                  nextFilters.page = 1;
+                }
+                loadActivity(nextFilters);
+              }}
+              onPageChange={(page) => {
+                loadActivity({
+                  ...activityFilters,
+                  page,
+                });
+              }}
+              onRefresh={() =>
+                loadActivity(
+                  {
+                    ...activityFilters,
+                    page: 1,
+                  },
+                  {
+                    silent: false,
+                  },
+                )
+              }
+              onOpen={openActivity}
             />
           )}
 
@@ -2916,142 +3069,69 @@ function KnowledgeLayout({
   );
 }
 
-function ActivityLayout({ activityData, onDataChange }) {
-  const rows = [
-    [
-      "9:45 AM",
-      "Qualified Lead",
-      "AI qualified Maria Lopez as a hot lead (Score: 92%)",
-      MessageCircle,
-      "Completed",
-    ],
-    [
-      "9:43 AM",
-      "Booked Appointment",
-      "AI booked a property showing for tomorrow at 11:00 AM",
-      CalendarDays,
-      "Completed",
-    ],
-    [
-      "9:40 AM",
-      "Recommended Properties",
-      "AI recommended 4 properties to Maria Lopez",
-      Home,
-      "Completed",
-    ],
-    [
-      "9:37 AM",
-      "Sent Follow-up Message",
-      "AI sent follow-up message via WhatsApp",
-      Send,
-      "Completed",
-    ],
-    [
-      "9:21 AM",
-      "Lead Scored",
-      "AI updated lead score for Carlos Martinez (78%)",
-      Star,
-      "Completed",
-    ],
-    [
-      "9:18 AM",
-      "Email Sent",
-      "AI sent property details via email",
-      Mail,
-      "Completed",
-    ],
-    [
-      "9:12 AM",
-      "Data Enriched",
-      "AI enriched lead data from public sources",
-      Database,
-      "Completed",
-    ],
-    [
-      "9:08 AM",
-      "Hot Lead Alert",
-      "AI escalated David Smith as hot lead",
-      Bell,
-      "Escalated",
-    ],
-  ];
-  const activityTypes = [
-    {
-      label: "Messages",
-      value: "62 (40%)",
-      percent: 40,
-      icon: MessageCircle,
-      accent: "green",
-    },
-    {
-      label: "Appointments",
-      value: "28 (18%)",
-      percent: 18,
-      icon: CalendarDays,
-      accent: "orange",
-    },
-    {
-      label: "Lead Updates",
-      value: "24 (15%)",
-      percent: 15,
-      icon: Home,
-      accent: "purple",
-    },
-    {
-      label: "Data Updates",
-      value: "20 (13%)",
-      percent: 13,
-      icon: Database,
-      accent: "blue",
-    },
-    {
-      label: "Alerts",
-      value: "12 (8%)",
-      percent: 8,
-      icon: TriangleAlert,
-      accent: "red",
-    },
-    {
-      label: "Others",
-      value: "10 (6%)",
-      percent: 6,
-      icon: MoreHorizontal,
-      accent: "gray",
-    },
-  ];
-  const topActions = [
-    {
-      icon: UserRoundCheck,
-      title: "Lead Qualification",
-      total: 32,
-      accent: "green",
-    },
-    {
-      icon: MessageCircle,
-      title: "Auto Replies",
-      total: 28,
-      accent: "green",
-    },
-    {
-      icon: Home,
-      title: "Property Recommendations",
-      total: 24,
-      accent: "purple",
-    },
-    {
-      icon: CalendarDays,
-      title: "Appointments Booked",
-      total: 20,
-      accent: "orange",
-    },
-    {
-      icon: Send,
-      title: "Follow-up Messages",
-      total: 18,
-      accent: "blue",
-    },
-  ];
+function ActivityLayout({
+  activityData,
+  loading,
+  error,
+  filters,
+  exporting,
+  onExport,
+  onFilterChange,
+  onPageChange,
+  onRefresh,
+  onOpen,
+}) {
+  const items = Array.isArray(activityData?.items) ? activityData.items : [];
+  const activityByType = Array.isArray(activityData?.activityByType)
+    ? activityData.activityByType
+    : [];
+  const topActions = Array.isArray(activityData?.topActions)
+    ? activityData.topActions
+    : [];
+  const currentPage = Number(activityData?.page || filters?.page || 1);
+  const totalPages = Number(activityData?.totalPages || 1);
+  const totalItems = Number(activityData?.total || 0);
+  const limit = Number(activityData?.limit || filters?.limit || 20);
+  const startItem = totalItems > 0 ? (currentPage - 1) * limit + 1 : 0;
+  const endItem = Math.min(currentPage * limit, totalItems);
+  const getVisiblePages = () => {
+    if (totalPages <= 7) {
+      return Array.from(
+        {
+          length: totalPages,
+        },
+        (_, index) => index + 1,
+      );
+    }
 
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "ellipsis-right", totalPages];
+    }
+
+    if (currentPage >= totalPages - 3) {
+      return [
+        1,
+        "ellipsis-left",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+
+    return [
+      1,
+      "ellipsis-left",
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      "ellipsis-right",
+      totalPages,
+    ];
+  };
+
+  const visiblePages = getVisiblePages();
   const apiRows = (activityData?.items || []).map((item) => [
     item.timeLabel || "",
     item.title || "AI Activity",
@@ -3069,18 +3149,10 @@ function ActivityLayout({ activityData, onDataChange }) {
     item.leadName || "",
   ]);
 
-  const displayRows = apiRows.length ? apiRows : rows;
+  const displayRows = apiRows.length ? apiRows : items;
   const overview = activityData?.overview || {};
-  const activityTypesData =
-    Array.isArray(activityData?.activityByType) &&
-    activityData.activityByType.length > 0
-      ? activityData.activityByType
-      : activityTypes;
-  const topActionsData =
-    Array.isArray(activityData?.topActions) &&
-    activityData.topActions.length > 0
-      ? activityData.topActions
-      : topActions;
+  const activityTypesData = activityByType;
+  const topActionsData = topActions;
 
   const getActivityTypeIcon = (label = "") => {
     const normalized = String(label).trim().toLowerCase();
@@ -3159,69 +3231,203 @@ function ActivityLayout({ activityData, onDataChange }) {
           <h1>Activity</h1>
           <p>See everything your AI Agent has done across your business.</p>
         </div>
-        <button className="cx-primary-outline">
-          <Upload size={17} /> Export Activity
+        <button
+          type="button"
+          className="cx-primary-outline"
+          disabled={exporting}
+          onClick={onExport}
+        >
+          {exporting ? (
+            <RefreshCw size={17} className="cx-ai-loading-spinner" />
+          ) : (
+            <Upload size={17} />
+          )}
+
+          {exporting ? "Exporting..." : "Export Activity"}
         </button>
       </div>
 
       <div className="cx-activity-layout">
         <main>
           <div className="cx-activity-filters">
-            <button>
-              <CalendarDays size={17} /> May 17 - May 23, 2024{" "}
-              <ChevronDown size={16} />
+            <select
+              value={filters?.type || "all"}
+              onChange={(event) =>
+                onFilterChange({
+                  type: event.target.value,
+                })
+              }
+            >
+              <option value="all">All Types</option>
+              <option value="conversation">Conversations</option>
+              <option value="knowledge">Knowledge</option>
+              <option value="appointment">Appointments</option>
+              <option value="automation">Automations</option>
+              <option value="lead">Lead Updates</option>
+              <option value="property">Property Updates</option>
+              <option value="alert">Alerts</option>
+            </select>
+
+            <select
+              value={filters?.status || "all"}
+              onChange={(event) =>
+                onFilterChange({
+                  status: event.target.value,
+                })
+              }
+            >
+              <option value="all">All Statuses</option>
+              <option value="success">Completed</option>
+              <option value="failed">Failed</option>
+              <option value="escalated">Escalated</option>
+              <option value="pending">Pending</option>
+            </select>
+
+            <label className="cx-activity-search">
+              <Search size={17} />
+              <input
+                value={filters?.search || ""}
+                placeholder="Search activity..."
+                onChange={(event) =>
+                  onFilterChange({
+                    search: event.target.value,
+                  })
+                }
+              />
+            </label>
+
+            <button type="button" onClick={onRefresh} disabled={loading}>
+              <RefreshCw
+                size={17}
+                className={loading ? "cx-ai-loading-spinner" : ""}
+              />
+              Refresh
             </button>
-            <button>
-              All Types <ChevronDown size={16} />
-            </button>
-            <button>
-              All Status <ChevronDown size={16} />
-            </button>
-            <div>
-              <Search size={17} /> Search activity...
-            </div>
           </div>
 
           <div className="cx-white-card cx-timeline-card">
-            <h4>Today - May 23, 2024</h4>
-
-            {displayRows.map(
-              ([time, title, desc, Icon, status, leadName], index) => (
-                <div
-                  className="cx-activity-row"
-                  key={`${title}-${time}-${index}`}
-                >
-                  <time>{time}</time>
-                  <div className="cx-line-dot" />
-                  <div
-                    className={`cx-small-icon ${index % 3 === 0 ? "green" : index % 3 === 1 ? "orange" : "blue"}`}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <div>
-                    <strong>{title}</strong>
-                    <p>{desc}</p>
-                  </div>
-                  <span>{leadName ? `Lead: ${leadName}` : "AI Agent"}</span>
-                  <em className={status === "Escalated" ? "warning" : ""}>
-                    {status}
-                  </em>
-                </div>
-              ),
-            )}
-
-            <div className="cx-pagination">
-              <span>Showing 1 to 25 of 156 activities</span>
-              <div>
-                <button>‹</button>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>...</button>
-                <button>7</button>
-                <button>›</button>
+            <h4>Recent AI Activity</h4>
+            {error && <div className="cx-ai-error-banner">{error}</div>}
+            {loading && items.length === 0 ? (
+              <div className="cx-activity-empty">
+                <RefreshCw className="cx-ai-loading-spinner" size={20} />
+                Loading activity...
               </div>
-            </div>
+            ) : items.length > 0 ? (
+              items.map((item, index) => {
+                const iconKey = String(
+                  item?.iconKey || item?.type || item?.action || "",
+                ).toLowerCase();
+                const Icon = iconKey.includes("appointment")
+                  ? CalendarDays
+                  : iconKey.includes("property")
+                    ? Home
+                    : iconKey.includes("knowledge")
+                      ? BookOpen
+                      : iconKey.includes("alert")
+                        ? TriangleAlert
+                        : iconKey.includes("lead")
+                          ? UserRoundCheck
+                          : iconKey.includes("data")
+                            ? Database
+                            : iconKey.includes("message") ||
+                                iconKey.includes("conversation")
+                              ? MessageCircle
+                              : Sparkles;
+
+                const status = String(
+                  item?.status || item?.outcome || "success",
+                ).toLowerCase();
+
+                return (
+                  <div
+                    type="button"
+                    className="cx-activity-row"
+                    key={item.id || `${item.title}-${item.createdAt}-${index}`}
+                    onClick={() => onOpen?.(item)}
+                  >
+                    <time>
+                      {item.timeLabel || formatRelativeTime(item.createdAt)}
+                    </time>
+                    <div className="cx-line-dot" />
+                    <div className={`cx-small-icon ${item.accent || "purple"}`}>
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <strong>{item.title || "AI Activity"}</strong>
+                      <p>
+                        {item.description ||
+                          item.summary ||
+                          "AI Agent activity recorded."}
+                      </p>
+                    </div>
+                    <span
+                      className={`cx-activity-status cx-status-pill ${status}`}
+                    >
+                      {item.statusLabel ||
+                        (status === "success" ? "Completed" : status)}
+                    </span>
+                    <ChevronRight size={17} />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="cx-activity-empty">
+                <Activity size={28} />
+                <strong>No activity found</strong>
+                <p>Try changing the filters or search.</p>
+              </div>
+            )}
+            {totalPages > 1 && (
+              <div className="cx-activity-pagination cx-pagination">
+                <div className="cx-activity-pagination-info">
+                  Showing {startItem}–{endItem} of {totalItems} activities
+                </div>
+
+                <div className="cx-activity-pagination-controls">
+                  <button
+                    type="button"
+                    disabled={loading || currentPage <= 1}
+                    onClick={() => onPageChange(currentPage - 1)}
+                  >
+                    ‹
+                  </button>
+
+                  {visiblePages.map((page, index) => {
+                    if (typeof page !== "number") {
+                      return (
+                        <span
+                          key={`${page}-${index}`}
+                          className="cx-pagination-ellipsis"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <button
+                        type="button"
+                        key={page}
+                        className={page === currentPage ? "active" : ""}
+                        disabled={loading}
+                        onClick={() => onPageChange(page)}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    disabled={loading || currentPage >= totalPages}
+                    onClick={() => onPageChange(currentPage + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
 

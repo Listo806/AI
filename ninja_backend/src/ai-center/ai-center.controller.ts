@@ -654,4 +654,27 @@ export class AiCenterController {
       body.items || [],
     );
   }
+
+  @Get("agent/activity-feed/export")
+  @ApiOperation({
+    summary: "Export AI Agent activity as CSV",
+  })
+  async exportAgentActivityCsv(
+    @CurrentUser() user: any,
+
+    @Query("type")
+    type?: string,
+
+    @Query("status")
+    status?: string,
+
+    @Query("search")
+    search?: string,
+  ) {
+    return this.service.exportAgentActivityCsv(user.teamId, {
+      type,
+      status,
+      search,
+    });
+  }
 }
