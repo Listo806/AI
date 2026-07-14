@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 
 import apiClient from "../../api/apiClient";
+import { useAuth } from "../../context/AuthContext";
 import WhatsAppConnectCard from "./components/WhatsAppConnectCard";
 import { useWhatsAppSetup } from "./hooks/useWhatsAppSetup";
 import "./CortexaAI.css";
@@ -67,6 +68,7 @@ import KnowledgeImportModal from "./components/KnowledgeImportModal";
 import KnowledgeInsightsModal from "./components/KnowledgeInsightsModal";
 
 export default function CortexaAI() {
+  const { user } = useAuth();
   const [activePage, setActivePage] = useState("setup");
   const [openStep, setOpenStep] = useState(1);
   const [message, setMessage] = useState("");
@@ -1325,6 +1327,7 @@ export default function CortexaAI() {
 
           {setupData?.isSetupComplete && activePage === "chat" && (
             <ChatLayout
+              user={user}
               message={message}
               setMessage={setMessage}
               dashboardData={dashboardData}
@@ -1339,6 +1342,7 @@ export default function CortexaAI() {
               onSend={sendChatMessage}
               onNewChat={createNewChat}
               onSelectSession={loadChatSession}
+              onOpenActivity={() => setActivePage("activity")}
             />
           )}
 
@@ -1931,6 +1935,7 @@ function SetupLayout({
 }
 
 function ChatLayout({
+  user,
   message,
   setMessage,
   dashboardData,
@@ -1949,45 +1954,143 @@ function ChatLayout({
   onSend,
   onNewChat,
   onSelectSession,
+  onOpenActivity,
 }) {
-  const prompts = [
+  const chatShortcuts = [
     {
+      key: "leads",
+      label: "Leads",
+      icon: Users,
+      prompt:
+        "Give me an overview of my active leads and which ones need attention.",
+    },
+    {
+      key: "properties",
+      label: "Properties",
+      icon: Home,
+      prompt:
+        "Give me an overview of available properties and recent buyer matches.",
+    },
+    {
+      key: "appointments",
+      label: "Appointments",
+      icon: CalendarDays,
+      prompt: "Show me upcoming, confirmed, and overdue appointments.",
+    },
+    {
+      key: "pipeline",
+      label: "Pipeline",
+      icon: Sparkles,
+      prompt: "Summarize my pipeline and highlight deals at risk.",
+    },
+  ];
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return "Good morning";
+    }
+
+    if (hour < 18) {
+      return "Good afternoon";
+    }
+
+    return "Good evening";
+  };
+
+  const displayName =
+    user?.name ||
+    user?.fullName ||
+    user?.firstName ||
+    user?.email?.split("@")?.[0] ||
+    "there";
+
+  const firstName = String(displayName).trim().split(/\s+/)[0] || "there";
+
+  const fallbackPrompts = [
+    {
+      key: "leads_attention",
       icon: MessageSquare,
       title: "What leads need attention today?",
-      desc: "Show me hot and overdue leads.",
+      prompt:
+        "Show me hot, overdue, and uncontacted leads that need attention today.",
+      desc: "Review hot and overdue leads.",
       accent: "purple",
     },
     {
+      key: "likely_buyers",
       icon: Zap,
       title: "Which buyers are most likely to buy?",
-      desc: "Show me my hottest buyer leads.",
+      prompt: "Show me the buyer leads most likely to convert, with reasons.",
+      desc: "Review your highest-intent buyers.",
       accent: "orange",
     },
     {
+      key: "appointments_today",
       icon: CalendarDays,
-      title: "What appointments did you book today?",
-      desc: "Show today’s confirmed appointments.",
+      title: "What appointments are booked today?",
+      prompt: "Show me today's booked and confirmed appointments.",
+      desc: "Review today’s appointments.",
       accent: "blue",
     },
     {
+      key: "follow_up",
       icon: MessageCircle,
-      title: "Write a follow-up for Maria Lopez",
-      desc: "Create a WhatsApp follow-up message.",
+      title: "Write a follow-up message",
+      prompt:
+        "Help me write a professional follow-up message for a lead who has not replied.",
+      desc: "Create a lead follow-up message.",
       accent: "green",
     },
     {
+      key: "property_match",
       icon: Home,
-      title: "Find properties for a 3 bedroom buyer",
-      desc: "Show me the best matching properties.",
+      title: "Find matching properties",
+      prompt: "Show me recent property matches for active buyer leads.",
+      desc: "Review matching properties.",
       accent: "green",
     },
     {
+      key: "pipeline_summary",
       icon: FileText,
       title: "Summarize my pipeline",
-      desc: "Give me a quick update on my pipeline.",
+      prompt:
+        "Summarize my current pipeline, including risks, overdue deals, and next actions.",
+      desc: "Get a quick pipeline update.",
       accent: "purple",
     },
   ];
+
+  const apiPrompts = Array.isArray(dashboardData?.suggestedPrompts)
+    ? dashboardData.suggestedPrompts
+    : [];
+
+  const prompts =
+    apiPrompts.length > 0
+      ? apiPrompts.map((item, index) => ({
+          key: item.key || `prompt-${index}`,
+
+          title: item.title || item.prompt || "Ask AI Agent",
+
+          prompt: item.prompt || item.title || "",
+
+          desc: item.description || item.desc || "",
+
+          accent:
+            item.accent || ["purple", "orange", "blue", "green"][index % 4],
+
+          icon:
+            item.type === "appointment"
+              ? CalendarDays
+              : item.type === "property"
+                ? Home
+                : item.type === "pipeline"
+                  ? Sparkles
+                  : item.type === "lead"
+                    ? Users
+                    : MessageSquare,
+        }))
+      : fallbackPrompts;
 
   return (
     <div className="cx-ai-page cx-chat-page">
@@ -2076,7 +2179,9 @@ function ChatLayout({
             <div className="cx-hero-bot">
               <Bot size={44} />
             </div>
-            <h2>Good morning, John! 👋</h2>
+            <h2>
+              {getGreeting()}, {firstName}! 👋
+            </h2>
             <p>
               I’m your AI Agent. I can help you with leads, properties,
               appointments, follow-ups and more.
@@ -2101,9 +2206,11 @@ function ChatLayout({
               const Icon = item.icon;
               return (
                 <button
-                  key={item.title}
+                  type="button"
+                  key={item.key || item.title}
                   className="cx-prompt-card"
-                  onClick={() => onSend(item.title)}
+                  disabled={sendingMessage}
+                  onClick={() => onSend(item.prompt || item.title)}
                 >
                   <div className="cx-promt-card-wrap">
                     <div className={`cx-small-icon ${item.accent}`}>
@@ -2118,20 +2225,33 @@ function ChatLayout({
           </div>
 
           <div className="cx-chat-filter-pills">
-            <button>
-              <Users size={17} /> Leads
-            </button>
-            <button>
-              <Home size={17} /> Properties
-            </button>
-            <button>
-              <CalendarDays size={17} /> Appointments
-            </button>
-            <button>
-              <Sparkles size={17} /> Pipeline
-            </button>
-            <button>
-              <ChevronDown size={17} /> More
+            {chatShortcuts.map((shortcut) => {
+              const Icon = shortcut.icon;
+
+              return (
+                <button
+                  type="button"
+                  key={shortcut.key}
+                  disabled={sendingMessage}
+                  onClick={() => onSend(shortcut.prompt)}
+                >
+                  <Icon size={17} />
+                  {shortcut.label}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              disabled={sendingMessage}
+              onClick={() =>
+                onSend(
+                  "What other useful insights or actions can you help me with today?",
+                )
+              }
+            >
+              <ChevronDown size={17} />
+              More
             </button>
           </div>
 
@@ -2194,8 +2314,15 @@ function ChatLayout({
 
         <aside className="cx-right-column">
           <GlanceCard data={dashboardData?.glance} />
-          <PriorityTasks tasks={dashboardData?.priorityTasks} />
-          <RecentActivityMini items={dashboardData?.recentActivity} />
+          <PriorityTasks
+            tasks={dashboardData?.priorityTasks}
+            onViewAll={onOpenActivity}
+          />
+
+          <RecentActivityMini
+            items={dashboardData?.recentActivity}
+            onViewAll={onOpenActivity}
+          />
         </aside>
       </div>
     </div>
@@ -3560,37 +3687,61 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
 }
 
 function GlanceCard({ data = {} }) {
+  const conversations = Number(
+    data?.conversations ?? data?.conversationsToday ?? 0,
+  );
+
+  const leadsContacted = Number(
+    data?.leadsContacted ?? data?.leadsContactedToday ?? 0,
+  );
+
+  const appointmentsBooked = Number(
+    data?.appointmentsBooked ?? data?.appointmentsToday ?? 0,
+  );
+
+  const propertiesShared = Number(
+    data?.propertiesShared ?? data?.propertiesSharedToday ?? 0,
+  );
+
+  const status = data?.status || data?.agentStatus || "live";
+
   return (
     <div className="cx-white-card">
       <h2>
-        AI Agent at a glance{" "}
-        <em>
-          <i></i>Live
+        AI Agent at a glance
+        <em className={status === "paused" ? "paused" : ""}>
+          <i />
+
+          {status === "paused" ? "Paused" : "Live"}
         </em>
       </h2>
+
       <div className="cx-glance-grid">
         <StatMini
           icon={MessageSquare}
           title="Conversations"
-          value="124"
+          value={conversations}
           desc="Today"
         />
+
         <StatMini
           icon={Users}
           title="Leads Contacted"
-          value="56"
+          value={leadsContacted}
           desc="Today"
         />
+
         <StatMini
           icon={CalendarDays}
           title="Appointments Booked"
-          value="8"
+          value={appointmentsBooked}
           desc="Today"
         />
+
         <StatMini
           icon={Home}
           title="Properties Shared"
-          value="23"
+          value={propertiesShared}
           desc="Today"
         />
       </div>
@@ -3598,55 +3749,183 @@ function GlanceCard({ data = {} }) {
   );
 }
 
-function PriorityTasks({ tasks = [] }) {
+const formatRelativeTime = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 60) {
+    return "Just now";
+  }
+
+  const minutes = Math.floor(seconds / 60);
+
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+
+  return `${days}d ago`;
+};
+
+function PriorityTasks({ tasks = [], onViewAll }) {
+  const rows = Array.isArray(tasks) ? tasks : [];
+
   return (
     <div className="cx-white-card">
       <h2>
-        Priority Tasks <button>View all</button>
+        Priority Tasks
+        {rows.length > 0 && (
+          <button type="button" onClick={onViewAll}>
+            View all
+          </button>
+        )}
       </h2>
-      {[
-        "Follow up with Maria Lopez",
-        "Respond to David Smith",
-        "Appointment with James Hall",
-        "Send listings to Ana Torres",
-      ].map((x, i) => (
-        <div className="cx-task-row" key={x}>
-          <img src={`https://i.pravatar.cc/60?img=${11 + i}`} alt="" />
-          <div>
-            <strong>{x}</strong>
-            <p>
-              {i === 1 ? "WhatsApp" : "Lead"} · {i + 1}m ago
-            </p>
-          </div>
-          <em>{["High", "Medium", "High", "Low"][i]}</em>
+
+      {rows.length > 0 ? (
+        rows.slice(0, 4).map((task) => {
+          const priority = String(
+            task.priority || task.priorityLabel || "medium",
+          ).toLowerCase();
+
+          const name =
+            task.contactName || task.leadName || task.assigneeName || "";
+
+          const initials = String(name || task.title || "AI")
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join("")
+            .toUpperCase();
+
+          return (
+            <div
+              className="cx-task-row"
+              key={task.id || `${task.title}-${task.createdAt}`}
+            >
+              {task.avatarUrl ? (
+                <img src={task.avatarUrl} alt={name} />
+              ) : (
+                <span className="cx-task-avatar-fallback">{initials}</span>
+              )}
+
+              <div>
+                <strong>{task.title || "Priority task"}</strong>
+
+                <p>
+                  {task.typeLabel || task.type || "Task"}
+
+                  {task.createdAt || task.dueAt ? (
+                    <>
+                      {" · "}
+                      {formatRelativeTime(task.createdAt || task.dueAt)}
+                    </>
+                  ) : null}
+                </p>
+              </div>
+
+              <em className={priority}>
+                {priority.charAt(0).toUpperCase() + priority.slice(1)}
+              </em>
+            </div>
+          );
+        })
+      ) : (
+        <div className="cx-mini-empty">
+          <CheckCircle2 size={22} />
+          <p>No priority tasks right now.</p>
         </div>
-      ))}
+      )}
     </div>
   );
 }
 
-function RecentActivityMini({ items = [] }) {
+function RecentActivityMini({ items = [], onViewAll }) {
+  const rows = Array.isArray(items) ? items : [];
+
+  const getActivityIcon = (item) => {
+    const value = String(
+      item.iconKey || item.type || item.action || "",
+    ).toLowerCase();
+
+    if (value.includes("appointment") || value.includes("book")) {
+      return CalendarDays;
+    }
+
+    if (value.includes("property")) {
+      return Home;
+    }
+
+    if (
+      value.includes("whatsapp") ||
+      value.includes("message") ||
+      value.includes("reply")
+    ) {
+      return MessageCircle;
+    }
+
+    if (value.includes("lead")) {
+      return Users;
+    }
+
+    if (value.includes("complete")) {
+      return CheckCircle2;
+    }
+
+    return Sparkles;
+  };
+
   return (
     <div className="cx-white-card">
       <h2>
-        Recent Activity <button>View all</button>
+        Recent Activity
+        {rows.length > 0 && (
+          <button type="button" onClick={onViewAll}>
+            View all
+          </button>
+        )}
       </h2>
-      {[
-        "Booked appointment with James Hall",
-        "Sent 3 properties to Maria Lopez",
-        "New lead message from David Smith",
-        "Follow-up completed for Ana Torres",
-      ].map((x, i) => (
-        <div className="cx-mini-activity" key={x}>
-          <div className={`cx-small-icon ${i % 2 ? "blue" : "green"}`}>
-            <CheckCircle2 size={18} />
-          </div>
-          <div>
-            <strong>{x}</strong>
-            <p>Today at {["11:32 AM", "10:45 AM", "10:12 AM", "9:40 AM"][i]}</p>
-          </div>
+
+      {rows.length > 0 ? (
+        rows.slice(0, 4).map((item) => {
+          const Icon = getActivityIcon(item);
+
+          return (
+            <div
+              className="cx-mini-activity"
+              key={item.id || `${item.title}-${item.createdAt}`}
+            >
+              <div className={`cx-small-icon ${item.accent || "purple"}`}>
+                <Icon size={17} />
+              </div>
+
+              <div>
+                <strong>{item.title || item.label || "AI activity"}</strong>
+
+                <p>{item.timeLabel || formatRelativeTime(item.createdAt)}</p>
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div className="cx-mini-empty">
+          <Activity size={22} />
+          <p>No recent AI activity.</p>
         </div>
-      ))}
+      )}
     </div>
   );
 }

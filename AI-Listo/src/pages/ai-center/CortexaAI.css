@@ -940,6 +940,9 @@
   align-items: center;
   gap: 6px;
 }
+.cx-chat-badges span{
+  font-size: 12px;
+}
 .cx-chat-filter-pills{
   gap: 3px;
 }
@@ -2631,7 +2634,57 @@
   background: #f3eaff;
   color: #8b3fe6;
 }
+.cx-task-avatar-fallback {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  background: #eeeaff;
+  color: #5d3fe5;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+}
 
+.cx-task-row em.high {
+  background: #fff0f0;
+  color: #e23b3b;
+}
+
+.cx-task-row em.medium {
+  background: #fff5e7;
+  color: #d67a12;
+}
+
+.cx-task-row em.low {
+  background: #edf4ff;
+  color: #3171db;
+}
+
+.cx-mini-empty {
+  min-height: 100px;
+  color: #8690aa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.cx-mini-empty p {
+  margin: 0;
+  font-size: 11px;
+}
+
+.cx-white-card h2 em.paused {
+  color: #dc2626;
+}
+
+.cx-white-card h2 em.paused i {
+  background: #dc2626;
+}
 @media (max-width: 1200px) {
   .cx-knowledge-health-content {
     grid-template-columns: 1fr;
