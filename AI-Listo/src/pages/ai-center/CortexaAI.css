@@ -2872,11 +2872,9 @@
 
 .cx-activity-detail-section {
   margin-bottom: 18px;
-  padding: 15px;
-
+  padding: 15px!important;
   border: 1px solid #e7eaf3;
   border-radius: 11px;
-
   background: #ffffff;
 }
 
