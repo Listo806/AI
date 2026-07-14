@@ -319,6 +319,12 @@ export const aiAgentSetupService = {
       },
     );
   },
+
+  getActivityDetail(id) {
+    return request(`/ai-center/agent/activity-feed/${id}`, {
+      method: "GET",
+    });
+  },
 };
 
 export default aiAgentSetupService;

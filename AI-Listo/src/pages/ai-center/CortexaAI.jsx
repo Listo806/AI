@@ -49,6 +49,7 @@ import {
   Timer,
   MoreHorizontal,
   Trash2,
+  X,
 } from "lucide-react";
 
 import apiClient from "../../api/apiClient";
@@ -864,6 +865,7 @@ export default function CortexaAI() {
   const [activityDrawer, setActivityDrawer] = useState(null);
   const [activityDetailLoading, setActivityDetailLoading] = useState(false);
   const [activityExporting, setActivityExporting] = useState(false);
+  const [activitySummaryModal, setActivitySummaryModal] = useState(null);
   const loadActivity = useCallback(
     async (nextFilters, { silent = false } = {}) => {
       const resolvedFilters = {
@@ -1459,7 +1461,17 @@ export default function CortexaAI() {
               onSend={sendChatMessage}
               onNewChat={createNewChat}
               onSelectSession={loadChatSession}
-              onOpenActivity={() => setActivePage("activity")}
+              onOpenActivity={(filters = {}) => {
+                setActivePage("activity");
+
+                setTimeout(() => {
+                  loadActivity({
+                    ...activityFilters,
+                    page: 1,
+                    ...filters,
+                  });
+                }, 0);
+              }}
             />
           )}
 
@@ -1582,6 +1594,35 @@ export default function CortexaAI() {
                 )
               }
               onOpen={openActivity}
+              onViewActivityTypes={() => {
+                setActivitySummaryModal({
+                  type: "activity_types",
+                  title: "Activity by Type",
+                  items: Array.isArray(activityData?.activityByType)
+                    ? activityData.activityByType
+                    : [],
+                });
+              }}
+              onViewTopActions={() => {
+                setActivitySummaryModal({
+                  type: "top_actions",
+                  title: "Top Actions",
+                  items: Array.isArray(activityData?.topActions)
+                    ? activityData.topActions
+                    : [],
+                });
+              }}
+              onViewRecentRuns={() => {
+                setActivitySummaryModal({
+                  type: "recent_runs",
+                  title: "Recent AI Runs",
+                  items: Array.isArray(activityData?.recentRuns)
+                    ? activityData.recentRuns
+                    : Array.isArray(activityData?.recentAiRuns)
+                      ? activityData.recentAiRuns
+                      : [],
+                });
+              }}
             />
           )}
 
@@ -1730,6 +1771,32 @@ export default function CortexaAI() {
         open={knowledgeInsightsOpen}
         data={knowledgeData}
         onClose={() => setKnowledgeInsightsOpen(false)}
+      />
+
+      <ActivityDetailDrawer
+        open={Boolean(activityDrawer) || activityDetailLoading}
+        loading={activityDetailLoading}
+        activity={activityDrawer}
+        onClose={() => {
+          if (!activityDetailLoading) {
+            setActivityDrawer(null);
+          }
+        }}
+      />
+
+      <ActivitySummaryModal
+        open={Boolean(activitySummaryModal)}
+        title={activitySummaryModal?.title}
+        type={activitySummaryModal?.type}
+        items={activitySummaryModal?.items || []}
+        onClose={() => setActivitySummaryModal(null)}
+        onOpenActivity={(item) => {
+          setActivitySummaryModal(null);
+
+          if (item?.id) {
+            openActivity(item);
+          }
+        }}
       />
     </>
   );
@@ -2469,12 +2536,23 @@ function ChatLayout({
           <GlanceCard data={dashboardData?.glance} />
           <PriorityTasks
             tasks={dashboardData?.priorityTasks}
-            onViewAll={onOpenActivity}
+            onViewAll={() =>
+              onOpenActivity?.({
+                page: 1,
+                type: "task",
+                status: "pending",
+              })
+            }
           />
 
           <RecentActivityMini
             items={dashboardData?.recentActivity}
-            onViewAll={onOpenActivity}
+            onViewAll={() =>
+              onOpenActivity?.({
+                type: "all",
+                page: 1,
+              })
+            }
           />
         </aside>
       </div>
@@ -3080,6 +3158,9 @@ function ActivityLayout({
   onPageChange,
   onRefresh,
   onOpen,
+  onViewActivityTypes,
+  onViewTopActions,
+  onViewRecentRuns,
 }) {
   const items = Array.isArray(activityData?.items) ? activityData.items : [];
   const activityByType = Array.isArray(activityData?.activityByType)
@@ -3154,6 +3235,42 @@ function ActivityLayout({
   const activityTypesData = activityByType;
   const topActionsData = topActions;
 
+  const recentRunsData = Array.isArray(activityData?.recentRuns)
+    ? activityData.recentRuns
+    : Array.isArray(activityData?.recentAiRuns)
+      ? activityData.recentAiRuns
+      : [];
+  const getRecentRunIcon = (item = {}) => {
+    const value = String(
+      item.type || item.action || item.title || "",
+    ).toLowerCase();
+
+    if (value.includes("property")) {
+      return Home;
+    }
+
+    if (value.includes("appointment")) {
+      return CalendarDays;
+    }
+
+    if (value.includes("lead")) {
+      return UserRoundCheck;
+    }
+
+    if (value.includes("knowledge")) {
+      return BookOpen;
+    }
+
+    if (
+      value.includes("message") ||
+      value.includes("reply") ||
+      value.includes("follow")
+    ) {
+      return Send;
+    }
+
+    return Sparkles;
+  };
   const getActivityTypeIcon = (label = "") => {
     const normalized = String(label).trim().toLowerCase();
 
@@ -3464,9 +3581,12 @@ function ActivityLayout({
 
           <div className="cx-white-card">
             <h2>
-              Activity by Type <button>View all</button>
+              Activity by Type
+              <button type="button" onClick={onViewActivityTypes}>
+                View all
+              </button>
             </h2>
-            {activityTypesData.map((item, index) => {
+            {activityTypesData.slice(0, 6).map((item, index) => {
               const Icon = item.icon || getActivityTypeIcon(item.label);
 
               return (
@@ -3474,17 +3594,25 @@ function ActivityLayout({
                   className="cx-bar-row has-icon"
                   key={`${item.label}-${index}`}
                 >
-                  <div className={`cx-bar-icon ${item.accent}`}>
+                  <div className={`cx-bar-icon ${item.accent || "purple"}`}>
                     <Icon size={14} />
                   </div>
+
                   <span>{item.label}</span>
+
                   <div className="cx-bar-track">
                     <i
-                      className={item.accent}
-                      style={{ width: `${item.percent}%` }}
+                      className={item.accent || "purple"}
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.max(0, Number(item.percent || 0)),
+                        )}%`,
+                      }}
                     />
                   </div>
-                  <strong>{item.value}</strong>
+
+                  <strong>{item.value ?? item.total ?? 0}</strong>
                 </div>
               );
             })}
@@ -3493,11 +3621,13 @@ function ActivityLayout({
           <div className="cx-white-card">
             <h2>
               Top Actions
-              <button>View all</button>
+              <button type="button" onClick={onViewTopActions}>
+                View all
+              </button>
             </h2>
 
             <div className="cx-top-actions-list">
-              {topActionsData.map((item, index) => {
+              {topActionsData.slice(0, 5).map((item, index) => {
                 const Icon = item.icon || getTopActionIcon(item.title);
 
                 return (
@@ -3505,11 +3635,13 @@ function ActivityLayout({
                     className="cx-top-action-row"
                     key={`${item.title}-${index}`}
                   >
-                    <div className={`cx-bar-icon ${item.accent}`}>
+                    <div className={`cx-bar-icon ${item.accent || "purple"}`}>
                       <Icon size={15} />
                     </div>
+
                     <span>{item.title}</span>
-                    <strong>{item.total}</strong>
+
+                    <strong>{Number(item.total || item.count || 0)}</strong>
                   </div>
                 );
               })}
@@ -3518,24 +3650,66 @@ function ActivityLayout({
 
           <div className="cx-white-card">
             <h2>
-              Recent AI Runs <button>View all</button>
+              Recent AI Runs
+              <button
+                type="button"
+                onClick={onViewRecentRuns}
+                disabled={recentRunsData.length === 0}
+              >
+                View all
+              </button>
             </h2>
-            <div className="cx-run-row">
-              <Send size={18} />
-              <div>
-                <strong>AI Follow-up Campaign</strong>
-                <p>May 23, 2024 at 9:00 AM</p>
+
+            {recentRunsData.length > 0 ? (
+              recentRunsData.slice(0, 4).map((item, index) => {
+                const Icon = getRecentRunIcon(item);
+
+                const status = String(
+                  item.status || item.outcome || "success",
+                ).toLowerCase();
+
+                return (
+                  <button
+                    type="button"
+                    className="cx-run-row"
+                    key={item.id || `${item.title}-${index}`}
+                    onClick={() => item.id && onOpen?.(item)}
+                  >
+                    <Icon size={18} />
+
+                    <div>
+                      <strong>
+                        {item.title || item.actionLabel || "AI Run"}
+                      </strong>
+
+                      <p>
+                        {item.timeLabel ||
+                          formatRelativeTime(item.createdAt || item.created_at)}
+                      </p>
+                    </div>
+
+                    <em
+                      className={
+                        status === "failed" || status === "error"
+                          ? "danger"
+                          : status === "escalated"
+                            ? "warning"
+                            : ""
+                      }
+                    >
+                      {item.statusLabel ||
+                        (status === "success" ? "Completed" : status)}
+                    </em>
+                  </button>
+                );
+              })
+            ) : (
+              <div className="cx-mini-empty">
+                <Sparkles size={22} />
+
+                <p>No recent AI runs.</p>
               </div>
-              <em>Completed</em>
-            </div>
-            <div className="cx-run-row">
-              <Home size={18} />
-              <div>
-                <strong>Property Matching</strong>
-                <p>May 23, 2024 at 8:30 AM</p>
-              </div>
-              <em>Completed</em>
-            </div>
+            )}
           </div>
         </aside>
       </div>
@@ -3543,6 +3717,406 @@ function ActivityLayout({
   );
 }
 
+function ActivityDetailDrawer({ open, loading, activity, onClose }) {
+  if (!open) {
+    return null;
+  }
+
+  const data = activity || {};
+  const metadata =
+    data?.metadata && typeof data.metadata === "object" ? data.metadata : {};
+  const status = String(data.status || data.outcome || "success").toLowerCase();
+  const title =
+    data.title ||
+    metadata.title ||
+    data.actionLabel ||
+    data.action ||
+    "AI Activity";
+
+  const description =
+    data.description ||
+    data.summary ||
+    metadata.description ||
+    metadata.summary ||
+    "";
+
+  const prompt =
+    data.prompt ||
+    metadata.prompt ||
+    metadata.userMessage ||
+    metadata.user_message ||
+    "";
+
+  const response =
+    data.response ||
+    data.aiResponse ||
+    metadata.response ||
+    metadata.aiResponse ||
+    metadata.answer ||
+    "";
+
+  const createdAt =
+    data.createdAt || data.created_at || metadata.createdAt || null;
+  const copyText = async (value) => {
+    const text = String(value || "");
+    if (!text) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      console.error("COPY ACTIVITY TEXT FAILED:", error);
+    }
+  };
+
+  const detailRows = [
+    {
+      label: "Activity ID",
+      value: data.id,
+    },
+    {
+      label: "Action",
+      value: data.action || metadata.action,
+    },
+    {
+      label: "Type",
+      value: data.type || data.iconKey || metadata.type || metadata.category,
+    },
+    {
+      label: "Channel",
+      value: data.channel || metadata.channel,
+    },
+    {
+      label: "Created",
+      value: createdAt ? new Date(createdAt).toLocaleString() : "",
+    },
+    {
+      label: "Execution time",
+      value:
+        data.executionTimeMs ?? metadata.executionTimeMs ?? metadata.durationMs,
+      suffix: " ms",
+    },
+    {
+      label: "Tokens",
+      value: data.tokens ?? metadata.tokens ?? metadata.totalTokens,
+    },
+    {
+      label: "Confidence",
+      value: data.confidence ?? metadata.confidence ?? metadata.confidenceScore,
+      suffix:
+        Number(
+          data.confidence ?? metadata.confidence ?? metadata.confidenceScore,
+        ) <= 1
+          ? "%"
+          : "",
+      transform: (value) => {
+        const number = Number(value);
+
+        if (Number.isNaN(number)) {
+          return value;
+        }
+
+        return number <= 1 ? Math.round(number * 100) : number;
+      },
+    },
+  ].filter(
+    (row) => row.value !== undefined && row.value !== null && row.value !== "",
+  );
+
+  const relatedRows = [
+    {
+      label: "Lead",
+      value: data.leadName || metadata.leadName || metadata.lead_name,
+    },
+    {
+      label: "Contact",
+      value: data.contactName || metadata.contactName || metadata.contact_name,
+    },
+    {
+      label: "Property",
+      value:
+        data.propertyTitle ||
+        metadata.propertyTitle ||
+        metadata.property_title ||
+        metadata.propertyAddress,
+    },
+    {
+      label: "Appointment",
+      value:
+        data.appointmentTitle ||
+        metadata.appointmentTitle ||
+        metadata.appointment_title,
+    },
+    {
+      label: "Conversation",
+      value:
+        data.conversationId || metadata.conversationId || metadata.sessionId,
+    },
+  ].filter(
+    (row) => row.value !== undefined && row.value !== null && row.value !== "",
+  );
+
+  return (
+    <div className="cx-activity-drawer-backdrop" onMouseDown={onClose}>
+      <aside
+        className="cx-activity-detail-drawer"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="cx-activity-drawer-head">
+          <div>
+            <span>
+              <Activity size={21} />
+            </span>
+            <div>
+              <p>AI Activity</p>
+              <h2>{title}</h2>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close activity details"
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        {loading ? (
+          <div className="cx-activity-drawer-loading">
+            <RefreshCw className="cx-ai-loading-spinner" size={22} />
+            Loading activity details...
+          </div>
+        ) : (
+          <div className="cx-activity-drawer-body">
+            <div className="cx-activity-detail-status">
+              <span className={`cx-activity-status ${status}`}>
+                {data.statusLabel ||
+                  (status === "success" ? "Completed" : status)}
+              </span>
+
+              {createdAt && <time>{new Date(createdAt).toLocaleString()}</time>}
+            </div>
+
+            {description && (
+              <section className="cx-activity-detail-section">
+                <h3>Summary</h3>
+
+                <p>{description}</p>
+              </section>
+            )}
+
+            {detailRows.length > 0 && (
+              <section className="cx-activity-detail-section">
+                <h3>Execution Details</h3>
+
+                <div className="cx-activity-detail-grid">
+                  {detailRows.map((row) => {
+                    const value = row.transform
+                      ? row.transform(row.value)
+                      : row.value;
+
+                    return (
+                      <div key={row.label}>
+                        <span>{row.label}</span>
+
+                        <strong>
+                          {value}
+                          {row.suffix || ""}
+                        </strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {prompt && (
+              <section className="cx-activity-detail-section">
+                <div className="cx-activity-detail-title-row">
+                  <h3>Prompt</h3>
+
+                  <button type="button" onClick={() => copyText(prompt)}>
+                    <Copy size={15} />
+                    Copy
+                  </button>
+                </div>
+
+                <div className="cx-activity-text-box">{prompt}</div>
+              </section>
+            )}
+
+            {response && (
+              <section className="cx-activity-detail-section">
+                <div className="cx-activity-detail-title-row">
+                  <h3>AI Response</h3>
+
+                  <button type="button" onClick={() => copyText(response)}>
+                    <Copy size={15} />
+                    Copy
+                  </button>
+                </div>
+
+                <div className="cx-activity-text-box response">{response}</div>
+              </section>
+            )}
+
+            {relatedRows.length > 0 && (
+              <section className="cx-activity-detail-section">
+                <h3>Related Records</h3>
+
+                <div className="cx-activity-related-list">
+                  {relatedRows.map((row) => (
+                    <div key={row.label}>
+                      <span>{row.label}</span>
+
+                      <strong>{row.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {Object.keys(metadata).length > 0 && (
+              <details className="cx-activity-metadata">
+                <summary>Raw Metadata</summary>
+
+                <pre>{JSON.stringify(metadata, null, 2)}</pre>
+              </details>
+            )}
+          </div>
+        )}
+      </aside>
+    </div>
+  );
+}
+function ActivitySummaryModal({
+  open,
+  title,
+  type,
+  items,
+  onClose,
+  onOpenActivity,
+}) {
+  if (!open) {
+    return null;
+  }
+
+  const rows = Array.isArray(items) ? items : [];
+
+  const getIcon = (item = {}) => {
+    const value = String(
+      item.label || item.title || item.type || item.action || "",
+    ).toLowerCase();
+
+    if (value.includes("appointment")) {
+      return CalendarDays;
+    }
+
+    if (value.includes("property")) {
+      return Home;
+    }
+
+    if (value.includes("lead")) {
+      return UserRoundCheck;
+    }
+
+    if (value.includes("knowledge")) {
+      return BookOpen;
+    }
+
+    if (value.includes("message") || value.includes("reply")) {
+      return MessageCircle;
+    }
+
+    if (value.includes("alert")) {
+      return TriangleAlert;
+    }
+
+    return Sparkles;
+  };
+
+  return (
+    <div className="cx-activity-summary-backdrop" onMouseDown={onClose}>
+      <div
+        className="cx-activity-summary-modal"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header>
+          <div>
+            <span>
+              <Activity size={21} />
+            </span>
+
+            <div>
+              <h2>{title || "Activity Summary"}</h2>
+
+              <p>
+                {rows.length} item
+                {rows.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
+          <button type="button" onClick={onClose}>
+            <X size={20} />
+          </button>
+        </header>
+
+        <div className="cx-activity-summary-list">
+          {rows.length > 0 ? (
+            rows.map((item, index) => {
+              const Icon = getIcon(item);
+
+              const clickable = Boolean(item?.id);
+
+              return (
+                <button
+                  type="button"
+                  key={item.id || `${item.label || item.title}-${index}`}
+                  className={clickable ? "" : "not-clickable"}
+                  onClick={() => {
+                    if (clickable) {
+                      onOpenActivity?.(item);
+                    }
+                  }}
+                >
+                  <div className={`cx-bar-icon ${item.accent || "purple"}`}>
+                    <Icon size={16} />
+                  </div>
+
+                  <div>
+                    <strong>{item.title || item.label || "AI Activity"}</strong>
+
+                    <p>
+                      {type === "activity_types"
+                        ? `${Number(item.percent || 0)}% of activity`
+                        : item.description ||
+                          item.timeLabel ||
+                          formatRelativeTime(
+                            item.createdAt || item.created_at,
+                          ) ||
+                          ""}
+                    </p>
+                  </div>
+
+                  <span>{item.value ?? item.total ?? item.count ?? ""}</span>
+
+                  {clickable && <ChevronRight size={17} />}
+                </button>
+              );
+            })
+          ) : (
+            <div className="cx-activity-summary-empty">
+              <Activity size={28} />
+
+              <strong>No data available</strong>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
   const tabs = [
     "General",
@@ -3957,33 +4531,23 @@ function GlanceCard({ data = {} }) {
 
 const formatRelativeTime = (value) => {
   if (!value) return "";
-
   const date = new Date(value);
-
   if (Number.isNaN(date.getTime())) {
     return String(value);
   }
-
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-
   if (seconds < 60) {
     return "Just now";
   }
-
   const minutes = Math.floor(seconds / 60);
-
   if (minutes < 60) {
     return `${minutes}m ago`;
   }
-
   const hours = Math.floor(minutes / 60);
-
   if (hours < 24) {
     return `${hours}h ago`;
   }
-
   const days = Math.floor(hours / 24);
-
   return `${days}d ago`;
 };
 
@@ -4027,13 +4591,10 @@ function PriorityTasks({ tasks = [], onViewAll }) {
               ) : (
                 <span className="cx-task-avatar-fallback">{initials}</span>
               )}
-
               <div>
                 <strong>{task.title || "Priority task"}</strong>
-
                 <p>
                   {task.typeLabel || task.type || "Task"}
-
                   {task.createdAt || task.dueAt ? (
                     <>
                       {" · "}
@@ -4061,7 +4622,6 @@ function PriorityTasks({ tasks = [], onViewAll }) {
 
 function RecentActivityMini({ items = [], onViewAll }) {
   const rows = Array.isArray(items) ? items : [];
-
   const getActivityIcon = (item) => {
     const value = String(
       item.iconKey || item.type || item.action || "",
@@ -4117,10 +4677,8 @@ function RecentActivityMini({ items = [], onViewAll }) {
               <div className={`cx-small-icon ${item.accent || "purple"}`}>
                 <Icon size={17} />
               </div>
-
               <div>
                 <strong>{item.title || item.label || "AI activity"}</strong>
-
                 <p>{item.timeLabel || formatRelativeTime(item.createdAt)}</p>
               </div>
             </div>

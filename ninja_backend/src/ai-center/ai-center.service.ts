@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException } from "@nestjs/common";
+import { Injectable, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import OpenAI from "openai";
 import { S3Service } from "../common/aws/s3.service";
@@ -5032,6 +5032,120 @@ export class AiCenterService {
       mimeType: "text/csv;charset=utf-8",
       total: result.rows.length,
       csv,
+    };
+  }
+  async getAgentActivityDetail(teamId: string, activityId: string) {
+    if (!teamId) {
+      throw new ForbiddenException("Team is required");
+    }
+    if (!activityId) {
+      throw new NotFoundException("Activity ID is required");
+    }
+    const result = await this.db.query(
+      `
+      SELECT
+        activity.id,
+        activity.team_id,
+        activity.action,
+        activity.channel,
+        activity.outcome,
+        activity.metadata,
+        activity.created_at
+
+      FROM ai_activity activity
+
+      WHERE activity.id = $1
+        AND activity.team_id = $2
+
+      LIMIT 1
+      `,
+      [activityId, teamId],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      throw new NotFoundException("AI activity not found");
+    }
+    const metadata =
+      row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+    const action = String(row.action || "");
+    const normalizedAction = action
+      .replace(/[._-]+/g, " ")
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+
+    return {
+      id: row.id,
+
+      action,
+      actionLabel:
+        metadata.actionLabel ||
+        metadata.title ||
+        normalizedAction ||
+        "AI Activity",
+
+      title:
+        metadata.title || metadata.label || normalizedAction || "AI Activity",
+      description: metadata.description || metadata.summary || "",
+      type: metadata.type || metadata.category || row.channel || action,
+      iconKey: metadata.iconKey || metadata.type || action,
+      channel: row.channel,
+      outcome: row.outcome,
+      status: row.outcome || metadata.status || "success",
+      statusLabel:
+        metadata.statusLabel ||
+        (row.outcome === "success" ? "Completed" : row.outcome),
+      prompt:
+        metadata.prompt || metadata.userMessage || metadata.user_message || "",
+
+      response:
+        metadata.response ||
+        metadata.aiResponse ||
+        metadata.ai_response ||
+        metadata.answer ||
+        "",
+
+      executionTimeMs:
+        metadata.executionTimeMs ??
+        metadata.execution_time_ms ??
+        metadata.durationMs ??
+        metadata.duration_ms ??
+        null,
+
+      tokens:
+        metadata.tokens ??
+        metadata.totalTokens ??
+        metadata.total_tokens ??
+        null,
+
+      confidence:
+        metadata.confidence ??
+        metadata.confidenceScore ??
+        metadata.confidence_score ??
+        null,
+
+      leadName: metadata.leadName || metadata.lead_name || null,
+
+      contactName: metadata.contactName || metadata.contact_name || null,
+
+      propertyTitle:
+        metadata.propertyTitle ||
+        metadata.property_title ||
+        metadata.propertyAddress ||
+        metadata.property_address ||
+        null,
+
+      appointmentTitle:
+        metadata.appointmentTitle || metadata.appointment_title || null,
+
+      conversationId:
+        metadata.conversationId ||
+        metadata.conversation_id ||
+        metadata.sessionId ||
+        metadata.session_id ||
+        null,
+
+      createdAt: row.created_at,
+
+      metadata,
     };
   }
 }

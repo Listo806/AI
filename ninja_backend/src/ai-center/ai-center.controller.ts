@@ -677,4 +677,16 @@ export class AiCenterController {
       search,
     });
   }
+
+  
+  @Get("agent/activity-feed/:id")
+  @ApiOperation({
+    summary: "Get AI Agent activity detail",
+  })
+  async getAgentActivityDetail(
+    @CurrentUser() user: any,
+    @Param("id") id: string,
+  ) {
+    return this.service.getAgentActivityDetail(user.teamId, id);
+  }
 }
