@@ -21,7 +21,6 @@ import "./Common.css";
 import trial from "../../assets/cortexa/trial-right.png";
 import trialogo from "../../assets/cortexa/trial-logo.png";
 import headlogoM from "../../assets/cortexa/headlogotran.png";
-import trialbottomM from "../../assets/cortexa/mobile/trial-bt.png";
 
 const t = {
   en: {
@@ -56,7 +55,7 @@ const t = {
     statTimeVal: "24/7",
     statTimeLbl: "AI Working For You Nonstop",
 
-    trustedText: "Trusted by real estate professionals everywhere",
+    trustedText: "Built for real estate professionals",
 
   },
   es: {
@@ -84,10 +83,6 @@ const t = {
     heroTitlePost: "Creado para Profesionales Inmobiliarios que Quieren",
     heroTitleMore: "Más.",
 
-    quoteText: `"CORTEXA AI Revenue OS transformó por completo nuestro negocio. La IA se encarga de los seguimientos, nuestro pipeline se mantiene lleno y nuestros cierres han aumentado. Es como tener un equipo entero trabajando 24/7."`,
-    quoteAuthor: "Historia de un cliente",
-    quoteSub: "*****",
-
     statUsersVal: "",
     statUsersLbl: "Usuarios Activos",
     statDealsVal: "",
@@ -95,8 +90,7 @@ const t = {
     statTimeVal: "24/7",
     statTimeLbl: "IA Trabajando para Ti Sin Parar",
 
-    trustedText:
-      "Con la confianza de profesionales inmobiliarios en todas partes",
+    trustedText: "Creado para profesionales inmobiliarios",
 
   },
   pt: {
@@ -124,18 +118,14 @@ const t = {
     heroTitlePost: "Feito para Profissionais Imobiliários que Querem",
     heroTitleMore: "Mais.",
 
-    quoteText: `"O CORTEXA AI Revenue OS transformou completamente o nosso negócio. A IA cuida dos acompanhamentos, nosso pipeline permanece cheio e nossos fechamentos aumentaram. É como ter uma equipe inteira trabalhando 24/7."`,
-    quoteAuthor: "História de um cliente",
-    quoteSub: "*****",
-
     statUsersVal: "",
     statUsersLbl: "Usuários Ativos",
-    statDealsVal: "3X",
+    statDealsVal: "",
     statDealsLbl: "Mais Negócios Fechados",
     statTimeVal: "24/7",
     statTimeLbl: "IA Trabalhando para Você Sem Parar",
 
-    trustedText: "Confiado por profissionais imobiliários em todos os lugares",
+    trustedText: "Feito para profissionais imobiliários",
 
   },
 };
@@ -476,13 +466,6 @@ export default function StartTrial() {
                   <span>{tr.trustedText}</span>
                 </div>
 
-                <div className="cx-mob-badges-grid">
-                  <img
-                    src={trialbottomM}
-                    alt="Cortexa"
-                    className="trialbt-img"
-                  />
-                </div>
               </div>
             </div>
           </div>

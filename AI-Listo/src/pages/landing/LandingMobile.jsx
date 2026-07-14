@@ -87,7 +87,7 @@ export default function LandingMobile() {
       ],
       pricing: "Pricing",
       watchDemo: "Watch Demo",
-      trusted: "Trusted by real estate agents worldwide.",
+      trusted: "Built for real estate agents.",
 
       benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
       benefitsTitle1: "Everything You Need.",
@@ -272,7 +272,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
       leftCost1: "High setup fees",
       leftCost2: "Add-ons and upgrades you pay for separately",
       leftCost3: "Multiple disconnected tools",
@@ -284,7 +284,7 @@ export default function LandingMobile() {
       rightBenefit3: "One connected workspace",
       rightBenefit4: "Faster implementation",
       rightBenefit5: "Transparent pricing. No surprises.",
-      stat2Title: "LESS EXPENSIVE TO IMPLEMENT",
+      stat2Title: "",
 
       titlePre: "Reporting that ",
       titleActive: "actually ",
@@ -343,7 +343,7 @@ export default function LandingMobile() {
       ],
       pricing: "Precios",
       watchDemo: "Ver Demo",
-      trusted: "Con la confianza de agentes inmobiliarios de todo el mundo",
+      trusted: "Creado para agentes inmobiliarios.",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
@@ -528,7 +528,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
       leftCost1: "Altas tarifas de configuración",
       leftCost2: "Complementos y actualizaciones que pagas por separado",
       leftCost3: "Múltiples herramientas desconectadas",
@@ -540,7 +540,7 @@ export default function LandingMobile() {
       rightBenefit3: "Un espacio de trabajo conectado",
       rightBenefit4: "Implementación más rápida",
       rightBenefit5: "Precios transparentes. Sin sorpresas.",
-      stat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
+      stat2Title: "",
 
       titlePre: "Informes que ",
       titleActive: "realmente ",
@@ -601,7 +601,7 @@ export default function LandingMobile() {
       ],
       pricing: "Preços",
       watchDemo: "Ver Demo",
-      trusted: "A confiança de agentes imobiliários em todo o mundo",
+      trusted: "Feito para agentes imobiliários.",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
@@ -786,7 +786,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
       leftCost1: "Altas taxas de configuração",
       leftCost2: "Adicionais e atualizações pagos separadamente",
       leftCost3: "Múltiplas ferramentas desconectadas",
@@ -798,7 +798,7 @@ export default function LandingMobile() {
       rightBenefit3: "Um espaço de trabalho conectado",
       rightBenefit4: "Implementação mais rápida",
       rightBenefit5: "Preços transparentes. Sem surpresas.",
-      stat2Title: "MAIS BARATO PARA IMPLEMENTAR",
+      stat2Title: "",
 
       titlePre: "Relatórios que ",
       titleActive: "realmente ",
@@ -1086,10 +1086,6 @@ export default function LandingMobile() {
           </div>
 
           <div className="cx-mob-stat-block">
-            <div className="cx-mob-stat-hero">
-              <TrendingUp size={46} className="cx-mob-trend-icon" />
-              <h3>3X</h3>
-            </div>
             <h4>{tr.stat1Title}</h4>
             <p>{tr.stat1Desc}</p>
           </div>
@@ -1105,7 +1101,6 @@ export default function LandingMobile() {
                   <XCircle size={14} className="icon-red" />
                   <span>{tr.leftCost1}</span>
                 </div>
-                <strong className="cx-val-red">$2,500 - $7,500+</strong>
               </li>
               <li>
                 <div className="cx-mob-li-left">
@@ -1174,13 +1169,6 @@ export default function LandingMobile() {
             </ul>
           </div>
 
-          <div className="cx-mob-stat-block-bottom">
-            <div className="cx-mob-stat-hero">
-              <TrendingUp size={36} className="cx-mob-trend-icon" />
-              <h3>20X</h3>
-            </div>
-            <h4>{tr.stat2Title}</h4>
-          </div>
         </div>
       </section>
       {/* BENEFITS SECTION */}
@@ -2112,22 +2100,6 @@ export default function LandingMobile() {
           </h2>
         </div>
 
-        <div className="m-final-cta-stats">
-          <div className="m-final-stat-card">
-            <h3>+312%</h3>
-            <span>{tr.ctaStat1Label}</span>
-          </div>
-
-          <div className="m-final-stat-card">
-            <h3>+$2.4M+</h3>
-            <span>{tr.ctaStat2Label}</span>
-          </div>
-
-          <div className="m-final-stat-card">
-            <h3>10K+</h3>
-            <span>{tr.ctaStat3Label}</span>
-          </div>
-        </div>
 
         <div className="m-final-cta-action">
           <a href="/trial" className="m-final-purple-btn">

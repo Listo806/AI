@@ -420,7 +420,7 @@ export default function Landing() {
         "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
       
       roiStat4Desc:
-        "Most users recover their investment within the first month from deals that would have otherwise been lost.",
+        "Designed to help you recover your investment quickly by capturing deals that would otherwise be lost.",
 
       aiosBadgeTitle: "Meet Your",
       aiosBadgeHighlight: "AI OS",
@@ -652,14 +652,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Connect Your Tools",
       rightStat1Up: "FOLLOW UP WITH EVERY LEAD AUTOMATICALLY",
       rightStat1Up1: "ONE CONNECTED WORKSPACE BUILT FOR REAL ESTATE PROS",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
       rightStat1Desc1: "Run your leads, follow-ups, and pipeline in one connected workspace.",
       rightStat2Up: "UP TO",
-      rightStat2Title: "LESS EXPENSIVE TO IMPLEMENT",
-      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      rightStat2Title: "",
+      vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
       vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
       vsText: "VS.",
       leftCost1: "High setup fees",
@@ -959,7 +959,7 @@ export default function Landing() {
         "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
       
       roiStat4Desc:
-        "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
+        "Diseñado para ayudarte a recuperar tu inversión rápidamente al capturar acuerdos que de otro modo se perderían.",
 
       aiosBadgeTitle: "Conoce Tu",
       aiosBadgeHighlight: "AI OS",
@@ -1192,14 +1192,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecta tus Herramientas",
       rightStat1Up: "REALIZA UN SEGUIMIENTO AUTOMÁTICO DE CADA CLIENTE POTENCIAL",
       rightStat1Up1: "UN ESPACIO DE TRABAJO CONECTADO CREADO PARA PROFESIONALES INMOBILIARIOS",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
       rightStat1Desc1: "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
       rightStat2Up: "HASTA",
-      rightStat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
-      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      rightStat2Title: "",
+      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
       vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
       vsText: "VS.",
       leftCost1: "Altas tarifas de configuración",
@@ -1494,7 +1494,7 @@ export default function Landing() {
         "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
       
       roiStat4Desc:
-        "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
+        "Projetado para ajudar você a recuperar seu investimento rapidamente ao capturar negócios que de outra forma seriam perdidos.",
 
       aiosBadgeTitle: "Conheça Seu",
       aiosBadgeHighlight: "AI OS",
@@ -1731,14 +1731,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecte Suas Ferramentas",
       rightStat1Up: "FAÇA O ACOMPANHAMENTO AUTOMÁTICO DE CADA LEAD",
       rightStat1Up1: "UM ESPAÇO DE TRABALHO INTEGRADO CRIADO PARA PROFISSIONAIS DO MERCADO IMOBILIÁRIO",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
       rightStat1Desc1: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       rightStat2Up: "ATÉ",
-      rightStat2Title: "MAIS BARATO PARA IMPLEMENTAR",
-      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      rightStat2Title: "",
+      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
       vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
       vsText: "VS.",
       leftCost1: "Altas taxas de configuração",
@@ -2190,16 +2190,6 @@ export default function Landing() {
                   </div>
                 </li>
               </ul>
-            </div>
-          </div>
-          <div className="cx-feat-stats-sidebar">
-            <div className="cx-sidebar-stat-block-bottom">
-              <span className="cx-stat-up-tag">{tr.rightStat2Up}</span>
-              <div className="cx-stat-inline-row">
-                <TrendingUp className="cx-stat-inline-icon" size={92} />
-              </div>
-              <h4 className="cx-stat-title-label">{tr.rightStat2Title}</h4>
-              <div className="cx-stat-blue-bar-short"></div>
             </div>
           </div>
         </div>
