@@ -98,6 +98,7 @@ export default function KnowledgeItemModal({
   }, [open, item]);
 
   const editing = Boolean(item?.id);
+  const isQuestionAnswer = form.sourceType === "qa";
 
   const canSave = useMemo(() => {
     return (
@@ -202,22 +203,30 @@ export default function KnowledgeItemModal({
             </label>
 
             <label className="full">
-              Title
+              {isQuestionAnswer ? "Question" : "Title"}
               <input
                 value={form.title}
                 onChange={(event) => update("title", event.target.value)}
-                placeholder="Example: About our company"
+                placeholder={
+                  isQuestionAnswer
+                    ? "Example: What areas do you serve?"
+                    : "Example: About our company"
+                }
                 maxLength={255}
               />
             </label>
 
             <label className="full">
-              Content
+              {isQuestionAnswer ? "Answer" : "Content"}
               <textarea
                 rows={10}
                 value={form.content}
                 onChange={(event) => update("content", event.target.value)}
-                placeholder="Enter the information your AI Agent should know..."
+                placeholder={
+                  isQuestionAnswer
+                    ? "Enter the answer your AI Agent should provide..."
+                    : "Enter the information your AI Agent should know..."
+                }
                 maxLength={20000}
               />
               <small>{String(form.content || "").length} / 20,000</small>

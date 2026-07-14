@@ -1,0 +1,239 @@
+.cx-knowledge-insights-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1310;
+  padding: 24px;
+  background: rgba(5, 10, 45, 0.54);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cx-knowledge-insights-modal {
+  width: min(900px, 100%);
+  max-height: 92vh;
+  overflow: auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 28px 90px
+    rgba(4, 10, 50, 0.3);
+}
+
+.cx-knowledge-insights-modal > header {
+  padding: 20px 22px;
+  border-bottom: 1px solid #e7eaf4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cx-knowledge-insights-modal
+  > header
+  > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cx-knowledge-insights-modal
+  > header
+  > div
+  > span {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eeeaff;
+  color: #603ce8;
+  display: grid;
+  place-items: center;
+}
+
+.cx-knowledge-insights-modal h2 {
+  margin: 0;
+  color: #11194f;
+  font-size: 20px;
+}
+
+.cx-knowledge-insights-modal p {
+  margin: 5px 0 0;
+  color: #68728f;
+  font-size: 12px;
+}
+
+.cx-knowledge-insights-modal
+  > header
+  > button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #f5f6fb;
+  color: #53607f;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.cx-knowledge-insights-grid {
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.cx-knowledge-insights-grid article {
+  padding: 14px;
+  border: 1px solid #e5e9f3;
+  border-radius: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cx-knowledge-insights-grid svg {
+  color: #5d3ee6;
+}
+
+.cx-knowledge-insights-grid strong {
+  color: #11194f;
+  font-size: 22px;
+}
+
+.cx-knowledge-insights-grid span {
+  color: #79819a;
+  font-size: 11px;
+}
+
+.cx-knowledge-insights-health {
+  margin: 0 22px;
+  padding: 18px;
+  border: 1px solid #e5e9f3;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns:
+    180px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.cx-knowledge-insights-health
+  > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cx-knowledge-insights-health
+  > div
+  strong {
+  color: #5737f1;
+  font-size: 38px;
+}
+
+.cx-knowledge-insights-health
+  > div
+  span {
+  color: #69738f;
+  font-size: 11px;
+}
+
+.cx-knowledge-insights-health ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cx-knowledge-insights-health li {
+  display: grid;
+  grid-template-columns:
+    18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: #475272;
+  font-size: 12px;
+}
+
+.cx-knowledge-insights-health li svg {
+  color: #17a85a;
+}
+
+.cx-knowledge-insights-health
+  li:last-child
+  svg {
+  color: #f59e0b;
+}
+
+.cx-knowledge-insights-categories {
+  padding: 20px 22px 24px;
+}
+
+.cx-knowledge-insights-categories h3 {
+  margin: 0 0 14px;
+  color: #11194f;
+  font-size: 14px;
+}
+
+.cx-knowledge-insights-categories
+  > div {
+  margin-bottom: 14px;
+}
+
+.cx-knowledge-insights-categories
+  > div
+  > div:first-child {
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cx-knowledge-insights-categories strong {
+  color: #26315f;
+  font-size: 11px;
+}
+
+.cx-knowledge-insights-categories span {
+  color: #79819a;
+  font-size: 10px;
+}
+
+.cx-knowledge-insights-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: #eceef5;
+  overflow: hidden;
+}
+
+.cx-knowledge-insights-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #5c3ce6;
+}
+
+@media (max-width: 760px) {
+  .cx-knowledge-insights-backdrop {
+    padding: 0;
+  }
+
+  .cx-knowledge-insights-modal {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .cx-knowledge-insights-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .cx-knowledge-insights-health {
+    grid-template-columns: 1fr;
+  }
+}

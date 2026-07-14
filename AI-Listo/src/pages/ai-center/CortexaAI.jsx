@@ -64,6 +64,7 @@ import AutomationModal from "./components/AutomationModal";
 import TestAgentModal from "./components/TestAgentModal";
 import KnowledgeItemModal from "./components/KnowledgeItemModal";
 import KnowledgeImportModal from "./components/KnowledgeImportModal";
+import KnowledgeInsightsModal from "./components/KnowledgeInsightsModal";
 
 export default function CortexaAI() {
   const [activePage, setActivePage] = useState("setup");
@@ -147,6 +148,9 @@ export default function CortexaAI() {
   const [agentSidebarCollapsed, setAgentSidebarCollapsed] = useState(() => {
     return localStorage.getItem("cx-agent-sidebar-collapsed") === "true";
   });
+
+  const [knowledgeInsightsOpen, setKnowledgeInsightsOpen] = useState(false);
+  const [showInactiveCategories, setShowInactiveCategories] = useState(false);
 
   const toggleAgentSidebar = () => {
     setAgentSidebarCollapsed((current) => {
@@ -697,12 +701,20 @@ export default function CortexaAI() {
     [knowledgeFilters],
   );
 
-  const openCreateKnowledge = (category = "company_information") => {
+  const openCreateKnowledge = (
+    category = "company_information",
+    overrides = {},
+  ) => {
     setKnowledgeEditingItem({
       category,
       sourceType: "text",
       status: "active",
       priority: 0,
+      title: "",
+      content: "",
+      sourceUrl: "",
+      metadata: {},
+      ...overrides,
     });
 
     setKnowledgeError("");
@@ -1027,7 +1039,7 @@ export default function CortexaAI() {
     },
     {
       key: "knowledge",
-      title: "AI Knowledge",
+      title: "Knowledge",
       desc: "Manage AI knowledge",
       icon: BookOpen,
     },
@@ -1337,6 +1349,11 @@ export default function CortexaAI() {
               loading={loadingPage}
               error={knowledgeError}
               deletingId={knowledgeDeletingId}
+              showInactiveCategories={showInactiveCategories}
+              onToggleInactiveCategories={() =>
+                setShowInactiveCategories((current) => !current)
+              }
+              onViewInsights={() => setKnowledgeInsightsOpen(true)}
               onAdd={openCreateKnowledge}
               onEdit={openEditKnowledge}
               onDelete={deleteKnowledgeItem}
@@ -1359,6 +1376,47 @@ export default function CortexaAI() {
                 }
 
                 loadKnowledge(nextFilters);
+              }}
+              onQuickAction={(type) => {
+                const category =
+                  knowledgeFilters.category !== "all"
+                    ? knowledgeFilters.category
+                    : "company_information";
+
+                if (type === "text") {
+                  openCreateKnowledge(category, {
+                    sourceType: "text",
+                  });
+                  return;
+                }
+
+                if (type === "qa") {
+                  openCreateKnowledge("faqs", {
+                    sourceType: "qa",
+                    metadata: {
+                      format: "question_answer",
+                    },
+                  });
+                  return;
+                }
+
+                if (type === "website") {
+                  openCreateKnowledge(category, {
+                    sourceType: "website",
+                  });
+                  return;
+                }
+
+                if (type === "document") {
+                  setKnowledgeImportError("");
+                  setKnowledgeImportOpen(true);
+                  return;
+                }
+
+                if (type === "data_source") {
+                  setKnowledgeImportError("");
+                  setKnowledgeImportOpen(true);
+                }
               }}
             />
           )}
@@ -1509,6 +1567,12 @@ export default function CortexaAI() {
           }
         }}
         onImport={importKnowledgeItems}
+      />
+
+      <KnowledgeInsightsModal
+        open={knowledgeInsightsOpen}
+        data={knowledgeData}
+        onClose={() => setKnowledgeInsightsOpen(false)}
       />
     </>
   );
@@ -2144,12 +2208,25 @@ function KnowledgeLayout({
   loading,
   error,
   deletingId,
+  showInactiveCategories,
+  onToggleInactiveCategories,
+  onViewInsights,
   onAdd,
   onImport,
   onEdit,
   onDelete,
   onFilterChange,
+  onQuickAction,
 }) {
+  const allCategories = Array.isArray(knowledgeData?.categories)
+    ? knowledgeData.categories
+    : [];
+
+  const visibleCategories = showInactiveCategories
+    ? allCategories
+    : allCategories.filter(
+        (item) => String(item.status || "").toLowerCase() !== "inactive",
+      );
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
@@ -2214,8 +2291,8 @@ function KnowledgeLayout({
           <p>Organize and manage what your AI knows.</p>
 
           <div className="cx-category-list">
-            {(knowledgeData?.categories?.length
-              ? knowledgeData.categories
+            {(visibleCategories.length
+              ? visibleCategories
               : [
                   {
                     key: "company_information",
@@ -2513,55 +2590,198 @@ function KnowledgeLayout({
               </button>
             </div>
           )}
-          <button className="cx-show-more">
-            Show inactive categories <ChevronDown size={16} />
+          <button
+            type="button"
+            className="cx-show-more"
+            onClick={onToggleInactiveCategories}
+          >
+            {showInactiveCategories
+              ? "Hide inactive categories"
+              : "Show inactive categories"}
+
+            {showInactiveCategories ? (
+              <ChevronUp size={16} />
+            ) : (
+              <ChevronDown size={16} />
+            )}
           </button>
         </main>
 
         <aside className="cx-right-column">
-          <div className="cx-white-card">
+          <div className="cx-white-card cx-knowledge-health-card">
             <h2>Knowledge Health</h2>
-            <div className="cx-health-row">
-              <div className="cx-big-score">
-                {knowledgeData?.health?.score ?? 0}%
-              </div>
-              <div className="cx-health-list">
-                <p>
-                  <CheckCircle2 size={16} /> Complete <strong>28 / 32</strong>
-                </p>
-                <p>
-                  <CheckCircle2 size={16} /> Up to date <strong>25 / 28</strong>
-                </p>
-                <p>
-                  <CheckCircle2 size={16} /> Well structured{" "}
-                  <strong>26 / 32</strong>
-                </p>
-                <p>
-                  <Clock3 size={16} /> Needs review <strong>4 / 32</strong>
-                </p>
-              </div>
-            </div>
-            <button className="cx-full-btn">View Knowledge Insights</button>
+            {(() => {
+              const score = Math.max(
+                0,
+                Math.min(100, Number(knowledgeData?.health?.score || 0)),
+              );
+              const total = Number(knowledgeData?.health?.total || 0);
+              const complete = Number(knowledgeData?.health?.complete || 0);
+              const upToDate = Number(knowledgeData?.health?.upToDate || 0);
+              const wellStructured = Number(
+                knowledgeData?.health?.wellStructured || 0,
+              );
+              const needsReview = Number(
+                knowledgeData?.health?.needsReview || 0,
+              );
+              const radius = 48;
+              const circumference = 2 * Math.PI * radius;
+              const progressOffset =
+                circumference - (score / 100) * circumference;
+
+              return (
+                <>
+                  <div className="cx-knowledge-health-content">
+                    <div className="cx-knowledge-score-wrap">
+                      <div className="cx-knowledge-score-ring">
+                        <svg
+                          viewBox="0 0 120 120"
+                          aria-label={`Knowledge score ${score}%`}
+                        >
+                          <circle
+                            className="cx-knowledge-score-track"
+                            cx="60"
+                            cy="60"
+                            r={radius}
+                          />
+
+                          <circle
+                            className="cx-knowledge-score-progress"
+                            cx="60"
+                            cy="60"
+                            r={radius}
+                            strokeDasharray={circumference}
+                            strokeDashoffset={progressOffset}
+                          />
+                        </svg>
+
+                        <strong>{score}%</strong>
+                      </div>
+
+                      <p className="cx-knowledge-score-label">
+                        Knowledge Score
+                        <HelpCircle size={13} />
+                      </p>
+                    </div>
+
+                    <div className="cx-knowledge-health-list">
+                      <div>
+                        <CheckCircle2 size={16} />
+
+                        <span>Complete</span>
+
+                        <strong>
+                          {complete} / {total}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <CheckCircle2 size={16} />
+
+                        <span>Up to date</span>
+
+                        <strong>
+                          {upToDate} / {total}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <CheckCircle2 size={16} />
+
+                        <span>Well structured</span>
+
+                        <strong>
+                          {wellStructured} / {total}
+                        </strong>
+                      </div>
+
+                      <div className="warning">
+                        <Clock3 size={16} />
+
+                        <span>Needs review</span>
+
+                        <strong>
+                          {needsReview} / {total}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/*<button
+                    type="button"
+                    className="cx-full-btn"
+                    onClick={onViewInsights}
+                  >
+                    View Knowledge Insights
+                    <Activity size={16} />
+                  </button>*/}
+                </>
+              );
+            })()}
           </div>
 
           <div className="cx-white-card">
             <h2>Quick Actions</h2>
+
             {[
-              "Add Text Knowledge",
-              "Upload Document",
-              "Add Website URL",
-              "Connect Data Source",
-              "Create Custom Q&A",
-            ].map((x) => (
-              <div className="cx-quick-row" key={x}>
-                <FileText size={18} />
-                <div>
-                  <strong>{x}</strong>
-                  <p>Add text, notes or documents</p>
-                </div>
-                <ChevronRight size={17} />
-              </div>
-            ))}
+              {
+                key: "text",
+                title: "Add Text Knowledge",
+                description: "Add text, notes or business information",
+                icon: FileText,
+                accent: "purple",
+              },
+              {
+                key: "document",
+                title: "Upload Document",
+                description: "Import CSV or JSON knowledge files",
+                icon: Upload,
+                accent: "blue",
+              },
+              {
+                key: "website",
+                title: "Add Website URL",
+                description: "Add content and reference a website",
+                icon: Search,
+                accent: "indigo",
+              },
+              {
+                key: "data_source",
+                title: "Connect Data Source",
+                description: "Import knowledge from an external source",
+                icon: Database,
+                accent: "purple",
+              },
+              {
+                key: "qa",
+                title: "Create Custom Q&A",
+                description: "Add a question and answer pair",
+                icon: MessageCircle,
+                accent: "violet",
+              },
+            ].map((action) => {
+              const Icon = action.icon;
+
+              return (
+                <button
+                  type="button"
+                  className="cx-quick-row"
+                  key={action.key}
+                  onClick={() => onQuickAction?.(action.key)}
+                >
+                  <span className={`cx-quick-action-icon ${action.accent}`}>
+                    <Icon size={18} />
+                  </span>
+
+                  <div>
+                    <strong>{action.title}</strong>
+                    <p>{action.description}</p>
+                  </div>
+
+                  <ChevronRight size={17} />
+                </button>
+              );
+            })}
           </div>
         </aside>
       </div>
