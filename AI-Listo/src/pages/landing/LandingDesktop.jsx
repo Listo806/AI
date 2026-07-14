@@ -205,7 +205,7 @@ export default function Landing() {
       trustSectionTitlePost: "Built to Grow Revenue.",
       trustSectionSub:
         "One connected platform. Every feature works together to help you capture more leads, close more deals, and ",
-      trustSectionSub1: "increase your lead conversion up to 3X ",
+      trustSectionSub1: "Follow up with every lead automatically, so none slip through ",
       trustSectionSub2: "— while ",
       trustSectionSub3: " keeping more capital in your business.",
 
@@ -375,8 +375,7 @@ export default function Landing() {
       aipointTitle3: "Automatic Booking",
       aipointText3: "Appointments scheduled without back-and-forth.",
       aialt: "AI Setter handling conversations and booking appointments",
-      reinforcement:
-        "Run your entire pipeline with AI — no extra hires, no missed opportunities.",
+
       beTitle: "What This Actually Does For You",
       besubTitle:
         "Automation handles the work. Communication never stops. Every lead keeps moving forward — without you chasing it.",
@@ -571,8 +570,7 @@ export default function Landing() {
       finalTitle: "Automate Your Entire Workflow",
       finalDesc:
         "CORTEXA captures leads, automates follow-ups, updates your pipeline, and keeps your team moving — so you can focus on closing deals",
-      reinforcement: "No credit card required",
-
+     
       footerDescription:
         "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
 
@@ -741,7 +739,7 @@ export default function Landing() {
       trustSectionTitlePost: "Creado para aumentar los ingresos.",
       trustSectionSub:
         "Una plataforma conectada. Todas las funciones trabajan juntas para ayudarte a captar más leads, cerrar más negocios y ",
-      trustSectionSub1: "aumentar la conversión de leads hasta 3 veces ",
+      trustSectionSub1: "Haz seguimiento automático de cada cliente potencial para que ninguno se pierda ",
       trustSectionSub2: "— mientras ",
       trustSectionSub3: "mantienes más capital dentro de tu empresa.",
       trustFeatures: {
@@ -914,8 +912,7 @@ export default function Landing() {
       aipointTitle3: "Reserva automática",
       aipointText3: "Citas programadas sin idas y venidas.",
       aialt: "IA que gestiona conversaciones y agenda citas automáticamente",
-      reinforcement:
-        "Gestiona todo tu pipeline con IA — sin contratar más personal y sin perder oportunidades.",
+      
       beTitle: "Lo que esto realmente hace por ti",
       besubTitle:
         "La automatización hace el trabajo. La comunicación nunca se detiene. Cada lead sigue avanzando — sin que tengas que perseguirlo.",
@@ -1116,7 +1113,6 @@ export default function Landing() {
       finalTitle: "Automatize todo o seu fluxo de trabalho",
       finalDesc:
         "A CORTEXA captura leads, automatiza acompanhamentos, atualiza seu pipeline e mantém sua equipe em movimento, para que você possa se concentrar em fechar mais negócios",
-      reinforcement: "No se requiere tarjeta de crédito",
 
       footerDescription:
         "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
@@ -1284,7 +1280,7 @@ export default function Landing() {
       trustSectionTitlePost: "Feito para Aumentar a Receita.",
       trustSectionSub:
         "Uma plataforma conectada. Todos os recursos trabalham juntos para ajudar você a captar mais leads, fechar mais negócios e ",
-      trustSectionSub1: "aumentar a conversão de leads em até 3 vezes ",
+      trustSectionSub1: "Acompanhe automaticamente cada lead para que nenhum seja perdido ",
       trustSectionSub2: "— enquanto ",
       trustSectionSub3: "mantém mais capital dentro da sua empresa.",
       trustFeatures: {
@@ -1453,8 +1449,7 @@ export default function Landing() {
       aipointTitle3: "Agendamento automático",
       aipointText3: "Compromissos agendados sem idas e vindas.",
       aialt: "IA que gerencia conversas e agenda compromissos automaticamente",
-      reinforcement:
-        "Gerencie todo o seu pipeline com IA — sem contratar mais pessoas e sem perder oportunidades.",
+
       beTitle: "O que isso realmente faz por você",
       besubTitle:
         "A automação faz o trabalho. A comunicação nunca para. Cada lead continua avançando — sem que você precise correr atrás.",
@@ -1660,7 +1655,6 @@ export default function Landing() {
       finalTitle: "Comece a crescer com IA hoje",
       finalDesc:
         "Capture mais leads, automatize acompanhamentos e feche mais negócios com automação impulsionada por IA.",
-      reinforcement: "Não é necessário cartão de crédito",
 
       footerDescription:
         "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",

@@ -166,19 +166,6 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTS GROWING",
       ctaButtonText: "Get Started",
 
-      reviewSubtitle: "HOW CORTEXA AI CRM HELPS",
-      reviewTitle:
-        "Powerful AI tools built for modern real estate professionals.",
-      review1Text:
-        "“CORTEXA helped me 3x my appointments in the first 60 days.”",
-      review1Stat: "+320% more appointments",
-      review2Text:
-        "“The AI follow-ups are a game changer. I close deals I used to lose.”",
-      review2Stat: "+2.1M in closed volume",
-      review3Text:
-        "“It's like having a full-time assistant working 24/7 for my business.”",
-      review3Stat: "+40 hrs saved per week",
-
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
       faq: [
@@ -434,19 +421,6 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
       ctaButtonText: "Comenzar",
-
-      reviewSubtitle: "CÓMO AYUDA CORTEXA AI CRM",
-      reviewTitle:
-        "Potentes herramientas de IA diseñadas para los profesionales inmobiliarios modernos.",
-      review1Text:
-        "“CORTEXA me ayudó a triplicar mis citas en los primeros 60 días.”",
-      review1Stat: "+320% más de citas",
-      review2Text:
-        "“Los seguimientos con IA cambian el juego. Cierro tratos que antes perdía.”",
-      review2Stat: "+2.1M en volumen cerrado",
-      review3Text:
-        "“Es como tener un asistente de tiempo completo trabajando 24/7 para mi negocio.”",
-      review3Stat: "+40 hrs ahorradas por semana",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -705,19 +679,6 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
       ctaButtonText: "Começar",
-
-      reviewSubtitle: "COMO O CORTEXA AI CRM AJUDA",
-      reviewTitle:
-        "Ferramentas poderosas de IA desenvolvidas para profissionais do mercado imobiliário moderno.",
-      review1Text:
-        "“A CORTEXA me ajudou a triplicar minhas reuniões nos primeiros 60 dias.”",
-      review1Stat: "+320% mais reuniões",
-      review2Text:
-        "“Os acompanhamentos de IA mudaram o jogo. Fecho negócios que antes costumava perder.”",
-      review2Stat: "+2.1M em volume fechado",
-      review3Text:
-        "“É como ter um assistente em tempo integral trabalhando 24/7 para o meu negócio.”",
-      review3Stat: "+40h economizadas por semana",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",

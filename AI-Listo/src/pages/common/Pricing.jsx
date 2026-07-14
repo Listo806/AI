@@ -86,7 +86,7 @@ const t = {
       conversion: {
         value: "3X",
         title: "Increase in Lead Conversion Rate",
-        desc: "CORTEXA AIOS customers see up to 3X more leads converted into deals.",
+        desc: "Run your leads, follow-ups, and pipeline in one connected workspace.",
       },
       realestate: {
         title: "Built for Real Estate",
@@ -371,7 +371,7 @@ const t = {
       conversion: {
         value: "3X",
         title: "Aumento en la Tasa de Conversión",
-        desc: "Los clientes de CORTEXA AIOS experimentan hasta 3 veces más prospectos convertidos en acuerdos comerciales.",
+        desc: "Gestiona tus clientes potenciales, seguimientos y flujo de ventas en un solo espacio de trabajo conectado.",
       },
       realestate: {
         title: "Creado para Bienes Raíces",
@@ -669,7 +669,7 @@ const t = {
       conversion: {
         value: "3X",
         title: "Aumento na Taxa de Conversão de Leads",
-        desc: "Os clientes do CORTEXA AIOS veem até 3X mais leads convertidos em negócios fechados.",
+        desc: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       },
       realestate: {
         title: "Feito para o Setor Imobiliário",
