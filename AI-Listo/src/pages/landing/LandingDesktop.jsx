@@ -52,7 +52,7 @@ import {
   Contact2,
   Users2,
   Puzzle,
-  CheckCircle2, Link2, Check, Grid, ChevronRight,
+  CheckCircle2, Link2, Check, Grid, ChevronRight, CircleDollarSign,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -409,20 +409,16 @@ export default function Landing() {
       roiSub:
         "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
       roiBtn: "Get Started",
-      roiStat1Number: "+312%",
-      roiStat1Label: "ROI",
+      
       roiStat1Desc:
         "CORTEXA transforms your lead handling into a revenue engine — automating follow-ups and deal flow to generate more closed deals.",
-      roiStat2Number: "+$2.4M+",
-      roiStat2Label: "Revenue Increase",
+      
       roiStat2Desc:
         "More conversations. Faster responses. Zero missed leads — turning your pipeline into predictable revenue.",
-      roiStat3Number: "80,000+",
-      roiStat3Label: "Hours Saved",
+      
       roiStat3Desc:
         "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
-      roiStat4Number: "< 30 Days",
-      roiStat4Label: "Payback",
+      
       roiStat4Desc:
         "Most users recover their investment within the first month from deals that would have otherwise been lost.",
 
@@ -654,13 +650,14 @@ export default function Landing() {
       nodeCommunicationSub: "Email, SMS, Calls",
       nodeIntegrationsTitle: "INTEGRATIONS",
       nodeIntegrationsSub: "Connect Your Tools",
-      rightStat1Up: "UP TO",
+      rightStat1Up: "FOLLOW UP WITH EVERY LEAD AUTOMATICALLY",
+      rightStat1Up1: "ONE CONNECTED WORKSPACE BUILT FOR REAL ESTATE PROS",
       rightStat1Main: "3X",
       rightStat1Title: "",
       rightStat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
+      rightStat1Desc1: "Run your leads, follow-ups, and pipeline in one connected workspace.",
       rightStat2Up: "UP TO",
-      rightStat2Main: "20X",
       rightStat2Title: "LESS EXPENSIVE TO IMPLEMENT",
       vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
       vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
@@ -951,20 +948,16 @@ export default function Landing() {
       roiSub:
         "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
       roiBtn: "Comenzar",
-      roiStat1Number: "+312%",
-      roiStat1Label: "ROI",
+      
       roiStat1Desc:
         "CORTEXA transforma la gestión de tus leads en un motor de ingresos — automatizando seguimientos y el flujo de ventas para generar más cierres.",
-      roiStat2Number: "+$2.4M+",
-      roiStat2Label: "Incremento de ingresos",
+      
       roiStat2Desc:
         "Más conversaciones. Respuestas más rápidas. Cero leads perdidos — convirtiendo tu pipeline en ingresos predecibles.",
-      roiStat3Number: "80,000+",
-      roiStat3Label: "Horas ahorradas",
+      
       roiStat3Desc:
         "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
-      roiStat4Number: "< 30 días",
-      roiStat4Label: "Recuperación",
+      
       roiStat4Desc:
         "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
 
@@ -1197,13 +1190,14 @@ export default function Landing() {
       nodeCommunicationSub: "Email, SMS, Llamadas",
       nodeIntegrationsTitle: "INTEGRACIONES",
       nodeIntegrationsSub: "Conecta tus Herramientas",
-      rightStat1Up: "HASTA",
+      rightStat1Up: "REALIZA UN SEGUIMIENTO AUTOMÁTICO DE CADA CLIENTE POTENCIAL",
+      rightStat1Up1: "UN ESPACIO DE TRABAJO CONECTADO CREADO PARA PROFESIONALES INMOBILIARIOS",
       rightStat1Main: "3X",
       rightStat1Title: "",
       rightStat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
+      rightStat1Desc1: "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
       rightStat2Up: "HASTA",
-      rightStat2Main: "20X",
       rightStat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
       vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
       vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
@@ -1489,20 +1483,16 @@ export default function Landing() {
       roiSub:
         "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
       roiBtn: "Começar",
-      roiStat1Number: "+312%",
-      roiStat1Label: "ROI",
+      
       roiStat1Desc:
         "O CORTEXA transforma a gestão de leads em um motor de receita — automatizando follow-ups e o fluxo de vendas para gerar mais fechamentos.",
-      roiStat2Number: "+$2.4M+",
-      roiStat2Label: "Aumento de receita",
+      
       roiStat2Desc:
         "Mais conversas. Respostas mais rápidas. Zero leads perdidos — transformando seu pipeline em receita previsível.",
-      roiStat3Number: "80,000+",
-      roiStat3Label: "Horas economizadas",
+      
       roiStat3Desc:
         "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
-      roiStat4Number: "< 30 dias",
-      roiStat4Label: "Retorno",
+      
       roiStat4Desc:
         "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
 
@@ -1739,13 +1729,14 @@ export default function Landing() {
       nodeCommunicationSub: "E-mail, SMS, Chamadas",
       nodeIntegrationsTitle: "INTEGRAÇÕES",
       nodeIntegrationsSub: "Conecte Suas Ferramentas",
-      rightStat1Up: "ATÉ",
+      rightStat1Up: "FAÇA O ACOMPANHAMENTO AUTOMÁTICO DE CADA LEAD",
+      rightStat1Up1: "UM ESPAÇO DE TRABALHO INTEGRADO CRIADO PARA PROFISSIONAIS DO MERCADO IMOBILIÁRIO",
       rightStat1Main: "3X",
       rightStat1Title: "",
       rightStat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
+      rightStat1Desc1: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       rightStat2Up: "ATÉ",
-      rightStat2Main: "20X",
       rightStat2Title: "MAIS BARATO PARA IMPLEMENTAR",
       vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
       vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
@@ -2074,11 +2065,23 @@ export default function Landing() {
 
           <div className="cx-feat-stats-sidebar">
             <div className="cx-sidebar-stat-block-top">
-              <span className="cx-stat-up-tag">{tr.rightStat1Up}</span>
-              <img src={x3xImg} alt="iamge" />
+              <div className="cx-stat-up-wrap">
+                <span className="svg"><Target size={24} /></span>
+                <span className="cx-stat-up-tag">{tr.rightStat1Up}</span>
+              </div>
               <h4 className="cx-stat-title-label"></h4>
               <div className="cx-stat-blue-bar"></div>
               <p className="cx-stat-description-text">{tr.rightStat1Desc}</p>
+            </div>
+
+            <div className="cx-sidebar-stat-block-top">
+              <div className="cx-stat-up-wrap">
+                <span className="svg"><CircleDollarSign size={24} /></span>
+                <span className="cx-stat-up-tag">{tr.rightStat1Up1}</span>
+              </div>
+              <h4 className="cx-stat-title-label"></h4>
+              <div className="cx-stat-blue-bar"></div>
+              <p className="cx-stat-description-text">{tr.rightStat1Desc1}</p>
             </div>
           </div>
         </div>
@@ -2095,7 +2098,7 @@ export default function Landing() {
                     <XCircle className="cx-li-icon icon-red-small" size={18} />
                     <span>{tr.leftCost1}</span>
                   </div>
-                  <strong className="cx-cost-high">$2,500 - $7,500+</strong>
+                  <strong className="cx-cost-high">more expensive</strong>
                 </li>
                 <li>
                   <div className="cx-list-item-content">
@@ -2194,7 +2197,6 @@ export default function Landing() {
               <span className="cx-stat-up-tag">{tr.rightStat2Up}</span>
               <div className="cx-stat-inline-row">
                 <TrendingUp className="cx-stat-inline-icon" size={92} />
-                <h3 className="cx-stat-giant-num">{tr.rightStat2Main}</h3>
               </div>
               <h4 className="cx-stat-title-label">{tr.rightStat2Title}</h4>
               <div className="cx-stat-blue-bar-short"></div>
@@ -2658,23 +2660,15 @@ export default function Landing() {
           <p className="underCTA">{tr.underCTA}</p>
           <div className="roi-grid">
             <div className="roi-item">
-              <p className="roi-number">{tr.roiStat1Number}</p>
-              <p className="roi-label">{tr.roiStat1Label}</p>
               <p className="roi-desc">{tr.roiStat1Desc}</p>
             </div>
             <div className="roi-item">
-              <p className="roi-number">{tr.roiStat2Number}</p>
-              <p className="roi-label">{tr.roiStat2Label}</p>
               <p className="roi-desc">{tr.roiStat2Desc}</p>
             </div>
             <div className="roi-item">
-              <p className="roi-number">{tr.roiStat3Number}</p>
-              <p className="roi-label">{tr.roiStat3Label}</p>
               <p className="roi-desc">{tr.roiStat3Desc}</p>
             </div>
             <div className="roi-item">
-              <p className="roi-number">{tr.roiStat4Number}</p>
-              <p className="roi-label">{tr.roiStat4Label}</p>
               <p className="roi-desc">{tr.roiStat4Desc}</p>
             </div>
           </div>

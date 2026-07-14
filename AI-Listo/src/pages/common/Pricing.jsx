@@ -84,7 +84,6 @@ const t = {
         desc: "Never miss a lead again. Instant responses and smart follow-ups convert more leads into clients.",
       },
       conversion: {
-        value: "3X",
         title: "Increase in Lead Conversion Rate",
         desc: "Run your leads, follow-ups, and pipeline in one connected workspace.",
       },
@@ -295,12 +294,12 @@ const t = {
 
     vsCompOtherTitle: "WITH OTHER PLATFORMS",
     vsCompOther1: "High monthly cost with multiple add-ons",
-    vsCompOther2: "$2,500 - $7,500+ setup fee for big plans",
+    vsCompOther2: "Various types of fees can be applied.",
     vsCompOther3: "Complex setup and long onboarding",
     vsCompOther4: "Pay more as you add seats, features, and tools",
-    vsCompOther5: "By the time you get going, you're down $10,000+",
+    vsCompOther5: "By the time you get going, you have spent a lot of money",
     vsCompOtherTotalTitle: "Typical Total Investment to Get Started",
-    vsCompOtherTotalVal: "$10,000+",
+    vsCompOtherTotalVal: "more expensive",
     vsCompOtherTotalSub: "(Setup + First Month)",
     vsCompOtherTotalNote: "And it still may not include everything.",
 
@@ -317,7 +316,7 @@ const t = {
     vsCompCortexaTotalSub: "(Setup + First Month for 1 Agent)",
 
     vsCompBottomHeader: "More Leads. More Appointments. More Closings.",
-    vsCompBottomSub: "Up to 3X Increase in Lead Conversion Rate.",
+    vsCompBottomSub: "Increase the conversion rate of potential customers.",
     vsCompBottomFeat1: "No hidden fees",
     vsCompBottomFeat2: "Cancel anytime",
     vsCompBottomFeat3: "Built for real estate",
@@ -591,13 +590,13 @@ const t = {
     vsCompOtherTitle: "CON OTRAS PLATAFORMAS",
     vsCompOther1: "Alto costo mensual con múltiples complementos",
     vsCompOther2:
-      "Tarifa de configuración de $2,500 - $7,500+ para planes grandes",
+      "Se pueden aplicar diversos tipos de tarifas.",
     vsCompOther3: "Configuración compleja y larga capacitación inicial",
     vsCompOther4:
       "Pague más a medida que agrega usuarios, funciones y herramientas",
-    vsCompOther5: "Para cuando empiece a funcionar, ya habrá gastado $10,000+",
+    vsCompOther5: "Para cuando empiece a funcionar,has gastado mucho dinero",
     vsCompOtherTotalTitle: "Inversión Total Típica para Comenzar",
-    vsCompOtherTotalVal: "$10,000+",
+    vsCompOtherTotalVal: "Más caro",
     vsCompOtherTotalSub: "(Configuración + Primer Mes)",
     vsCompOtherTotalNote: "Y es posible que aún no incluya todo.",
 
@@ -615,7 +614,7 @@ const t = {
 
     vsCompBottomHeader: "Más Prospectos. Más Citas. Más Cierres.",
     vsCompBottomSub:
-      "Hasta 3X de Incremento en la Tasa de Conversión de Leads.",
+      "Aumente la tasa de conversión de clientes potenciales.",
     vsCompBottomFeat1: "Sin tarifas ocultas",
     vsCompBottomFeat2: "Cancele en cualquier momento",
     vsCompBottomFeat3: "Diseñado para el sector inmobiliario",
@@ -886,13 +885,13 @@ const t = {
     vsCompOtherTitle: "COM OUTRAS PLATAFORMAS",
     vsCompOther1: "Alto custo mensal com múltiplos add-ons",
     vsCompOther2:
-      "Taxa de configuração de $2.500 - $7.500+ para grandes planos",
+      "Diferentes tipos de taxas podem ser aplicados.",
     vsCompOther3: "Configuração complexa e integração demorada",
     vsCompOther4:
       "Pague mais conforme adiciona usuários, recursos e ferramentas",
-    vsCompOther5: "No momento em que você começar, já terá gasto $10.000+",
+    vsCompOther5: "No momento em que você começar, você gastou muito dinheiro",
     vsCompOtherTotalTitle: "Investimento Total Típico para Começar",
-    vsCompOtherTotalVal: "$10.000+",
+    vsCompOtherTotalVal: "Mais caro",
     vsCompOtherTotalSub: "(Configuração + Primeiro Mês)",
     vsCompOtherTotalNote: "E ainda pode não incluir tudo.",
 
@@ -909,7 +908,7 @@ const t = {
     vsCompCortexaTotalSub: "(Configuração + Primeiro Mês para 1 Agente)",
 
     vsCompBottomHeader: "Mais Leads. Mais Agendamentos. Mais Fechamentos.",
-    vsCompBottomSub: "Aumento de até 3X na Taxa de Conversão de Leads.",
+    vsCompBottomSub: "Aumente a taxa de conversão de clientes em potencial.",
     vsCompBottomFeat1: "Sem taxas ocultas",
     vsCompBottomFeat2: "Cancele a qualquer momento",
     vsCompBottomFeat3: "Feito para o mercado imobiliário",
@@ -1181,9 +1180,7 @@ export default function PricingPage() {
                 <div className="cx-pricing-icon-inline">
                   <BarChart3 size={44} strokeWidth={2} />
                 </div>
-                <span className="cx-pricing-stat-value">
-                  {tr.pricingFeatures.conversion.value}
-                </span>
+                
               </div>
               <h3 className="cx-pricing-card-title">
                 {tr.pricingFeatures.conversion.title}

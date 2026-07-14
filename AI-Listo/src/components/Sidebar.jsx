@@ -458,31 +458,7 @@ export default function Sidebar({
               )}
             </NavLink>
           ))}
-          {/*<div className={`ai-usage-card ${isCollapsed ? "collapsed" : ""}`}>
-              <div className="ai-usage-header">
-                <span className="ai-usage-title">{t("nav.ai_usage")}</span>
-              </div>     
-              <div className="ai-usage-chart-container">
-                <svg viewBox="0 0 200 60" className="ai-usage-svg">
-                  <path
-                    d="M0,50 Q20,45 40,48 T80,35 T120,40 T160,20 T200,10"
-                    fill="none"
-                    stroke="#6D7CFF"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="ai-usage-stats">
-                <p className="ai-usage-text">
-                  <strong>7,250</strong> / 10,000 {t("nav.ai_usage_credits")}
-                </p>
-                <div className="ai-usage-progress-bg">
-                  <div className="ai-usage-progress-bar" style={{ width: '72.5%' }}></div>
-                </div>
-                <span className="ai-usage-reset">{t("nav.ai_usage_reset")}</span>
-              </div>
-            </div>*/}
+          
         </nav>
 
         {/* {!isCollapsed && (

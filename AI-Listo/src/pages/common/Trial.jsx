@@ -49,10 +49,6 @@ const t = {
     heroTitlePost: "Built for Real Estate Professionals Who Want",
     heroTitleMore: "More.",
 
-    quoteText: `"CORTEXA AI Revenue OS completely transformed our business. The AI handles the follow-ups, our pipeline stays full and our closings are up. It's like having an entire team working 24/7."`,
-    quoteAuthor: "Customer Story",
-    quoteSub: "*****",
-
     statUsersVal: "",
     statUsersLbl: "Active Users",
     statDealsVal: "",
@@ -62,14 +58,6 @@ const t = {
 
     trustedText: "Trusted by real estate professionals everywhere",
 
-    badge1Title: "High Performer",
-    badge1Sub: "WINTER 2026",
-    badge2Title: "Best Results",
-    badge2Sub: "FALL 2025",
-    badge3Title: "Easiest To Use",
-    badge3Sub: "SUMMER 2025",
-    badge4Title: "Momentum Leader",
-    badge4Sub: "WINTER 2026",
   },
   es: {
     title: "Convierte más leads en ingresos — ",
@@ -110,14 +98,6 @@ const t = {
     trustedText:
       "Con la confianza de profesionales inmobiliarios en todas partes",
 
-    badge1Title: "Alto Rendimiento",
-    badge1Sub: "INVIERNO 2026",
-    badge2Title: "Mejores Resultados",
-    badge2Sub: "OTOÑO 2025",
-    badge3Title: "Más Fácil de Usar",
-    badge3Sub: "VERANO 2025",
-    badge4Title: "Líder de Impulso",
-    badge4Sub: "INVIERNO 2026",
   },
   pt: {
     title: "Transforme mais leads em receita — ",
@@ -157,14 +137,6 @@ const t = {
 
     trustedText: "Confiado por profissionais imobiliários em todos os lugares",
 
-    badge1Title: "Alto Desempenho",
-    badge1Sub: "INVERNO 2026",
-    badge2Title: "Melhores Resultados",
-    badge2Sub: "OUTONO 2025",
-    badge3Title: "Mais Fácil de Usar",
-    badge3Sub: "VERÃO 2025",
-    badge4Title: "Líder de Impulso",
-    badge4Sub: "INVERNO 2026",
   },
 };
 
@@ -466,50 +438,6 @@ export default function StartTrial() {
                 {tr.heroTitlePost}{" "}
                 <span className="cx-purple-text">{tr.heroTitleMore}</span>
               </h2>
-
-              <div className="cx-mob-testimonial-card">
-                <div className="cx-mob-quote-header">
-                  <Quote
-                    className="cx-mob-quote-icon"
-                    size={24}
-                    fill="currentColor"
-                  />
-                  <div className="cx-mob-avatar-placeholder">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                <p className="cx-mob-quote-body">{tr.quoteText}</p>
-
-                <div className="cx-mob-author-wrapper">
-                  <div className="cx-mob-team-photo">
-                    <div className="cx-mini-avatar avatar-1">
-                      <img
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-                        alt="User avatar"
-                        className="badge-avatar"
-                      />
-                    </div>
-                  </div>
-                  <div className="cx-mob-author-info">
-                    <h4 className="cx-mob-author-name">{tr.quoteAuthor}</h4>
-                    <p className="cx-mob-author-sub">{tr.quoteSub}</p>
-                    <div className="cx-mob-verified-badge">
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div className="cx-mob-stats-card middle">
                 <div className="cx-mob-stat-row">

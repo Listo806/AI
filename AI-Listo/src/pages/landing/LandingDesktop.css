@@ -2997,13 +2997,28 @@ i{
 }
 
 #features .cx-stat-up-tag {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: #0f172a;
   letter-spacing: 0.05em;
   display: block;
+  text-align: left;
 }
-
+.cx-stat-up-wrap{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.cx-stat-up-wrap .svg{
+  padding: 10px;
+  background: #678aff38;
+  border-radius: 50%;
+  height: 44px;
+}
+.cx-stat-up-wrap span svg{
+  min-width: 24px;
+  color: #003bff;
+}
 #features .cx-stat-giant-num {
   font-size: 74px;
   font-weight: 700;
@@ -3035,15 +3050,18 @@ i{
   width: 60px;
   height: 3px;
   background-color: #2563eb;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 20px 54px;
 }
 
 #features .cx-stat-description-text {
   font-size: 14px;
   line-height: 1.6;
   color: #272a2e;
+  text-align: left;
 }
-
+#features .cx-sidebar-stat-block-bottom .cx-stat-up-tag{
+  text-align: center;
+}
 #features .cx-sidebar-divider-line {
   height: 1px;
   background-color: #e2e8f0;
@@ -3057,6 +3075,7 @@ i{
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: center;
 }
 
 #features .cx-stat-inline-icon {
