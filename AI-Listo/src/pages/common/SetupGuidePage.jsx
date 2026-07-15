@@ -199,8 +199,8 @@ export default function SetupGuide() {
         <footer className={styles.footerTip}>
           <Lightbulb size={26} className={styles.tipIcon} />
           <span>
-            <strong>Tip:</strong> Most customers can complete the basic setup
-            process in under 15 minutes.
+            <strong>Tip:</strong> The basic setup is designed to be quick and
+            straightforward.
           </span>
         </footer>
       </main>

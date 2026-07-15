@@ -41,7 +41,7 @@ const t = {
     btnNormal: "Continue to Secure Checkout",
     btnLoading: "Creating Account...",
     footerNote:
-      "You will be redirected to secure checkout to activate your account with a one-time setup fee.",
+      "You will be redirected to secure checkout to activate your account with a one-time $97 setup fee.",
 
     heroTitlePre: "The",
     heroTitleAi: "AI Revenue OS",
@@ -76,7 +76,7 @@ const t = {
     btnNormal: "Continuar al Pago Seguro",
     btnLoading: "Creando Cuenta...",
     footerNote:
-      "Será redirigido al pago seguro para activar su cuenta con una tarifa de configuración de pago único.",
+      "Será redirigido al pago seguro para activar su cuenta con una tarifa de configuración única de $97.",
 
     heroTitlePre: "El",
     heroTitleAi: "AI Revenue OS",
@@ -111,7 +111,7 @@ const t = {
     btnNormal: "Continuar para o Pagamento Seguro",
     btnLoading: "Criando Conta...",
     footerNote:
-      "Você será redirecionado para o pagamento seguro para ativar sua conta com uma taxa de configuração de pagamento único.",
+      "Você será redirecionado para o pagamento seguro para ativar sua conta com uma taxa de configuração única de $97.",
 
     heroTitlePre: "O",
     heroTitleAi: "AI Revenue OS",

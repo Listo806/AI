@@ -449,6 +449,7 @@ export default function FeaturesPage() {
                   <div className={styles.chartBar} style={{ width: "45%", backgroundColor: "#38BDF8" }}></div>
                 </div>
                 <div className={styles.analyticsMini}><TrendingUp size={14} /> {cur.analyticsSection.convRate}</div>
+                <p style={{ fontSize: "11px", opacity: 0.6, margin: "8px 0 0 0" }}>Sample data for illustration only.</p>
               </div>
             </div>
           </div>

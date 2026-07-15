@@ -192,7 +192,7 @@ export default function Landing() {
         {
           eyebrow: "AI Follow up",
           title: "Automate your follow-ups",
-          desc: "Never miss a lead. Send instant, personalized replies across your channels and nurture opportunities automatically.",
+          desc: "Respond faster with personalized replies across your channels and nurture opportunities automatically.",
         },
         {
           eyebrow: "AI Appoitment Setter",
@@ -2412,6 +2412,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
+          <i style={{ display: "block", fontSize: "12px", opacity: 0.65, marginTop: "16px", textAlign: "center" }}>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
         </div>
       </section>
       <section className="how-section">

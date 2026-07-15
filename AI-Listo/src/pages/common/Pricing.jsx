@@ -81,7 +81,7 @@ const t = {
       },
       automate: {
         title: "Automate. Follow Up. Close More.",
-        desc: "Never miss a lead again. Instant responses and smart follow-ups convert more leads into clients.",
+        desc: "Automatic, smart follow-ups help you respond faster and convert more leads into clients.",
       },
       conversion: {
         title: "Increase in Lead Conversion Rate",
@@ -95,6 +95,7 @@ const t = {
 
     plansBadgePopular: "MOST POPULAR",
     plansBtnTrial: "Start My Free Trial",
+    plansFeeNote: "One-time setup fee: $97",
     plansPerMonth: "/month",
     plansData: {
       solo: {
@@ -365,7 +366,7 @@ const t = {
       },
       automate: {
         title: "Automatice. Siga de cerca. Cierre más.",
-        desc: "No vuelva a perder un prospecto. Las respuestas instantáneas y los seguimientos inteligentes convierten más prospectos en clientes.",
+        desc: "Los seguimientos automáticos e inteligentes le ayudan a responder más rápido y convertir más prospectos en clientes.",
       },
       conversion: {
         value: "",
@@ -380,6 +381,7 @@ const t = {
 
     plansBadgePopular: "MÁS POPULAR",
     plansBtnTrial: "Iniciar Mi Prueba Gratuita",
+    plansFeeNote: "Tarifa única de configuración: $97",
     plansPerMonth: "/mes",
     plansData: {
       solo: {
@@ -663,7 +665,7 @@ const t = {
       },
       automate: {
         title: "Automatize. Acompanhe. Feche Mais.",
-        desc: "Nunca mais perca um lead. Respostas instantâneas e acompanhamentos inteligentes convertem mais leads em clientes.",
+        desc: "Acompanhamentos automáticos e inteligentes ajudam você a responder mais rápido e converter mais leads em clientes.",
       },
       conversion: {
         value: "",
@@ -678,6 +680,7 @@ const t = {
 
     plansBadgePopular: "MAIS POPULAR",
     plansBtnTrial: "Iniciar Meu Teste Gratuito",
+    plansFeeNote: "Taxa única de configuração: $97",
     plansPerMonth: "/mês",
     plansData: {
       solo: {
@@ -1236,6 +1239,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card cx-plans-popular">
@@ -1269,6 +1273,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card">
@@ -1301,6 +1306,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
           </div>
 
@@ -1621,6 +1627,7 @@ export default function PricingPage() {
               <Zap size={16} fill="currentColor" className="cx-btn-bolt-icon" />
               {tr.vsCompBottomBtn}
             </a>
+            <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
           </div>
         </div>
       </main>
