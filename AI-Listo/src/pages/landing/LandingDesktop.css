@@ -3944,6 +3944,9 @@ i{
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.cx-strip i{
+    color: #555;
+}
  @media (max-width: 1200px) {
 
    .how-grid {

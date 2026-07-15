@@ -2722,6 +2722,7 @@ export default function Landing() {
                   </div>
                 </div>
                 <div className="cta-ai">⚡ {tr.stripAI}</div>
+                <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
               </div>
             </div>
             <div className="cta-glow"></div>
