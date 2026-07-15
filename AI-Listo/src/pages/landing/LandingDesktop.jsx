@@ -2876,7 +2876,7 @@ export default function Landing() {
 
             <div className="footer-grid footer-landing">
               <div className="footer-brand">
-                <img src={footlogo} alt="Cortexa" className="landing-logo" />
+                <img src={headlogotranImg} alt="Cortexa" className="landing-logo" />
 
                 <p>{tr.footerDescription}</p>
 
