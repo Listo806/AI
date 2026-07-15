@@ -9,11 +9,11 @@ const Privacy = () => {
       </p>
 
       <p>
-        This Privacy Policy explains how <strong>Cortexa CRM</strong> ("Cortexa", "we", "our", "us") collects, uses, and protects your information when you use our platform and services ("Services").
+        This Privacy Policy explains how <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us") collects, uses, and protects your information when you use our platform and services ("Services").
       </p>
 
       <p>
-        By using Cortexa CRM, you agree to this Privacy Policy.
+        By using CORTEXA AI Revenue OS, you agree to this Privacy Policy.
       </p>
 
       <Section title="1. Information We Collect">
@@ -155,8 +155,8 @@ const Privacy = () => {
         </Section>
 
         <Section title="12. Contact">
-          <p>Support Email: support@cortexa.ai</p>
-          <p>Company: Cortexa CRM</p>
+          <p>Support Email: support@cortexaaicrm.com</p>
+          <p>Company: CORTEXA AI Revenue OS</p>
         </Section>
     </div>
   );

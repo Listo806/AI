@@ -81,7 +81,7 @@ const t = {
       },
       automate: {
         title: "Automate. Follow Up. Close More.",
-        desc: "Never miss a lead again. Instant responses and smart follow-ups convert more leads into clients.",
+        desc: "Automatic, smart follow-ups help you respond faster and convert more leads into clients.",
       },
       conversion: {
         title: "Increase in Lead Conversion Rate",
@@ -95,6 +95,7 @@ const t = {
 
     plansBadgePopular: "MOST POPULAR",
     plansBtnTrial: "Start My Free Trial",
+    plansFeeNote: "One-time setup fee: $97",
     plansPerMonth: "/month",
     plansData: {
       solo: {
@@ -166,9 +167,9 @@ const t = {
     compareOneTimeSetup: "ONE-TIME SETUP FEE\nTypical for big plans",
     compareSetupSetup: "$97\nOne-time setup",
     compareEstimatedCost: "ESTIMATED MONTHLY COST\nFor most businesses",
-    compareEstimatedOther: "$2,500 – $7,500+",
+    compareEstimatedOther: "Varies by provider",
     compareEstimatedOther1:
-      "$2,500 – $5,000+ /month\nAnd it still may not include everything.",
+      "Varies by provider\nAnd it may not include everything.",
     compareEstimatedCortexa: "$197 /month\nEverything included",
 
     compareRows: [
@@ -177,117 +178,117 @@ const t = {
       {
         f: "Email & SMS Campaigns",
         o: "Included, but tiered by plan",
-        c: "$50 – $150 /mo",
+        c: "Varies",
       },
       {
         f: "Marketing Automation",
         o: "Included, but limited in lower plans",
-        c: "$100 – $300 /mo",
+        c: "Varies",
       },
       {
         f: "AI Agent (24/7)",
         o: "Add-on or higher tier only",
-        c: "$300 – $1,000 /mo",
+        c: "Varies",
       },
       {
         f: "WhatsApp Automation",
         o: "Usually integration or add-on",
-        c: "$50 – $150 /mo",
+        c: "Varies",
       },
       {
         f: "Appointment Booking",
         o: "Add-on or higher tier only",
-        c: "$50 – $115 /mo",
+        c: "Varies",
       },
       {
         f: "Web Forms & Landing Pages",
         o: "Limited in lower plans",
-        c: "$50 – $75 /mo",
+        c: "Varies",
       },
       {
         f: "Reporting & Analytics",
         o: "Advanced reporting in higher tiers",
-        c: "$100 – $250 /mo",
+        c: "Varies",
       },
       {
         f: "Sales Automation",
         o: "Sales automation in higher tiers",
-        c: "$75 – $200 /mo",
+        c: "Varies",
       },
       {
         f: "Tasks & Reminders",
         o: "Included, but limited",
-        c: "$25 – $75 /mo",
+        c: "Varies",
       },
       {
         f: "Team Collaboration",
         o: "Seat-based, higher cost",
-        c: "$25 – $75 /user/mo",
+        c: "Varies",
       },
       {
         f: "Document & File Management",
         o: "Often limited storage",
-        c: "$25 – $100 /mo",
+        c: "Varies",
       },
       {
         f: "Workflow Automation",
         o: "Advanced workflows in higher tiers",
-        c: "$100 – $250 /mo",
+        c: "Varies",
       },
       {
         f: "Industry-Specific Setup",
         o: "Custom work or expensive add-on",
-        c: "$500 – $2,500+ (one-time)",
+        c: "Varies",
       },
       {
         f: "Onboarding & Training",
         o: "Often add-on or paid service",
-        c: "$500 – $2,000+ (one-time)",
+        c: "Varies",
       },
       {
         f: "Integration (Popular Apps)",
         o: "Many require paid integrations",
-        c: "$50 – $300 /mo",
+        c: "Varies",
       },
       {
         f: "Lead Generation (Done For You)",
         o: "Separate add-on or external service",
-        c: "$197 – $1,000+ /mo",
+        c: "Varies",
       },
       {
         f: "AI Usage & Credits",
         o: "AI credits, usage limits, and overage charges",
-        c: "$197 – $1,000+ /mo\n(varies by usage)",
+        c: "Varies",
         badge: "NEW",
       },
       {
         f: "Marketing Contact Fees",
         o: "Charged as your contact database grows",
-        c: "$225 – $180+ /mo\n(varies by contact volume)",
+        c: "Varies",
         badge: "NEW",
       },
       {
         f: "Transactional Emails",
         o: "Often sold as a separate add-on service",
-        c: "$600+ /mo",
+        c: "Varies",
         badge: "NEW",
       },
       {
         f: "Custom Fields & Properties",
         o: "Additional limits require expansion packs or upgrades",
-        c: "$70 – $220+ /mo",
+        c: "Varies",
         badge: "NEW",
       },
       {
         f: "Advanced Reporting & Dashboards",
         o: "Reporting limits often require higher plans or add-ons",
-        c: "$200+ /mo",
+        c: "Varies",
         badge: "NEW",
       },
       {
         f: "Team & User Growth Limits",
         o: "Expansion packs required as teams grow",
-        c: "$200+ /mo",
+        c: "Varies",
         badge: "NEW",
       },
     ],
@@ -366,10 +367,10 @@ const t = {
       },
       automate: {
         title: "Automatice. Siga de cerca. Cierre más.",
-        desc: "No vuelva a perder un prospecto. Las respuestas instantáneas y los seguimientos inteligentes convierten más prospectos en clientes.",
+        desc: "Los seguimientos automáticos e inteligentes le ayudan a responder más rápido y convertir más prospectos en clientes.",
       },
       conversion: {
-        value: "3X",
+        value: "",
         title: "Aumento en la Tasa de Conversión",
         desc: "Gestiona tus clientes potenciales, seguimientos y flujo de ventas en un solo espacio de trabajo conectado.",
       },
@@ -381,6 +382,7 @@ const t = {
 
     plansBadgePopular: "MÁS POPULAR",
     plansBtnTrial: "Iniciar Mi Prueba Gratuita",
+    plansFeeNote: "Tarifa única de configuración: $97",
     plansPerMonth: "/mes",
     plansData: {
       solo: {
@@ -454,9 +456,9 @@ const t = {
       "TARIFA DE CONFIGURACIÓN ÚNICA\nHabitual en planes grandes",
     compareSetupSetup: "$97\nConfiguración única",
     compareEstimatedCost: "COSTO MENSUAL ESTIMADO\nPara la mayoría de empresas",
-    compareEstimatedOther: "$2,500 – $7,500+",
+    compareEstimatedOther: "Varies by provider",
     compareEstimatedOther1:
-      "$2,500 – $5,000+ /mes\nY aún así podría no incluir todo.",
+      "Varía según el proveedor\nY aún así podría no incluir todo.",
     compareEstimatedCortexa: "$197 /mes\nTodo incluido",
 
     compareRows: [
@@ -473,117 +475,117 @@ const t = {
       {
         f: "Campañas de Email y SMS",
         o: "Incluido, pero por niveles según plan",
-        c: "$50 – $150 /mes",
+        c: "Varies",
       },
       {
         f: "Automatización de Marketing",
         o: "Incluido, pero limitado en planes inferiores",
-        c: "$100 – $300 /mes",
+        c: "Varies",
       },
       {
         f: "Agente de IA (24/7)",
         o: "Solo complemento o nivel superior",
-        c: "$300 – $1,000 /mes",
+        c: "Varies",
       },
       {
         f: "Automatización de WhatsApp",
         o: "Normalmente integración o complemento",
-        c: "$50 – $150 /mes",
+        c: "Varies",
       },
       {
         f: "Reserva de Citas",
         o: "Solo complemento o nivel superior",
-        c: "$50 – $115 /mes",
+        c: "Varies",
       },
       {
         f: "Formularios Web y Landing Pages",
         o: "Limitado en planes inferiores",
-        c: "$50 – $75 /mes",
+        c: "Varies",
       },
       {
         f: "Informes y Analítica",
         o: "Informes avanzados en niveles superiores",
-        c: "$100 – $250 /mes",
+        c: "Varies",
       },
       {
         f: "Automatización de Ventas",
         o: "Automatización en niveles superiores",
-        c: "$75 – $200 /mes",
+        c: "Varies",
       },
       {
         f: "Tareas y Recordatorios",
         o: "Incluido, pero limitado",
-        c: "$25 – $75 /mes",
+        c: "Varies",
       },
       {
         f: "Colaboración en Equipo",
         o: "Por usuario, mayor costo",
-        c: "$25 – $75 /usuario/mes",
+        c: "Varies",
       },
       {
         f: "Gestión de Documentos y Archivos",
         o: "A menudo almacenamiento limitado",
-        c: "$25 – $100 /mes",
+        c: "Varies",
       },
       {
         f: "Automatización de Flujos",
         o: "Flujos avanzados en niveles superiores",
-        c: "$100 – $250 /mes",
+        c: "Varies",
       },
       {
         f: "Configuración Específica",
         o: "Trabajo personalizado o complemento costoso",
-        c: "$500 – $2,500+ (único)",
+        c: "Varies",
       },
       {
         f: "Onboarding y Capacitación",
         o: "A menudo servicio de pago",
-        c: "$500 – $2,000+ (único)",
+        c: "Varies",
       },
       {
         f: "Integración (Apps Populares)",
         o: "Muchas requieren integraciones de pago",
-        c: "$50 – $300 /mes",
+        c: "Varies",
       },
       {
         f: "Generación de Prospectos",
         o: "Complemento separado o servicio externo",
-        c: "$197 – $1,000+ /mes",
+        c: "Varies",
       },
       {
         f: "Créditos y Uso de IA",
         o: "Límites de uso y cargos por exceso",
-        c: "$197 – $1,000+ /mes\n(varía según el uso)",
+        c: "Varies",
         badge: "NUEVO",
       },
       {
         f: "Tarifas por Contactos",
         o: "Se cobra a medida que crece la base de datos",
-        c: "$225 – $180+ /mes\n(varía según el volumen)",
+        c: "Varies",
         badge: "NUEVO",
       },
       {
         f: "Correos Transaccionales",
         o: "A menudo vendido por separado",
-        c: "$600+ /mes",
+        c: "Varies",
         badge: "NUEVO",
       },
       {
         f: "Campos Personalizados",
         o: "Límites adicionales requieren paquetes de expansión",
-        c: "$70 – $220+ /mes",
+        c: "Varies",
         badge: "NUEVO",
       },
       {
         f: "Informes Avanzados",
         o: "Límites de informes requieren planes superiores",
-        c: "$200+ /mes",
+        c: "Varies",
         badge: "NUEVO",
       },
       {
         f: "Límites de Crecimiento de Equipo",
         o: "Paquetes de expansión al crecer el equipo",
-        c: "$200+ /mes",
+        c: "Varies",
         badge: "NUEVO",
       },
     ],
@@ -665,10 +667,10 @@ const t = {
       },
       automate: {
         title: "Automatize. Acompanhe. Feche Mais.",
-        desc: "Nunca mais perca um lead. Respostas instantâneas e acompanhamentos inteligentes convertem mais leads em clientes.",
+        desc: "Acompanhamentos automáticos e inteligentes ajudam você a responder mais rápido e converter mais leads em clientes.",
       },
       conversion: {
-        value: "3X",
+        value: "",
         title: "Aumento na Taxa de Conversão de Leads",
         desc: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       },
@@ -680,6 +682,7 @@ const t = {
 
     plansBadgePopular: "MAIS POPULAR",
     plansBtnTrial: "Iniciar Meu Teste Gratuito",
+    plansFeeNote: "Taxa única de configuração: $97",
     plansPerMonth: "/mês",
     plansData: {
       solo: {
@@ -754,9 +757,9 @@ const t = {
       "TAXA ÚNICA DE CONFIGURAÇÃO\nTradicional em planos grandes",
     compareSetupSetup: "$97\nTaxa única",
     compareEstimatedCost: "CUSTO MENSAL ESTIMADO\nPara a maioria das empresas",
-    compareEstimatedOther: "$2.500 – $7.500+",
+    compareEstimatedOther: "Varies by provider",
     compareEstimatedOther1:
-      "$2.500 – $5.000+ /mês\nE ainda assim pode não incluir tudo.",
+      "Varia conforme o provedor\nE ainda assim pode não incluir tudo.",
     compareEstimatedCortexa: "$197 /mês\nTudo incluso",
 
     compareRows: [
@@ -769,117 +772,117 @@ const t = {
       {
         f: "Campanhas de E-mail e SMS",
         o: "Incluso, mas por nível de plano",
-        c: "$50 – $150 /mês",
+        c: "Varies",
       },
       {
         f: "Automação de Marketing",
         o: "Incluso, mas limitado em planos baixos",
-        c: "$100 – $300 /mês",
+        c: "Varies",
       },
       {
         f: "Agente de IA (24/7)",
         o: "Apenas complemento ou nível superior",
-        c: "$300 – $1.000 /mês",
+        c: "Varies",
       },
       {
         f: "Automação de WhatsApp",
         o: "Geralmente integração ou complemento",
-        c: "$50 – $150 /mês",
+        c: "Varies",
       },
       {
         f: "Agendamento de Reuniões",
         o: "Apenas complemento ou nível superior",
-        c: "$50 – $115 /mês",
+        c: "Varies",
       },
       {
         f: "Formulários Web e Landing Pages",
         o: "Limitado em planos inferiores",
-        c: "$50 – $75 /mês",
+        c: "Varies",
       },
       {
         f: "Relatórios e Análises",
         o: "Relatórios avançados em níveis superiores",
-        c: "$100 – $250 /mês",
+        c: "Varies",
       },
       {
         f: "Automação de Vendas",
         o: "Automação em níveis superiores",
-        c: "$75 – $200 /mês",
+        c: "Varies",
       },
       {
         f: "Tarefas e Lembretes",
         o: "Incluso, mas limitado",
-        c: "$25 – $75 /mês",
+        c: "Varies",
       },
       {
         f: "Colaboração em Equipe",
         o: "Por usuário, custo maior",
-        c: "$25 – $75 /usuário/mês",
+        c: "Varies",
       },
       {
         f: "Gestão de Documentos e Arquivos",
         o: "Geralmente armazenamento limitado",
-        c: "$25 – $100 /mês",
+        c: "Varies",
       },
       {
         f: "Automação de Fluxos",
         o: "Fluxos avançados em níveis superiores",
-        c: "$100 – $250 /mês",
+        c: "Varies",
       },
       {
         f: "Configuração Específica",
         o: "Trabalho personalizado ou complemento caro",
-        c: "$500 – $2.500+ (único)",
+        c: "Varies",
       },
       {
         f: "Onboarding e Treinamento",
         o: "Geralmente serviço adicional pago",
-        c: "$500 – $2.000+ (único)",
+        c: "Varies",
       },
       {
         f: "Integração (Apps Populares)",
         o: "Muitos exigem integrações pagas",
-        c: "$50 – $300 /mês",
+        c: "Varies",
       },
       {
         f: "Geração de Leads",
         o: "Complemento separado ou serviço externo",
-        c: "$197 – $1.000+ /mês",
+        c: "Varies",
       },
       {
         f: "Créditos e Uso de IA",
         o: "Créditos de IA e cobranças por excesso",
-        c: "$197 – $1.000+ /mês\n(varia por uso)",
+        c: "Varies",
         badge: "NOVO",
       },
       {
         f: "Taxas por Contatos de Marketing",
         o: "Cobrado conforme o banco de dados cresce",
-        c: "$225 – $180+ /mês\n(varia por volume)",
+        c: "Varies",
         badge: "NOVO",
       },
       {
         f: "E-mails Transacionais",
         o: "Geralmente vendido como serviço separado",
-        c: "$600+ /mês",
+        c: "Varies",
         badge: "NOVO",
       },
       {
         f: "Campos Personalizados",
         o: "Limites extras exigem pacotes de expansão",
-        c: "$70 – $220+ /mês",
+        c: "Varies",
         badge: "NOVO",
       },
       {
         f: "Painéis e Relatórios Avançados",
         o: "Limites exigem planos superiores",
-        c: "$200+ /mês",
+        c: "Varies",
         badge: "NOVO",
       },
       {
         f: "Limites de Crescimento de Equipe",
         o: "Pacotes de expansão necessários",
-        c: "$200+ /mês",
+        c: "Varies",
         badge: "NOVO",
       },
     ],
@@ -1236,6 +1239,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card cx-plans-popular">
@@ -1269,6 +1273,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card">
@@ -1301,6 +1306,7 @@ export default function PricingPage() {
               <a href="/trial" className="cx-plans-btn">
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </a>
+              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
           </div>
 

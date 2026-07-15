@@ -87,14 +87,14 @@ export default function LandingMobile() {
       ],
       pricing: "Pricing",
       watchDemo: "Watch Demo",
-      trusted: "Trusted by real estate agents worldwide.",
+      trusted: "Built for real estate agents.",
 
       benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
       benefitsTitle1: "Everything You Need.",
       benefitsTitle2: "All in One Place.",
       followUpTitle: "Automated Follow-Ups",
       followUpDesc:
-        "Never miss a lead again. AI follows up instantly until the deal is closed.",
+        "Automatically follows up on new leads so fewer slip through the cracks.",
       setterTitle: "AI Appointment Setter",
       setterDesc:
         "Qualifies leads, books appointments, and moves opportunities forward.",
@@ -164,7 +164,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
-      ctaButtonText: "Get Started",
+      ctaButtonText: "Start Your Free Trial",
+      underCTA: "One-time setup fee: $97",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -209,7 +210,7 @@ export default function LandingMobile() {
       finalCtaTitle3: "Grow Your Business.",
       finalCtaDesc:
         "Join real estate professionals who are growing with CORTEXA.",
-      finalCtaBtn: "Get Started",
+      finalCtaBtn: "Start Your Free Trial",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Unlock potential today",
 
@@ -272,7 +273,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
       leftCost1: "High setup fees",
       leftCost2: "Add-ons and upgrades you pay for separately",
       leftCost3: "Multiple disconnected tools",
@@ -284,7 +285,7 @@ export default function LandingMobile() {
       rightBenefit3: "One connected workspace",
       rightBenefit4: "Faster implementation",
       rightBenefit5: "Transparent pricing. No surprises.",
-      stat2Title: "LESS EXPENSIVE TO IMPLEMENT",
+      stat2Title: "",
 
       titlePre: "Reporting that ",
       titleActive: "actually ",
@@ -343,13 +344,13 @@ export default function LandingMobile() {
       ],
       pricing: "Precios",
       watchDemo: "Ver Demo",
-      trusted: "Con la confianza de agentes inmobiliarios de todo el mundo",
+      trusted: "Creado para agentes inmobiliarios.",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
       followUpTitle: "Seguimientos Automatizados",
       followUpDesc:
-        "No pierdas ningún lead. La IA hace seguimiento al instante hasta cerrar el trato.",
+        "Hace seguimiento automático de los nuevos leads para que menos se escapen.",
       setterTitle: "Agendador de Citas con IA",
       setterDesc: "Califica leads, agenda citas y avanza las oportunidades.",
       pipelineTitle: "Gestión de Pipeline",
@@ -420,7 +421,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
-      ctaButtonText: "Comenzar",
+      ctaButtonText: "Comienza Tu Prueba Gratis",
+      underCTA: "Tarifa única de configuración: $97",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -464,8 +466,8 @@ export default function LandingMobile() {
       finalCtaTitle2: "Cierra Más Tratos.",
       finalCtaTitle3: "Haz Crecer Tu Negocio.",
       finalCtaDesc:
-        "Únete a más de profesionales inmobiliarios que están creciendo con CORTEXA.",
-      finalCtaBtn: "Comenzar",
+        "Únete a profesionales inmobiliarios que están creciendo con CORTEXA.",
+      finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
 
@@ -528,7 +530,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
       leftCost1: "Altas tarifas de configuración",
       leftCost2: "Complementos y actualizaciones que pagas por separado",
       leftCost3: "Múltiples herramientas desconectadas",
@@ -540,7 +542,7 @@ export default function LandingMobile() {
       rightBenefit3: "Un espacio de trabajo conectado",
       rightBenefit4: "Implementación más rápida",
       rightBenefit5: "Precios transparentes. Sin sorpresas.",
-      stat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
+      stat2Title: "",
 
       titlePre: "Informes que ",
       titleActive: "realmente ",
@@ -601,13 +603,13 @@ export default function LandingMobile() {
       ],
       pricing: "Preços",
       watchDemo: "Ver Demo",
-      trusted: "A confiança de agentes imobiliários em todo o mundo",
+      trusted: "Feito para agentes imobiliários.",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
       followUpTitle: "Acompanhamentos Automatizados",
       followUpDesc:
-        "Nunca perca um lead. A IA acompanha instantaneamente até o negócio ser fechado.",
+        "Acompanha automaticamente os novos leads para que menos escapem.",
       setterTitle: "Agendador de Reuniões com IA",
       setterDesc:
         "Qualifica leads, agenda reuniões e faz os negócios avançarem.",
@@ -678,7 +680,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
-      ctaButtonText: "Começar",
+      ctaButtonText: "Comece Seu Teste Grátis",
+      underCTA: "Taxa única de configuração: $97",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
@@ -722,8 +725,8 @@ export default function LandingMobile() {
       finalCtaTitle2: "Feche Mais Negócios.",
       finalCtaTitle3: "Cresça Seu Negócio.",
       finalCtaDesc:
-        "Junte-se a mais de profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
-      finalCtaBtn: "Começar",
+        "Junte-se a profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
+      finalCtaBtn: "Comece Seu Teste Grátis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
 
@@ -786,7 +789,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
       leftCost1: "Altas taxas de configuração",
       leftCost2: "Adicionais e atualizações pagos separadamente",
       leftCost3: "Múltiplas ferramentas desconectadas",
@@ -798,7 +801,7 @@ export default function LandingMobile() {
       rightBenefit3: "Um espaço de trabalho conectado",
       rightBenefit4: "Implementação mais rápida",
       rightBenefit5: "Preços transparentes. Sem surpresas.",
-      stat2Title: "MAIS BARATO PARA IMPLEMENTAR",
+      stat2Title: "",
 
       titlePre: "Relatórios que ",
       titleActive: "realmente ",
@@ -997,6 +1000,7 @@ export default function LandingMobile() {
             </div>
             <ArrowRight size={18} />
           </a>
+          <p className="m-under-cta">{tr.underCTA}</p>
           {/*<button className="m-secondary-btn">
             <Play size={18} />
             {tr.watchDemo}
@@ -1016,29 +1020,7 @@ export default function LandingMobile() {
         </div>
 
         <div className="m-trust">
-          <div className="m-avatars">
-            {avatars.map((url, index) => (
-              <img
-                key={index}
-                src={url}
-                alt={`User avatar ${index + 1}`}
-                className="badge-avatar"
-              />
-            ))}
-          </div>
-
           <div className="m-trust-text">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                className="star-icon"
-                viewBox="0 0 24 24"
-                fill="#FFB800"
-              >
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-              </svg>
-            ))}
-            <br />
             {tr.trusted}
           </div>
         </div>
@@ -1049,24 +1031,6 @@ export default function LandingMobile() {
         </div>
       </section>
 
-      {/* STATS */}
-
-      <section className="m-stats">
-        <div className="m-stat-card">
-          <h3>$80M+</h3>
-          <span>Pipeline Value</span>
-        </div>
-
-        <div className="m-stat-card">
-          <h3>500K+</h3>
-          <span>Leads Captured</span>
-        </div>
-
-        <div className="m-stat-card">
-          <h3>24/7</h3>
-          <span>AI Agent</span>
-        </div>
-      </section>
       <section className="features">
         <div className="cx-mob-container">
           <div className="cx-mob-header">
@@ -1086,10 +1050,6 @@ export default function LandingMobile() {
           </div>
 
           <div className="cx-mob-stat-block">
-            <div className="cx-mob-stat-hero">
-              <TrendingUp size={46} className="cx-mob-trend-icon" />
-              <h3>3X</h3>
-            </div>
             <h4>{tr.stat1Title}</h4>
             <p>{tr.stat1Desc}</p>
           </div>
@@ -1105,7 +1065,6 @@ export default function LandingMobile() {
                   <XCircle size={14} className="icon-red" />
                   <span>{tr.leftCost1}</span>
                 </div>
-                <strong className="cx-val-red">$2,500 - $7,500+</strong>
               </li>
               <li>
                 <div className="cx-mob-li-left">
@@ -1174,13 +1133,6 @@ export default function LandingMobile() {
             </ul>
           </div>
 
-          <div className="cx-mob-stat-block-bottom">
-            <div className="cx-mob-stat-hero">
-              <TrendingUp size={36} className="cx-mob-trend-icon" />
-              <h3>20X</h3>
-            </div>
-            <h4>{tr.stat2Title}</h4>
-          </div>
         </div>
       </section>
       {/* BENEFITS SECTION */}
@@ -1988,6 +1940,7 @@ export default function LandingMobile() {
             </div>
           </div>
         </div>
+        <i style={{ display: "block", fontSize: "11px", opacity: 0.7, marginTop: "10px", textAlign: "center" }}>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
       </section>
       <section id="m-workspace">
         <div className="aios-container">
@@ -2112,22 +2065,6 @@ export default function LandingMobile() {
           </h2>
         </div>
 
-        <div className="m-final-cta-stats">
-          <div className="m-final-stat-card">
-            <h3>+312%</h3>
-            <span>{tr.ctaStat1Label}</span>
-          </div>
-
-          <div className="m-final-stat-card">
-            <h3>+$2.4M+</h3>
-            <span>{tr.ctaStat2Label}</span>
-          </div>
-
-          <div className="m-final-stat-card">
-            <h3>10K+</h3>
-            <span>{tr.ctaStat3Label}</span>
-          </div>
-        </div>
 
         <div className="m-final-cta-action">
           <a href="/trial" className="m-final-purple-btn">
@@ -2158,6 +2095,7 @@ export default function LandingMobile() {
               <path d="m12 5 7 7-7 7" />
             </svg>
           </a>
+          <p className="m-under-cta">{tr.underCTA}</p>
         </div>
       </section>
       <section className="m-powerful">
@@ -2279,6 +2217,7 @@ export default function LandingMobile() {
                 <path d="m12 5 7 7-7 7" />
               </svg>
             </a>
+            <p className="m-under-cta">{tr.underCTA}</p>
           </div>
 
           <div className="m-bottom-preview-container">

@@ -9,7 +9,7 @@ const Cancellation = () => {
       </p>
 
       <p>
-        This Cancellation Policy explains how you may cancel your subscription to <strong>Cortexa CRM</strong> ("Cortexa", "we", "our", "us"). By using our Services, you agree to this policy.
+        This Cancellation Policy explains how you may cancel your subscription to <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us"). By using our Services, you agree to this policy.
       </p>
 
       <Section title="1. Subscription Cancellation">
@@ -22,7 +22,7 @@ const Cancellation = () => {
               By contacting support via:
               <ul style={styles.ul}>
                 <li>AI Support (Contact page)</li>
-                <li>Email: support@cortexa.ai</li>
+                <li>Email: support@cortexaaicrm.com</li>
               </ul>
             </li>
           </ul>
@@ -76,7 +76,7 @@ const Cancellation = () => {
 
           <p>To request full account deletion:</p>
           <ul style={styles.ul}>
-            <li>Contact support at support@cortexa.ai</li>
+            <li>Contact support at support@cortexaaicrm.com</li>
           </ul>
         </Section>
 
@@ -102,8 +102,8 @@ const Cancellation = () => {
         <Section title="9. Contact">
           <p>For cancellation or billing inquiries:</p>
           <p>AI Support: Available via the Contact page</p>
-          <p>Email: support@cortexa.ai</p>
-          <p>Company: Cortexa CRM</p>
+          <p>Email: support@cortexaaicrm.com</p>
+          <p>Company: CORTEXA AI Revenue OS</p>
         </Section>
     </div>
   );

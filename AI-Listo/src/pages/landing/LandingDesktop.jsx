@@ -192,7 +192,7 @@ export default function Landing() {
         {
           eyebrow: "AI Follow up",
           title: "Automate your follow-ups",
-          desc: "Never miss a lead. Send instant, personalized replies across your channels and nurture opportunities automatically.",
+          desc: "Respond faster with personalized replies across your channels and nurture opportunities automatically.",
         },
         {
           eyebrow: "AI Appoitment Setter",
@@ -394,7 +394,7 @@ export default function Landing() {
       stripTitle: "Start closing more deals — with AI working for you 24/7.",
       stripSub:
         "No extra hires. No missed leads. Just a smarter way to run your pipeline.",
-      stripBtn: "Get Started →",
+      stripBtn: "Start Your Free Trial →",
       stripBenefit1: "Get started in minutes",
       stripBenefit3: "Cancel anytime",
       stripCardTitle: "Pipeline Overview",
@@ -420,7 +420,7 @@ export default function Landing() {
         "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
       
       roiStat4Desc:
-        "Most users recover their investment within the first month from deals that would have otherwise been lost.",
+        "Designed to help you recover your investment quickly by capturing deals that would otherwise be lost.",
 
       aiosBadgeTitle: "Meet Your",
       aiosBadgeHighlight: "Agentic AIOS",
@@ -510,7 +510,7 @@ export default function Landing() {
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
-      heroCTA: "Get Started",
+      heroCTA: "Start Your Free Trial",
       heroUnlock: "Unlock potential today!",
       underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
@@ -571,7 +571,7 @@ export default function Landing() {
         "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
 
       startFreeTrial: "Get Started",
-      startYourFreeTrial: "Get Started →",
+      startYourFreeTrial: "Start Your Free Trial →",
 
       tagAiPowered: "✨ AI-Powered",
       tagSecure: "🛡 Secure",
@@ -652,14 +652,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Connect Your Tools",
       rightStat1Up: "FOLLOW UP WITH EVERY LEAD AUTOMATICALLY",
       rightStat1Up1: "ONE CONNECTED WORKSPACE BUILT FOR REAL ESTATE PROS",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
       rightStat1Desc1: "Run your leads, follow-ups, and pipeline in one connected workspace.",
       rightStat2Up: "UP TO",
-      rightStat2Title: "LESS EXPENSIVE TO IMPLEMENT",
-      vsTitleLeft: "OTHER PLATFORMS COST YOU MORE",
+      rightStat2Title: "",
+      vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
       vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
       vsText: "VS.",
       leftCost1: "High setup fees",
@@ -932,7 +932,7 @@ export default function Landing() {
         "Empieza a cerrar más ventas — con IA trabajando para ti 24/7.",
       stripSub:
         "Sin contratar más personal. Sin perder leads. Solo una forma más inteligente de gestionar tu pipeline.",
-      stripBtn: "Comenzar →",
+      stripBtn: "Comienza Tu Prueba Gratis →",
       stripBenefit1: "Empieza en minutos",
       stripBenefit3: "Cancela en cualquier momento",
       stripCardTitle: "Resumen del pipeline",
@@ -959,7 +959,7 @@ export default function Landing() {
         "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
       
       roiStat4Desc:
-        "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
+        "Diseñado para ayudarte a recuperar tu inversión rápidamente al capturar acuerdos que de otro modo se perderían.",
 
       aiosBadgeTitle: "Conoce Tu",
       aiosBadgeHighlight: "Agentic AIOS",
@@ -1052,7 +1052,7 @@ export default function Landing() {
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
-      heroCTA: "Comenzar",
+      heroCTA: "Comienza Tu Prueba Gratis",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
@@ -1111,7 +1111,7 @@ export default function Landing() {
         "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
 
       startFreeTrial: "Comenzar",
-      startYourFreeTrial: "Comenzar →",
+      startYourFreeTrial: "Comienza Tu Prueba Gratis →",
 
       tagAiPowered: "✨ Impulsado por IA",
       tagSecure: "🛡 Seguro",
@@ -1192,14 +1192,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecta tus Herramientas",
       rightStat1Up: "REALIZA UN SEGUIMIENTO AUTOMÁTICO DE CADA CLIENTE POTENCIAL",
       rightStat1Up1: "UN ESPACIO DE TRABAJO CONECTADO CREADO PARA PROFESIONALES INMOBILIARIOS",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
       rightStat1Desc1: "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
       rightStat2Up: "HASTA",
-      rightStat2Title: "MENOS COSTOSO DE IMPLEMENTAR",
-      vsTitleLeft: "OTRAS PLATAFORMAS TE CUESTAN MÁS",
+      rightStat2Title: "",
+      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
       vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
       vsText: "VS.",
       leftCost1: "Altas tarifas de configuración",
@@ -1466,7 +1466,7 @@ export default function Landing() {
         "Comece a fechar mais negócios — com IA trabalhando para você 24/7.",
       stripSub:
         "Sem contratar mais pessoas. Sem perder leads. Apenas uma forma mais inteligente de gerenciar seu pipeline.",
-      stripBtn: "Começar →",
+      stripBtn: "Comece Seu Teste Grátis →",
       stripBenefit1: "Comece em minutos",
       stripBenefit3: "Cancele a qualquer momento",
       stripCardTitle: "Visão geral do pipeline",
@@ -1494,7 +1494,7 @@ export default function Landing() {
         "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
       
       roiStat4Desc:
-        "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
+        "Projetado para ajudar você a recuperar seu investimento rapidamente ao capturar negócios que de outra forma seriam perdidos.",
 
       aiosBadgeTitle: "Conheça Seu",
       aiosBadgeHighlight: "Agentic AIOS",
@@ -1589,7 +1589,7 @@ export default function Landing() {
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
-      heroCTA: "Começar",
+      heroCTA: "Comece Seu Teste Grátis",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
@@ -1650,7 +1650,7 @@ export default function Landing() {
         "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",
 
       startFreeTrial: "Começar",
-      startYourFreeTrial: "Começar →",
+      startYourFreeTrial: "Comece Seu Teste Grátis →",
 
       tagAiPowered: "✨ Com tecnologia de IA",
       tagSecure: "🛡 Seguro",
@@ -1731,14 +1731,14 @@ export default function Landing() {
       nodeIntegrationsSub: "Conecte Suas Ferramentas",
       rightStat1Up: "FAÇA O ACOMPANHAMENTO AUTOMÁTICO DE CADA LEAD",
       rightStat1Up1: "UM ESPAÇO DE TRABALHO INTEGRADO CRIADO PARA PROFISSIONAIS DO MERCADO IMOBILIÁRIO",
-      rightStat1Main: "3X",
+      rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
       rightStat1Desc1: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       rightStat2Up: "ATÉ",
-      rightStat2Title: "MAIS BARATO PARA IMPLEMENTAR",
-      vsTitleLeft: "OUTRAS PLATAFORMAS CUSTAM MAIS",
+      rightStat2Title: "",
+      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
       vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
       vsText: "VS.",
       leftCost1: "Altas taxas de configuração",
@@ -2191,16 +2191,6 @@ export default function Landing() {
               </ul>
             </div>
           </div>
-          <div className="cx-feat-stats-sidebar">
-            <div className="cx-sidebar-stat-block-bottom">
-              <span className="cx-stat-up-tag">{tr.rightStat2Up}</span>
-              <div className="cx-stat-inline-row">
-                <TrendingUp className="cx-stat-inline-icon" size={92} />
-              </div>
-              <h4 className="cx-stat-title-label">{tr.rightStat2Title}</h4>
-              <div className="cx-stat-blue-bar-short"></div>
-            </div>
-          </div>
         </div>
       </section>
       <section id="analytics" className="cx-hero pt-50">
@@ -2421,6 +2411,7 @@ export default function Landing() {
               </div>
             </div>
           </div>
+          <i style={{ display: "block", fontSize: "12px", opacity: 0.65, marginTop: "16px", textAlign: "center" }}>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
         </div>
       </section>
       <section className="how-section">
@@ -2857,7 +2848,7 @@ export default function Landing() {
 
           <a href="/trial" className="cx-btn cx-btn-secondary">
             <Zap size={22} />
-            {tr.trial}
+            {tr.heroCTA}
           </a>
           <p className="underCTA">{tr.underCTA}</p>
           <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>

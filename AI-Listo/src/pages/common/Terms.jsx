@@ -363,7 +363,7 @@ const Terms = () => {
       </Section>
 
       <Section title="Contact Information">
-        <p><strong>Support Email:</strong> support@cortexaaios.com</p>
+        <p><strong>Support Email:</strong> support@cortexaaicrm.com</p>
         <p><strong>Platform:</strong> CORTEXA AI Revenue OS</p>
         <p><strong>Legal Business Name:</strong> Listo Qasa S.A.</p>
         <p><strong>Trade Name / Brand:</strong> CORTEXA Agentic AI Revenue OS</p>
@@ -371,7 +371,7 @@ const Terms = () => {
         <p><strong>Country of Registration:</strong> Ecuador</p>
         <p>
           For questions regarding these Terms, billing, platform usage, or legal
-          matters, please contact our support team at support@cortexaaios.com.
+          matters, please contact our support team at support@cortexaaicrm.com.
         </p>
       </Section>
     </div>
