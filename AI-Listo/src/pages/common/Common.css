@@ -704,7 +704,6 @@
 
 .trial-page .trial-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   max-width: 1173px;
   height: 100vh;
 }

@@ -471,7 +471,7 @@ export default function StartTrial() {
           </div>
         ) : (
           <div className="trial-right-column">
-            <img src={trial} alt="Trial" />
+            
           </div>
         )}
       </div>
