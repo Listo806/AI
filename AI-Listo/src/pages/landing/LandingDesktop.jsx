@@ -394,7 +394,7 @@ export default function Landing() {
       stripTitle: "Start closing more deals — with AI working for you 24/7.",
       stripSub:
         "No extra hires. No missed leads. Just a smarter way to run your pipeline.",
-      stripBtn: "Get Started →",
+      stripBtn: "Start Your Free Trial →",
       stripBenefit1: "Get started in minutes",
       stripBenefit3: "Cancel anytime",
       stripCardTitle: "Pipeline Overview",
@@ -510,7 +510,7 @@ export default function Landing() {
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
-      heroCTA: "Get Started",
+      heroCTA: "Start Your Free Trial",
       heroUnlock: "Unlock potential today!",
       underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
@@ -571,7 +571,7 @@ export default function Landing() {
         "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
 
       startFreeTrial: "Get Started",
-      startYourFreeTrial: "Get Started →",
+      startYourFreeTrial: "Start Your Free Trial →",
 
       tagAiPowered: "✨ AI-Powered",
       tagSecure: "🛡 Secure",
@@ -932,7 +932,7 @@ export default function Landing() {
         "Empieza a cerrar más ventas — con IA trabajando para ti 24/7.",
       stripSub:
         "Sin contratar más personal. Sin perder leads. Solo una forma más inteligente de gestionar tu pipeline.",
-      stripBtn: "Comenzar →",
+      stripBtn: "Comienza Tu Prueba Gratis →",
       stripBenefit1: "Empieza en minutos",
       stripBenefit3: "Cancela en cualquier momento",
       stripCardTitle: "Resumen del pipeline",
@@ -1052,7 +1052,7 @@ export default function Landing() {
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
-      heroCTA: "Comenzar",
+      heroCTA: "Comienza Tu Prueba Gratis",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
@@ -1111,7 +1111,7 @@ export default function Landing() {
         "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
 
       startFreeTrial: "Comenzar",
-      startYourFreeTrial: "Comenzar →",
+      startYourFreeTrial: "Comienza Tu Prueba Gratis →",
 
       tagAiPowered: "✨ Impulsado por IA",
       tagSecure: "🛡 Seguro",
@@ -1466,7 +1466,7 @@ export default function Landing() {
         "Comece a fechar mais negócios — com IA trabalhando para você 24/7.",
       stripSub:
         "Sem contratar mais pessoas. Sem perder leads. Apenas uma forma mais inteligente de gerenciar seu pipeline.",
-      stripBtn: "Começar →",
+      stripBtn: "Comece Seu Teste Grátis →",
       stripBenefit1: "Comece em minutos",
       stripBenefit3: "Cancele a qualquer momento",
       stripCardTitle: "Visão geral do pipeline",
@@ -1589,7 +1589,7 @@ export default function Landing() {
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
-      heroCTA: "Começar",
+      heroCTA: "Comece Seu Teste Grátis",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
@@ -1650,7 +1650,7 @@ export default function Landing() {
         "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",
 
       startFreeTrial: "Começar",
-      startYourFreeTrial: "Começar →",
+      startYourFreeTrial: "Comece Seu Teste Grátis →",
 
       tagAiPowered: "✨ Com tecnologia de IA",
       tagSecure: "🛡 Seguro",
@@ -2847,7 +2847,7 @@ export default function Landing() {
 
           <a href="/trial" className="cx-btn cx-btn-secondary">
             <Zap size={22} />
-            {tr.trial}
+            {tr.heroCTA}
           </a>
           <p className="underCTA">{tr.underCTA}</p>
           <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>

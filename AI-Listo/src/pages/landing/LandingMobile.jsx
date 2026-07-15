@@ -164,7 +164,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
-      ctaButtonText: "Get Started",
+      ctaButtonText: "Start Your Free Trial",
+      underCTA: "One-time setup fee: $97",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -209,7 +210,7 @@ export default function LandingMobile() {
       finalCtaTitle3: "Grow Your Business.",
       finalCtaDesc:
         "Join real estate professionals who are growing with CORTEXA.",
-      finalCtaBtn: "Get Started",
+      finalCtaBtn: "Start Your Free Trial",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Unlock potential today",
 
@@ -420,7 +421,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
-      ctaButtonText: "Comenzar",
+      ctaButtonText: "Comienza Tu Prueba Gratis",
+      underCTA: "Tarifa única de configuración: $97",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -465,7 +467,7 @@ export default function LandingMobile() {
       finalCtaTitle3: "Haz Crecer Tu Negocio.",
       finalCtaDesc:
         "Únete a más de profesionales inmobiliarios que están creciendo con CORTEXA.",
-      finalCtaBtn: "Comenzar",
+      finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
 
@@ -678,7 +680,8 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
-      ctaButtonText: "Começar",
+      ctaButtonText: "Comece Seu Teste Grátis",
+      underCTA: "Taxa única de configuração: $97",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
@@ -723,7 +726,7 @@ export default function LandingMobile() {
       finalCtaTitle3: "Cresça Seu Negócio.",
       finalCtaDesc:
         "Junte-se a mais de profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
-      finalCtaBtn: "Começar",
+      finalCtaBtn: "Comece Seu Teste Grátis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
 
@@ -997,6 +1000,7 @@ export default function LandingMobile() {
             </div>
             <ArrowRight size={18} />
           </a>
+          <p className="m-under-cta">{tr.underCTA}</p>
           {/*<button className="m-secondary-btn">
             <Play size={18} />
             {tr.watchDemo}
@@ -2130,6 +2134,7 @@ export default function LandingMobile() {
               <path d="m12 5 7 7-7 7" />
             </svg>
           </a>
+          <p className="m-under-cta">{tr.underCTA}</p>
         </div>
       </section>
       <section className="m-powerful">
@@ -2251,6 +2256,7 @@ export default function LandingMobile() {
                 <path d="m12 5 7 7-7 7" />
               </svg>
             </a>
+            <p className="m-under-cta">{tr.underCTA}</p>
           </div>
 
           <div className="m-bottom-preview-container">
