@@ -5,6 +5,14 @@
   padding: 0;
   font-family: inherit;
 }
+.cx-ai-setup-page h1 svg{
+  color: #1733ef;
+}
+.cx-ai-setup-page h1{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+} 
 
 .cx-ai-setup-topbar {
   display: flex;

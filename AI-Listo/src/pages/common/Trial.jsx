@@ -288,7 +288,7 @@ export default function StartTrial() {
           )}
 
           <h1 className="trial-title">
-            {tr.title}
+            {tr.title}<br/>
             <span className="cx-pricing-title-blue">{tr.title1}</span>
           </h1>
           <p className="trial-desc">

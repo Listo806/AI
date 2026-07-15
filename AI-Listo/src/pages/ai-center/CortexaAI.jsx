@@ -1281,7 +1281,7 @@ export default function CortexaAI() {
               className={agentSidebarCollapsed ? "" : "is-expanded"}
             />
           </button>
-          <div className="cx-agent-brand">
+          {/*<div className="cx-agent-brand">
             <div className="cx-agent-bot">
               <Bot size={24} />
             </div>
@@ -1301,7 +1301,7 @@ export default function CortexaAI() {
                 </span>
               </div>
             )}
-          </div>
+          </div>*/}
 
           <nav className="cx-agent-menu">
             {agentMenus.map((item) => {
@@ -1943,7 +1943,7 @@ function SetupLayout({
     <div className="cx-ai-setup-page">
       <header className="cx-ai-setup-topbar heading_page">
         <div>
-          <h1>Welcome! Let’s Get Your AI Agent Ready 👋</h1>
+          <h1><Bot size={24} /> Welcome! Let’s Get Your AI Agent Ready </h1>
           <p className="sub_head">
             Complete these 8 quick steps. Most customers finish setup in under 5
             minutes.
