@@ -153,7 +153,7 @@ export default function CortexaAI() {
 
   const [knowledgeInsightsOpen, setKnowledgeInsightsOpen] = useState(false);
   const [showInactiveCategories, setShowInactiveCategories] = useState(false);
-
+  const isAgentReadOnly = !setupData?.isSetupComplete;
   const toggleAgentSidebar = () => {
     setAgentSidebarCollapsed((current) => {
       const next = !current;
@@ -951,17 +951,16 @@ export default function CortexaAI() {
   }, [loadSetup]);
 
   useEffect(() => {
-    if (!setupData?.isSetupComplete || activePage === "setup") return;
-
+    if (activePage === "setup") {
+      return;
+    }
     let cancelled = false;
-
     const loadPage = async () => {
       setLoadingPage(true);
       setPageError("");
 
       try {
         let data = null;
-
         if (activePage === "chat") {
           const [dashboardResponse] = await Promise.all([
             request("/ai-center/agent/dashboard"),
@@ -1307,37 +1306,22 @@ export default function CortexaAI() {
             {agentMenus.map((item) => {
               const Icon = item.icon;
 
-              const locked =
-                !setupData?.isSetupComplete && item.key !== "setup";
-
               return (
                 <button
+                  type="button"
                   key={item.key}
                   title={agentSidebarCollapsed ? item.title : undefined}
-                  className={`${
-                    activePage === item.key ? "active" : ""
-                  } ${locked ? "locked" : ""}`}
-                  disabled={locked}
+                  className={activePage === item.key ? "active" : ""}
                   onClick={() => {
-                    if (locked) return;
                     setActivePage(item.key);
                   }}
                 >
                   <Icon size={18} />
                   {!agentSidebarCollapsed && (
-                    <>
-                      <div className="cx-agent-status-card">
-                        <div>
-                          <strong>{item.title}</strong>
-                          <small>
-                            {locked ? "Complete setup first" : item.desc}
-                          </small>
-                        </div>
-                      </div>
-                      {locked && (
-                        <Lock className="cx-agent-menu-lock" size={14} />
-                      )}
-                    </>
+                    <div className="cx-agent-menu-copy">
+                      <strong>{item.title}</strong>
+                      <small>{item.desc}</small>
+                    </div>
                   )}
                 </button>
               );
@@ -1417,7 +1401,23 @@ export default function CortexaAI() {
 
         <section className="cx-agent-content">
           {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
-
+          {isAgentReadOnly && activePage !== "setup" && (
+            <div className="cx-agent-readonly-notice">
+              <div>
+                <ShieldCheck size={18} />
+                <div>
+                  <strong>Preview mode</strong>
+                  <p>
+                    Complete AI Agent setup to enable actions and save changes.
+                  </p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setActivePage("setup")}>
+                Continue Setup
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          )}
           {loadingPage && activePage !== "chat" && (
             <div className="cx-ai-inline-loading">
               <RefreshCw className="cx-ai-loading-spinner" size={18} />
@@ -1444,195 +1444,209 @@ export default function CortexaAI() {
             />
           )}
 
-          {setupData?.isSetupComplete && activePage === "chat" && (
-            <ChatLayout
-              user={user}
-              message={message}
-              setMessage={setMessage}
-              dashboardData={dashboardData}
-              messages={messages}
-              sessions={chatSessions}
-              activeSessionId={activeChatSessionId}
-              sessionsLoading={chatSessionsLoading}
-              sessionLoading={chatSessionLoading}
-              creatingSession={creatingChatSession}
-              sendingMessage={sendingMessage}
-              error={chatError}
-              onSend={sendChatMessage}
-              onNewChat={createNewChat}
-              onSelectSession={loadChatSession}
-              onOpenActivity={(filters = {}) => {
-                setActivePage("activity");
+          {activePage === "chat" && (
+            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+              <ChatLayout
+                user={user}
+                message={message}
+                setMessage={setMessage}
+                dashboardData={dashboardData}
+                messages={messages}
+                sessions={chatSessions}
+                activeSessionId={activeChatSessionId}
+                sessionsLoading={chatSessionsLoading}
+                sessionLoading={chatSessionLoading}
+                creatingSession={creatingChatSession}
+                sendingMessage={sendingMessage}
+                error={chatError}
+                onSend={sendChatMessage}
+                onNewChat={createNewChat}
+                onSelectSession={loadChatSession}
+                onOpenActivity={(filters = {}) => {
+                  setActivePage("activity");
 
-                setTimeout(() => {
+                  setTimeout(() => {
+                    loadActivity({
+                      ...activityFilters,
+                      page: 1,
+                      ...filters,
+                    });
+                  }, 0);
+                }}
+                readOnly={isAgentReadOnly}
+              />
+            </AgentReadOnlyBoundary>
+          )}
+
+          {activePage === "knowledge" && (
+            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+              <KnowledgeLayout
+                knowledgeData={knowledgeData}
+                filters={knowledgeFilters}
+                loading={loadingPage}
+                error={knowledgeError}
+                deletingId={knowledgeDeletingId}
+                showInactiveCategories={showInactiveCategories}
+                onToggleInactiveCategories={() =>
+                  setShowInactiveCategories((current) => !current)
+                }
+                onViewInsights={() => setKnowledgeInsightsOpen(true)}
+                onAdd={openCreateKnowledge}
+                onEdit={openEditKnowledge}
+                onDelete={deleteKnowledgeItem}
+                onImport={() => {
+                  setKnowledgeImportError("");
+                  setKnowledgeImportOpen(true);
+                }}
+                onFilterChange={(patch) => {
+                  const nextFilters = {
+                    ...knowledgeFilters,
+                    ...patch,
+                  };
+
+                  if (
+                    patch.category !== undefined ||
+                    patch.status !== undefined ||
+                    patch.search !== undefined
+                  ) {
+                    nextFilters.page = 1;
+                  }
+
+                  loadKnowledge(nextFilters);
+                }}
+                onQuickAction={(type) => {
+                  const category =
+                    knowledgeFilters.category !== "all"
+                      ? knowledgeFilters.category
+                      : "company_information";
+
+                  if (type === "text") {
+                    openCreateKnowledge(category, {
+                      sourceType: "text",
+                    });
+                    return;
+                  }
+
+                  if (type === "qa") {
+                    openCreateKnowledge("faqs", {
+                      sourceType: "qa",
+                      metadata: {
+                        format: "question_answer",
+                      },
+                    });
+                    return;
+                  }
+
+                  if (type === "website") {
+                    openCreateKnowledge(category, {
+                      sourceType: "website",
+                    });
+                    return;
+                  }
+
+                  if (type === "document") {
+                    setKnowledgeImportError("");
+                    setKnowledgeImportOpen(true);
+                    return;
+                  }
+
+                  if (type === "data_source") {
+                    setKnowledgeImportError("");
+                    setKnowledgeImportOpen(true);
+                  }
+                }}
+                readOnly={isAgentReadOnly}
+              />
+            </AgentReadOnlyBoundary>
+          )}
+
+          {activePage === "activity" && (
+            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+              <ActivityLayout
+                activityData={activityData}
+                loading={activityLoading}
+                error={activityError}
+                filters={activityFilters}
+                exporting={activityExporting}
+                onExport={exportActivityCsv}
+                onFilterChange={(patch) => {
+                  const nextFilters = {
+                    ...activityFilters,
+                    ...patch,
+                  };
+                  if (
+                    patch.type !== undefined ||
+                    patch.status !== undefined ||
+                    patch.search !== undefined
+                  ) {
+                    nextFilters.page = 1;
+                  }
+                  loadActivity(nextFilters);
+                }}
+                onPageChange={(page) => {
                   loadActivity({
                     ...activityFilters,
-                    page: 1,
-                    ...filters,
+                    page,
                   });
-                }, 0);
-              }}
-            />
-          )}
-
-          {setupData?.isSetupComplete && activePage === "knowledge" && (
-            <KnowledgeLayout
-              knowledgeData={knowledgeData}
-              filters={knowledgeFilters}
-              loading={loadingPage}
-              error={knowledgeError}
-              deletingId={knowledgeDeletingId}
-              showInactiveCategories={showInactiveCategories}
-              onToggleInactiveCategories={() =>
-                setShowInactiveCategories((current) => !current)
-              }
-              onViewInsights={() => setKnowledgeInsightsOpen(true)}
-              onAdd={openCreateKnowledge}
-              onEdit={openEditKnowledge}
-              onDelete={deleteKnowledgeItem}
-              onImport={() => {
-                setKnowledgeImportError("");
-                setKnowledgeImportOpen(true);
-              }}
-              onFilterChange={(patch) => {
-                const nextFilters = {
-                  ...knowledgeFilters,
-                  ...patch,
-                };
-
-                if (
-                  patch.category !== undefined ||
-                  patch.status !== undefined ||
-                  patch.search !== undefined
-                ) {
-                  nextFilters.page = 1;
-                }
-
-                loadKnowledge(nextFilters);
-              }}
-              onQuickAction={(type) => {
-                const category =
-                  knowledgeFilters.category !== "all"
-                    ? knowledgeFilters.category
-                    : "company_information";
-
-                if (type === "text") {
-                  openCreateKnowledge(category, {
-                    sourceType: "text",
-                  });
-                  return;
-                }
-
-                if (type === "qa") {
-                  openCreateKnowledge("faqs", {
-                    sourceType: "qa",
-                    metadata: {
-                      format: "question_answer",
+                }}
+                onRefresh={() =>
+                  loadActivity(
+                    {
+                      ...activityFilters,
+                      page: 1,
                     },
-                  });
-                  return;
+                    {
+                      silent: false,
+                    },
+                  )
                 }
-
-                if (type === "website") {
-                  openCreateKnowledge(category, {
-                    sourceType: "website",
-                  });
-                  return;
-                }
-
-                if (type === "document") {
-                  setKnowledgeImportError("");
-                  setKnowledgeImportOpen(true);
-                  return;
-                }
-
-                if (type === "data_source") {
-                  setKnowledgeImportError("");
-                  setKnowledgeImportOpen(true);
-                }
-              }}
-            />
-          )}
-
-          {setupData?.isSetupComplete && activePage === "activity" && (
-            <ActivityLayout
-              activityData={activityData}
-              loading={activityLoading}
-              error={activityError}
-              filters={activityFilters}
-              exporting={activityExporting}
-              onExport={exportActivityCsv}
-              onFilterChange={(patch) => {
-                const nextFilters = {
-                  ...activityFilters,
-                  ...patch,
-                };
-                if (
-                  patch.type !== undefined ||
-                  patch.status !== undefined ||
-                  patch.search !== undefined
-                ) {
-                  nextFilters.page = 1;
-                }
-                loadActivity(nextFilters);
-              }}
-              onPageChange={(page) => {
-                loadActivity({
-                  ...activityFilters,
-                  page,
-                });
-              }}
-              onRefresh={() =>
-                loadActivity(
-                  {
-                    ...activityFilters,
-                    page: 1,
-                  },
-                  {
-                    silent: false,
-                  },
-                )
-              }
-              onOpen={openActivity}
-              onViewActivityTypes={() => {
-                setActivitySummaryModal({
-                  type: "activity_types",
-                  title: "Activity by Type",
-                  items: Array.isArray(activityData?.activityByType)
-                    ? activityData.activityByType
-                    : [],
-                });
-              }}
-              onViewTopActions={() => {
-                setActivitySummaryModal({
-                  type: "top_actions",
-                  title: "Top Actions",
-                  items: Array.isArray(activityData?.topActions)
-                    ? activityData.topActions
-                    : [],
-                });
-              }}
-              onViewRecentRuns={() => {
-                setActivitySummaryModal({
-                  type: "recent_runs",
-                  title: "Recent AI Runs",
-                  items: Array.isArray(activityData?.recentRuns)
-                    ? activityData.recentRuns
-                    : Array.isArray(activityData?.recentAiRuns)
-                      ? activityData.recentAiRuns
+                onOpen={openActivity}
+                onViewActivityTypes={() => {
+                  setActivitySummaryModal({
+                    type: "activity_types",
+                    title: "Activity by Type",
+                    items: Array.isArray(activityData?.activityByType)
+                      ? activityData.activityByType
                       : [],
-                });
-              }}
-            />
+                  });
+                }}
+                onViewTopActions={() => {
+                  setActivitySummaryModal({
+                    type: "top_actions",
+                    title: "Top Actions",
+                    items: Array.isArray(activityData?.topActions)
+                      ? activityData.topActions
+                      : [],
+                  });
+                }}
+                onViewRecentRuns={() => {
+                  setActivitySummaryModal({
+                    type: "recent_runs",
+                    title: "Recent AI Runs",
+                    items: Array.isArray(activityData?.recentRuns)
+                      ? activityData.recentRuns
+                      : Array.isArray(activityData?.recentAiRuns)
+                        ? activityData.recentAiRuns
+                        : [],
+                  });
+                }}
+                readOnly={isAgentReadOnly}
+              />
+            </AgentReadOnlyBoundary>
           )}
 
-          {setupData?.isSetupComplete && activePage === "controls" && (
-            <ControlsLayout
-              controlTab={controlTab}
-              setControlTab={setControlTab}
-              controlsData={controlsData}
-              onSave={saveControls}
-            />
+          {activePage === "controls" && (
+            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+              <ControlsLayout
+                controlTab={controlTab}
+                setControlTab={setControlTab}
+                controlsData={controlsData}
+                onSave={saveControls}
+                onOpenAutomations={openAutomations}
+                onEditBehavior={openBehavior}
+                readOnly={isAgentReadOnly}
+              />
+            </AgentReadOnlyBoundary>
           )}
         </section>
       </div>
@@ -1943,7 +1957,9 @@ function SetupLayout({
     <div className="cx-ai-setup-page">
       <header className="cx-ai-setup-topbar heading_page">
         <div>
-          <h1><Bot size={24} /> Welcome! Let’s Get Your AI Agent Ready </h1>
+          <h1>
+            <Bot size={24} /> Welcome! Let’s Get Your AI Agent Ready{" "}
+          </h1>
           <p className="sub_head">
             Complete these 8 quick steps. Most customers finish setup in under 5
             minutes.
@@ -2153,7 +2169,33 @@ function SetupLayout({
     </div>
   );
 }
+function AgentReadOnlyBoundary({ readOnly, children }) {
+  const blockWriteAction = (event) => {
+    if (!readOnly) {
+      return;
+    }
+    const writeElement = event.target.closest("[data-ai-write-action='true']");
+    if (!writeElement) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
+  return (
+    <div
+      className={
+        readOnly
+          ? "cx-agent-readonly-boundary is-readonly"
+          : "cx-agent-readonly-boundary"
+      }
+      onClickCapture={blockWriteAction}
+      onSubmitCapture={blockWriteAction}
+    >
+      {children}
+    </div>
+  );
+}
 function ChatLayout({
   user,
   message,
@@ -2326,6 +2368,7 @@ function ChatLayout({
           className="cx-primary-outline"
           onClick={onNewChat}
           disabled={creatingSession}
+          data-ai-write-action="true"
         >
           {creatingSession ? (
             <RefreshCw size={18} className="cx-ai-loading-spinner" />
@@ -2350,6 +2393,7 @@ function ChatLayout({
               onClick={onNewChat}
               disabled={creatingSession}
               title="New Chat"
+              data-ai-write-action="true"
             >
               <Plus size={16} />
             </button>
@@ -2370,23 +2414,18 @@ function ChatLayout({
                   onClick={() => onSelectSession(session.id)}
                 >
                   <MessageSquare size={17} />
-
                   <div>
                     <strong>{session.title || "New Chat"}</strong>
-
                     <p>{session.lastMessage || "No messages yet"}</p>
                   </div>
-
                   <span>{Number(session.messageCount || 0)}</span>
                 </button>
               ))
             ) : (
               <div className="cx-chat-history-empty">
                 <MessageSquare size={22} />
-
                 <p>No chats yet</p>
-
-                <button type="button" onClick={onNewChat}>
+                <button type="button" onClick={onNewChat} data-ai-write-action="true">
                   Start a new chat
                 </button>
               </div>
@@ -2431,6 +2470,7 @@ function ChatLayout({
                   className="cx-prompt-card"
                   disabled={sendingMessage}
                   onClick={() => onSend(item.prompt || item.title)}
+                  data-ai-write-action="true"
                 >
                   <div className="cx-promt-card-wrap">
                     <div className={`cx-small-icon ${item.accent}`}>
@@ -2522,6 +2562,7 @@ function ChatLayout({
             <button
               onClick={() => onSend(message)}
               disabled={!message.trim() || sendingMessage}
+              data-ai-write-action="true"
             >
               <Send size={22} />
             </button>
@@ -2597,6 +2638,7 @@ function KnowledgeLayout({
             type="button"
             className="cx-primary-outline"
             onClick={onImport}
+            data-ai-write-action="true"
           >
             <Upload size={17} />
             Import Knowledge
@@ -2605,6 +2647,7 @@ function KnowledgeLayout({
             type="button"
             className="cx-primary-btn slim"
             onClick={() => onAdd()}
+            data-ai-write-action="true"
           >
             <Plus size={17} />
             Add Knowledge
@@ -2900,6 +2943,7 @@ function KnowledgeLayout({
                 <button
                   type="button"
                   className="cx-primary-btn slim"
+                  data-ai-write-action="true"
                   onClick={() =>
                     onAdd(
                       filters?.category !== "all"
@@ -3353,6 +3397,7 @@ function ActivityLayout({
           className="cx-primary-outline"
           disabled={exporting}
           onClick={onExport}
+          data-ai-write-action="true"
         >
           {exporting ? (
             <RefreshCw size={17} className="cx-ai-loading-spinner" />
@@ -4117,7 +4162,14 @@ function ActivitySummaryModal({
     </div>
   );
 }
-function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
+function ControlsLayout({
+  controlTab,
+  setControlTab,
+  controlsData,
+  onSave,
+  onOpenAutomations,
+  onEditBehavior,
+}) {
   const tabs = [
     "General",
     "Lead Handling",
@@ -4126,142 +4178,552 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
     "Privacy & Safety",
     "Advanced",
   ];
-  const capabilities = [
-    [
-      "Auto Reply to Leads",
-      "Automatically respond to new leads via WhatsApp, SMS, and email",
-      MessageCircle,
-      true,
-    ],
-    [
-      "Lead Qualification",
-      "Qualify leads and score their interest automatically",
-      Users,
-      true,
-    ],
-    [
-      "Appointment Booking",
-      "Book and manage appointments automatically",
-      CalendarDays,
-      true,
-    ],
-    [
-      "Property Recommendations",
-      "Suggest properties based on buyer preferences",
-      Home,
-      true,
-    ],
-    [
-      "Follow-up Automation",
-      "Send follow-up messages and reminders",
-      Send,
-      true,
-    ],
-    [
-      "Lead Scoring",
-      "Score leads based on engagement and behavior",
-      Star,
-      true,
-    ],
-    [
-      "Human Approval for High Value",
-      "Require approval before sending high-value proposals",
-      ShieldCheck,
-      true,
-    ],
-    [
-      "Auto Escalation for Hot Leads",
-      "Automatically escalate hot leads to you or your team",
-      Bell,
-      true,
-    ],
-    [
-      "Marketing Campaigns",
-      "Create and send marketing campaigns",
-      Sparkles,
-      false,
-    ],
-    [
-      "Smart Insights & Alerts",
-      "Generate insights and important alerts",
-      Bell,
-      true,
-    ],
-  ];
 
-  const capabilityState = controlsData?.capabilities || {};
-  const quickControlState = controlsData?.quickControls || {};
   const [draft, setDraft] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [responseToneOpen, setResponseToneOpen] = useState(false);
 
   useEffect(() => {
-    if (controlsData) setDraft(controlsData);
+    if (controlsData) {
+      setDraft(controlsData);
+    }
   }, [controlsData]);
 
   const current = draft || controlsData || {};
 
-  const toggleCapability = (key) => {
-    setDraft((previous) => ({
-      ...(previous || controlsData || {}),
-      capabilities: {
-        ...((previous || controlsData || {}).capabilities || {}),
-        [key]: !Boolean(
-          ((previous || controlsData || {}).capabilities || {})[key],
-        ),
-      },
-    }));
+  const capabilities =
+    current?.capabilities && typeof current.capabilities === "object"
+      ? current.capabilities
+      : {};
+
+  const quickControls =
+    current?.quickControls && typeof current.quickControls === "object"
+      ? current.quickControls
+      : {};
+
+  const responseToneOptions = [
+    {
+      value: "professional",
+      label: "Professional & Friendly",
+      description: "Clear, polished and approachable communication.",
+    },
+    {
+      value: "friendly",
+      label: "Warm & Conversational",
+      description: "Relaxed, helpful and personable communication.",
+    },
+    {
+      value: "sales",
+      label: "Sales Focused",
+      description: "Confident communication focused on conversion.",
+    },
+  ];
+
+  const generalCapabilities = [
+    {
+      key: "autoReplyToLeads",
+      title: "Auto Reply to Leads",
+      description:
+        "Automatically respond to new leads via WhatsApp, SMS, and email",
+      icon: MessageCircle,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "leadQualification",
+      title: "Lead Qualification",
+      description: "Qualify leads and score their interest automatically",
+      icon: Users,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "appointmentBooking",
+      title: "Appointment Booking",
+      description: "Book and manage appointments automatically",
+      icon: CalendarDays,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "propertyRecommendations",
+      title: "Property Recommendations",
+      description: "Suggest properties based on buyer preferences",
+      icon: Home,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "followUpAutomation",
+      title: "Follow-up Automation",
+      description: "Send follow-up messages and reminders",
+      icon: Send,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "leadScoring",
+      title: "Lead Scoring",
+      description: "Score leads based on engagement and behavior",
+      icon: Star,
+      accent: "red",
+      defaultValue: true,
+    },
+    {
+      key: "humanApprovalHighValue",
+      title: "Human Approval for High Value",
+      description: "Require approval before sending high-value proposals",
+      icon: ShieldCheck,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "autoEscalationHotLeads",
+      title: "Auto Escalation for Hot Leads",
+      description: "Automatically escalate hot leads to you or your team",
+      icon: TriangleAlert,
+      accent: "red",
+      defaultValue: true,
+    },
+    {
+      key: "marketingCampaigns",
+      title: "Marketing Campaigns",
+      description: "Create and send marketing campaigns",
+      icon: Bell,
+      accent: "blue",
+      defaultValue: false,
+    },
+    {
+      key: "smartInsights",
+      title: "Smart Insights & Alerts",
+      description: "Generate insights and important alerts",
+      icon: Bell,
+      accent: "blue",
+      defaultValue: true,
+    },
+  ];
+
+  const leadHandlingSettings = [
+    {
+      key: "autoReplyToLeads",
+      title: "Auto Reply to New Leads",
+      description: "Immediately respond when a new lead contacts your business",
+      icon: MessageCircle,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "leadQualification",
+      title: "Lead Qualification",
+      description: "Ask qualifying questions and identify lead intent",
+      icon: UserRoundCheck,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "leadScoring",
+      title: "Automatic Lead Scoring",
+      description: "Update scores using engagement and buyer behavior",
+      icon: Star,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "propertyRecommendations",
+      title: "Property Recommendations",
+      description: "Recommend relevant properties based on buyer criteria",
+      icon: Home,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "appointmentBooking",
+      title: "Appointment Booking",
+      description: "Allow the AI Agent to book appointments automatically",
+      icon: CalendarDays,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "followUpAutomation",
+      title: "Automatic Follow-up",
+      description: "Send follow-ups when leads have not responded",
+      icon: Send,
+      accent: "purple",
+      defaultValue: true,
+    },
+  ];
+
+  const communicationSettings = [
+    {
+      key: "useBusinessGreeting",
+      title: "Use Business Greeting",
+      description: "Start conversations using the configured business greeting",
+      icon: MessageSquare,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "useConversationClosing",
+      title: "Use Conversation Closing",
+      description: "End completed conversations with a professional closing",
+      icon: CheckCircle2,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "allowEmoji",
+      title: "Allow Emojis",
+      description: "Use appropriate emojis in friendly conversations",
+      icon: Heart,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "conciseResponses",
+      title: "Concise Responses",
+      description: "Prefer shorter replies unless more detail is required",
+      icon: FileText,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "whatsappCommunication",
+      title: "WhatsApp Communication",
+      description: "Allow responses through the connected WhatsApp account",
+      icon: MessageCircle,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "emailCommunication",
+      title: "Email Communication",
+      description: "Allow AI-assisted emails and follow-up messages",
+      icon: Mail,
+      accent: "purple",
+      defaultValue: false,
+    },
+  ];
+
+  const escalationSettings = [
+    {
+      key: "autoEscalationHotLeads",
+      title: "Escalate Hot Leads",
+      description: "Notify the team when a lead reaches the hot-lead threshold",
+      icon: Zap,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "humanApprovalHighValue",
+      title: "Human Approval for High-value Actions",
+      description: "Require approval before sensitive or high-value actions",
+      icon: ShieldCheck,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "escalateNegativeSentiment",
+      title: "Escalate Negative Sentiment",
+      description: "Hand off angry or dissatisfied customers to a human",
+      icon: TriangleAlert,
+      accent: "red",
+      defaultValue: true,
+    },
+    {
+      key: "escalatePricingRequests",
+      title: "Escalate Pricing Exceptions",
+      description: "Require review for discounts and pricing exceptions",
+      icon: BriefcaseBusiness,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "escalateLegalRequests",
+      title: "Escalate Legal Requests",
+      description: "Require human review for legal or compliance questions",
+      icon: ShieldCheck,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "notifyTeamOnEscalation",
+      title: "Notify Team Immediately",
+      description: "Send an alert whenever a conversation is escalated",
+      icon: Bell,
+      accent: "green",
+      defaultValue: true,
+    },
+  ];
+
+  const privacySettings = [
+    {
+      key: "piiProtection",
+      title: "PII Protection",
+      description: "Protect phone numbers, emails and personal information",
+      icon: ShieldCheck,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "hideSensitiveData",
+      title: "Hide Sensitive CRM Data",
+      description: "Avoid exposing private CRM information in responses",
+      icon: Lock,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "blockFinancialAdvice",
+      title: "Block Financial Advice",
+      description:
+        "Prevent AI from presenting financial guidance as professional advice",
+      icon: TriangleAlert,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "blockLegalAdvice",
+      title: "Block Legal Advice",
+      description:
+        "Prevent AI from presenting legal guidance as professional advice",
+      icon: ShieldCheck,
+      accent: "red",
+      defaultValue: true,
+    },
+    {
+      key: "requireApprovalSensitiveActions",
+      title: "Approval for Sensitive Actions",
+      description: "Require human approval before risky CRM changes",
+      icon: UserRoundCheck,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "storeConversationLogs",
+      title: "Store Conversation Logs",
+      description: "Keep AI conversation logs for audits and quality review",
+      icon: Database,
+      accent: "purple",
+      defaultValue: true,
+    },
+  ];
+
+  const advancedSettings = [
+    {
+      key: "smartInsights",
+      title: "Smart Insights & Alerts",
+      description: "Generate proactive CRM insights and recommendations",
+      icon: Sparkles,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "knowledgeGrounding",
+      title: "Knowledge Grounding",
+      description: "Prioritize verified Knowledge items when responding",
+      icon: BookOpen,
+      accent: "blue",
+      defaultValue: true,
+    },
+    {
+      key: "conversationMemory",
+      title: "Conversation Memory",
+      description:
+        "Use previous messages from the same conversation as context",
+      icon: Database,
+      accent: "green",
+      defaultValue: true,
+    },
+    {
+      key: "automaticRetry",
+      title: "Automatic Retry",
+      description: "Retry failed AI requests when the error is temporary",
+      icon: RefreshCw,
+      accent: "orange",
+      defaultValue: true,
+    },
+    {
+      key: "activityLogging",
+      title: "Detailed Activity Logging",
+      description: "Record AI activity for auditing and debugging",
+      icon: Activity,
+      accent: "purple",
+      defaultValue: true,
+    },
+    {
+      key: "marketingCampaigns",
+      title: "Marketing Campaigns",
+      description: "Allow AI to prepare marketing campaign content",
+      icon: Sparkles,
+      accent: "green",
+      defaultValue: false,
+    },
+  ];
+
+  const setCapabilityValue = (key, value) => {
+    setDraft((previous) => {
+      const base = previous || controlsData || {};
+
+      return {
+        ...base,
+        capabilities: {
+          ...(base.capabilities || {}),
+          [key]: value,
+        },
+      };
+    });
   };
 
-  const toggleQuickControl = (key) => {
+  const toggleCapability = (key, fallback = false) => {
+    const enabled = capabilities[key] ?? fallback;
+
+    setCapabilityValue(key, !Boolean(enabled));
+  };
+
+  const toggleQuickControl = (key, fallback = false) => {
+    const enabled = quickControls[key] ?? fallback;
+
+    setDraft((previous) => {
+      const base = previous || controlsData || {};
+
+      return {
+        ...base,
+        quickControls: {
+          ...(base.quickControls || {}),
+          [key]: !Boolean(enabled),
+        },
+      };
+    });
+  };
+
+  const selectResponseTone = (value) => {
+    const option = responseToneOptions.find((item) => item.value === value);
+
     setDraft((previous) => ({
       ...(previous || controlsData || {}),
-      quickControls: {
-        ...((previous || controlsData || {}).quickControls || {}),
-        [key]: !Boolean(
-          ((previous || controlsData || {}).quickControls || {})[key],
-        ),
-      },
+      responseTone: value,
+      responseToneLabel: option?.label || value,
     }));
+
+    setResponseToneOpen(false);
   };
 
   const handleSave = async () => {
-    if (!current || saving) return;
-
+    if (saving) return;
     setSaving(true);
+    setSaveError("");
     try {
       const saved = await onSave({
-        responseTone: current.responseTone,
-        capabilities: current.capabilities,
-        quickControls: current.quickControls,
+        responseTone: current?.responseTone || "professional",
+        capabilities: current?.capabilities || {},
+        quickControls: current?.quickControls || {},
       });
+
       setDraft(saved);
+    } catch (error) {
+      console.error("SAVE AI CONTROLS FAILED:", error);
+      setSaveError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Unable to save AI controls.",
+      );
     } finally {
       setSaving(false);
     }
   };
+
+  const responseTone =
+    responseToneOptions.find(
+      (item) => item.value === (current?.responseTone || "professional"),
+    ) || responseToneOptions[0];
+
+  const automationRules = Array.isArray(current?.automationRules)
+    ? current.automationRules
+    : Array.isArray(current?.automations)
+      ? current.automations
+      : [];
+
+  const visibleAutomationRules = automationRules.slice(0, 4);
+
+  const renderSettingsCard = ({ title, description, items }) => (
+    <div className="cx-white-card">
+      <div className="cx-control-section-head">
+        <div>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+      </div>
+
+      <div className="cx-capability-list">
+        {items.map((item) => {
+          const Icon = item.icon;
+
+          const enabled = capabilities[item.key] ?? item.defaultValue;
+
+          return (
+            <div className="cx-capability-row" key={item.key}>
+              <div className={`cx-small-icon ${item.accent}`}>
+                <Icon size={21} />
+              </div>
+
+              <div>
+                <strong>{item.title}</strong>
+
+                <p>{item.description}</p>
+              </div>
+
+              <button
+                type="button"
+                className={`cx-switch ${enabled ? "on" : ""}`}
+                onClick={() => toggleCapability(item.key, item.defaultValue)}
+                aria-pressed={enabled}
+              >
+                <i />
+              </button>
+
+              <ChevronRight size={18} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
         <div>
           <h1>Controls</h1>
+
           <p>
-            Manage your AI Agent’s behavior, preferences, and automation
+            Manage your AI Agent’s behavior, preferences and automation
             settings.
           </p>
         </div>
+
         <button
+          type="button"
           className="cx-primary-btn slim"
           onClick={handleSave}
           disabled={saving}
+          data-ai-write-action="true"
         >
-          <Save size={16} /> {saving ? "Saving..." : "Save Changes"}
+          {saving ? (
+            <RefreshCw size={16} className="cx-ai-loading-spinner" />
+          ) : (
+            <Save size={16} />
+          )}
+
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
 
       <div className="cx-control-tabs">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab}
             className={controlTab === tab ? "active" : ""}
             onClick={() => setControlTab(tab)}
@@ -4271,87 +4733,109 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
         ))}
       </div>
 
+      {saveError && <div className="cx-ai-error-banner">{saveError}</div>}
+
       <div className="cx-two-col">
         <main>
-          <div className="cx-white-card">
-            <h2>AI Agent Capabilities</h2>
-            <p>Enable or disable features your AI Agent can perform.</p>
-
-            <div className="cx-capability-list">
-              {capabilities.map(([title, desc, Icon, enabled], index) => {
-                const capabilityKeys = [
-                  "autoReplyToLeads",
-                  "leadQualification",
-                  "appointmentBooking",
-                  "propertyRecommendations",
-                  "followUpAutomation",
-                  "leadScoring",
-                  "humanApprovalHighValue",
-                  "autoEscalationHotLeads",
-                  "marketingCampaigns",
-                  "smartInsights",
-                ];
-                const key = capabilityKeys[index];
-                const isEnabled = current?.capabilities?.[key] ?? enabled;
-
-                return (
-                  <div className="cx-capability-row" key={title}>
-                    <div
-                      className={`cx-small-icon ${index % 4 === 0 ? "green" : index % 4 === 1 ? "purple" : index % 4 === 2 ? "orange" : "blue"}`}
-                    >
-                      <Icon size={21} />
-                    </div>
-                    <div>
-                      <strong>{title}</strong>
-                      <p>{desc}</p>
-                    </div>
-                    <button
-                      className={`cx-switch ${isEnabled ? "on" : ""}`}
-                      onClick={() => toggleCapability(key)}
-                    >
-                      <i />
-                    </button>
-                    <ChevronRight size={18} />
-                  </div>
-                );
+          {controlTab === "General" && (
+            <>
+              {renderSettingsCard({
+                title: "AI Agent Capabilities",
+                description:
+                  "Enable or disable features your AI Agent can perform.",
+                items: generalCapabilities,
               })}
-            </div>
-          </div>
 
-          <div className="cx-white-card cx-behavior-summary">
-            <div className="flex">
-              <div>
-                <h2>AI Behavior Summary</h2>
-                <p>
-                  Your AI Agent is set to be proactive, helpful, and always put
-                  your leads first.
-                </p>
+              <div className="cx-white-card cx-behavior-summary">
+                <div className="cx-control-card-head">
+                  <div>
+                    <h2>AI Behavior Summary</h2>
+
+                    <p>
+                      Your AI Agent is set to be proactive, helpful, and always
+                      put your leads first.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="cx-primary-outline"
+                    onClick={onEditBehavior}
+                    data-ai-write-action="true"
+                  >
+                    <PenLine size={16} />
+                    Edit Behavior
+                  </button>
+                </div>
+
+                <div className="cx-behavior-tags">
+                  {[
+                    "Proactive",
+                    "Helpful",
+                    "Fast Response",
+                    "Human-like",
+                    "Lead-focused",
+                  ].map((tag) => (
+                    <span key={tag}>
+                      <Check size={14} />
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <button className="cx-primary-outline">
-                <PenLine size={16} /> Edit Behavior
-              </button>
-            </div>
-            <div>
-              {[
-                "Proactive",
-                "Helpful",
-                "Fast Response",
-                "Human-like",
-                "Lead-focused",
-              ].map((x) => (
-                <span key={x}>
-                  <Check size={14} /> {x}
-                </span>
-              ))}
-            </div>
-          </div>
+            </>
+          )}
+
+          {controlTab === "Lead Handling" &&
+            renderSettingsCard({
+              title: "Lead Handling",
+              description:
+                "Control how your AI Agent qualifies, scores and follows up with leads.",
+              items: leadHandlingSettings,
+            })}
+
+          {controlTab === "Communication" &&
+            renderSettingsCard({
+              title: "Communication",
+              description:
+                "Configure how your AI Agent communicates across channels.",
+              items: communicationSettings,
+            })}
+
+          {controlTab === "Escalation" &&
+            renderSettingsCard({
+              title: "Escalation",
+              description:
+                "Define when your AI Agent should hand conversations to your team.",
+              items: escalationSettings,
+            })}
+
+          {controlTab === "Privacy & Safety" &&
+            renderSettingsCard({
+              title: "Privacy & Safety",
+              description:
+                "Protect sensitive data and restrict risky AI actions.",
+              items: privacySettings,
+            })}
+
+          {controlTab === "Advanced" &&
+            renderSettingsCard({
+              title: "Advanced",
+              description:
+                "Configure advanced performance and diagnostic behavior.",
+              items: advancedSettings,
+            })}
         </main>
 
         <aside className="cx-right-column control">
           <div className="cx-white-card">
             <h2>
-              AI Agent Status <em>Active</em>
+              AI Agent Status
+              <em className={current?.agentStatus === "paused" ? "paused" : ""}>
+                {current?.agentStatus === "paused" ? "Paused" : "Active"}
+              </em>
             </h2>
+
             <div className="cx-overview-grid">
               <StatMini
                 title="Responses Today"
@@ -4379,62 +4863,118 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
             </div>
           </div>
 
-          <div className="cx-white-card">
+          <div className="cx-white-card cx-response-tone-card">
             <h2>Response Tone</h2>
+
             <p>How your AI Agent communicates</p>
-            <button className="cx-select-btn">
-              {current?.responseToneLabel || "Professional & Friendly"}{" "}
-              <ChevronDown size={18} />
-            </button>
+
+            <div className="cx-response-tone-select">
+              <button
+                type="button"
+                className={`cx-select-btn ${responseToneOpen ? "open" : ""}`}
+                onClick={() => setResponseToneOpen((value) => !value)}
+              >
+                <span>
+                  <strong>{responseTone.label}</strong>
+
+                  <small>{responseTone.description}</small>
+                </span>
+
+                {responseToneOpen ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+              </button>
+
+              {responseToneOpen && (
+                <div className="cx-response-tone-menu">
+                  {responseToneOptions.map((option) => {
+                    const selected = option.value === responseTone.value;
+
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        className={selected ? "selected" : ""}
+                        onClick={() => selectResponseTone(option.value)}
+                      >
+                        <div>
+                          <strong>{option.label}</strong>
+
+                          <p>{option.description}</p>
+                        </div>
+
+                        {selected && <Check size={17} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="cx-white-card">
             <h2>Quick Controls</h2>
+
             {[
               {
                 key: "pauseAiAgent",
                 title: "Pause AI Agent",
-                desc: "Temporarily pause all AI actions",
+                description: "Temporarily pause all AI actions",
                 icon: PauseCircle,
                 accent: "red",
+                defaultValue: false,
               },
               {
                 key: "doNotDisturb",
                 title: "Do Not Disturb",
-                desc: "Silence notifications after hours",
+                description: "Silence notifications after hours",
                 icon: Moon,
                 accent: "blue",
+                defaultValue: true,
               },
               {
                 key: "workingHoursOnly",
                 title: "Working Hours Only",
-                desc: "9:00 AM - 6:00 PM (Mon - Fri)",
+                description: "9:00 AM - 6:00 PM (Mon - Fri)",
                 icon: Timer,
                 accent: "green",
+                defaultValue: true,
               },
               {
                 key: "weekendsActive",
                 title: "Weekends Active",
-                desc: "Allow AI to work on weekends",
+                description: "Allow AI to work on weekends",
                 icon: CalendarDays,
                 accent: "orange",
+                defaultValue: false,
               },
             ].map((item) => {
               const Icon = item.icon;
-              const active = Boolean(current?.quickControls?.[item.key]);
+
+              const enabled = quickControls[item.key] ?? item.defaultValue;
 
               return (
                 <div className="cx-quick-control" key={item.key}>
                   <div className={`cx-quick-control-icon ${item.accent}`}>
                     <Icon size={18} />
                   </div>
+
                   <div className="cx-quick-control-content">
                     <strong>{item.title}</strong>
-                    <p>{item.desc}</p>
+
+                    <p>{item.description}</p>
                   </div>
+
                   <button
-                    className={`cx-switch ${active ? "on" : ""}`}
-                    onClick={() => toggleQuickControl(item.key)}
+                    type="button"
+                    className={`cx-switch ${enabled ? "on" : ""}`}
+                    onClick={() =>
+                      toggleQuickControl(item.key, item.defaultValue)
+                    }
+                    aria-pressed={enabled}
+                    data-ai-write-action="true"
                   >
                     <i />
                   </button>
@@ -4444,23 +4984,75 @@ function ControlsLayout({ controlTab, setControlTab, controlsData, onSave }) {
           </div>
 
           <div className="cx-white-card">
-            <h2>Automation Rules</h2>
-            {[
-              "Auto reply within 5 minutes",
-              "Escalate score 80+",
-              "Book appointments automatically",
-              "Follow up after 24 hours",
-            ].map((x) => (
-              <div className="cx-rule-row" key={x}>
-                <CheckCircle2 size={16} /> <span>{x}</span>
-                <em>Enabled</em>
+            <h2>
+              Automation Rules
+              <button type="button" onClick={onOpenAutomations} data-ai-write-action="true">
+                Manage Rules
+              </button>
+            </h2>
+
+            {visibleAutomationRules.length > 0 ? (
+              visibleAutomationRules.map((rule, index) => {
+                const enabled = rule.enabled !== false && rule.active !== false;
+
+                return (
+                  <div
+                    className="cx-rule-row"
+                    key={rule.id || rule.key || `${rule.title}-${index}`}
+                  >
+                    {enabled ? (
+                      <CheckCircle2 size={16} />
+                    ) : (
+                      <CircleX size={16} />
+                    )}
+
+                    <span>
+                      {rule.title ||
+                        rule.label ||
+                        rule.name ||
+                        "Automation rule"}
+                    </span>
+
+                    <em className={enabled ? "enabled" : "disabled"}>
+                      {enabled ? "Enabled" : "Disabled"}
+                    </em>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="cx-mini-empty">
+                <Zap size={22} />
+
+                <p>No automation rules configured.</p>
               </div>
-            ))}
-            <button className="cx-show-more">
-              View All Rules <ChevronRight size={16} />
+            )}
+
+            <button
+              type="button"
+              className="cx-show-more"
+              onClick={onOpenAutomations}
+              data-ai-write-action="true"
+            >
+              View All Rules
+              <ChevronRight size={16} />
             </button>
           </div>
         </aside>
+      </div>
+    </div>
+  );
+}
+function ControlTabCard({ title, description, children }) {
+  return (
+    <div className="cx-controls-tab-content">
+      <div className="cx-white-card">
+        <div className="cx-control-section-head">
+          <div>
+            <h2>{title}</h2>
+            <p>{description}</p>
+          </div>
+        </div>
+        <div className="cx-control-settings-list">{children}</div>
       </div>
     </div>
   );

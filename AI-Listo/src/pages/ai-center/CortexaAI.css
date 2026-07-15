@@ -824,6 +824,12 @@
   margin-bottom: 22px;
   text-align: left;
 }
+.cx-ai-page-head .cx-primary-btn{
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
 
 .cx-ai-page-head h1 {
   margin: 0;
@@ -1170,6 +1176,9 @@
   border: 1px solid #e3e6f3;
   border-radius: 10px;
   padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .cx-stat-mini p {
@@ -1714,7 +1723,7 @@
   border-radius: 999px;
   padding: 7px 8px;
   margin: 10px 8px 0 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -3170,7 +3179,550 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+.cx-response-tone-select {
+  position: relative;
+  margin-top: 14px;
+}
 
+.cx-response-tone-select
+  .cx-select-btn {
+  width: 100%;
+  height: auto;
+  min-height: 54px;
+  padding: 10px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  text-align: left;
+}
+
+.cx-response-tone-select
+  .cx-select-btn
+  > span {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn strong {
+  color: #182157;
+  font-size: 11px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn small {
+  color: #7a839c;
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.cx-response-tone-select
+  .cx-select-btn.open {
+  border-color: #7963ff;
+  box-shadow:
+    0 0 0 3px
+    rgba(89, 58, 231, 0.1);
+}
+
+.cx-response-tone-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+
+  padding: 7px;
+
+  border: 1px solid #e1e5f0;
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 14px 35px
+    rgba(12, 20, 65, 0.14);
+}
+
+.cx-response-tone-menu
+  > button {
+  width: 100%;
+  padding: 10px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: transparent;
+  color: inherit;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.cx-response-tone-menu
+  > button:hover,
+.cx-response-tone-menu
+  > button.selected {
+  background: #f5f2ff;
+}
+
+.cx-response-tone-menu
+  strong {
+  color: #202a5b;
+  font-size: 11px;
+}
+
+.cx-response-tone-menu p {
+  margin: 4px 0 0;
+  color: #78819c;
+  font-size: 9px;
+}
+
+.cx-response-tone-menu svg {
+  color: #5c3ce5;
+  flex-shrink: 0;
+}
+
+.cx-rule-row em.disabled {
+  background: #f2f3f6;
+  color: #7b849b;
+}
+
+.cx-rule-row
+  > svg {
+  color: #16a25a;
+}
+
+.cx-rule-row:has(
+    em.disabled
+  )
+  > svg {
+  color: #a0a7b8;
+}
+.cx-control-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cx-control-card-head h2 {
+  margin: 0;
+}
+
+.cx-control-card-head p {
+  margin: 7px 0 0;
+  color: #69738f;
+  line-height: 1.55;
+}
+
+.cx-behavior-tags {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cx-controls-tab-content {
+  width: 100%;
+}
+
+.cx-control-section-head {
+  margin-bottom: 16px;
+}
+
+.cx-control-section-head h2 {
+  margin: 0;
+}
+
+.cx-control-section-head p {
+  margin: 6px 0 0;
+  color: #6f7893;
+  font-size: 11px;
+}
+
+.cx-control-settings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.cx-control-setting-row {
+  min-height: 68px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf0f6;
+  display: grid;
+  grid-template-columns:
+    40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.cx-control-setting-row:last-child {
+  border-bottom: 0;
+}
+
+.cx-control-setting-row > div:nth-child(2) {
+  min-width: 0;
+}
+
+.cx-control-setting-row strong {
+  display: block;
+  color: #202a5b;
+  font-size: 12px;
+}
+
+.cx-control-setting-row p {
+  margin: 5px 0 0;
+  color: #77809b;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.cx-response-tone-select {
+  position: relative;
+  margin-top: 14px;
+}
+
+.cx-response-tone-select .cx-select-btn {
+  width: 100%;
+  min-height: 56px;
+  height: auto;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+}
+
+.cx-response-tone-select
+  .cx-select-btn
+  > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn
+  strong {
+  color: #202a5b;
+  font-size: 11px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn
+  small {
+  color: #7c859e;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.cx-response-tone-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 7px;
+  border: 1px solid #e1e5f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 35px
+    rgba(12, 20, 65, 0.14);
+}
+
+.cx-response-tone-menu > button {
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cx-response-tone-menu
+  > button:hover,
+.cx-response-tone-menu
+  > button.selected {
+  background: #f5f2ff;
+}
+
+.cx-response-tone-menu strong {
+  color: #202a5b;
+  font-size: 11px;
+}
+
+.cx-response-tone-menu p {
+  margin: 4px 0 0;
+  color: #78819c;
+  font-size: 9px;
+}
+
+.cx-response-tone-menu svg {
+  color: #5c3ce5;
+  flex-shrink: 0;
+}
+.cx-controls-page .cx-two-col,
+.cx-ai-page .cx-two-col {
+  align-items: start;
+}
+
+.cx-controls-page main,
+.cx-ai-page .cx-two-col > main {
+  min-width: 0;
+}
+
+.cx-right-column.control {
+  position: sticky;
+  top: 18px;
+  align-self: start;
+}
+
+.cx-control-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.cx-control-card-head h2 {
+  margin: 0;
+}
+
+.cx-control-card-head p {
+  margin: 6px 0 0;
+  color: #6f7892;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.cx-behavior-tags {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cx-control-section-head {
+  margin-bottom: 12px;
+}
+
+.cx-control-section-head h2 {
+  margin: 0;
+}
+
+.cx-control-section-head p {
+  margin: 6px 0 0;
+  color: #75809a;
+  font-size: 11px;
+}
+
+.cx-response-tone-select {
+  position: relative;
+  margin-top: 13px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn {
+  width: 100%;
+  min-height: 48px;
+  height: auto;
+  padding: 9px 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+}
+
+.cx-response-tone-select
+  .cx-select-btn
+  > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn strong {
+  color: #1d2858;
+  font-size: 11px;
+}
+
+.cx-response-tone-select
+  .cx-select-btn small {
+  color: #7c859e;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.cx-response-tone-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 7px;
+  border: 1px solid #e1e5f0;
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 14px 35px
+    rgba(12, 20, 65, 0.14);
+}
+
+.cx-response-tone-menu > button {
+  width: 100%;
+  padding: 9px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cx-response-tone-menu
+  > button:hover,
+.cx-response-tone-menu
+  > button.selected {
+  background: #f5f2ff;
+}
+
+.cx-response-tone-menu strong {
+  color: #202a5b;
+  font-size: 11px;
+}
+
+.cx-response-tone-menu p {
+  margin: 4px 0 0;
+  color: #78819c;
+  font-size: 9px;
+}
+.cx-agent-readonly-notice {
+  margin-bottom: 14px;
+  padding: 11px 13px;
+
+  border: 1px solid #ddd4ff;
+  border-radius: 10px;
+
+  background: #f7f4ff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cx-agent-readonly-notice > div {
+  min-width: 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cx-agent-readonly-notice
+  > div
+  > svg {
+  flex: 0 0 auto;
+  color: #6543e7;
+}
+
+.cx-agent-readonly-notice strong {
+  display: block;
+  color: #242c60;
+  font-size: 11px;
+}
+
+.cx-agent-readonly-notice p {
+  margin: 3px 0 0;
+  color: #6f7895;
+  font-size: 10px;
+}
+
+.cx-agent-readonly-notice
+  > button {
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid #cfc2ff;
+  border-radius: 8px;
+  background: #fff;
+  color: #5b3ce1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.cx-agent-readonly-boundary.is-readonly
+  [data-ai-write-action="true"] {
+  cursor: not-allowed;
+}
+
+.cx-agent-readonly-boundary.is-readonly
+  button[data-ai-write-action="true"] {
+  opacity: 0.55;
+}
+
+.cx-agent-readonly-boundary.is-readonly
+  input[data-ai-write-action="true"],
+.cx-agent-readonly-boundary.is-readonly
+  textarea[data-ai-write-action="true"],
+.cx-agent-readonly-boundary.is-readonly
+  select[data-ai-write-action="true"] {
+  opacity: 0.7;
+}
+@media (max-width: 700px) {
+  .cx-agent-readonly-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 1100px) {
+  .cx-right-column.control {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .cx-control-card-head {
+    flex-direction: column;
+  }
+}
+@media (max-width: 760px) {
+  .cx-control-card-head {
+    flex-direction: column;
+  }
+
+  .cx-control-setting-row {
+    grid-template-columns:
+      36px minmax(0, 1fr) auto;
+  }
+}
 @media (max-width: 640px) {
   .cx-activity-summary-backdrop {
     padding: 0;
