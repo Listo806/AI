@@ -423,7 +423,7 @@ export default function Landing() {
         "Most users recover their investment within the first month from deals that would have otherwise been lost.",
 
       aiosBadgeTitle: "Meet Your",
-      aiosBadgeHighlight: "AI OS",
+      aiosBadgeHighlight: "Agentic AIOS",
       aiosSubtitle:
         "AI system built for real estate teams — captures more leads, follows up automatically, manages deals, and helps your team close more, all in one place.",
       aiosCards: [
@@ -558,7 +558,7 @@ export default function Landing() {
       smartBottom: "More Leads. More Appointments. More Closings.",
 
       topLine1: "The simple ",
-      topHighlight: "revenue operating system",
+      topHighlight: "Agentic AI revenue operating system",
       topLine3:
         "for bussinesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
@@ -962,7 +962,7 @@ export default function Landing() {
         "La mayoría de los usuarios recuperan su inversión en el primer mes gracias a acuerdos que antes se habrían perdido.",
 
       aiosBadgeTitle: "Conoce Tu",
-      aiosBadgeHighlight: "AI OS",
+      aiosBadgeHighlight: "Agentic AIOS",
       aiosSubtitle:
         "Sistema de IA diseñado para equipos inmobiliarios: captura más clientes potenciales, realiza seguimientos automáticamente, gestiona operaciones y ayuda a tu equipo a cerrar más negocios, todo en un solo lugar.",
       aiosCards: [
@@ -1098,7 +1098,7 @@ export default function Landing() {
       smartBottom: "Más oportunidades. Más citas. Más cierres.",
 
       topLine1: "El ",
-      topHighlight: "sistema operativo de ingresos",
+      topHighlight: "Sistema operativo de ingresos para IA agéntica",
       topLine3:
         "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
       pricing: "Precios",
@@ -1497,7 +1497,7 @@ export default function Landing() {
         "A maioria dos usuários recupera o investimento no primeiro mês com negócios que antes seriam perdidos.",
 
       aiosBadgeTitle: "Conheça Seu",
-      aiosBadgeHighlight: "AI OS",
+      aiosBadgeHighlight: "Agentic AIOS",
       aiosSubtitle:
         "Sistema de IA desenvolvido para equipes imobiliárias — captura mais leads, faz acompanhamento automático, gerencia negociações e ajuda sua equipe a fechar mais negócios, tudo em um só lugar.",
 
@@ -1637,7 +1637,7 @@ export default function Landing() {
       smartBottom: "Mais leads. Mais agendamentos. Mais fechamentos.",
 
       topLine1: "O ",
-      topHighlight: "sistema operacional de receita",
+      topHighlight: "Sistema operacional de receita para IA agêntica",
       topLine3:
         "simples para empresas cansadas de softwares de CRM complicados e caros.",
       pricing: "Preços",
@@ -1847,7 +1847,6 @@ export default function Landing() {
     <div id="cortexa-ai-crm-landing">
       <div className="hero-text">
         <h2 className="hero-title">
-          {tr.topLine1}
           <span className="highlight">{tr.topHighlight}</span> {tr.topLine3}
         </h2>
       </div>
@@ -1963,7 +1962,7 @@ export default function Landing() {
           <div className="hero-left">
             <div className="hero-left-in">
               <div className="hero-dead-wrap">
-                <span className="hero-head1 hero-head">AI POWERED</span>
+                <span className="hero-head1 hero-head">AGENTIC AI</span>
                 <br />
                 <span className="hero-head">{tr.heroHead}</span>
               </div>

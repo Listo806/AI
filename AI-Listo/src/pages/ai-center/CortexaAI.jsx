@@ -1943,7 +1943,7 @@ function SetupLayout({
     <div className="cx-ai-setup-page">
       <header className="cx-ai-setup-topbar heading_page">
         <div>
-          <h1>Welcome! Let’s Get Your AI Agent Ready 👋</h1>
+          <h1><Bot size={24} /> Welcome! Let’s Get Your AI Agent Ready </h1>
           <p className="sub_head">
             Complete these 8 quick steps. Most customers finish setup in under 5
             minutes.

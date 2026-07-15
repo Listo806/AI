@@ -704,7 +704,7 @@
 
 .trial-page .trial-container {
   display: grid;
-  max-width: 1173px;
+  max-width: 489px;
   height: 100vh;
 }
 
@@ -807,7 +807,7 @@
 }
 
 .trial-page .trial-left-column {
-  padding: 30px 18% 0 0;
+  padding: 38px 0 0 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -815,13 +815,11 @@
 }
 
 .trial-page .trial-logo-area {
-  display: flex;
   margin-bottom: 33px;
 }
 
 .trial-page .trial-logo-box {
   height: 32px;
-  background-color: #1d4ed8;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -854,14 +852,15 @@
 }
 
 .trial-page .trial-title {
-  font-size: 31px;
+  font-size: 32px;
   font-weight: 700;
   color: #0c111d;
   margin: 0 0 10px 0;
   letter-spacing: -1px;
 }
 .trial-logo-img{
-  height: 118px;
+  height: 100px;
+  width: 100%;
 }
 .trial-page .trial-desc {
   font-size: 13px;
@@ -1741,7 +1740,7 @@
 
 .pricing-page .footer-main-grid {
   display: grid;
-  grid-template-columns: 1.8fr repeat(5, 1fr);
+  grid-template-columns: 1.8fr repeat(4, 1fr);
   gap: 32px;
 }
 
@@ -2677,7 +2676,11 @@
   transition: background-color 0.2s ease;
   text-decoration: none;
 }
-
+.cx-footer-cta-button-wrap{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+}
 .pricing-page .cx-footer-cta-button:hover {
   background-color: #002ecc;
 }

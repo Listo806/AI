@@ -320,7 +320,8 @@ const t = {
     vsCompBottomFeat1: "No hidden fees",
     vsCompBottomFeat2: "Cancel anytime",
     vsCompBottomFeat3: "Built for real estate",
-    vsCompBottomBtn: "Start My Free Trial",
+    vsCompBottomBtn: "Get Started",
+    underCTA: "One-time setup fee: $97",
   },
   es: {
     nav: {
@@ -618,7 +619,8 @@ const t = {
     vsCompBottomFeat1: "Sin tarifas ocultas",
     vsCompBottomFeat2: "Cancele en cualquier momento",
     vsCompBottomFeat3: "Diseñado para el sector inmobiliario",
-    vsCompBottomBtn: "Iniciar Mi Prueba Gratuita",
+    vsCompBottomBtn: "Comenzar",
+    underCTA: "Tarifa única de configuración: $97",
   },
   pt: {
     nav: {
@@ -912,7 +914,8 @@ const t = {
     vsCompBottomFeat1: "Sem taxas ocultas",
     vsCompBottomFeat2: "Cancele a qualquer momento",
     vsCompBottomFeat3: "Feito para o mercado imobiliário",
-    vsCompBottomBtn: "Iniciar Meu Teste Grátis",
+    vsCompBottomBtn: "Começar",
+    underCTA: "Taxa única de configuração: $97",
   },
 };
 
@@ -1088,9 +1091,6 @@ export default function PricingPage() {
                   </div>
                 )}
               </div>
-              <a href="/trial" className="trial-btn">
-                {tr.nav.trial}
-              </a>
             </div>
           </div>
         </header>
@@ -1617,10 +1617,13 @@ export default function PricingPage() {
                 <span>{tr.vsCompBottomFeat3}</span>
               </div>
             </div>
+            <div className="cx-footer-cta-button-wrap">
             <a href="/trial" className="cx-footer-cta-button">
               <Zap size={16} fill="currentColor" className="cx-btn-bolt-icon" />
               {tr.vsCompBottomBtn}
             </a>
+            <p className="underCTA">{tr.underCTA}</p>
+            </div>
           </div>
         </div>
       </main>
@@ -1761,19 +1764,6 @@ export default function PricingPage() {
               </ul>
             </div>
 
-            <div className="footer-links-column">
-              <h3>{tr.footer.col5}</h3>
-              <ul>
-                <li>
-                  <a href="/sign-in">{tr.footer.col5_items[0]}</a>
-                </li>
-                <li>
-                  <a href="/trial" className="footer-cta-btn">
-                    {tr.footer.col5_items[1]}
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
 
           <div className="footer-copyright-bar">

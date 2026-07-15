@@ -1753,6 +1753,13 @@ i{
 
  #cortexa-ai-crm-landing .hero-head1 {
    color: #2563eb;
+   padding: 3px 8px;
+  border: 1px solid #3c0ab8;
+  border-radius: 18px;
+  font-size: 14px;
+  margin-bottom: 3px;
+  display: inline-block;
+  margin-top: 0;
  }
 
  .roi-grid {
@@ -1824,7 +1831,7 @@ i{
   font-size: 13px;
  }
  #cortexa-ai-crm-landing .hero-left .underCTA{
-  margin-left: 40px;
+  margin-left: 15px;
  }
   #cortexa-ai-crm-landing .footer-brand .underCTA{
   margin-left: 28px;
