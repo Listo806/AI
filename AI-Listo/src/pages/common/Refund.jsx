@@ -9,7 +9,7 @@ const Refund = () => {
       </p>
 
       <p>
-        This Refund Policy explains how payments for <strong>Cortexa CRM</strong> ("Cortexa", "we", "our", "us") are handled. By purchasing or subscribing to our Services, you agree to this policy.
+        This Refund Policy explains how payments for <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us") are handled. By purchasing or subscribing to our Services, you agree to this policy.
       </p>
 
       <Section title="1. Free Trial & Activation Fee">
@@ -43,7 +43,7 @@ const Refund = () => {
 
           <p>This includes:</p>
           <ul style={styles.ul}>
-            <li>Subscription fees (monthly or annual)</li>
+            <li>Subscription fees (monthly)</li>
             <li>Activation or setup fees</li>
             <li>Charges after trial conversion</li>
           </ul>
@@ -64,7 +64,7 @@ const Refund = () => {
               Contact support via:
               <ul style={styles.ul}>
                 <li>AI Support (Contact page)</li>
-                <li>Email: support@cortexa.ai</li>
+                <li>Email: support@cortexaaicrm.com</li>
               </ul>
             </li>
           </ul>
@@ -100,7 +100,7 @@ const Refund = () => {
         <Section title="6. Contact">
           <p>For billing, cancellation, or refund inquiries:</p>
           <p>AI Support: Available via the Contact page</p>
-          <p>Email: support@cortexa.ai</p>
+          <p>Email: support@cortexaaicrm.com</p>
 
           <p>We aim to respond promptly and resolve all issues efficiently.</p>
         </Section>
