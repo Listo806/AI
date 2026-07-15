@@ -1107,6 +1107,35 @@ export default function CortexaAI() {
           error?.message ||
           "Unable to send your message.",
       );
+      const errorCode =
+        error?.code || error?.details?.code || error?.response?.data?.code;
+
+      if (errorCode === "AI_CAPABILITY_DISABLED") {
+        const capability =
+          error?.details?.capability || error?.response?.data?.capability;
+
+        setChatError(
+          `This AI capability is disabled: ${
+            capability || "requested action"
+          }. Enable it in Controls to continue.`,
+        );
+
+        return;
+      }
+
+      if (errorCode === "AI_AGENT_PAUSED") {
+        setChatError(
+          "The AI Agent is paused. Resume it in Controls before sending messages.",
+        );
+
+        return;
+      }
+
+      if (errorCode === "AI_AGENT_OUTSIDE_WORKING_HOURS") {
+        setChatError("The AI Agent is currently outside its working hours.");
+
+        return;
+      }
 
       throw error;
     } finally {
@@ -2425,7 +2454,11 @@ function ChatLayout({
               <div className="cx-chat-history-empty">
                 <MessageSquare size={22} />
                 <p>No chats yet</p>
-                <button type="button" onClick={onNewChat} data-ai-write-action="true">
+                <button
+                  type="button"
+                  onClick={onNewChat}
+                  data-ai-write-action="true"
+                >
                   Start a new chat
                 </button>
               </div>
@@ -4986,7 +5019,11 @@ function ControlsLayout({
           <div className="cx-white-card">
             <h2>
               Automation Rules
-              <button type="button" onClick={onOpenAutomations} data-ai-write-action="true">
+              <button
+                type="button"
+                onClick={onOpenAutomations}
+                data-ai-write-action="true"
+              >
                 Manage Rules
               </button>
             </h2>

@@ -29,6 +29,8 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { UserRole } from "../users/entities/user.entity";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { AiAgentSetupCompleteGuard } from "./guards/ai-agent-setup-complete.guard";
+import { AllowBeforeAgentSetup } from "./decorators/allow-before-agent-setup.decorator";
 
 import { FilesInterceptor } from "@nestjs/platform-express";
 
@@ -131,12 +133,14 @@ export class AiCenterController {
   }
 
   @Get("agent/setup")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent setup progress" })
   async getAgentSetup(@CurrentUser() user: any) {
     return this.service.getAgentSetup(user.teamId);
   }
 
   @Put("agent/setup")
+  @AllowBeforeAgentSetup()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({ summary: "Update AI Agent setup state" })
@@ -156,12 +160,14 @@ export class AiCenterController {
   }
 
   @Get("agent/business-profile")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent business profile" })
   async getAgentBusinessProfile(@CurrentUser() user: any) {
     return this.service.getAgentBusinessProfile(user.teamId);
   }
 
   @Put("agent/business-profile")
+  @AllowBeforeAgentSetup()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({ summary: "Create or update AI Agent business profile" })
@@ -196,12 +202,14 @@ export class AiCenterController {
   }
 
   @Get("agent/dashboard")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent chat dashboard data" })
   async getAgentDashboard(@CurrentUser() user: any) {
     return this.service.getAgentDashboard(user.teamId);
   }
 
   @Get("agent/knowledge")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get AI Agent knowledge dashboard",
   })
@@ -233,6 +241,7 @@ export class AiCenterController {
   }
 
   @Get("agent/knowledge/search")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Search active AI Agent knowledge",
   })
@@ -249,6 +258,7 @@ export class AiCenterController {
   }
 
   @Get("agent/knowledge/items/:id")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get one AI knowledge item",
   })
@@ -260,7 +270,7 @@ export class AiCenterController {
   }
 
   @Post("agent/knowledge/items")
-  @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard, AiAgentSetupCompleteGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
     summary: "Create AI knowledge item",
@@ -288,7 +298,7 @@ export class AiCenterController {
   }
 
   @Put("agent/knowledge/items/:id")
-  @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard, AiAgentSetupCompleteGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
     summary: "Update AI knowledge item",
@@ -322,7 +332,7 @@ export class AiCenterController {
   }
 
   @Delete("agent/knowledge/items/:id")
-  @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard, AiAgentSetupCompleteGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
     summary: "Delete AI knowledge item",
@@ -335,6 +345,7 @@ export class AiCenterController {
   }
 
   @Get("agent/activity-feed")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get paginated AI Agent activity" })
   async getAgentActivityFeed(
     @CurrentUser() user: any,
@@ -354,13 +365,14 @@ export class AiCenterController {
   }
 
   @Get("agent/controls")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get AI Agent controls" })
   async getAgentControls(@CurrentUser() user: any) {
     return this.service.getAgentControls(user.teamId);
   }
 
   @Put("agent/controls")
-  @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard, AiAgentSetupCompleteGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({ summary: "Update AI Agent controls" })
   async updateAgentControls(
@@ -376,6 +388,7 @@ export class AiCenterController {
   }
 
   @Post("agent")
+  @UseGuards(AiAgentSetupCompleteGuard)
   @ApiOperation({ summary: "CORTEXA AI Agent Chat" })
   @ApiResponse({ status: 200, description: "AI response" })
   async cortexaAgent(
@@ -413,6 +426,7 @@ export class AiCenterController {
   }
 
   @Get("agent/property-catalog")
+  @AllowBeforeAgentSetup()
   @ApiOperation({ summary: "Get properties available to AI Agent" })
   async getAgentPropertyCatalog(
     @CurrentUser() user: any,
@@ -434,6 +448,7 @@ export class AiCenterController {
   }
 
   @Put("agent/property-catalog")
+  @AllowBeforeAgentSetup()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({ summary: "Save AI Agent property catalog" })
@@ -453,11 +468,13 @@ export class AiCenterController {
   }
 
   @Get("agent/appointment-rules")
+  @AllowBeforeAgentSetup()
   async getAppointmentRules(@CurrentUser() user: any) {
     return this.service.getAppointmentRules(user.teamId);
   }
 
   @Put("agent/appointment-rules")
+  @AllowBeforeAgentSetup()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
@@ -496,6 +513,7 @@ export class AiCenterController {
   }
 
   @Get("agent/behavior")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get AI Agent behavior",
   })
@@ -504,6 +522,7 @@ export class AiCenterController {
   }
 
   @Put("agent/behavior")
+   @AllowBeforeAgentSetup()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
@@ -537,11 +556,13 @@ export class AiCenterController {
   }
 
   @Get("agent/automations")
+  @AllowBeforeAgentSetup()
   async getAutomations(@CurrentUser() user: any) {
     return this.service.getAutomations(user.teamId);
   }
 
   @Put("agent/automations")
+  @AllowBeforeAgentSetup()
   async saveAutomations(
     @CurrentUser() user: any,
 
@@ -552,16 +573,19 @@ export class AiCenterController {
   }
 
   @Get("agent/test")
+  @AllowBeforeAgentSetup()
   async getTestStatus(@CurrentUser() user: any) {
     return this.service.getAgentTest(user.teamId);
   }
 
   @Post("agent/test/sessions")
+  @AllowBeforeAgentSetup()
   async createTestSession(@CurrentUser() user: any) {
     return this.service.createAgentTestSession(user.teamId, user.id);
   }
 
   @Post("agent/test")
+  @AllowBeforeAgentSetup()
   async runAgentTest(
     @CurrentUser() user: any,
 
@@ -580,6 +604,7 @@ export class AiCenterController {
   }
 
   @Get("agent/chat/sessions")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get AI Agent chat sessions",
   })
@@ -593,6 +618,7 @@ export class AiCenterController {
   }
 
   @Post("agent/chat/sessions")
+  @UseGuards(AiAgentSetupCompleteGuard)
   @ApiOperation({
     summary: "Create AI Agent chat session",
   })
@@ -601,6 +627,7 @@ export class AiCenterController {
   }
 
   @Get("agent/chat/sessions/:id")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get AI Agent chat session",
   })
@@ -609,6 +636,7 @@ export class AiCenterController {
   }
 
   @Post("agent/chat/messages")
+  @UseGuards(AiAgentSetupCompleteGuard)
   @ApiOperation({
     summary: "Send message to AI Agent",
   })
@@ -626,7 +654,7 @@ export class AiCenterController {
   }
 
   @Post("agent/knowledge/import")
-  @UseGuards(RolesGuard)
+  @UseGuards(RolesGuard, AiAgentSetupCompleteGuard)
   @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   @ApiOperation({
     summary: "Bulk import AI knowledge items",
@@ -656,6 +684,7 @@ export class AiCenterController {
   }
 
   @Get("agent/activity-feed/export")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Export AI Agent activity as CSV",
   })
@@ -678,8 +707,8 @@ export class AiCenterController {
     });
   }
 
-  
   @Get("agent/activity-feed/:id")
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Get AI Agent activity detail",
   })

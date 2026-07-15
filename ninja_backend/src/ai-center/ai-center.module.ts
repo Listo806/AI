@@ -4,14 +4,15 @@ import { AiCenterService } from './ai-center.service';
 import { DatabaseModule } from '../database/database.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { S3Service } from '../common/aws/s3.service';
-
+import { AiAgentSetupCompleteGuard } from "./guards/ai-agent-setup-complete.guard";
 @Module({
   imports: [DatabaseModule, SubscriptionsModule],
   controllers: [AiCenterController],
   providers: [
     AiCenterService,
     S3Service,
+    AiAgentSetupCompleteGuard,
   ],
-  exports: [AiCenterService],
+  exports: [AiCenterService, AiAgentSetupCompleteGuard],
 })
 export class AiCenterModule {}

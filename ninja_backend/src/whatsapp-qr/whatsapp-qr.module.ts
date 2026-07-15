@@ -19,9 +19,10 @@ import { WhatsAppQrFlowOrchestratorService } from './whatsapp-qr-flow-orchestrat
 import { WhatsAppQrGateway } from './whatsapp-qr.gateway';
 import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 import { CrmModule } from '../crm/crm.module';
+import { AiCenterModule } from "../ai-center/ai-center.module";
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule],
+  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule, AiCenterModule],
   controllers: [WhatsAppQrController],
   providers: [
     WhatsAppQrRealtimeService,

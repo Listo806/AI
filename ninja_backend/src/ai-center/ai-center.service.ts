@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from "@nestjs/common";
 import { DatabaseService } from "../database/database.service";
 import OpenAI from "openai";
 import { S3Service } from "../common/aws/s3.service";
@@ -116,6 +120,17 @@ const AI_KNOWLEDGE_CATEGORY_META: Record<
     accent: "purple",
   },
 };
+type AiAgentRuntimeControls = {
+  teamId: string;
+  launched: boolean;
+  paused: boolean;
+  responseTone: string;
+
+  capabilities: Record<string, boolean>;
+
+  quickControls: Record<string, boolean>;
+};
+
 @Injectable()
 export class AiCenterService {
   private openai = new OpenAI({
@@ -125,7 +140,293 @@ export class AiCenterService {
     private readonly db: DatabaseService,
     private readonly s3Service: S3Service,
   ) {}
+  private resolveRequestedCapability(message: string) {
+    const value = String(message || "").toLowerCase();
 
+    if (
+      value.includes("appointment") ||
+      value.includes("book") ||
+      value.includes("schedule")
+    ) {
+      return {
+        key: "appointmentBooking",
+        defaultValue: true,
+      };
+    }
+
+    if (
+      value.includes("property") ||
+      value.includes("listing") ||
+      value.includes("recommend")
+    ) {
+      return {
+        key: "propertyRecommendations",
+        defaultValue: true,
+      };
+    }
+
+    if (value.includes("qualify") || value.includes("qualification")) {
+      return {
+        key: "leadQualification",
+        defaultValue: true,
+      };
+    }
+
+    if (value.includes("score") || value.includes("hot lead")) {
+      return {
+        key: "leadScoring",
+        defaultValue: true,
+      };
+    }
+
+    if (value.includes("follow up") || value.includes("follow-up")) {
+      return {
+        key: "followUpAutomation",
+        defaultValue: true,
+      };
+    }
+
+    if (value.includes("campaign") || value.includes("marketing")) {
+      return {
+        key: "marketingCampaigns",
+        defaultValue: false,
+      };
+    }
+
+    if (value.includes("whatsapp")) {
+      return {
+        key: "whatsappCommunication",
+        defaultValue: true,
+      };
+    }
+
+    return null;
+  }
+
+  private isInsideWorkingHours(controls: AiAgentRuntimeControls) {
+    const quick = controls.quickControls || {};
+
+    if (quick.workingHoursOnly !== true) {
+      return true;
+    }
+    const now = new Date();
+    const day = now.getDay();
+    const hour = now.getHours();
+    const isWeekend = day === 0 || day === 6;
+    if (isWeekend && quick.weekendsActive !== true) {
+      return false;
+    }
+
+    return hour >= 9 && hour < 18;
+  }
+  private async getRuntimeControls(
+    teamId: string,
+  ): Promise<AiAgentRuntimeControls> {
+    const result = await this.db.query(
+      `
+      SELECT
+        launched,
+        paused,
+        response_tone,
+        capabilities,
+        quick_controls
+      FROM ai_agent_settings
+      WHERE team_id = $1
+      LIMIT 1
+      `,
+      [teamId],
+    );
+
+    const row = result.rows[0];
+
+    if (!row) {
+      return {
+        teamId,
+        launched: false,
+        paused: false,
+        responseTone: "professional",
+        capabilities: {},
+        quickControls: {},
+      };
+    }
+
+    return {
+      teamId,
+      launched: Boolean(row.launched),
+      paused: Boolean(row.paused),
+
+      responseTone: row.response_tone || "professional",
+
+      capabilities:
+        row.capabilities && typeof row.capabilities === "object"
+          ? row.capabilities
+          : {},
+
+      quickControls:
+        row.quick_controls && typeof row.quick_controls === "object"
+          ? row.quick_controls
+          : {},
+    };
+  }
+
+  private async assertCapabilityEnabled(
+    teamId: string,
+    controls: AiAgentRuntimeControls,
+    capability: string,
+    defaultValue = false,
+  ): Promise<void> {
+    const enabled = controls.capabilities[capability] ?? defaultValue;
+
+    if (enabled) {
+      return;
+    }
+
+    await this.db.query(
+      `
+    INSERT INTO ai_activity (
+      team_id,
+      action,
+      channel,
+      outcome,
+      metadata,
+      created_at
+    )
+    VALUES (
+      $1,
+      'ai_capability_blocked',
+      'web',
+      'blocked',
+      $2::jsonb,
+      NOW()
+    )
+    `,
+      [
+        teamId,
+        JSON.stringify({
+          capability,
+        }),
+      ],
+    );
+
+    throw new ForbiddenException({
+      code: "AI_CAPABILITY_DISABLED",
+
+      capability,
+
+      message: `AI capability "${capability}" is disabled.`,
+    });
+  }
+
+  private assertAgentRuntimeAvailable(controls: AiAgentRuntimeControls): void {
+    if (!controls.launched) {
+      throw new ForbiddenException({
+        code: "AI_AGENT_SETUP_REQUIRED",
+
+        message: "Complete setup and launch the AI Agent first.",
+      });
+    }
+
+    if (controls.paused || controls.quickControls?.pauseAiAgent === true) {
+      throw new ForbiddenException({
+        code: "AI_AGENT_PAUSED",
+
+        message: "The AI Agent is currently paused.",
+      });
+    }
+  }
+  private async logRuntimeBlock(
+    teamId: string,
+    reason: string,
+    metadata: Record<string, any> = {},
+  ) {
+    try {
+      await this.db.query(
+        `
+      INSERT INTO ai_activity (
+        team_id,
+        action,
+        channel,
+        outcome,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        'ai_action_blocked',
+        $2,
+        'blocked',
+        $3::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+
+          metadata.channel || "system",
+
+          JSON.stringify({
+            reason,
+            ...metadata,
+          }),
+        ],
+      );
+    } catch (error) {
+      console.error("LOG AI RUNTIME BLOCK FAILED:", error);
+    }
+  }
+  async assertAgentActionAllowed(
+    teamId: string,
+
+    capability?: string,
+
+    options: {
+      defaultValue?: boolean;
+      checkWorkingHours?: boolean;
+      channel?: string;
+      metadata?: Record<string, any>;
+    } = {},
+  ): Promise<AiAgentRuntimeControls> {
+    if (!teamId) {
+      throw new ForbiddenException({
+        code: "AI_AGENT_TEAM_REQUIRED",
+        message: "A team is required to use the AI Agent.",
+      });
+    }
+
+    const controls = await this.getRuntimeControls(teamId);
+
+    this.assertAgentRuntimeAvailable(controls);
+
+    if (
+      options.checkWorkingHours !== false &&
+      !this.isInsideWorkingHours(controls)
+    ) {
+      await this.logRuntimeBlock(teamId, "outside_working_hours", {
+        channel: options.channel || "system",
+
+        capability: capability || null,
+
+        ...options.metadata,
+      });
+
+      throw new ForbiddenException({
+        code: "AI_AGENT_OUTSIDE_WORKING_HOURS",
+
+        message: "The AI Agent is outside its configured working hours.",
+      });
+    }
+
+    if (capability) {
+      await this.assertCapabilityEnabled(
+        teamId,
+        controls,
+        capability,
+        options.defaultValue ?? false,
+      );
+    }
+
+    return controls;
+  }
   async getOverview(teamId: string): Promise<OverviewResponse> {
     const [team, recent] = await Promise.all([
       this.getTeamAiSettings(teamId),
@@ -1979,9 +2280,34 @@ export class AiCenterService {
         answer: "You need to create or join a team before using CORTEXA AI.",
       };
     }
-    /*
-     * LOAD REAL CRM DATA
-     */
+    const requestedCapability = this.resolveRequestedCapability(message);
+
+    const runtimeControls = await this.assertAgentActionAllowed(
+      teamId,
+
+      requestedCapability?.key,
+
+      {
+        defaultValue: requestedCapability?.defaultValue ?? true,
+
+        checkWorkingHours: true,
+
+        channel: "web",
+
+        metadata: {
+          userId: user?.id || null,
+
+          conversationId: conversationId || null,
+        },
+      },
+    );
+    if (!this.isInsideWorkingHours(runtimeControls)) {
+      throw new ForbiddenException({
+        code: "AI_AGENT_OUTSIDE_WORKING_HOURS",
+
+        message: "The AI Agent is outside its configured working hours.",
+      });
+    }
 
     const leadsResult = await this.db.query(
       `
@@ -2027,29 +2353,47 @@ export class AiCenterService {
     /*
      * SYSTEM PROMPT
      */
+    const toneInstructions: Record<string, string> = {
+      professional:
+        "Use a professional, clear, friendly and approachable tone.",
 
+      friendly: "Use a warm, conversational and personable tone.",
+
+      sales:
+        "Use a confident and conversion-focused tone without being aggressive.",
+    };
+
+    const responseToneInstruction =
+      toneInstructions[runtimeControls.responseTone] ||
+      toneInstructions.professional;
     const systemPrompt = `
-    You are CORTEXA AI, an AI agent built for real estate agents and teams.
+You are CORTEXA AI, an AI agent built for real estate agents and teams.
 
-    You help users:
-    - manage leads
-    - follow-ups
-    - WhatsApp replies
-    - appointments
-    - pipelines
-    - listings
-    - ad copy
-    - CRM analytics
+You help users:
+- manage leads
+- follow-ups
+- WhatsApp replies
+- appointments
+- pipelines
+- listings
+- ad copy
+- CRM analytics
 
-    Only answer using available CRM data when data is required.
+Only answer using available CRM data when data is required.
 
-    If data is missing:
-    - explain exactly what is missing
-    - explain what the user should connect or create
+If data is missing:
+- explain exactly what is missing
+- explain what the user should connect or create
 
-    Be direct, professional, and action-oriented.
-    Always give next steps.
-    `;
+Communication style:
+${responseToneInstruction}
+
+Enabled capabilities:
+${JSON.stringify(runtimeControls.capabilities)}
+
+Be direct, professional, and action-oriented.
+Always give clear next steps.
+`;
 
     /*
      * OPENAI CALL
