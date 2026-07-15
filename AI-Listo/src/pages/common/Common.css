@@ -714,7 +714,9 @@
   color: #111;
 }
 .trial-page .cx-pricing-title-blue {
-    color: #003bff;
+    background: linear-gradient(90deg, #7a5cff, #4c7dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 .trial-page .trial-badge {
   color: #2563eb;

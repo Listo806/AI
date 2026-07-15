@@ -1281,7 +1281,7 @@ export default function CortexaAI() {
               className={agentSidebarCollapsed ? "" : "is-expanded"}
             />
           </button>
-          <div className="cx-agent-brand">
+          {/*<div className="cx-agent-brand">
             <div className="cx-agent-bot">
               <Bot size={24} />
             </div>
@@ -1301,7 +1301,7 @@ export default function CortexaAI() {
                 </span>
               </div>
             )}
-          </div>
+          </div>*/}
 
           <nav className="cx-agent-menu">
             {agentMenus.map((item) => {
