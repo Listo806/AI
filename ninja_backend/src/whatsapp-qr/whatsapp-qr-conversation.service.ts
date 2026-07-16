@@ -1110,4 +1110,33 @@ Rules:
       };
     }
   }
+
+  async attachConnectedSession(
+    conversationId: string,
+    params: {
+      sessionId: string;
+      userId: string;
+    },
+  ) {
+    const { rows } = await this.db.query(
+      `
+    UPDATE whatsapp_qr_conversations
+    SET
+      session_id = $2,
+      user_id = $3,
+      updated_at = NOW()
+    WHERE id = $1
+    RETURNING
+      id,
+      session_id,
+      user_id,
+      team_id,
+      lead_id,
+      contact_phone
+    `,
+      [conversationId, params.sessionId, params.userId],
+    );
+
+    return rows[0] || null;
+  }
 }
