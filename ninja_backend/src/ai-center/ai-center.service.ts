@@ -2295,30 +2295,18 @@ export class AiCenterService {
 
     const runtimeControls = await this.assertAgentActionAllowed(
       teamId,
-
       requestedCapability?.key,
-
       {
         defaultValue: requestedCapability?.defaultValue ?? true,
-
         checkWorkingHours: false,
         allowWhenPaused: true,
         channel: "web",
-
         metadata: {
           userId: user?.id || null,
-
           conversationId: conversationId || null,
         },
       },
     );
-    if (!this.isInsideWorkingHours(runtimeControls)) {
-      throw new ForbiddenException({
-        code: "AI_AGENT_OUTSIDE_WORKING_HOURS",
-
-        message: "The AI Agent is outside its configured working hours.",
-      });
-    }
 
     const leadsResult = await this.db.query(
       `
@@ -4822,6 +4810,20 @@ Always give clear next steps.
     }
     const message = String(body.message || "").trim();
     const attachments = Array.isArray(body.attachments) ? body.attachments : [];
+    const requestedCapability = this.resolveRequestedCapability(message);
+
+    await this.assertAgentActionAllowed(teamId, requestedCapability?.key, {
+      defaultValue: requestedCapability?.defaultValue ?? true,
+
+      checkWorkingHours: false,
+      allowWhenPaused: true,
+      channel: "web",
+
+      metadata: {
+        userId,
+        sessionId: body.sessionId || null,
+      },
+    });
     if (!message && attachments.length === 0) {
       throw new ForbiddenException("Message or attachment is required");
     }
