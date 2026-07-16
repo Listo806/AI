@@ -1658,16 +1658,230 @@ export class AiCenterService {
     const values: any[] = [teamId];
     let index = 2;
 
-    if (params.type && params.type !== "all") {
-      where.push(`a.action = $${index++}`);
-      values.push(params.type);
+    const activityType = String(params.type || "all")
+      .trim()
+      .toLowerCase();
+
+    if (activityType && activityType !== "all") {
+      switch (activityType) {
+        case "messages":
+        case "message":
+        case "conversation":
+        case "conversations": {
+          where.push(`
+        (
+          a.action ILIKE '%chat%'
+          OR a.action ILIKE '%message%'
+          OR a.action ILIKE '%reply%'
+          OR a.action ILIKE '%follow_up%'
+          OR a.action ILIKE '%email%'
+          OR a.action ILIKE '%whatsapp%'
+          OR a.action ILIKE '%sms%'
+
+          OR (
+            a.action NOT ILIKE '%appointment%'
+            AND a.action NOT ILIKE '%property%'
+            AND a.action NOT ILIKE '%lead%'
+            AND a.action NOT ILIKE '%alert%'
+            AND a.action NOT ILIKE '%escalat%'
+            AND a.action NOT ILIKE '%data%'
+            AND a.action NOT ILIKE '%knowledge%'
+            AND a.action NOT ILIKE '%automation%'
+          )
+        )
+      `);
+
+          break;
+        }
+
+        case "appointment":
+        case "appointments": {
+          where.push(`
+        a.action ILIKE '%appointment%'
+      `);
+
+          break;
+        }
+
+        case "property":
+        case "properties":
+        case "property_updates": {
+          where.push(`
+        a.action ILIKE '%property%'
+      `);
+
+          break;
+        }
+
+        case "lead":
+        case "leads":
+        case "lead_updates": {
+          where.push(`
+        a.action ILIKE '%lead%'
+      `);
+
+          break;
+        }
+
+        case "alert":
+        case "alerts":
+        case "escalation":
+        case "escalations": {
+          where.push(`
+        (
+          a.action ILIKE '%alert%'
+          OR a.action ILIKE '%escalat%'
+          OR COALESCE(
+            a.outcome,
+            ''
+          ) ILIKE '%escalat%'
+          OR LOWER(
+            COALESCE(
+              a.outcome,
+              ''
+            )
+          ) IN (
+            'blocked',
+            'failed',
+            'error',
+            'requires_human'
+          )
+        )
+      `);
+
+          break;
+        }
+
+        case "data":
+        case "data_updates": {
+          where.push(`
+        a.action ILIKE '%data%'
+      `);
+
+          break;
+        }
+
+        case "knowledge": {
+          where.push(`
+        a.action ILIKE '%knowledge%'
+      `);
+
+          break;
+        }
+
+        case "automation":
+        case "automations": {
+          where.push(`
+        (
+          a.action ILIKE '%automation%'
+          OR a.action ILIKE '%follow_up%'
+        )
+      `);
+
+          break;
+        }
+
+        default: {
+          values.push(activityType);
+
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.action,
+            ''
+          )
+        ) = $${index++}
+      `);
+
+          break;
+        }
+      }
     }
 
-    if (params.status && params.status !== "all") {
-      where.push(
-        `LOWER(COALESCE(a.outcome, 'completed')) = LOWER($${index++})`,
-      );
-      values.push(params.status);
+    const activityStatus = String(params.status || "all")
+      .trim()
+      .toLowerCase();
+
+    if (activityStatus && activityStatus !== "all") {
+      switch (activityStatus) {
+        case "success":
+        case "completed": {
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.outcome,
+            'completed'
+          )
+        ) IN (
+          'success',
+          'completed'
+        )
+      `);
+
+          break;
+        }
+
+        case "failed":
+        case "error": {
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.outcome,
+            ''
+          )
+        ) IN (
+          'failed',
+          'error'
+        )
+      `);
+
+          break;
+        }
+
+        case "escalated": {
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.outcome,
+            ''
+          )
+        ) IN (
+          'escalated',
+          'requires_human'
+        )
+      `);
+
+          break;
+        }
+
+        case "blocked": {
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.outcome,
+            ''
+          )
+        ) = 'blocked'
+      `);
+
+          break;
+        }
+
+        default: {
+          values.push(activityStatus);
+
+          where.push(`
+        LOWER(
+          COALESCE(
+            a.outcome,
+            ''
+          )
+        ) = $${index++}
+      `);
+
+          break;
+        }
+      }
     }
 
     if (params.search?.trim()) {
@@ -1722,20 +1936,56 @@ export class AiCenterService {
           [teamId],
         ),
         this.db.query(
-          `SELECT
-             CASE
-               WHEN action ILIKE '%appointment%' THEN 'Appointments'
-               WHEN action ILIKE '%lead%' THEN 'Lead Updates'
-               WHEN action ILIKE '%property%' THEN 'Property Updates'
-               WHEN action ILIKE '%alert%' OR outcome ILIKE '%escalat%' THEN 'Alerts'
-               WHEN action ILIKE '%data%' THEN 'Data Updates'
-               ELSE 'Messages'
-             END AS label,
-             COUNT(*)::int AS total
-           FROM ai_activity
-           WHERE team_id = $1
-           GROUP BY 1
-           ORDER BY total DESC`,
+          `
+          SELECT
+            CASE
+              WHEN action ILIKE '%appointment%'
+                THEN 'Appointments'
+
+              WHEN action ILIKE '%property%'
+                THEN 'Property Updates'
+
+              WHEN action ILIKE '%lead%'
+                THEN 'Lead Updates'
+
+              WHEN action ILIKE '%knowledge%'
+                THEN 'Knowledge'
+
+              WHEN action ILIKE '%automation%'
+                OR action ILIKE '%follow_up%'
+                THEN 'Automations'
+
+              WHEN action ILIKE '%data%'
+                THEN 'Data Updates'
+
+              WHEN action ILIKE '%alert%'
+                OR action ILIKE '%escalat%'
+                OR COALESCE(
+                  outcome,
+                  ''
+                ) ILIKE '%escalat%'
+                OR LOWER(
+                  COALESCE(
+                    outcome,
+                    ''
+                  )
+                ) IN (
+                  'blocked',
+                  'failed',
+                  'error',
+                  'requires_human'
+                )
+                THEN 'Alerts'
+
+              ELSE 'Messages'
+            END AS label,
+
+            COUNT(*)::int AS total
+          FROM ai_activity
+          WHERE team_id = $1
+          GROUP BY 1
+          ORDER BY total DESC
+          `,
           [teamId],
         ),
         this.db.query(
@@ -1755,7 +2005,16 @@ export class AiCenterService {
       summaryTotal > 0 ? Math.round((value / summaryTotal) * 100) : 0;
 
     const colorByIndex = ["green", "orange", "purple", "blue", "red", "gray"];
-
+    const activityTypeKeyMap: Record<string, string> = {
+      Messages: "messages",
+      Appointments: "appointments",
+      "Property Updates": "property_updates",
+      "Lead Updates": "lead_updates",
+      Alerts: "alerts",
+      "Data Updates": "data_updates",
+      Knowledge: "knowledge",
+      Automations: "automations",
+    };
     return {
       page,
       limit,
@@ -1775,12 +2034,22 @@ export class AiCenterService {
         failedPercentLabel: `${percent(Number(summary.failed || 0))}%`,
         trendLabel: "Current period",
       },
-      activityByType: typeResult.rows.map((row: any, rowIndex: number) => ({
-        label: row.label,
-        value: `${row.total} (${percent(Number(row.total || 0))}%)`,
-        percent: percent(Number(row.total || 0)),
-        accent: colorByIndex[rowIndex % colorByIndex.length],
-      })),
+      activityByType: typeResult.rows.map((row: any, rowIndex: number) => {
+        const total = Number(row.total || 0);
+        return {
+          key:
+            activityTypeKeyMap[row.label] ||
+            String(row.label || "")
+              .toLowerCase()
+              .replace(/\s+/g, "_"),
+
+          label: row.label,
+          total,
+          value: `${total} (${percent(total)}%)`,
+          percent: percent(total),
+          accent: colorByIndex[rowIndex % colorByIndex.length],
+        };
+      }),
       topActions: topResult.rows.map((row: any, rowIndex: number) => ({
         title: this.formatAiActionTitle(row.action),
         total: Number(row.total || 0),

@@ -3454,13 +3454,14 @@ function ActivityLayout({
               }
             >
               <option value="all">All Types</option>
-              <option value="conversation">Conversations</option>
+              <option value="messages">Messages</option>
+              <option value="appointments">Appointments</option>
+              <option value="property_updates">Property Updates</option>
+              <option value="lead_updates">Lead Updates</option>
               <option value="knowledge">Knowledge</option>
-              <option value="appointment">Appointments</option>
-              <option value="automation">Automations</option>
-              <option value="lead">Lead Updates</option>
-              <option value="property">Property Updates</option>
-              <option value="alert">Alerts</option>
+              <option value="automations">Automations</option>
+              <option value="alerts">Alerts</option>
+              <option value="data_updates">Data Updates</option>
             </select>
 
             <select
@@ -3671,6 +3672,12 @@ function ActivityLayout({
                 <div
                   className="cx-bar-row has-icon"
                   key={`${item.label}-${index}`}
+                  onClick={() =>
+                    onFilterChange({
+                      type: item.key || "all",
+                      page: 1,
+                    })
+                  }
                 >
                   <div className={`cx-bar-icon ${item.accent || "purple"}`}>
                     <Icon size={14} />
