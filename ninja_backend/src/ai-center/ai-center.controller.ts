@@ -649,7 +649,7 @@ export class AiCenterController {
       sessionId?: string;
       attachments?: any[];
     },
-  ) {
+  ) { console.log("CHAT CONTROLLER");
     return this.service.sendAgentChatMessage(user.teamId, user.id, body);
   }
 

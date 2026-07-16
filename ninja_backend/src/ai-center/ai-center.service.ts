@@ -4816,6 +4816,7 @@ Always give clear next steps.
       attachments?: any[];
     },
   ) {
+    console.log("CHAT SERVICE");
     if (!teamId) {
       throw new ForbiddenException("Team is required");
     }
