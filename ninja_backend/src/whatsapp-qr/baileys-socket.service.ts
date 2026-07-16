@@ -5,12 +5,12 @@ import {
   OnApplicationShutdown,
   Inject,
   forwardRef,
-} from '@nestjs/common';
-import { ConfigService } from '../config/config.service';
-import { BaileysRedisAuthService } from './baileys-redis-auth.service';
-import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
-import { WhatsAppQrSessionService } from './whatsapp-qr-session.service';
-import { WhatsAppQrInboundService } from './whatsapp-qr-inbound.service';
+} from "@nestjs/common";
+import { ConfigService } from "../config/config.service";
+import { BaileysRedisAuthService } from "./baileys-redis-auth.service";
+import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
+import { WhatsAppQrSessionService } from "./whatsapp-qr-session.service";
+import { WhatsAppQrInboundService } from "./whatsapp-qr-inbound.service";
 
 /**
  * One Baileys socket per userId. QR + connection events via WhatsAppQrRealtimeService.
@@ -49,7 +49,7 @@ export class BaileysSocketService
   ) {}
 
   isQrEnabled(): boolean {
-    return this.config.get('WHATSAPP_QR_ENABLED') === 'true';
+    return this.config.get("WHATSAPP_QR_ENABLED") === "true";
   }
 
   getHandle(userId: string): SocketHandle | undefined {
@@ -103,7 +103,7 @@ export class BaileysSocketService
       this.contexts.delete(userId);
     }
 
-    const baileys = await import('@whiskeysockets/baileys');
+    const baileys = await import("@whiskeysockets/baileys");
     const makeWASocket = baileys.default || baileys.makeWASocket;
     const { DisconnectReason } = baileys;
 
@@ -115,7 +115,7 @@ export class BaileysSocketService
       syncFullHistory: false,
       markOnlineOnConnect: false,
       generateHighQualityLinkPreview: false,
-      browser: ['Ninja', 'Chrome', '120.0.0'],
+      browser: ["Ninja", "Chrome", "120.0.0"],
       getMessage: async () => undefined,
     });
 
@@ -128,19 +128,19 @@ export class BaileysSocketService
     };
     this.contexts.set(userId, ctx);
 
-    sock.ev.on('creds.update', saveCreds);
+    sock.ev.on("creds.update", saveCreds);
 
-    sock.ev.on('connection.update', async (update: any) => {
+    sock.ev.on("connection.update", async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
         this.realtime.emitQr(userId, qr);
       }
 
-      if (connection === 'open') {
+      if (connection === "open") {
         ctx.reconnectAttempt = 0;
         const phone =
-          state.creds?.me?.id?.split(':')[0]?.replace(/\D/g, '') || null;
+          state.creds?.me?.id?.split(":")[0]?.replace(/\D/g, "") || null;
         const handle: SocketHandle = {
           userId,
           sessionId,
@@ -148,13 +148,13 @@ export class BaileysSocketService
           phone,
         };
         this.handles.set(userId, handle);
-        await this.sessions.setStatus(sessionId, 'connected', phone);
+        await this.sessions.setStatus(sessionId, "connected", phone);
         this.realtime.emitConnected(userId, phone);
         await this.redisAuth.refreshAuthTtl(userId);
         this.logger.log(`WhatsApp QR connected user=${userId} phone=${phone}`);
       }
 
-      if (connection === 'close') {
+      if (connection === "close") {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         const shouldReconnect =
           statusCode !== DisconnectReason.loggedOut &&
@@ -170,14 +170,14 @@ export class BaileysSocketService
 
         if (statusCode === DisconnectReason.loggedOut) {
           await this.redisAuth.clearAuth(userId);
-          await this.sessions.setStatus(sessionId, 'disconnected');
+          await this.sessions.setStatus(sessionId, "disconnected");
         } else {
-          await this.sessions.setStatus(sessionId, 'connecting');
+          await this.sessions.setStatus(sessionId, "connecting");
         }
 
         this.realtime.emitDisconnected(
           userId,
-          lastDisconnect?.error?.message || 'close',
+          lastDisconnect?.error?.message || "close",
         );
 
         if (ctx.closing || !shouldReconnect) {
@@ -199,9 +199,9 @@ export class BaileysSocketService
       }
     });
 
-    sock.ev.on('messages.upsert', async (upsert: any) => {
+    sock.ev.on("messages.upsert", async (upsert: any) => {
       const messages = upsert?.messages || [];
-      const type = upsert?.type || '';
+      const type = upsert?.type || "";
       if (!messages.length) return;
       await this.inbound.handleUpsert(userId, sessionId, messages, type);
     });
@@ -219,9 +219,9 @@ export class BaileysSocketService
    */
   async sendText(userId: string, toE164: string, text: string): Promise<void> {
     const ctx = this.contexts.get(userId);
-    if (!ctx?.sock) throw new Error('WhatsApp QR socket not connected');
-    const digits = toE164.replace(/\D/g, '');
-    if (digits.length < 10) throw new Error('Invalid phone for send');
+    if (!ctx?.sock) throw new Error("WhatsApp QR socket not connected");
+    const digits = toE164.replace(/\D/g, "");
+    if (digits.length < 10) throw new Error("Invalid phone for send");
     const jid = `${digits}@s.whatsapp.net`;
     await ctx.sock.sendMessage(jid, { text });
   }
@@ -229,17 +229,25 @@ export class BaileysSocketService
   /**
    * Send voice message (audio/ogg) to E.164 contact over Baileys.
    */
-  async sendVoice(userId: string, toE164: string, audioBase64: string): Promise<void> {
+  async sendVoice(
+    userId: string,
+    toE164: string,
+    audioBase64: string,
+  ): Promise<void> {
     const ctx = this.contexts.get(userId);
-    if (!ctx?.sock) throw new Error('WhatsApp QR socket not connected');
-    const digits = toE164.replace(/\D/g, '');
-    if (digits.length < 10) throw new Error('Invalid phone for send');
+    if (!ctx?.sock) throw new Error("WhatsApp QR socket not connected");
+    const digits = toE164.replace(/\D/g, "");
+    if (digits.length < 10) throw new Error("Invalid phone for send");
     const jid = `${digits}@s.whatsapp.net`;
-    const buffer = Buffer.from(audioBase64, 'base64');
-    await ctx.sock.sendMessage(jid, {
-      audio: buffer,
-      mimetype: 'audio/ogg; codecs=opus',
-    }, { sendAudioAsVoice: true });
+    const buffer = Buffer.from(audioBase64, "base64");
+    await ctx.sock.sendMessage(
+      jid,
+      {
+        audio: buffer,
+        mimetype: "audio/ogg; codecs=opus",
+      },
+      { sendAudioAsVoice: true },
+    );
   }
 
   async disconnectUser(userId: string): Promise<void> {
@@ -284,5 +292,9 @@ export class BaileysSocketService
       if (clearAuth) await this.redisAuth.clearAuth(userId);
       await this.disconnectUser(userId);
     }
+  }
+
+  async hasStoredAuth(userId: string): Promise<boolean> {
+    return this.redisAuth.hasStoredCredentials(userId);
   }
 }

@@ -55,7 +55,15 @@ export class WhatsAppQrController {
     },
   ) {
     const teamId = user.teamId || user.team_id || conversation.team_id || null;
+    const originalHasAuth = await this.sockets.hasStoredAuth(
+      conversation.user_id,
+    );
 
+    console.log("[WA SEND] original auth state", {
+      userId: conversation.user_id,
+
+      hasStoredAuth: originalHasAuth,
+    });
     console.log("[WA SEND] resolve connection", {
       requestUserId: user.id,
       teamId,
@@ -80,13 +88,20 @@ export class WhatsAppQrController {
       };
     }
 
-    try {
-      handle = await this.sockets.ensureSocket(
-        conversation.user_id,
-        conversation.session_id,
-      );
-    } catch (error) {
-      console.error("[WA SEND] restore original socket failed", error);
+    if (originalHasAuth) {
+      try {
+        handle = await this.sockets.ensureSocket(
+          conversation.user_id,
+          conversation.session_id,
+        );
+      } catch (error) {
+        console.error("[WA SEND] restore original socket failed", error);
+      }
+    } else {
+      console.warn("[WA SEND] original session has no stored credentials", {
+        userId: conversation.user_id,
+        sessionId: conversation.session_id,
+      });
     }
 
     if (!handle?.connected) {
@@ -142,7 +157,9 @@ export class WhatsAppQrController {
         handle: null,
         conversation,
         session: null,
-        reason: "no_connected_database_session",
+        reason: originalHasAuth
+          ? "socket_reconnect_failed"
+          : "whatsapp_qr_required",
       };
     }
 
@@ -252,17 +269,29 @@ export class WhatsAppQrController {
     }
 
     const connected = handle?.connected === true;
-
     if (row.status === "connected" && !connected) {
-      await this.sessions.setStatus(row.id, "disconnected");
+      const hasStoredAuth = await this.sockets.hasStoredAuth(user.id);
+      await this.sessions.setStatus(
+        row.id,
+        hasStoredAuth ? "connecting" : "disconnected",
+      );
     }
+
+    const hasStoredAuth = connected
+      ? true
+      : await this.sockets.hasStoredAuth(user.id);
 
     return {
       data: {
         enabled: this.sockets.isQrEnabled(),
         connected,
         phone: connected ? row.phone : null,
-        status: connected ? "connected" : "disconnected",
+        status: connected
+          ? "connected"
+          : hasStoredAuth
+            ? "connecting"
+            : "disconnected",
+        requiresQr: !connected && !hasStoredAuth,
         connected_at: connected ? row.connected_at : null,
         updated_at: row.updated_at,
       },
@@ -425,12 +454,15 @@ export class WhatsAppQrController {
     const sendConversation = resolved.conversation;
 
     if (!handle?.connected) {
+      const qrRequired =
+        resolved.reason === "whatsapp_qr_required" ||
+        resolved.reason === "database_connected_but_socket_disconnected";
+
       throw new BadRequestException({
-        code: "WHATSAPP_SESSION_NOT_CONNECTED",
-        message:
-          resolved.reason === "database_connected_but_socket_disconnected"
-            ? "The saved WhatsApp session is no longer valid. Scan the QR code again from AI Agent Setup."
-            : "No active WhatsApp connection is available. Connect WhatsApp from AI Agent Setup.",
+        code: qrRequired ? "WHATSAPP_QR_REQUIRED" : "WHATSAPP_RECONNECTING",
+        message: qrRequired
+          ? "Your WhatsApp login has expired or is missing. Scan the QR code again from AI Agent Setup."
+          : "WhatsApp is reconnecting. Please wait a few seconds and try again.",
 
         reason: resolved.reason || "unknown",
         conversationId: conv.id,

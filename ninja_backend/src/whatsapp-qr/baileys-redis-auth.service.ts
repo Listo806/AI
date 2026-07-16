@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import Redis from 'ioredis';
-import { Mutex } from 'async-mutex';
-import { ConfigService } from '../config/config.service';
+import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
+import Redis from "ioredis";
+import { Mutex } from "async-mutex";
+import { ConfigService } from "../config/config.service";
 
 /** TTL for each auth key: 30 days; refreshed on write and on connect */
 const AUTH_KEY_TTL_SEC = 30 * 24 * 60 * 60;
@@ -19,9 +19,38 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
 
   constructor(private readonly config: ConfigService) {}
 
+  async hasStoredCredentials(userId: string): Promise<boolean> {
+    const redis = this.getRedis();
+
+    if (!redis) {
+      return false;
+    }
+
+    try {
+      await redis.connect().catch(() => {});
+
+      const key = this.redisKey(userId, "creds.json");
+      const raw = await redis.get(key);
+
+      if (!raw) {
+        return false;
+      }
+
+      const baileys = await import("@whiskeysockets/baileys");
+      const { BufferJSON } = baileys as any;
+      const creds = JSON.parse(raw, BufferJSON.reviver);
+      return Boolean(creds?.registered && creds?.me?.id);
+    } catch (error) {
+      this.logger.warn(
+        `Unable to inspect WhatsApp auth for user ${userId}: ${error}`,
+      );
+
+      return false;
+    }
+  }
   private getRedis(): Redis | null {
     if (this.client) return this.client;
-    const url = this.config.get('REDIS_URL');
+    const url = this.config.get("REDIS_URL");
     if (!url) return null;
     try {
       this.client = new Redis(url, {
@@ -40,7 +69,7 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
   }
 
   private redisKey(userId: string, file: string): string {
-    const safe = file.replace(/\//g, '__').replace(/:/g, '-');
+    const safe = file.replace(/\//g, "__").replace(/:/g, "-");
     return `${this.keyPrefix(userId)}:${safe}`;
   }
 
@@ -63,12 +92,12 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
   } | null> {
     const redis = this.getRedis();
     if (!redis) {
-      this.logger.warn('REDIS_URL not set; cannot persist Baileys auth');
+      this.logger.warn("REDIS_URL not set; cannot persist Baileys auth");
       return null;
     }
     await redis.connect().catch(() => {});
 
-    const baileys = await import('@whiskeysockets/baileys');
+    const baileys = await import("@whiskeysockets/baileys");
     const { initAuthCreds, BufferJSON, proto } = baileys as any;
 
     const writeData = async (data: any, file: string) => {
@@ -106,7 +135,7 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
       }
     };
 
-    const creds = (await readData('creds.json')) || initAuthCreds();
+    const creds = (await readData("creds.json")) || initAuthCreds();
 
     return {
       state: {
@@ -117,7 +146,7 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
             await Promise.all(
               ids.map(async (id) => {
                 let value = await readData(`${type}-${id}.json`);
-                if (type === 'app-state-sync-key' && value) {
+                if (type === "app-state-sync-key" && value) {
                   value = proto.Message.AppStateSyncKeyData.fromObject(value);
                 }
                 data[id] = value;
@@ -131,16 +160,14 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
               for (const id of Object.keys(data[category] || {})) {
                 const value = data[category][id];
                 const file = `${category}-${id}.json`;
-                tasks.push(
-                  value ? writeData(value, file) : removeData(file),
-                );
+                tasks.push(value ? writeData(value, file) : removeData(file));
               }
             }
             await Promise.all(tasks);
           },
         },
       },
-      saveCreds: async () => writeData(creds, 'creds.json'),
+      saveCreds: async () => writeData(creds, "creds.json"),
     };
   }
 
@@ -150,23 +177,23 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
   async clearAuth(userId: string): Promise<void> {
     const redis = this.getRedis();
     if (!redis) {
-      this.logger.warn('REDIS_URL not set; clearAuth no-op');
+      this.logger.warn("REDIS_URL not set; clearAuth no-op");
       return;
     }
     await redis.connect().catch(() => {});
     const pattern = `${this.keyPrefix(userId)}:*`;
-    let cursor = '0';
+    let cursor = "0";
     do {
       const [next, keys] = await redis.scan(
         cursor,
-        'MATCH',
+        "MATCH",
         pattern,
-        'COUNT',
+        "COUNT",
         100,
       );
       cursor = next;
       if (keys.length) await redis.del(...keys);
-    } while (cursor !== '0');
+    } while (cursor !== "0");
     this.logger.log(`clearAuth: removed Redis keys for user ${userId}`);
   }
 
@@ -178,20 +205,20 @@ export class BaileysRedisAuthService implements OnModuleDestroy {
     if (!redis) return;
     await redis.connect().catch(() => {});
     const pattern = `${this.keyPrefix(userId)}:*`;
-    let cursor = '0';
+    let cursor = "0";
     do {
       const [next, keys] = await redis.scan(
         cursor,
-        'MATCH',
+        "MATCH",
         pattern,
-        'COUNT',
+        "COUNT",
         100,
       );
       cursor = next;
       for (const k of keys) {
         await redis.expire(k, AUTH_KEY_TTL_SEC).catch(() => {});
       }
-    } while (cursor !== '0');
+    } while (cursor !== "0");
   }
 
   async onModuleDestroy(): Promise<void> {
