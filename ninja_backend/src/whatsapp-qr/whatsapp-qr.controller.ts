@@ -386,7 +386,9 @@ export class WhatsAppQrController {
     if (!conv) {
       throw new NotFoundException("No conversation for this contact");
     }
-    const handle = await this.resolveConnectedHandle(conv);
+    const resolved = await this.resolveConnectedHandle(user, conv);
+    const handle = resolved.handle;
+    const sendConversation = resolved.conversation;
     if (!handle?.connected) {
       throw new BadRequestException(
         "WhatsApp QR session for this conversation is not connected",
