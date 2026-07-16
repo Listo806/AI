@@ -41,6 +41,35 @@ export class WhatsAppQrController {
     private readonly outbound: WhatsAppQrOutboundService,
   ) {}
 
+  private async resolveConnectedHandle(conversation: {
+    user_id: string;
+    session_id: string;
+  }) {
+    let handle = this.sockets.getHandle(conversation.user_id);
+
+    if (handle?.connected) {
+      return handle;
+    }
+
+    handle = await this.sockets.ensureSocket(
+      conversation.user_id,
+      conversation.session_id,
+    );
+
+    if (handle?.connected) {
+      return handle;
+    }
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 300));
+      handle = this.sockets.getHandle(conversation.user_id);
+      if (handle?.connected) {
+        return handle;
+      }
+    }
+
+    return handle;
+  }
   @Get("pending-qr")
   @ApiOperation({
     summary: "Get pending QR if any (fallback when socket event missed)",
@@ -192,11 +221,22 @@ export class WhatsAppQrController {
   }
 
   @Post("send")
-  @ApiOperation({ summary: "Agent send outbound via Baileys" })
-  async send(@CurrentUser() user: any, @Body() dto: SendQrMessageDto) {
+  @ApiOperation({
+    summary: "Agent send outbound via Baileys",
+  })
+  async send(
+    @CurrentUser()
+    user: any,
+    @Body()
+    dto: SendQrMessageDto,
+  ) {
     const contactPhone = normalizeToE164(dto.contactPhone);
+    const message = String(dto.message || "").trim();
     if (!contactPhone) {
       throw new BadRequestException("Invalid contactPhone; use E.164");
+    }
+    if (!message) {
+      throw new BadRequestException("Message is required");
     }
     const conv = await this.conversations.findScopedByContactPhone(
       user,
@@ -205,12 +245,22 @@ export class WhatsAppQrController {
     if (!conv) {
       throw new NotFoundException("No conversation for this contact");
     }
-    const handle = this.sockets.getHandle(conv.user_id);
+    const handle = await this.resolveConnectedHandle(conv);
     if (!handle?.connected) {
-      throw new BadRequestException(
-        "WhatsApp QR session for this conversation is not connected",
-      );
+      const session = await this.sessions.findByUserId(conv.user_id);
+      throw new BadRequestException({
+        code: "WHATSAPP_SESSION_NOT_CONNECTED",
+        message:
+          session?.status === "connected"
+            ? "WhatsApp is reconnecting. Please try again in a few seconds."
+            : "The WhatsApp account for this conversation is disconnected. Reconnect it from AI Agent Setup.",
+
+        conversationId: conv.id,
+        sessionId: conv.session_id,
+        sessionStatus: session?.status || "unknown",
+      });
     }
+
     await this.outbound.sendAgentText({
       userId: conv.user_id,
       sessionId: conv.session_id,
@@ -218,9 +268,17 @@ export class WhatsAppQrController {
       leadId: conv.lead_id,
       teamId: conv.team_id,
       contactPhone,
-      text: dto.message.trim(),
+      text: message,
     });
-    return { success: true };
+
+    return {
+      success: true,
+      data: {
+        conversationId: conv.id,
+        contactPhone,
+        sent: true,
+      },
+    };
   }
 
   @Post("send-voice")
@@ -239,7 +297,7 @@ export class WhatsAppQrController {
     if (!conv) {
       throw new NotFoundException("No conversation for this contact");
     }
-    const handle = this.sockets.getHandle(conv.user_id);
+    const handle = await this.resolveConnectedHandle(conv);
     if (!handle?.connected) {
       throw new BadRequestException(
         "WhatsApp QR session for this conversation is not connected",
