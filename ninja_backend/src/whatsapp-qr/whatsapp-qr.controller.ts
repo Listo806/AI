@@ -47,7 +47,6 @@ export class WhatsAppQrController {
       teamId?: string | null;
       team_id?: string | null;
     },
-
     conversation: {
       id: string;
       user_id: string;
@@ -55,26 +54,45 @@ export class WhatsAppQrController {
       team_id?: string | null;
     },
   ) {
-    // 1. Try the current socket of the conversation.
+    const teamId = user.teamId || user.team_id || conversation.team_id || null;
+
+    console.log("[WA SEND] resolve connection", {
+      requestUserId: user.id,
+      teamId,
+      conversationId: conversation.id,
+      conversationUserId: conversation.user_id,
+      conversationSessionId: conversation.session_id,
+    });
+
     let handle = this.sockets.getHandle(conversation.user_id);
+
+    console.log("[WA SEND] existing handle", {
+      exists: Boolean(handle),
+      connected: handle?.connected === true,
+    });
 
     if (handle?.connected) {
       return {
         handle,
         conversation,
         session: null,
+        reason: "existing_handle",
       };
     }
 
-    // 2. Try restoring the original session from Redis.
-    handle = await this.sockets.ensureSocket(
-      conversation.user_id,
-      conversation.session_id,
-    );
+    try {
+      handle = await this.sockets.ensureSocket(
+        conversation.user_id,
+        conversation.session_id,
+      );
+    } catch (error) {
+      console.error("[WA SEND] restore original socket failed", error);
+    }
 
     if (!handle?.connected) {
-      for (let attempt = 0; attempt < 12; attempt += 1) {
-        await new Promise<void>((resolve) => setTimeout(resolve, 350));
+      for (let attempt = 0; attempt < 15; attempt += 1) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 400));
+
         handle = this.sockets.getHandle(conversation.user_id);
 
         if (handle?.connected) {
@@ -83,40 +101,65 @@ export class WhatsAppQrController {
       }
     }
 
+    console.log("[WA SEND] original restored handle", {
+      exists: Boolean(handle),
+      connected: handle?.connected === true,
+    });
+
     if (handle?.connected) {
       return {
         handle,
         conversation,
         session: null,
+        reason: "original_session_restored",
       };
     }
 
-    // 3. The conversation is tied to the previous session.
-    // Find the most suitable WhatsApp account currently connected.
     const connectedSession = await this.sessions.findBestConnectedSession({
       conversationSessionId: conversation.session_id,
+
       conversationUserId: conversation.user_id,
+
       requestUserId: user.id,
-      teamId: user.teamId || user.team_id || conversation.team_id || null,
+
+      teamId,
     });
+
+    console.log(
+      "[WA SEND] best connected DB session",
+      connectedSession
+        ? {
+            id: connectedSession.id,
+            userId: connectedSession.user_id,
+            status: connectedSession.status,
+            phone: connectedSession.phone,
+          }
+        : null,
+    );
 
     if (!connectedSession) {
       return {
         handle: null,
         conversation,
         session: null,
+        reason: "no_connected_database_session",
       };
     }
 
-    // 4. Restore the socket of the new session.
-    let connectedHandle = await this.sockets.ensureSocket(
-      connectedSession.user_id,
-      connectedSession.id,
-    );
+    let connectedHandle = null;
+
+    try {
+      connectedHandle = await this.sockets.ensureSocket(
+        connectedSession.user_id,
+        connectedSession.id,
+      );
+    } catch (error) {
+      console.error("[WA SEND] restore fallback socket failed", error);
+    }
 
     if (!connectedHandle?.connected) {
-      for (let attempt = 0; attempt < 12; attempt += 1) {
-        await new Promise<void>((resolve) => setTimeout(resolve, 350));
+      for (let attempt = 0; attempt < 15; attempt += 1) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 400));
 
         connectedHandle = this.sockets.getHandle(connectedSession.user_id);
 
@@ -126,15 +169,24 @@ export class WhatsAppQrController {
       }
     }
 
+    console.log("[WA SEND] fallback restored handle", {
+      sessionId: connectedSession.id,
+      userId: connectedSession.user_id,
+      exists: Boolean(connectedHandle),
+      connected: connectedHandle?.connected === true,
+    });
+
     if (!connectedHandle?.connected) {
+      await this.sessions.setStatus(connectedSession.id, "disconnected");
+
       return {
         handle: connectedHandle,
         conversation,
         session: connectedSession,
+        reason: "database_connected_but_socket_disconnected",
       };
     }
 
-    // 5. Transfer the old conversation to the current active session.
     const updatedConversation = await this.conversations.attachConnectedSession(
       conversation.id,
       {
@@ -147,6 +199,7 @@ export class WhatsAppQrController {
       handle: connectedHandle,
       conversation: updatedConversation || conversation,
       session: connectedSession,
+      reason: "fallback_session_restored",
     };
   }
   @Get("pending-qr")
@@ -160,21 +213,58 @@ export class WhatsAppQrController {
 
   @Get("status")
   @ApiOperation({
-    summary: "WhatsApp QR connection status (scoped to current user)",
+    summary: "WhatsApp QR connection status",
   })
-  async status(@CurrentUser() user: any) {
+  async status(
+    @CurrentUser()
+    user: any,
+  ) {
     const row = await this.sessions.findByUserId(user.id);
-    const handle = this.sockets.getHandle(user.id);
-    const dbStatus = row?.status ?? "disconnected";
-    const connected = dbStatus === "connected" && handle?.connected === true;
+
+    if (!row) {
+      return {
+        data: {
+          enabled: this.sockets.isQrEnabled(),
+          connected: false,
+          phone: null,
+          status: "disconnected",
+          connected_at: null,
+          updated_at: null,
+        },
+      };
+    }
+
+    let handle = this.sockets.getHandle(user.id);
+
+    if (row.status === "connected" && !handle?.connected) {
+      try {
+        handle = await this.sockets.ensureSocket(user.id, row.id);
+        for (let attempt = 0; attempt < 10; attempt += 1) {
+          if (handle?.connected) {
+            break;
+          }
+          await new Promise<void>((resolve) => setTimeout(resolve, 300));
+          handle = this.sockets.getHandle(user.id);
+        }
+      } catch (error) {
+        console.error("[WA STATUS] restore failed", error);
+      }
+    }
+
+    const connected = handle?.connected === true;
+
+    if (row.status === "connected" && !connected) {
+      await this.sessions.setStatus(row.id, "disconnected");
+    }
+
     return {
       data: {
         enabled: this.sockets.isQrEnabled(),
         connected,
-        phone: row ? row.phone : null,
-        status: dbStatus,
-        connected_at: row?.connected_at ?? null,
-        updated_at: row?.updated_at ?? null,
+        phone: connected ? row.phone : null,
+        status: connected ? "connected" : "disconnected",
+        connected_at: connected ? row.connected_at : null,
+        updated_at: row.updated_at,
       },
     };
   }
@@ -338,8 +428,11 @@ export class WhatsAppQrController {
       throw new BadRequestException({
         code: "WHATSAPP_SESSION_NOT_CONNECTED",
         message:
-          "No active WhatsApp connection is available for this team. Reconnect WhatsApp from AI Agent Setup.",
+          resolved.reason === "database_connected_but_socket_disconnected"
+            ? "The saved WhatsApp session is no longer valid. Scan the QR code again from AI Agent Setup."
+            : "No active WhatsApp connection is available. Connect WhatsApp from AI Agent Setup.",
 
+        reason: resolved.reason || "unknown",
         conversationId: conv.id,
         conversationSessionId: conv.session_id,
         conversationOwnerUserId: conv.user_id,
@@ -395,11 +488,11 @@ export class WhatsAppQrController {
       );
     }
     await this.outbound.sendAgentVoice({
-      userId: conv.user_id,
-      sessionId: conv.session_id,
-      conversationId: conv.id,
-      leadId: conv.lead_id,
-      teamId: conv.team_id,
+      userId: sendConversation.user_id,
+      sessionId: sendConversation.session_id,
+      conversationId: sendConversation.id,
+      leadId: sendConversation.lead_id,
+      teamId: sendConversation.team_id,
       contactPhone,
       audioBase64: dto.audioBase64,
     });
