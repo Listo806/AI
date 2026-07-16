@@ -103,16 +103,6 @@ export class AiAgentSetupCompleteGuard implements CanActivate {
       });
     }
 
-    if (Boolean(settings.paused)) {
-      throw new ForbiddenException({
-        code: "AI_AGENT_PAUSED",
-        message: "The AI Agent is currently paused.",
-        setupComplete: true,
-        launched: true,
-        paused: true,
-      });
-    }
-
     return true;
   }
 

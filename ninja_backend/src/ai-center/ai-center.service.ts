@@ -317,7 +317,12 @@ export class AiCenterService {
     });
   }
 
-  private assertAgentRuntimeAvailable(controls: AiAgentRuntimeControls): void {
+  private assertAgentRuntimeAvailable(
+    controls: AiAgentRuntimeControls,
+    options: {
+      allowWhenPaused?: boolean;
+    } = {},
+  ): void {
     if (!controls.launched) {
       throw new ForbiddenException({
         code: "AI_AGENT_SETUP_REQUIRED",
@@ -326,7 +331,10 @@ export class AiCenterService {
       });
     }
 
-    if (controls.paused || controls.quickControls?.pauseAiAgent === true) {
+    const paused =
+      controls.paused || controls.quickControls?.pauseAiAgent === true;
+
+    if (paused && options.allowWhenPaused !== true) {
       throw new ForbiddenException({
         code: "AI_AGENT_PAUSED",
 
@@ -382,6 +390,7 @@ export class AiCenterService {
     options: {
       defaultValue?: boolean;
       checkWorkingHours?: boolean;
+      allowWhenPaused?: boolean;
       channel?: string;
       metadata?: Record<string, any>;
     } = {},
@@ -395,7 +404,9 @@ export class AiCenterService {
 
     const controls = await this.getRuntimeControls(teamId);
 
-    this.assertAgentRuntimeAvailable(controls);
+    this.assertAgentRuntimeAvailable(controls, {
+      allowWhenPaused: options.allowWhenPaused,
+    });
 
     if (
       options.checkWorkingHours !== false &&
@@ -2290,8 +2301,8 @@ export class AiCenterService {
       {
         defaultValue: requestedCapability?.defaultValue ?? true,
 
-        checkWorkingHours: true,
-
+        checkWorkingHours: false,
+        allowWhenPaused: true,
         channel: "web",
 
         metadata: {
