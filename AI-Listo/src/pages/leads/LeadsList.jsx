@@ -556,28 +556,20 @@ export default function LeadsPage() {
 
   const sendLeadMessage = async () => {
     if (!selectedLead?.id || !chatMessage.trim()) return;
-
     try {
       const message = chatMessage.trim();
 
-      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+      await apiClient.request(`/whatsapp-qr/leads/${selectedLead.id}/send`, {
         method: "POST",
-        body: JSON.stringify({
-          eventType: "lead.message_sent",
-          metadata: {
-            title: "Message sent",
-            sub: message,
-            message,
-          },
-        }),
+        body: JSON.stringify({ message }),
       });
-
       setChatMessage("");
-      fetchLeadEvents(selectedLead.id);
-      fetchLeadMessages(selectedLead.id);
-      fetchFullLeadEvents(1, false);
+      await Promise.all([
+        fetchLeadMessages(selectedLead.id),
+        fetchLeadEvents(selectedLead.id),
+      ]);
     } catch (err) {
-      console.error("Send lead message error:", err);
+      console.error("Send WhatsApp message from lead error:", err);
     }
   };
 
@@ -633,23 +625,13 @@ export default function LeadsPage() {
       setLeadMessagesLoading(true);
 
       const response = await apiClient.request(
-        `/leads/${leadId}/events?limit=50&page=1`,
-        { method: "GET" },
+        `/whatsapp-qr/leads/${leadId}/messages?limit=100`,
+        {
+          method: "GET",
+        },
       );
-
-      const data = response?.data || response || {};
-      const items = Array.isArray(data.items) ? data.items : [];
-
-      setLeadMessages(
-        items.filter((event) =>
-          [
-            "lead.message_sent",
-            "lead.file_sent",
-            "lead.image_sent",
-            "lead.voice_sent",
-          ].includes(event.eventType),
-        ),
-      );
+      const data = response?.data || response || [];
+      setLeadMessages(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch lead messages error:", err);
       setLeadMessages([]);

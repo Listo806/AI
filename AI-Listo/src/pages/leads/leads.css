@@ -263,7 +263,7 @@ body .leads-page {
 
 .leads-page .leads-layout {
   display: grid;
-  grid-template-columns: 265px 1fr 310px;
+  grid-template-columns: 265px 1fr 290px;
   gap: 16px;
   padding-bottom: 16px;
 }
@@ -368,6 +368,9 @@ body .leads-page {
 .leads-page .lead-meta span {
   color: #64748b;
   font-size: 12px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .leads-page .lead-score {
@@ -404,11 +407,15 @@ body .leads-page {
   color: #475569;
   line-height: 1.5;
   font-size: 11px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .lead-message-wrap {
   display: flex;
   justify-content: space-between;
+  gap:4px;
 }
 
 .leads-page .conversation-panel {
@@ -424,7 +431,7 @@ body .leads-page {
 
 .leads-page .conversation-user {
   display: flex;
-  gap: 10px;
+  gap: 4px;
   align-items: center;
 }
 
@@ -747,7 +754,9 @@ body .leads-page {
 .leads-page .budget-range {
   font-size: 11px;
   color: #64748b;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .leads-page .timestamp {

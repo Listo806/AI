@@ -603,4 +603,233 @@ export class WhatsAppQrController {
 
     return { data };
   }
+
+  @Get("leads/:leadId/conversation")
+  @ApiOperation({
+    summary: "Get the shared WhatsApp conversation for a lead",
+  })
+  async getLeadConversation(
+    @CurrentUser() user: any,
+    @Param("leadId") leadId: string,
+  ) {
+    const conversation = await this.conversations.findScopedByLeadId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      leadId,
+    );
+
+    return {
+      success: true,
+      data: conversation,
+    };
+  }
+
+  @Get("contacts/:contactId/conversation")
+  @ApiOperation({
+    summary: "Get the shared WhatsApp conversation for a contact",
+  })
+  async getContactConversation(
+    @CurrentUser() user: any,
+    @Param("contactId") contactId: string,
+  ) {
+    const conversation = await this.conversations.findScopedByContactId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      contactId,
+    );
+
+    return {
+      success: true,
+      data: conversation,
+    };
+  }
+
+  @Get("leads/:leadId/messages")
+  @ApiOperation({
+    summary: "Get shared WhatsApp messages for a lead",
+  })
+  async getLeadMessages(
+    @CurrentUser() user: any,
+    @Param("leadId") leadId: string,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
+  ) {
+    const conversation = await this.conversations.findScopedByLeadId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      leadId,
+    );
+    if (!conversation) {
+      return {
+        success: true,
+        data: [],
+        conversationId: null,
+      };
+    }
+    const parsedLimit = Number(limitRaw);
+    const limit = Number.isFinite(parsedLimit) ? parsedLimit : 50;
+    const messages = await this.messages.listByConversationId(conversation.id, {
+      limit,
+      before: before || null,
+    });
+
+    return {
+      success: true,
+      data: messages,
+      conversationId: conversation.id,
+    };
+  }
+
+  @Get("contacts/:contactId/messages")
+  @ApiOperation({
+    summary: "Get shared WhatsApp messages for a contact",
+  })
+  async getContactMessages(
+    @CurrentUser() user: any,
+    @Param("contactId") contactId: string,
+    @Query("limit") limitRaw?: string,
+    @Query("before") before?: string,
+  ) {
+    const conversation = await this.conversations.findScopedByContactId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      contactId,
+    );
+    if (!conversation) {
+      return {
+        success: true,
+        data: [],
+        conversationId: null,
+      };
+    }
+    const parsedLimit = Number(limitRaw);
+    const limit = Number.isFinite(parsedLimit) ? parsedLimit : 50;
+    const messages = await this.messages.listByConversationId(conversation.id, {
+      limit,
+      before: before || null,
+    });
+
+    return {
+      success: true,
+      data: messages,
+      conversationId: conversation.id,
+    };
+  }
+
+  private async sendThroughConversation(
+    user: any,
+    conversation: any,
+    messageRaw: string,
+  ) {
+    const message = String(messageRaw || "").trim();
+
+    if (!message) {
+      throw new BadRequestException("Message is required");
+    }
+
+    const resolved = await this.resolveConnectedHandle(user, conversation);
+
+    const handle = resolved.handle;
+    const sendConversation = resolved.conversation;
+
+    if (!handle?.connected) {
+      throw new BadRequestException({
+        code: "WHATSAPP_SESSION_NOT_CONNECTED",
+        message:
+          "No active WhatsApp connection is available. Connect WhatsApp from AI Agent Setup.",
+        conversationId: conversation.id,
+      });
+    }
+
+    await this.outbound.sendAgentText({
+      userId: sendConversation.user_id,
+      sessionId: sendConversation.session_id,
+      conversationId: sendConversation.id,
+      leadId: sendConversation.lead_id,
+      contactId: sendConversation.contact_id || null,
+      teamId: sendConversation.team_id,
+      contactPhone,
+      text: message,
+    });
+
+    return {
+      success: true,
+      data: {
+        conversationId: sendConversation.id,
+        leadId: sendConversation.lead_id,
+        contactId: sendConversation.contact_id || null,
+        contactPhone: sendConversation.contact_phone,
+        sent: true,
+      },
+    };
+  }
+
+  @Post("leads/:leadId/send")
+  @ApiOperation({
+    summary: "Send a real WhatsApp message from the Lead page",
+  })
+  async sendFromLead(
+    @CurrentUser() user: any,
+    @Param("leadId") leadId: string,
+    @Body() body: { message: string },
+  ) {
+    const conversation = await this.conversations.findScopedByLeadId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      leadId,
+    );
+
+    if (!conversation) {
+      throw new NotFoundException({
+        code: "WHATSAPP_CONVERSATION_NOT_FOUND",
+        message:
+          "This lead does not have a WhatsApp conversation yet. The conversation must be created or linked first.",
+      });
+    }
+
+    return this.sendThroughConversation(user, conversation, body.message);
+  }
+
+  @Post("contacts/:contactId/send")
+  @ApiOperation({
+    summary: "Send a real WhatsApp message from the Contact page",
+  })
+  async sendFromContact(
+    @CurrentUser() user: any,
+    @Param("contactId") contactId: string,
+    @Body() body: { message: string },
+  ) {
+    const conversation = await this.conversations.findScopedByContactId(
+      {
+        id: user.id,
+        teamId: user.teamId || user.team_id || null,
+        role: user.role,
+      },
+      contactId,
+    );
+    if (!conversation) {
+      throw new NotFoundException({
+        code: "WHATSAPP_CONVERSATION_NOT_FOUND",
+        message:
+          "This contact does not have a WhatsApp conversation yet. The conversation must be created or linked first.",
+      });
+    }
+
+    return this.sendThroughConversation(user, conversation, body.message);
+  }
 }

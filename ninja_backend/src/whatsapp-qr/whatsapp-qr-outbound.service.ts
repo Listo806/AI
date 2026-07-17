@@ -26,6 +26,7 @@ export class WhatsAppQrOutboundService {
     sessionId: string;
     conversationId: string;
     leadId: string;
+    contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
     text: string;
@@ -37,30 +38,98 @@ export class WhatsAppQrOutboundService {
       params.text,
     );
     await this.conversations.setOwnerHuman(params.conversationId);
-    await this.db.query(
-      `INSERT INTO whatsapp_qr_messages
-        (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id, status, sent_at)
-        VALUES ($1, $2, $3, $4, $5, 'outbound', 'agent', 'text', $6, NULL, 'sent', NOW())`,
+    const { rows } = await this.db.query(
+      `
+      INSERT INTO whatsapp_qr_messages (
+        session_id,
+        conversation_id,
+        lead_id,
+        contact_id,
+        team_id,
+        contact_phone,
+        direction,
+        sender_type,
+        message_type,
+        body,
+        message_id
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        'outbound',
+        'agent',
+        'text',
+        $7,
+        NULL
+      )
+      RETURNING
+        id,
+        conversation_id,
+        lead_id,
+        contact_id,
+        direction,
+        sender_type,
+        message_type,
+        body,
+        created_at
+      `,
       [
         params.sessionId,
         params.conversationId,
         params.leadId,
+        params.contactId ?? null,
         params.teamId,
         params.contactPhone,
         params.text,
       ],
     );
+
+    const savedMessage = rows[0];
     await this.db.query(
-      `UPDATE whatsapp_qr_conversations
-       SET last_message_at = NOW(), last_message = $2, last_message_type = 'text', updated_at = NOW()
-       WHERE id = $1`,
-      [params.conversationId, params.text.slice(0, 500)],
+      `
+      UPDATE whatsapp_qr_conversations
+      SET
+        contact_id = COALESCE(contact_id, $3),
+        last_message_at = NOW(),
+        last_message = $2,
+        last_message_type = 'text',
+        updated_at = NOW()
+      WHERE id = $1
+      `,
+      [
+        params.conversationId,
+        params.text.slice(0, 500),
+        params.contactId ?? null,
+      ],
     );
     await this.db.query(
-      `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),
-       last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      `
+      UPDATE leads
+      SET
+        last_contacted_at = NOW(),
+        last_activity_at = NOW(),
+        last_action_type = 'whatsapp',
+        last_action_at = NOW(),
+        updated_at = NOW()
+      WHERE id = $1
+      `,
       [params.leadId],
     );
+    if (params.contactId) {
+      await this.db.query(
+        `
+        UPDATE contacts
+        SET
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [params.contactId],
+      );
+    }
     this.realtime.emitMessage({
       userId: params.userId,
       conversationId: params.conversationId,
@@ -69,7 +138,10 @@ export class WhatsAppQrOutboundService {
       senderType: "agent",
       body: params.text,
       messageType: "text",
-      createdAt: new Date().toISOString(),
+      createdAt:
+        savedMessage?.created_at?.toISOString?.() ||
+        savedMessage?.created_at ||
+        new Date().toISOString(),
     });
   }
 

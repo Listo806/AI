@@ -65,6 +65,29 @@ export default function ContactsRelationshipsPage() {
   const [noteText, setNoteText] = useState("");
   const [showDetailMoreMenu, setShowDetailMoreMenu] = useState(false);
 
+  const [contactMessages, setContactMessages] = useState([]);
+  const [contactMessagesLoading, setContactMessagesLoading] = useState(false);
+
+  const fetchContactMessages = async (contactId) => {
+    if (!contactId) return;
+    try {
+      setContactMessagesLoading(true);
+      const response = await apiClient.request(
+        `/whatsapp-qr/contacts/${contactId}/messages?limit=100`,
+        {
+          method: "GET",
+        },
+      );
+      const data = response?.data || response || [];
+      setContactMessages(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch contact WhatsApp messages error:", err);
+      setContactMessages([]);
+    } finally {
+      setContactMessagesLoading(false);
+    }
+  };
+
   const [createForm, setCreateForm] = useState({
     name: "",
     type: "Buyer",
@@ -336,19 +359,26 @@ export default function ContactsRelationshipsPage() {
   };
 
   const messageContact = async (contactId) => {
-    const message = prompt("Enter message");
-    if (!message) return;
+    const message = window.prompt("Enter WhatsApp message");
+    if (!message?.trim()) return;
     try {
-      await apiClient.request(`/contacts/${contactId}/message`, {
+      await apiClient.request(`/whatsapp-qr/contacts/${contactId}/send`, {
         method: "POST",
-        body: JSON.stringify({ channel: "whatsapp", message }),
+        body: JSON.stringify({
+          message: message.trim(),
+        }),
       });
-      showToast("Message sent");
+      showToast("WhatsApp message sent");
+      if (selectedContact?.id === contactId) {
+        await fetchContactMessages(contactId);
+      }
     } catch (err) {
-      console.error(err);
-      showToast(err?.message || "Failed to send message", "error");
+      console.error("Send WhatsApp message from contact error:", err);
+
+      showToast(err?.message || "Failed to send WhatsApp message", "error");
     }
   };
+
   const deleteContact = async (contactId) => {
     const ok = window.confirm("Delete this contact?");
     if (!ok) return;
@@ -525,7 +555,9 @@ export default function ContactsRelationshipsPage() {
   const openContactDetail = (contact) => {
     setSelectedContact(contact);
     fetchActivities(contact.id);
+    fetchContactMessages(contact.id);
   };
+
   const openLinkedLead = async (contact) => {
     if (!contact?.id) return;
     try {

@@ -64,6 +64,21 @@ export interface QrConversationListItem {
   property_price: number | string | null;
 }
 
+export type CrmConversationEntity = "lead" | "contact";
+
+export interface ResolvedCrmConversation {
+  id: string;
+  session_id: string;
+  user_id: string;
+  team_id: string | null;
+  lead_id: string;
+  contact_id: string | null;
+  contact_phone: string;
+  owner_type: "ai" | "human";
+  ai_enabled: boolean;
+  unread_count: number;
+}
+
 @Injectable()
 export class WhatsAppQrConversationService {
   constructor(
@@ -75,6 +90,164 @@ export class WhatsAppQrConversationService {
   private openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
+
+  async findScopedByLeadId(
+    user: {
+      id: string;
+      teamId: string | null;
+      role: string;
+    },
+    leadId: string,
+  ): Promise<ResolvedCrmConversation | null> {
+    const { isGlobal, teamIds } = await this.crm.resolveDashboardDataScope(
+      user.id,
+      user.teamId,
+      user.role,
+    );
+
+    const params: any[] = [leadId];
+    const where: string[] = ["c.lead_id = $1"];
+
+    if (!isGlobal) {
+      params.push(user.id);
+      const userIndex = params.length;
+
+      if (teamIds.length > 0) {
+        params.push(teamIds);
+        const teamIndex = params.length;
+
+        where.push(`
+        (
+          l.created_by = $${userIndex}
+          OR l.team_id = ANY($${teamIndex}::uuid[])
+        )
+      `);
+      } else {
+        where.push(`l.created_by = $${userIndex}`);
+      }
+    }
+
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        c.id,
+        c.session_id,
+        c.user_id,
+        c.team_id,
+        c.lead_id,
+        c.contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.unread_count
+      FROM whatsapp_qr_conversations c
+      INNER JOIN leads l ON l.id = c.lead_id
+      WHERE ${where.join(" AND ")}
+      ORDER BY
+        c.last_message_at DESC NULLS LAST,
+        c.updated_at DESC
+      LIMIT 1
+      `,
+      params,
+    );
+
+    return rows[0] || null;
+  }
+
+  async findScopedByContactId(
+    user: {
+      id: string;
+      teamId: string | null;
+      role: string;
+    },
+    contactId: string,
+  ): Promise<ResolvedCrmConversation | null> {
+    const { isGlobal, teamIds } = await this.crm.resolveDashboardDataScope(
+      user.id,
+      user.teamId,
+      user.role,
+    );
+
+    const params: any[] = [contactId];
+    const where: string[] = [
+      `
+    (
+      c.contact_id = $1
+      OR l.contact_id = $1
+    )
+    `,
+    ];
+
+    if (!isGlobal) {
+      params.push(user.id);
+      const userIndex = params.length;
+
+      if (teamIds.length > 0) {
+        params.push(teamIds);
+        const teamIndex = params.length;
+
+        where.push(`
+        (
+          l.created_by = $${userIndex}
+          OR l.team_id = ANY($${teamIndex}::uuid[])
+          OR ct.created_by = $${userIndex}
+          OR ct.team_id = ANY($${teamIndex}::uuid[])
+        )
+      `);
+      } else {
+        where.push(`
+        (
+          l.created_by = $${userIndex}
+          OR ct.created_by = $${userIndex}
+        )
+      `);
+      }
+    }
+
+    const { rows } = await this.db.query(
+      `
+      SELECT
+        c.id,
+        c.session_id,
+        c.user_id,
+        c.team_id,
+        c.lead_id,
+        COALESCE(c.contact_id, l.contact_id) AS contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.unread_count
+      FROM whatsapp_qr_conversations c
+      INNER JOIN leads l ON l.id = c.lead_id
+      LEFT JOIN contacts ct
+        ON ct.id = COALESCE(c.contact_id, l.contact_id)
+      WHERE ${where.join(" AND ")}
+      ORDER BY
+        c.last_message_at DESC NULLS LAST,
+        c.updated_at DESC
+      LIMIT 1
+      `,
+      params,
+    );
+
+    return rows[0] || null;
+  }
+
+  async resolveCrmConversation(
+    user: {
+      id: string;
+      teamId: string | null;
+      role: string;
+    },
+    entityType: CrmConversationEntity,
+    entityId: string,
+  ): Promise<ResolvedCrmConversation | null> {
+    if (entityType === "lead") {
+      return this.findScopedByLeadId(user, entityId);
+    }
+
+    return this.findScopedByContactId(user, entityId);
+  }
 
   async findBySessionAndPhone(
     sessionId: string,
