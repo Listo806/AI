@@ -676,29 +676,29 @@ export class LeadsService {
      */
     const existingContactResult = await this.db.query(
       `
-    SELECT
-      c.id,
-      c.team_id AS "teamId",
-      c.created_by AS "createdBy",
-      c.name,
-      c.type,
-      c.email,
-      c.phone,
-      c.lead_id AS "linkedLeadId",
-      c.linked_lead_name AS "linkedLead",
-      c.interest,
-      c.last_contact_at AS "lastContactAt",
-      c.score,
-      c.status,
-      c.source,
-      c.notes,
-      c.assigned_to AS "assignedTo",
-      c.created_at AS "createdAt",
-      c.updated_at AS "updatedAt"
-    FROM contacts c
-    WHERE c.lead_id = $1
-    LIMIT 1
-    `,
+      SELECT
+        c.id,
+        c.team_id AS "teamId",
+        c.created_by AS "createdBy",
+        c.name,
+        c.type,
+        c.email,
+        c.phone,
+        c.lead_id AS "linkedLeadId",
+        c.linked_lead_name AS "linkedLead",
+        c.interest,
+        c.last_contact_at AS "lastContactAt",
+        c.score,
+        c.status,
+        c.source,
+        c.notes,
+        c.assigned_to AS "assignedTo",
+        c.created_at AS "createdAt",
+        c.updated_at AS "updatedAt"
+      FROM contacts c
+      WHERE c.lead_id = $1
+      LIMIT 1
+      `,
       [lead.id],
     );
 
@@ -710,14 +710,58 @@ export class LeadsService {
        */
       await this.db.query(
         `
-      UPDATE leads
-      SET
-        contact_id = $1,
-        updated_at = NOW()
-      WHERE id = $2
-        AND contact_id IS DISTINCT FROM $1
-      `,
+        UPDATE leads
+        SET
+          contact_id = $1,
+          updated_at = NOW()
+        WHERE id = $2
+          AND contact_id IS DISTINCT FROM $1
+        `,
         [existingContact.id, lead.id],
+      );
+
+      await this.db.query(
+        `
+        UPDATE whatsapp_qr_conversations
+        SET
+          contact_id = $1,
+          updated_at = NOW()
+        WHERE lead_id = $2
+          AND contact_id IS DISTINCT FROM $1
+        `,
+        [existingContact.id, lead.id],
+      );
+
+      await this.db.query(
+        `
+        UPDATE whatsapp_qr_messages
+        SET contact_id = $1
+        WHERE lead_id = $2
+          AND contact_id IS DISTINCT FROM $1
+        `,
+        [existingContact.id, lead.id],
+      );
+
+      await this.db.query(
+        `
+        UPDATE whatsapp_qr_conversations
+        SET
+          contact_id = $1,
+          updated_at = NOW()
+        WHERE lead_id = $2
+          AND contact_id IS DISTINCT FROM $1
+        `,
+        [contact.id, lead.id],
+      );
+
+      await this.db.query(
+        `
+        UPDATE whatsapp_qr_messages
+        SET contact_id = $1
+        WHERE lead_id = $2
+          AND contact_id IS DISTINCT FROM $1
+        `,
+        [contact.id, lead.id],
       );
 
       return {

@@ -11,10 +11,12 @@ export type QrConversationRow = {
   user_id: string;
   team_id: string | null;
   lead_id: string;
+  contact_id: string | null;
   contact_phone: string;
   owner_type: "ai" | "human";
   ai_enabled: boolean;
   unread_count: number;
+  property_id?: string | null;
 };
 
 function mapSenderToLastMessageType(
@@ -30,6 +32,7 @@ export interface QrConversationListItem {
   id: string;
   session_id: string;
   lead_id: string;
+  contact_id: string | null;
   contact_phone: string;
   owner_type: string;
   ai_enabled: boolean;
@@ -37,16 +40,20 @@ export interface QrConversationListItem {
   unread_count: number;
   status: string;
   property_id: string | null;
-  /** User who owns the QR WhatsApp session for this row */
   qr_user_id: string;
-  lead_name: string | null;
-  last_message_type: "ai" | "human" | "system" | null;
-  last_action_label: string | null;
-  last_message: string | null;
 
+  lead_name: string | null;
   lead_status: string | null;
   lead_priority: string | null;
   lead_source: string | null;
+
+  contact_name: string | null;
+  contact_status: string | null;
+  contact_type: string | null;
+
+  last_message_type: "ai" | "human" | "system" | null;
+  last_action_label: string | null;
+  last_message: string | null;
 
   assigned_agent_name: string | null;
   assigned_agent_email: string | null;
@@ -74,9 +81,21 @@ export class WhatsAppQrConversationService {
     contactPhone: string,
   ): Promise<QrConversationRow | null> {
     const { rows } = await this.db.query(
-      `SELECT id, session_id, user_id, team_id, lead_id, contact_phone, owner_type, ai_enabled, unread_count
-       FROM whatsapp_qr_conversations
-       WHERE session_id = $1 AND contact_phone = $2`,
+      `SELECT
+          id,
+          session_id,
+          user_id,
+          team_id,
+          lead_id,
+          contact_id,
+          contact_phone,
+          owner_type,
+          ai_enabled,
+          unread_count,
+          property_id
+      FROM whatsapp_qr_conversations
+      WHERE session_id = $1
+        AND contact_phone = $2`,
       [sessionId, contactPhone],
     );
     return rows.length ? rows[0] : null;
@@ -87,8 +106,8 @@ export class WhatsAppQrConversationService {
     userId: string;
     teamId: string | null;
     leadId: string;
+    contactId?: string | null;
     contactPhone: string;
-    /** When lead came from a listing / property CTA */
     propertyId?: string | null;
   }): Promise<{ row: QrConversationRow; created: boolean }> {
     const existing = await this.findBySessionAndPhone(
@@ -96,25 +115,75 @@ export class WhatsAppQrConversationService {
       params.contactPhone,
     );
     if (existing) {
-      if (params.propertyId && !(existing as any).property_id) {
-        await this.db.query(
-          `UPDATE whatsapp_qr_conversations SET property_id = $2, updated_at = NOW() WHERE id = $1`,
-          [existing.id, params.propertyId],
-        );
-      }
-      return { row: existing, created: false };
+      await this.db.query(
+        `
+    UPDATE whatsapp_qr_conversations
+    SET
+      contact_id = COALESCE(contact_id, $2),
+      property_id = COALESCE(property_id, $3),
+      updated_at = NOW()
+    WHERE id = $1
+    `,
+        [existing.id, params.contactId ?? null, params.propertyId ?? null],
+      );
+
+      return {
+        row: {
+          ...existing,
+          contact_id: existing.contact_id || params.contactId || null,
+          property_id: existing.property_id || params.propertyId || null,
+        },
+        created: false,
+      };
     }
 
     const { rows } = await this.db.query(
-      `INSERT INTO whatsapp_qr_conversations
-       (session_id, user_id, team_id, lead_id, contact_phone, owner_type, ai_enabled, last_message_at, unread_count, updated_at, property_id)
-       VALUES ($1, $2, $3, $4, $5, 'ai', true, NOW(), 1, NOW(), $6)
-       RETURNING id, session_id, user_id, team_id, lead_id, contact_phone, owner_type, ai_enabled, unread_count`,
+      `INSERT INTO whatsapp_qr_conversations (
+          session_id,
+          user_id,
+          team_id,
+          lead_id,
+          contact_id,
+          contact_phone,
+          owner_type,
+          ai_enabled,
+          last_message_at,
+          unread_count,
+          updated_at,
+          property_id
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          'ai',
+          true,
+          NOW(),
+          1,
+          NOW(),
+          $7
+        )
+        RETURNING
+          id,
+          session_id,
+          user_id,
+          team_id,
+          lead_id,
+          contact_id,
+          contact_phone,
+          owner_type,
+          ai_enabled,
+          unread_count,
+          property_id`,
       [
         params.sessionId,
         params.userId,
         params.teamId,
         params.leadId,
+        params.contactId ?? null,
         params.contactPhone,
         params.propertyId ?? null,
       ],
@@ -136,14 +205,30 @@ export class WhatsAppQrConversationService {
    */
   async listByUserId(userId: string): Promise<any[]> {
     const { rows } = await this.db.query(
-      `SELECT c.id, c.session_id, c.lead_id, c.contact_phone, c.owner_type, c.ai_enabled,
-              c.last_message_at, c.last_message, c.last_message_type, c.property_id,
-              c.unread_count, c.status, c.created_at,
-              l.name AS lead_name
-       FROM whatsapp_qr_conversations c
-       INNER JOIN leads l ON l.id = c.lead_id
-       WHERE c.user_id = $1
-       ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC`,
+      `SELECT
+        c.id,
+        c.session_id,
+        c.lead_id,
+        c.contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.last_message_at,
+        c.last_message,
+        c.last_message_type,
+        c.property_id,
+        c.unread_count,
+        c.status,
+        c.created_at,
+        l.name AS lead_name,
+        ct.name AS contact_name,
+        ct.status AS contact_status,
+        ct.type AS contact_type
+      FROM whatsapp_qr_conversations c
+      INNER JOIN leads l ON l.id = c.lead_id
+      LEFT JOIN contacts ct ON ct.id = c.contact_id
+      WHERE c.user_id = $1
+      ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC`,
       [userId],
     );
     return rows;
@@ -171,41 +256,53 @@ export class WhatsAppQrConversationService {
     );
 
     const { rows } = await this.db.query(
-      `SELECT
-              c.id,
-              c.session_id,
-              c.lead_id,
-              c.contact_phone,
-              c.owner_type,
-              c.ai_enabled,
-              c.last_message_at,
-              c.last_message,
-              c.last_message_type,
-              c.unread_count,
-              c.status,
-              c.property_id,
-              c.user_id AS qr_user_id,
+      `
+      SELECT
+        c.id,
+        c.session_id,
+        c.lead_id,
+        c.contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.last_message_at,
+        c.last_message,
+        c.last_message_type,
+        c.unread_count,
+        c.status,
+        c.property_id,
+        c.user_id AS qr_user_id,
 
-              l.name AS lead_name,
-              l.status AS lead_status,
-              l.priority AS lead_priority,
-              l.source AS lead_source,
+        l.name AS lead_name,
+        l.status AS lead_status,
+        l.priority AS lead_priority,
+        l.source AS lead_source,
 
-              u.name AS assigned_agent_name,
-              u.email AS assigned_agent_email,
+        ct.name AS contact_name,
+        ct.status AS contact_status,
+        ct.type AS contact_type,
 
-              p.title AS property_title,
-              p.city AS property_city,
-              p.state AS property_state,
-              p.price AS property_price
+        u.name AS assigned_agent_name,
+        u.email AS assigned_agent_email,
+
+        p.title AS property_title,
+        p.city AS property_city,
+        p.state AS property_state,
+        p.price AS property_price
 
       FROM whatsapp_qr_conversations c
       INNER JOIN leads l ON l.id = c.lead_id
+      LEFT JOIN contacts ct
+        ON ct.id = COALESCE(c.contact_id, l.contact_id)
       LEFT JOIN users u ON u.id = l.assigned_to
-      LEFT JOIN properties p ON p.id = COALESCE(c.property_id, l.property_id)
+      LEFT JOIN properties p
+        ON p.id = COALESCE(c.property_id, l.property_id)
       WHERE ${clause}
-      ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC
-      LIMIT 200`,
+      ORDER BY
+        c.last_message_at DESC NULLS LAST,
+        c.updated_at DESC
+      LIMIT 200
+      `,
       params,
     );
 
@@ -248,6 +345,10 @@ export class WhatsAppQrConversationService {
         id: r.id,
         session_id: r.session_id,
         lead_id: r.lead_id,
+        contact_id: r.contact_id ?? null,
+        contact_name: r.contact_name ?? null,
+        contact_status: r.contact_status ?? null,
+        contact_type: r.contact_type ?? null,
         contact_phone: r.contact_phone,
         owner_type: r.owner_type,
         ai_enabled: r.ai_enabled,
@@ -284,7 +385,7 @@ export class WhatsAppQrConversationService {
     contactPhone: string,
   ): Promise<QrConversationRow | null> {
     const { rows } = await this.db.query(
-      `SELECT id, session_id, user_id, team_id, lead_id, contact_phone, owner_type, ai_enabled, unread_count
+      `SELECT id, session_id, user_id, team_id, lead_id, contact_id, contact_phone, owner_type, ai_enabled, unread_count
        FROM whatsapp_qr_conversations
        WHERE user_id = $1 AND contact_phone = $2`,
       [userId, contactPhone],
@@ -314,7 +415,7 @@ export class WhatsAppQrConversationService {
     const allParams = [...params, contactPhone];
     const phoneIdx = params.length + 1;
     const { rows } = await this.db.query(
-      `SELECT c.id, c.session_id, c.user_id, c.team_id, c.lead_id, c.contact_phone, c.owner_type, c.ai_enabled, c.unread_count
+      `SELECT c.id, c.session_id, c.user_id, c.team_id, c.lead_id, c.contact_id,, c.contact_phone, c.owner_type, c.ai_enabled, c.unread_count
        FROM whatsapp_qr_conversations c
        INNER JOIN leads l ON l.id = c.lead_id
        WHERE c.contact_phone = $${phoneIdx} AND ${clause}

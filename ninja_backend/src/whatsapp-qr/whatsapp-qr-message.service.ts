@@ -15,6 +15,7 @@ export class WhatsAppQrMessageService {
     sessionId: string;
     conversationId: string;
     leadId: string;
+    contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
     body: string | null;
@@ -32,15 +33,53 @@ export class WhatsAppQrMessageService {
       }
     }
 
+    let contactId = params.contactId ?? null;
+
+    if (!contactId) {
+      const { rows: contactRows } = await this.db.query(
+        `
+        SELECT contact_id
+        FROM leads
+        WHERE id = $1
+        LIMIT 1
+        `,
+        [params.leadId],
+      );
+      contactId = contactRows[0]?.contact_id ?? null;
+    }
     try {
       await this.db.query(
-        `INSERT INTO whatsapp_qr_messages
-         (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id)
-         VALUES ($1, $2, $3, $4, $5, 'inbound', 'lead', $6, $7, $8)`,
+        `INSERT INTO whatsapp_qr_messages (
+          session_id,
+          conversation_id,
+          lead_id,
+          contact_id,
+          team_id,
+          contact_phone,
+          direction,
+          sender_type,
+          message_type,
+          body,
+          message_id
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          'inbound',
+          'lead',
+          $7,
+          $8,
+          $9
+        )`,
         [
           params.sessionId,
           params.conversationId,
           params.leadId,
+          params.contactId ?? null,
           params.teamId,
           params.contactPhone,
           params.messageType,
