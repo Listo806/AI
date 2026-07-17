@@ -213,6 +213,11 @@ export class ContactsController {
     return this.contactsService.getActivities(id, req.user);
   }
 
+  @Get(":id/linked-lead")
+  getLinkedLead(@Param("id") id: string, @Req() req: any) {
+    return this.contactsService.getLinkedLead(id, req.user);
+  }
+
   @Post(":id/activities")
   createActivity(
     @Param("id") id: string,
@@ -220,10 +225,5 @@ export class ContactsController {
     @Req() req,
   ) {
     return this.contactsService.addActivity(id, req.user, dto);
-  }
-
-  @Post(":id/convert-to-lead")
-  convertToLead(@Param("id") id: string, @Req() req) {
-    return this.contactsService.convertToLead(id, req.user);
   }
 }

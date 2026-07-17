@@ -244,6 +244,30 @@ export class LeadsController {
     return this.leadsService.update(id, updateLeadDto, user.id, user.teamId);
   }
 
+  @Post(":id/convert-to-contact")
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth("JWT-auth")
+  @ApiOperation({ summary: "Convert a lead to a contact" })
+  @ApiParam({
+    name: "id",
+    description: "Lead ID",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "Lead converted to contact successfully",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "CRM access required or insufficient permission",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Lead not found",
+  })
+  async convertToContact(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.leadsService.convertToContact(id, user);
+  }
+
   @Post(":id/contact")
   @UseGuards(JwtAuthGuard, CrmAccessGuard)
   @ApiBearerAuth("JWT-auth")

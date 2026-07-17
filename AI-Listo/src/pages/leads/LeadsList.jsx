@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 import "./leads.css";
 import EmojiPicker from "emoji-picker-react";
@@ -36,10 +36,13 @@ import {
 
 export default function LeadsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [leadsData, setLeadsData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [leadsLoading, setLeadsLoading] = useState(false);
+  const [convertingLead, setConvertingLead] = useState(false);
+  const [leadActionMessage, setLeadActionMessage] = useState("");
 
   const [leadEvents, setLeadEvents] = useState([]);
   const [leadEventsLoading, setLeadEventsLoading] = useState(false);
@@ -295,8 +298,96 @@ export default function LeadsPage() {
 
   const selectLead = (lead) => {
     setSelectedLead(lead);
+    setLeadActionMessage("");
     fetchLeadEvents(lead.id);
     fetchLeadMessages(lead.id);
+  };
+
+  const fetchLeadById = async (leadId) => {
+    if (!leadId) return null;
+    try {
+      const response = await apiClient.request(`/leads/${leadId}`, {
+        method: "GET",
+      });
+      return response?.data || response || null;
+    } catch (err) {
+      console.error("Fetch lead by ID error:", err);
+      return null;
+    }
+  };
+
+  const convertSelectedLeadToContact = async () => {
+    if (!selectedLead?.id || convertingLead) return;
+
+    const confirmed = window.confirm(
+      `Convert ${selectedLead.name || "this lead"} to a contact?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setConvertingLead(true);
+      setLeadActionMessage("");
+
+      const response = await apiClient.request(
+        `/leads/${selectedLead.id}/convert-to-contact`,
+        {
+          method: "POST",
+        },
+      );
+
+      const data = response?.data || response || {};
+      const contact = data?.contact || null;
+      const contactId = contact?.id || selectedLead.contactId || null;
+
+      const normalizedLead = {
+        ...selectedLead,
+        contactId,
+      };
+
+      setSelectedLead(normalizedLead);
+
+      setLeadsData((prev) =>
+        prev.map((lead) =>
+          lead.id === selectedLead.id
+            ? {
+                ...lead,
+                contactId,
+              }
+            : lead,
+        ),
+      );
+
+      setLeadActionMessage(
+        data?.alreadyConverted
+          ? "This lead is already linked to a contact."
+          : "Lead converted to contact successfully.",
+      );
+
+      await fetchLeadEvents(selectedLead.id);
+    } catch (err) {
+      console.error("Convert lead to contact error:", err);
+
+      setLeadActionMessage(
+        err?.message || "Failed to convert lead to contact.",
+      );
+    } finally {
+      setConvertingLead(false);
+    }
+  };
+
+  const openSelectedLeadContact = () => {
+    if (!selectedLead?.contactId) return;
+    navigate(`/dashboard/contacts?contactId=${selectedLead.contactId}`);
+  };
+
+  const handleLeadContactAction = () => {
+    if (!selectedLead?.id) return;
+    if (selectedLead.contactId) {
+      openSelectedLeadContact();
+      return;
+    }
+    convertSelectedLeadToContact();
   };
 
   const escalateSelectedLead = async () => {
@@ -924,14 +1015,15 @@ export default function LeadsPage() {
       if (!append) {
         const params = new URLSearchParams(location.search);
         const leadId = params.get("leadId");
-
-        const matchedLead = leadId
+        let activeLead = leadId
           ? incomingLeads.find((item) => String(item.id) === String(leadId))
           : null;
-
-        const activeLead = matchedLead || incomingLeads[0] || null;
+        if (leadId && !activeLead) {
+          activeLead = await fetchLeadById(leadId);
+        }
+        activeLead = activeLead || incomingLeads[0] || null;
         setSelectedLead(activeLead);
-
+        setLeadActionMessage("");
         if (activeLead?.id) {
           fetchLeadEvents(activeLead.id);
           fetchLeadMessages(activeLead.id);
@@ -1600,14 +1692,53 @@ export default function LeadsPage() {
             </div>
 
             <div className="conversation-actions">
-              <button className="icon-btn">
+              <button
+                type="button"
+                className="icon-btn"
+                disabled={!selectedLead}
+                title="Call lead"
+              >
                 <Phone size={16} />
               </button>
-              <button className="icon-btn">
+
+              <button
+                type="button"
+                className="icon-btn"
+                disabled={!selectedLead}
+                title="Start video call"
+              >
                 <Video size={16} />
               </button>
-              <button className="icon-btn">
-                <MoreVertical size={16} />
+
+              <button
+                type="button"
+                className={`lead-contact-action-btn ${
+                  selectedLead?.contactId ? "linked" : ""
+                }`}
+                onClick={handleLeadContactAction}
+                disabled={!selectedLead || convertingLead}
+                title={
+                  selectedLead?.contactId
+                    ? "Open linked contact"
+                    : "Convert this lead to a contact"
+                }
+              >
+                {convertingLead ? (
+                  <>
+                    <span className="lead-contact-action-spinner" />
+                    Converting...
+                  </>
+                ) : selectedLead?.contactId ? (
+                  <>
+                    <Users size={16} />
+                    Open Contact
+                  </>
+                ) : (
+                  <>
+                    <Users size={16} />
+                    Convert to Contact
+                  </>
+                )}
               </button>
 
               <div className="score-badge">
@@ -1655,6 +1786,24 @@ export default function LeadsPage() {
               </select>
             </div>
           </div>
+          {leadActionMessage && (
+            <div
+              className={`lead-action-message ${
+                leadActionMessage.toLowerCase().includes("failed")
+                  ? "error"
+                  : "success"
+              }`}
+            >
+              <span>{leadActionMessage}</span>
+              <button
+                type="button"
+                onClick={() => setLeadActionMessage("")}
+                aria-label="Close message"
+              >
+                ×
+              </button>
+            </div>
+          )}
           {/* AI SUMMARY */}
           <div className="ai-summary">
             <div className="summary-icon">

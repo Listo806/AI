@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./contacts.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 
 import {
@@ -39,6 +39,7 @@ import {
 
 export default function ContactsRelationshipsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [contacts, setContacts] = useState([]);
   const [stats, setStats] = useState([]);
@@ -209,9 +210,12 @@ export default function ContactsRelationshipsPage() {
         method: "GET",
       });
       const data = response?.data || response || [];
-      setContacts(Array.isArray(data) ? data : []);
+      const contactList = Array.isArray(data) ? data : [];
+      setContacts(contactList);
+      return contactList;
     } catch (err) {
       console.error("Fetch contacts error:", err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -275,6 +279,10 @@ export default function ContactsRelationshipsPage() {
     fetchContacts();
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    openContactFromUrl();
+  }, [location.search]);
 
   useEffect(() => {
     const crmContent = document.querySelector(".crm-content");
@@ -518,6 +526,54 @@ export default function ContactsRelationshipsPage() {
     setSelectedContact(contact);
     fetchActivities(contact.id);
   };
+  const openLinkedLead = async (contact) => {
+    if (!contact?.id) return;
+    try {
+      let leadId = contact.linkedLeadId || null;
+      if (!leadId) {
+        const response = await apiClient.request(
+          `/contacts/${contact.id}/linked-lead`,
+          {
+            method: "GET",
+          },
+        );
+        const data = response?.data || response || {};
+        leadId = data?.lead?.id || null;
+      }
+      if (!leadId) {
+        showToast("This contact is not linked to a lead", "error");
+        return;
+      }
+      setOpenMenuId(null);
+      setShowDetailMoreMenu(false);
+      navigate(`/dashboard/leads?leadId=${leadId}`);
+    } catch (err) {
+      console.error("Open linked lead error:", err);
+      showToast(err?.message || "Failed to open linked lead", "error");
+    }
+  };
+
+  const openContactFromUrl = async () => {
+    const params = new URLSearchParams(location.search);
+    const contactId = params.get("contactId");
+    if (!contactId) return;
+    try {
+      const response = await apiClient.request(`/contacts/${contactId}`, {
+        method: "GET",
+      });
+      const contact = response?.data || response;
+      if (!contact?.id) return;
+      setSelectedContact({
+        ...contact,
+        avatar: contact.avatar || contact.name?.charAt(0)?.toUpperCase() || "?",
+      });
+
+      fetchActivities(contact.id);
+    } catch (err) {
+      console.error("Open contact from URL error:", err);
+      showToast(err?.message || "Failed to open contact", "error");
+    }
+  };
 
   const latestNote =
     activities.find((item) => item.type === "note")?.sub ||
@@ -574,42 +630,16 @@ export default function ContactsRelationshipsPage() {
     setSelectedContact(null);
     setActivities([]);
     setShowDetailMoreMenu(false);
-  };
-
-  const convertContactToLead = async (contact) => {
-    const ok = window.confirm(`Convert ${contact.name} to a lead?`);
-    if (!ok) return;
-
-    try {
-      const response = await apiClient.request(
-        `/contacts/${contact.id}/convert-to-lead`,
-        { method: "POST" },
-      );
-
-      const data = response?.data || response;
-      const leadId = data?.lead?.id;
-
-      await fetchActivities(contact.id);
-
-      showToast(
-        data?.alreadyConverted
-          ? "This contact is already converted to a lead"
-          : "Contact converted to lead",
-      );
-
-      setOpenMenuId(null);
-      setShowDetailMoreMenu(false);
-
-      if (leadId) {
-        navigate(`/dashboard/leads?leadId=${leadId}`);
-      } else {
-        navigate("/dashboard/leads");
-      }
-    } catch (err) {
-      console.error(err);
-      showToast(err?.message || "Failed to convert contact", "error");
+    const params = new URLSearchParams(location.search);
+    if (params.has("contactId")) {
+      params.delete("contactId");
+      const query = params.toString();
+      navigate(query ? `/dashboard/contacts?${query}` : "/dashboard/contacts", {
+        replace: true,
+      });
     }
   };
+
   const Modals = () => (
     <>
       {showEditModal && editForm && (
@@ -910,14 +940,12 @@ export default function ContactsRelationshipsPage() {
             >
               <UserCog size={15} /> Assign Agent
             </button>
-            <button
-              onClick={() => {
-                setShowDetailMoreMenu(false);
-                convertContactToLead(selectedContact);
-              }}
-            >
-              <GitFork size={15} /> Convert to Lead
-            </button>
+            {selectedContact.linkedLeadId && (
+              <button onClick={() => openLinkedLead(selectedContact)}>
+                <GitFork size={15} />
+                Open Lead
+              </button>
+            )}
             <button
               onClick={() => {
                 setShowDetailMoreMenu(false);
@@ -1005,6 +1033,27 @@ export default function ContactsRelationshipsPage() {
                 </div>
                 <div className="info-value">
                   {selectedContact.source || "-"}
+                </div>
+              </div>
+
+              <div className="info-item">
+                <div className="info-label-group">
+                  <GitFork size={16} />
+                  <span>Linked Lead:</span>
+                </div>
+                <div className="info-value">
+                  {selectedContact.linkedLeadId ? (
+                    <button
+                      type="button"
+                      className="contact-linked-lead-btn"
+                      onClick={() => openLinkedLead(selectedContact)}
+                    >
+                      {selectedContact.linkedLead || "Open Lead"}
+                      <ChevronRight size={14} />
+                    </button>
+                  ) : (
+                    "-"
+                  )}
                 </div>
               </div>
 
@@ -1284,11 +1333,12 @@ export default function ContactsRelationshipsPage() {
                             <button onClick={() => openAssignAgent(contact)}>
                               <UserCog size={15} /> Assign Agent
                             </button>
-                            <button
-                              onClick={() => convertContactToLead(contact)}
-                            >
-                              <GitFork size={15} /> Convert to Lead
-                            </button>
+                            {contact.linkedLeadId && (
+                              <button onClick={() => openLinkedLead(contact)}>
+                                <GitFork size={15} />
+                                Open Lead
+                              </button>
+                            )}
                             <div className="status-menu-group">
                               <button>
                                 <StickyNote size={15} /> Change Status

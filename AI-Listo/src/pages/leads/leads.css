@@ -263,7 +263,7 @@ body .leads-page {
 
 .leads-page .leads-layout {
   display: grid;
-  grid-template-columns: 300px 1fr 310px;
+  grid-template-columns: 265px 1fr 310px;
   gap: 16px;
   padding-bottom: 16px;
 }
@@ -305,7 +305,7 @@ body .leads-page {
 }
 
 .leads-page .icon-btn {
-  width: 42px;
+  width: 40px;
   height: 42px;
   border-radius: 10px;
   background: white;
@@ -324,7 +324,7 @@ body .leads-page {
 .leads-page .lead-card {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   transition: 0.2s ease;
 }
 
@@ -340,12 +340,12 @@ body .leads-page {
 
 .leads-page .lead-card-top {
   display: flex;
-  gap: 10px;
+  gap: 6px;
 }
 
 .leads-page .lead-avatar {
-  width: 46px;
-  height: 46px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #16a34a;
   color: white;
@@ -1688,6 +1688,112 @@ body .leads-page {
   width: 100%;
   margin: 10px 0;
 }
+.lead-contact-action-btn {
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px!important;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.lead-contact-action-btn:hover:not(:disabled) {
+  background: rgba(124, 58, 237, 0.17);
+  border-color: rgba(124, 58, 237, 0.55);
+  transform: translateY(-1px);
+}
+
+.lead-contact-action-btn.linked {
+  color: #047857;
+  border-color: rgba(5, 150, 105, 0.35);
+  background: rgba(5, 150, 105, 0.1);
+}
+
+.lead-contact-action-btn.linked:hover:not(:disabled) {
+  border-color: rgba(5, 150, 105, 0.55);
+  background: rgba(5, 150, 105, 0.16);
+}
+
+.lead-contact-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.lead-contact-action-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: lead-contact-action-spin 0.7s linear infinite;
+}
+
+@keyframes lead-contact-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lead-action-message {
+  margin: 10px 16px 0;
+  padding: 10px 12px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lead-action-message.success {
+  color: #047857;
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  background: rgba(5, 150, 105, 0.08);
+}
+
+.lead-action-message.error {
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.lead-action-message button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .lead-contact-action-btn {
+    min-width: 36px;
+    width: 36px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .lead-contact-action-btn svg,
+  .lead-contact-action-btn .lead-contact-action-spinner {
+    flex-shrink: 0;
+  }
+}
 @keyframes recordingPulse {
   0% {
     transform: scale(1);
@@ -1731,15 +1837,6 @@ body .leads-page {
     width: 100%;
   }
 }
-
-
-
-
-
-
-
-
-@media (max-width: 1300px) {}
 
 @media (max-width: 1024px) {
   .leads-page .priority-bar {

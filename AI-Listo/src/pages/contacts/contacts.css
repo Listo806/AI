@@ -1160,6 +1160,26 @@ body .contacts-page .map svg{
   right: 18px;
   z-index: 50;
 }
+.contact-linked-lead-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #7c3aed;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contact-linked-lead-btn:hover {
+  text-decoration: underline;
+}
+
+.contact-linked-lead-btn svg {
+  flex-shrink: 0;
+}
 @media (min-width: 1200px) {
     .contacts-page .main-content {
         margin-top: 0;

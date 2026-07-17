@@ -85,11 +85,6 @@ export class LeadsService {
       });
     }
 
-    // Auto-create a contact linked to this lead when we have a team
-    if (teamId) {
-      await this.createContactForLead(lead, assignedTo || null);
-    }
-
     // Fire webhooks (async, never blocks)
     if (teamId) {
       this.webhooksService.triggerWebhooks("lead.created", teamId, {
@@ -103,43 +98,6 @@ export class LeadsService {
     }
 
     return lead;
-  }
-
-  /**
-   * Create a contact record linked to a newly created lead (same name, email, phone, team).
-   * Only call when lead has team_id (contacts.team_id is NOT NULL).
-   */
-  private async createContactForLead(
-    lead: {
-      id: string;
-      teamId: string | null;
-      createdBy?: string | null;
-      name: string;
-      email?: string | null;
-      phone?: string | null;
-      notes?: string | null;
-    },
-    createdBy: string | null,
-  ): Promise<void> {
-    if (!lead.teamId) return;
-    try {
-      await this.db.query(
-        `INSERT INTO contacts (team_id, created_by, name, email, phone, lead_id, notes, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-        [
-          lead.teamId,
-          createdBy ?? lead.createdBy ?? null,
-          lead.name?.trim() || "Contact",
-          lead.email?.trim() || null,
-          lead.phone?.trim() || null,
-          lead.id,
-          lead.notes?.trim() || null,
-        ],
-      );
-    } catch (err) {
-      // Log but do not fail lead creation if contact insert fails (e.g. table missing)
-      console.warn("Failed to auto-create contact for lead:", lead.id, err);
-    }
   }
 
   async create(
@@ -189,11 +147,6 @@ export class LeadsService {
       source: lead.source,
     });
 
-    // Auto-create a contact linked to this lead when we have a team
-    if (teamId) {
-      await this.createContactForLead(lead, userId);
-    }
-
     // Fire webhooks (async, never blocks)
     if (teamId) {
       this.webhooksService.triggerWebhooks("lead.created", teamId, {
@@ -223,6 +176,7 @@ export class LeadsService {
     l.assigned_to as "assignedTo",
     l.property_id as "propertyId",
     l.buyer_id as "buyerId",
+    l.contact_id as "contactId",
     l.created_by as "createdBy",
     l.team_id as "teamId",
     l.notes,
@@ -281,6 +235,7 @@ export class LeadsService {
         l.assigned_to as "assignedTo", 
         l.property_id as "propertyId", 
         l.buyer_id as "buyerId",
+        l.contact_id as "contactId",
         l.created_by as "createdBy", 
         l.team_id as "teamId", 
         l.notes, 
@@ -354,6 +309,7 @@ export class LeadsService {
       status: lead.status,
       assignedTo: lead.assignedTo,
       propertyId: lead.propertyId,
+      contactId: lead.contactId || null,
       createdBy: lead.createdBy,
       teamId: lead.teamId,
       notes: lead.notes,
@@ -464,7 +420,7 @@ export class LeadsService {
 
     const { rows } = await this.db.query(
       `UPDATE leads SET ${updates.join(", ")} WHERE id = $${paramCount}
-       RETURNING id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", contact_id as "contactId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, instagram_id as "instagramId", created_at as "createdAt", updated_at as "updatedAt", last_contacted_at as "lastContactedAt"`,
       values,
     );
@@ -584,7 +540,7 @@ export class LeadsService {
            ${statusUpdate}
            updated_at = NOW()
        WHERE id = $1
-       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+       RETURNING id, name, email, phone, status, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", contact_id as "contactId", created_by as "createdBy", 
                  team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt", 
                  last_contacted_at as "lastContactedAt", has_responded as "hasResponded",
                  last_activity_at as "lastActivityAt", last_action_type as "lastActionType", last_action_at as "lastActionAt"`,
@@ -620,6 +576,349 @@ export class LeadsService {
     return this.findById(id);
   }
 
+  async convertToContact(
+    leadId: string,
+    user: any,
+  ): Promise<{
+    success: boolean;
+    alreadyConverted: boolean;
+    contact: any;
+  }> {
+    const userId = user?.id;
+    const userTeamId = user?.teamId || user?.team_id || null;
+
+    if (!userId) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const lead = await this.findById(leadId);
+
+    if (!lead) {
+      throw new NotFoundException("Lead not found");
+    }
+
+    const isCreator = lead.createdBy === userId;
+    const isSameTeam =
+      Boolean(userTeamId) && Boolean(lead.teamId) && lead.teamId === userTeamId;
+
+    if (!isCreator && !isSameTeam) {
+      throw new ForbiddenException(
+        "You do not have permission to convert this lead",
+      );
+    }
+
+    if (!lead.teamId) {
+      throw new ForbiddenException(
+        "Lead must belong to a team before it can be converted to a contact",
+      );
+    }
+
+    if (lead.contactId) {
+      const linkedContactResult = await this.db.query(
+        `
+        SELECT
+          c.id,
+          c.team_id AS "teamId",
+          c.created_by AS "createdBy",
+          c.name,
+          c.type,
+          c.email,
+          c.phone,
+          c.lead_id AS "linkedLeadId",
+          c.linked_lead_name AS "linkedLead",
+          c.interest,
+          c.last_contact_at AS "lastContactAt",
+          c.score,
+          c.status,
+          c.source,
+          c.notes,
+          c.assigned_to AS "assignedTo",
+          c.created_at AS "createdAt",
+          c.updated_at AS "updatedAt"
+        FROM contacts c
+        WHERE c.id = $1
+          AND c.team_id = $2
+        LIMIT 1
+        `,
+        [lead.contactId, lead.teamId],
+      );
+
+      if (linkedContactResult.rows.length > 0) {
+        const linkedContact = linkedContactResult.rows[0];
+
+        await this.db.query(
+          `
+          UPDATE contacts
+          SET
+            lead_id = COALESCE(lead_id, $1),
+            linked_lead_name = COALESCE(linked_lead_name, $2),
+            updated_at = NOW()
+          WHERE id = $3
+          `,
+          [lead.id, lead.name || null, linkedContact.id],
+        );
+
+        return {
+          success: true,
+          alreadyConverted: true,
+          contact: {
+            ...linkedContact,
+            linkedLeadId: linkedContact.linkedLeadId || lead.id,
+            linkedLead: linkedContact.linkedLead || lead.name || null,
+          },
+        };
+      }
+    }
+    /*
+     * 1. Check if Contact is linked to Lead.
+     * contacts.lead_id is the primary source for checking,
+     * because Contact already has a lead_id field in the current project.
+     */
+    const existingContactResult = await this.db.query(
+      `
+    SELECT
+      c.id,
+      c.team_id AS "teamId",
+      c.created_by AS "createdBy",
+      c.name,
+      c.type,
+      c.email,
+      c.phone,
+      c.lead_id AS "linkedLeadId",
+      c.linked_lead_name AS "linkedLead",
+      c.interest,
+      c.last_contact_at AS "lastContactAt",
+      c.score,
+      c.status,
+      c.source,
+      c.notes,
+      c.assigned_to AS "assignedTo",
+      c.created_at AS "createdAt",
+      c.updated_at AS "updatedAt"
+    FROM contacts c
+    WHERE c.lead_id = $1
+    LIMIT 1
+    `,
+      [lead.id],
+    );
+
+    if (existingContactResult.rows.length > 0) {
+      const existingContact = existingContactResult.rows[0];
+
+      /*
+       *Synchronize the contact_id back to the Lead if the Lead doesn't already have one.
+       */
+      await this.db.query(
+        `
+      UPDATE leads
+      SET
+        contact_id = $1,
+        updated_at = NOW()
+      WHERE id = $2
+        AND contact_id IS DISTINCT FROM $1
+      `,
+        [existingContact.id, lead.id],
+      );
+
+      return {
+        success: true,
+        alreadyConverted: true,
+        contact: existingContact,
+      };
+    }
+
+    /*
+     * 2. Change Lead status to Contact status.
+     * Contacts are currently using the following statuses:
+     * Cold, Warm, Hot, Active.
+     */
+    const normalizedLeadStatus = String(lead.status || "").toLowerCase();
+
+    let contactStatus = "Cold";
+    let contactScore = 25;
+
+    if (
+      normalizedLeadStatus === "qualified" ||
+      normalizedLeadStatus === "closed-won"
+    ) {
+      contactStatus = "Hot";
+      contactScore = 90;
+    } else if (
+      normalizedLeadStatus === "contacted" ||
+      normalizedLeadStatus === "follow-up"
+    ) {
+      contactStatus = "Warm";
+      contactScore = 65;
+    } else if (normalizedLeadStatus === "new") {
+      contactStatus = "Cold";
+      contactScore = 25;
+    }
+
+    /*
+     * 3. create Contact.
+     */
+    const contactResult = await this.db.query(
+      `
+    INSERT INTO contacts (
+      team_id,
+      created_by,
+      name,
+      type,
+      email,
+      phone,
+      lead_id,
+      linked_lead_name,
+      interest,
+      last_contact_at,
+      score,
+      status,
+      source,
+      notes,
+      assigned_to,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      $7,
+      $8,
+      $9,
+      $10,
+      $11,
+      $12,
+      $13,
+      $14,
+      $15,
+      NOW(),
+      NOW()
+    )
+    RETURNING
+      id,
+      team_id AS "teamId",
+      created_by AS "createdBy",
+      name,
+      type,
+      email,
+      phone,
+      lead_id AS "linkedLeadId",
+      linked_lead_name AS "linkedLead",
+      interest,
+      last_contact_at AS "lastContactAt",
+      score,
+      status,
+      source,
+      notes,
+      assigned_to AS "assignedTo",
+      created_at AS "createdAt",
+      updated_at AS "updatedAt"
+    `,
+      [
+        lead.teamId,
+        userId,
+        lead.name?.trim() || "Contact",
+        null,
+        lead.email?.trim() || null,
+        lead.phone?.trim() || null,
+        lead.id,
+        lead.name?.trim() || null,
+        lead.property?.title || null,
+        lead.lastContactedAt || null,
+        contactScore,
+        contactStatus,
+        lead.source || "Lead conversion",
+        lead.notes?.trim() || null,
+        lead.assignedTo || null,
+      ],
+    );
+
+    const contact = contactResult.rows[0];
+
+    /*
+     * 4. Contact to Lead.
+     */
+    await this.db.query(
+      `
+    UPDATE leads
+    SET
+      contact_id = $1,
+      last_activity_at = NOW(),
+      last_action_type = $2,
+      last_action_at = NOW(),
+      updated_at = NOW()
+    WHERE id = $3
+    `,
+      [contact.id, "converted_to_contact", lead.id],
+    );
+
+    /*
+     * 5. add timeline for Lead.
+     */
+    await this.createEvent({
+      eventType: "lead.converted_to_contact",
+      entityType: "lead",
+      entityId: lead.id,
+      userId,
+      teamId: lead.teamId,
+      metadata: {
+        title: "Converted to contact",
+        sub: `Contact created for ${lead.name}`,
+        contactId: contact.id,
+        contactName: contact.name,
+      },
+    });
+
+    /*
+     * 6. activity for Contact.
+     */
+    await this.db.query(
+      `
+    INSERT INTO contact_activities (
+      contact_id,
+      user_id,
+      team_id,
+      type,
+      title,
+      sub
+    )
+    VALUES ($1, $2, $3, $4, $5, $6)
+    `,
+      [
+        contact.id,
+        userId,
+        lead.teamId,
+        "converted_from_lead",
+        "Converted from lead",
+        `Lead: ${lead.name}`,
+      ],
+    );
+
+    /*
+     * 7. Webhook.
+     */
+    this.webhooksService.triggerWebhooks(
+      "lead.converted_to_contact",
+      lead.teamId,
+      {
+        lead_id: lead.id,
+        contact_id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+      },
+    );
+
+    return {
+      success: true,
+      alreadyConverted: false,
+      contact,
+    };
+  }
+
   async delete(
     id: string,
     userId: string,
@@ -651,14 +950,14 @@ export class LeadsService {
     let params: any[];
 
     if (teamId) {
-      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", contact_id as "contactId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE team_id = $1 AND status = $2
                ORDER BY created_at DESC`;
       params = [teamId, status];
     } else {
-      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", created_by as "createdBy", 
+      query = `SELECT id, name, email, phone, status, priority, assigned_to as "assignedTo", property_id as "propertyId", buyer_id as "buyerId", contact_id as "contactId", created_by as "createdBy", 
                       team_id as "teamId", notes, source, created_at as "createdAt", updated_at as "updatedAt"
                FROM leads
                WHERE created_by = $1 AND status = $2
@@ -978,6 +1277,7 @@ export class LeadsService {
     l.assigned_to AS "assignedTo",
     l.property_id AS "propertyId",
     l.buyer_id AS "buyerId",
+    l.contact_id AS "contactId",
     l.created_by AS "createdBy",
     l.team_id AS "teamId",
     l.notes,
@@ -1016,6 +1316,7 @@ export class LeadsService {
     l.assigned_to AS "assignedTo",
     l.property_id AS "propertyId",
     l.buyer_id AS "buyerId",
+    l.contact_id AS "contactId",
     l.created_by AS "createdBy",
     l.team_id AS "teamId",
     l.notes,

@@ -216,15 +216,17 @@ export function useWhatsAppDashboard() {
       setStatusLoading(false);
     }
   };
-
+  const [sendError, setSendError] = useState("");
   const sendMessage = async () => {
+    setSendError("");
     const text = messageText.trim();
-    if (!selectedConversation?.contact_phone || !text) return;
 
+    if (!selectedConversation?.contact_phone || !text || sending) {
+      return;
+    }
+    const tempId = `temp-${Date.now()}`;
     try {
       setSending(true);
-
-      const tempId = `temp-${Date.now()}`;
 
       const optimisticMessage = {
         id: tempId,
@@ -236,19 +238,40 @@ export function useWhatsAppDashboard() {
         optimistic: true,
       };
 
-      setMessages((prev) => [...prev, optimisticMessage]);
+      setMessages((previous) => [...previous, optimisticMessage]);
       setMessageText("");
-
       await whatsappService.sendMessage(
         selectedConversation.contact_phone,
         text,
       );
-
       await loadMessages(selectedConversation);
       await loadDashboard();
+
       loadTimeline(selectedConversation, 1, false);
-    } catch (err) {
-      console.error("Send WhatsApp message error:", err);
+    } catch (error) {
+      
+      console.error("Send WhatsApp message error:", error);
+      setMessages((previous) => previous.filter((item) => item.id !== tempId));
+      setMessageText(text);
+      const code =
+        error?.code || error?.details?.code || error?.response?.data?.code;
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.details?.message ||
+        error?.message ||
+        "Unable to send WhatsApp message.";
+      setSendError(errorMessage);
+      if (code === "WHATSAPP_QR_REQUIRED") {
+        await loadStatus();
+        console.warn("WhatsApp QR scan required:", errorMessage);
+        return;
+      }
+
+      if (code === "WHATSAPP_RECONNECTING") {
+        await loadStatus();
+        console.warn("WhatsApp is reconnecting:", errorMessage);
+        return;
+      }
     } finally {
       setSending(false);
     }
@@ -509,5 +532,6 @@ export function useWhatsAppDashboard() {
     aiAssistReply,
     setAiAssistReply,
     generateAiAssistReply,
+    sendError,
   };
 }

@@ -28,6 +28,9 @@ export class ContactsService {
   c.lead_id AS "linkedLeadId",
   c.linked_lead_name AS "linkedLead",
 
+  ll.status AS "linkedLeadStatus",
+  ll.priority AS "linkedLeadPriority",
+
   c.interest,
   c.last_contact_at AS "lastContactAt",
 
@@ -132,6 +135,20 @@ export class ContactsService {
       ${this.baseSelectColumns}
     FROM contacts c
     LEFT JOIN users au ON au.id = c.assigned_to
+    LEFT JOIN LATERAL (
+      SELECT
+        l.id,
+        l.name,
+        l.status,
+        l.priority
+      FROM leads l
+      WHERE l.id = c.lead_id
+        OR l.contact_id = c.id
+      ORDER BY
+        CASE WHEN l.id = c.lead_id THEN 0 ELSE 1 END,
+        l.created_at DESC
+      LIMIT 1
+    ) ll ON TRUE
     WHERE ${where.join(" AND ")}
     ORDER BY c.created_at DESC
     LIMIT $${limitParam}
@@ -399,6 +416,20 @@ export class ContactsService {
     ${this.baseSelectColumns}
   FROM contacts c
   LEFT JOIN users au ON au.id = c.assigned_to
+  LEFT JOIN LATERAL (
+    SELECT
+      l.id,
+      l.name,
+      l.status,
+      l.priority
+    FROM leads l
+    WHERE l.id = c.lead_id
+      OR l.contact_id = c.id
+    ORDER BY
+      CASE WHEN l.id = c.lead_id THEN 0 ELSE 1 END,
+      l.created_at DESC
+    LIMIT 1
+  ) ll ON TRUE
   WHERE c.id = $1
     AND c.team_id IN (${placeholders})
   `,
@@ -692,115 +723,47 @@ export class ContactsService {
     return rows[0];
   }
 
-  async convertToLead(id: string, user: any) {
-    const contact = await this.findOne(id, user.id, user.teamId, user.role);
-
-    const existingLead = await this.db.query(
-      `
-    SELECT id, name
-    FROM leads
-    WHERE contact_id = $1
-    LIMIT 1
-    `,
-      [contact.id],
+  async getLinkedLead(contactId: string, user: any) {
+    const contact = await this.findOne(
+      contactId,
+      user.id,
+      user.teamId ?? user.team_id ?? null,
+      user.role ?? "owner",
     );
-
-    if (existingLead.rows.length) {
-      return {
-        success: true,
-        alreadyConverted: true,
-        lead: existingLead.rows[0],
-      };
-    }
 
     const { rows } = await this.db.query(
       `
-    INSERT INTO leads (
-      name,
-      email,
-      phone,
-      status,
-      assigned_to,
-      created_by,
-      team_id,
-      notes,
-      source,
-      contact_id,
-      priority,
-      lead_metadata,
-      last_activity_at,
-      last_action_type,
-      last_action_at
+    SELECT
+      l.id,
+      l.name,
+      l.email,
+      l.phone,
+      l.status,
+      l.priority,
+      l.source,
+      l.assigned_to AS "assignedTo",
+      l.property_id AS "propertyId",
+      l.contact_id AS "contactId",
+      l.team_id AS "teamId",
+      l.created_at AS "createdAt",
+      l.updated_at AS "updatedAt"
+    FROM leads l
+    WHERE (
+      l.id = $1
+      OR l.contact_id = $2
     )
-    VALUES (
-      $1, $2, $3, $4, $5,
-      $6, $7, $8, $9, $10,
-      $11, $12, NOW(), $13, NOW()
-    )
-    RETURNING *
+      AND l.team_id = $3
+    ORDER BY
+      CASE WHEN l.id = $1 THEN 0 ELSE 1 END,
+      l.created_at DESC
+    LIMIT 1
     `,
-      [
-        contact.name,
-        contact.email || null,
-        contact.phone || null,
-        "new",
-        contact.assignedTo || null,
-        user.id,
-        contact.teamId || user.teamId || null,
-        contact.notes || null,
-        contact.source || "Contact",
-        contact.id,
-        contact.score >= 80 ? "high" : contact.score >= 50 ? "medium" : "low",
-        {
-          convertedFrom: "contact",
-          contactType: contact.type || null,
-          interest: contact.interest || null,
-          score: contact.score || null,
-        },
-        "converted_to_lead",
-      ],
-    );
-
-    const lead = rows[0];
-
-    await this.createActivity(
-      contact.id,
-      user.id,
-      contact.teamId,
-      "converted_to_lead",
-      "Converted to lead",
-      `Lead: ${lead.name}`,
-    );
-    await this.db.query(
-      `
-  INSERT INTO events (
-    event_type,
-    entity_type,
-    entity_id,
-    user_id,
-    team_id,
-    metadata
-  )
-  VALUES ($1, $2, $3, $4, $5, $6)
-  `,
-      [
-        "converted_from_contact",
-        "lead",
-        lead.id,
-        user.id,
-        lead.team_id,
-        {
-          title: "Converted from contact",
-          sub: `Contact: ${contact.name}`,
-          contactId: contact.id,
-        },
-      ],
+      [contact.linkedLeadId || null, contact.id, contact.teamId],
     );
 
     return {
-      success: true,
-      alreadyConverted: false,
-      lead,
+      linked: rows.length > 0,
+      lead: rows[0] || null,
     };
   }
 }
