@@ -490,7 +490,7 @@ export class WhatsAppQrController {
         conversationId: sendConversation.id,
         sessionId: sendConversation.session_id,
         whatsappOwnerUserId: sendConversation.user_id,
-        contactPhone,
+        contactPhone: sendConversation.contact_phone,
         sent: true,
       },
     };
@@ -526,7 +526,7 @@ export class WhatsAppQrController {
       conversationId: sendConversation.id,
       leadId: sendConversation.lead_id,
       teamId: sendConversation.team_id,
-      contactPhone,
+      contactPhone: sendConversation.contact_phone,
       audioBase64: dto.audioBase64,
     });
     return { success: true };
