@@ -761,7 +761,7 @@ export class WhatsAppQrController {
       leadId: sendConversation.lead_id,
       contactId: sendConversation.contact_id || null,
       teamId: sendConversation.team_id,
-      contactPhone,
+      contactPhone: sendConversation.contact_phone,
       text: message,
     });
 
