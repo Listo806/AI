@@ -742,28 +742,6 @@ export class LeadsService {
         [existingContact.id, lead.id],
       );
 
-      await this.db.query(
-        `
-        UPDATE whatsapp_qr_conversations
-        SET
-          contact_id = $1,
-          updated_at = NOW()
-        WHERE lead_id = $2
-          AND contact_id IS DISTINCT FROM $1
-        `,
-        [contact.id, lead.id],
-      );
-
-      await this.db.query(
-        `
-        UPDATE whatsapp_qr_messages
-        SET contact_id = $1
-        WHERE lead_id = $2
-          AND contact_id IS DISTINCT FROM $1
-        `,
-        [contact.id, lead.id],
-      );
-
       return {
         success: true,
         alreadyConverted: true,
@@ -881,6 +859,28 @@ export class LeadsService {
     );
 
     const contact = contactResult.rows[0];
+
+    await this.db.query(
+      `
+      UPDATE whatsapp_qr_conversations
+      SET
+        contact_id = $1,
+        updated_at = NOW()
+      WHERE lead_id = $2
+        AND contact_id IS DISTINCT FROM $1
+      `,
+      [contact.id, lead.id],
+    );
+
+    await this.db.query(
+      `
+      UPDATE whatsapp_qr_messages
+      SET contact_id = $1
+      WHERE lead_id = $2
+        AND contact_id IS DISTINCT FROM $1
+      `,
+      [contact.id, lead.id],
+    );
 
     /*
      * 4. Contact to Lead.
