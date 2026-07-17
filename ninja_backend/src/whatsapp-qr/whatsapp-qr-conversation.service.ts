@@ -10,13 +10,13 @@ export type QrConversationRow = {
   session_id: string;
   user_id: string;
   team_id: string | null;
-  lead_id: string;
+  lead_id: string | null;
   contact_id: string | null;
   contact_phone: string;
+  property_id?: string | null;
   owner_type: "ai" | "human";
   ai_enabled: boolean;
   unread_count: number;
-  property_id?: string | null;
 };
 
 function mapSenderToLastMessageType(
@@ -571,32 +571,82 @@ export class WhatsAppQrConversationService {
    * If multiple sessions share the same contact phone, returns the most recently active row.
    */
   async findScopedByContactPhone(
-    user: { id: string; teamId: string | null; role: string },
+    user: {
+      id: string;
+      teamId?: string | null;
+      team_id?: string | null;
+      role: string;
+    },
     contactPhone: string,
   ): Promise<QrConversationRow | null> {
+    const normalizedTeamId = user.teamId || user.team_id || null;
+
     const { isGlobal, teamIds } = await this.crm.resolveDashboardDataScope(
       user.id,
-      user.teamId,
+      normalizedTeamId,
       user.role,
     );
-    const { clause, params } = leadScopeWhereClause(
-      isGlobal,
-      teamIds,
-      user.id,
-      1,
-    );
-    const allParams = [...params, contactPhone];
-    const phoneIdx = params.length + 1;
+
+    const values: any[] = [contactPhone];
+    const where: string[] = ["c.contact_phone = $1"];
+
+    if (!isGlobal) {
+      values.push(user.id);
+      const userIndex = values.length;
+
+      if (teamIds.length > 0) {
+        values.push(teamIds);
+        const teamIndex = values.length;
+
+        where.push(`
+        (
+          l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
+          OR l.team_id = ANY($${teamIndex}::uuid[])
+          OR c.user_id = $${userIndex}
+          OR c.team_id = ANY($${teamIndex}::uuid[])
+        )
+      `);
+      } else {
+        where.push(`
+        (
+          l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
+          OR c.user_id = $${userIndex}
+        )
+      `);
+      }
+    }
+
     const { rows } = await this.db.query(
-      `SELECT c.id, c.session_id, c.user_id, c.team_id, c.lead_id, c.contact_id,, c.contact_phone, c.owner_type, c.ai_enabled, c.unread_count
-       FROM whatsapp_qr_conversations c
-       INNER JOIN leads l ON l.id = c.lead_id
-       WHERE c.contact_phone = $${phoneIdx} AND ${clause}
-       ORDER BY c.last_message_at DESC NULLS LAST, c.updated_at DESC
-       LIMIT 1`,
-      allParams,
+      `
+      SELECT
+        c.id,
+        c.session_id,
+        c.user_id,
+        c.team_id,
+        c.lead_id,
+        c.contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.unread_count,
+        c.property_id,
+        c.last_message_at,
+        c.updated_at
+      FROM whatsapp_qr_conversations c
+      LEFT JOIN leads l
+        ON l.id = c.lead_id
+      WHERE ${where.join(" AND ")}
+      ORDER BY
+        c.last_message_at DESC NULLS LAST,
+        c.updated_at DESC
+      LIMIT 1
+      `,
+      values,
     );
-    return rows.length ? rows[0] : null;
+
+    return rows[0] || null;
   }
 
   async toggleAi(
@@ -928,24 +978,23 @@ export class WhatsAppQrConversationService {
   }
 
   async getConversationIntelligence(
-    user: { id: string; teamId: string | null; role: string },
+    user: {
+      id: string;
+      teamId?: string | null;
+      team_id?: string | null;
+      role: string;
+    },
     contactPhone: string,
   ) {
+    // 1. Tìm conversation theo phone và quyền user
     const conv = await this.findScopedByContactPhone(user, contactPhone);
-    const { rows: convRows } = await this.db.query(
-      `
-      SELECT
-          property_id
-      FROM whatsapp_qr_conversations
-      WHERE id = $1
-      LIMIT 1
-      `,
-      [conv.id],
-    );
 
-    const conversationPropertyId = convRows[0]?.property_id ?? null;
+    // 2. Không tìm thấy conversation thì trả dữ liệu rỗng
     if (!conv) {
       return {
+        lead: null,
+        contact: null,
+        property: null,
         score: 0,
         sentiment: "Unknown",
         intent: "Unknown",
@@ -961,63 +1010,117 @@ export class WhatsAppQrConversationService {
       };
     }
 
-    const { rows: leadRows } = await this.db.query(
+    // 3. Lấy property_id và contact_id trực tiếp từ conversation
+    const { rows: convRows } = await this.db.query(
       `
     SELECT
-      id,
-      name,
-      email,
-      phone,
-      status,
-      priority,
-      source,
-      notes,
       property_id,
-      lead_metadata,
-      parsed_city,
-      parsed_country,
-      parsed_budget_min,
-      parsed_budget_max,
-      parsed_intent,
-      created_at,
-      updated_at
-    FROM leads
+      contact_id
+    FROM whatsapp_qr_conversations
     WHERE id = $1
     LIMIT 1
     `,
-      [conv.lead_id],
+      [conv.id],
     );
 
+    const conversationPropertyId = convRows[0]?.property_id ?? null;
+
+    const conversationContactId = convRows[0]?.contact_id ?? null;
+
+    // 4. Lấy Lead nếu conversation có lead_id
+    let lead: any = null;
+
+    if (conv.lead_id) {
+      const { rows: leadRows } = await this.db.query(
+        `
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        status,
+        priority,
+        source,
+        notes,
+        property_id,
+        lead_metadata,
+        parsed_city,
+        parsed_country,
+        parsed_budget_min,
+        parsed_budget_max,
+        parsed_intent,
+        created_at,
+        updated_at
+      FROM leads
+      WHERE id = $1
+      LIMIT 1
+      `,
+        [conv.lead_id],
+      );
+
+      lead = leadRows[0] || null;
+    }
+
+    // 5. Lấy Contact nếu conversation có contact_id
+    let contact: any = null;
+
+    if (conversationContactId) {
+      const { rows: contactRows } = await this.db.query(
+        `
+      SELECT
+        id,
+        name,
+        email,
+        phone,
+        type,
+        status,
+        source,
+        notes,
+        score,
+        created_at,
+        updated_at
+      FROM contacts
+      WHERE id = $1
+      LIMIT 1
+      `,
+        [conversationContactId],
+      );
+
+      contact = contactRows[0] || null;
+    }
+
+    // 6. Lấy Property
     let property: any = null;
 
-    const propertyId = leadRows[0]?.property_id || conversationPropertyId;
+    const propertyId = lead?.property_id || conversationPropertyId;
 
     if (propertyId) {
       const { rows: propertyRows } = await this.db.query(
         `
-    SELECT
-      id,
-      title,
-      city,
-      state,
-      price,
-      type,
-      status,
-      bedrooms,
-      bathrooms,
-      square_feet,
-      property_type,
-      listing_type
-    FROM properties
-    WHERE id = $1
-    LIMIT 1
-    `,
+      SELECT
+        id,
+        title,
+        city,
+        state,
+        price,
+        type,
+        status,
+        bedrooms,
+        bathrooms,
+        square_feet,
+        property_type,
+        listing_type
+      FROM properties
+      WHERE id = $1
+      LIMIT 1
+      `,
         [propertyId],
       );
 
       property = propertyRows[0] || null;
     }
 
+    // 7. Lấy 30 messages gần nhất
     const { rows: messageRows } = await this.db.query(
       `
     SELECT
@@ -1036,9 +1139,11 @@ export class WhatsAppQrConversationService {
 
     const messages = messageRows.reverse();
 
+    // 8. Context gửi cho OpenAI
     const context = {
       conversation: conv,
-      lead: leadRows[0] || null,
+      lead,
+      contact,
       property,
       messages,
     };
@@ -1081,7 +1186,12 @@ Rules:
         input: [
           {
             role: "system",
-            content: [{ type: "input_text", text: systemPrompt }],
+            content: [
+              {
+                type: "input_text",
+                text: systemPrompt,
+              },
+            ],
           },
           {
             role: "user",
@@ -1098,15 +1208,29 @@ Rules:
       const parsed = JSON.parse(response.output_text || "{}");
 
       return {
-        lead: {
-          id: leadRows[0]?.id ?? null,
-          name: leadRows[0]?.name ?? null,
-          phone: leadRows[0]?.phone ?? null,
-          email: leadRows[0]?.email ?? null,
-          status: leadRows[0]?.status ?? null,
-          priority: leadRows[0]?.priority ?? null,
-          source: leadRows[0]?.source ?? null,
-        },
+        lead: lead
+          ? {
+              id: lead.id,
+              name: lead.name,
+              phone: lead.phone,
+              email: lead.email,
+              status: lead.status,
+              priority: lead.priority,
+              source: lead.source,
+            }
+          : null,
+
+        contact: contact
+          ? {
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              type: contact.type,
+              status: contact.status,
+              source: contact.source,
+            }
+          : null,
 
         property: property
           ? {
@@ -1118,6 +1242,7 @@ Rules:
               type: property.type,
             }
           : null,
+
         score: Number(parsed.score || 0),
         sentiment: parsed.sentiment || "Unknown",
         intent: parsed.intent || "Unknown",
@@ -1144,15 +1269,29 @@ Rules:
       });
 
       return {
-        lead: {
-          id: leadRows[0]?.id ?? null,
-          name: leadRows[0]?.name ?? null,
-          phone: leadRows[0]?.phone ?? null,
-          email: leadRows[0]?.email ?? null,
-          status: leadRows[0]?.status ?? null,
-          priority: leadRows[0]?.priority ?? null,
-          source: leadRows[0]?.source ?? null,
-        },
+        lead: lead
+          ? {
+              id: lead.id,
+              name: lead.name,
+              phone: lead.phone,
+              email: lead.email,
+              status: lead.status,
+              priority: lead.priority,
+              source: lead.source,
+            }
+          : null,
+
+        contact: contact
+          ? {
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              type: contact.type,
+              status: contact.status,
+              source: contact.source,
+            }
+          : null,
 
         property: property
           ? {
@@ -1164,6 +1303,7 @@ Rules:
               type: property.type,
             }
           : null,
+
         score: fallbackScore,
         sentiment: fallbackScore >= 60 ? "Positive" : "Neutral",
         intent:
