@@ -1834,7 +1834,7 @@ i{
   margin-left: 15px;
  }
   #cortexa-ai-crm-landing .footer-brand .underCTA{
-  margin-left: 5px;
+  margin-left: 35px;
  }
  #cortexa-ai-crm-landing .hero-checks .check svg {
     fill: #fff;
@@ -2393,7 +2393,9 @@ i{
  #cortexa-ai-crm-landing .footer-final .footer-brand p {
    color: #666;
    margin-bottom: 20px;
-   line-height: 1.6
+   line-height: 1.6;
+   font-size: 17px;
+   margin-top: 10px;
  }
 
  .footer-final .btn-primary {
@@ -3953,6 +3955,13 @@ i{
 }
 .cx-strip i{
     color: #555;
+}
+.footer-brand .btn-primary{
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  width: 250px;
 }
  @media (max-width: 1200px) {
 

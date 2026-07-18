@@ -95,7 +95,6 @@ const t = {
     plansBadgePopular: "MOST POPULAR",
     plansBtnTrial: "Start My Free Trial",
     plansFeeNote: "One-time setup fee: $97",
-    plansinclude: "Everything included",
     plansPerMonth: "/month",
     plansData: {
       solo: {
@@ -388,7 +387,6 @@ const t = {
     plansBadgePopular: "MÁS POPULAR",
     plansBtnTrial: "Iniciar Mi Prueba Gratuita",
     plansFeeNote: "Tarifa única de configuración: $97",
-    plansinclude: "Todo incluido",
     plansPerMonth: "/mes",
     plansData: {
       solo: {
@@ -694,7 +692,6 @@ const t = {
     plansBadgePopular: "MAIS POPULAR",
     plansBtnTrial: "Iniciar Meu Teste Gratuito",
     plansFeeNote: "Taxa única de configuração: $97",
-    plansinclude: "Tudo incluído",
     plansPerMonth: "/mês",
     plansData: {
       solo: {
@@ -975,180 +972,7 @@ export default function PricingPage() {
   };
   return (
     <div className="pricing-page">
-      {isMobile ? (
-        <header className="m-header">
-          <div className="m-logo-block">
-            <a href="/">
-              <img src={headlogoM} alt="Cortexa" className="cx-logo-img" />
-            </a>
-          </div>
-
-          <div className="m-header-right">
-            <div className="m-lang-wrapper">
-              <button
-                type="button"
-                className="m-lang-btn"
-                onClick={() => setLangOpen(!langOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  textTransform: "uppercase",
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="100%"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="img-local"
-                >
-                  <path
-                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M2 12H22M12 2C9.43223 4.69615 8 8.27674 8 12C8 15.7233 9.43223 19.3038 12 22C14.5678 19.3038 16 15.7233 16 12C16 8.27674 14.5678 4.69615 12 2Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-
-              {langOpen && (
-                <div className="m-lang-dropdown">
-                  <button type="button" onClick={() => handleLangChange("en")}>
-                    English
-                  </button>
-                  <button type="button" onClick={() => handleLangChange("es")}>
-                    Español
-                  </button>
-                  <button type="button" onClick={() => handleLangChange("pt")}>
-                    Português
-                  </button>
-                </div>
-              )}
-            </div>
-            <button className="m-menu-btn" onClick={() => setMenuOpen(true)}>
-              <Menu size={26} color="#ffffff" />
-            </button>
-          </div>
-        </header>
-      ) : (
-        <header className="header">
-          <div className="header-inner">
-            <div className="logo">
-              <a href="/">
-                <img src={headlogo} alt="Cortexa" className="cx-logo-img" />
-              </a>
-            </div>
-            <nav className="nav">
-              <HashLink smooth to="/features">
-                {tr.nav.features}
-              </HashLink>
-              <a href="/pricing" className="active">
-                {tr.nav.pricing}
-              </a>
-              <a href="/about">{tr.nav.about}</a>
-              <a href="/contact">{tr.nav.contact}</a>
-            </nav>
-            <div className="actions">
-              <a href="/sign-in" className="login-link">
-                {tr.nav.login}
-              </a>
-              <div className="lang-wrapper">
-                <div
-                  className="lang-toggle"
-                  onClick={() => setLangOpen(!langOpen)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="100%"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="img-local"
-                  >
-                    <path
-                      d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <path
-                      d="M2 12H22M12 2C9.43223 4.69615 8 8.27674 8 12C8 15.7233 9.43223 19.3038 12 22C14.5678 19.3038 16 15.7233 16 12C16 8.27674 14.5678 4.69615 12 2Z"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                {langOpen && (
-                  <div className="lang-dropdown">
-                    <div
-                      className="lang-item"
-                      onClick={() => handleLangChange("en")}
-                    >
-                      English
-                    </div>
-                    <div
-                      className="lang-item"
-                      onClick={() => handleLangChange("es")}
-                    >
-                      Español
-                    </div>
-                    <div
-                      className="lang-item"
-                      onClick={() => handleLangChange("pt")}
-                    >
-                      Português
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-      )}
-      {/* ================= MOBILE NAVIGATION DRAWER ================= */}
-      {isMobile && (
-        <div className={`m-drawer ${menuOpen ? "open" : ""}`}>
-          <div className="m-drawer-top">
-            <div className="m-logo-block">
-              <img src={headlogoM} alt="Cortexa" className="cx-logo-img" />
-            </div>
-            <button className="m-close" onClick={() => setMenuOpen(false)}>
-              <X size={24} color="#ffffff" />
-            </button>
-          </div>
-
-          <div className="m-drawer-nav" onClick={() => setMenuOpen(false)}>
-            <HashLink className="nav-menu" smooth to="/features">
-              {tr.nav.features}
-            </HashLink>
-            <a href="/pricing" className="active">
-              {tr.nav.pricing}
-            </a>
-            <a href="/about">{tr.nav.about}</a>
-            <a href="/contact">{tr.nav.contact}</a>
-          </div>
-
-          <div className="m-drawer-actions">
-            <a href="/trial" className="m-trial-btn">
-              {tr.nav.trial}
-            </a>
-            <a className="m-login-btn" href="/sign-in">
-              {tr.nav.login}
-            </a>
-          </div>
-        </div>
-      )}
+     
       <main className="main-content">
         <section className="cx-pricing cx-center">
           <div className="cx-pricing-header">
@@ -1211,7 +1035,6 @@ export default function PricingPage() {
               >
                 {tr.plansFeeNote}
               </p>
-              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.solo.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1252,7 +1075,6 @@ export default function PricingPage() {
               >
                 {tr.plansFeeNote}
               </p>
-              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.team.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1292,7 +1114,6 @@ export default function PricingPage() {
               >
                 {tr.plansFeeNote}
               </p>
-              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.growth.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1429,152 +1250,6 @@ export default function PricingPage() {
         </div>
       </main>
 
-      <footer className="footer-section">
-        <div className="footer-inner-wrap">
-          <div className="footer-main-grid">
-            {isMobile ? (
-              <div className="footer-brand-column">
-                <img
-                  src={headlogoM}
-                  alt="Cortexa"
-                  className="footer-logo-img"
-                />
-                <p className="footer-brand-desc">{tr.footer.desc}</p>
-                <div className="footer-social-row">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
-                  </svg>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                  </svg>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                  </svg>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                  </svg>
-                </div>
-              </div>
-            ) : (
-              <div className="footer-brand-column">
-                <img src={headlogo} alt="Cortexa" className="footer-logo-img" />
-                <p className="footer-brand-desc">{tr.footer.desc}</p>
-                <div className="footer-social-row">
-                  <img src={social1} alt="Social" />
-                  <img src={social2} alt="Social" />
-                  <img src={social3} alt="Social" />
-                  <img src={social4} alt="Social" />
-                </div>
-              </div>
-            )}
-
-            <div className="footer-links-column">
-              <h3>{tr.footer.col1}</h3>
-              <ul>
-                <li>
-                  <HashLink smooth to="/features">
-                    {tr.footer.col1_items[0]}
-                  </HashLink>
-                </li>
-                <li>
-                  <a href="/pricing">{tr.footer.col1_items[1]}</a>
-                </li>
-                <li>
-                  <a href="/integrations">{tr.footer.col1_items[2]}</a>
-                </li>
-                <li>
-                  <a href="/changelog">{tr.footer.col1_items[3]}</a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-links-column">
-              <h3>{tr.footer.col2}</h3>
-              <ul>
-                <li>
-                  <a href="/about">{tr.footer.col2_items[0]}</a>
-                </li>
-                <li>
-                  <a href="/blog">{tr.footer.col2_items[1]}</a>
-                </li>
-                <li>
-                  <a href="/careers">{tr.footer.col2_items[2]}</a>
-                </li>
-                <li>
-                  <a href="/contact">{tr.footer.col2_items[3]}</a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-links-column">
-              <h3>{tr.footer.col3}</h3>
-              <ul>
-                <li>
-                  <a href="/help">{tr.footer.col3_items[0]}</a>
-                </li>
-                <li>
-                  <a href="/guides">{tr.footer.col3_items[1]}</a>
-                </li>
-                <li>
-                  <a href="/community">{tr.footer.col3_items[2]}</a>
-                </li>
-                <li>
-                  <a href="/api-docs">{tr.footer.col3_items[3]}</a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="footer-links-column">
-              <h3>{tr.footer.col4}</h3>
-              <ul>
-                <li>
-                  <a href="/terms">{tr.footer.col4_items[0]}</a>
-                </li>
-                <li>
-                  <a href="/privacy">{tr.footer.col4_items[1]}</a>
-                </li>
-                <li>
-                  <a href="/refund">{tr.footer.col4_items[2]}</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="footer-copyright-bar">
-            <p>&copy; 2026 Cortexa. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

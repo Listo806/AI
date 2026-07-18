@@ -57,6 +57,7 @@ import {
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
 
+import footdarklogo from "../../assets/cortexa/footlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 import CountriesCitiesSection from "./CountriesCitiesSection";
 import herorightImg from "../../assets/cortexa/hero_right.png";
@@ -567,8 +568,7 @@ export default function Landing() {
       finalDesc:
         "CORTEXA captures leads, automates follow-ups, updates your pipeline, and keeps your team moving — so you can focus on closing deals",
      
-      footerDescription:
-        "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals — faster.",
+      footerDescription: "AI Leads.   AI Qualifies.  AI CLoses.",
 
       startFreeTrial: "Get Started",
       startYourFreeTrial: "Start Your Free Trial →",
@@ -1107,8 +1107,7 @@ export default function Landing() {
       finalDesc:
         "A CORTEXA captura leads, automatiza acompanhamentos, atualiza seu pipeline e mantém sua equipe em movimento, para que você possa se concentrar em fechar mais negócios",
 
-      footerDescription:
-        "El CRM impulsado por IA que te ayuda a captar clientes potenciales, automatizar seguimientos y cerrar más negocios más rápido.",
+      footerDescription: "AI Leads. AI Califica. AI Cierra.",
 
       startFreeTrial: "Comenzar",
       startYourFreeTrial: "Comienza Tu Prueba Gratis →",
@@ -1646,8 +1645,7 @@ export default function Landing() {
       finalDesc:
         "Capture mais leads, automatize acompanhamentos e feche mais negócios com automação impulsionada por IA.",
 
-      footerDescription:
-        "O CRM com IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.",
+      footerDescription: "IA Gera Leads. IA Qualifica. IA Fecha.",
 
       startFreeTrial: "Começar",
       startYourFreeTrial: "Comece Seu Teste Grátis →",
@@ -2867,11 +2865,12 @@ export default function Landing() {
 
             <div className="footer-grid footer-landing">
               <div className="footer-brand">
-                <img src={headlogotranImg} alt="Cortexa" className="landing-logo" />
+                <img src={footdarklogo} alt="Cortexa" className="landing-logo" />
 
                 <p>{tr.footerDescription}</p>
 
                 <a href="/trial" className="btn-primary">
+                  <Zap size={18} /> 
                   {tr.startYourFreeTrial}
                 </a>
                 <p className="underCTA">{tr.underCTA}</p>
