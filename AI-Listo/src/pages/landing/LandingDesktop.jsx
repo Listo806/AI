@@ -52,7 +52,12 @@ import {
   Contact2,
   Users2,
   Puzzle,
-  CheckCircle2, Link2, Check, Grid, ChevronRight, CircleDollarSign,
+  CheckCircle2,
+  Link2,
+  Check,
+  Grid,
+  ChevronRight,
+  CircleDollarSign,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -206,7 +211,8 @@ export default function Landing() {
       trustSectionTitlePost: "Built to Grow Revenue.",
       trustSectionSub:
         "One connected platform. Every feature works together to help you capture more leads, close more deals, and ",
-      trustSectionSub1: "Follow up with every lead automatically, so none slip through ",
+      trustSectionSub1:
+        "Follow up with every lead automatically, so none slip through ",
       trustSectionSub2: "— while ",
       trustSectionSub3: " keeping more capital in your business.",
 
@@ -410,16 +416,16 @@ export default function Landing() {
       roiSub:
         "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
       roiBtn: "Get Started",
-      
+
       roiStat1Desc:
         "CORTEXA transforms your lead handling into a revenue engine — automating follow-ups and deal flow to generate more closed deals.",
-      
+
       roiStat2Desc:
         "More conversations. Faster responses. Zero missed leads — turning your pipeline into predictable revenue.",
-      
+
       roiStat3Desc:
         "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
-      
+
       roiStat4Desc:
         "Designed to help you recover your investment quickly by capturing deals that would otherwise be lost.",
 
@@ -500,8 +506,7 @@ export default function Landing() {
       heroTitleLine4: "with AI.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
-      herotextabove:
-        "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
+      herotextabove: "AI finds. AI qualifies. AI follows up. You close.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
       heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
@@ -565,9 +570,9 @@ export default function Landing() {
       pricing: "Pricing",
 
       finalTitle: "Automate Your Entire Workflow",
-      finalDesc:
-        "CORTEXA captures leads, automates follow-ups, updates your pipeline, and keeps your team moving — so you can focus on closing deals",
-     
+      finalDesc: "AI Leads. AI Qualifies. AI Closes. All in your",
+      finalDesc1: "Revenue OS",
+
       footerDescription: "AI Leads.   AI Qualifies.  AI CLoses.",
 
       startFreeTrial: "Get Started",
@@ -614,11 +619,9 @@ export default function Landing() {
       heroTitlePre: "Built to ",
       heroTitleActive: "Grow Revenue",
       heroTitlePost: " — Not Manage Software.",
-      heroDescPre:
-        "Most platforms piece together separate tools for AI, CRM, marketing, reporting, automation, communication, and data — ",
-      heroDescActive: "We bring it all into one connected workspace",
-      heroDescPost:
-        " so your team can capture leads, qualify prospects, automate follow-ups, manage pipelines, book appointments, track performance, and close more deals.",
+      heroDescPre: "Leads.",
+      heroDescPre1: "Qualifies.",
+      heroDescPre2: "Closes.",
       nodeLeadsTitle: "LEADS",
       nodeLeadsSub: "Capture & Qualify",
       nodeContactsTitle: "CONTACTS",
@@ -656,7 +659,8 @@ export default function Landing() {
       rightStat1Title: "",
       rightStat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      rightStat1Desc1: "Run your leads, follow-ups, and pipeline in one connected workspace.",
+      rightStat1Desc1:
+        "Run your leads, follow-ups, and pipeline in one connected workspace.",
       rightStat2Up: "UP TO",
       rightStat2Title: "",
       vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
@@ -672,18 +676,22 @@ export default function Landing() {
       rightBenefit3: "One connected workspace",
       rightBenefit4: "Faster implementation",
       rightBenefit5: "Transparent pricing. No surprises.",
+      listo1: "Very Low Entry Fee",
 
       badge: "Powerful Integrations",
       titlePre: "Works with ",
       titleActive: "tools you already use",
-      subtitlePre: "Bring your leads, messages, calendars, tasks, files, and workflows ",
+      subtitlePre:
+        "Bring your leads, messages, calendars, tasks, files, and workflows ",
       subtitlePost: "into Cortexa and let AI handle the busy work.",
       feature1: "Sync in minutes",
       feature2: "Automate workflows",
       feature3: "Save time every day",
       feature4: "Keep your team aligned",
-      footerTextPre: "Connect your apps, import your data, and automate your workflow inside Cortexa.",
-      footerTextPost: "Manage everything from one place in Apps & Integrations.",
+      footerTextPre:
+        "Connect your apps, import your data, and automate your workflow inside Cortexa.",
+      footerTextPost:
+        "Manage everything from one place in Apps & Integrations.",
       btnText: "See Integrations",
 
       workspacelang1: "Team",
@@ -736,7 +744,8 @@ export default function Landing() {
       trustSectionTitlePost: "Creado para aumentar los ingresos.",
       trustSectionSub:
         "Una plataforma conectada. Todas las funciones trabajan juntas para ayudarte a captar más leads, cerrar más negocios y ",
-      trustSectionSub1: "Haz seguimiento automático de cada cliente potencial para que ninguno se pierda ",
+      trustSectionSub1:
+        "Haz seguimiento automático de cada cliente potencial para que ninguno se pierda ",
       trustSectionSub2: "— mientras ",
       trustSectionSub3: "mantienes más capital dentro de tu empresa.",
       trustFeatures: {
@@ -909,7 +918,7 @@ export default function Landing() {
       aipointTitle3: "Reserva automática",
       aipointText3: "Citas programadas sin idas y venidas.",
       aialt: "IA que gestiona conversaciones y agenda citas automáticamente",
-      
+
       beTitle: "Lo que esto realmente hace por ti",
       besubTitle:
         "La automatización hace el trabajo. La comunicación nunca se detiene. Cada lead sigue avanzando — sin que tengas que perseguirlo.",
@@ -948,16 +957,16 @@ export default function Landing() {
       roiSub:
         "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
       roiBtn: "Comenzar",
-      
+
       roiStat1Desc:
         "CORTEXA transforma la gestión de tus leads en un motor de ingresos — automatizando seguimientos y el flujo de ventas para generar más cierres.",
-      
+
       roiStat2Desc:
         "Más conversaciones. Respuestas más rápidas. Cero leads perdidos — convirtiendo tu pipeline en ingresos predecibles.",
-      
+
       roiStat3Desc:
         "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
-      
+
       roiStat4Desc:
         "Diseñado para ayudarte a recuperar tu inversión rápidamente al capturar acuerdos que de otro modo se perderían.",
 
@@ -1039,7 +1048,7 @@ export default function Landing() {
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
       herotextabove:
-        "Plataforma de IA todo en uno que te ayuda a captar más clientes potenciales, dar seguimiento al instante, cerrar más ventas y aumentar los ingresos en piloto automático.",
+        "La IA encuentra. La IA califica. La IA hace seguimiento. Tú cierras.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
       heroCheck6:
         "Tu agente de IA encuentra, captura y califica leads automáticamente.",
@@ -1105,7 +1114,8 @@ export default function Landing() {
 
       finalTitle: "Automatize todo o seu fluxo de trabalho",
       finalDesc:
-        "A CORTEXA captura leads, automatiza acompanhamentos, atualiza seu pipeline e mantém sua equipe em movimento, para que você possa se concentrar em fechar mais negócios",
+        "La IA genera clientes potenciales. La IA califica. La IA cierra. Todo en tu ",
+      finalDesc1: "Revenue OS",
 
       footerDescription: "AI Leads. AI Califica. AI Cierra.",
 
@@ -1153,11 +1163,9 @@ export default function Landing() {
       heroTitlePre: "Creado para ",
       heroTitleActive: "Aumentar Ingresos",
       heroTitlePost: " — No para Administrar Software.",
-      heroDescPre:
-        "La mayoría de las plataformas combinan herramientas separadas para IA, CRM, marketing, informes, automatización, comunicación y datos — ",
-      heroDescActive: "Lo traemos todo en un espacio de trabajo conectado",
-      heroDescPost:
-        " para que su equipo pueda captar leads, calificar prospectos, automatizar seguimientos, gestionar pipelines, programar citas, realizar un seguimiento del rendimiento y cerrar más tratos.",
+      heroDescPre: "Clientes potenciales.",
+      heroDescPre1: "Califica.",
+      heroDescPre2: "Cierra.",
       nodeLeadsTitle: "CLIENTES POTENCIALES",
       nodeLeadsSub: "Capturar y Calificar",
       nodeContactsTitle: "CONTACTOS",
@@ -1189,13 +1197,16 @@ export default function Landing() {
       nodeCommunicationSub: "Email, SMS, Llamadas",
       nodeIntegrationsTitle: "INTEGRACIONES",
       nodeIntegrationsSub: "Conecta tus Herramientas",
-      rightStat1Up: "REALIZA UN SEGUIMIENTO AUTOMÁTICO DE CADA CLIENTE POTENCIAL",
-      rightStat1Up1: "UN ESPACIO DE TRABAJO CONECTADO CREADO PARA PROFESIONALES INMOBILIARIOS",
+      rightStat1Up:
+        "REALIZA UN SEGUIMIENTO AUTOMÁTICO DE CADA CLIENTE POTENCIAL",
+      rightStat1Up1:
+        "UN ESPACIO DE TRABAJO CONECTADO CREADO PARA PROFESIONALES INMOBILIARIOS",
       rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      rightStat1Desc1: "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
+      rightStat1Desc1:
+        "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
       rightStat2Up: "HASTA",
       rightStat2Title: "",
       vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
@@ -1211,18 +1222,23 @@ export default function Landing() {
       rightBenefit3: "Un espacio de trabajo conectado",
       rightBenefit4: "Implementación más rápida",
       rightBenefit5: "Precios transparentes. Sin sorpresas.",
+      listo1: "Tarifa de entrada muy baja",
 
       badge: "Integraciones Potentes",
       titlePre: "Funciona con las ",
       titleActive: "herramientas que ya usas",
-      subtitlePre: "Lleva tus leads, mensajes, calendarios, tareas, archivos y flujos de trabajo ",
-      subtitlePost: "a Cortexa y deja que la IA se encargue del trabajo pesado.",
+      subtitlePre:
+        "Lleva tus leads, mensajes, calendarios, tareas, archivos y flujos de trabajo ",
+      subtitlePost:
+        "a Cortexa y deja que la IA se encargue del trabajo pesado.",
       feature1: "Sincroniza en minutos",
       feature2: "Automatiza flujos de trabajo",
       feature3: "Ahorra tiempo cada día",
       feature4: "Mantén a tu equipo alineado",
-      footerTextPre: "Conecta tus apps, importa tus datos y automatiza tu flujo de trabajo dentro de Cortexa.",
-      footerTextPost: "Gestiona todo desde un solo lugar en Apps e Integraciones.",
+      footerTextPre:
+        "Conecta tus apps, importa tus datos y automatiza tu flujo de trabajo dentro de Cortexa.",
+      footerTextPost:
+        "Gestiona todo desde un solo lugar en Apps e Integraciones.",
       btnText: "Ver Integraciones",
 
       workspacelang1: "Equipo",
@@ -1273,7 +1289,8 @@ export default function Landing() {
       trustSectionTitlePost: "Feito para Aumentar a Receita.",
       trustSectionSub:
         "Uma plataforma conectada. Todos os recursos trabalham juntos para ajudar você a captar mais leads, fechar mais negócios e ",
-      trustSectionSub1: "Acompanhe automaticamente cada lead para que nenhum seja perdido ",
+      trustSectionSub1:
+        "Acompanhe automaticamente cada lead para que nenhum seja perdido ",
       trustSectionSub2: "— enquanto ",
       trustSectionSub3: "mantém mais capital dentro da sua empresa.",
       trustFeatures: {
@@ -1482,16 +1499,16 @@ export default function Landing() {
       roiSub:
         "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
       roiBtn: "Começar",
-      
+
       roiStat1Desc:
         "O CORTEXA transforma a gestão de leads em um motor de receita — automatizando follow-ups e o fluxo de vendas para gerar mais fechamentos.",
-      
+
       roiStat2Desc:
         "Mais conversas. Respostas mais rápidas. Zero leads perdidos — transformando seu pipeline em receita previsível.",
-      
+
       roiStat3Desc:
         "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
-      
+
       roiStat4Desc:
         "Projetado para ajudar você a recuperar seu investimento rapidamente ao capturar negócios que de outra forma seriam perdidos.",
 
@@ -1574,7 +1591,7 @@ export default function Landing() {
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
       herotextabove:
-        "Plataforma de IA tudo-em-um que ajuda você a captar mais leads, fazer o acompanhamento instantaneamente, fechar mais negócios e aumentar a receita no piloto automático.",
+        "A IA encontra. A IA qualifica. A IA faz o acompanhamento. Você fecha.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
       heroCheck6:
         "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
@@ -1642,8 +1659,8 @@ export default function Landing() {
       pricing: "Preços",
 
       finalTitle: "Comece a crescer com IA hoje",
-      finalDesc:
-        "Capture mais leads, automatize acompanhamentos e feche mais negócios com automação impulsionada por IA.",
+      finalDesc: "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
+      finalDesc1: "Revenue OS",
 
       footerDescription: "IA Gera Leads. IA Qualifica. IA Fecha.",
 
@@ -1691,11 +1708,9 @@ export default function Landing() {
       heroTitlePre: "Feito para ",
       heroTitleActive: "Aumentar a Receita",
       heroTitlePost: " — Não para Gerenciar Software.",
-      heroDescPre:
-        "A maioria das plataformas reúne ferramentas separadas para IA, CRM, marketing, relatórios, automação, comunicação e dados — ",
-      heroDescActive: "Nós trazemos tudo para um espaço de trabalho conectado",
-      heroDescPost:
-        " para que sua equipe possa capturar leads, qualificar prospects, automatizar acompanhamentos, gerenciar pipelines, agendar compromissos, acompanhar o desempenho e fechar mais negócios.",
+      heroDescPre: "Leads.",
+      heroDescPre1: "Qualifica.",
+      heroDescPre2: "Fecha.",
       nodeLeadsTitle: "LEADS",
       nodeLeadsSub: "Capturar e Qualificar",
       nodeContactsTitle: "CONTATOS",
@@ -1728,12 +1743,14 @@ export default function Landing() {
       nodeIntegrationsTitle: "INTEGRAÇÕES",
       nodeIntegrationsSub: "Conecte Suas Ferramentas",
       rightStat1Up: "FAÇA O ACOMPANHAMENTO AUTOMÁTICO DE CADA LEAD",
-      rightStat1Up1: "UM ESPAÇO DE TRABALHO INTEGRADO CRIADO PARA PROFISSIONAIS DO MERCADO IMOBILIÁRIO",
+      rightStat1Up1:
+        "UM ESPAÇO DE TRABALHO INTEGRADO CRIADO PARA PROFISSIONAIS DO MERCADO IMOBILIÁRIO",
       rightStat1Main: "",
       rightStat1Title: "",
       rightStat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      rightStat1Desc1: "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
+      rightStat1Desc1:
+        "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
       rightStat2Up: "ATÉ",
       rightStat2Title: "",
       vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
@@ -1749,17 +1766,20 @@ export default function Landing() {
       rightBenefit3: "Um espaço de trabalho conectado",
       rightBenefit4: "Implementação mais rápida",
       rightBenefit5: "Preços transparentes. Sem surpresas.",
+      listo1: "Taxa de entrada muito baixa",
 
       badge: "Integrações Poderosas",
       titlePre: "Funciona com as ",
       titleActive: "ferramentas que você já usa",
-      subtitlePre: "Traga seus leads, mensagens, calendários, tarefas, arquivos e fluxos de trabalho ",
+      subtitlePre:
+        "Traga seus leads, mensagens, calendários, tarefas, arquivos e fluxos de trabalho ",
       subtitlePost: "para o Cortexa e deixe a IA cuidar do trabalho pesado.",
       feature1: "Sincronize em minutos",
       feature2: "Automatize fluxos de trabalho",
       feature3: "Economize tempo todos os dias",
       feature4: "Mantenha sua equipe alinhada",
-      footerTextPre: "Conecte seus apps, importe seus dados e automatize seu fluxo de trabalho dentro do Cortexa.",
+      footerTextPre:
+        "Conecte seus apps, importe seus dados e automatize seu fluxo de trabalho dentro do Cortexa.",
       footerTextPost: "Gerencie tudo em um só lugar em Apps e Integrações.",
       btnText: "Ver Integrações",
 
@@ -1795,9 +1815,13 @@ export default function Landing() {
 
   const currentaiSetterImg =
     lang === "es" ? aiSetterImgES : lang === "pt" ? aiSetterImgPT : aiSetterImg;
-  workspaceImg  
+  workspaceImg;
   const workspace =
-    lang === "es" ? workspaceImgES : lang === "pt" ? workspaceImgPT : workspaceImg;
+    lang === "es"
+      ? workspaceImgES
+      : lang === "pt"
+        ? workspaceImgPT
+        : workspaceImg;
   const currenttestimonialsImg =
     lang === "es"
       ? testimonialsImgES
@@ -1998,14 +2022,16 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              
             </div>
           </div>
 
           <div className="hero-right">
             <div className="hero-image">
               <img src={herorightImg} />
-              <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+              <i>
+                Product demo — the names, numbers, and activity shown are sample
+                data for illustration only, not real customer results.
+              </i>
             </div>
           </div>
         </div>
@@ -2049,37 +2075,15 @@ export default function Landing() {
             {tr.heroTitlePost}
           </h2>
           <p className="cx-feat-sub-title">
-            {tr.heroDescPre}
-            <span className="cx-feat-blue-dark-text">{tr.heroDescActive}</span>
-            {tr.heroDescPost}
+            <span className="text-os">AI </span> {tr.heroDescPre}
+            <span className="text-os"> AI </span> {tr.heroDescPre1}
+            <span className="text-os"> AI </span> {tr.heroDescPre2}
           </p>
         </div>
 
         <div className="cx-feat-main-grid">
           <div className="cx-feat-diagram-area">
             <img src={featurechartImg} alt="diagram" />
-          </div>
-
-          <div className="cx-feat-stats-sidebar">
-            <div className="cx-sidebar-stat-block-top">
-              <div className="cx-stat-up-wrap">
-                <span className="svg"><Target size={24} /></span>
-                <span className="cx-stat-up-tag">{tr.rightStat1Up}</span>
-              </div>
-              <h4 className="cx-stat-title-label"></h4>
-              <div className="cx-stat-blue-bar"></div>
-              <p className="cx-stat-description-text">{tr.rightStat1Desc}</p>
-            </div>
-
-            <div className="cx-sidebar-stat-block-top">
-              <div className="cx-stat-up-wrap">
-                <span className="svg"><CircleDollarSign size={24} /></span>
-                <span className="cx-stat-up-tag">{tr.rightStat1Up1}</span>
-              </div>
-              <h4 className="cx-stat-title-label"></h4>
-              <div className="cx-stat-blue-bar"></div>
-              <p className="cx-stat-description-text">{tr.rightStat1Desc1}</p>
-            </div>
           </div>
         </div>
         <div className="cx-feat-wrap">
@@ -2095,7 +2099,6 @@ export default function Landing() {
                     <XCircle className="cx-li-icon icon-red-small" size={18} />
                     <span>{tr.leftCost1}</span>
                   </div>
-                  <strong className="cx-cost-high">more expensive</strong>
                 </li>
                 <li>
                   <div className="cx-list-item-content">
@@ -2139,67 +2142,77 @@ export default function Landing() {
                 />
                 <h5>{tr.vsTitleRight}</h5>
               </div>
-              <ul className="cx-comp-list">
-                <li>
-                  <div className="cx-list-item-content">
-                    <CheckCircle2
-                      className="cx-li-icon icon-blue-small"
-                      size={18}
-                    />
-                    <span>{tr.rightBenefit1}</span>
+              <div className="cx-comp-right-wrap">
+                <ul className="cx-comp-list">
+                  <li>
+                    <div className="cx-list-item-content">
+                      <CheckCircle2
+                        className="cx-li-icon icon-blue-small"
+                        size={18}
+                      />
+                      <span>{tr.rightBenefit1}</span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="cx-list-item-content">
+                      <CheckCircle2
+                        className="cx-li-icon icon-blue-small"
+                        size={18}
+                      />
+                      <span>{tr.rightBenefit2}</span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="cx-list-item-content">
+                      <CheckCircle2
+                        className="cx-li-icon icon-blue-small"
+                        size={18}
+                      />
+                      <span>{tr.rightBenefit3}</span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="cx-list-item-content">
+                      <CheckCircle2
+                        className="cx-li-icon icon-blue-small"
+                        size={18}
+                      />
+                      <span>{tr.rightBenefit4}</span>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="cx-list-item-content">
+                      <CheckCircle2
+                        className="cx-li-icon icon-blue-small"
+                        size={18}
+                      />
+                      <span>{tr.rightBenefit5}</span>
+                    </div>
+                  </li>
+                </ul>
+                <div className="cx-listo-right">
+                  <div className="cx-listo-right-inner">
+                    <Sparkles />
+                    <span>{tr.listo1}</span>
                   </div>
-                  <strong className="cx-cost-low">$97</strong>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <CheckCircle2
-                      className="cx-li-icon icon-blue-small"
-                      size={18}
-                    />
-                    <span>{tr.rightBenefit2}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <CheckCircle2
-                      className="cx-li-icon icon-blue-small"
-                      size={18}
-                    />
-                    <span>{tr.rightBenefit3}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <CheckCircle2
-                      className="cx-li-icon icon-blue-small"
-                      size={18}
-                    />
-                    <span>{tr.rightBenefit4}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <CheckCircle2
-                      className="cx-li-icon icon-blue-small"
-                      size={18}
-                    />
-                    <span>{tr.rightBenefit5}</span>
-                  </div>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
       <section id="analytics" className="cx-hero pt-50">
         <img src={currentSec2} alt="" />
-        <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+        <i>
+          Product demo — the names, numbers, and activity shown are sample data
+          for illustration only, not real customer results.
+        </i>
       </section>
       <section id="workspace">
         <div className="aios-container">
-        <img src={workspace} alt="workspace" />         
+          <img src={workspace} alt="workspace" />
         </div>
-      </section>              
+      </section>
       <section id="whatsapp" className="cx-hero pt-50">
         <img src={currentSec3} alt="" />
       </section>
@@ -2409,7 +2422,18 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <i style={{ display: "block", fontSize: "12px", opacity: 0.65, marginTop: "16px", textAlign: "center" }}>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+          <i
+            style={{
+              display: "block",
+              fontSize: "12px",
+              opacity: 0.65,
+              marginTop: "16px",
+              textAlign: "center",
+            }}
+          >
+            Product demo — the names, numbers, and activity shown are sample
+            data for illustration only, not real customer results.
+          </i>
         </div>
       </section>
       <section className="how-section">
@@ -2454,7 +2478,6 @@ export default function Landing() {
       </section>
       <section className="powerful">
         <div className="cx-pwr-container">
-          
           <div className="cx-pwr-badge-box">
             <div className="cx-pwr-badge">
               <Link2 size={14} />
@@ -2463,43 +2486,54 @@ export default function Landing() {
           </div>
 
           <h2 className="cx-pwr-title">
-            {tr.titlePre}<span>{tr.titleActive}</span>
+            {tr.titlePre}
+            <span>{tr.titleActive}</span>
           </h2>
 
           <p className="cx-pwr-subtitle">
-            {tr.subtitlePre}<strong>{tr.subtitlePost}</strong>
+            {tr.subtitlePre}
+            <strong>{tr.subtitlePost}</strong>
           </p>
 
           <div className="cx-pwr-features-line">
             <div className="cx-pwr-f-item">
-              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <div className="cx-mini-tick">
+                <Check size={14} className="cx-pwr-check" />
+              </div>
               <span>{tr.feature1}</span>
             </div>
             <div className="cx-pwr-f-divider"></div>
             <div className="cx-pwr-f-item">
-              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <div className="cx-mini-tick">
+                <Check size={14} className="cx-pwr-check" />
+              </div>
               <span>{tr.feature2}</span>
             </div>
             <div className="cx-pwr-f-divider"></div>
             <div className="cx-pwr-f-item">
-              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <div className="cx-mini-tick">
+                <Check size={14} className="cx-pwr-check" />
+              </div>
               <span>{tr.feature3}</span>
             </div>
             <div className="cx-pwr-f-divider"></div>
             <div className="cx-pwr-f-item">
-              <div className="cx-mini-tick"><Check size={14} className="cx-pwr-check" /></div>
+              <div className="cx-mini-tick">
+                <Check size={14} className="cx-pwr-check" />
+              </div>
               <span>{tr.feature4}</span>
             </div>
           </div>
-          <img src={powerfulImg} alt="diagram" />       
-          
+          <img src={powerfulImg} alt="diagram" />
+
           <div className="cx-pwr-footer-banner">
             <div className="cx-pwr-footer-left">
               <div className="cx-pwr-grid-icon-box">
                 <Grid size={20} />
               </div>
               <p className="cx-pwr-footer-text">
-                <strong>{tr.footerTextPre}</strong><br />
+                <strong>{tr.footerTextPre}</strong>
+                <br />
                 <span>{tr.footerTextPost}</span>
               </p>
             </div>
@@ -2508,10 +2542,9 @@ export default function Landing() {
               <ChevronRight size={16} />
             </button>
           </div>
-
         </div>
       </section>
-  
+
       <section className="smart">
         <div className="smart-container">
           <div className="smart-head">
@@ -2633,7 +2666,10 @@ export default function Landing() {
 
       <section id="pipeline" className="cx-hero pt-50">
         <img src={currentSec4} alt="" />
-        <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+        <i>
+          Product demo — the names, numbers, and activity shown are sample data
+          for illustration only, not real customer results.
+        </i>
       </section>
 
       <section className="roi-section pt-50">
@@ -2710,7 +2746,10 @@ export default function Landing() {
                   </div>
                 </div>
                 <div className="cta-ai">⚡ {tr.stripAI}</div>
-                <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+                <i>
+                  Product demo — the names, numbers, and activity shown are
+                  sample data for illustration only, not real customer results.
+                </i>
               </div>
             </div>
             <div className="cta-glow"></div>
@@ -2831,25 +2870,32 @@ export default function Landing() {
       <section id="testimonials" className="cx-hero pt-50">
         <div className="img-container">
           <img src={currenttestimonialsImg} alt="" />
-          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+          <i>
+            Product demo — the names, numbers, and activity shown are sample
+            data for illustration only, not real customer results.
+          </i>
         </div>
       </section>
       {/* FINAL */}
       <section className="cx-final pt-50" id="trial">
         <div className="cx-final-box">
-          <img src={logotranImg} className="cx-logo-img" />
           <h2 className="cx-title-lg" style={{ color: "#fff" }}>
             {tr.finalTitle}
           </h2>
 
-          <p className="cx-sub">{tr.finalDesc}</p>
+          <p className="cx-sub">
+            {tr.finalDesc} <span className="text-os">{tr.finalDesc1}</span>
+          </p>
 
           <a href="/trial" className="cx-btn cx-btn-secondary">
             <Zap size={22} />
             {tr.heroCTA}
           </a>
           <p className="underCTA">{tr.underCTA}</p>
-          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+          <i>
+            Product demo — the names, numbers, and activity shown are sample
+            data for illustration only, not real customer results.
+          </i>
           <div className="cx-final-shot">
             <img src={trialmobileImg} className="desktop-none" />
           </div>
@@ -2865,12 +2911,16 @@ export default function Landing() {
 
             <div className="footer-grid footer-landing">
               <div className="footer-brand">
-                <img src={footdarklogo} alt="Cortexa" className="landing-logo" />
+                <img
+                  src={footdarklogo}
+                  alt="Cortexa"
+                  className="landing-logo"
+                />
 
                 <p>{tr.footerDescription}</p>
 
                 <a href="/trial" className="btn-primary">
-                  <Zap size={18} /> 
+                  <Zap size={18} />
                   {tr.startYourFreeTrial}
                 </a>
                 <p className="underCTA">{tr.underCTA}</p>
@@ -3002,4 +3052,3 @@ export default function Landing() {
     </div>
   );
 }
-
