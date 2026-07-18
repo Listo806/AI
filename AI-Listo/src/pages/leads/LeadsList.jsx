@@ -1817,47 +1817,91 @@ export default function LeadsPage() {
               </div>
             ) : leadMessages.length ? (
               leadMessages
-                .slice()
-                .reverse()
-                .map((event) => (
-                  <div
-                    key={event.id}
-                    className="message right robot-msg-container"
-                  >
-                    {event.metadata?.fileUrl ? (
-                      event.metadata?.fileType?.startsWith("image/") ? (
-                        <a
-                          href={event.metadata.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
+                .map((message) => {
+                  const isOutbound =
+                    message.direction === "outbound" ||
+                    message.sender_type === "agent" ||
+                    message.sender_type === "ai";
+
+                  const isAi = message.sender_type === "ai";
+
+                  const messageText = String(
+                    message.body || message.message || message.text || "",
+                  ).trim();
+
+                  const messageType = String(
+                    message.message_type || "text",
+                  ).toLowerCase();
+
+                  const mediaUrl =
+                    message.media_url ||
+                    message.file_url ||
+                    message.url ||
+                    null;
+
+                  return (
+                    <div
+                      key={message.id}
+                      className={`message ${
+                        isOutbound ? "right robot-msg-container" : "left"
+                      }`}
+                    >
+                      {messageType === "image" && mediaUrl ? (
+                        <a href={mediaUrl} target="_blank" rel="noreferrer">
                           <img
-                            src={event.metadata.fileUrl}
-                            alt={event.metadata.fileName || "Attachment"}
+                            src={mediaUrl}
+                            alt="WhatsApp attachment"
                             className="chat-image-preview"
                           />
                         </a>
-                      ) : event.metadata?.fileType?.startsWith("audio/") ? (
-                        <audio controls src={event.metadata.fileUrl} />
-                      ) : (
-                        <a
-                          href={event.metadata.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          📎 {event.metadata.fileName || "Download file"}
+                      ) : messageType === "audio" && mediaUrl ? (
+                        <audio controls src={mediaUrl} />
+                      ) : messageType === "video" && mediaUrl ? (
+                        <video
+                          controls
+                          src={mediaUrl}
+                          className="chat-video-preview"
+                        />
+                      ) : messageType === "document" && mediaUrl ? (
+                        <a href={mediaUrl} target="_blank" rel="noreferrer">
+                          📎 Download attachment
                         </a>
-                      )
-                    ) : (
-                      <p>{event.metadata?.message || event.metadata?.sub}</p>
-                    )}
-                    <span className="msg-status-right">
-                      {formatLeadEventDate(event.createdAt)}{" "}
-                      <CheckCheck size={12} />
-                    </span>
-                    <div className="robot-badge-icon">🤖</div>
-                  </div>
-                ))
+                      ) : (
+                        <p>
+                          {messageText ||
+                            (messageType === "image"
+                              ? "📷 Photo"
+                              : messageType === "audio"
+                                ? "🎤 Voice message"
+                                : messageType === "video"
+                                  ? "🎥 Video"
+                                  : messageType === "document"
+                                    ? "📄 Document"
+                                    : "Message")}
+                        </p>
+                      )}
+
+                      <span
+                        className={
+                          isOutbound ? "msg-status-right" : "msg-status-left"
+                        }
+                      >
+                        {formatLeadEventDate(
+                          message.created_at || message.createdAt,
+                        )}
+
+                        {isOutbound && (
+                          <>
+                            {" "}
+                            <CheckCheck size={12} />
+                          </>
+                        )}
+                      </span>
+
+                      {isAi && <div className="robot-badge-icon">🤖</div>}
+                    </div>
+                  );
+                })
             ) : (
               <div className="message left">
                 <p>No messages yet.</p>
