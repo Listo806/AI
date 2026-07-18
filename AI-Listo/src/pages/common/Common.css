@@ -1852,9 +1852,7 @@
     -webkit-text-fill-color: transparent;
     font-size: 40px;
 }
-.text-ai{
-  color: #003bff;
-}
+
 .pricing-page .cx-pricing-subtitle {
   font-size: 20px;
   line-height: 1.6;
@@ -1865,30 +1863,6 @@
   display: flex;
   gap: 14px;
   justify-content: center;
-}
-
-.pricing-page .cx-pricing-alert-bar {
-  max-width: 900px;
-  margin: 0 auto 10px auto;
-}
-
-.pricing-page .cx-pricing-alert-text {
-  font-size: 14.5px;
-  line-height: 1.5;
-  color: #1f2937;
-  margin: 0;
-  font-weight: 500;
-  padding: 6px 18px;
-  border-radius: 18px;
-}
-
-.pricing-page .cx-pricing-alert-bold {
-  color: #003bff;
-  font-weight: 700;
-  background: linear-gradient(90deg, #0b63ff, #b428f1);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .pricing-page .cx-pricing-icon-inline {
@@ -2301,17 +2275,12 @@
 }
 
 .pricing-page .cx-side-other {
-  background-color: #f4f7fc;
   padding-right: 50px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
 }
 
 .pricing-page .cx-side-cortexa {
-  background-color: #f4f7fc;
-  padding-left: 50px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  padding-left: 150px;
+  border-left: 1px solid #e5e7eb;
 }
 
 .pricing-page .cx-comp-side-title {
@@ -3175,7 +3144,7 @@
   .pricing-page .cx-side-other .cx-comp-side-title{
     color: #fff;
   }
-  .pricing-page .cx-pricing-subtitle, .pricing-page .cx-pricing-alert-text,
+  .pricing-page .cx-pricing-subtitle, 
   .pricing-page .cx-pricing-card-desc, 
   .pricing-page .cx-plans-feature-item,
   .pricing-page .cx-plans-footer-title, .pricing-page .cx-compare-subtitle{

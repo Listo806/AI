@@ -67,12 +67,11 @@ const t = {
       col5_items: ["Login", "Start Free Trial"],
     },
 
-    pricingMainTitlePre: "Turn More Lead Into Revenue —",
-    pricingMainTitlePost: "On Autopilot.",
+    pricingMainTitlePre: "Your Automation ",
+    pricingMainTitlePost: "Begins Here",
     pricingSubText: "Leads.",
     pricingSubText1: "Qualifies.",
     pricingSubText2: "Closes.",
-    pricingAlertText: "AI Qualifies in 60 Seconds!",
     pricingFeatures: {
       ai: {
         title: "AI-Powered Everything",
@@ -358,12 +357,11 @@ const t = {
       col5_items: ["Login", "Prueba Gratis"],
     },
 
-    pricingMainTitlePre: "Convierte más clientes potenciales en ingresos —",
-    pricingMainTitlePost: "En piloto automático.",
+    pricingMainTitlePre: "Tu automatización ",
+    pricingMainTitlePost: "comienza aquí",
     pricingSubText: "Clientes potenciales.",
     pricingSubText1: "Califica.",
     pricingSubText2: "Cierra.",
-    pricingAlertText: "¡La IA califica en 60 segundos!",
     pricingFeatures: {
       ai: {
         title: "Todo Impulsado por IA",
@@ -661,14 +659,13 @@ const t = {
       col5_items: ["Login", "Teste Grátis"],
     },
 
-    pricingMainTitlePre: "Transforme mais leads em receita —",
-    pricingMainTitlePost: "No piloto automático.",
+    pricingMainTitlePre: "Sua automação ",
+    pricingMainTitlePost: "começa aqui",
     pricingSubText:
       "Suas ferramentas devem apoiar o seu crescimento, não esgotá-lo. O CORTEXA AIOS oferece o sistema essencial para capturar leads, fazer acompanhamento, agendar reuniões e gerenciar receitas sem adicionar milhares em custos iniciais.",
     pricingSubText: "Leads.",
     pricingSubText1: "Qualifica.",
     pricingSubText2: "Fecha.",
-    pricingAlertText: "A IA qualifica em 60 segundos!",
     pricingFeatures: {
       ai: {
         title: "Tudo Impulsionado por IA",
@@ -993,14 +990,6 @@ export default function PricingPage() {
                 <span className="text-ai">AI</span> {tr.pricingSubText2}
               </span>
             </p>
-          </div>
-
-          <div className="cx-pricing-alert-bar">
-            <span className="cx-pricing-alert-text">
-              <span className="cx-pricing-alert-bold">
-                <Zap size={14} /> {tr.pricingAlertText}
-              </span>
-            </span>
           </div>
         </section>
 
