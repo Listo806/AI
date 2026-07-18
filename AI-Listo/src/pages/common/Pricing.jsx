@@ -31,6 +31,7 @@ import {
   CheckCircle,
   CheckCircle2,
   HelpCircle,
+  LockKeyhole,
 } from "lucide-react";
 
 import headlogo from "../../assets/cortexa/headlogo.png";
@@ -66,14 +67,12 @@ const t = {
       col5_items: ["Login", "Start Free Trial"],
     },
 
-    pricingLabel: "PRICING PLANS",
-    pricingMainTitlePre: "All-In-One Real Estate CRM. ",
-    pricingMainTitlePost: "Simple Pricing. Maximum Results.",
-    pricingSubText:
-      "Your tools should support your growth, not drain it. CORTEXA AIOS gives you the essential system to capture leads, follow up, book appointments, and manage revenue without adding thousands in upfront costs.",
-    pricingAlertBold: "Keep more capital in your business.",
-    pricingAlertText:
-      " Start with the system you need, without enterprise-level setup fees, confusing add-ons, or software costs that eat into your monthly gains.",
+    pricingMainTitlePre: "Turn More Lead Into Revenue —",
+    pricingMainTitlePost: "On Autopilot.",
+    pricingSubText: "Leads.",
+    pricingSubText1: "Qualifies.",
+    pricingSubText2: "Closes.",
+    pricingAlertText: "AI Qualifies in 60 Seconds!",
     pricingFeatures: {
       ai: {
         title: "AI-Powered Everything",
@@ -96,6 +95,7 @@ const t = {
     plansBadgePopular: "MOST POPULAR",
     plansBtnTrial: "Start My Free Trial",
     plansFeeNote: "One-time setup fee: $97",
+    plansinclude: "Everything included",
     plansPerMonth: "/month",
     plansData: {
       solo: {
@@ -104,9 +104,17 @@ const t = {
         desc: "Perfect for solo agents.",
         price: "$197",
         features: [
-          "1 user included",
-          "All features included",
-          "AI Agent Automation",
+          "CRM & Contact Management",
+          "Leads & Pipeline Management",
+          "AI Agent (24/7)",
+          "WhatsApp Automation",
+          "Reporting & Analytics",
+          "Team Collaboration",
+          "Tasks & Reminders",
+          "Document & File Management",
+          "Workflow Automation",
+          "Integrations (Popular Apps)",
+          "Email & SMS Campaigns",
           "24/7 Support",
         ],
       },
@@ -116,9 +124,17 @@ const t = {
         desc: "Great for small teams.",
         price: "$347",
         features: [
-          "3 users included",
-          "All features included",
-          "AI Agent Automation",
+          "CRM & Contact Management",
+          "Leads & Pipeline Management",
+          "AI Agent (24/7)",
+          "WhatsApp Automation",
+          "Reporting & Analytics",
+          "Team Collaboration",
+          "Tasks & Reminders",
+          "Document & File Management",
+          "Workflow Automation",
+          "Integrations (Popular Apps)",
+          "Email & SMS Campaigns",
           "24/7 Support",
         ],
       },
@@ -128,27 +144,33 @@ const t = {
         desc: "Built for growing teams.",
         price: "$497",
         features: [
-          "5 users included",
-          "All features included",
-          "AI Agent Automation",
+          "CRM & Contact Management",
+          "Leads & Pipeline Management",
+          "AI Agent (24/7)",
+          "WhatsApp Automation",
+          "Reporting & Analytics",
+          "Team Collaboration",
+          "Tasks & Reminders",
+          "Document & File Management",
+          "Workflow Automation",
+          "Integrations (Popular Apps)",
+          "Email & SMS Campaigns",
           "24/7 Support",
         ],
       },
     },
     plansFooter: {
       setup: {
-        value: "$97",
-        title: "One-Time Setup Fee",
-        desc: "Get fully set up and ready to grow.",
+        title: "No long-term contracts",
+        desc: "Cancel anytime",
       },
       user: {
-        value: "$97",
-        title: "Per Additional User",
-        desc: "Add team members anytime.",
+        title: "Secure and reliable",
+        desc: "Your data is protected",
       },
       contract: {
-        title: "No Long-Term Contracts Cancel Anytime",
-        desc: "Flexibility you can count on.",
+        title: "Add users anytime",
+        desc: "Scale as you grow",
       },
     },
 
@@ -299,10 +321,6 @@ const t = {
     vsCompOther3: "Complex setup and long onboarding",
     vsCompOther4: "Pay more as you add seats, features, and tools",
     vsCompOther5: "By the time you get going, you have spent a lot of money",
-    vsCompOtherTotalTitle: "Typical Total Investment to Get Started",
-    vsCompOtherTotalVal: "more expensive",
-    vsCompOtherTotalSub: "(Setup + First Month)",
-    vsCompOtherTotalNote: "And it still may not include everything.",
 
     vsCompVs: "VS.",
 
@@ -312,17 +330,6 @@ const t = {
     vsCompCortexa3: "$197/month - everything included",
     vsCompCortexa4: "Add agents (users) for $97/month",
     vsCompCortexa5: "Start today and start making revenue",
-    vsCompCortexaTotalTitle: "Total Investment to Get Started",
-    vsCompCortexaTotalVal: "$294",
-    vsCompCortexaTotalSub: "(Setup + First Month for 1 Agent)",
-
-    vsCompBottomHeader: "More Leads. More Appointments. More Closings.",
-    vsCompBottomSub: "Increase the conversion rate of potential customers.",
-    vsCompBottomFeat1: "No hidden fees",
-    vsCompBottomFeat2: "Cancel anytime",
-    vsCompBottomFeat3: "Built for real estate",
-    vsCompBottomBtn: "Get Started",
-    underCTA: "One-time setup fee: $97",
   },
   es: {
     nav: {
@@ -352,14 +359,12 @@ const t = {
       col5_items: ["Login", "Prueba Gratis"],
     },
 
-    pricingLabel: "PLANES DE PRECIOS",
-    pricingMainTitlePre: "CRM Inmobiliario Todo en Uno. ",
-    pricingMainTitlePost: "Precios Simples. Máximos Resultados.",
-    pricingSubText:
-      "Sus herramientas deben apoyar su crecimiento, no agotarlo. CORTEXA AIOS le brinda el sistema esencial para capturar prospectos, hacer seguimiento, programar citas y administrar los ingresos sin agregar miles en costos iniciales.",
-    pricingAlertBold: "Mantenga más capital en su negocio.",
-    pricingAlertText:
-      " Comience con el sistema que necesita, sin tarifas de configuración a nivel de gran empresa, complementos confusos o costos de software que reduzcan sus ganancias mensuales.",
+    pricingMainTitlePre: "Convierte más clientes potenciales en ingresos —",
+    pricingMainTitlePost: "En piloto automático.",
+    pricingSubText: "Clientes potenciales.",
+    pricingSubText1: "Califica.",
+    pricingSubText2: "Cierra.",
+    pricingAlertText: "¡La IA califica en 60 segundos!",
     pricingFeatures: {
       ai: {
         title: "Todo Impulsado por IA",
@@ -383,6 +388,7 @@ const t = {
     plansBadgePopular: "MÁS POPULAR",
     plansBtnTrial: "Iniciar Mi Prueba Gratuita",
     plansFeeNote: "Tarifa única de configuración: $97",
+    plansinclude: "Todo incluido",
     plansPerMonth: "/mes",
     plansData: {
       solo: {
@@ -391,9 +397,17 @@ const t = {
         desc: "Perfecto para agentes independientes.",
         price: "$197",
         features: [
-          "1 usuario incluido",
-          "Todas las funciones incluidas",
-          "Automatización con Agente de IA",
+          "CRM y Gestión de Contactos",
+          "Gestión de Prospectos y Pipeline",
+          "Agente de IA (24/7)",
+          "Automatización de WhatsApp",
+          "Informes y Analítica",
+          "Colaboración en Equipo",
+          "Tareas y Recordatorios",
+          "Gestión de Documentos y Archivos",
+          "Automatización de Flujos",
+          "Integraciones (Apps Populares)",
+          "Campañas de Email y SMS",
           "Soporte 24/7",
         ],
       },
@@ -403,9 +417,17 @@ const t = {
         desc: "Ideal para equipos pequeños.",
         price: "$347",
         features: [
-          "3 usuarios incluidos",
-          "Todas las funciones incluidas",
-          "Automatización con Agente de IA",
+          "CRM y Gestión de Contactos",
+          "Gestión de Prospectos y Pipeline",
+          "Agente de IA (24/7)",
+          "Automatización de WhatsApp",
+          "Informes y Analítica",
+          "Colaboración en Equipo",
+          "Tareas y Recordatorios",
+          "Gestión de Documentos y Archivos",
+          "Automatización de Flujos",
+          "Integraciones (Apps Populares)",
+          "Campañas de Email y SMS",
           "Soporte 24/7",
         ],
       },
@@ -415,27 +437,33 @@ const t = {
         desc: "Creado para equipos en crecimiento.",
         price: "$497",
         features: [
-          "5 usuarios incluidos",
-          "Todas las funciones incluidas",
-          "Automatización con Agente de IA",
+          "CRM y Gestión de Contactos",
+          "Gestión de Prospectos y Pipeline",
+          "Agente de IA (24/7)",
+          "Automatización de WhatsApp",
+          "Informes y Analítica",
+          "Colaboración en Equipo",
+          "Tareas y Recordatorios",
+          "Gestión de Documentos y Archivos",
+          "Automatización de Flujos",
+          "Integraciones (Apps Populares)",
+          "Campañas de Email y SMS",
           "Soporte 24/7",
         ],
       },
     },
     plansFooter: {
       setup: {
-        value: "$97",
-        title: "Tarifa de Configuración Única",
-        desc: "Regístrese por completo y prepárese para crecer.",
+        title: "Sin contratos a largo plazo",
+        desc: "Cancela cuando quieras",
       },
       user: {
-        value: "$97",
-        title: "Por Usuario Adicional",
-        desc: "Añada miembros al equipo en cualquier momento.",
+        title: "Seguro y confiable",
+        desc: "Tus datos están protegidos",
       },
       contract: {
-        title: "Sin Contratos a Largo Plazo Cancele en Cualquier Momento",
-        desc: "Flexibilidad con la que puede contar.",
+        title: "Agrega usuarios en cualquier momento",
+        desc: "Escala a medida que creces",
       },
     },
 
@@ -592,16 +620,11 @@ const t = {
 
     vsCompOtherTitle: "CON OTRAS PLATAFORMAS",
     vsCompOther1: "Alto costo mensual con múltiples complementos",
-    vsCompOther2:
-      "Se pueden aplicar diversos tipos de tarifas.",
+    vsCompOther2: "Se pueden aplicar diversos tipos de tarifas.",
     vsCompOther3: "Configuración compleja y larga capacitación inicial",
     vsCompOther4:
       "Pague más a medida que agrega usuarios, funciones y herramientas",
     vsCompOther5: "Para cuando empiece a funcionar,has gastado mucho dinero",
-    vsCompOtherTotalTitle: "Inversión Total Típica para Comenzar",
-    vsCompOtherTotalVal: "Más caro",
-    vsCompOtherTotalSub: "(Configuración + Primer Mes)",
-    vsCompOtherTotalNote: "Y es posible que aún no incluya todo.",
 
     vsCompVs: "VS.",
 
@@ -611,18 +634,6 @@ const t = {
     vsCompCortexa3: "$197/mes - todo incluido",
     vsCompCortexa4: "Agregue agentes (usuarios) por $97/mes",
     vsCompCortexa5: "Comience hoy mismo y comience a generar ingresos",
-    vsCompCortexaTotalTitle: "Inversión Total para Comenzar",
-    vsCompCortexaTotalVal: "$294",
-    vsCompCortexaTotalSub: "(Configuración + Primer Mes para 1 Agente)",
-
-    vsCompBottomHeader: "Más Prospectos. Más Citas. Más Cierres.",
-    vsCompBottomSub:
-      "Aumente la tasa de conversión de clientes potenciales.",
-    vsCompBottomFeat1: "Sin tarifas ocultas",
-    vsCompBottomFeat2: "Cancele en cualquier momento",
-    vsCompBottomFeat3: "Diseñado para el sector inmobiliario",
-    vsCompBottomBtn: "Comenzar",
-    underCTA: "Tarifa única de configuración: $97",
   },
   pt: {
     nav: {
@@ -652,14 +663,14 @@ const t = {
       col5_items: ["Login", "Teste Grátis"],
     },
 
-    pricingLabel: "PLANOS DE PREÇOS",
-    pricingMainTitlePre: "CRM Imobiliário Tudo-Em-Um. ",
-    pricingMainTitlePost: "Preços Simples. Resultados Máximos.",
+    pricingMainTitlePre: "Transforme mais leads em receita —",
+    pricingMainTitlePost: "No piloto automático.",
     pricingSubText:
       "Suas ferramentas devem apoiar o seu crescimento, não esgotá-lo. O CORTEXA AIOS oferece o sistema essencial para capturar leads, fazer acompanhamento, agendar reuniões e gerenciar receitas sem adicionar milhares em custos iniciais.",
-    pricingAlertBold: "Mantenha mais capital na sua empresa.",
-    pricingAlertText:
-      " Comece com o sistema que você precisa, sem taxas de configuração de nível empresarial, complementos confusos ou custos de software que corroam seus ganhos mensais.",
+    pricingSubText: "Leads.",
+    pricingSubText1: "Qualifica.",
+    pricingSubText2: "Fecha.",
+    pricingAlertText: "A IA qualifica em 60 segundos!",
     pricingFeatures: {
       ai: {
         title: "Tudo Impulsionado por IA",
@@ -683,6 +694,7 @@ const t = {
     plansBadgePopular: "MAIS POPULAR",
     plansBtnTrial: "Iniciar Meu Teste Gratuito",
     plansFeeNote: "Taxa única de configuração: $97",
+    plansinclude: "Tudo incluído",
     plansPerMonth: "/mês",
     plansData: {
       solo: {
@@ -691,9 +703,17 @@ const t = {
         desc: "Perfeito para corretores autônomos.",
         price: "$197",
         features: [
-          "1 usuário incluso",
-          "Todos os recursos inclusos",
-          "Automação com Agente de IA",
+          "CRM e Gestão de Contatos",
+          "Gestão de Leads e Pipeline",
+          "Agente de IA (24/7)",
+          "Automação do WhatsApp",
+          "Relatórios e Análises",
+          "Colaboração em Equipe",
+          "Tarefas e Lembretes",
+          "Gestão de Documentos e Arquivos",
+          "Automação de Fluxos",
+          "Integrações (Apps Populares)",
+          "Campanhas de E-mail e SMS",
           "Suporte 24/7",
         ],
       },
@@ -703,9 +723,17 @@ const t = {
         desc: "Excelente para equipes pequenas.",
         price: "$347",
         features: [
-          "3 usuários inclusos",
-          "Todos os recursos inclusos",
-          "Automação com Agente de IA",
+          "CRM e Gestão de Contatos",
+          "Gestão de Leads e Pipeline",
+          "Agente de IA (24/7)",
+          "Automação do WhatsApp",
+          "Relatórios e Análises",
+          "Colaboração em Equipe",
+          "Tarefas e Lembretes",
+          "Gestão de Documentos e Arquivos",
+          "Automação de Fluxos",
+          "Integrações (Apps Populares)",
+          "Campanhas de E-mail e SMS",
           "Suporte 24/7",
         ],
       },
@@ -715,27 +743,33 @@ const t = {
         desc: "Desenvolvido para equipes em crescimento.",
         price: "$497",
         features: [
-          "5 usuários inclusos",
-          "Todos os recursos inclusos",
-          "Automação com Agente de IA",
+          "CRM e Gestão de Contatos",
+          "Gestão de Leads e Pipeline",
+          "Agente de IA (24/7)",
+          "Automação do WhatsApp",
+          "Relatórios e Análises",
+          "Colaboração em Equipe",
+          "Tarefas e Lembretes",
+          "Gestão de Documentos e Arquivos",
+          "Automação de Fluxos",
+          "Integrações (Apps Populares)",
+          "Campanhas de E-mail e SMS",
           "Suporte 24/7",
         ],
       },
     },
     plansFooter: {
       setup: {
-        value: "$97",
-        title: "Taxa Única de Configuração",
-        desc: "Fique totalmente configurado e pronto para crescer.",
+        title: "Sem contratos de longo prazo",
+        desc: "Cancele a qualquer momento",
       },
       user: {
-        value: "$97",
-        title: "Por Usuário Adicional",
-        desc: "Adicione membros à equipe a qualquer momento.",
+        title: "Seguro e confiável",
+        desc: "Seus dados estão protegidos",
       },
       contract: {
-        title: "Sem Contratos de Longo Prazo Cancele a Qualquer Momento",
-        desc: "Flexibilidade com a que você pode contar.",
+        title: "Adicione usuários a qualquer momento",
+        desc: "Escale conforme seu crescimento",
       },
     },
 
@@ -889,16 +923,11 @@ const t = {
 
     vsCompOtherTitle: "COM OUTRAS PLATAFORMAS",
     vsCompOther1: "Alto custo mensal com múltiplos add-ons",
-    vsCompOther2:
-      "Diferentes tipos de taxas podem ser aplicados.",
+    vsCompOther2: "Diferentes tipos de taxas podem ser aplicados.",
     vsCompOther3: "Configuração complexa e integração demorada",
     vsCompOther4:
       "Pague mais conforme adiciona usuários, recursos e ferramentas",
     vsCompOther5: "No momento em que você começar, você gastou muito dinheiro",
-    vsCompOtherTotalTitle: "Investimento Total Típico para Começar",
-    vsCompOtherTotalVal: "Mais caro",
-    vsCompOtherTotalSub: "(Configuração + Primeiro Mês)",
-    vsCompOtherTotalNote: "E ainda pode não incluir tudo.",
 
     vsCompVs: "VS.",
 
@@ -908,17 +937,6 @@ const t = {
     vsCompCortexa3: "$197/mês - tudo incluso",
     vsCompCortexa4: "Adicione agentes (usuários) por $97/mês",
     vsCompCortexa5: "Comece hoje e comece a faturar",
-    vsCompCortexaTotalTitle: "Investimento Total para Começar",
-    vsCompCortexaTotalVal: "$294",
-    vsCompCortexaTotalSub: "(Configuração + Primeiro Mês para 1 Agente)",
-
-    vsCompBottomHeader: "Mais Leads. Mais Agendamentos. Mais Fechamentos.",
-    vsCompBottomSub: "Aumente a taxa de conversão de clientes em potencial.",
-    vsCompBottomFeat1: "Sem taxas ocultas",
-    vsCompBottomFeat2: "Cancele a qualquer momento",
-    vsCompBottomFeat3: "Feito para o mercado imobiliário",
-    vsCompBottomBtn: "Começar",
-    underCTA: "Taxa única de configuração: $97",
   },
 };
 
@@ -1134,76 +1152,31 @@ export default function PricingPage() {
       <main className="main-content">
         <section className="cx-pricing cx-center">
           <div className="cx-pricing-header">
-            <span className="cx-pricing-tag">{tr.pricingLabel}</span>
             <h2 className="cx-pricing-title">
               {tr.pricingMainTitlePre}
               <span className="cx-pricing-title-blue">
                 {tr.pricingMainTitlePost}
               </span>
             </h2>
-            <p className="cx-pricing-subtitle">{tr.pricingSubText}</p>
-          </div>
-
-          <div className="cx-pricing-alert-bar">
-            <p className="cx-pricing-alert-text">
-              <span className="cx-pricing-alert-bold">
-                {tr.pricingAlertBold}
+            <p className="cx-pricing-subtitle">
+              <span>
+                <span className="text-ai">AI</span> {tr.pricingSubText}
               </span>
-              {tr.pricingAlertText}
+              <span>
+                <span className="text-ai">AI</span> {tr.pricingSubText1}
+              </span>
+              <span>
+                <span className="text-ai">AI</span> {tr.pricingSubText2}
+              </span>
             </p>
           </div>
 
-          <div className="cx-pricing-grid">
-            <div className="cx-pricing-card">
-              <div className="cx-pricing-icon-wrapper">
-                <Bot size={44} strokeWidth={2} />
-              </div>
-              <h3 className="cx-pricing-card-title">
-                {tr.pricingFeatures.ai.title}
-              </h3>
-              <p className="cx-pricing-card-desc">
-                {tr.pricingFeatures.ai.desc}
-              </p>
-            </div>
-
-            <div className="cx-pricing-card">
-              <div className="cx-pricing-icon-wrapper">
-                <RefreshCw size={44} strokeWidth={2} />
-              </div>
-              <h3 className="cx-pricing-card-title">
-                {tr.pricingFeatures.automate.title}
-              </h3>
-              <p className="cx-pricing-card-desc">
-                {tr.pricingFeatures.automate.desc}
-              </p>
-            </div>
-
-            <div className="cx-pricing-card">
-              <div className="cx-pricing-stat-wrapper">
-                <div className="cx-pricing-icon-inline">
-                  <BarChart3 size={44} strokeWidth={2} />
-                </div>
-                
-              </div>
-              <h3 className="cx-pricing-card-title">
-                {tr.pricingFeatures.conversion.title}
-              </h3>
-              <p className="cx-pricing-card-desc">
-                {tr.pricingFeatures.conversion.desc}
-              </p>
-            </div>
-
-            <div className="cx-pricing-card">
-              <div className="cx-pricing-icon-wrapper">
-                <Building2 size={44} strokeWidth={2} />
-              </div>
-              <h3 className="cx-pricing-card-title">
-                {tr.pricingFeatures.realestate.title}
-              </h3>
-              <p className="cx-pricing-card-desc">
-                {tr.pricingFeatures.realestate.desc}
-              </p>
-            </div>
+          <div className="cx-pricing-alert-bar">
+            <span className="cx-pricing-alert-text">
+              <span className="cx-pricing-alert-bold">
+                <Zap size={14} /> {tr.pricingAlertText}
+              </span>
+            </span>
           </div>
         </section>
 
@@ -1216,10 +1189,6 @@ export default function PricingPage() {
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.solo.name}</h3>
-                  <span className="cx-plans-users">
-                    {tr.plansData.solo.users}
-                  </span>
-                  <p className="cx-plans-desc">{tr.plansData.solo.desc}</p>
                 </div>
               </div>
               <div className="cx-plans-price-block">
@@ -1228,6 +1197,21 @@ export default function PricingPage() {
                 </span>
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
+              <div className="cx-plans-users">{tr.plansData.solo.users}</div>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  opacity: 0.7,
+                  textAlign: "center",
+                }}
+              >
+                {tr.plansFeeNote}
+              </p>
+              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.solo.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1236,10 +1220,6 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <a href="/trial" className="cx-plans-btn">
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
-              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card cx-plans-popular">
@@ -1250,10 +1230,6 @@ export default function PricingPage() {
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.team.name}</h3>
-                  <span className=" cx-plans-users">
-                    {tr.plansData.team.users}
-                  </span>
-                  <p className="cx-plans-desc">{tr.plansData.team.desc}</p>
                 </div>
               </div>
               <div className="cx-plans-price-block">
@@ -1262,6 +1238,21 @@ export default function PricingPage() {
                 </span>
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
+              <div className="cx-plans-users">{tr.plansData.team.users}</div>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  opacity: 0.7,
+                  textAlign: "center",
+                }}
+              >
+                {tr.plansFeeNote}
+              </p>
+              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.team.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1270,10 +1261,6 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <a href="/trial" className="cx-plans-btn">
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
-              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
 
             <div className="cx-plans-card">
@@ -1283,10 +1270,6 @@ export default function PricingPage() {
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.growth.name}</h3>
-                  <span className="cx-plans-users">
-                    {tr.plansData.growth.users}
-                  </span>
-                  <p className="cx-plans-desc">{tr.plansData.growth.desc}</p>
                 </div>
               </div>
               <div className="cx-plans-price-block">
@@ -1295,6 +1278,21 @@ export default function PricingPage() {
                 </span>
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
+              <div className="cx-plans-users">{tr.plansData.growth.users}</div>
+              <a href="/trial" className="cx-plans-btn">
+                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
+              </a>
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  opacity: 0.7,
+                  textAlign: "center",
+                }}
+              >
+                {tr.plansFeeNote}
+              </p>
+              <p className="cx-plans-everything">{tr.plansinclude}:</p>
               <ul className="cx-plans-features">
                 {tr.plansData.growth.features.map((feat, i) => (
                   <li key={i} className="cx-plans-feature-item">
@@ -1303,22 +1301,91 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <a href="/trial" className="cx-plans-btn">
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
-              <p style={{ marginTop: "8px", fontSize: "12px", opacity: 0.7, textAlign: "center" }}>{tr.plansFeeNote}</p>
             </div>
           </div>
+          <div className="cx-comparison-container">
+            {/* Top Split Comparison Cards */}
+            <div className="cx-split-comparison">
+              {/* Left Side: Other Platforms */}
+              <div className="cx-comp-side-card cx-side-other">
+                <h3 className="cx-comp-side-title">{tr.vsCompOtherTitle}</h3>
+                <ul className="cx-comp-list">
+                  <li>
+                    <div className="cx-circle-icon-x">
+                      <X size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompOther1}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-x">
+                      <X size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompOther3}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-x">
+                      <X size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompOther4}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-x">
+                      <X size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompOther5}</span>
+                  </li>
+                </ul>
+              </div>
 
+              {/* Middle VS Badge */}
+              <div className="cx-comp-vs-badge">
+                <span>{tr.vsCompVs}</span>
+              </div>
+
+              {/* Right Side: Cortexa AIOS */}
+              <div className="cx-comp-side-card cx-side-cortexa">
+                <h3 className="cx-comp-side-title">{tr.vsCompCortexaTitle}</h3>
+                <ul className="cx-comp-list">
+                  <li>
+                    <div className="cx-circle-icon-check">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompCortexa1}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-check">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompCortexa2}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-check">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompCortexa3}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-check">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompCortexa4}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-check">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span>{tr.vsCompCortexa5}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
           <div className="cx-plans-footer-grid">
             <div className="cx-plans-footer-card">
               <div className="cx-plans-footer-icon-box">
-                <Settings size={42} strokeWidth={2} />
+                <LockKeyhole size={42} strokeWidth={2} />
               </div>
               <div className="cx-plans-footer-info">
-                <div className="cx-plans-footer-value">
-                  {tr.plansFooter.setup.value}
-                </div>
                 <h4 className="cx-plans-footer-title">
                   {tr.plansFooter.setup.title}
                 </h4>
@@ -1330,7 +1397,7 @@ export default function PricingPage() {
 
             <div className="cx-plans-footer-card">
               <div className="cx-plans-footer-icon-box">
-                <UserPlus size={42} strokeWidth={2} />
+                <ShieldCheck size={42} strokeWidth={2} />
               </div>
               <div className="cx-plans-footer-info">
                 <div className="cx-plans-footer-value">
@@ -1347,7 +1414,7 @@ export default function PricingPage() {
 
             <div className="cx-plans-footer-card">
               <div className="cx-plans-footer-icon-box">
-                <ShieldCheck size={42} strokeWidth={2} />
+                <UserPlus size={42} strokeWidth={2} />
               </div>
               <div className="cx-plans-footer-info">
                 <h4 className=" cx-plans-footer-title-large">
@@ -1360,278 +1427,6 @@ export default function PricingPage() {
             </div>
           </div>
         </div>
-
-        <section className="cx-compare-container">
-          <div className="cx-compare-header">
-            <h2 className="cx-compare-title">{tr.compareTitle}</h2>
-            <p className="cx-compare-subtitle">{tr.compareSubtitle}</p>
-          </div>
-
-          <div className="cx-compare-table-wrapper">
-            <table className="cx-compare-table">
-              <thead>
-                <tr>
-                  <th className="cx-th-feature">{tr.compareThFeature}</th>
-                  <th className="cx-th-other">
-                    {renderNewLineText(tr.compareThOther)}
-                  </th>
-                  <th className="cx-th-cost">
-                    {renderNewLineText(tr.compareThCost)}
-                  </th>
-                  <th className="cx-th-cortexa">
-                    {renderNewLineText(tr.compareThCortexa)}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {tr.compareRows.map((row, idx) => {
-                  const isSpecialRow = idx >= 18;
-                  return (
-                    <tr
-                      key={idx}
-                      className={isSpecialRow ? "cx-row-special" : ""}
-                    >
-                      <td className="cx-td-feature">
-                        <div className="cx-feature-cell">
-                          {isSpecialRow ? (
-                            <span className="cx-icon-close">✓</span>
-                          ) : (
-                            <HelpCircle size={16} className="cx-icon-help" />
-                          )}
-                          <span className="cx-feature-text">
-                            {row.f}
-                            {row.badge && (
-                              <span className="cx-compare-badge">
-                                {row.badge}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="cx-td-other">{row.o}</td>
-                      <td className="cx-td-cost">{renderNewLineText(row.c)}</td>
-                      <td className="cx-td-cortexa">
-                        {idx === 18 ? (
-                          <div className="cx-cortexa-info-cell">
-                            <span className="cx-cortexa-info-title">
-                              {tr.compareUnlimitedAiTitle}
-                            </span>
-                            <span className="cx-cortexa-info-desc">
-                              {renderNewLineText(tr.compareUnlimitedAiDesc)}
-                            </span>
-                          </div>
-                        ) : idx === 19 ? (
-                          <div className="cx-cortexa-info-cell">
-                            <span className="cx-cortexa-info-title">
-                              {tr.compareNoPenaltiesTitle}
-                            </span>
-                            <span className="cx-cortexa-info-desc">
-                              {renderNewLineText(tr.compareNoPenaltiesDesc)}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="cx-cortexa-included-box">
-                            <CheckCircle2 size={18} className="cx-icon-check" />
-                            <span className="cx-included-text">
-                              {tr.compareIncluded}
-                            </span>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                <tr className="cx-row-summary">
-                  <td className="cx-td-feature cx-summary-title">
-                    {renderNewLineText(tr.compareOneTimeSetup)}
-                  </td>
-                  <td className="cx-td-other font-bold">
-                    {renderNewLineText(tr.compareEstimatedOther.split("\n")[0])}
-                  </td>
-                  <td className="cx-td-cost">-</td>
-                  <td className="cx-td-cortexa cx-summary-cortexa-highlight">
-                    {renderNewLineText(tr.compareSetupSetup)}
-                  </td>
-                </tr>
-
-                <tr className="cx-row-summary">
-                  <td className="cx-td-feature cx-summary-title">
-                    {renderNewLineText(tr.compareEstimatedCost)}
-                  </td>
-                  <td className="cx-td-other cx-summary-other-cost">
-                    {renderNewLineText(tr.compareEstimatedOther1)}
-                  </td>
-                  <td className="cx-td-cost">-</td>
-                  <td className="cx-td-cortexa cx-summary-cortexa-main-highlight">
-                    {renderNewLineText(tr.compareEstimatedCortexa)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <div className="cx-comparison-container">
-          {/* Top Split Comparison Cards */}
-          <div className="cx-split-comparison">
-            {/* Left Side: Other Platforms */}
-            <div className="cx-comp-side-card cx-side-other">
-              <h3 className="cx-comp-side-title">{tr.vsCompOtherTitle}</h3>
-              <ul className="cx-comp-list">
-                <li>
-                  <div className="cx-circle-icon-x">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompOther1}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-x">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompOther2}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-x">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompOther3}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-x">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompOther4}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-x">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompOther5}</span>
-                </li>
-              </ul>
-
-              <div className="cx-investment-inner-box cx-inner-box-other">
-                <p className="cx-inner-box-label">{tr.vsCompOtherTotalTitle}</p>
-                <p className="cx-inner-box-value">{tr.vsCompOtherTotalVal}</p>
-                <p className="cx-inner-box-sub">{tr.vsCompOtherTotalSub}</p>
-                <p className="cx-inner-box-note">{tr.vsCompOtherTotalNote}</p>
-              </div>
-            </div>
-
-            {/* Middle VS Badge */}
-            <div className="cx-comp-vs-badge">
-              <span>{tr.vsCompVs}</span>
-            </div>
-
-            {/* Right Side: Cortexa AIOS */}
-            <div className="cx-comp-side-card cx-side-cortexa">
-              <h3 className="cx-comp-side-title">{tr.vsCompCortexaTitle}</h3>
-              <ul className="cx-comp-list">
-                <li>
-                  <div className="cx-circle-icon-check">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompCortexa1}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-check">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompCortexa2}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-check">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompCortexa3}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-check">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompCortexa4}</span>
-                </li>
-                <li>
-                  <div className="cx-circle-icon-check">
-                    <Check size={12} strokeWidth={3} />
-                  </div>
-                  <span>{tr.vsCompCortexa5}</span>
-                </li>
-              </ul>
-
-              <div className="cx-investment-inner-box cx-inner-box-cortexa">
-                <p className="cx-inner-box-label">
-                  {tr.vsCompCortexaTotalTitle}
-                </p>
-                <p className="cx-inner-box-value">{tr.vsCompCortexaTotalVal}</p>
-                <p className="cx-inner-box-sub">{tr.vsCompCortexaTotalSub}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Conversion Banner */}
-          <div className="cx-conversion-footer-banner">
-            <div className="cx-footer-left-content">
-              <div className="cx-footer-bar-icon-container">
-                <BarChart3 size={24} className="cx-bar-icon" />
-              </div>
-              <div className="cx-footer-text-block">
-                <h4 className="cx-footer-header-text">
-                  {tr.vsCompBottomHeader}
-                </h4>
-                <p className="cx-footer-sub-text">{tr.vsCompBottomSub}</p>
-                <div className="cx-footer-ticks-row desktop">
-                  <div className="cx-tick-item">
-                    <div className="cx-mini-tick">
-                      <Check size={10} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompBottomFeat1}</span>
-                  </div>
-                  <div className="cx-tick-item">
-                    <div className="cx-mini-tick">
-                      <Check size={10} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompBottomFeat2}</span>
-                  </div>
-                  <div className="cx-tick-item">
-                    <div className="cx-mini-tick">
-                      <Check size={10} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompBottomFeat3}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="cx-footer-ticks-row mobile">
-              <div className="cx-tick-item">
-                <div className="cx-mini-tick">
-                  <Check size={10} strokeWidth={3} />
-                </div>
-                <span>{tr.vsCompBottomFeat1}</span>
-              </div>
-              <div className="cx-tick-item">
-                <div className="cx-mini-tick">
-                  <Check size={10} strokeWidth={3} />
-                </div>
-                <span>{tr.vsCompBottomFeat2}</span>
-              </div>
-              <div className="cx-tick-item">
-                <div className="cx-mini-tick">
-                  <Check size={10} strokeWidth={3} />
-                </div>
-                <span>{tr.vsCompBottomFeat3}</span>
-              </div>
-            </div>
-            <div className="cx-footer-cta-button-wrap">
-            <a href="/trial" className="cx-footer-cta-button">
-              <Zap size={16} fill="currentColor" className="cx-btn-bolt-icon" />
-              {tr.vsCompBottomBtn}
-            </a>
-            <p className="underCTA">{tr.underCTA}</p>
-            </div>
-          </div>
-        </div>
       </main>
 
       <footer className="footer-section">
@@ -1639,7 +1434,11 @@ export default function PricingPage() {
           <div className="footer-main-grid">
             {isMobile ? (
               <div className="footer-brand-column">
-                <img src={headlogoM} alt="Cortexa" className="footer-logo-img" />
+                <img
+                  src={headlogoM}
+                  alt="Cortexa"
+                  className="footer-logo-img"
+                />
                 <p className="footer-brand-desc">{tr.footer.desc}</p>
                 <div className="footer-social-row">
                   <svg
@@ -1686,7 +1485,7 @@ export default function PricingPage() {
                   </svg>
                 </div>
               </div>
-            ):(
+            ) : (
               <div className="footer-brand-column">
                 <img src={headlogo} alt="Cortexa" className="footer-logo-img" />
                 <p className="footer-brand-desc">{tr.footer.desc}</p>
@@ -1769,7 +1568,6 @@ export default function PricingPage() {
                 </li>
               </ul>
             </div>
-
           </div>
 
           <div className="footer-copyright-bar">
