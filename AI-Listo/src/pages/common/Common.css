@@ -2501,7 +2501,7 @@
 .trial-v2-hero h1 {
   max-width: 980px;
   margin: 0 auto;
-  font-size: clamp(30px, 5.4vw, 30px);
+  font-size: clamp(30px, 5.4vw, 31px);
   line-height: 1;
   font-weight: 800;
 }
@@ -2529,7 +2529,7 @@
 .trial-v2-ai-row em { color: #4b1bdc; font-style: normal; }
 
 .trial-v2-qualifies {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   color: #4d21d4;
   font-weight: 750;
 }
@@ -2546,7 +2546,7 @@
 }
 
 .trial-v2-shell {
-  padding: 16px 38px 6px!important;
+  padding: 18px 38px 18px!important;
   border: 1px solid #e5e7ef;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 18px 55px rgba(25, 34, 80, 0.13);
@@ -2583,7 +2583,7 @@
   color: #171a27;
   font: inherit;
   font-size: 13px;
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 .trial-v2-field input::placeholder { color: #62697b; opacity: 1; }
@@ -2679,7 +2679,7 @@
 .trial-v2-submit {
   width: 100%;
   min-height: 40px;
-  margin-top: 10px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: 1fr 45px;
   align-items: center;
@@ -2715,7 +2715,7 @@
 .trial-v2-card{
   border: 1px solid #e5e7ef;
   box-shadow: 0 18px 55px rgba(25, 34, 80, 0.13);
-  padding: 14px 20px;
+  padding: 16px 20px;
   border-radius: 16px;
 }
 @media (max-width: 760px) {

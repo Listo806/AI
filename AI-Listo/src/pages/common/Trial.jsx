@@ -17,14 +17,12 @@ import "./Common.css";
 
 const t = {
   en: {
-    title: "Turn More Leads Into Revenue —",
-    titleAccent: "On Autopilot.",
+    title: "Steps away from activating your",
+    titleAccent: "Agentic AI Revenue OS.",
     aiLeads: "Leads.",
     aiQualifies: "Qualifies.",
     aiCloses: "Closes.",
     qualifies: "AI Qualifies in 60 Seconds!",
-    subtitle: "Agentic AI Revenue OS, all-in-one system.",
-    tagline: "One system. Every tool. Unlimited potential.",
     placeholders: {
       name: "Full Name",
       email: "Email Address",
@@ -49,14 +47,12 @@ const t = {
     },
   },
   es: {
-    title: "Convierte más leads en ingresos —",
-    titleAccent: "En piloto automático.",
+    title: "A solo unos pasos de activar tu",
+    titleAccent: "Agentic AI Revenue OS.",
     aiLeads: "Leads.",
     aiQualifies: "Califica.",
     aiCloses: "Cierra.",
     qualifies: "¡La IA califica en 60 segundos!",
-    subtitle: "Sistema operativo de ingresos con IA agéntica, todo en uno.",
-    tagline: "Un sistema. Todas las herramientas. Potencial ilimitado.",
     placeholders: {
       name: "Nombre completo",
       email: "Correo electrónico",
@@ -81,14 +77,12 @@ const t = {
     },
   },
   pt: {
-    title: "Transforme mais leads em receita —",
-    titleAccent: "No piloto automático.",
+    title: "A poucos passos de ativar seu",
+    titleAccent: "Sistema Operacional de Receita com IA Agêntica.",
     aiLeads: "Leads.",
     aiQualifies: "Qualifica.",
     aiCloses: "Fecha.",
     qualifies: "A IA qualifica em 60 segundos!",
-    subtitle: "Sistema operacional de receita com IA agêntica, tudo em um.",
-    tagline: "Um sistema. Todas as ferramentas. Potencial ilimitado.",
     placeholders: {
       name: "Nome completo",
       email: "Endereço de e-mail",
@@ -202,8 +196,6 @@ export default function StartTrial() {
           </div>
 
           <p className="trial-v2-qualifies">{tr.qualifies}</p>
-          <p className="trial-v2-subtitle">{tr.subtitle}</p>
-          <p className="trial-v2-tagline">{tr.tagline}</p>
         </header>
 
         <div className="trial-v2-card">
