@@ -14,4 +14,19 @@ export class PaymentsController {
   paymentSuccess(@Body() body: { userId: string }) {
     return this.paymentsService.paymentSuccess(body.userId);
   }
+
+  @Post('create-payment-intent')
+  createPaymentIntent(
+    @Body()
+    body: {
+      amount?: number;
+      currency?: string;
+      email?: string;
+      name?: string;
+      phone?: string;
+      plan?: string;
+    },
+  ) {
+    return this.paymentsService.createPaymentIntent(body);
+  }
 }
