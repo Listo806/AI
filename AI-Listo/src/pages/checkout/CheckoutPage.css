@@ -470,7 +470,7 @@ body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hov
   align-items: center;
   gap: 9px;
   color: #7b8193;
-  font-size: 14px;
+  font-size: 13px;
 }
 .checkout-stripe-config-error {
   padding: 18px 20px;
