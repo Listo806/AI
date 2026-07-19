@@ -1811,7 +1811,7 @@ i{
 
  .hero-left-in {
    padding-left: 8%;
-   padding-top: 10px;
+   padding-top: 35px;
  }
 
  #cortexa-ai-crm-landing .hero-right {
@@ -3067,6 +3067,7 @@ i{
 .cx-comp-right-wrap{
   display: grid;
   grid-template-columns: 1fr 135px;
+  align-items: center;
 }
 .cx-listo-right-inner{
   display: flex;
@@ -3088,6 +3089,7 @@ i{
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 #features .icon-red {
@@ -3096,8 +3098,8 @@ i{
 }
 
 #features .cx-comp-title-row h5 {
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 19px;
+  font-weight: 700;
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -3110,16 +3112,21 @@ i{
   color: #2563eb;
 }
 #features .cx-comp-col-right{
-  border-right: 1px solid #d4d6d7;
   padding-right: 30px;
+}
+#features .cx-comp-col-left{
+  padding-left: 30px;
+}
+#features .cx-comp-col-left .cx-comp-list{
+  padding-left: 10%;
 }
 #features .cx-comp-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 #features .cx-comp-list li {
@@ -3139,7 +3146,7 @@ i{
 
 #features .icon-red-small {
   color: #fff;
-  fill: #dc2626;
+  fill: #000;
 }
 
 #features .icon-blue-small {
@@ -3178,8 +3185,8 @@ i{
   position: absolute;
   top: 45%;
   transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   background-color: #000000;
   color: #ffffff;
   border-radius: 50%;
@@ -3190,7 +3197,7 @@ i{
 }
 
 #features .cx-comp-vs-circle span {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.05em;
 }
