@@ -655,9 +655,12 @@ i{
  .cx-nav button:hover {
    color: #000;
  }
-
+html{
+  background: #fff;
+}
  .cx-logo-img {
-  
+   width: 82%;
+  margin-top: -10px;
  }
 
  .cx-login {
@@ -2361,7 +2364,9 @@ i{
    text-align: center;
    background: #fff;
  }
-
+.cx-header .cx-nav{
+  margin-top: 20px;
+}
  #cortexa-ai-crm-landing .hero-text .hero-title {
    font-size: 17px;
    font-weight: 600;
