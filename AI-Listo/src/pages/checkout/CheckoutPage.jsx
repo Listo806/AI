@@ -46,6 +46,8 @@ const t = {
     userCount: { one: "1 user", many: "{count} users" },
     mostPopular: "Most Popular",
     month: "/month",
+    selectedAfterTrial: "Selected for after the free trial",
+    monthlyAfterTrial: "Monthly price after the free trial",
     setupFee: "One-time setup fee",
     totalToday: "Total due today",
     informationTitle: "Your information",
@@ -88,6 +90,8 @@ const t = {
     userCount: { one: "1 usuario", many: "{count} usuarios" },
     mostPopular: "Más Popular",
     month: "/mes",
+    selectedAfterTrial: "Seleccionado para después de la prueba gratuita",
+    monthlyAfterTrial: "Precio mensual después de la prueba gratuita",
     setupFee: "Tarifa única de configuración",
     totalToday: "Total a pagar hoy",
     informationTitle: "Tu información",
@@ -135,6 +139,8 @@ const t = {
     userCount: { one: "1 usuário", many: "{count} usuários" },
     mostPopular: "Mais Popular",
     month: "/mês",
+    selectedAfterTrial: "Selecionado para após o teste gratuito",
+    monthlyAfterTrial: "Preço mensal após o teste gratuito",
     setupFee: "Taxa única de configuração",
     totalToday: "Total devido hoje",
     informationTitle: "Suas informações",
@@ -200,7 +206,11 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
   const [postalCode, setPostalCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const total = useMemo(() => plan.price + SETUP_FEE, [plan.price]);
+  const isTrialCheckout = source === "trial";
+  const dueToday = useMemo(
+    () => (isTrialCheckout ? SETUP_FEE : plan.price + SETUP_FEE),
+    [isTrialCheckout, plan.price],
+  );
 
   const updateCustomer = (field) => (event) => {
     const value = event.target.value;
@@ -256,8 +266,10 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
             planKey: selectedPlan,
             monthlyPrice: plan.price,
             setupFee: SETUP_FEE,
-            amount: Math.round(total * 100),
+            amount: Math.round(dueToday * 100),
             currency: "usd",
+            chargeMonthlyNow: !isTrialCheckout,
+            startSubscriptionAfterTrial: isTrialCheckout,
           }),
         },
       );
@@ -327,9 +339,15 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
                 )}
               </div>
               <p>{usersText}</p>
+              {isTrialCheckout && (
+                <small className="checkout-plan-after-trial">
+                  {tr.selectedAfterTrial}
+                </small>
+              )}
             </div>
           </div>
           <div className="checkout-plan-price">
+            {isTrialCheckout && <small>{tr.monthlyAfterTrial}</small>}
             <strong>${formatMoney(plan.price)}</strong>
             <span>{tr.month}</span>
           </div>
@@ -342,7 +360,7 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
           <strong>{tr.totalToday}</strong>
           <div>
             <span>USD</span>
-            <strong>${formatMoney(total)}</strong>
+            <strong>${formatMoney(dueToday)}</strong>
           </div>
         </div>
       </section>
@@ -538,7 +556,7 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
         <span>
           {loading
             ? tr.processing
-            : tr.pay.replace("{total}", `$${formatMoney(total)}`)}
+            : tr.pay.replace("{total}", `$${formatMoney(dueToday)}`)}
         </span>
       </button>
 

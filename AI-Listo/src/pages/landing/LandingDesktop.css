@@ -657,9 +657,8 @@ i{
  }
 
  .cx-logo-img {
-   height: 70px;
-   width: auto;
-   object-fit: contain;
+   width: 82%;
+  margin-top: -10px;
  }
 
  .cx-login {
@@ -1003,7 +1002,10 @@ i{
  .cx-final-box .cx-btn {
    margin: 10px 0;
  }
-
+.cx-final-box i{
+  margin-top: 20px;
+  display: block;
+}
  .icon-purple {
    color: #4f46e5;
  }
