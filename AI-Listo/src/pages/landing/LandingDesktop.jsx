@@ -2015,7 +2015,7 @@ export default function Landing() {
                 </p>
               </div>
               <p className="underCTA">{tr.underCTA}</p>
-              <div className="hero-checks">
+              <div className="hero-checks ul">
                 {[
                   tr.heroCheck6,
                   tr.heroCheck7,

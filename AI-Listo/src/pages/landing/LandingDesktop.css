@@ -659,10 +659,12 @@ html{
   background: #fff;
 }
  .cx-logo-img {
-   width: 82%;
+   width: 100%;
   margin-top: -30px;
  }
-
+.cx-header .cx-left{
+  max-width: 275px;
+}
  .cx-login {
    margin-left: 15px;
    color: #000;
@@ -1659,6 +1661,8 @@ html{
    -webkit-background-clip: text;
    background-clip: text;
    -webkit-text-fill-color: transparent;
+   z-index: 9999999;
+   position: relative;
  }
 
  .hero-sub {
@@ -1670,7 +1674,9 @@ html{
  .hero-checks {
    margin-top: 14px;
  }
-
+.hero-checks.ul {
+   margin-top: 24px;
+ }
  .hero-checks p {
    font-size: 15px;
    max-width: 500px;
@@ -1680,12 +1686,14 @@ html{
    display: flex;
    gap: 10px;
    color: #1f2937;
-   font-size: 13px;
+   font-size: 14px;
    margin-top: 5px;
  }
 
  .check-item .check {
    min-width: 22px;
+   margin-top: 4px;
+   height: 18px;
  }
 
  .check svg {
