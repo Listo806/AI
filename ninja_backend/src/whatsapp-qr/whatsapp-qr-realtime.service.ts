@@ -8,10 +8,23 @@ export type MessagePayload = {
   userId: string;
   conversationId: string;
   contactPhone: string;
-  direction: 'inbound' | 'outbound';
+
+  direction: "inbound" | "outbound";
   senderType: string;
+
   body: string | null;
   messageType: string;
+
+  databaseMessageId?: string | null;
+  messageId?: string | null;
+
+  status?: "pending" | "sent" | "delivered" | "read" | "failed";
+
+  sentAt?: string | null;
+  deliveredAt?: string | null;
+  readAt?: string | null;
+  failedAt?: string | null;
+
   createdAt: string;
 };
 

@@ -32,6 +32,8 @@ import {
   ArrowUpRight,
   CheckCheck,
   Layers,
+  Check,
+  CircleAlert,
 } from "lucide-react";
 
 export default function LeadsPage() {
@@ -1293,6 +1295,51 @@ export default function LeadsPage() {
       ? normalizedReplies
       : fallbackSuggestedReplies;
   })();
+
+  const renderMessageStatus = (message) => {
+    if (message?.direction !== "outbound") {
+      return null;
+    }
+    const status = String(message?.status || "sent").toLowerCase();
+    if (status === "pending") {
+      return (
+        <Clock3
+          size={12}
+          className="lead-message-status lead-message-status-pending"
+        />
+      );
+    }
+    if (status === "failed") {
+      return (
+        <CircleAlert
+          size={12}
+          className="lead-message-status lead-message-status-failed"
+        />
+      );
+    }
+    if (status === "read") {
+      return (
+        <CheckCheck
+          size={13}
+          className="lead-message-status lead-message-status-read"
+        />
+      );
+    }
+    if (status === "delivered") {
+      return (
+        <CheckCheck
+          size={13}
+          className="lead-message-status lead-message-status-delivered"
+        />
+      );
+    }
+    return (
+      <Check
+        size={13}
+        className="lead-message-status lead-message-status-sent"
+      />
+    );
+  };
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -2071,7 +2118,7 @@ export default function LeadsPage() {
                         {isOutbound && (
                           <>
                             {" "}
-                            <CheckCheck size={12} />
+                            {renderMessageStatus(message)}
                           </>
                         )}
                       </span>

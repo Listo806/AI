@@ -217,13 +217,24 @@ export class BaileysSocketService
   /**
    * Send text to E.164 contact over Baileys (outbound).
    */
-  async sendText(userId: string, toE164: string, text: string): Promise<void> {
+  async sendText(
+    userId: string,
+    toE164: string,
+    text: string,
+  ): Promise<string | null> {
     const ctx = this.contexts.get(userId);
-    if (!ctx?.sock) throw new Error("WhatsApp QR socket not connected");
-    const digits = toE164.replace(/\D/g, "");
-    if (digits.length < 10) throw new Error("Invalid phone for send");
+    if (!ctx?.sock) {
+      throw new Error("WhatsApp QR socket not connected");
+    }
+    const digits = String(toE164 || "").replace(/\D/g, "");
+    if (digits.length < 10) {
+      throw new Error("Invalid phone for send");
+    }
     const jid = `${digits}@s.whatsapp.net`;
-    await ctx.sock.sendMessage(jid, { text });
+    const result = await ctx.sock.sendMessage(jid, {
+      text,
+    });
+    return result?.key?.id || null;
   }
 
   /**

@@ -79,7 +79,7 @@ export class WhatsAppQrMessageService {
           params.sessionId,
           params.conversationId,
           params.leadId,
-          params.contactId ?? null,
+          contactId,
           params.teamId,
           params.contactPhone,
           params.messageType,
@@ -126,6 +126,9 @@ export class WhatsAppQrMessageService {
         delivered_at,
         read_at,
         failed_at,
+        conversation_id,
+        lead_id,
+        contact_id,
         created_at
       FROM whatsapp_qr_messages
       WHERE conversation_id = $1

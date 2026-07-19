@@ -9,7 +9,11 @@ import {
   BadRequestException,
   NotFoundException,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
+
+import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
@@ -520,16 +524,25 @@ export class WhatsAppQrController {
         "WhatsApp QR session for this conversation is not connected",
       );
     }
-    await this.outbound.sendAgentVoice({
+    const savedMessage = await this.outbound.sendAgentVoice({
       userId: sendConversation.user_id,
       sessionId: sendConversation.session_id,
       conversationId: sendConversation.id,
       leadId: sendConversation.lead_id,
+      contactId: sendConversation.contact_id || null,
       teamId: sendConversation.team_id,
       contactPhone: sendConversation.contact_phone,
       audioBase64: dto.audioBase64,
     });
-    return { success: true };
+
+    return {
+      success: true,
+      data: {
+        conversationId: sendConversation.id,
+        sent: true,
+        message: savedMessage,
+      },
+    };
   }
 
   @Post("conversations/:contactPhone/toggle-ai")
@@ -754,7 +767,7 @@ export class WhatsAppQrController {
       });
     }
 
-    await this.outbound.sendAgentText({
+    const savedMessage = await this.outbound.sendAgentText({
       userId: sendConversation.user_id,
       sessionId: sendConversation.session_id,
       conversationId: sendConversation.id,
@@ -773,6 +786,7 @@ export class WhatsAppQrController {
         contactId: sendConversation.contact_id || null,
         contactPhone: sendConversation.contact_phone,
         sent: true,
+        message: savedMessage,
       },
     };
   }

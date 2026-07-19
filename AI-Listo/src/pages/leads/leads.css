@@ -1790,7 +1790,30 @@ body .leads-page {
   line-height: 1;
   cursor: pointer;
 }
+.lead-message-status {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
 
+.lead-message-status-pending {
+  color: #94a3b8;
+}
+
+.lead-message-status-sent {
+  color: #94a3b8;
+}
+
+.lead-message-status-delivered {
+  color: #94a3b8;
+}
+
+.lead-message-status-read {
+  color: #3b82f6;
+}
+
+.lead-message-status-failed {
+  color: #dc2626;
+}
 @media (max-width: 767px) {
   .lead-contact-action-btn {
     min-width: 36px;
