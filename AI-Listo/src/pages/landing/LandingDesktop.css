@@ -2364,7 +2364,7 @@ html{
    text-align: center;
    background: #fff;
  }
-.cx-header .cx-nav{
+.cx-header .cx-nav, .cx-header .cx-actions{
   margin-top: 26px;
 }
  #cortexa-ai-crm-landing .hero-text .hero-title {
