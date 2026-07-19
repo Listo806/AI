@@ -57,11 +57,16 @@ export default function LeadsPage() {
   const [propertiesNote, setPropertiesNote] = useState("");
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [followUpMessage, setFollowUpMessage] = useState("");
+  const [isSubmittingFollowUp, setIsSubmittingFollowUp] = useState(false);
   const [showLeadProfileModal, setShowLeadProfileModal] = useState(false);
 
   const [chatMessage, setChatMessage] = useState("");
   const [leadMessages, setLeadMessages] = useState([]);
   const [leadMessagesLoading, setLeadMessagesLoading] = useState(false);
+  const [conversationIntelligence, setConversationIntelligence] =
+    useState(null);
+  const [conversationIntelligenceLoading, setConversationIntelligenceLoading] =
+    useState(false);
 
   const [showBookShowingModal, setShowBookShowingModal] = useState(false);
   const [showAutomationModal, setShowAutomationModal] = useState(false);
@@ -84,6 +89,7 @@ export default function LeadsPage() {
   const audioChunksRef = useRef([]);
   const recordTimerRef = useRef(null);
   const recordingCancelledRef = useRef(false);
+  const chatBodyRef = useRef(null);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -299,8 +305,12 @@ export default function LeadsPage() {
   const selectLead = (lead) => {
     setSelectedLead(lead);
     setLeadActionMessage("");
+    setConversationIntelligence(null);
     fetchLeadEvents(lead.id);
     fetchLeadMessages(lead.id);
+    if (lead.phone) {
+      fetchConversationIntelligence(lead.phone);
+    }
   };
 
   const fetchLeadById = async (leadId) => {
@@ -520,37 +530,56 @@ export default function LeadsPage() {
   const openAiFollowUp = () => {
     if (!selectedLead?.id) return;
 
-    setFollowUpMessage(
-      `Hi ${selectedLead.name || "there"}, just following up to see if you're still interested.`,
-    );
+    const firstAiReply = Array.isArray(
+      conversationIntelligence?.suggestedReplies,
+    )
+      ? conversationIntelligence.suggestedReplies.find(
+          (reply) => typeof reply === "string" && reply.trim(),
+        )
+      : null;
 
+    const fallbackMessage = `Hi ${
+      selectedLead.name || "there"
+    }, just following up to see if you're still interested.`;
+
+    setFollowUpMessage(firstAiReply?.trim() || fallbackMessage);
     setShowFollowUpModal(true);
   };
 
   const submitAiFollowUp = async (e) => {
     e.preventDefault();
 
-    if (!selectedLead?.id || !followUpMessage.trim()) return;
+    const message = String(followUpMessage || "").trim();
+
+    if (!selectedLead?.id || !message || isSubmittingFollowUp) return;
 
     try {
-      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+      setIsSubmittingFollowUp(true);
+
+      await apiClient.request(`/whatsapp-qr/leads/${selectedLead.id}/send`, {
         method: "POST",
-        body: JSON.stringify({
-          eventType: "lead.ai_follow_up_sent",
-          metadata: {
-            title: "AI follow-up sent",
-            sub: followUpMessage.trim(),
-            message: followUpMessage.trim(),
-          },
-        }),
+        body: JSON.stringify({ message }),
       });
 
       setShowFollowUpModal(false);
       setFollowUpMessage("");
-      fetchLeadEvents(selectedLead.id);
-      fetchFullLeadEvents(1, false);
+
+      await Promise.all([
+        fetchLeadMessages(selectedLead.id),
+        fetchLeadEvents(selectedLead.id),
+        fetchConversationIntelligence(selectedLead.phone),
+      ]);
+
+      if (showTimelineModal) {
+        await fetchFullLeadEvents(1, false);
+      }
     } catch (err) {
-      console.error("AI follow-up error:", err);
+      console.error("Send AI WhatsApp follow-up error:", err);
+      setLeadActionMessage(
+        err?.message || "Failed to send the WhatsApp follow-up.",
+      );
+    } finally {
+      setIsSubmittingFollowUp(false);
     }
   };
 
@@ -567,22 +596,33 @@ export default function LeadsPage() {
       await Promise.all([
         fetchLeadMessages(selectedLead.id),
         fetchLeadEvents(selectedLead.id),
+        fetchConversationIntelligence(selectedLead.phone),
       ]);
     } catch (err) {
       console.error("Send WhatsApp message from lead error:", err);
     }
   };
 
-  const generateAiAssistMessage = () => {
-    if (!selectedLead) return;
+  const generateAiAssistMessage = async () => {
+    if (!selectedLead?.phone) return;
 
-    const name = selectedLead.name || "there";
-    const source = selectedLead.source || "your inquiry";
-    const status = selectedLead.status || "new";
-
-    const message = `Hi ${name}, thanks for your interest. Based on ${source}, I can help you with matching properties and next steps. Are you available for a quick call or showing this week?`;
-
-    setChatMessage(message);
+    try {
+      const response = await apiClient.request(
+        `/whatsapp-qr/conversations/${encodeURIComponent(
+          selectedLead.phone,
+        )}/ai-assist`,
+        {
+          method: "POST",
+        },
+      );
+      const data = response?.data || response || {};
+      const reply = data.reply || data.message || "";
+      if (reply) {
+        setChatMessage(reply);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const applySuggestedReply = (type) => {
@@ -639,6 +679,33 @@ export default function LeadsPage() {
       setLeadMessagesLoading(false);
     }
   };
+
+  const fetchConversationIntelligence = async (phone) => {
+    if (!phone) {
+      setConversationIntelligence(null);
+      setConversationIntelligenceLoading(false);
+      return;
+    }
+
+    try {
+      setConversationIntelligenceLoading(true);
+
+      const response = await apiClient.request(
+        `/whatsapp-qr/conversations/${encodeURIComponent(phone)}/intelligence`,
+        {
+          method: "GET",
+        },
+      );
+
+      setConversationIntelligence(response?.data || response || null);
+    } catch (err) {
+      console.error("Fetch conversation intelligence error:", err);
+      setConversationIntelligence(null);
+    } finally {
+      setConversationIntelligenceLoading(false);
+    }
+  };
+
   const getCloseProbability = (stage) => {
     const map = {
       new: 10,
@@ -770,7 +837,74 @@ export default function LeadsPage() {
     };
   };
 
-  const leadIntelligence = getLeadIntelligence();
+  const fallbackLeadIntelligence = getLeadIntelligence();
+
+  const normalizePercentNumber = (value, fallback = 0) => {
+    if (value === null || value === undefined || value === "") {
+      return Number(fallback) || 0;
+    }
+
+    const parsed = Number(String(value).replace("%", "").trim());
+
+    return Number.isFinite(parsed)
+      ? Math.max(0, Math.min(100, Math.round(parsed)))
+      : Number(fallback) || 0;
+  };
+
+  const intelligenceScore = normalizePercentNumber(
+    conversationIntelligence?.score,
+    fallbackLeadIntelligence.score,
+  );
+
+  const leadIntelligence = {
+    ...fallbackLeadIntelligence,
+    score: intelligenceScore,
+    temperature:
+      intelligenceScore >= 80
+        ? "Hot"
+        : intelligenceScore >= 60
+          ? "Warm"
+          : "Cool",
+    sentiment:
+      conversationIntelligence?.sentiment ||
+      fallbackLeadIntelligence.sentiment ||
+      "Unknown",
+    interestLevel:
+      conversationIntelligence?.intent ||
+      fallbackLeadIntelligence.interestLevel ||
+      "Unknown",
+    responseLikelihood:
+      conversationIntelligence?.responseLikelihood ||
+      fallbackLeadIntelligence.responseLikelihood ||
+      "Unknown",
+    closeProbability:
+      conversationIntelligence?.closeProbability ||
+      `${getCloseProbability(selectedLead?.dealStage)}%`,
+    expectedRevenue:
+      conversationIntelligence?.expectedRevenue ||
+      `$${Number(selectedLead?.dealValue || 0).toLocaleString()}`,
+    budget: conversationIntelligence?.budget || "Unknown",
+    timeline: conversationIntelligence?.timeline || "Unknown",
+    ghostRisk: conversationIntelligence?.ghostRisk || "Unknown",
+    summary:
+      conversationIntelligence?.summary ||
+      selectedLead?.notes ||
+      `Lead source: ${selectedLead?.source || "CRM"}. Status: ${
+        selectedLead?.status || "new"
+      }.`,
+    recommendedAction:
+      conversationIntelligence?.recommendedAction ||
+      selectedLead?.recommendedActionReason ||
+      "Review the conversation and follow up.",
+  };
+
+  useEffect(() => {
+    if (!chatBodyRef.current) return;
+
+    requestAnimationFrame(() => {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    });
+  }, [leadMessages, selectedLead?.id]);
 
   const createLead = async (e) => {
     e.preventDefault();
@@ -1007,8 +1141,12 @@ export default function LeadsPage() {
         setSelectedLead(activeLead);
         setLeadActionMessage("");
         if (activeLead?.id) {
+          setConversationIntelligence(null);
           fetchLeadEvents(activeLead.id);
           fetchLeadMessages(activeLead.id);
+          if (activeLead.phone) {
+            fetchConversationIntelligence(activeLead.phone);
+          }
         }
       }
     } catch (err) {
@@ -1121,6 +1259,40 @@ export default function LeadsPage() {
     recordingCancelledRef.current = false;
     mediaRecorderRef.current?.stop();
   };
+  const fallbackSuggestedReplies = [
+    "Send matching properties",
+    "Ask about their budget range",
+    "Suggest a property viewing time",
+  ];
+
+  const aiSuggestedReplies = (() => {
+    const rawReplies =
+      conversationIntelligence?.suggestedReplies ||
+      conversationIntelligence?.suggested_replies ||
+      conversationIntelligence?.replies ||
+      [];
+
+    if (!Array.isArray(rawReplies)) {
+      return fallbackSuggestedReplies;
+    }
+
+    const normalizedReplies = rawReplies
+      .map((reply) => {
+        if (typeof reply === "string") {
+          return reply.trim();
+        }
+
+        return String(
+          reply?.text || reply?.message || reply?.reply || reply?.content || "",
+        ).trim();
+      })
+      .filter(Boolean)
+      .slice(0, 3);
+
+    return normalizedReplies.length
+      ? normalizedReplies
+      : fallbackSuggestedReplies;
+  })();
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -1794,10 +1966,9 @@ export default function LeadsPage() {
             <div className="summary-text-box">
               <h4>AI Lead Summary</h4>
               <p>
-                {selectedLead?.notes ||
-                  `Lead source: ${selectedLead?.source || "CRM"}. Status: ${
-                    selectedLead?.status || "new"
-                  }.`}
+                {conversationIntelligenceLoading
+                  ? "Analyzing conversation..."
+                  : leadIntelligence.summary}
               </p>
             </div>
             <button
@@ -1810,13 +1981,20 @@ export default function LeadsPage() {
           </div>
 
           {/* CHAT BODY */}
-          <div className="chat-body">
+          <div className="chat-body" ref={chatBodyRef}>
             {leadMessagesLoading ? (
               <div className="message left">
                 <p>Loading messages...</p>
               </div>
             ) : leadMessages.length ? (
               leadMessages
+                .slice()
+                .sort((a, b) => {
+                  return (
+                    new Date(a.created_at || a.createdAt).getTime() -
+                    new Date(b.created_at || b.createdAt).getTime()
+                  );
+                })
                 .map((message) => {
                   const isOutbound =
                     message.direction === "outbound" ||
@@ -1908,8 +2086,6 @@ export default function LeadsPage() {
                 <span>Start a conversation</span>
               </div>
             )}
-
-            {chatMessage && <div className="typing-indicator">Typing...</div>}
           </div>
 
           {/* AI SUGGESTED REPLIES */}
@@ -1918,18 +2094,14 @@ export default function LeadsPage() {
               <Sparkles size={12} /> AI Suggested Replies
             </div>
             <div className="suggested-chips-scroll">
-              {[
-                { label: "Send matching properties", type: "properties" },
-                { label: "Ask budget range", type: "budget" },
-                { label: "Suggest viewing time", type: "viewing" },
-              ].map((item) => (
+              {aiSuggestedReplies.map((reply, index) => (
                 <button
-                  key={item.type}
                   className="chip-btn"
-                  onClick={() => applySuggestedReply(item.type)}
-                  disabled={!selectedLead}
+                  type="button"
+                  key={`${reply}-${index}`}
+                  onClick={() => setChatMessage(reply)}
                 >
-                  {item.label}
+                  {reply}
                 </button>
               ))}
             </div>
@@ -2138,6 +2310,10 @@ export default function LeadsPage() {
                 {leadIntelligence.temperature} Lead
               </span>
             </div>
+            {conversationIntelligenceLoading && (
+              <p className="panel-header-desc">Analyzing conversation...</p>
+            )}
+
             <div className="insight-wrap">
               <div className="score-circle">
                 <div>
@@ -2151,21 +2327,27 @@ export default function LeadsPage() {
                   <span>Sentiment</span>
                   <strong>{leadIntelligence.sentiment}</strong>
                 </div>
+
                 <div className="insight-row">
-                  <span>Interest Level</span>
+                  <span>Intent</span>
                   <strong>{leadIntelligence.interestLevel}</strong>
                 </div>
+
                 <div className="insight-row">
                   <span>Response Likelihood</span>
                   <strong>{leadIntelligence.responseLikelihood}</strong>
                 </div>
+
                 <div className="insight-row">
-                  <span>Engagement Score</span>
-                  <strong className="dark-insight-text">
-                    {leadIntelligence.engagementScore}/100
-                  </strong>
+                  <span>Ghost Risk</span>
+                  <strong>{leadIntelligence.ghostRisk}</strong>
                 </div>
               </div>
+            </div>
+
+            <div className="lead-ai-summary">
+              <strong>Recommended Action</strong>
+              <p>{leadIntelligence.recommendedAction}</p>
             </div>
           </div>
 
@@ -2178,21 +2360,21 @@ export default function LeadsPage() {
               <div className="revenue-box">
                 <span className="revenue-label">Deal Value</span>
                 <strong className="revenue-val-green">
-                  ${Number(selectedLead?.dealValue || 0).toLocaleString()}
+                  {leadIntelligence.expectedRevenue}
                 </strong>
               </div>
 
               <div className="revenue-box">
                 <span className="revenue-label">Close Probability</span>
                 <strong className="revenue-val-blue">
-                  {getCloseProbability(selectedLead?.dealStage)}%
+                  {leadIntelligence.closeProbability}
                 </strong>
               </div>
 
               <div className="revenue-box">
-                <span className="revenue-label">Est. Close Date</span>
+                <span className="revenue-label">Timeline</span>
                 <strong className="revenue-val-dark">
-                  {selectedLead?.estimatedCloseDate || "-"}
+                  {leadIntelligence.timeline}
                 </strong>
               </div>
 
@@ -2495,11 +2677,21 @@ export default function LeadsPage() {
                 <button
                   type="button"
                   onClick={() => setShowFollowUpModal(false)}
+                  disabled={isSubmittingFollowUp}
                 >
                   Cancel
                 </button>
 
-                <button type="submit">Send Follow-Up</button>
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmittingFollowUp ||
+                    !followUpMessage.trim() ||
+                    !selectedLead?.id
+                  }
+                >
+                  {isSubmittingFollowUp ? "Sending..." : "Send Follow-Up"}
+                </button>
               </div>
             </form>
           </div>

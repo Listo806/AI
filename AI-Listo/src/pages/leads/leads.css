@@ -579,6 +579,7 @@ body .leads-page {
 
 .leads-page .insight-row strong {
   color: #16a34a;
+  text-align: right;
 }
 
 .leads-page .automation-row p {
@@ -952,7 +953,7 @@ body .leads-page {
 .leads-page .suggested-chips-scroll {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
+  flex-direction: column;
 }
 
 .leads-page .chip-btn {
