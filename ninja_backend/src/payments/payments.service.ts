@@ -13,6 +13,14 @@ import { ConfigService } from '../config/config.service';
 export class PaymentsService {
   private stripeClient: Stripe | null = null;
 
+  // Trusted server-side price catalog (USD). The client NEVER dictates the charge.
+  private static readonly PLAN_PRICES: Record<string, number> = {
+    solo: 197,
+    team: 347,
+    growth: 497,
+  };
+  private static readonly SETUP_FEE = 97;
+
   constructor(
     private readonly db: DatabaseService,
     private readonly config: ConfigService,
@@ -40,48 +48,78 @@ export class PaymentsService {
 
   // Create a one-time card PaymentIntent for the checkout flow. The frontend
   // (CheckoutPage.jsx) confirms it with Stripe Elements using the clientSecret.
+  //
+  // Security: the charge amount is computed HERE from a trusted price table.
+  // The client-supplied `amount` is ignored so it cannot be tampered.
   async createPaymentIntent(body: {
-    amount?: number;
-    currency?: string;
+    plan?: string;
+    planKey?: string;
+    source?: string;
+    userId?: string | null;
     email?: string;
     name?: string;
     phone?: string;
-    plan?: string;
+    currency?: string;
   }) {
-    const amount = Math.round(Number(body?.amount));
-    // Stripe rejects charges under 50 cents; guard empty/invalid amounts.
-    if (!Number.isFinite(amount) || amount < 50) {
-      throw new BadRequestException('Invalid payment amount.');
+    const planKey = String(body?.plan || body?.planKey || 'team').toLowerCase();
+    const planPrice = PaymentsService.PLAN_PRICES[planKey];
+    if (!planPrice) {
+      throw new BadRequestException('Unknown plan.');
     }
 
+    // Trial checkout charges only the one-time setup fee today (the monthly plan
+    // price starts after the free trial). Pricing checkout charges plan + setup.
+    const isTrial = body?.source === 'trial';
+    const dueTodayDollars = isTrial
+      ? PaymentsService.SETUP_FEE
+      : planPrice + PaymentsService.SETUP_FEE;
+    const amount = Math.round(dueTodayDollars * 100);
+
+    const userId = body?.userId ? String(body.userId) : '';
+
     try {
-      const paymentIntent = await this.getStripe().paymentIntents.create({
-        amount,
-        currency: (body.currency || 'usd').toLowerCase(),
-        payment_method_types: ['card'],
-        description: body.plan
-          ? `CORTEXA ${body.plan} plan`
-          : 'CORTEXA checkout',
-        receipt_email: body.email || undefined,
-        metadata: {
-          name: body.name || '',
-          email: body.email || '',
-          phone: body.phone || '',
-          plan: body.plan || '',
+      const paymentIntent = await this.getStripe().paymentIntents.create(
+        {
+          amount,
+          currency: (body.currency || 'usd').toLowerCase(),
+          payment_method_types: ['card'],
+          description: `CORTEXA ${planKey} plan (${isTrial ? 'trial setup' : 'plan + setup'})`,
+          receipt_email: body.email || undefined,
+          metadata: {
+            userId,
+            plan: planKey,
+            source: body.source || '',
+            name: body.name || '',
+            email: body.email || '',
+            phone: body.phone || '',
+          },
         },
-      });
+        // Stable key so an accidental double-submit reuses the same PaymentIntent
+        // instead of creating (and potentially charging) a second one.
+        userId
+          ? { idempotencyKey: `pi_${userId}_${planKey}_${amount}` }
+          : undefined,
+      );
 
       return {
         clientSecret: paymentIntent.client_secret,
-        successUrl: '/sign-in',
+        // Route through /payment-success so the payment is recorded
+        // (payment_status='paid') and the user is auto-logged-in. Without a
+        // userId (pricing path) there is no account yet, so fall back to sign-in.
+        successUrl: userId
+          ? `/payment-success?userId=${encodeURIComponent(userId)}`
+          : '/sign-in',
       };
     } catch (err) {
+      // Log full detail server-side; return a safe, generic message to the client.
+      console.error('CREATE PAYMENT INTENT ERROR:', err);
       if (err instanceof HttpException) {
         throw err;
       }
-      const message =
-        err instanceof Error ? err.message : 'Payment could not be initiated.';
-      throw new InternalServerErrorException(message);
+      if ((err as { type?: string })?.type === 'StripeCardError') {
+        throw new BadRequestException('Your card could not be processed.');
+      }
+      throw new InternalServerErrorException('Payment could not be initiated.');
     }
   }
 

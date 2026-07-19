@@ -19,12 +19,14 @@ export class PaymentsController {
   createPaymentIntent(
     @Body()
     body: {
-      amount?: number;
-      currency?: string;
+      plan?: string;
+      planKey?: string;
+      source?: string;
+      userId?: string | null;
       email?: string;
       name?: string;
       phone?: string;
-      plan?: string;
+      currency?: string;
     },
   ) {
     return this.paymentsService.createPaymentIntent(body);
