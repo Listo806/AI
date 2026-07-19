@@ -69,8 +69,7 @@ const t = {
     },
     btnNormal: "Continuar al pago seguro",
     btnLoading: "Creando cuenta...",
-    footerNote:
-      "Serás redirigido a un pago seguro para activar tu cuenta.",
+    footerNote: "Serás redirigido a un pago seguro para activar tu cuenta.",
     errors: {
       server: "Error del servidor. Inténtalo de nuevo.",
       generic: "No se pudo crear tu cuenta de prueba.",
@@ -169,9 +168,10 @@ export default function StartTrial() {
       localStorage.setItem("trialUserId", data.userId);
       localStorage.setItem("email", form.email);
       localStorage.setItem("name", form.name);
+      localStorage.setItem("phone", form.phone);
       localStorage.setItem("password", form.password);
       localStorage.setItem("trialPlan", form.plan);
-      navigate(`/checkout?plan=${encodeURIComponent(form.plan)}`);
+      navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
       console.error("SUBMIT ERROR:", error);
       alert(error.message || tr.errors.server);
@@ -190,9 +190,15 @@ export default function StartTrial() {
           </h1>
 
           <div className="trial-v2-ai-row" aria-label="AI capabilities">
-            <strong><em>AI</em> {tr.aiLeads}</strong>
-            <strong><em>AI</em> {tr.aiQualifies}</strong>
-            <strong><em>AI</em> {tr.aiCloses}</strong>
+            <strong>
+              <em>AI</em> {tr.aiLeads}
+            </strong>
+            <strong>
+              <em>AI</em> {tr.aiQualifies}
+            </strong>
+            <strong>
+              <em>AI</em> {tr.aiCloses}
+            </strong>
           </div>
 
           <p className="trial-v2-qualifies">{tr.qualifies}</p>
@@ -264,7 +270,9 @@ export default function StartTrial() {
             </div>
 
             <div className="trial-v2-plan-heading">
-              <div className="trial-v2-plan-icon"><Box size={34} /></div>
+              <div className="trial-v2-plan-icon">
+                <Box size={34} />
+              </div>
               <div>
                 <h2>{tr.choosePlan}</h2>
                 <p>{tr.choosePlanNote}</p>
@@ -289,7 +297,11 @@ export default function StartTrial() {
                     <span className="trial-v2-radio" aria-hidden="true">
                       <span />
                     </span>
-                    <Icon className="trial-v2-plan-symbol" size={36} strokeWidth={1.8} />
+                    <Icon
+                      className="trial-v2-plan-symbol"
+                      size={36}
+                      strokeWidth={1.8}
+                    />
                     <span className="trial-v2-plan-copy">
                       <strong>{name}</strong>
                       <small>{tr.users[usersKey]}</small>
@@ -299,9 +311,15 @@ export default function StartTrial() {
               })}
             </div>
 
-            <button type="submit" className="trial-v2-submit" disabled={loading}>
-              
-              <span><LockKeyhole size={22} /> {loading ? tr.btnLoading : tr.btnNormal}</span>
+            <button
+              type="submit"
+              className="trial-v2-submit"
+              disabled={loading}
+            >
+              <span>
+                <LockKeyhole size={22} />{" "}
+                {loading ? tr.btnLoading : tr.btnNormal}
+              </span>
               <ChevronRight size={22} />
             </button>
 

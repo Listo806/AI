@@ -2280,7 +2280,6 @@
 
 .pricing-page .cx-side-cortexa {
   padding-left: 150px;
-  border-left: 1px solid #e5e7eb;
 }
 
 .pricing-page .cx-comp-side-title {
@@ -2407,13 +2406,40 @@
   margin: 8px 0 0 0;
   font-style: italic;
 }
-
-.pricing-page .cx-comp-vs-badge {
+.pricing-page .cx-comp-vs-circle-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+.pricing-page .cx-comp-vertical-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #d4d6d7;
+    z-index: 1;
+}
+.pricing-page .cx-comp-vs-circle span {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: .05em;
+}
+.pricing-page .cx-comp-vs-circle {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
+      width: 60px;
+    height: 60px;
+    background-color: #000;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
 }
 
 .pricing-page .cx-comp-vs-badge span {

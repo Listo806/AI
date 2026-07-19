@@ -2574,9 +2574,9 @@ export default function Landing() {
                 <p>{tr.captureDesc}</p>
               </div>
             </div>
-            <div class="flow-arrow-container">
-              <div class="arrow-line"></div>
-              <div class="arrow-head"></div>
+            <div className="flow-arrow-container">
+              <div className="arrow-line"></div>
+              <div className="arrow-head"></div>
             </div>
             <div className="smart-step">
               <div className="step-number">2</div>
@@ -2585,9 +2585,9 @@ export default function Landing() {
                 <p>{tr.convertDesc}</p>
               </div>
             </div>
-            <div class="flow-arrow-container">
-              <div class="arrow-line"></div>
-              <div class="arrow-head"></div>
+            <div className="flow-arrow-container">
+              <div className="arrow-line"></div>
+              <div className="arrow-head"></div>
             </div>
             <div className="smart-step">
               <div className="step-number">3</div>

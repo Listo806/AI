@@ -315,19 +315,19 @@ const t = {
 
     vsCompOtherTitle: "WITH OTHER PLATFORMS",
     vsCompOther1: "High monthly cost with multiple add-ons",
-    vsCompOther2: "Various types of fees can be applied.",
-    vsCompOther3: "Complex setup and long onboarding",
-    vsCompOther4: "Pay more as you add seats, features, and tools",
-    vsCompOther5: "By the time you get going, you have spent a lot of money",
+    vsCompOther2: "Complex setup and long onboarding",
+    vsCompOther3: "Pay for features you don't fully use",
+    vsCompOther4: "Switch between different tools all day",
+    vsCompOther5: "Hidden costs that add up over time",
 
     vsCompVs: "VS.",
 
     vsCompCortexaTitle: "WITH CORTEXA AIOS",
-    vsCompCortexa1: "One system with everything you need",
-    vsCompCortexa2: "$97 one-time setup fee",
-    vsCompCortexa3: "$197/month - everything included",
-    vsCompCortexa4: "Add agents (users) for $97/month",
-    vsCompCortexa5: "Start today and start making revenue",
+    vsCompCortexa1: "Everything in one AI-powered platform",
+    vsCompCortexa2: "AI automates follow-ups and conversations",
+    vsCompCortexa3: "Built to help you close more deals",
+    vsCompCortexa4: "Ready to use in minutes",
+    vsCompCortexa5: "Scale your business as you grow",
   },
   es: {
     nav: {
@@ -615,21 +615,20 @@ const t = {
     ],
 
     vsCompOtherTitle: "CON OTRAS PLATAFORMAS",
-    vsCompOther1: "Alto costo mensual con múltiples complementos",
-    vsCompOther2: "Se pueden aplicar diversos tipos de tarifas.",
-    vsCompOther3: "Configuración compleja y larga capacitación inicial",
-    vsCompOther4:
-      "Pague más a medida que agrega usuarios, funciones y herramientas",
-    vsCompOther5: "Para cuando empiece a funcionar,has gastado mucho dinero",
+    vsCompOther1: "Altos costos mensuales con múltiples complementos",
+    vsCompOther2: "Configuración compleja y largo proceso de implementación",
+    vsCompOther3: "Pagas por funciones que realmente no utilizas",
+    vsCompOther4: "Cambias entre diferentes herramientas todo el día",
+    vsCompOther5: "Costos ocultos que aumentan con el tiempo",
 
     vsCompVs: "VS.",
 
     vsCompCortexaTitle: "CON CORTEXA AIOS",
-    vsCompCortexa1: "Un sistema con todo lo que necesita",
-    vsCompCortexa2: "Tarifa de configuración única de $97",
-    vsCompCortexa3: "$197/mes - todo incluido",
-    vsCompCortexa4: "Agregue agentes (usuarios) por $97/mes",
-    vsCompCortexa5: "Comience hoy mismo y comience a generar ingresos",
+    vsCompCortexa1: "Todo en una plataforma impulsada por IA",
+    vsCompCortexa2: "La IA automatiza seguimientos y conversaciones",
+    vsCompCortexa3: "Diseñado para ayudarte a cerrar más negocios",
+    vsCompCortexa4: "Listo para usar en minutos",
+    vsCompCortexa5: "Haz crecer tu negocio a medida que creces",
   },
   pt: {
     nav: {
@@ -916,21 +915,20 @@ const t = {
     ],
 
     vsCompOtherTitle: "COM OUTRAS PLATAFORMAS",
-    vsCompOther1: "Alto custo mensal com múltiplos add-ons",
-    vsCompOther2: "Diferentes tipos de taxas podem ser aplicados.",
-    vsCompOther3: "Configuração complexa e integração demorada",
-    vsCompOther4:
-      "Pague mais conforme adiciona usuários, recursos e ferramentas",
-    vsCompOther5: "No momento em que você começar, você gastou muito dinheiro",
+    vsCompOther1: "Alto custo mensal com vários complementos",
+    vsCompOther2: "Configuração complexa e longo processo de implantação",
+    vsCompOther3: "Pague por recursos que você nem utiliza totalmente",
+    vsCompOther4: "Troque entre diferentes ferramentas o dia todo",
+    vsCompOther5: "Custos ocultos que aumentam com o tempo",
 
     vsCompVs: "VS.",
 
     vsCompCortexaTitle: "COM CORTEXA AIOS",
-    vsCompCortexa1: "Um sistema com tudo o que você precisa",
-    vsCompCortexa2: "Taxa de configuração única de $97",
-    vsCompCortexa3: "$197/mês - tudo incluso",
-    vsCompCortexa4: "Adicione agentes (usuários) por $97/mês",
-    vsCompCortexa5: "Comece hoje e comece a faturar",
+    vsCompCortexa1: "Tudo em uma plataforma com IA",
+    vsCompCortexa2: "A IA automatiza acompanhamentos e conversas",
+    vsCompCortexa3: "Criado para ajudar você a fechar mais negócios",
+    vsCompCortexa4: "Pronto para usar em poucos minutos",
+    vsCompCortexa5: "Expanda seu negócio conforme ele cresce",
   },
 };
 
@@ -969,7 +967,6 @@ export default function PricingPage() {
   };
   return (
     <div className="pricing-page">
-     
       <main className="main-content">
         <section className="cx-pricing cx-center">
           <div className="cx-pricing-header">
@@ -1011,9 +1008,12 @@ export default function PricingPage() {
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
               <div className="cx-plans-users">{tr.plansData.solo.users}</div>
-              <a href="/trial" className="cx-plans-btn">
+              <Link
+                to="/checkout?plan=solo&source=pricing"
+                className="cx-plans-btn"
+              >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
+              </Link>
               <p
                 style={{
                   marginTop: "8px",
@@ -1051,9 +1051,12 @@ export default function PricingPage() {
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
               <div className="cx-plans-users">{tr.plansData.team.users}</div>
-              <a href="/trial" className="cx-plans-btn">
+              <Link
+                to="/checkout?plan=team&source=pricing"
+                className="cx-plans-btn"
+              >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
+              </Link>
               <p
                 style={{
                   marginTop: "8px",
@@ -1090,9 +1093,12 @@ export default function PricingPage() {
                 <span className="cx-plans-period">{tr.plansPerMonth}</span>
               </div>
               <div className="cx-plans-users">{tr.plansData.growth.users}</div>
-              <a href="/trial" className="cx-plans-btn">
+              <Link
+                to="/checkout?plan=growth&source=pricing"
+                className="cx-plans-btn"
+              >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </a>
+              </Link>
               <p
                 style={{
                   marginTop: "8px",
@@ -1130,6 +1136,12 @@ export default function PricingPage() {
                     <div className="cx-circle-icon-x">
                       <X size={12} strokeWidth={3} />
                     </div>
+                    <span>{tr.vsCompOther2}</span>
+                  </li>
+                  <li>
+                    <div className="cx-circle-icon-x">
+                      <X size={12} strokeWidth={3} />
+                    </div>
                     <span>{tr.vsCompOther3}</span>
                   </li>
                   <li>
@@ -1148,8 +1160,11 @@ export default function PricingPage() {
               </div>
 
               {/* Middle VS Badge */}
-              <div className="cx-comp-vs-badge">
-                <span>{tr.vsCompVs}</span>
+              <div className="cx-comp-vs-circle-wrapper">
+                <div className="cx-comp-vertical-line"></div>
+                <div className="cx-comp-vs-circle">
+                  <span>{tr.vsCompVs}</span>
+                </div>
               </div>
 
               {/* Right Side: Cortexa AIOS */}
@@ -1238,7 +1253,6 @@ export default function PricingPage() {
           </div>
         </div>
       </main>
-
     </div>
   );
 }

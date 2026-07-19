@@ -23,7 +23,7 @@ body {
     border: 1px solid #e5e7ef;
     background: #fffffff5;
     box-shadow: 0 18px 55px #19225021;
-    width: min(740px, 100%);
+    width: min(700px, 100%);
     margin: 0 auto;
 }
 
@@ -34,15 +34,15 @@ body {
 .checkout-heading h1 {
   margin: 0;
   color: #11162a;
-  font-size: clamp(34px, 4vw, 32px);
+  font-size: clamp(31px, 4vw, 31px);
   line-height: 1.08;
   letter-spacing: -0.035em;
 }
 
 .checkout-heading p {
-  margin: 12px 0 0;
-  color: #667085;
-  font-size: 19px;
+    margin: 10px 0 0;
+    color: #667085;
+    font-size: 16px;
 }
 
 .checkout-card {
@@ -57,12 +57,12 @@ body {
 
 .checkout-card h2 {
   margin: 0;
-  font-size: 23px;
+  font-size: 18px;
   color: #101426;
 }
 
 .checkout-summary-card > h2 {
-  margin-bottom: 25px;
+  margin-bottom: 15px;
 }
 
 .checkout-plan-row {
@@ -70,7 +70,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 25px;
+  padding-bottom: 15px;
   border-bottom: 1px solid #e4e6ee;
 }
 
@@ -93,9 +93,9 @@ body {
 
 .checkout-plan-icon {
   display: grid;
-  width: 74px;
-  height: 74px;
-  flex: 0 0 74px;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
   place-items: center;
   border-radius: 14px;
   color: #fff;
@@ -110,7 +110,7 @@ body {
 
 .checkout-plan-copy h3 {
   margin: 0;
-  font-size: 23px;
+  font-size: 18px;
 }
 
 .checkout-plan-copy p {
@@ -184,7 +184,7 @@ body {
 
 .checkout-summary-total > div strong {
   color: #5332df;
-  font-size: 40px;
+  font-size: 35px;
   line-height: 1;
 }
 
@@ -238,7 +238,7 @@ body {
 
 .checkout-input-wrap {
   display: flex;
-  height: 57px;
+  height: 42px;
   align-items: center;
   gap: 14px;
   padding: 0 15px;
@@ -330,8 +330,8 @@ body {
 }
 
 .checkout-terms input {
-  width: 22px;
-  height: 22px;
+  width: 17px;
+  height: 17px;
   flex: 0 0 22px;
   accent-color: #5b37e7;
 }
@@ -348,7 +348,6 @@ body {
 .checkout-pay-button {
   display: flex;
   width: 100%;
-  min-height: 74px;
   align-items: center;
   justify-content: center;
   gap: 14px;
@@ -357,8 +356,8 @@ body {
   color: #fff;
   background: linear-gradient(100deg, #4330ef, #6a22ee);
   box-shadow: 0 12px 28px rgba(74, 43, 226, 0.25);
-  font-size: 26px;
-  font-weight: 720;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
   transition:
     transform 0.18s ease,
@@ -399,7 +398,7 @@ body {
 
 .checkout-phone-input {
   width: 100% !important;
-  height: 57px !important;
+  height: 42px !important;
   padding-left: 66px !important;
   border: 1px solid #d8dce7 !important;
   border-radius: 9px !important;
@@ -422,19 +421,14 @@ body {
   background: transparent !important;
 }
 
-.checkout-phone-button:hover,
-.checkout-phone-button.open {
-  background: #f7f7fc !important;
-}
 .checkout-page .country-list .search{
     display: flex;
 }
 .checkout-page .search-box{
     margin-top: 0;
 }
-.checkout-phone-dropdown {
-  border-radius: 10px !important;
-  box-shadow: 0 12px 30px rgba(20, 25, 50, 0.14) !important;
+body .checkout-page .selected-flag:focus, body .checkout-page .selected-flag:hover{
+    background: transparent;
 }
 .checkout-card-fields {
   display: grid;
@@ -445,7 +439,7 @@ body {
 .checkout-stripe-input {
   display: flex;
   width: 100%;
-  height: 57px;
+  height: 42px;
   align-items: center;
   gap: 14px;
   padding: 0 15px;
@@ -495,6 +489,44 @@ body {
   background: #fee2e2;
   font-weight: 700;
 }
+.checkout-phone-shell {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.checkout-phone-leading-icon {
+  position: absolute;
+  left: 15px;
+  z-index: 3;
+  color: #747b91;
+  pointer-events: none;
+}
+
+.checkout-phone-container {
+  width: 100% !important;
+}
+
+.checkout-phone-input:focus {
+  border-color: #6844ee !important;
+  box-shadow: 0 0 0 4px rgba(104, 68, 238, 0.1) !important;
+}
+
+.checkout-phone-button {
+  left: 42px !important;
+  width: 55px !important;
+  border: 0 !important;
+  border-right: 1px solid #e1e3eb !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.checkout-phone-dropdown {
+  margin-left: -42px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 30px rgba(20, 25, 50, 0.14) !important;
+}
 @media (max-width: 720px) {
   .checkout-card-fields {
     grid-template-columns: 1fr;
@@ -538,9 +570,9 @@ body {
   }
 
   .checkout-plan-icon {
-    width: 57px;
-    height: 57px;
-    flex-basis: 57px;
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
   }
 
   .checkout-plan-copy h3 {
