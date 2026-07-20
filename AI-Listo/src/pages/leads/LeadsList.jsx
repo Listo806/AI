@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import apiClient from "../../api/apiClient";
 import "./leads.css";
 import EmojiPicker from "emoji-picker-react";
@@ -35,7 +36,121 @@ import {
   Check,
   CircleAlert,
 } from "lucide-react";
+const getStoredAuthToken = () => {
+  const tokenKeys = [
+    "token",
+    "accessToken",
+    "access_token",
+    "authToken",
+    "jwt",
+  ];
 
+  for (const key of tokenKeys) {
+    const localValue = localStorage.getItem(key);
+
+    if (localValue) {
+      return localValue;
+    }
+
+    const sessionValue = sessionStorage.getItem(key);
+
+    if (sessionValue) {
+      return sessionValue;
+    }
+  }
+
+  const objectKeys = ["auth", "user", "authData"];
+
+  for (const key of objectKeys) {
+    try {
+      const rawValue = localStorage.getItem(key) || sessionStorage.getItem(key);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      const parsedValue = JSON.parse(rawValue);
+
+      const token =
+        parsedValue?.token ||
+        parsedValue?.accessToken ||
+        parsedValue?.access_token ||
+        null;
+
+      if (token) {
+        return token;
+      }
+    } catch {
+      // cancel storage value not JSON.
+    }
+  }
+
+  return null;
+};
+
+const getWhatsAppSocketBaseUrl = () => {
+  const configuredUrl =
+    import.meta.env.VITE_SOCKET_URL ||
+    import.meta.env.VITE_BACKEND_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL;
+
+  if (configuredUrl) {
+    return String(configuredUrl)
+      .replace(/\/api\/?$/, "")
+      .replace(/\/$/, "");
+  }
+
+  return window.location.origin;
+};
+
+const normalizeWhatsAppPhone = (value) => {
+  return String(value || "").replace(/\D/g, "");
+};
+
+const normalizeRealtimeMessage = (payload) => {
+  const createdAt =
+    payload?.createdAt || payload?.sentAt || new Date().toISOString();
+
+  return {
+    id:
+      payload?.databaseMessageId ||
+      payload?.id ||
+      payload?.messageId ||
+      `realtime-${Date.now()}-${Math.random()}`,
+
+    conversation_id:
+      payload?.conversationId || payload?.conversation_id || null,
+
+    direction: payload?.direction || "inbound",
+
+    sender_type:
+      payload?.senderType ||
+      payload?.sender_type ||
+      (payload?.direction === "outbound" ? "agent" : "lead"),
+
+    message_type: payload?.messageType || payload?.message_type || "text",
+
+    body: payload?.body ?? payload?.message ?? payload?.text ?? null,
+
+    message_id: payload?.messageId || payload?.message_id || null,
+
+    status:
+      payload?.status || (payload?.direction === "outbound" ? "sent" : null),
+
+    sent_at: payload?.sentAt || payload?.sent_at || null,
+
+    delivered_at: payload?.deliveredAt || payload?.delivered_at || null,
+
+    read_at: payload?.readAt || payload?.read_at || null,
+
+    failed_at: payload?.failedAt || payload?.failed_at || null,
+
+    contact_phone: payload?.contactPhone || payload?.contact_phone || null,
+
+    created_at: createdAt,
+  };
+};
 export default function LeadsPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,6 +207,8 @@ export default function LeadsPage() {
   const recordTimerRef = useRef(null);
   const recordingCancelledRef = useRef(false);
   const chatBodyRef = useRef(null);
+  const leadChatSocketRef = useRef(null);
+  const selectedLeadRef = useRef(null);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -138,6 +255,9 @@ export default function LeadsPage() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  useEffect(() => {
+    selectedLeadRef.current = selectedLead;
+  }, [selectedLead]);
   const applyPriorityQueue = () => {
     setQueueFilter("urgent");
     setAiView(false);
@@ -568,7 +688,6 @@ export default function LeadsPage() {
 
       await Promise.all([
         fetchLeadMessages(selectedLead.id),
-        fetchLeadEvents(selectedLead.id),
         fetchConversationIntelligence(selectedLead.phone),
       ]);
 
@@ -597,7 +716,6 @@ export default function LeadsPage() {
       setChatMessage("");
       await Promise.all([
         fetchLeadMessages(selectedLead.id),
-        fetchLeadEvents(selectedLead.id),
         fetchConversationIntelligence(selectedLead.phone),
       ]);
     } catch (err) {
@@ -1340,6 +1458,187 @@ export default function LeadsPage() {
       />
     );
   };
+  const handleRealtimeMessage = (payload) => {
+    const activeLead = selectedLeadRef.current;
+    if (!activeLead?.id) {
+      return;
+    }
+    const payloadPhone = normalizeWhatsAppPhone(
+      payload?.contactPhone || payload?.contact_phone,
+    );
+    const selectedPhone = normalizeWhatsAppPhone(activeLead?.phone);
+    /*
+     * User can revived realtime from conversations
+     * Only append message from lead is opening.
+     */
+    if (payloadPhone && selectedPhone && payloadPhone !== selectedPhone) {
+      return;
+    }
+    const incomingMessage = normalizeRealtimeMessage(payload);
+    setLeadMessages((currentMessages) => {
+      const safeMessages = Array.isArray(currentMessages)
+        ? currentMessages
+        : [];
+
+      const alreadyExists = safeMessages.some((message) => {
+        const sameDatabaseId =
+          incomingMessage.id &&
+          message?.id &&
+          String(message.id) === String(incomingMessage.id);
+
+        const sameWhatsAppId =
+          incomingMessage.message_id &&
+          message?.message_id &&
+          String(message.message_id) === String(incomingMessage.message_id);
+
+        return sameDatabaseId || sameWhatsAppId;
+      });
+      if (alreadyExists) {
+        return safeMessages.map((message) => {
+          const sameDatabaseId =
+            incomingMessage.id &&
+            message?.id &&
+            String(message.id) === String(incomingMessage.id);
+
+          const sameWhatsAppId =
+            incomingMessage.message_id &&
+            message?.message_id &&
+            String(message.message_id) === String(incomingMessage.message_id);
+
+          if (!sameDatabaseId && !sameWhatsAppId) {
+            return message;
+          }
+          return {
+            ...message,
+            ...incomingMessage,
+          };
+        });
+      }
+
+      return [...safeMessages, incomingMessage];
+    });
+
+    /*
+     * Inbound message make AI Intelligence change.
+     */
+    if (payload?.direction === "inbound") {
+      fetchConversationIntelligence(activeLead.phone);
+    }
+  };
+  const handleMessageStatus = (payload) => {
+    const activeLead = selectedLeadRef.current;
+
+    if (!activeLead?.id) {
+      return;
+    }
+    const payloadPhone = normalizeWhatsAppPhone(
+      payload?.contactPhone || payload?.contact_phone,
+    );
+    const selectedPhone = normalizeWhatsAppPhone(activeLead?.phone);
+    if (payloadPhone && selectedPhone && payloadPhone !== selectedPhone) {
+      return;
+    }
+    const whatsappMessageId = payload?.messageId || payload?.message_id || null;
+    const databaseMessageId =
+      payload?.databaseMessageId ||
+      payload?.database_message_id ||
+      payload?.id ||
+      null;
+
+    if (!whatsappMessageId && !databaseMessageId) {
+      return;
+    }
+
+    setLeadMessages((currentMessages) =>
+      (Array.isArray(currentMessages) ? currentMessages : []).map((message) => {
+        const matchesDatabaseId =
+          Boolean(databaseMessageId) &&
+          String(message?.id) === String(databaseMessageId);
+
+        const matchesWhatsAppId =
+          Boolean(whatsappMessageId) &&
+          String(message?.message_id) === String(whatsappMessageId);
+
+        if (!matchesDatabaseId && !matchesWhatsAppId) {
+          return message;
+        }
+
+        return {
+          ...message,
+
+          status: payload?.status || message?.status || "sent",
+
+          sent_at:
+            payload?.sentAt ?? payload?.sent_at ?? message?.sent_at ?? null,
+
+          delivered_at:
+            payload?.deliveredAt ??
+            payload?.delivered_at ??
+            message?.delivered_at ??
+            null,
+
+          read_at:
+            payload?.readAt ?? payload?.read_at ?? message?.read_at ?? null,
+
+          failed_at:
+            payload?.failedAt ??
+            payload?.failed_at ??
+            message?.failed_at ??
+            null,
+        };
+      }),
+    );
+  };
+  useEffect(() => {
+    const token = getStoredAuthToken();
+    if (!token) {
+      console.warn("Lead chat socket skipped: authentication token not found.");
+      return undefined;
+    }
+    const socketUrl = `${getWhatsAppSocketBaseUrl()}/whatsapp-qr`;
+    const socket = io(socketUrl, {
+      transports: ["websocket", "polling"],
+      auth: {
+        token,
+      },
+      query: {
+        token,
+      },
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+    });
+    leadChatSocketRef.current = socket;
+    const handleSocketConnect = () => {
+      console.log("LEAD WHATSAPP SOCKET CONNECTED:", socket.id);
+    };
+    const handleSocketDisconnect = (reason) => {
+      console.log("LEAD WHATSAPP SOCKET DISCONNECTED:", reason);
+    };
+    const handleSocketError = (error) => {
+      console.error("LEAD WHATSAPP SOCKET ERROR:", error);
+    };
+
+    socket.on("connect", handleSocketConnect);
+    socket.on("disconnect", handleSocketDisconnect);
+    socket.on("connect_error", handleSocketError);
+    socket.on("message", handleRealtimeMessage);
+    socket.on("message-status", handleMessageStatus);
+
+    return () => {
+      socket.off("connect", handleSocketConnect);
+      socket.off("disconnect", handleSocketDisconnect);
+      socket.off("connect_error", handleSocketError);
+      socket.off("message", handleRealtimeMessage);
+      socket.off("message-status", handleMessageStatus);
+      socket.disconnect();
+
+      if (leadChatSocketRef.current === socket) {
+        leadChatSocketRef.current = null;
+      }
+    };
+  }, []);
   return (
     <div className="leads-page">
       <div className="heading_page">
@@ -2066,7 +2365,11 @@ export default function LeadsPage() {
 
                   return (
                     <div
-                      key={message.id}
+                      key={
+                        message.id ||
+                        message.message_id ||
+                        `${message.direction}-${message.created_at}-${message.body}`
+                      }
                       className={`message ${
                         isOutbound ? "right robot-msg-container" : "left"
                       }`}
@@ -2115,12 +2418,7 @@ export default function LeadsPage() {
                           message.created_at || message.createdAt,
                         )}
 
-                        {isOutbound && (
-                          <>
-                            {" "}
-                            {renderMessageStatus(message)}
-                          </>
-                        )}
+                        {isOutbound && <> {renderMessageStatus(message)}</>}
                       </span>
 
                       {isAi && <div className="robot-badge-icon">🤖</div>}
