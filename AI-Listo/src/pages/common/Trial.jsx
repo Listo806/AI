@@ -37,10 +37,10 @@ const t = {
       three: "3 users",
       five: "5 users",
     },
-    btnNormal: "Continue to Secure Checkout",
+    btnNormal: "Continue",
     btnLoading: "Creating Account...",
     footerNote:
-      "You will be redirected to a secure checkout to activate your account.",
+      "No payment required today. You'll review your plan and start your free trial.",
     errors: {
       server: "Server error. Please try again.",
       generic: "Unable to create your trial account.",
@@ -67,9 +67,10 @@ const t = {
       three: "3 usuarios",
       five: "5 usuarios",
     },
-    btnNormal: "Continuar al pago seguro",
+    btnNormal: "Continuar",
     btnLoading: "Creando cuenta...",
-    footerNote: "Serás redirigido a un pago seguro para activar tu cuenta.",
+    footerNote:
+      "No se requiere pago hoy. Revisarás tu plan y comenzarás tu prueba gratuita.",
     errors: {
       server: "Error del servidor. Inténtalo de nuevo.",
       generic: "No se pudo crear tu cuenta de prueba.",
@@ -96,10 +97,10 @@ const t = {
       three: "3 usuários",
       five: "5 usuários",
     },
-    btnNormal: "Continuar para o pagamento seguro",
+    btnNormal: "Continuar",
     btnLoading: "Criando conta...",
     footerNote:
-      "Você será redirecionado para um pagamento seguro para ativar sua conta.",
+      "Nenhum pagamento hoje. Você revisará seu plano e começará seu teste gratuito.",
     errors: {
       server: "Erro no servidor. Tente novamente.",
       generic: "Não foi possível criar sua conta de teste.",
