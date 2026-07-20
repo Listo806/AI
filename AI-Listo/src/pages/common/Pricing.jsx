@@ -964,7 +964,7 @@ export default function PricingPage() {
               </div>
               <div className="cx-plans-users">{tr.plansData.solo.users}</div>
               <Link
-                to="/checkout?plan=solo&source=pricing"
+                to="/trial?plan=solo"
                 className="cx-plans-btn"
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
@@ -1007,7 +1007,7 @@ export default function PricingPage() {
               </div>
               <div className="cx-plans-users">{tr.plansData.team.users}</div>
               <Link
-                to="/checkout?plan=team&source=pricing"
+                to="/trial?plan=team"
                 className="cx-plans-btn"
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
@@ -1049,7 +1049,7 @@ export default function PricingPage() {
               </div>
               <div className="cx-plans-users">{tr.plansData.growth.users}</div>
               <Link
-                to="/checkout?plan=growth&source=pricing"
+                to="/trial?plan=growth"
                 className="cx-plans-btn"
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
