@@ -144,7 +144,6 @@ export default function StartTrial() {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   };
-
   const selectPlan = (plan) => {
     setForm((current) => ({ ...current, plan }));
   };
@@ -164,9 +163,7 @@ export default function StartTrial() {
           body: JSON.stringify(form),
         },
       );
-
       const data = await response.json().catch(() => ({}));
-
       if (!response.ok || !data.success) {
         throw new Error(data.message || tr.errors.generic);
       }
