@@ -92,7 +92,7 @@ const t = {
     },
 
     plansBadgePopular: "MOST POPULAR",
-    plansBtnTrial: "Start My Free Trial",
+    plansBtnTrial: "Choose plan",
     plansFeeNote: "One-time setup fee: $97",
     plansPerMonth: "/month",
     plansData: {
@@ -313,21 +313,6 @@ const t = {
       },
     ],
 
-    vsCompOtherTitle: "WITH OTHER PLATFORMS",
-    vsCompOther1: "High monthly cost with multiple add-ons",
-    vsCompOther2: "Complex setup and long onboarding",
-    vsCompOther3: "Pay for features you don't fully use",
-    vsCompOther4: "Switch between different tools all day",
-    vsCompOther5: "Hidden costs that add up over time",
-
-    vsCompVs: "VS.",
-
-    vsCompCortexaTitle: "WITH CORTEXA AIOS",
-    vsCompCortexa1: "Everything in one AI-powered platform",
-    vsCompCortexa2: "AI automates follow-ups and conversations",
-    vsCompCortexa3: "Built to help you close more deals",
-    vsCompCortexa4: "Ready to use in minutes",
-    vsCompCortexa5: "Scale your business as you grow",
   },
   es: {
     nav: {
@@ -383,7 +368,7 @@ const t = {
     },
 
     plansBadgePopular: "MÁS POPULAR",
-    plansBtnTrial: "Iniciar Mi Prueba Gratuita",
+    plansBtnTrial: "Elige un plan",
     plansFeeNote: "Tarifa única de configuración: $97",
     plansPerMonth: "/mes",
     plansData: {
@@ -614,21 +599,6 @@ const t = {
       },
     ],
 
-    vsCompOtherTitle: "CON OTRAS PLATAFORMAS",
-    vsCompOther1: "Altos costos mensuales con múltiples complementos",
-    vsCompOther2: "Configuración compleja y largo proceso de implementación",
-    vsCompOther3: "Pagas por funciones que realmente no utilizas",
-    vsCompOther4: "Cambias entre diferentes herramientas todo el día",
-    vsCompOther5: "Costos ocultos que aumentan con el tiempo",
-
-    vsCompVs: "VS.",
-
-    vsCompCortexaTitle: "CON CORTEXA AIOS",
-    vsCompCortexa1: "Todo en una plataforma impulsada por IA",
-    vsCompCortexa2: "La IA automatiza seguimientos y conversaciones",
-    vsCompCortexa3: "Diseñado para ayudarte a cerrar más negocios",
-    vsCompCortexa4: "Listo para usar en minutos",
-    vsCompCortexa5: "Haz crecer tu negocio a medida que creces",
   },
   pt: {
     nav: {
@@ -686,7 +656,7 @@ const t = {
     },
 
     plansBadgePopular: "MAIS POPULAR",
-    plansBtnTrial: "Iniciar Meu Teste Gratuito",
+    plansBtnTrial: "Escolha um plano",
     plansFeeNote: "Taxa única de configuração: $97",
     plansPerMonth: "/mês",
     plansData: {
@@ -914,21 +884,6 @@ const t = {
       },
     ],
 
-    vsCompOtherTitle: "COM OUTRAS PLATAFORMAS",
-    vsCompOther1: "Alto custo mensal com vários complementos",
-    vsCompOther2: "Configuração complexa e longo processo de implantação",
-    vsCompOther3: "Pague por recursos que você nem utiliza totalmente",
-    vsCompOther4: "Troque entre diferentes ferramentas o dia todo",
-    vsCompOther5: "Custos ocultos que aumentam com o tempo",
-
-    vsCompVs: "VS.",
-
-    vsCompCortexaTitle: "COM CORTEXA AIOS",
-    vsCompCortexa1: "Tudo em uma plataforma com IA",
-    vsCompCortexa2: "A IA automatiza acompanhamentos e conversas",
-    vsCompCortexa3: "Criado para ajudar você a fechar mais negócios",
-    vsCompCortexa4: "Pronto para usar em poucos minutos",
-    vsCompCortexa5: "Expanda seu negócio conforme ele cresce",
   },
 };
 
@@ -1119,92 +1074,7 @@ export default function PricingPage() {
               </ul>
             </div>
           </div>
-          <div className="cx-comparison-container">
-            {/* Top Split Comparison Cards */}
-            <div className="cx-split-comparison">
-              {/* Left Side: Other Platforms */}
-              <div className="cx-comp-side-card cx-side-other">
-                <h3 className="cx-comp-side-title">{tr.vsCompOtherTitle}</h3>
-                <ul className="cx-comp-list">
-                  <li>
-                    <div className="cx-circle-icon-x">
-                      <X size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompOther1}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-x">
-                      <X size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompOther2}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-x">
-                      <X size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompOther3}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-x">
-                      <X size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompOther4}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-x">
-                      <X size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompOther5}</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Middle VS Badge */}
-              <div className="cx-comp-vs-circle-wrapper">
-                <div className="cx-comp-vertical-line"></div>
-                <div className="cx-comp-vs-circle">
-                  <span>{tr.vsCompVs}</span>
-                </div>
-              </div>
-
-              {/* Right Side: Cortexa AIOS */}
-              <div className="cx-comp-side-card cx-side-cortexa">
-                <h3 className="cx-comp-side-title">{tr.vsCompCortexaTitle}</h3>
-                <ul className="cx-comp-list">
-                  <li>
-                    <div className="cx-circle-icon-check">
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompCortexa1}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-check">
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompCortexa2}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-check">
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompCortexa3}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-check">
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompCortexa4}</span>
-                  </li>
-                  <li>
-                    <div className="cx-circle-icon-check">
-                      <Check size={12} strokeWidth={3} />
-                    </div>
-                    <span>{tr.vsCompCortexa5}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          
           <div className="cx-plans-footer-grid">
             <div className="cx-plans-footer-card">
               <div className="cx-plans-footer-icon-box">
