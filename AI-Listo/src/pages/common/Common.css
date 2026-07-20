@@ -1718,7 +1718,7 @@
 .pricing-page .main-content {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 20px 24px 0px;
+  padding: 12px 24px 0px;
   background: #fff;
 }
 
@@ -1832,14 +1832,13 @@
 }
 
 .pricing-page .cx-pricing-header {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .pricing-page .cx-pricing-title {
   font-size: 36px;
   font-weight: 800;
   color: #111827;
-  margin: 0 auto 12px auto;
   letter-spacing: -0.02em;
   line-height: 1;
 }
@@ -1887,14 +1886,14 @@
 .pricing-page .cx-plans-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 35px;
   align-items: stretch;
 }
 
 .pricing-page .cx-plans-card {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 10px 24px;
+  padding: 0px 24px;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -1930,8 +1929,8 @@
 .pricing-page .cx-plans-icon-box {
   color: #003bff;
   margin-right: 16px;
-  margin-top: 2px;
-  padding: 11px 14px;
+  margin-top: 7px;
+  padding: 11px 14px 5px;
   border-radius: 50%;
 }
 
@@ -1949,13 +1948,13 @@
   text-align: center;
 }
 .cx-plans-users{
-  padding: 9px;
+  padding: 3px;
   border-radius: 10px;
   text-align: center;
   font-weight: 700;
 }
 .pricing-page .cx-plans-amount {
-  font-size: 46px;
+  font-size: 34px;
   font-weight: 700;
   color: #111827;
   letter-spacing: -0.03em;
@@ -1984,7 +1983,7 @@
   align-items: center;
   font-size: 13.5px;
   color: #1f2937;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   font-weight: 600;
   gap: 5px;
 }
@@ -2000,7 +1999,7 @@
   background-color: #003bff;
   color: #ffffff;
   border: none;
-  padding: 14px 20px;
+  padding: 11px 20px;
   font-size: 14px;
   font-weight: 700;
   border-radius: 8px;
@@ -2025,7 +2024,7 @@
 }
 
 .pricing-page .cx-plans-footer-card {
-  padding: 24px 40px;
+  padding: 10px 40px 2px;
   display: flex;
   align-items: center;
   text-align: left;
