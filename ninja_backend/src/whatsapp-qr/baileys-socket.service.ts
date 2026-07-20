@@ -475,8 +475,9 @@ export class BaileysSocketService
       throw new Error("WhatsApp QR socket not connected");
     }
     const digits = String(toE164 || "").replace(/\D/g, "");
-    if (digits.length < 10) {
-      throw new Error("Invalid phone for send");
+
+    if (digits.length < 7 || digits.length > 15) {
+      throw new Error(`Invalid WhatsApp phone for send: ${toE164}`);
     }
     const jid = `${digits}@s.whatsapp.net`;
     const result = await ctx.sock.sendMessage(jid, {
@@ -499,8 +500,9 @@ export class BaileysSocketService
       throw new Error("WhatsApp QR socket not connected");
     }
     const digits = String(toE164 || "").replace(/\D/g, "");
-    if (digits.length < 10) {
-      throw new Error("Invalid phone for send");
+
+    if (digits.length < 7 || digits.length > 15) {
+      throw new Error(`Invalid WhatsApp phone for send: ${toE164}`);
     }
     const jid = `${digits}@s.whatsapp.net`;
     const buffer = Buffer.from(audioBase64, "base64");

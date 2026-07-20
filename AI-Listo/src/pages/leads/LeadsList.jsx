@@ -209,6 +209,7 @@ export default function LeadsPage() {
   const chatBodyRef = useRef(null);
   const leadChatSocketRef = useRef(null);
   const selectedLeadRef = useRef(null);
+  const [sendingLeadMessage, setSendingLeadMessage] = useState(false);
   const [leadFilters, setLeadFilters] = useState({
     source: "all",
     temperature: "all",
@@ -705,21 +706,31 @@ export default function LeadsPage() {
   };
 
   const sendLeadMessage = async () => {
-    if (!selectedLead?.id || !chatMessage.trim()) return;
+    const message = String(chatMessage || "").trim();
+
+    if (!selectedLead?.id || !message || sendingLeadMessage) {
+      return;
+    }
+
     try {
-      const message = chatMessage.trim();
+      setSendingLeadMessage(true);
+      setChatMessage("");
 
       await apiClient.request(`/whatsapp-qr/leads/${selectedLead.id}/send`, {
         method: "POST",
         body: JSON.stringify({ message }),
       });
-      setChatMessage("");
+
       await Promise.all([
         fetchLeadMessages(selectedLead.id),
         fetchConversationIntelligence(selectedLead.phone),
       ]);
     } catch (err) {
       console.error("Send WhatsApp message from lead error:", err);
+
+      setChatMessage(message);
+    } finally {
+      setSendingLeadMessage(false);
     }
   };
 
@@ -2487,7 +2498,11 @@ export default function LeadsPage() {
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !sendingLeadMessage
+                    ) {
                       e.preventDefault();
                       sendLeadMessage();
                     }
@@ -2582,7 +2597,7 @@ export default function LeadsPage() {
                 <button
                   className="send-btn fixed-send-btn"
                   onClick={sendLeadMessage}
-                  disabled={!chatMessage.trim()}
+                  disabled={!chatMessage.trim() || sendingLeadMessage}
                 >
                   <Send size={16} fill="white" />
                 </button>
