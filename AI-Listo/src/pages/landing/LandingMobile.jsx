@@ -947,6 +947,8 @@ export default function LandingMobile() {
               "analytics",
               "testimonials",
             ];
+            // Testimonials section removed; skip its nav link.
+            if (ids[i] === "testimonials") return null;
 
             return (
               <HashLink className="nav-menu" key={i} smooth to={`/#${ids[i]}`}>

@@ -5,99 +5,62 @@ const Refund = () => {
     <div style={styles.container}>
       <h1 style={styles.title}>Refund Policy</h1>
       <p style={styles.effectiveDate}>
-        Effective Date: April 22, 2026
+        Effective Date: July 20, 2026
       </p>
 
       <p>
-        This Refund Policy explains how payments for <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us") are handled. By purchasing or subscribing to our Services, you agree to this policy.
+        This Refund Policy explains how payments for <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us") are handled. By using our Services, you agree to this policy.
       </p>
 
-      <Section title="1. Free Trial & Activation Fee">
-          <p>Cortexa offers a 14-day free trial to new users.</p>
-
-          <p>To activate your account:</p>
+      <Section title="1. Free Trial — No Payment Collected">
+          <p>Cortexa offers a free trial to new users.</p>
           <ul style={styles.ul}>
-            <li>A one-time activation fee of $97 may be charged at signup</li>
+            <li>No payment is collected when you start your free trial.</li>
+            <li>No credit card or payment method is required to sign up.</li>
+            <li>Your free trial does not automatically convert to a paid subscription.</li>
+            <li>No charge is ever made automatically.</li>
           </ul>
-
-          <p>During the 14-day trial:</p>
-          <ul style={styles.ul}>
-            <li>You receive full access to the platform</li>
-            <li>You may cancel at any time before the trial ends</li>
-          </ul>
-
-          <p>At the end of the trial:</p>
-          <ul style={styles.ul}>
-            <li>Your account will automatically convert to a paid subscription</li>
-            <li>You will be charged the applicable plan fee (selected plan)</li>
-            <li>Billing will continue on a recurring basis unless canceled</li>
-          </ul>
-
           <p>
-            By signing up, you authorize Cortexa to charge your payment method accordingly.
+            Because no payment is taken during the free trial, there is nothing to refund for the trial itself.
           </p>
         </Section>
 
-        <Section title="2. No Refunds">
-          <p>All payments are non-refundable.</p>
-
-          <p>This includes:</p>
+        <Section title="2. Future Paid Subscriptions">
+          <p>
+            If you later choose to subscribe to a paid plan, you will be asked to add a payment method and actively confirm the purchase at that time. Nothing is charged until you do so.
+          </p>
+          <p>Current plan pricing (applies only if and when you choose to subscribe):</p>
           <ul style={styles.ul}>
-            <li>Subscription fees (monthly)</li>
-            <li>Activation or setup fees</li>
-            <li>Charges after trial conversion</li>
+            <li>Solo Plan: $197 USD per month</li>
+            <li>Team Plan: $347 USD per month</li>
+            <li>Growth Plan: $497 USD per month</li>
+            <li>A one-time setup fee of $97 USD may apply when you activate a paid subscription.</li>
           </ul>
-
-          <p>Once a payment has been processed, it cannot be reversed.</p>
+          <p>
+            You will always be shown the amount and asked to confirm before any payment is processed. We do not charge a payment method without your explicit authorization.
+          </p>
         </Section>
 
-        <Section title="3. Subscription Billing & Cancellation">
+        <Section title="3. Refunds on Paid Subscriptions">
+          <p>If you have an active paid subscription:</p>
           <ul style={styles.ul}>
-            <li>Subscriptions are billed in advance on a recurring basis</li>
-            <li>You may cancel your subscription at any time</li>
-          </ul>
-
-          <p>To cancel:</p>
-          <ul style={styles.ul}>
-            <li>Use your account settings, OR</li>
+            <li>You may cancel at any time to prevent future charges.</li>
             <li>
-              Contact support via:
-              <ul style={styles.ul}>
-                <li>AI Support (Contact page)</li>
-                <li>Email: support@cortexaaicrm.com</li>
-              </ul>
+              Fees for a billing period that has already been paid are generally non-refundable, except where required by applicable law.
             </li>
           </ul>
-
-          <p>Cancellation:</p>
-          <ul style={styles.ul}>
-            <li>Prevents future charges</li>
-            <li>Does NOT refund any current or past billing period</li>
-          </ul>
+          <p>
+            We are committed to resolving any billing issue quickly — please contact support first.
+          </p>
         </Section>
 
         <Section title="4. Chargebacks & Payment Disputes">
-          <p>If you initiate a chargeback or dispute:</p>
-          <ul style={styles.ul}>
-            <li>Your account may be suspended or permanently terminated</li>
-            <li>Access to the platform may be revoked</li>
-            <li>You agree to contact Cortexa support before filing a dispute</li>
-          </ul>
-
           <p>
-            We are committed to resolving billing issues quickly when contacted directly.
+            If you have a billing concern, please contact Cortexa support before initiating a chargeback or dispute so we can resolve it directly. Unresolved or unjustified disputes may result in suspension or termination of the account.
           </p>
         </Section>
 
-        <Section title="5. Exceptions">
-          <p>Refunds may only be issued:</p>
-          <ul style={styles.ul}>
-            <li>If required by applicable law</li>
-            <li>At Cortexa’s sole discretion in exceptional circumstances</li>
-          </ul>
-        </Section>
-
-        <Section title="6. Contact">
+        <Section title="5. Contact">
           <p>For billing, cancellation, or refund inquiries:</p>
           <p>AI Support: Available via the Contact page</p>
           <p>Email: support@cortexaaicrm.com</p>
