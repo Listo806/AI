@@ -40,8 +40,8 @@ export class WhatsAppQrOutboundService {
     }
 
     /*
-     * Gửi qua WhatsApp trước.
-     * Baileys trả về message key ID thật.
+     * sent WhatsApp
+     * Baileys return real message key ID
      */
     const whatsappMessageId = await this.sockets.sendText(
       params.userId,
@@ -52,7 +52,7 @@ export class WhatsAppQrOutboundService {
     await this.conversations.setOwnerHuman(params.conversationId);
 
     /*
-     * Vì sendMessage() phía trên đã thành công nên lưu status = sent.
+     *  sendMessage() ok, save lưu status = sent.
      */
     const { rows } = await this.db.query(
       `
@@ -188,45 +188,152 @@ export class WhatsAppQrOutboundService {
     sessionId: string;
     conversationId: string;
     leadId: string;
+    contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
     text: string;
-  }): Promise<void> {
+  }): Promise<any> {
     await this.throttle.assertAllowed(params.sessionId);
-    await this.sockets.sendText(
+
+    const text = String(params.text || "").trim();
+
+    if (!text) {
+      throw new Error("Message is required");
+    }
+
+    const whatsappMessageId = await this.sockets.sendText(
       params.userId,
       params.contactPhone,
-      params.text,
+      text,
     );
-    await this.db.query(
-      `INSERT INTO whatsapp_qr_messages
-      (session_id, conversation_id, lead_id, team_id, contact_phone, direction, sender_type, message_type, body, message_id, status, sent_at)
-      VALUES ($1, $2, $3, $4, $5, 'outbound', 'ai', 'text', $6, NULL, 'sent', NOW())`,
+
+    const { rows } = await this.db.query(
+      `
+    INSERT INTO whatsapp_qr_messages (
+      session_id,
+      conversation_id,
+      lead_id,
+      contact_id,
+      team_id,
+      contact_phone,
+      direction,
+      sender_type,
+      message_type,
+      body,
+      message_id,
+      status,
+      sent_at
+    )
+    VALUES (
+      $1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      'outbound',
+      'ai',
+      'text',
+      $7,
+      $8,
+      'sent',
+      NOW()
+    )
+    RETURNING
+      id,
+      session_id,
+      conversation_id,
+      lead_id,
+      contact_id,
+      team_id,
+      contact_phone,
+      direction,
+      sender_type,
+      message_type,
+      body,
+      message_id,
+      status,
+      sent_at,
+      delivered_at,
+      read_at,
+      failed_at,
+      created_at
+    `,
       [
         params.sessionId,
         params.conversationId,
         params.leadId,
+        params.contactId ?? null,
         params.teamId,
         params.contactPhone,
-        params.text,
+        text,
+        whatsappMessageId,
       ],
     );
-    await this.conversations.setOwnerHuman(params.conversationId);
+
+    const savedMessage = rows[0];
+
     await this.db.query(
-      `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),
-       last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      `
+    UPDATE whatsapp_qr_conversations
+    SET
+      contact_id = COALESCE(contact_id, $3),
+      last_message_at = NOW(),
+      last_message = $2,
+      last_message_type = 'text',
+      updated_at = NOW()
+    WHERE id = $1
+    `,
+      [params.conversationId, text.slice(0, 500), params.contactId ?? null],
+    );
+
+    await this.db.query(
+      `
+    UPDATE leads
+    SET
+      last_contacted_at = NOW(),
+      last_activity_at = NOW(),
+      last_action_type = 'whatsapp',
+      last_action_at = NOW(),
+      updated_at = NOW()
+    WHERE id = $1
+    `,
       [params.leadId],
     );
+
+    if (params.contactId) {
+      await this.db.query(
+        `
+      UPDATE contacts
+      SET updated_at = NOW()
+      WHERE id = $1
+      `,
+        [params.contactId],
+      );
+    }
+
     this.realtime.emitMessage({
       userId: params.userId,
       conversationId: params.conversationId,
       contactPhone: params.contactPhone,
       direction: "outbound",
       senderType: "ai",
-      body: params.text,
+      body: text,
       messageType: "text",
-      createdAt: new Date().toISOString(),
+      databaseMessageId: savedMessage?.id || null,
+      messageId: savedMessage?.message_id || whatsappMessageId || null,
+      status: savedMessage?.status || "sent",
+      sentAt:
+        savedMessage?.sent_at?.toISOString?.() ||
+        savedMessage?.sent_at ||
+        new Date().toISOString(),
+      createdAt:
+        savedMessage?.created_at?.toISOString?.() ||
+        savedMessage?.created_at ||
+        new Date().toISOString(),
     });
+
+    return savedMessage;
   }
 
   /**
@@ -244,7 +351,7 @@ export class WhatsAppQrOutboundService {
   }): Promise<any> {
     await this.throttle.assertAllowed(params.sessionId);
 
-    await this.sockets.sendVoice(
+    const whatsappMessageId = await this.sockets.sendVoice(
       params.userId,
       params.contactPhone,
       params.audioBase64,
@@ -280,7 +387,7 @@ export class WhatsAppQrOutboundService {
       'agent',
       'audio',
       '[Voice message]',
-      NULL,
+      $7,
       'sent',
       NOW()
     )
@@ -308,6 +415,7 @@ export class WhatsAppQrOutboundService {
         params.contactId ?? null,
         params.teamId,
         params.contactPhone,
+        whatsappMessageId,
       ],
     );
 
@@ -375,6 +483,4 @@ export class WhatsAppQrOutboundService {
 
     return savedMessage;
   }
-
-  
 }

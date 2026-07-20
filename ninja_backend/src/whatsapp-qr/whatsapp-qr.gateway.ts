@@ -3,13 +3,13 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
-} from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
-import { Server, Socket } from 'socket.io';
-import * as jwt from 'jsonwebtoken';
-import { ConfigService } from '../config/config.service';
-import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
-import { Subscription } from 'rxjs';
+} from "@nestjs/websockets";
+import { Logger } from "@nestjs/common";
+import { Server, Socket } from "socket.io";
+import * as jwt from "jsonwebtoken";
+import { ConfigService } from "../config/config.service";
+import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
+import { Subscription } from "rxjs";
 
 /**
  * Namespace /whatsapp-qr — JWT in handshake auth.token or query.token.
@@ -17,7 +17,7 @@ import { Subscription } from 'rxjs';
  * Spec: WHATSAPP-QR-ENTERPRISE-SPEC §6
  */
 @WebSocketGateway({
-  namespace: '/whatsapp-qr',
+  namespace: "/whatsapp-qr",
   cors: {
     origin: true,
     credentials: true,
@@ -41,16 +41,16 @@ export class WhatsAppQrGateway
     const token =
       (client.handshake.auth as any)?.token ||
       (client.handshake.query?.token as string);
-    if (!token || typeof token !== 'string') {
-      this.logger.warn('WS reject: no token');
+    if (!token || typeof token !== "string") {
+      this.logger.warn("WS reject: no token");
       client.disconnect(true);
       return;
     }
     let payload: any;
     try {
-      payload = jwt.verify(token, this.config.getRequired('JWT_SECRET'));
+      payload = jwt.verify(token, this.config.getRequired("JWT_SECRET"));
     } catch {
-      this.logger.warn('WS reject: invalid token');
+      this.logger.warn("WS reject: invalid token");
       client.disconnect(true);
       return;
     }
@@ -65,25 +65,43 @@ export class WhatsAppQrGateway
 
     // Re-send last QR if any (client may have joined after it was emitted)
     const lastQr = this.realtime.getLastQr(room);
-    if (lastQr) client.emit('qr', { qr: lastQr });
+    if (lastQr) client.emit("qr", { qr: lastQr });
 
     const subQr = this.realtime.qr$.subscribe(({ userId: uid, qr }) => {
-      if (uid === room) client.emit('qr', { qr });
+      if (uid === room) client.emit("qr", { qr });
     });
     const subConn = this.realtime.connected$.subscribe(
       ({ userId: uid, phone }) => {
-        if (uid === room) client.emit('connected', { phone });
+        if (uid === room) client.emit("connected", { phone });
       },
     );
     const subDisc = this.realtime.disconnected$.subscribe(
       ({ userId: uid, reason }) => {
-        if (uid === room) client.emit('disconnected', { reason });
+        if (uid === room) client.emit("disconnected", { reason });
       },
     );
     const subMsg = this.realtime.message$.subscribe((payload) => {
-      if (payload.userId === room) client.emit('message', payload);
+      if (payload.userId === room) {
+        client.emit("message", payload);
+      }
     });
-    this.subs.set(client.id, [subQr, subConn, subDisc, subMsg]);
+
+    const subMessageStatus = this.realtime.messageStatus$.subscribe(
+      (payload) => {
+        if (payload.userId === room) {
+          client.emit("message-status", payload);
+        }
+      },
+    );
+
+    this.subs.set(client.id, [
+      subQr,
+      subConn,
+      subDisc,
+      subMsg,
+      subMessageStatus,
+    ]);
+
     this.logger.log(`WS connected userId=${room} id=${client.id}`);
   }
 

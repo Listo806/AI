@@ -11,6 +11,7 @@ import { BaileysRedisAuthService } from "./baileys-redis-auth.service";
 import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
 import { WhatsAppQrSessionService } from "./whatsapp-qr-session.service";
 import { WhatsAppQrInboundService } from "./whatsapp-qr-inbound.service";
+import { WhatsAppQrMessageService } from "./whatsapp-qr-message.service";
 
 /**
  * One Baileys socket per userId. QR + connection events via WhatsAppQrRealtimeService.
@@ -44,8 +45,11 @@ export class BaileysSocketService
     private readonly redisAuth: BaileysRedisAuthService,
     private readonly realtime: WhatsAppQrRealtimeService,
     private readonly sessions: WhatsAppQrSessionService,
+
     @Inject(forwardRef(() => WhatsAppQrInboundService))
     private readonly inbound: WhatsAppQrInboundService,
+
+    private readonly messages: WhatsAppQrMessageService,
   ) {}
 
   isQrEnabled(): boolean {
@@ -76,6 +80,168 @@ export class BaileysSocketService
 
     await this.startSocket(userId, sessionId, authResult);
     return this.handles.get(userId) || { userId, sessionId, connected: false };
+  }
+
+  private resolveBaileysMessageStatus(
+    rawStatus: unknown,
+  ): "sent" | "delivered" | "read" | "failed" | null {
+    const status = Number(rawStatus);
+
+    if (!Number.isFinite(status)) {
+      return null;
+    }
+
+    /*
+     * Baileys / WhatsApp status thường có dạng:
+     *
+     * 0 = ERROR
+     * 1 = PENDING
+     * 2 = SERVER_ACK
+     * 3 = DELIVERY_ACK
+     * 4 = READ
+     * 5 = PLAYED
+     */
+    if (status === 0) {
+      return "failed";
+    }
+
+    if (status >= 4) {
+      return "read";
+    }
+
+    if (status === 3) {
+      return "delivered";
+    }
+
+    if (status === 2) {
+      return "sent";
+    }
+
+    return null;
+  }
+
+  private normalizeReceiptTimestamp(value: unknown): Date {
+    if (value instanceof Date) {
+      return value;
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      /*
+       * WhatsApp thường trả Unix seconds.
+       * Nếu giá trị rất lớn thì coi là milliseconds.
+       */
+      const milliseconds = value > 10_000_000_000 ? value : value * 1000;
+
+      const date = new Date(milliseconds);
+
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      const numericValue = Number(value);
+
+      if (Number.isFinite(numericValue)) {
+        const milliseconds =
+          numericValue > 10_000_000_000 ? numericValue : numericValue * 1000;
+
+        const numericDate = new Date(milliseconds);
+
+        if (!Number.isNaN(numericDate.getTime())) {
+          return numericDate;
+        }
+      }
+
+      const parsedDate = new Date(value);
+
+      if (!Number.isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    }
+
+    return new Date();
+  }
+
+  private async persistMessageStatus(params: {
+    userId: string;
+    messageId: string;
+    status: "sent" | "delivered" | "read" | "failed";
+    occurredAt?: Date | string | null;
+  }): Promise<void> {
+    const messageId = String(params.messageId || "").trim();
+
+    if (!messageId) {
+      return;
+    }
+
+    try {
+      let updatedMessage: any | null = null;
+
+      for (let attempt = 1; attempt <= 5; attempt += 1) {
+        updatedMessage = await this.messages.updateOutboundStatusByMessageId({
+          messageId,
+          status: params.status,
+          occurredAt: params.occurredAt || new Date(),
+        });
+
+        if (updatedMessage) {
+          break;
+        }
+        if (attempt < 5) {
+          await new Promise<void>((resolve) =>
+            setTimeout(resolve, attempt * 150),
+          );
+        }
+      }
+
+      if (!updatedMessage) {
+        this.logger.warn(
+          `Receipt could not be matched after retries messageId=${messageId} status=${params.status}`,
+        );
+        return;
+      }
+
+      this.realtime.emitMessageStatus({
+        userId: params.userId,
+        databaseMessageId: updatedMessage.id || null,
+        messageId: updatedMessage.message_id,
+        conversationId: updatedMessage.conversation_id,
+        contactPhone: updatedMessage.contact_phone,
+        status: updatedMessage.status,
+
+        sentAt:
+          updatedMessage.sent_at?.toISOString?.() ||
+          updatedMessage.sent_at ||
+          null,
+
+        deliveredAt:
+          updatedMessage.delivered_at?.toISOString?.() ||
+          updatedMessage.delivered_at ||
+          null,
+
+        readAt:
+          updatedMessage.read_at?.toISOString?.() ||
+          updatedMessage.read_at ||
+          null,
+
+        failedAt:
+          updatedMessage.failed_at?.toISOString?.() ||
+          updatedMessage.failed_at ||
+          null,
+
+        updatedAt: new Date().toISOString(),
+      });
+
+      this.logger.debug(
+        `WhatsApp message status updated messageId=${messageId} status=${updatedMessage.status}`,
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to update WhatsApp message status messageId=${messageId}`,
+        error?.stack || error?.message || error,
+      );
+    }
   }
 
   private async startSocket(
@@ -206,6 +372,78 @@ export class BaileysSocketService
       await this.inbound.handleUpsert(userId, sessionId, messages, type);
     });
 
+    sock.ev.on("messages.update", async (updates: any[]) => {
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return;
+      }
+
+      for (const item of updates) {
+        const messageId = String(item?.key?.id || "").trim();
+        if (!messageId) {
+          continue;
+        }
+        if (item?.key?.fromMe !== true) {
+          continue;
+        }
+        const status = this.resolveBaileysMessageStatus(item?.update?.status);
+        if (!status) {
+          continue;
+        }
+        await this.persistMessageStatus({
+          userId,
+          messageId,
+          status,
+          occurredAt: new Date(),
+        });
+      }
+    });
+
+    sock.ev.on("message-receipt.update", async (updates: any[]) => {
+      if (!Array.isArray(updates) || updates.length === 0) {
+        return;
+      }
+      for (const item of updates) {
+        const messageId = String(item?.key?.id || "").trim();
+        if (!messageId) {
+          continue;
+        }
+        /*
+         * readTimestamp This means the recipient has read it..
+         */
+        const readTimestamp =
+          item?.receipt?.readTimestamp ??
+          item?.receipt?.playedTimestamp ??
+          null;
+
+        if (readTimestamp) {
+          await this.persistMessageStatus({
+            userId,
+            messageId,
+            status: "read",
+            occurredAt: this.normalizeReceiptTimestamp(readTimestamp),
+          });
+
+          continue;
+        }
+        /*
+         * receiptTimestamp This means the device has been delivered..
+         */
+        const deliveredTimestamp =
+          item?.receipt?.receiptTimestamp ??
+          item?.receipt?.deliveredTimestamp ??
+          null;
+
+        if (deliveredTimestamp) {
+          await this.persistMessageStatus({
+            userId,
+            messageId,
+            status: "delivered",
+            occurredAt: this.normalizeReceiptTimestamp(deliveredTimestamp),
+          });
+        }
+      }
+    });
+
     const handle: SocketHandle = {
       userId,
       sessionId,
@@ -244,21 +482,23 @@ export class BaileysSocketService
     userId: string,
     toE164: string,
     audioBase64: string,
-  ): Promise<void> {
+  ): Promise<string | null> {
     const ctx = this.contexts.get(userId);
-    if (!ctx?.sock) throw new Error("WhatsApp QR socket not connected");
-    const digits = toE164.replace(/\D/g, "");
-    if (digits.length < 10) throw new Error("Invalid phone for send");
+    if (!ctx?.sock) {
+      throw new Error("WhatsApp QR socket not connected");
+    }
+    const digits = String(toE164 || "").replace(/\D/g, "");
+    if (digits.length < 10) {
+      throw new Error("Invalid phone for send");
+    }
     const jid = `${digits}@s.whatsapp.net`;
     const buffer = Buffer.from(audioBase64, "base64");
-    await ctx.sock.sendMessage(
-      jid,
-      {
-        audio: buffer,
-        mimetype: "audio/ogg; codecs=opus",
-      },
-      { sendAudioAsVoice: true },
-    );
+    const result = await ctx.sock.sendMessage(jid, {
+      audio: buffer,
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: true,
+    });
+    return result?.key?.id || null;
   }
 
   async disconnectUser(userId: string): Promise<void> {

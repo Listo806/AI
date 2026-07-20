@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Subject } from 'rxjs';
+import { Injectable } from "@nestjs/common";
+import { Subject } from "rxjs";
 
 export type QrPayload = { userId: string; qr: string };
 export type ConnectedPayload = { userId: string; phone?: string | null };
@@ -28,6 +28,24 @@ export type MessagePayload = {
   createdAt: string;
 };
 
+export type MessageStatusPayload = {
+  userId: string;
+
+  databaseMessageId: string | null;
+  messageId: string;
+
+  conversationId: string;
+  contactPhone: string;
+
+  status: "sent" | "delivered" | "read" | "failed";
+
+  sentAt?: string | null;
+  deliveredAt?: string | null;
+  readAt?: string | null;
+  failedAt?: string | null;
+
+  updatedAt: string;
+};
 /**
  * Bridges Baileys socket lifecycle to Socket.IO without circular DI.
  * Gateway subscribes and emits to the user's room.
@@ -38,6 +56,7 @@ export class WhatsAppQrRealtimeService {
   readonly connected$ = new Subject<ConnectedPayload>();
   readonly disconnected$ = new Subject<DisconnectedPayload>();
   readonly message$ = new Subject<MessagePayload>();
+  readonly messageStatus$ = new Subject<MessageStatusPayload>();
 
   /** Last QR per user — re-sent when client joins so they don't miss it */
   private readonly lastQrByUser = new Map<string, string>();
@@ -66,5 +85,9 @@ export class WhatsAppQrRealtimeService {
 
   emitMessage(payload: MessagePayload): void {
     this.message$.next(payload);
+  }
+
+  emitMessageStatus(payload: MessageStatusPayload): void {
+    this.messageStatus$.next(payload);
   }
 }

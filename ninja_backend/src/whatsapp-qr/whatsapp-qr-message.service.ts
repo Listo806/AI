@@ -139,4 +139,115 @@ export class WhatsAppQrMessageService {
     );
     return rows.reverse();
   }
+
+  async updateOutboundStatusByMessageId(params: {
+    messageId: string;
+    status: "sent" | "delivered" | "read" | "failed";
+    occurredAt?: Date | string | null;
+  }): Promise<any | null> {
+    const messageId = String(params.messageId || "").trim();
+
+    if (!messageId) {
+      return null;
+    }
+
+    const occurredAt =
+      params.occurredAt instanceof Date
+        ? params.occurredAt
+        : params.occurredAt
+          ? new Date(params.occurredAt)
+          : new Date();
+
+    const safeOccurredAt = Number.isNaN(occurredAt.getTime())
+      ? new Date()
+      : occurredAt;
+
+    /*
+     * Không cho trạng thái bị lùi:
+     *
+     * sent      = 1
+     * delivered = 2
+     * read      = 3
+     * failed    = trạng thái lỗi riêng
+     */
+    const { rows } = await this.db.query(
+      `
+      UPDATE whatsapp_qr_messages
+      SET
+        status = CASE
+          WHEN $2 = 'failed' THEN
+            CASE
+              WHEN status IN ('read', 'delivered') THEN status
+              ELSE 'failed'
+            END
+
+          WHEN $2 = 'read' THEN 'read'
+
+          WHEN $2 = 'delivered' THEN
+            CASE
+              WHEN status = 'read' THEN 'read'
+              ELSE 'delivered'
+            END
+
+          WHEN $2 = 'sent' THEN
+            CASE
+              WHEN status IN ('read', 'delivered') THEN status
+              ELSE 'sent'
+            END
+
+          ELSE status
+        END,
+
+        sent_at = CASE
+          WHEN $2 IN ('sent', 'delivered', 'read')
+            THEN COALESCE(sent_at, $3::timestamptz)
+          ELSE sent_at
+        END,
+
+        delivered_at = CASE
+          WHEN $2 IN ('delivered', 'read')
+            THEN COALESCE(delivered_at, $3::timestamptz)
+          ELSE delivered_at
+        END,
+
+        read_at = CASE
+          WHEN $2 = 'read'
+            THEN COALESCE(read_at, $3::timestamptz)
+          ELSE read_at
+        END,
+
+        failed_at = CASE
+          WHEN $2 = 'failed'
+            THEN COALESCE(failed_at, $3::timestamptz)
+          ELSE failed_at
+        END
+
+      WHERE message_id = $1
+        AND direction = 'outbound'
+
+      RETURNING
+        id,
+        session_id,
+        conversation_id,
+        lead_id,
+        contact_id,
+        team_id,
+        contact_phone,
+        direction,
+        sender_type,
+        message_type,
+        body,
+        message_id,
+        status,
+        sent_at,
+        delivered_at,
+        read_at,
+        failed_at,
+        created_at
+      `,
+      [messageId, params.status, safeOccurredAt.toISOString()],
+    );
+
+    return rows[0] || null;
+  }
 }
