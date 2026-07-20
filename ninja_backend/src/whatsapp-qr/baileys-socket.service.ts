@@ -482,6 +482,7 @@ export class BaileysSocketService
     const result = await ctx.sock.sendMessage(jid, {
       text,
     });
+    this.logger.log(result);
     return result?.key?.id || null;
   }
 
