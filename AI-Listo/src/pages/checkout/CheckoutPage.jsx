@@ -321,248 +321,252 @@ function CheckoutForm({ tr, selectedPlan, plan, source }) {
         <h1>{tr.title}</h1>
         <p>{tr.subtitle}</p>
       </header>
-
-      <section className="checkout-card checkout-summary-card">
-        <h2>{tr.selectedPlan}</h2>
-        <div className="checkout-plan-row">
-          <div className="checkout-plan-main">
-            <div className="checkout-plan-icon">
-              <Users size={34} />
-            </div>
-            <div className="checkout-plan-copy">
-              <div className="checkout-plan-name-row">
-                <h3>{tr.planNames[selectedPlan]}</h3>
-                {plan.popular && (
-                  <span className="checkout-popular-badge">
-                    {tr.mostPopular}
-                  </span>
-                )}
+      <div className="checkout-shell-grid">
+        <div className="checkout-shell-1">
+          <section className="checkout-card checkout-summary-card">
+            <h2>{tr.selectedPlan}</h2>
+            <div className="checkout-plan-row">
+              <div className="checkout-plan-main">
+                <div className="checkout-plan-icon">
+                  <Users size={34} />
+                </div>
+                <div className="checkout-plan-copy">
+                  <div className="checkout-plan-name-row">
+                    <h3>{tr.planNames[selectedPlan]}</h3>
+                    {plan.popular && (
+                      <span className="checkout-popular-badge">
+                        {tr.mostPopular}
+                      </span>
+                    )}
+                  </div>
+                  <p>{usersText}</p>
+                  {isTrialCheckout && (
+                    <small className="checkout-plan-after-trial">
+                      {tr.selectedAfterTrial}
+                    </small>
+                  )}
+                </div>
               </div>
-              <p>{usersText}</p>
-              {isTrialCheckout && (
-                <small className="checkout-plan-after-trial">
-                  {tr.selectedAfterTrial}
-                </small>
-              )}
+              <div className="checkout-plan-price">
+                {isTrialCheckout && <small>{tr.monthlyAfterTrial}</small>}
+                <strong>${formatMoney(plan.price)}</strong>
+                <span>{tr.month}</span>
+              </div>
             </div>
-          </div>
-          <div className="checkout-plan-price">
-            {isTrialCheckout && <small>{tr.monthlyAfterTrial}</small>}
-            <strong>${formatMoney(plan.price)}</strong>
-            <span>{tr.month}</span>
-          </div>
-        </div>
-        <div className="checkout-summary-line">
-          <span>{tr.setupFee}</span>
-          <strong>${formatMoney(SETUP_FEE)}</strong>
-        </div>
-        <div className="checkout-summary-total">
-          <strong>{tr.totalToday}</strong>
-          <div>
-            <span>USD</span>
-            <strong>${formatMoney(dueToday)}</strong>
-          </div>
-        </div>
-      </section>
+            <div className="checkout-summary-line">
+              <span>{tr.setupFee}</span>
+              <strong>${formatMoney(SETUP_FEE)}</strong>
+            </div>
+            <div className="checkout-summary-total">
+              <strong>{tr.totalToday}</strong>
+              <div>
+                <span>USD</span>
+                <strong>${formatMoney(dueToday)}</strong>
+              </div>
+            </div>
+          </section>
 
-      <section className="checkout-card">
-        <div className="checkout-section-heading">
-          <div className="checkout-section-icon">
-            <User size={24} />
-          </div>
-          <div>
-            <h2>{tr.informationTitle}</h2>
-            <p>{tr.informationDesc}</p>
-          </div>
-        </div>
+          <section className="checkout-card">
+            <div className="checkout-section-heading">
+              <div className="checkout-section-icon">
+                <User size={24} />
+              </div>
+              <div>
+                <h2>{tr.informationTitle}</h2>
+                <p>{tr.informationDesc}</p>
+              </div>
+            </div>
 
-        <div className="checkout-info-grid">
-          <label className="checkout-field">
-            <span>{tr.fullName}</span>
-            <div className="checkout-input-wrap">
-              <User size={19} />
+            <div className="checkout-info-grid">
+              <label className="checkout-field">
+                <span>{tr.fullName}</span>
+                <div className="checkout-input-wrap">
+                  <User size={19} />
+                  <input
+                    type="text"
+                    value={customer.name}
+                    onChange={updateCustomer("name")}
+                    placeholder={tr.fullNamePlaceholder}
+                    autoComplete="name"
+                  />
+                </div>
+              </label>
+
+              <label className="checkout-field">
+                <span>{tr.email}</span>
+                <div className="checkout-input-wrap">
+                  <Mail size={19} />
+                  <input
+                    type="email"
+                    value={customer.email}
+                    onChange={updateCustomer("email")}
+                    placeholder={tr.emailPlaceholder}
+                    autoComplete="email"
+                  />
+                </div>
+              </label>
+
+              <label className="checkout-field checkout-field-full">
+                <span>{tr.phone}</span>
+                <div className="checkout-phone-shell">
+                  <Phone className="checkout-phone-leading-icon" size={19} />
+                  <PhoneInput
+                    country="us"
+                    value={customer.phone}
+                    onChange={updatePhone}
+                    enableSearch
+                    countryCodeEditable={false}
+                    placeholder={tr.phonePlaceholder}
+                    containerClass="checkout-phone-container"
+                    inputClass="checkout-phone-input"
+                    buttonClass="checkout-phone-button"
+                    dropdownClass="checkout-phone-dropdown"
+                  />
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+        <div className="checkout-shell-1">
+          <section className="checkout-card">
+            <div className="checkout-section-heading">
+              <div className="checkout-section-icon">
+                <CreditCard size={24} />
+              </div>
+              <div>
+                <h2>{tr.paymentTitle}</h2>
+                <p>{tr.paymentDesc}</p>
+              </div>
+            </div>
+
+            <div className="checkout-card-fields">
+              <label className="checkout-field checkout-field-full">
+                <span>{tr.cardNumber}</span>
+                <div className="checkout-stripe-input">
+                  <div className="checkout-stripe-element">
+                    <CardNumberElement
+                      options={{
+                        showIcon: true,
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            color: "#171b2c",
+                            fontFamily: "Inter, sans-serif",
+                            "::placeholder": { color: "#8b91a3" },
+                          },
+                          invalid: { color: "#dc2626" },
+                        },
+                      }}
+                    />
+                  </div>
+                  <CreditCard size={19} />
+                </div>
+              </label>
+
+              <label className="checkout-field">
+                <span>{tr.expirationDate}</span>
+                <div className="checkout-stripe-input">
+                  <div className="checkout-stripe-element">
+                    <CardExpiryElement
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            color: "#171b2c",
+                            fontFamily: "Inter, sans-serif",
+                            "::placeholder": { color: "#8b91a3" },
+                          },
+                          invalid: { color: "#dc2626" },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </label>
+
+              <label className="checkout-field">
+                <span>{tr.cvc}</span>
+                <div className="checkout-stripe-input">
+                  <div className="checkout-stripe-element">
+                    <CardCvcElement
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                            color: "#171b2c",
+                            fontFamily: "Inter, sans-serif",
+                            "::placeholder": { color: "#8b91a3" },
+                          },
+                          invalid: { color: "#dc2626" },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </label>
+
+              <label className="checkout-field">
+                <span>{tr.postalCode}</span>
+                <div className="checkout-input-wrap">
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(event) => setPostalCode(event.target.value)}
+                    placeholder="12345"
+                    autoComplete="postal-code"
+                  />
+                </div>
+              </label>
+            </div>
+
+            <div className="checkout-payment-footer">
+              <div className="checkout-card-brands">
+                <span>VISA</span>
+                <span>MC</span>
+                <span>AMEX</span>
+                <span>DISCOVER</span>
+              </div>
+              <div className="checkout-encrypted-note">
+                <LockKeyhole size={16} />
+                <span>{tr.encryptedPayment}</span>
+              </div>
+            </div>
+            <div className="divider"></div>
+            <label className="checkout-terms">
               <input
-                type="text"
-                value={customer.name}
-                onChange={updateCustomer("name")}
-                placeholder={tr.fullNamePlaceholder}
-                autoComplete="name"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(event) => setAcceptedTerms(event.target.checked)}
               />
-            </div>
-          </label>
+              <span>
+                {tr.agreementPrefix}{" "}
+                <a href="/terms" target="_blank" rel="noreferrer">
+                  {tr.terms}
+                  <ExternalLink size={14} />
+                </a>
+              </span>
+            </label>
 
-          <label className="checkout-field">
-            <span>{tr.email}</span>
-            <div className="checkout-input-wrap">
-              <Mail size={19} />
-              <input
-                type="email"
-                value={customer.email}
-                onChange={updateCustomer("email")}
-                placeholder={tr.emailPlaceholder}
-                autoComplete="email"
-              />
-            </div>
-          </label>
+            <button
+              type="button"
+              className="checkout-pay-button"
+              onClick={handleCheckout}
+              disabled={loading}
+            >
+              <LockKeyhole size={23} />
+              <span>
+                {loading
+                  ? tr.processing
+                  : tr.pay.replace("{total}", `$${formatMoney(dueToday)}`)}
+              </span>
+            </button>
 
-          <label className="checkout-field checkout-field-full">
-            <span>{tr.phone}</span>
-            <div className="checkout-phone-shell">
-              <Phone className="checkout-phone-leading-icon" size={19} />
-              <PhoneInput
-                country="us"
-                value={customer.phone}
-                onChange={updatePhone}
-                enableSearch
-                countryCodeEditable={false}
-                placeholder={tr.phonePlaceholder}
-                containerClass="checkout-phone-container"
-                inputClass="checkout-phone-input"
-                buttonClass="checkout-phone-button"
-                dropdownClass="checkout-phone-dropdown"
-              />
+            <div className="checkout-secure-footer">
+              <ShieldCheck size={19} />
+              <span>{tr.secureFooter}</span>
             </div>
-          </label>
+          </section>
         </div>
-      </section>
-
-      <section className="checkout-card">
-        <div className="checkout-section-heading">
-          <div className="checkout-section-icon">
-            <CreditCard size={24} />
-          </div>
-          <div>
-            <h2>{tr.paymentTitle}</h2>
-            <p>{tr.paymentDesc}</p>
-          </div>
-        </div>
-
-        <div className="checkout-card-fields">
-          <label className="checkout-field checkout-field-full">
-            <span>{tr.cardNumber}</span>
-            <div className="checkout-stripe-input">
-              <div className="checkout-stripe-element">
-                <CardNumberElement
-                  options={{
-                    showIcon: true,
-                    style: {
-                      base: {
-                        fontSize: "16px",
-                        color: "#171b2c",
-                        fontFamily: "Inter, sans-serif",
-                        "::placeholder": { color: "#8b91a3" },
-                      },
-                      invalid: { color: "#dc2626" },
-                    },
-                  }}
-                />
-              </div>
-              <CreditCard size={19} />
-            </div>
-          </label>
-
-          <label className="checkout-field">
-            <span>{tr.expirationDate}</span>
-            <div className="checkout-stripe-input">
-              <div className="checkout-stripe-element">
-                <CardExpiryElement
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: "16px",
-                        color: "#171b2c",
-                        fontFamily: "Inter, sans-serif",
-                        "::placeholder": { color: "#8b91a3" },
-                      },
-                      invalid: { color: "#dc2626" },
-                    },
-                  }}
-                />
-              </div>
-            </div>
-          </label>
-
-          <label className="checkout-field">
-            <span>{tr.cvc}</span>
-            <div className="checkout-stripe-input">
-              <div className="checkout-stripe-element">
-                <CardCvcElement
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: "16px",
-                        color: "#171b2c",
-                        fontFamily: "Inter, sans-serif",
-                        "::placeholder": { color: "#8b91a3" },
-                      },
-                      invalid: { color: "#dc2626" },
-                    },
-                  }}
-                />
-              </div>
-            </div>
-          </label>
-
-          <label className="checkout-field">
-            <span>{tr.postalCode}</span>
-            <div className="checkout-input-wrap">
-              <input
-                type="text"
-                value={postalCode}
-                onChange={(event) => setPostalCode(event.target.value)}
-                placeholder="12345"
-                autoComplete="postal-code"
-              />
-            </div>
-          </label>
-        </div>
-
-        <div className="checkout-payment-footer">
-          <div className="checkout-card-brands">
-            <span>VISA</span>
-            <span>MC</span>
-            <span>AMEX</span>
-            <span>DISCOVER</span>
-          </div>
-          <div className="checkout-encrypted-note">
-            <LockKeyhole size={16} />
-            <span>{tr.encryptedPayment}</span>
-          </div>
-        </div>
-      </section>
-
-      <label className="checkout-terms">
-        <input
-          type="checkbox"
-          checked={acceptedTerms}
-          onChange={(event) => setAcceptedTerms(event.target.checked)}
-        />
-        <span>
-          {tr.agreementPrefix}{" "}
-          <a href="/terms" target="_blank" rel="noreferrer">
-            {tr.terms}
-            <ExternalLink size={14} />
-          </a>
-        </span>
-      </label>
-
-      <button
-        type="button"
-        className="checkout-pay-button"
-        onClick={handleCheckout}
-        disabled={loading}
-      >
-        <LockKeyhole size={23} />
-        <span>
-          {loading
-            ? tr.processing
-            : tr.pay.replace("{total}", `$${formatMoney(dueToday)}`)}
-        </span>
-      </button>
-
-      <div className="checkout-secure-footer">
-        <ShieldCheck size={19} />
-        <span>{tr.secureFooter}</span>
       </div>
     </div>
   );
