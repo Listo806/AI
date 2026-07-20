@@ -84,7 +84,15 @@ export class BaileysSocketService
 
   private resolveBaileysMessageStatus(
     rawStatus: unknown,
-  ): "sent" | "delivered" | "read" | "failed" | null {
+  ): "sent" | "delivered" | "read" | null {
+    /*
+     * Very important:
+     * Number(null) and Number("") are both equal to 0.
+     * Failure to check beforehand will result in the message being incorrectly marked as failed.
+     */
+    if (rawStatus === null || rawStatus === undefined || rawStatus === "") {
+      return null;
+    }
     const status = Number(rawStatus);
 
     if (!Number.isFinite(status)) {
@@ -92,7 +100,7 @@ export class BaileysSocketService
     }
 
     /*
-     * Baileys / WhatsApp status thường có dạng:
+     * Baileys WAMessageStatus:
      *
      * 0 = ERROR
      * 1 = PENDING
@@ -100,23 +108,20 @@ export class BaileysSocketService
      * 3 = DELIVERY_ACK
      * 4 = READ
      * 5 = PLAYED
+     *
+     * Do not convert 0 to failed here.
+     * The status=0 event may occur in incomplete updates.
+     * Failed should be handled from the actual submission error.
      */
-    if (status === 0) {
-      return "failed";
-    }
-
     if (status >= 4) {
       return "read";
     }
-
     if (status === 3) {
       return "delivered";
     }
-
     if (status === 2) {
       return "sent";
     }
-
     return null;
   }
 
@@ -379,6 +384,11 @@ export class BaileysSocketService
 
       for (const item of updates) {
         const messageId = String(item?.key?.id || "").trim();
+        this.logger.debug(
+          `Baileys messages.update messageId=${messageId || "empty"} ` +
+            `fromMe=${String(item?.key?.fromMe)} ` +
+            `rawStatus=${String(item?.update?.status)}`,
+        );
         if (!messageId) {
           continue;
         }

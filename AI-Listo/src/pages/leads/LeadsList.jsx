@@ -1459,6 +1459,7 @@ export default function LeadsPage() {
     );
   };
   const handleRealtimeMessage = (payload) => {
+    console.log("LEAD REALTIME MESSAGE:", payload);
     const activeLead = selectedLeadRef.current;
     if (!activeLead?.id) {
       return;
@@ -1526,6 +1527,7 @@ export default function LeadsPage() {
     }
   };
   const handleMessageStatus = (payload) => {
+    console.log("LEAD MESSAGE STATUS:", payload);
     const activeLead = selectedLeadRef.current;
 
     if (!activeLead?.id) {
