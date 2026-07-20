@@ -118,13 +118,19 @@ export default function StartTrial() {
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    role: "owner",
-    plan: "team",
+  const [form, setForm] = useState(() => {
+    const planParam = new URLSearchParams(window.location.search).get("plan");
+    const plan = ["solo", "team", "growth"].includes(planParam)
+      ? planParam
+      : "team";
+    return {
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: "owner",
+      plan,
+    };
   });
 
   const tr = t[lang] || t.en;
@@ -169,7 +175,7 @@ export default function StartTrial() {
       localStorage.setItem("email", form.email);
       localStorage.setItem("name", form.name);
       localStorage.setItem("phone", form.phone);
-      localStorage.setItem("password", form.password);
+      localStorage.removeItem("password"); // never persist the raw password client-side
       localStorage.setItem("trialPlan", form.plan);
       navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
