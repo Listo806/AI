@@ -2225,7 +2225,7 @@ export default function Landing() {
         <img src={currentSec3} alt="" />
       </section>
 
-      <section className="aios-section ai-crm-section pt-20">
+      <section className="aios-section ai-crm-section">
         <div className="aios-container">
           <div className="aios-header">
             <h2>

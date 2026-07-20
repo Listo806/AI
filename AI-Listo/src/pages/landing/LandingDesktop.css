@@ -3218,7 +3218,7 @@ html{
 
  #cortexa-ai-crm-landing .aios-section {
    padding: 110px 24px;
-   background: #f7f7f9;
+   background: #fff;
    padding-left: 24px !important;
    padding-right: 24px !important;
  }
@@ -3636,8 +3636,8 @@ html{
  }
 
  #cortexa-ai-crm-landing .how-section {
-   padding: 0 24px 120px !important;
-   background: #f8f8fb;
+   padding: 0 24px 80px !important;
+   background: #fff;
  }
 
  .how-container {
