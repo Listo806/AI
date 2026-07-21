@@ -153,6 +153,69 @@ export class WhatsAppQrConversationService {
 
     return rows[0] || null;
   }
+  async getOrCreateByLead(
+    user: {
+      id: string;
+      teamId: string | null;
+      role: string;
+    },
+    leadId: string,
+  ): Promise<ResolvedCrmConversation | null> {
+    const existing = await this.findScopedByLeadId(user, leadId);
+
+    if (existing) {
+      return existing;
+    }
+    const { rows: leadRows } = await this.db.query(
+      `
+    SELECT
+      l.id,
+      l.phone,
+      l.contact_id,
+      l.team_id,
+      l.created_by
+    FROM leads l
+    WHERE l.id = $1
+    LIMIT 1
+    `,
+      [leadId],
+    );
+
+    if (!leadRows.length) {
+      return null;
+    }
+    const lead = leadRows[0];
+    const { rows: sessionRows } = await this.db.query(
+      `
+    SELECT
+      id,
+      user_id,
+      team_id
+    FROM whatsapp_qr_sessions
+    WHERE
+      user_id = $1
+      AND status='connected'
+    ORDER BY connected_at DESC NULLS LAST
+    LIMIT 1
+    `,
+      [user.id],
+    );
+
+    if (!sessionRows.length) {
+      return null;
+    }
+    const session = sessionRows[0];
+    const created = await this.getOrCreate({
+      sessionId: session.id,
+      userId: session.user_id,
+      teamId: lead.team_id,
+      leadId: lead.id,
+      contactId: lead.contact_id,
+      contactPhone: lead.phone,
+    });
+
+    return created.row;
+  }
 
   async findScopedByContactId(
     user: {
@@ -349,8 +412,8 @@ export class WhatsAppQrConversationService {
           $4,
           $5,
           $6,
-          'ai',
-          true,
+          'human',
+          false,
           NOW(),
           1,
           NOW(),

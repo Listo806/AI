@@ -801,7 +801,7 @@ export class WhatsAppQrController {
     @Body() body: { message: string },
   ) {
     console.log("=== SEND FROM LEAD ===", leadId);
-    const conversation = await this.conversations.findScopedByLeadId(
+    const conversation = await this.conversations.getOrCreateByLead(
       {
         id: user.id,
         teamId: user.teamId || user.team_id || null,
@@ -812,12 +812,10 @@ export class WhatsAppQrController {
 
     if (!conversation) {
       throw new NotFoundException({
-        code: "WHATSAPP_CONVERSATION_NOT_FOUND",
-        message:
-          "This lead does not have a WhatsApp conversation yet. The conversation must be created or linked first.",
+        code: "WHATSAPP_SESSION_NOT_CONNECTED",
+        message: "Please connect WhatsApp first.",
       });
     }
-
     return this.sendThroughConversation(user, conversation, body.message);
   }
 
