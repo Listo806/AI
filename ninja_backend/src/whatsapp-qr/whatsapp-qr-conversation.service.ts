@@ -154,6 +154,7 @@ export class WhatsAppQrConversationService {
 
     return rows[0] || null;
   }
+
   async getOrCreateByLead(
     user: {
       id: string;
@@ -174,18 +175,18 @@ export class WhatsAppQrConversationService {
       user.role,
     );
 
-    const params: any[] = [leadId];
-    const where: string[] = ["l.id = $1"];
+    const leadParams: any[] = [leadId];
+    const leadWhere: string[] = ["l.id = $1"];
 
     if (!isGlobal) {
-      params.push(user.id);
-      const userIndex = params.length;
+      leadParams.push(user.id);
+      const userIndex = leadParams.length;
 
       if (teamIds.length > 0) {
-        params.push(teamIds);
-        const teamIndex = params.length;
+        leadParams.push(teamIds);
+        const teamIndex = leadParams.length;
 
-        where.push(`
+        leadWhere.push(`
         (
           l.created_by = $${userIndex}
           OR l.assigned_to = $${userIndex}
@@ -193,7 +194,7 @@ export class WhatsAppQrConversationService {
         )
       `);
       } else {
-        where.push(`
+        leadWhere.push(`
         (
           l.created_by = $${userIndex}
           OR l.assigned_to = $${userIndex}
@@ -213,13 +214,13 @@ export class WhatsAppQrConversationService {
       l.created_by,
       l.assigned_to
     FROM leads l
-    WHERE ${where.join(" AND ")}
+    WHERE ${leadWhere.join(" AND ")}
     LIMIT 1
     `,
-      params,
+      leadParams,
     );
 
-    const lead = leadRows[0];
+    const lead = leadRows[0] || null;
 
     if (!lead) {
       return null;
@@ -233,7 +234,34 @@ export class WhatsAppQrConversationService {
       );
     }
 
-    const reusableParams: any[] = [contactPhone, user.id];
+    const { rows: sessionRows } = await this.db.query(
+      `
+    SELECT
+      s.id,
+      s.user_id,
+      s.status,
+      s.connected_at,
+      s.updated_at
+    FROM whatsapp_qr_sessions s
+    WHERE s.user_id = $1
+      AND s.status = 'connected'
+    ORDER BY
+      s.connected_at DESC NULLS LAST,
+      s.updated_at DESC NULLS LAST
+    LIMIT 1
+    `,
+      [user.id],
+    );
+
+    const session = sessionRows[0] || null;
+
+    if (!session) {
+      throw new Error(
+        "No connected WhatsApp session is available. Connect WhatsApp first.",
+      );
+    }
+
+    const reusableParams: any[] = [contactPhone];
     const reusableWhere: string[] = [
       `
     regexp_replace(
@@ -251,18 +279,21 @@ export class WhatsAppQrConversationService {
     ];
 
     if (!isGlobal) {
+      reusableParams.push(user.id);
+      const userIndex = reusableParams.length;
+
       if (teamIds.length > 0) {
         reusableParams.push(teamIds);
         const teamIndex = reusableParams.length;
 
         reusableWhere.push(`
         (
-          c.user_id = $2
+          c.user_id = $${userIndex}
           OR c.team_id = ANY($${teamIndex}::uuid[])
         )
       `);
       } else {
-        reusableWhere.push(`c.user_id = $2`);
+        reusableWhere.push(`c.user_id = $${userIndex}`);
       }
     }
 
@@ -278,63 +309,20 @@ export class WhatsAppQrConversationService {
       c.contact_phone,
       c.owner_type,
       c.ai_enabled,
-      c.unread_count
+      c.unread_count,
+      c.property_id
     FROM whatsapp_qr_conversations c
     WHERE ${reusableWhere.join(" AND ")}
     ORDER BY
       c.last_message_at DESC NULLS LAST,
-      c.updated_at DESC
+      c.updated_at DESC NULLS LAST
     LIMIT 1
     `,
       reusableParams,
     );
 
-    const reusableConversation = reusableRows[0];
-
-    const requestedTeamId = lead.team_id || user.teamId || null;
-
-    const sessionParams: any[] = [user.id];
-    let sessionScope = `s.user_id = $1`;
-
-    if (requestedTeamId) {
-      sessionParams.push(requestedTeamId);
-
-      sessionScope = `
-      (
-        s.user_id = $1
-        OR s.team_id = $2
-      )
-    `;
-    }
-
-    const { rows: sessionRows } = await this.db.query(
-      `
-    SELECT
-      s.id,
-      s.user_id,
-      s.team_id,
-      s.status,
-      s.connected_at,
-      s.updated_at
-    FROM whatsapp_qr_sessions s
-    WHERE s.status = 'connected'
-      AND ${sessionScope}
-    ORDER BY
-      CASE WHEN s.user_id = $1 THEN 0 ELSE 1 END,
-      s.connected_at DESC NULLS LAST,
-      s.updated_at DESC
-    LIMIT 1
-    `,
-      sessionParams,
-    );
-
-    const session = sessionRows[0];
-
-    if (!session) {
-      throw new Error(
-        "No connected WhatsApp session is available. Connect WhatsApp first.",
-      );
-    }
+    const reusableConversation = reusableRows[0] || null;
+    const conversationTeamId = lead.team_id || user.teamId || null;
 
     if (reusableConversation) {
       const { rows: updatedRows } = await this.db.query(
@@ -368,7 +356,7 @@ export class WhatsAppQrConversationService {
           reusableConversation.id,
           session.id,
           session.user_id,
-          lead.team_id || session.team_id || user.teamId || null,
+          conversationTeamId,
           lead.id,
           lead.contact_id || null,
           contactPhone,
@@ -382,7 +370,7 @@ export class WhatsAppQrConversationService {
     const created = await this.getOrCreate({
       sessionId: session.id,
       userId: session.user_id,
-      teamId: lead.team_id || session.team_id || user.teamId || null,
+      teamId: conversationTeamId,
       leadId: lead.id,
       contactId: lead.contact_id || null,
       contactPhone,
@@ -538,9 +526,84 @@ export class WhatsAppQrConversationService {
     contactPhone: string;
     propertyId?: string | null;
   }): Promise<{ row: QrConversationRow; created: boolean }> {
+   
     const { rows: existingRows } = await this.db.query(
       `
       SELECT
+        c.id,
+        c.session_id,
+        c.user_id,
+        c.team_id,
+        c.lead_id,
+        c.contact_id,
+        c.contact_phone,
+        c.owner_type,
+        c.ai_enabled,
+        c.unread_count,
+        c.property_id
+      FROM whatsapp_qr_conversations c
+      WHERE
+        c.lead_id = $1
+
+        OR (
+          c.user_id = $2
+          AND regexp_replace(
+            COALESCE(c.contact_phone, ''),
+            '[^0-9]',
+            '',
+            'g'
+          ) = regexp_replace(
+            $3,
+            '[^0-9]',
+            '',
+            'g'
+          )
+        )
+
+        OR (
+          c.session_id = $4
+          AND regexp_replace(
+            COALESCE(c.contact_phone, ''),
+            '[^0-9]',
+            '',
+            'g'
+          ) = regexp_replace(
+            $3,
+            '[^0-9]',
+            '',
+            'g'
+          )
+        )
+
+      ORDER BY
+        CASE
+          WHEN c.lead_id = $1 THEN 0
+          WHEN c.user_id = $2 THEN 1
+          ELSE 2
+        END,
+        c.updated_at DESC NULLS LAST
+      LIMIT 1
+      `,
+      [params.leadId, params.userId, params.contactPhone, params.sessionId],
+    );
+
+    const existing = existingRows[0] || null;
+
+    if (existing) {
+      const { rows: updatedRows } = await this.db.query(
+        `
+      UPDATE whatsapp_qr_conversations
+      SET
+        session_id = $2,
+        user_id = $3,
+        team_id = COALESCE($4, team_id),
+        lead_id = $5,
+        contact_id = COALESCE($6, contact_id),
+        contact_phone = $7,
+        property_id = COALESCE($8, property_id),
+        updated_at = NOW()
+      WHERE id = $1
+      RETURNING
         id,
         session_id,
         user_id,
@@ -552,110 +615,68 @@ export class WhatsAppQrConversationService {
         ai_enabled,
         unread_count,
         property_id
-      FROM whatsapp_qr_conversations
-      WHERE
-        lead_id = $1
-        OR (
-          user_id = $2
-          AND regexp_replace(
-            COALESCE(contact_phone, ''),
-            '[^0-9]',
-            '',
-            'g'
-          ) = regexp_replace(
-            $3,
-            '[^0-9]',
-            '',
-            'g'
-          )
-        )
-        OR (
-          session_id = $4
-          AND regexp_replace(
-            COALESCE(contact_phone, ''),
-            '[^0-9]',
-            '',
-            'g'
-          ) = regexp_replace(
-            $3,
-            '[^0-9]',
-            '',
-            'g'
-          )
-        )
-      ORDER BY
-        CASE WHEN lead_id = $1 THEN 0 ELSE 1 END,
-        updated_at DESC
-      LIMIT 1
       `,
-      [params.leadId, params.userId, params.contactPhone, params.sessionId],
-    );
-
-    const existing = existingRows[0] || null;
-    if (existing) {
-      await this.db.query(
-        `
-    UPDATE whatsapp_qr_conversations
-    SET
-      contact_id = COALESCE(contact_id, $2),
-      property_id = COALESCE(property_id, $3),
-      updated_at = NOW()
-    WHERE id = $1
-    `,
-        [existing.id, params.contactId ?? null, params.propertyId ?? null],
+        [
+          existing.id,
+          params.sessionId,
+          params.userId,
+          params.teamId,
+          params.leadId,
+          params.contactId ?? null,
+          params.contactPhone,
+          params.propertyId ?? null,
+        ],
       );
 
       return {
-        row: {
-          ...existing,
-          contact_id: existing.contact_id || params.contactId || null,
-          property_id: existing.property_id || params.propertyId || null,
-        },
+        row: updatedRows[0],
         created: false,
       };
     }
 
-    const { rows } = await this.db.query(
-      `INSERT INTO whatsapp_qr_conversations (
-          session_id,
-          user_id,
-          team_id,
-          lead_id,
-          contact_id,
-          contact_phone,
-          owner_type,
-          ai_enabled,
-          last_message_at,
-          unread_count,
-          updated_at,
-          property_id
-        )
-        VALUES (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          $6,
-          'human',
-          false,
-          NOW(),
-          1,
-          NOW(),
-          $7
-        )
-        RETURNING
-          id,
-          session_id,
-          user_id,
-          team_id,
-          lead_id,
-          contact_id,
-          contact_phone,
-          owner_type,
-          ai_enabled,
-          unread_count,
-          property_id`,
+    const { rows: createdRows } = await this.db.query(
+      `
+      INSERT INTO whatsapp_qr_conversations (
+        session_id,
+        user_id,
+        team_id,
+        lead_id,
+        contact_id,
+        contact_phone,
+        owner_type,
+        ai_enabled,
+        last_message_at,
+        unread_count,
+        updated_at,
+        property_id
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        'human',
+        false,
+        NOW(),
+        0,
+        NOW(),
+        $7
+      )
+      RETURNING
+        id,
+        session_id,
+        user_id,
+        team_id,
+        lead_id,
+        contact_id,
+        contact_phone,
+        owner_type,
+        ai_enabled,
+        unread_count,
+        property_id
+      `,
       [
         params.sessionId,
         params.userId,
@@ -666,7 +687,11 @@ export class WhatsAppQrConversationService {
         params.propertyId ?? null,
       ],
     );
-    return { row: rows[0], created: true };
+
+    return {
+      row: createdRows[0],
+      created: true,
+    };
   }
 
   async touchInbound(conversationId: string): Promise<void> {
