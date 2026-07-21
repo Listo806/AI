@@ -950,7 +950,7 @@ export default function PricingPage() {
             <div className="cx-plans-card">
               <div className="cx-plans-card-header">
                 <div className="cx-plans-icon-box">
-                  <User size={38} strokeWidth={1.8} />
+                  <User size={32} strokeWidth={1.8} />
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.solo.name}</h3>
@@ -994,7 +994,7 @@ export default function PricingPage() {
               <div className="cx-plans-badge">{tr.plansBadgePopular}</div>
               <div className="cx-plans-card-header">
                 <div className="cx-plans-icon-box">
-                  <Users size={38} strokeWidth={1.8} />
+                  <Users size={32} strokeWidth={1.8} />
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.team.name}</h3>
@@ -1037,7 +1037,7 @@ export default function PricingPage() {
             <div className="cx-plans-card">
               <div className="cx-plans-card-header">
                 <div className="cx-plans-icon-box">
-                  <BarChart3 size={38} strokeWidth={1.8} />
+                  <BarChart3 size={32} strokeWidth={1.8} />
                 </div>
                 <div className="cx-plans-meta">
                   <h3 className="cx-plans-name">{tr.plansData.growth.name}</h3>
