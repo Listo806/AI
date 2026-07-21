@@ -801,21 +801,48 @@ export class WhatsAppQrController {
     @Body() body: { message: string },
   ) {
     console.log("=== SEND FROM LEAD ===", leadId);
-    const conversation = await this.conversations.getOrCreateByLead(
-      {
-        id: user.id,
-        teamId: user.teamId || user.team_id || null,
-        role: user.role,
-      },
-      leadId,
-    );
-
+    let conversation;
+    try {
+      conversation = await this.conversations.getOrCreateByLead(
+        {
+          id: user.id,
+          teamId: user.teamId || user.team_id || null,
+          role: user.role,
+        },
+        leadId,
+      );
+    } catch (error: any) {
+      console.error("[WA SEND FROM LEAD] resolve conversation failed", {
+        leadId,
+        userId: user.id,
+        message: error?.message,
+        error,
+      });
+      const errorMessage = String(error?.message || "");
+      if (errorMessage.includes("phone number")) {
+        throw new BadRequestException({
+          code: "INVALID_LEAD_PHONE",
+          message:
+            "This lead does not have a valid WhatsApp phone number. Use an international number such as +84933758705.",
+        });
+      }
+      if (errorMessage.includes("connected WhatsApp session")) {
+        throw new BadRequestException({
+          code: "WHATSAPP_SESSION_NOT_CONNECTED",
+          message:
+            "No connected WhatsApp session is available. Connect WhatsApp from AI Agent Setup first.",
+        });
+      }
+      throw error;
+    }
     if (!conversation) {
       throw new NotFoundException({
-        code: "WHATSAPP_SESSION_NOT_CONNECTED",
-        message: "Please connect WhatsApp first.",
+        code: "LEAD_NOT_FOUND_OR_FORBIDDEN",
+        message:
+          "The lead was not found or you do not have permission to access it.",
       });
     }
+
     return this.sendThroughConversation(user, conversation, body.message);
   }
 
