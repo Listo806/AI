@@ -101,9 +101,6 @@ import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
 import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
 
-import testimonialsImg from "../../assets/cortexa/testimonials.png";
-import testimonialsImgES from "../../assets/cortexa/testimonialsES.png";
-import testimonialsImgPT from "../../assets/cortexa/testimonialsPT.png";
 
 import smart1Img from "../../assets/cortexa/smart1.png";
 import smart2Img from "../../assets/cortexa/smart2.png";
@@ -1830,12 +1827,6 @@ export default function Landing() {
       : lang === "pt"
         ? workspaceImgPT
         : workspaceImg;
-  const currenttestimonialsImg =
-    lang === "es"
-      ? testimonialsImgES
-      : lang === "pt"
-        ? testimonialsImgPT
-        : testimonialsImg;
   const flows = [
     {
       label: tr.smartFlow1Label,
@@ -1898,6 +1889,8 @@ export default function Landing() {
                 "analytics",
                 "testimonials",
               ];
+              // Testimonials section removed (was illustrative/sample content); skip its nav link.
+              if (ids[i] === "testimonials") return null;
 
               return (
                 <HashLink
@@ -2873,15 +2866,6 @@ export default function Landing() {
               {activeFAQ === index && <div className="cx-faq-a">{item.a}</div>}
             </div>
           ))}
-        </div>
-      </section>
-      <section id="testimonials" className="cx-hero pt-50">
-        <div className="img-container">
-          <img src={currenttestimonialsImg} alt="" />
-          <i>
-            Product demo — the names, numbers, and activity shown are sample
-            data for illustration only, not real customer results.
-          </i>
         </div>
       </section>
       {/* FINAL */}

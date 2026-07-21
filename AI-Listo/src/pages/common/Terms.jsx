@@ -77,14 +77,18 @@ const Terms = () => {
 
       <Section title="Free Trial, Setup Fee & Billing">
         <p><strong>Free Trial</strong></p>
-        <p>CORTEXA AI Revenue OS offers a 14-day free trial.</p>
+        <p>
+          CORTEXA AI Revenue OS offers a free trial to new users. No payment is
+          collected to start the trial, no card or payment method is required,
+          and the trial does not automatically convert to a paid plan.
+        </p>
 
         <p><strong>Setup Fee</strong></p>
-        <p>To activate your account:</p>
         <ul style={styles.ul}>
           <li>
-            A one-time setup and activation fee of $97 USD may be charged at
-            signup.
+            A one-time setup and activation fee of $97 USD applies only if and
+            when you choose to activate a paid subscription. It is not charged
+            during the free trial.
           </li>
         </ul>
         <p>
@@ -144,24 +148,31 @@ const Terms = () => {
           receive notice of material pricing changes where required by law.
         </p>
 
-        <p><strong>Billing</strong></p>
-        <p>After the trial period:</p>
+        <p><strong>How Billing Works</strong></p>
+        <p>
+          The free trial collects no payment and does not store a payment method.
+        </p>
         <ul style={styles.ul}>
+          <li>Your free trial does not automatically convert to a paid plan.</li>
+          <li>No charge is made automatically.</li>
           <li>
-            Your subscription automatically converts to a paid plan unless
-            canceled before the renewal date.
+            To move to a paid plan, you must actively choose to subscribe, add a
+            payment method, and confirm the purchase. Nothing is charged until
+            you do so.
           </li>
-          <li>Billing is recurring and continues until canceled.</li>
-          <li>Charges are processed through authorized third-party payment providers.</li>
           <li>
-            Additional users added during an active subscription may result in
-            prorated charges where applicable.
+            The plan prices above and the one-time $97 setup fee apply only if and
+            when you choose to activate a paid subscription.
+          </li>
+          <li>
+            Once you subscribe, billing continues on your selected plan until you
+            cancel, and additional users may result in prorated charges where
+            applicable.
           </li>
         </ul>
         <p>
-          By subscribing, you authorize CORTEXA AI Revenue OS to charge your
-          selected payment method according to your selected plan and any
-          additional services you purchase.
+          We do not charge any payment method without your explicit authorization
+          at the time you choose to subscribe.
         </p>
       </Section>
 

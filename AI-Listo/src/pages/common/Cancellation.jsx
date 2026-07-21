@@ -5,17 +5,23 @@ const Cancellation = () => {
     <div style={styles.container}>
       <h1 style={styles.title}>Cancellation Policy</h1>
       <p style={styles.effectiveDate}>
-        Effective Date: April 22, 2026
+        Effective Date: July 20, 2026
       </p>
 
       <p>
-        This Cancellation Policy explains how you may cancel your subscription to <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us"). By using our Services, you agree to this policy.
+        This Cancellation Policy explains how you may cancel your account or subscription to <strong>CORTEXA AI Revenue OS</strong> ("Cortexa", "we", "our", "us"). By using our Services, you agree to this policy.
       </p>
 
-      <Section title="1. Subscription Cancellation">
-          <p>You may cancel your Cortexa subscription at any time.</p>
+      <Section title="1. Free Trial — No Charge, No Auto-Conversion">
+          <ul style={styles.ul}>
+            <li>Your free trial collects no payment and requires no card on file.</li>
+            <li>The free trial does not automatically convert to a paid subscription, and you are never charged automatically.</li>
+            <li>You can stop using your trial account at any time with nothing owed.</li>
+          </ul>
+        </Section>
 
-          <p>To cancel your subscription:</p>
+        <Section title="2. Cancelling a Paid Subscription">
+          <p>If you have chosen to start a paid subscription, you may cancel it at any time:</p>
           <ul style={styles.ul}>
             <li>Through your account settings within the platform, OR</li>
             <li>
@@ -28,64 +34,29 @@ const Cancellation = () => {
           </ul>
         </Section>
 
-        <Section title="2. Cancellation Timing">
+        <Section title="3. Timing & Effect of Cancellation">
           <ul style={styles.ul}>
-            <li>Cancellation must be completed before your next billing date to avoid being charged for the next billing cycle</li>
-            <li>If you cancel after a billing charge has been processed, that charge will not be refunded</li>
+            <li>Cancel before your next billing date to avoid the next billing cycle.</li>
+            <li>You retain access to paid features until the end of the current paid billing period.</li>
+            <li>After that period ends, paid features may be limited, downgraded, or deactivated.</li>
+            <li>Cancellation stops future charges but does not refund a billing period that has already been paid (see the Refund Policy).</li>
           </ul>
         </Section>
 
-        <Section title="3. Effect of Cancellation">
-          <p>When your subscription is canceled:</p>
+        <Section title="4. Account Deletion vs Cancellation">
           <ul style={styles.ul}>
-            <li>You will retain access to Cortexa until the end of your current billing period</li>
-            <li>
-              After the billing period ends:
-              <ul style={styles.ul}>
-                <li>Your access to paid features will be revoked</li>
-                <li>Your account may be downgraded, limited, or deactivated</li>
-              </ul>
-            </li>
+            <li>Cancelling a subscription stops future billing only.</li>
+            <li>It does not automatically delete your account or data.</li>
           </ul>
+          <p>To request full account deletion, contact support at support@cortexaaicrm.com.</p>
         </Section>
 
-        <Section title="4. No Retroactive Cancellation">
-          <p>Cancellation does not:</p>
-          <ul style={styles.ul}>
-            <li>Reverse or refund prior charges</li>
-            <li>Apply to previous billing cycles</li>
-            <li>Provide partial refunds for unused time</li>
-          </ul>
-
-          <p>All payments remain subject to the Refund Policy.</p>
-        </Section>
-
-        <Section title="5. Free Trial Cancellation">
-          <ul style={styles.ul}>
-            <li>You may cancel your account at any time during the 14-day free trial</li>
-            <li>To avoid being charged, cancellation must occur before the trial period ends</li>
-            <li>Failure to cancel before the trial ends will result in automatic conversion to a paid subscription</li>
-          </ul>
-        </Section>
-
-        <Section title="6. Account Deletion vs Cancellation">
-          <ul style={styles.ul}>
-            <li>Cancelling your subscription stops future billing only</li>
-            <li>It does not automatically delete your account or data</li>
-          </ul>
-
-          <p>To request full account deletion:</p>
-          <ul style={styles.ul}>
-            <li>Contact support at support@cortexaaicrm.com</li>
-          </ul>
-        </Section>
-
-        <Section title="7. Payment Disputes">
+        <Section title="5. Payment Disputes">
           <p>If you have a billing issue:</p>
           <ul style={styles.ul}>
-            <li>You agree to contact Cortexa support before initiating a dispute or chargeback</li>
+            <li>Please contact Cortexa support before initiating a dispute or chargeback.</li>
             <li>
-              Unauthorized or unjustified disputes may result in:
+              Unresolved or unjustified disputes may result in:
               <ul style={styles.ul}>
                 <li>Account suspension</li>
                 <li>Permanent account termination</li>
@@ -94,12 +65,12 @@ const Cancellation = () => {
           </ul>
         </Section>
 
-        <Section title="8. Changes to This Policy">
+        <Section title="6. Changes to This Policy">
           <p>We may update this Cancellation Policy at any time.</p>
           <p>Continued use of Cortexa after updates constitutes acceptance of the revised policy.</p>
         </Section>
 
-        <Section title="9. Contact">
+        <Section title="7. Contact">
           <p>For cancellation or billing inquiries:</p>
           <p>AI Support: Available via the Contact page</p>
           <p>Email: support@cortexaaicrm.com</p>
