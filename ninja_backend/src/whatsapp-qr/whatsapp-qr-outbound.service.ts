@@ -4,7 +4,7 @@ import { BaileysSocketService } from "./baileys-socket.service";
 import { OutboundThrottleService } from "./outbound-throttle.service";
 import { WhatsAppQrConversationService } from "./whatsapp-qr-conversation.service";
 import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
-
+import { normalizeToE164 } from "./utils/phone-normalize.util";
 @Injectable()
 export class WhatsAppQrOutboundService {
   private readonly logger = new Logger(WhatsAppQrOutboundService.name);
@@ -34,7 +34,11 @@ export class WhatsAppQrOutboundService {
     await this.throttle.assertAllowed(params.sessionId);
 
     const text = String(params.text || "").trim();
+    const normalizedContactPhone = normalizeToE164(params.contactPhone);
 
+    if (!normalizedContactPhone) {
+      throw new Error(`Invalid WhatsApp contact phone: ${params.contactPhone}`);
+    }
     if (!text) {
       throw new Error("Message is required");
     }
@@ -45,7 +49,7 @@ export class WhatsAppQrOutboundService {
      */
     const whatsappMessageId = await this.sockets.sendText(
       params.userId,
-      params.contactPhone,
+      normalizedContactPhone,
       text,
     );
 
@@ -112,7 +116,7 @@ export class WhatsAppQrOutboundService {
         params.leadId,
         params.contactId ?? null,
         params.teamId,
-        params.contactPhone,
+        normalizedContactPhone,
         text,
         whatsappMessageId,
       ],
@@ -162,7 +166,7 @@ export class WhatsAppQrOutboundService {
     this.realtime.emitMessage({
       userId: params.userId,
       conversationId: params.conversationId,
-      contactPhone: params.contactPhone,
+      contactPhone: normalizedContactPhone,
       direction: "outbound",
       senderType: "agent",
       body: text,
@@ -196,14 +200,18 @@ export class WhatsAppQrOutboundService {
     await this.throttle.assertAllowed(params.sessionId);
 
     const text = String(params.text || "").trim();
+    const normalizedContactPhone = normalizeToE164(params.contactPhone);
 
+    if (!normalizedContactPhone) {
+      throw new Error(`Invalid WhatsApp contact phone: ${params.contactPhone}`);
+    }
     if (!text) {
       throw new Error("Message is required");
     }
 
     const whatsappMessageId = await this.sockets.sendText(
       params.userId,
-      params.contactPhone,
+      normalizedContactPhone,
       text,
     );
 
@@ -265,7 +273,7 @@ export class WhatsAppQrOutboundService {
         params.leadId,
         params.contactId ?? null,
         params.teamId,
-        params.contactPhone,
+        normalizedContactPhone,
         text,
         whatsappMessageId,
       ],
@@ -315,7 +323,7 @@ export class WhatsAppQrOutboundService {
     this.realtime.emitMessage({
       userId: params.userId,
       conversationId: params.conversationId,
-      contactPhone: params.contactPhone,
+      contactPhone: normalizedContactPhone,
       direction: "outbound",
       senderType: "ai",
       body: text,
@@ -350,10 +358,14 @@ export class WhatsAppQrOutboundService {
     audioBase64: string;
   }): Promise<any> {
     await this.throttle.assertAllowed(params.sessionId);
+    const normalizedContactPhone = normalizeToE164(params.contactPhone);
 
+    if (!normalizedContactPhone) {
+      throw new Error(`Invalid WhatsApp contact phone: ${params.contactPhone}`);
+    }
     const whatsappMessageId = await this.sockets.sendVoice(
       params.userId,
-      params.contactPhone,
+      normalizedContactPhone,
       params.audioBase64,
     );
 
@@ -414,7 +426,7 @@ export class WhatsAppQrOutboundService {
         params.leadId,
         params.contactId ?? null,
         params.teamId,
-        params.contactPhone,
+        normalizedContactPhone,
         whatsappMessageId,
       ],
     );
@@ -463,7 +475,7 @@ export class WhatsAppQrOutboundService {
     this.realtime.emitMessage({
       userId: params.userId,
       conversationId: params.conversationId,
-      contactPhone: params.contactPhone,
+      contactPhone: normalizedContactPhone,
       direction: "outbound",
       senderType: "agent",
       body: "[Voice message]",

@@ -79,6 +79,40 @@ function fallbackBodyByType(type: ParsedInbound["messageType"]): string {
 /**
  * Parse a single WAMessage. Returns null if not a 1:1 inbound we should store.
  */
+function resolvePhoneJid(
+  msg: any,
+  normalizePhone: (s: string) => string | null,
+): {
+  remoteJid: string;
+  contactPhone: string | null;
+} {
+  const key = msg?.key || {};
+  const candidates = [
+    key.remoteJidAlt,
+    key.participantAlt,
+
+    msg.senderPn,
+    key.senderPn,
+
+    msg.message?.senderPn,
+
+    key.remoteJid,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizePhone(candidate);
+    if (normalized) {
+      return {
+        remoteJid: String(candidate),
+        contactPhone: normalized,
+      };
+    }
+  }
+  return {
+    remoteJid: String(key.remoteJid || ""),
+    contactPhone: null,
+  };
+}
 export function parseWaMessage(
   msg: any,
   normalizePhone: (s: string) => string | null,
@@ -86,22 +120,28 @@ export function parseWaMessage(
   if (!msg?.key) return null;
 
   const key = msg.key;
-  const remoteJid = key.remoteJid || "";
-
-  if (remoteJid.endsWith("@g.us") || remoteJid === "status@broadcast") {
-    return null;
-  }
 
   const fromMe = !!key.fromMe;
   const messageId = key.id ? String(key.id) : null;
-  const contactPhoneE164 = normalizePhone(remoteJid);
+
+  const phoneResult = resolvePhoneJid(msg, normalizePhone);
+
+  const remoteJid = phoneResult.remoteJid;
+
+  const contactPhoneE164 = phoneResult.contactPhone;
   const messageType = detectMessageType(msg.message);
 
   const extractedBody = extractBody(msg.message);
   const body = extractedBody || fallbackBodyByType(messageType);
 
   const pushName = msg.pushName ? String(msg.pushName) : null;
-
+  console.log({
+    remoteJid: key.remoteJid,
+    remoteJidAlt: key.remoteJidAlt,
+    participantAlt: key.participantAlt,
+    senderPn: msg.senderPn,
+    keySenderPn: key.senderPn,
+  });
   return {
     messageId,
     remoteJid,

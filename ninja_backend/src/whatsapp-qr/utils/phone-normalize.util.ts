@@ -5,10 +5,12 @@
 
 const E164_REGEX = /^\+[1-9]\d{7,14}$/;
 
-/**
- * Normalize Baileys JID or raw phone to E.164 when possible.
- * Returns null if cannot normalize safely.
- */
+function extractJidUser(value: string): string {
+  const beforeDomain = value.split("@")[0] || "";
+
+  return beforeDomain.split(":")[0] || "";
+}
+
 export function normalizeToE164(
   input?: string | null,
 ): string | null {
@@ -18,16 +20,26 @@ export function normalizeToE164(
 
   let value = String(input).trim();
 
-  value = value.replace(/^whatsapp:/i, "");
-
-  // JID
-  if (value.includes("@")) {
-    value = value.split("@")[0];
+  if (!value) {
+    return null;
   }
 
-  // Multi-device
-  if (value.includes(":")) {
-    value = value.split(":")[0];
+  value = value.replace(/^whatsapp:/i, "");
+
+  if (/@lid$/i.test(value)) {
+    return null;
+  }
+
+  if (
+    /@g\.us$/i.test(value) ||
+    /@broadcast$/i.test(value) ||
+    /@newsletter$/i.test(value)
+  ) {
+    return null;
+  }
+
+  if (value.includes("@")) {
+    value = extractJidUser(value);
   }
 
   const digits = value.replace(/\D/g, "");
@@ -36,15 +48,25 @@ export function normalizeToE164(
     return null;
   }
 
-  return `+${digits}`;
+  const normalized = `+${digits}`;
+
+  return E164_REGEX.test(normalized)
+    ? normalized
+    : null;
+}
+
+export function normalizePhoneDigits(
+  input?: string | null,
+): string | null {
+  const normalized = normalizeToE164(input);
+
+  return normalized
+    ? normalized.slice(1)
+    : null;
 }
 
 export function isValidE164(
-  phone?: string | null,
-) {
-  if (!phone) {
-    return false;
-  }
-
-  return E164_REGEX.test(phone);
+  input?: string | null,
+): boolean {
+  return normalizeToE164(input) !== null;
 }

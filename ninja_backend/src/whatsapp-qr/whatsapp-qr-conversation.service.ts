@@ -254,7 +254,8 @@ export class WhatsAppQrConversationService {
     contactPhone: string,
   ): Promise<QrConversationRow | null> {
     const { rows } = await this.db.query(
-      `SELECT
+      `
+        SELECT
           id,
           session_id,
           user_id,
@@ -266,12 +267,28 @@ export class WhatsAppQrConversationService {
           ai_enabled,
           unread_count,
           property_id
-      FROM whatsapp_qr_conversations
-      WHERE session_id = $1
-        AND contact_phone = $2`,
+        FROM whatsapp_qr_conversations
+        WHERE session_id = $1
+          AND regexp_replace(
+            COALESCE(contact_phone, ''),
+            '[^0-9]',
+            '',
+            'g'
+          ) = regexp_replace(
+            $2,
+            '[^0-9]',
+            '',
+            'g'
+          )
+        ORDER BY
+          last_message_at DESC NULLS LAST,
+          updated_at DESC
+        LIMIT 1
+        `,
       [sessionId, contactPhone],
     );
-    return rows.length ? rows[0] : null;
+
+    return rows[0] || null;
   }
 
   async getOrCreate(params: {
@@ -658,7 +675,18 @@ export class WhatsAppQrConversationService {
     const { rowCount } = await this.db.query(
       `UPDATE whatsapp_qr_conversations
        SET ai_enabled = $3, owner_type = $4, updated_at = NOW()
-       WHERE user_id = $1 AND contact_phone = $2`,
+       WHERE user_id = $1
+        AND regexp_replace(
+              COALESCE(contact_phone, ''),
+              '[^0-9]',
+              '',
+              'g'
+            ) = regexp_replace(
+              $2,
+              '[^0-9]',
+              '',
+              'g'
+            )`,
       [userId, contactPhone, aiEnabled, ownerType],
     );
     return (rowCount ?? 0) > 0;

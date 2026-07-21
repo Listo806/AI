@@ -65,17 +65,75 @@ export class WhatsAppQrInboundService {
       .trim();
   }
 
+  private resolveInboundPhoneJid(msg: any): string | null {
+    const candidates = [
+      msg?.key?.remoteJidAlt,
+      msg?.key?.participantAlt,
+      msg?.senderPn,
+      msg?.key?.senderPn,
+      msg?.message?.senderPn,
+      msg?.message?.extendedTextMessage?.contextInfo?.participant,
+      msg?.message?.messageContextInfo?.participant,
+    ];
+    const remoteJid = String(msg?.key?.remoteJid || "").trim();
+    if (remoteJid && !/@lid$/i.test(remoteJid)) {
+      candidates.push(remoteJid);
+    }
+    for (const candidate of candidates) {
+      const normalized = normalizeToE164(candidate);
+
+      if (normalized) {
+        return normalized;
+      }
+    }
+    return null;
+  }
+
+  private prepareMessageForParsing(msg: any, contactPhone: string): any {
+    const phoneDigits = contactPhone.replace(/\D/g, "");
+    return {
+      ...msg,
+      key: {
+        ...(msg?.key || {}),
+        remoteJid: `${phoneDigits}@s.whatsapp.net`,
+      },
+    };
+  }
+
   private async handleOneMessage(
     userId: string,
     sessionId: string,
     msg: any,
   ): Promise<void> {
-    const parsed = parseWaMessage(msg, normalizeToE164);
-    if (!parsed || parsed.fromMe) return;
-    if (!parsed.contactPhoneE164) {
-      this.logger.warn(`QR inbound: cannot normalize jid ${parsed.remoteJid}`);
+    const originalRemoteJid = String(msg?.key?.remoteJid || "").trim();
+
+    const resolvedContactPhone = this.resolveInboundPhoneJid(msg);
+
+    if (!resolvedContactPhone) {
+      this.logger.warn(
+        [
+          "QR inbound: cannot resolve real contact phone",
+          `remoteJid=${originalRemoteJid || "empty"}`,
+          `remoteJidAlt=${String(msg?.key?.remoteJidAlt || "empty")}`,
+          `senderPn=${String(msg?.senderPn || msg?.key?.senderPn || "empty")}`,
+        ].join(" "),
+      );
+
       return;
     }
+
+    const messageForParser = this.prepareMessageForParsing(
+      msg,
+      resolvedContactPhone,
+    );
+
+    const parsed = parseWaMessage(messageForParser, normalizeToE164);
+
+    if (!parsed || parsed.fromMe) {
+      return;
+    }
+
+    parsed.contactPhoneE164 = resolvedContactPhone;
 
     const lead = await this.findOrCreateLeadByPhone(
       parsed.contactPhoneE164,
@@ -185,20 +243,31 @@ export class WhatsAppQrInboundService {
     property_id: string | null;
   }> {
     const { rows: existing } = await this.db.query(
-      `SELECT
-
-      id,
-      team_id,
-      property_id
+      `
+      SELECT
+        id,
+        team_id,
+        property_id
       FROM leads
-      WHERE phone=$1
+      WHERE regexp_replace(
+        COALESCE(phone, ''),
+        '[^0-9]',
+        '',
+        'g'
+      ) = regexp_replace(
+        $1,
+        '[^0-9]',
+        '',
+        'g'
+      )
       ORDER BY
-      CASE
-      WHEN property_id IS NOT NULL THEN 0
-      ELSE 1
-      END,
-      created_at DESC
-      LIMIT 1`,
+        CASE
+          WHEN property_id IS NOT NULL THEN 0
+          ELSE 1
+        END,
+        created_at DESC
+      LIMIT 1
+      `,
       [phone],
     );
     if (existing.length) {
@@ -207,7 +276,17 @@ export class WhatsAppQrInboundService {
           `
           SELECT property_id
           FROM leads
-          WHERE phone=$1
+          WHERE regexp_replace(
+            COALESCE(phone, ''),
+            '[^0-9]',
+            '',
+            'g'
+          ) = regexp_replace(
+            $1,
+            '[^0-9]',
+            '',
+            'g'
+          )
           AND property_id IS NOT NULL
           ORDER BY created_at DESC
           LIMIT 1
