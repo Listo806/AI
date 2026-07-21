@@ -1213,7 +1213,6 @@ body .leads-page {
   flex-direction: column;
   gap: 16px;
   position: relative;
-  padding-left: 12px;
 }
 
 .leads-page .timeline-vertical-line {

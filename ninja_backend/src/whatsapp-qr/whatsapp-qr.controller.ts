@@ -800,6 +800,7 @@ export class WhatsAppQrController {
     @Param("leadId") leadId: string,
     @Body() body: { message: string },
   ) {
+    console.log("=== SEND FROM LEAD ===", leadId);
     const conversation = await this.conversations.findScopedByLeadId(
       {
         id: user.id,
@@ -829,6 +830,7 @@ export class WhatsAppQrController {
     @Param("contactId") contactId: string,
     @Body() body: { message: string },
   ) {
+    console.log("=== SEND FROM CONTACT ===", contactId);
     const conversation = await this.conversations.findScopedByContactId(
       {
         id: user.id,
