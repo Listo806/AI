@@ -627,6 +627,7 @@ i {
 #cortexa-ai-crm-landing .cx-header-inner .cx-btn {
   padding: 0 16px;
   color: #000 !important;
+  font-size: 15px;
 }
 
 .cx-header-inner {
@@ -639,7 +640,7 @@ i {
 
 #cortexa-ai-crm-landing .cx-header-inner {
   max-width: unset;
-  padding: 0px 32px;
+  padding: 0px 28px;
 }
 
 .cx-nav button,
@@ -670,7 +671,7 @@ html {
 }
 
 .cx-header .cx-left {
-  max-width: 275px;
+  max-width: 248px;
 }
 
 .cx-login {
@@ -678,6 +679,7 @@ html {
   color: #000;
   text-decoration: none;
   font-weight: 500;
+  font-size: 15px;
 }
 
 .cx-footer {
@@ -1664,11 +1666,11 @@ section#footer {
 
 .hero-container {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  grid-template-columns: 1fr 1.7fr;
 }
 
 #cortexa-ai-crm-landing .hero-title {
-  font-size: clamp(34px, 4vw, 37px);
+  font-size: clamp(34px, 4vw, 36px);
   line-height: 1.1;
   letter-spacing: -0.04em;
   font-weight: 700;
@@ -1701,7 +1703,7 @@ section#footer {
 }
 
 .hero-checks p {
-  font-size: 15px;
+  font-size: 14px;
   max-width: 500px;
 }
 
@@ -1709,7 +1711,7 @@ section#footer {
   display: flex;
   gap: 10px;
   color: #1f2937;
-  font-size: 14px;
+  font-size: 13px;
   margin-top: 5px;
 }
 
@@ -1730,7 +1732,7 @@ section#footer {
   color: #fff;
   padding: 10px 24px;
   border-radius: 12px;
-  font-size: 18px;
+  font-size: 17px;
   border: none;
   cursor: pointer;
   transition: 0.3s;
@@ -1740,7 +1742,9 @@ section#footer {
   align-items: center;
   gap: 8px;
 }
-
+.next-btn{
+  font-size: 15px;
+}
 .hero-btn:hover {
   background: #1d4ed8;
 }
@@ -1785,7 +1789,7 @@ section#footer {
   font-weight: 700;
   margin-bottom: 5px;
   color: #000;
-  font-size: 17px;
+  font-size: 16px;
   background: linear-gradient(90deg, #0b63ff, #743cff);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1797,7 +1801,7 @@ section#footer {
   padding: 3px 8px;
   border: 1px solid #3c0ab8;
   border-radius: 18px;
-  font-size: 14px;
+  font-size: 13px;
   margin-bottom: 3px;
   display: inline-block;
   margin-top: 0;
@@ -1845,7 +1849,7 @@ section#footer {
 }
 
 .hero-left-in {
-  padding-left: 11%;
+  padding-left: 10%;
   padding-top: 35px;
 }
 
@@ -1926,7 +1930,7 @@ section#footer {
 .smart-container {
   position: relative;
   z-index: 2;
-  max-width: 1400px;
+  max-width: 1264px;
   margin: 0 auto;
 }
 
@@ -1948,7 +1952,7 @@ section#footer {
 .smart-head h2 {
   margin: 0;
   color: #fff;
-  font-size: clamp(34px, 5vw, 60px);
+  font-size: clamp(34px, 5vw, 54px);
   line-height: 1;
   letter-spacing: -0.04em;
   font-weight: 800;
@@ -1964,8 +1968,8 @@ section#footer {
 
 #cortexa-ai-crm-landing .smart-head p {
   margin: 28px auto 0;
-  max-width: 600px;
-  font-size: 18px;
+  max-width: 540px;
+  font-size: 16px;
   line-height: 1.7;
   color: #b9b9c9;
 }
@@ -2015,16 +2019,16 @@ section#footer {
 }
 
 .step-number {
-  width: 58px;
-  min-width: 58px;
-  height: 58px;
+  width: 53px;
+  min-width: 53px;
+  height: 53px;
   border-radius: 50%;
   background: linear-gradient(104deg, #8e34df, #4f8dff);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 800;
   box-shadow:
     0 0 25px rgba(120, 80, 255, .5);
@@ -2033,14 +2037,14 @@ section#footer {
 .smart-step h3 {
   margin: 20px 0 12px;
   color: #b083ff;
-  font-size: 25px;
+  font-size: 23px;
   font-weight: 600;
 }
 
 .smart-step p {
   color: #bdbdc7;
   line-height: 1.7;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .smart-main-grid,
@@ -2340,13 +2344,13 @@ section#footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 500px;
+  min-width: 452px;
   height: 52px;
   border-radius: 10px;
   text-decoration: none;
   color: #fff;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 18px;
   background: linear-gradient(90deg, #6e27d9, #4f8dff);
   box-shadow:
     0 20px 50px rgba(90, 80, 255, .35);
@@ -2356,6 +2360,7 @@ section#footer {
   color: #b8b8c6;
   line-height: 1.7;
   margin-top: 15px;
+  font-size: 14px;
 }
 
 @media (max-width: 1200px) {
@@ -2407,7 +2412,7 @@ section#footer {
 }
 
 #cortexa-ai-crm-landing .hero-text .hero-title {
-  font-size: 17px;
+  font-size: 15.4px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.5px;
@@ -2862,7 +2867,7 @@ section#footer {
 
 .cx-aios-workspace {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 60px 20px;
   font-family: sans-serif;
@@ -2880,7 +2885,7 @@ section#footer {
 }
 
 #features .cx-feat-main-title {
-  font-size: 43px;
+  font-size: 40px;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 10px 0;
@@ -2909,10 +2914,6 @@ section#footer {
   display: grid;
   grid-template-columns: 1fr;
   align-items: start;
-}
-
-#features .cx-feat-diagram-area img {
-  width: 93%;
 }
 
 #features .cx-diag-core-row {
@@ -3261,8 +3262,8 @@ section#footer {
 #cortexa-ai-crm-landing .aios-section {
   padding: 110px 24px;
   background: #fff;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
+  padding-left: 50px !important;
+  padding-right: 50px !important;
 }
 
 .aios-container {
@@ -3279,7 +3280,7 @@ section#footer {
 .aios-header h2 {
   margin: 0;
   color: #000;
-  font-size: clamp(34px, 5vw, 60px);
+  font-size: clamp(34px, 5vw, 54px);
   line-height: 1;
   letter-spacing: -0.04em;
   font-weight: 800;
@@ -3297,7 +3298,8 @@ section#footer {
   margin: 12px auto;
   color: #556070;
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 515px;
+  font-size: 14px;
 }
 
 .aios-grid {
@@ -3678,7 +3680,7 @@ section#footer {
 }
 
 #cortexa-ai-crm-landing .how-section {
-  padding: 0 24px 80px !important;
+  padding: 0 50px 80px !important;
   background: #fff;
 }
 
@@ -3689,7 +3691,7 @@ section#footer {
 
 .how-title {
   text-align: center;
-  font-size: 42px;
+  font-size: 40px;
   font-weight: 700;
   color: #111827;
   margin: 0 0 40px;
@@ -3765,6 +3767,7 @@ section#footer {
   margin: 0;
   color: #5b6472;
   text-align: left;
+  font-size: 14px;
 }
 
 .how-arrow {
@@ -3793,7 +3796,7 @@ section#footer {
 
 .powerful .cx-pwr-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -3826,7 +3829,7 @@ section#footer {
 }
 
 .powerful .cx-pwr-title {
-  font-size: clamp(34px, 5vw, 60px);
+  font-size: clamp(34px, 5vw, 54px);
   font-weight: 800;
   text-align: center;
   line-height: 1;
@@ -3835,14 +3838,14 @@ section#footer {
 }
 
 .powerful .cx-pwr-subtitle {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
   color: #0f172a;
   text-align: center;
   margin: 15px auto 12px auto !important;
   padding: 0 10px;
   font-weight: 500;
-  max-width: 480px;
+  max-width: 450px;
 }
 
 .powerful .cx-pwr-subtitle strong {
@@ -3859,10 +3862,10 @@ section#footer {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 15px 16px;
-  gap: 25px;
+  gap: 16px;
   margin: 10px auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  max-width: 850px;
+  max-width: 780px;
 }
 
 .powerful .cx-pwr-f-item {
@@ -3883,7 +3886,7 @@ section#footer {
 }
 
 .powerful .cx-pwr-f-item span {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #0f172a;
   white-space: nowrap;
@@ -4017,7 +4020,7 @@ section#footer {
 
 #workspace .aios-container {
   display: flex;
-  max-width: 1200px;
+  max-width: 1100px;
   align-items: center;
 }
 
@@ -4139,7 +4142,7 @@ section#footer {
 @media (min-width: 1366px) {
   #cortexa-ai-crm-landing .hero-right .hero-image img {
     height: calc(100vh - 166px);
-    width: calc(100vw - 555px);
+    /*width: calc(100vw - 555px);*/
     float: right;
   }
 }
