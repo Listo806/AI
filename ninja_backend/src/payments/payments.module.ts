@@ -4,12 +4,13 @@ import { PaddleController } from './paddle.controller';
 import { ConfigModule } from '../config/config.module';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
+import { PayPalService } from './paypal.service';
 import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [ConfigModule],
   controllers: [PaddleController, PaymentsController],
-  providers: [PaddleService, PaymentsService],
+  providers: [PaddleService, PaymentsService, PayPalService],
   exports: [PaddleService],
 })
 export class PaymentsModule {}
