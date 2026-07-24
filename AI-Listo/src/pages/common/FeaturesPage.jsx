@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import {
   ArrowRight,
   CheckCircle,
@@ -98,10 +99,11 @@ export default function FeaturesPage() {
     };
   }, []);
 
+  const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
     setLang(newLang);
-    localStorage.setItem("cortexa_lang", newLang);
     setLangOpen(false);
+    switchLocale(newLang);
   };
 
   const cur = t[lang] || t.en;

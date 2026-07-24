@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import "./Common.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
@@ -904,10 +905,11 @@ export default function PricingPage() {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
     setLang(newLang);
-    localStorage.setItem("cortexa_lang", newLang);
     setLangOpen(false);
+    switchLocale(newLang);
   };
 
   const tr = t[lang];
