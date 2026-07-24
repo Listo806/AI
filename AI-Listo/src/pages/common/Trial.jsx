@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { trackEvent } from "../../utils/track";
 import {
   BarChart3,
   Box,
@@ -154,6 +155,8 @@ export default function StartTrial() {
     if (loading) return;
 
     setLoading(true);
+    // Retargeting: visitor began the trial signup.
+    trackEvent("signup_started", { plan: form.plan });
 
     try {
       const response = await fetch(
@@ -175,6 +178,8 @@ export default function StartTrial() {
       localStorage.setItem("phone", form.phone);
       localStorage.removeItem("password"); // never persist the raw password client-side
       localStorage.setItem("trialPlan", form.plan);
+      // Retargeting: trial account created (not yet activated/paid).
+      trackEvent("account_created", { plan: form.plan });
       navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
       console.error("SUBMIT ERROR:", error);
