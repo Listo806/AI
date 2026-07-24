@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "../config/config.service";
 import { DatabaseService } from "../database/database.service";
 import { normalizeToE164 } from "./utils/phone-normalize.util";
 import { parseWaMessage } from "./utils/message-parser.util";
@@ -20,7 +19,6 @@ export class WhatsAppQrInboundService {
   private readonly logger = new Logger(WhatsAppQrInboundService.name);
 
   constructor(
-    private readonly config: ConfigService,
     private readonly db: DatabaseService,
     private readonly conversations: WhatsAppQrConversationService,
     private readonly messages: WhatsAppQrMessageService,
@@ -134,30 +132,35 @@ export class WhatsAppQrInboundService {
     }
 
     parsed.contactPhoneE164 = resolvedContactPhone;
-
-    const lead = await this.findOrCreateLeadByPhone(
+    const lead = await this.findExistingLeadByPhone(
       parsed.contactPhoneE164,
-      parsed.pushName || undefined,
       userId,
     );
 
+    if (!lead) {
+      this.logger.debug(
+        `QR inbound ignored: no CRM lead exists for ${parsed.contactPhoneE164}`,
+      );
+      return;
+    }
     const propertyIdFromMessage = this.extractPropertyIdFromMessage(
       parsed.body,
     );
     const cleanBody = this.cleanPropertyTags(parsed.body);
-
     if (propertyIdFromMessage && !lead.property_id) {
       await this.db.query(
         `
-    UPDATE leads
-    SET property_id = $1, updated_at = NOW()
-    WHERE id = $2
-    `,
+      UPDATE leads
+      SET
+        property_id = $1,
+        updated_at = NOW()
+      WHERE id = $2
+      `,
         [propertyIdFromMessage, lead.id],
       );
-
       lead.property_id = propertyIdFromMessage;
     }
+
     const { row: conv } = await this.conversations.getOrCreate({
       sessionId,
       userId,
@@ -177,7 +180,10 @@ export class WhatsAppQrInboundService {
       messageId: parsed.messageId,
       messageType: parsed.messageType,
     });
-    if (!inserted) return;
+
+    if (!inserted) {
+      return;
+    }
 
     this.realtime.emitMessage({
       userId,
@@ -191,6 +197,7 @@ export class WhatsAppQrInboundService {
     });
 
     const intent = this.intents.detectFromText(cleanBody);
+
     if (intent) {
       await this.intents.logIntent({
         qrConversationId: conv.id,
@@ -198,20 +205,31 @@ export class WhatsAppQrInboundService {
         intentType: intent.intent_type,
         confidence: intent.confidence,
       });
+
       if (intent.intent_type === "agent_request") {
         await this.conversations.setOwnerHuman(conv.id);
+
         conv.owner_type = "human";
         conv.ai_enabled = false;
       }
     }
 
     await this.db.query(
-      `UPDATE leads SET last_contacted_at = NOW(), last_activity_at = NOW(),
-       last_action_type = 'whatsapp', last_action_at = NOW(), updated_at = NOW() WHERE id = $1`,
+      `
+    UPDATE leads
+    SET
+      last_contacted_at = NOW(),
+      last_activity_at = NOW(),
+      last_action_type = 'whatsapp',
+      last_action_at = NOW(),
+      updated_at = NOW()
+    WHERE id = $1
+    `,
       [lead.id],
     );
 
     const { action } = await this.routing.route(conv, cleanBody);
+
     if (action === "reply_ai") {
       await this.aiReply.replyIfEnabled(
         conv.id,
@@ -233,24 +251,37 @@ export class WhatsAppQrInboundService {
    * Find existing lead by phone or create one. Uses sessionUserId when provided so the
    * connected user owns the lead (shows on Leads page for that owner).
    */
-  private async findOrCreateLeadByPhone(
+  private async findExistingLeadByPhone(
     phone: string,
-    profileName?: string,
-    sessionUserId?: string,
+    sessionUserId: string,
   ): Promise<{
     id: string;
     team_id: string | null;
     property_id: string | null;
-  }> {
-    const { rows: existing } = await this.db.query(
+  } | null> {
+    const normalizedPhone = normalizeToE164(phone);
+
+    if (!normalizedPhone) {
+      return null;
+    }
+
+    /*
+     * Only retrieve leads that the current user has permission to use:
+     * - Leads created by the user
+     * - Leads assigned to the user
+     * - Leads on the same team as the user
+     */
+    const { rows } = await this.db.query(
       `
       SELECT
-        id,
-        team_id,
-        property_id
-      FROM leads
+        l.id,
+        l.team_id,
+        l.property_id
+      FROM leads l
+      LEFT JOIN users u
+        ON u.id = $2
       WHERE regexp_replace(
-        COALESCE(phone, ''),
+        COALESCE(l.phone, ''),
         '[^0-9]',
         '',
         'g'
@@ -260,118 +291,28 @@ export class WhatsAppQrInboundService {
         '',
         'g'
       )
+      AND (
+        l.created_by = $2
+        OR l.assigned_to = $2
+        OR (
+          u.team_id IS NOT NULL
+          AND l.team_id = u.team_id
+        )
+      )
       ORDER BY
         CASE
-          WHEN property_id IS NOT NULL THEN 0
-          ELSE 1
+          WHEN l.created_by = $2 THEN 0
+          WHEN l.assigned_to = $2 THEN 1
+          ELSE 2
         END,
-        created_at DESC
+        l.updated_at DESC NULLS LAST,
+        l.created_at DESC
       LIMIT 1
       `,
-      [phone],
+      [normalizedPhone, sessionUserId],
     );
-    if (existing.length) {
-      if (!existing[0].property_id) {
-        const { rows: latestProperty } = await this.db.query(
-          `
-          SELECT property_id
-          FROM leads
-          WHERE regexp_replace(
-            COALESCE(phone, ''),
-            '[^0-9]',
-            '',
-            'g'
-          ) = regexp_replace(
-            $1,
-            '[^0-9]',
-            '',
-            'g'
-          )
-          AND property_id IS NOT NULL
-          ORDER BY created_at DESC
-          LIMIT 1
-          `,
-          [phone],
-        );
 
-        if (latestProperty.length) {
-          await this.db.query(
-            `
-            UPDATE leads
-            SET property_id=$1
-            WHERE id=$2
-            `,
-            [latestProperty[0].property_id, existing[0].id],
-          );
-          existing[0].property_id = latestProperty[0].property_id;
-        }
-      }
-
-      return {
-        id: existing[0].id,
-        team_id: existing[0].team_id,
-        property_id: existing[0].property_id,
-      };
-    }
-
-    let createdBy: string | null = null;
-    let teamId: string | null = null;
-    if (sessionUserId) {
-      const { rows: userRows } = await this.db.query(
-        `SELECT id, team_id FROM users WHERE id = $1`,
-        [sessionUserId],
-      );
-      if (userRows.length) {
-        createdBy = userRows[0].id;
-        teamId = userRows[0].team_id ?? null;
-      }
-    }
-    if (!createdBy) {
-      createdBy = this.config.get("WHATSAPP_FIRST_LEAD_CREATED_BY") || null;
-      if (createdBy) {
-        const { rows: userRows } = await this.db.query(
-          `SELECT team_id FROM users WHERE id = $1`,
-          [createdBy],
-        );
-        if (userRows.length) teamId = userRows[0].team_id ?? null;
-      } else {
-        const { rows: fallback } = await this.db.query(
-          `SELECT id, team_id FROM users WHERE is_active = true ORDER BY created_at ASC LIMIT 1`,
-        );
-        if (fallback.length) {
-          createdBy = fallback[0].id;
-          teamId = fallback[0].team_id ?? null;
-        }
-      }
-    }
-    if (!createdBy) {
-      throw new Error(
-        "QR lead creation requires session user, WHATSAPP_FIRST_LEAD_CREATED_BY, or at least one user",
-      );
-    }
-
-    const name = (profileName || "").trim() || "WhatsApp Lead";
-    const { rows } = await this.db.query(
-      `INSERT INTO leads (name, phone, status, created_by, team_id, source, first_source, created_at, updated_at, property_id)
-       VALUES ($1, $2, 'new', $3, $4, 'whatsapp', 'whatsapp', NOW(), NOW(), NULL)
-       RETURNING id, team_id`,
-      [name, phone, createdBy, teamId],
-    );
-    if (!rows.length) throw new Error("Failed to create lead");
-    const leadId = rows[0].id;
-    if (teamId) {
-      try {
-        await this.db.query(
-          `INSERT INTO contacts (team_id, created_by, name, email, phone, lead_id, notes, updated_at)
-           VALUES ($1, $2, $3, NULL, $4, $5, NULL, NOW())`,
-          [teamId, createdBy, name, phone, leadId],
-        );
-      } catch {
-        // ignore duplicate contact
-      }
-    }
-    this.logger.log(`QR created lead for phone ${phone}`);
-    return { id: leadId, team_id: rows[0].team_id ?? null, property_id: null };
+    return rows[0] || null;
   }
 
   private async logAiActivity(
