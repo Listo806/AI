@@ -381,6 +381,29 @@ body {
   opacity: 0.67;
 }
 
+.checkout-paypal {
+  margin-top: 6px;
+  min-height: 52px;
+}
+
+.checkout-paypal-buttons {
+  width: 100%;
+}
+
+.checkout-paypal-status {
+  margin-top: 10px;
+  text-align: center;
+  color: #697086;
+  font-size: 15px;
+}
+
+.checkout-paypal-error {
+  margin-top: 10px;
+  text-align: center;
+  color: #d1344b;
+  font-size: 15px;
+}
+
 .checkout-secure-footer {
   justify-content: center;
   gap: 9px;
