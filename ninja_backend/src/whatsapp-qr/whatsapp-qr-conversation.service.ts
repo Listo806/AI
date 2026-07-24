@@ -32,8 +32,10 @@ function mapSenderToLastMessageType(
 export interface QrConversationListItem {
   id: string;
   session_id: string;
-  lead_id: string;
+
+  lead_id: string | null;
   contact_id: string | null;
+
   contact_phone: string;
   owner_type: string;
   ai_enabled: boolean;
@@ -72,8 +74,10 @@ export interface ResolvedCrmConversation {
   session_id: string;
   user_id: string;
   team_id: string | null;
-  lead_id: string;
+
+  lead_id: string | null;
   contact_id: string | null;
+
   contact_phone: string;
   owner_type: "ai" | "human";
   ai_enabled: boolean;
@@ -393,7 +397,6 @@ export class WhatsAppQrConversationService {
       user.teamId,
       user.role,
     );
-
     const params: any[] = [contactId];
     const where: string[] = [
       `
@@ -407,24 +410,33 @@ export class WhatsAppQrConversationService {
     if (!isGlobal) {
       params.push(user.id);
       const userIndex = params.length;
-
       if (teamIds.length > 0) {
         params.push(teamIds);
         const teamIndex = params.length;
-
         where.push(`
         (
-          l.created_by = $${userIndex}
+          c.user_id = $${userIndex}
+          OR c.team_id = ANY($${teamIndex}::uuid[])
+
+          OR l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
           OR l.team_id = ANY($${teamIndex}::uuid[])
+
           OR ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
           OR ct.team_id = ANY($${teamIndex}::uuid[])
         )
       `);
       } else {
         where.push(`
         (
-          l.created_by = $${userIndex}
+          c.user_id = $${userIndex}
+
+          OR l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
+
           OR ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
         )
       `);
       }
@@ -432,27 +444,34 @@ export class WhatsAppQrConversationService {
 
     const { rows } = await this.db.query(
       `
-      SELECT
-        c.id,
-        c.session_id,
-        c.user_id,
-        c.team_id,
-        c.lead_id,
-        COALESCE(c.contact_id, l.contact_id) AS contact_id,
-        c.contact_phone,
-        c.owner_type,
-        c.ai_enabled,
-        c.unread_count
-      FROM whatsapp_qr_conversations c
-      INNER JOIN leads l ON l.id = c.lead_id
-      LEFT JOIN contacts ct
-        ON ct.id = COALESCE(c.contact_id, l.contact_id)
-      WHERE ${where.join(" AND ")}
-      ORDER BY
-        c.last_message_at DESC NULLS LAST,
-        c.updated_at DESC
-      LIMIT 1
-      `,
+        SELECT
+          c.id,
+          c.session_id,
+          c.user_id,
+          c.team_id,
+          c.lead_id,
+          COALESCE(c.contact_id, l.contact_id) AS contact_id,
+          c.contact_phone,
+          c.owner_type,
+          c.ai_enabled,
+          c.unread_count
+
+        FROM whatsapp_qr_conversations c
+
+        LEFT JOIN leads l
+          ON l.id = c.lead_id
+
+        LEFT JOIN contacts ct
+          ON ct.id = COALESCE(c.contact_id, l.contact_id)
+
+        WHERE ${where.join(" AND ")}
+
+        ORDER BY
+          c.last_message_at DESC NULLS LAST,
+          c.updated_at DESC
+
+        LIMIT 1
+        `,
       params,
     );
 
@@ -526,7 +545,6 @@ export class WhatsAppQrConversationService {
     contactPhone: string;
     propertyId?: string | null;
   }): Promise<{ row: QrConversationRow; created: boolean }> {
-   
     const { rows: existingRows } = await this.db.query(
       `
       SELECT
@@ -751,136 +769,197 @@ export class WhatsAppQrConversationService {
       user.teamId,
       user.role,
     );
-    const { clause, params } = leadScopeWhereClause(
-      isGlobal,
-      teamIds,
-      user.id,
-      1,
-    );
+
+    const params: any[] = [];
+    const where: string[] = [
+      `
+    (
+      c.lead_id IS NOT NULL
+      OR c.contact_id IS NOT NULL
+    )
+    `,
+    ];
+
+    if (!isGlobal) {
+      params.push(user.id);
+      const userIndex = params.length;
+
+      if (teamIds.length > 0) {
+        params.push(teamIds);
+        const teamIndex = params.length;
+
+        where.push(`
+        (
+          c.user_id = $${userIndex}
+          OR c.team_id = ANY($${teamIndex}::uuid[])
+
+          OR l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
+          OR l.team_id = ANY($${teamIndex}::uuid[])
+
+          OR ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
+          OR ct.team_id = ANY($${teamIndex}::uuid[])
+        )
+      `);
+      } else {
+        where.push(`
+        (
+          c.user_id = $${userIndex}
+
+          OR l.created_by = $${userIndex}
+          OR l.assigned_to = $${userIndex}
+
+          OR ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
+        )
+      `);
+      }
+    }
 
     const { rows } = await this.db.query(
       `
-      SELECT
-        c.id,
-        c.session_id,
-        c.lead_id,
-        c.contact_id,
-        c.contact_phone,
-        c.owner_type,
-        c.ai_enabled,
-        c.last_message_at,
-        c.last_message,
-        c.last_message_type,
-        c.unread_count,
-        c.status,
-        c.property_id,
-        c.user_id AS qr_user_id,
+    SELECT
+      c.id,
+      c.session_id,
+      c.lead_id,
+      c.contact_id,
+      c.contact_phone,
+      c.owner_type,
+      c.ai_enabled,
+      c.last_message_at,
+      c.last_message,
+      c.last_message_type,
+      c.unread_count,
+      c.status,
+      c.property_id,
+      c.user_id AS qr_user_id,
 
-        l.name AS lead_name,
-        l.status AS lead_status,
-        l.priority AS lead_priority,
-        l.source AS lead_source,
+      l.name AS lead_name,
+      l.status AS lead_status,
+      l.priority AS lead_priority,
+      l.source AS lead_source,
 
-        ct.name AS contact_name,
-        ct.status AS contact_status,
-        ct.type AS contact_type,
+      ct.name AS contact_name,
+      ct.status AS contact_status,
+      ct.type AS contact_type,
 
-        u.name AS assigned_agent_name,
-        u.email AS assigned_agent_email,
+      u.name AS assigned_agent_name,
+      u.email AS assigned_agent_email,
 
-        p.title AS property_title,
-        p.city AS property_city,
-        p.state AS property_state,
-        p.price AS property_price
+      p.title AS property_title,
+      p.city AS property_city,
+      p.state AS property_state,
+      p.price AS property_price
 
-      FROM whatsapp_qr_conversations c
-      INNER JOIN leads l ON l.id = c.lead_id
-      LEFT JOIN contacts ct
-        ON ct.id = COALESCE(c.contact_id, l.contact_id)
-      LEFT JOIN users u ON u.id = l.assigned_to
-      LEFT JOIN properties p
-        ON p.id = COALESCE(c.property_id, l.property_id)
-      WHERE ${clause}
-      ORDER BY
-        c.last_message_at DESC NULLS LAST,
-        c.updated_at DESC
-      LIMIT 200
-      `,
+    FROM whatsapp_qr_conversations c
+
+    LEFT JOIN leads l
+      ON l.id = c.lead_id
+
+    LEFT JOIN contacts ct
+      ON ct.id = COALESCE(c.contact_id, l.contact_id)
+
+    LEFT JOIN users u
+      ON u.id = COALESCE(l.assigned_to, ct.assigned_to)
+
+    LEFT JOIN properties p
+      ON p.id = COALESCE(c.property_id, l.property_id)
+
+    WHERE ${where.join(" AND ")}
+
+    ORDER BY
+      c.last_message_at DESC NULLS LAST,
+      c.updated_at DESC
+
+    LIMIT 200
+    `,
       params,
     );
 
-    if (rows.length === 0) return [];
-
-    const convIds = rows.map((r: { id: string }) => r.id);
-    const leadIds = [
-      ...new Set(rows.map((r: { lead_id: string }) => r.lead_id)),
-    ];
-
-    const [senderRes, labels] = await Promise.all([
-      this.db.query(
-        `SELECT DISTINCT ON (m.conversation_id) m.conversation_id, m.sender_type
-         FROM whatsapp_qr_messages m
-         WHERE m.conversation_id = ANY($1::uuid[])
-         ORDER BY m.conversation_id, m.created_at DESC`,
-        [convIds],
-      ),
-      this.activityFeed.getLastActionLabelsForLeadIds(
-        isGlobal,
-        teamIds,
-        leadIds,
-      ),
-    ]);
-
-    const senderByConv = new Map<string, string>();
-    for (const r of senderRes.rows as {
-      conversation_id: string;
-      sender_type: string;
-    }[]) {
-      senderByConv.set(r.conversation_id, r.sender_type);
+    if (rows.length === 0) {
+      return [];
     }
 
-    return rows.map((r: any) => {
-      const mappedSenderType = mapSenderToLastMessageType(
-        senderByConv.get(r.id),
-      );
+    const convIds = rows.map((row: any) => row.id);
 
-      return {
-        id: r.id,
-        session_id: r.session_id,
-        lead_id: r.lead_id,
-        contact_id: r.contact_id ?? null,
-        contact_name: r.contact_name ?? null,
-        contact_status: r.contact_status ?? null,
-        contact_type: r.contact_type ?? null,
-        contact_phone: r.contact_phone,
-        owner_type: r.owner_type,
-        ai_enabled: r.ai_enabled,
-        last_activity_at: r.last_message_at
-          ? new Date(r.last_message_at).toISOString()
-          : null,
-        unread_count: Number(r.unread_count || 0),
-        status: r.status,
-        property_id: r.property_id ?? null,
-        qr_user_id: r.qr_user_id,
+    const leadIds = [
+      ...new Set(rows.map((row: any) => row.lead_id).filter(Boolean)),
+    ] as string[];
 
-        lead_name: r.lead_name ?? null,
-        lead_status: r.lead_status ?? null,
-        lead_priority: r.lead_priority ?? null,
-        lead_source: r.lead_source ?? null,
+    const senderRes = await this.db.query(
+      `
+    SELECT DISTINCT ON (m.conversation_id)
+      m.conversation_id,
+      m.sender_type
+    FROM whatsapp_qr_messages m
+    WHERE m.conversation_id = ANY($1::uuid[])
+    ORDER BY
+      m.conversation_id,
+      m.created_at DESC
+    `,
+      [convIds],
+    );
 
-        assigned_agent_name: r.assigned_agent_name ?? "Unassigned",
-        assigned_agent_email: r.assigned_agent_email ?? null,
+    const labels =
+      leadIds.length > 0
+        ? await this.activityFeed.getLastActionLabelsForLeadIds(
+            isGlobal,
+            teamIds,
+            leadIds,
+          )
+        : new Map<string, string>();
 
-        property_title: r.property_title ?? null,
-        property_city: r.property_city ?? null,
-        property_state: r.property_state ?? null,
-        property_price: r.property_price ?? null,
+    const senderByConv = new Map<string, string>();
 
-        last_message: r.last_message ?? null,
-        last_message_type: mappedSenderType,
-        last_action_label: labels.get(r.lead_id) ?? null,
-      };
-    });
+    for (const row of senderRes.rows) {
+      senderByConv.set(row.conversation_id, row.sender_type);
+    }
+
+    return rows.map((row: any) => ({
+      id: row.id,
+      session_id: row.session_id,
+
+      lead_id: row.lead_id ?? null,
+      contact_id: row.contact_id ?? null,
+
+      contact_phone: row.contact_phone,
+      owner_type: row.owner_type,
+      ai_enabled: row.ai_enabled,
+
+      last_activity_at: row.last_message_at
+        ? new Date(row.last_message_at).toISOString()
+        : null,
+
+      unread_count: Number(row.unread_count || 0),
+      status: row.status,
+      property_id: row.property_id ?? null,
+      qr_user_id: row.qr_user_id,
+
+      lead_name: row.lead_name ?? null,
+      lead_status: row.lead_status ?? null,
+      lead_priority: row.lead_priority ?? null,
+      lead_source: row.lead_source ?? null,
+
+      contact_name: row.contact_name ?? null,
+      contact_status: row.contact_status ?? null,
+      contact_type: row.contact_type ?? null,
+
+      assigned_agent_name: row.assigned_agent_name ?? "Unassigned",
+
+      assigned_agent_email: row.assigned_agent_email ?? null,
+
+      property_title: row.property_title ?? null,
+      property_city: row.property_city ?? null,
+      property_state: row.property_state ?? null,
+      property_price: row.property_price ?? null,
+
+      last_message: row.last_message ?? null,
+
+      last_message_type: mapSenderToLastMessageType(senderByConv.get(row.id)),
+
+      last_action_label: row.lead_id ? (labels.get(row.lead_id) ?? null) : null,
+    }));
   }
 
   async findByUserAndPhone(
@@ -1893,5 +1972,132 @@ Rules:
     );
 
     return rows[0] || null;
+  }
+
+  async getOrCreateByContact(
+    user: {
+      id: string;
+      teamId: string | null;
+      role: string;
+    },
+    contactId: string,
+  ): Promise<ResolvedCrmConversation | null> {
+    const { isGlobal, teamIds } = await this.crm.resolveDashboardDataScope(
+      user.id,
+      user.teamId,
+      user.role,
+    );
+
+    const params: any[] = [contactId];
+    const where: string[] = ["ct.id = $1"];
+
+    if (!isGlobal) {
+      params.push(user.id);
+      const userIndex = params.length;
+
+      if (teamIds.length > 0) {
+        params.push(teamIds);
+        const teamIndex = params.length;
+
+        where.push(`
+        (
+          ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
+          OR ct.team_id = ANY($${teamIndex}::uuid[])
+        )
+      `);
+      } else {
+        where.push(`
+        (
+          ct.created_by = $${userIndex}
+          OR ct.assigned_to = $${userIndex}
+        )
+      `);
+      }
+    }
+
+    const { rows: contactRows } = await this.db.query(
+      `
+    SELECT
+      ct.id,
+      ct.phone,
+      ct.team_id,
+      ct.lead_id
+    FROM contacts ct
+    WHERE ${where.join(" AND ")}
+    LIMIT 1
+    `,
+      params,
+    );
+
+    const contact = contactRows[0] || null;
+
+    if (!contact) {
+      return null;
+    }
+
+    const contactPhone = normalizeToE164(contact.phone);
+
+    if (!contactPhone) {
+      throw new Error(
+        "Contact phone number is missing or invalid. Use a valid international phone number.",
+      );
+    }
+
+    const { rows: sessionRows } = await this.db.query(
+      `
+    SELECT
+      id,
+      user_id,
+      status,
+      connected_at,
+      updated_at
+    FROM whatsapp_qr_sessions
+    WHERE user_id = $1
+      AND status = 'connected'
+    ORDER BY
+      connected_at DESC NULLS LAST,
+      updated_at DESC NULLS LAST
+    LIMIT 1
+    `,
+      [user.id],
+    );
+
+    const session = sessionRows[0] || null;
+
+    if (!session) {
+      throw new Error(
+        "No connected WhatsApp session is available. Connect WhatsApp first.",
+      );
+    }
+
+    let linkedLeadId = contact.lead_id ?? null;
+
+    if (!linkedLeadId) {
+      const { rows: leadRows } = await this.db.query(
+        `
+      SELECT id
+      FROM leads
+      WHERE contact_id = $1
+      ORDER BY updated_at DESC NULLS LAST
+      LIMIT 1
+      `,
+        [contact.id],
+      );
+
+      linkedLeadId = leadRows[0]?.id ?? null;
+    }
+
+    const created = await this.getOrCreate({
+      sessionId: session.id,
+      userId: session.user_id,
+      teamId: contact.team_id || user.teamId || null,
+      leadId: linkedLeadId,
+      contactId: contact.id,
+      contactPhone,
+      propertyId: null,
+    });
+
+    return created.row as ResolvedCrmConversation;
   }
 }

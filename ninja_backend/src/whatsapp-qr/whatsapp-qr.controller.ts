@@ -481,8 +481,8 @@ export class WhatsAppQrController {
       userId: sendConversation.user_id,
       sessionId: sendConversation.session_id,
       conversationId: sendConversation.id,
-      leadId: sendConversation.lead_id,
-      contactId: sendConversation.contact_id || null,
+      leadId: sendConversation.lead_id ?? null,
+      contactId: sendConversation.contact_id ?? null,
       teamId: sendConversation.team_id,
       contactPhone: sendConversation.contact_phone,
       text: message,
@@ -528,8 +528,8 @@ export class WhatsAppQrController {
       userId: sendConversation.user_id,
       sessionId: sendConversation.session_id,
       conversationId: sendConversation.id,
-      leadId: sendConversation.lead_id,
-      contactId: sendConversation.contact_id || null,
+      leadId: sendConversation.lead_id ?? null,
+      contactId: sendConversation.contact_id ?? null,
       teamId: sendConversation.team_id,
       contactPhone: sendConversation.contact_phone,
       audioBase64: dto.audioBase64,
@@ -771,8 +771,8 @@ export class WhatsAppQrController {
       userId: sendConversation.user_id,
       sessionId: sendConversation.session_id,
       conversationId: sendConversation.id,
-      leadId: sendConversation.lead_id,
-      contactId: sendConversation.contact_id || null,
+      leadId: sendConversation.lead_id ?? null,
+      contactId: sendConversation.contact_id ?? null,
       teamId: sendConversation.team_id,
       contactPhone: sendConversation.contact_phone,
       text: message,
@@ -782,8 +782,8 @@ export class WhatsAppQrController {
       success: true,
       data: {
         conversationId: sendConversation.id,
-        leadId: sendConversation.lead_id,
-        contactId: sendConversation.contact_id || null,
+        leadId: sendConversation.lead_id ?? null,
+        contactId: sendConversation.contact_id ?? null,
         contactPhone: sendConversation.contact_phone,
         sent: true,
         message: savedMessage,
@@ -855,20 +855,44 @@ export class WhatsAppQrController {
     @Param("contactId") contactId: string,
     @Body() body: { message: string },
   ) {
-    console.log("=== SEND FROM CONTACT ===", contactId);
-    const conversation = await this.conversations.findScopedByContactId(
-      {
-        id: user.id,
-        teamId: user.teamId || user.team_id || null,
-        role: user.role,
-      },
-      contactId,
-    );
+    let conversation;
+
+    try {
+      conversation = await this.conversations.getOrCreateByContact(
+        {
+          id: user.id,
+          teamId: user.teamId || user.team_id || null,
+          role: user.role,
+        },
+        contactId,
+      );
+    } catch (error: any) {
+      const message = String(error?.message || "");
+
+      if (message.includes("phone number")) {
+        throw new BadRequestException({
+          code: "INVALID_CONTACT_PHONE",
+          message:
+            "This contact does not have a valid WhatsApp phone number. Use an international number such as +84933758705.",
+        });
+      }
+
+      if (message.includes("connected WhatsApp session")) {
+        throw new BadRequestException({
+          code: "WHATSAPP_SESSION_NOT_CONNECTED",
+          message:
+            "No connected WhatsApp session is available. Connect WhatsApp from AI Agent Setup first.",
+        });
+      }
+
+      throw error;
+    }
+
     if (!conversation) {
       throw new NotFoundException({
-        code: "WHATSAPP_CONVERSATION_NOT_FOUND",
+        code: "CONTACT_NOT_FOUND_OR_FORBIDDEN",
         message:
-          "This contact does not have a WhatsApp conversation yet. The conversation must be created or linked first.",
+          "The contact was not found or you do not have permission to access it.",
       });
     }
 

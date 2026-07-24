@@ -132,49 +132,53 @@ export class WhatsAppQrInboundService {
     }
 
     parsed.contactPhoneE164 = resolvedContactPhone;
-    const lead = await this.findExistingLeadByPhone(
+    const crmEntity = await this.findExistingCrmEntityByPhone(
       parsed.contactPhoneE164,
       userId,
     );
 
-    if (!lead) {
+    if (!crmEntity) {
       this.logger.debug(
-        `QR inbound ignored: no CRM lead exists for ${parsed.contactPhoneE164}`,
+        `QR inbound ignored: phone is not a CRM lead or contact: ${parsed.contactPhoneE164}`,
       );
+
       return;
     }
     const propertyIdFromMessage = this.extractPropertyIdFromMessage(
       parsed.body,
     );
     const cleanBody = this.cleanPropertyTags(parsed.body);
-    if (propertyIdFromMessage && !lead.property_id) {
+    if (propertyIdFromMessage && crmEntity.lead_id && !crmEntity.property_id) {
       await this.db.query(
         `
-      UPDATE leads
-      SET
-        property_id = $1,
-        updated_at = NOW()
-      WHERE id = $2
-      `,
-        [propertyIdFromMessage, lead.id],
+        UPDATE leads
+        SET
+          property_id = $1,
+          updated_at = NOW()
+        WHERE id = $2
+        `,
+        [propertyIdFromMessage, crmEntity.lead_id],
       );
-      lead.property_id = propertyIdFromMessage;
+
+      crmEntity.property_id = propertyIdFromMessage;
     }
 
     const { row: conv } = await this.conversations.getOrCreate({
       sessionId,
       userId,
-      teamId: lead.team_id,
-      leadId: lead.id,
+      teamId: crmEntity.team_id,
+      leadId: crmEntity.lead_id,
+      contactId: crmEntity.contact_id,
       contactPhone: parsed.contactPhoneE164,
-      propertyId: lead.property_id || propertyIdFromMessage || null,
+      propertyId: crmEntity.property_id || propertyIdFromMessage || null,
     });
 
     const inserted = await this.messages.insertInbound({
       sessionId,
       conversationId: conv.id,
-      leadId: lead.id,
-      teamId: lead.team_id,
+      leadId: crmEntity.lead_id,
+      contactId: crmEntity.contact_id,
+      teamId: crmEntity.team_id,
       contactPhone: parsed.contactPhoneE164,
       body: cleanBody || parsed.body || null,
       messageId: parsed.messageId,
@@ -196,54 +200,56 @@ export class WhatsAppQrInboundService {
       createdAt: new Date().toISOString(),
     });
 
-    const intent = this.intents.detectFromText(cleanBody);
+    if (crmEntity.lead_id) {
+      const intent = this.intents.detectFromText(cleanBody);
 
-    if (intent) {
-      await this.intents.logIntent({
-        qrConversationId: conv.id,
-        leadId: lead.id,
-        intentType: intent.intent_type,
-        confidence: intent.confidence,
-      });
+      if (intent) {
+        await this.intents.logIntent({
+          qrConversationId: conv.id,
+          leadId: crmEntity.lead_id,
+          intentType: intent.intent_type,
+          confidence: intent.confidence,
+        });
 
-      if (intent.intent_type === "agent_request") {
-        await this.conversations.setOwnerHuman(conv.id);
+        if (intent.intent_type === "agent_request") {
+          await this.conversations.setOwnerHuman(conv.id);
 
-        conv.owner_type = "human";
-        conv.ai_enabled = false;
+          conv.owner_type = "human";
+          conv.ai_enabled = false;
+        }
       }
-    }
 
-    await this.db.query(
-      `
-    UPDATE leads
-    SET
-      last_contacted_at = NOW(),
-      last_activity_at = NOW(),
-      last_action_type = 'whatsapp',
-      last_action_at = NOW(),
-      updated_at = NOW()
-    WHERE id = $1
-    `,
-      [lead.id],
-    );
-
-    const { action } = await this.routing.route(conv, cleanBody);
-
-    if (action === "reply_ai") {
-      await this.aiReply.replyIfEnabled(
-        conv.id,
-        lead.id,
-        parsed.contactPhoneE164,
+      await this.db.query(
+        `
+        UPDATE leads
+        SET
+          last_contacted_at = NOW(),
+          last_activity_at = NOW(),
+          last_action_type = 'whatsapp',
+          last_action_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [crmEntity.lead_id],
       );
-    } else if (lead.team_id) {
-      await this.logAiActivity(
-        lead.team_id,
-        "escalated",
-        lead.id,
-        "whatsapp_qr",
-        "notify_agent",
-      );
+
+      const { action } = await this.routing.route(conv, cleanBody);
+
+      if (action === "reply_ai") {
+        await this.aiReply.replyIfEnabled(
+          conv.id,
+          crmEntity.lead_id,
+          parsed.contactPhoneE164,
+        );
+      } else if (crmEntity.team_id) {
+        await this.logAiActivity(
+          crmEntity.team_id,
+          "escalated",
+          crmEntity.lead_id,
+          "whatsapp_qr",
+          "notify_agent",
+        );
+      }
     }
   }
 
@@ -251,11 +257,12 @@ export class WhatsAppQrInboundService {
    * Find existing lead by phone or create one. Uses sessionUserId when provided so the
    * connected user owns the lead (shows on Leads page for that owner).
    */
-  private async findExistingLeadByPhone(
+  private async findExistingCrmEntityByPhone(
     phone: string,
     sessionUserId: string,
   ): Promise<{
-    id: string;
+    lead_id: string | null;
+    contact_id: string | null;
     team_id: string | null;
     property_id: string | null;
   } | null> {
@@ -265,54 +272,111 @@ export class WhatsAppQrInboundService {
       return null;
     }
 
-    /*
-     * Only retrieve leads that the current user has permission to use:
-     * - Leads created by the user
-     * - Leads assigned to the user
-     * - Leads on the same team as the user
-     */
-    const { rows } = await this.db.query(
+    const { rows: userRows } = await this.db.query(
       `
-      SELECT
-        l.id,
-        l.team_id,
-        l.property_id
-      FROM leads l
-      LEFT JOIN users u
-        ON u.id = $2
-      WHERE regexp_replace(
-        COALESCE(l.phone, ''),
-        '[^0-9]',
-        '',
-        'g'
-      ) = regexp_replace(
-        $1,
-        '[^0-9]',
-        '',
-        'g'
-      )
-      AND (
-        l.created_by = $2
-        OR l.assigned_to = $2
-        OR (
-          u.team_id IS NOT NULL
-          AND l.team_id = u.team_id
-        )
-      )
-      ORDER BY
-        CASE
-          WHEN l.created_by = $2 THEN 0
-          WHEN l.assigned_to = $2 THEN 1
-          ELSE 2
-        END,
-        l.updated_at DESC NULLS LAST,
-        l.created_at DESC
+      SELECT team_id
+      FROM users
+      WHERE id = $1
       LIMIT 1
       `,
-      [normalizedPhone, sessionUserId],
+      [sessionUserId],
     );
 
-    return rows[0] || null;
+    const userTeamId = userRows[0]?.team_id ?? null;
+
+    const { rows: leadRows } = await this.db.query(
+      `
+    SELECT
+      l.id,
+      l.team_id,
+      l.property_id,
+      l.contact_id
+    FROM leads l
+    WHERE regexp_replace(
+      COALESCE(l.phone, ''),
+      '[^0-9]',
+      '',
+      'g'
+    ) = regexp_replace(
+      $1,
+      '[^0-9]',
+      '',
+      'g'
+    )
+    AND (
+      l.created_by = $2
+      OR l.assigned_to = $2
+      OR (
+        $3::uuid IS NOT NULL
+        AND l.team_id = $3::uuid
+      )
+    )
+    ORDER BY
+      CASE
+        WHEN l.created_by = $2 THEN 0
+        WHEN l.assigned_to = $2 THEN 1
+        ELSE 2
+      END,
+      l.updated_at DESC NULLS LAST,
+      l.created_at DESC
+    LIMIT 1
+    `,
+      [normalizedPhone, sessionUserId, userTeamId],
+    );
+
+    const lead = leadRows[0] || null;
+
+    const { rows: contactRows } = await this.db.query(
+      `
+        SELECT
+          c.id,
+          c.team_id,
+          c.lead_id
+        FROM contacts c
+        WHERE regexp_replace(
+          COALESCE(c.phone, ''),
+          '[^0-9]',
+          '',
+          'g'
+        ) = regexp_replace(
+          $1,
+          '[^0-9]',
+          '',
+          'g'
+        )
+        AND (
+          c.created_by = $2
+          OR c.assigned_to = $2
+          OR (
+            $3::uuid IS NOT NULL
+            AND c.team_id = $3::uuid
+          )
+        )
+        ORDER BY
+          CASE
+            WHEN c.created_by = $2 THEN 0
+            WHEN c.assigned_to = $2 THEN 1
+            ELSE 2
+          END,
+          c.updated_at DESC NULLS LAST,
+          c.created_at DESC
+        LIMIT 1
+        `,
+      [normalizedPhone, sessionUserId, userTeamId],
+    );
+
+    const contact = contactRows[0] || null;
+
+    if (!lead && !contact) {
+      return null;
+    }
+
+    return {
+      lead_id: lead?.id ?? contact?.lead_id ?? null,
+      contact_id: lead?.contact_id ?? contact?.id ?? null,
+      team_id: lead?.team_id ?? contact?.team_id ?? userTeamId,
+      property_id: lead?.property_id ?? null,
+    };
   }
 
   private async logAiActivity(

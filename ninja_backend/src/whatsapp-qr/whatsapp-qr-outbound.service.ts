@@ -25,7 +25,7 @@ export class WhatsAppQrOutboundService {
     userId: string;
     sessionId: string;
     conversationId: string;
-    leadId: string;
+    leadId?: string | null;
     contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
@@ -113,7 +113,7 @@ export class WhatsAppQrOutboundService {
       [
         params.sessionId,
         params.conversationId,
-        params.leadId,
+        params.leadId ?? null,
         params.contactId ?? null,
         params.teamId,
         normalizedContactPhone,
@@ -138,25 +138,28 @@ export class WhatsAppQrOutboundService {
       [params.conversationId, text.slice(0, 500), params.contactId ?? null],
     );
 
-    await this.db.query(
-      `
-    UPDATE leads
-    SET
-      last_contacted_at = NOW(),
-      last_activity_at = NOW(),
-      last_action_type = 'whatsapp',
-      last_action_at = NOW(),
-      updated_at = NOW()
-    WHERE id = $1
-    `,
-      [params.leadId],
-    );
+    if (params.leadId) {
+      await this.db.query(
+        `
+        UPDATE leads
+        SET
+          last_contacted_at = NOW(),
+          last_activity_at = NOW(),
+          last_action_type = 'whatsapp',
+          last_action_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [params.leadId],
+      );
+    }
 
     if (params.contactId) {
       await this.db.query(
         `
       UPDATE contacts
-      SET updated_at = NOW()
+      SET updated_at = NOW(),
+          last_contact_at = NOW()
       WHERE id = $1
       `,
         [params.contactId],
@@ -183,6 +186,32 @@ export class WhatsAppQrOutboundService {
         savedMessage?.created_at ||
         new Date().toISOString(),
     });
+    
+    if (params.contactId) {
+      await this.db.query(
+        `
+        INSERT INTO contact_activities (
+          contact_id,
+          user_id,
+          team_id,
+          type,
+          title,
+          sub,
+          created_at
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          'message',
+          'WhatsApp message sent',
+          $4,
+          NOW()
+        )
+        `,
+        [params.contactId, params.userId, params.teamId, text],
+      );
+    }
 
     return savedMessage;
   }
@@ -191,7 +220,7 @@ export class WhatsAppQrOutboundService {
     userId: string;
     sessionId: string;
     conversationId: string;
-    leadId: string;
+    leadId?: string | null;
     contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
@@ -270,7 +299,7 @@ export class WhatsAppQrOutboundService {
       [
         params.sessionId,
         params.conversationId,
-        params.leadId,
+        params.leadId ?? null,
         params.contactId ?? null,
         params.teamId,
         normalizedContactPhone,
@@ -295,25 +324,28 @@ export class WhatsAppQrOutboundService {
       [params.conversationId, text.slice(0, 500), params.contactId ?? null],
     );
 
-    await this.db.query(
-      `
-    UPDATE leads
-    SET
-      last_contacted_at = NOW(),
-      last_activity_at = NOW(),
-      last_action_type = 'whatsapp',
-      last_action_at = NOW(),
-      updated_at = NOW()
-    WHERE id = $1
-    `,
-      [params.leadId],
-    );
+    if (params.leadId) {
+      await this.db.query(
+        `
+        UPDATE leads
+        SET
+          last_contacted_at = NOW(),
+          last_activity_at = NOW(),
+          last_action_type = 'whatsapp',
+          last_action_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [params.leadId],
+      );
+    }
 
     if (params.contactId) {
       await this.db.query(
         `
       UPDATE contacts
-      SET updated_at = NOW()
+      SET updated_at = NOW(),
+          last_contact_at = NOW()
       WHERE id = $1
       `,
         [params.contactId],
@@ -351,7 +383,7 @@ export class WhatsAppQrOutboundService {
     userId: string;
     sessionId: string;
     conversationId: string;
-    leadId: string;
+    leadId?: string | null;
     contactId?: string | null;
     teamId: string | null;
     contactPhone: string;
@@ -423,7 +455,7 @@ export class WhatsAppQrOutboundService {
       [
         params.sessionId,
         params.conversationId,
-        params.leadId,
+        params.leadId ?? null,
         params.contactId ?? null,
         params.teamId,
         normalizedContactPhone,
@@ -447,25 +479,28 @@ export class WhatsAppQrOutboundService {
       [params.conversationId, params.contactId ?? null],
     );
 
-    await this.db.query(
-      `
-    UPDATE leads
-    SET
-      last_contacted_at = NOW(),
-      last_activity_at = NOW(),
-      last_action_type = 'whatsapp',
-      last_action_at = NOW(),
-      updated_at = NOW()
-    WHERE id = $1
-    `,
-      [params.leadId],
-    );
+    if (params.leadId) {
+      await this.db.query(
+        `
+        UPDATE leads
+        SET
+          last_contacted_at = NOW(),
+          last_activity_at = NOW(),
+          last_action_type = 'whatsapp',
+          last_action_at = NOW(),
+          updated_at = NOW()
+        WHERE id = $1
+        `,
+        [params.leadId],
+      );
+    }
 
     if (params.contactId) {
       await this.db.query(
         `
       UPDATE contacts
-      SET updated_at = NOW()
+      SET updated_at = NOW(),
+          last_contact_at = NOW()
       WHERE id = $1
       `,
         [params.contactId],
