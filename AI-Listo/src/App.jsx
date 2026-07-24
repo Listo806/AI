@@ -41,6 +41,7 @@ import CountryPage from "./pages/common/CountryPage";
 import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
+import LocaleLayout from "./components/LocaleLayout";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
 
@@ -131,31 +132,45 @@ function RootRoute() {
   return <Navigate to="/sign-in" replace />;
 }
 
+// The public marketing + funnel + legal pages, generated once per locale so
+// English lives at the root, Spanish under /es, and Portuguese under /pt-br.
+function publicRoutes(prefix) {
+  const p = prefix ? `/${prefix}` : "";
+  return (
+    <>
+      <Route path={p || "/"} element={<RootRoute />} />
+      <Route path={`${p}/sign-in`} element={<SignIn variant="crm" />} />
+      <Route path={`${p}/sign-up`} element={<SignUp />} />
+      <Route path={`${p}/privacy-policy`} element={<Privacy />} />
+      <Route path={`${p}/refund-policy`} element={<Refund />} />
+      <Route path={`${p}/terms`} element={<Terms />} />
+      <Route path={`${p}/cancellation`} element={<Cancellation />} />
+      <Route path={`${p}/contact`} element={<Contact />} />
+      <Route path={`${p}/help`} element={<HelpCenter />} />
+      <Route path={`${p}/about`} element={<About />} />
+      <Route path={`${p}/support`} element={<Support />} />
+      <Route path={`${p}/features`} element={<FeaturesPage />} />
+      <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
+      <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
+      <Route path={`${p}/pricing`} element={<Pricing />} />
+      <Route path={`${p}/trial`} element={<Trial />} />
+      <Route path={`${p}/checkout`} element={<CheckoutPage />} />
+      <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
+      <Route path={`${p}/onboarding`} element={<Onboarding />} />
+    </>
+  );
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<RootRoute />} />
-      <Route path="/sign-in" element={<SignIn variant="crm" />} />
-      <Route path="/sign-up" element={<SignUp />} />
-      <Route path="/sign-up-dev" element={<SignUpDev />} />
-      <Route path="/privacy-policy" element={<Privacy />} />
-      <Route path="/refund-policy" element={<Refund />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/cancellation" element={<Cancellation />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/help" element={<HelpCenter />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/support" element={<Support />} />
+      {/* Public site — English at root, Spanish at /es, Portuguese at /pt-br.
+          The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}
+      <Route element={<LocaleLayout code="en" />}>{publicRoutes("")}</Route>
+      <Route element={<LocaleLayout code="es" />}>{publicRoutes("es")}</Route>
+      <Route element={<LocaleLayout code="pt" />}>{publicRoutes("pt-br")}</Route>
 
-      <Route path="/features" element={<FeaturesPage />} />
-      <Route path="/integrations" element={<IntegrationsPage />} />
-      <Route path="/setup-guide" element={<SetupGuidePage />} />
-      <Route path="/pricing" element={<Pricing />} />
-      <Route path="/trial" element={<Trial />} />
-      <Route path="/checkout" element={<CheckoutPage />} />
-      <Route path="/payment-success" element={<PaymentSuccess />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/sign-up-dev" element={<SignUpDev />} />
       
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -144,10 +145,11 @@ export default function Landing() {
   const [activeFAQ, setActiveFAQ] = useState(0);
   const { isAuthenticated } = useAuth();
 
+  const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
     setLang(newLang);
-    localStorage.setItem("cortexa_lang", newLang);
     setLangOpen(false);
+    switchLocale(newLang);
   };
 
   useEffect(() => {

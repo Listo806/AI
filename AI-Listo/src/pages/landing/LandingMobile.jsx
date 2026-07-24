@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import { Link } from "react-router-dom";
 import {
   Menu,
@@ -842,10 +843,11 @@ export default function LandingMobile() {
       workspacelang3: "Espaço de trabalho",
     },
   };
+  const switchLocale = useLocaleSwitch();
   const handleLangChange = (newLang) => {
     setLang(newLang);
-    localStorage.setItem("cortexa_lang", newLang);
     setLangOpen(false);
+    switchLocale(newLang);
   };
   const tr = t[lang];
   const workspace =
