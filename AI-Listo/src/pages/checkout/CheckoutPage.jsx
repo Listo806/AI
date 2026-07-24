@@ -19,6 +19,11 @@ import "./CheckoutPage.css";
 const API_BASE = "https://backend.cortexaaicrm.com";
 const SETUP_FEE = 97;
 
+// Google Ads purchase conversion. Reusing the existing conversion action for
+// now so purchases start counting immediately; swap this for a dedicated
+// Purchase label when the client provides one from Google Ads.
+const PURCHASE_CONVERSION_SEND_TO = "AW-17836518151/z4trCLizpNgbEIfWjrlC";
+
 const PLAN_DATA = {
   solo: { price: 197, users: 1 },
   team: { price: 347, users: 3, popular: true },
@@ -282,6 +287,15 @@ export default function CheckoutPage() {
                 setErrorMsg(tr.validation.server);
                 setProcessing(false);
                 return;
+              }
+              // Google Ads: count the completed $97 purchase as a conversion.
+              if (typeof window.gtag === "function") {
+                window.gtag("event", "conversion", {
+                  send_to: PURCHASE_CONVERSION_SEND_TO,
+                  value: SETUP_FEE,
+                  currency: "USD",
+                  transaction_id: data.subscriptionID,
+                });
               }
               await finishAndLogin(userId);
             } catch (error) {
