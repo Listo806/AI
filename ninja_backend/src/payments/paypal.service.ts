@@ -248,16 +248,20 @@ export class PayPalService {
     }
   }
 
+  // Verify a PayPal webhook signature.
+  //  - returns true  only when PayPal confirms the signature (SUCCESS)
+  //  - returns false when PayPal definitively says it is NOT valid (forged)
+  //  - THROWS when we cannot verify (missing webhook id or transient error) so
+  //    the caller returns 5xx and PayPal retries. We never fail open.
   async verifyWebhook(headers: any, body: any): Promise<boolean> {
+    const webhookId = this.configService.get('PAYPAL_WEBHOOK_ID');
+    if (!webhookId) {
+      this.logger.error('PAYPAL_WEBHOOK_ID is not set; cannot verify webhook');
+      throw new Error('PAYPAL_WEBHOOK_ID is not configured');
+    }
+    let response;
     try {
-      const webhookId = this.configService.get('PAYPAL_WEBHOOK_ID');
-      if (!webhookId) {
-        this.logger.warn(
-          'PAYPAL_WEBHOOK_ID not set, skipping webhook verification',
-        );
-        return true;
-      }
-      const response = await this.api().post(
+      response = await this.api().post(
         '/v1/notifications/verify-webhook-signature',
         {
           auth_algo: headers['paypal-auth-algo'],
@@ -270,13 +274,32 @@ export class PayPalService {
         },
         { headers: await this.authHeader() },
       );
-      return response.data.verification_status === 'SUCCESS';
     } catch (error: any) {
+      // Transient problem reaching PayPal: do not decide validity, let it retry.
       this.logger.error(
-        'Webhook verification failed',
+        'Webhook verification request failed',
         error.response?.data || error.message,
       );
-      return process.env.NODE_ENV !== 'production';
+      throw new Error('PayPal webhook verification unavailable');
+    }
+    return response.data.verification_status === 'SUCCESS';
+  }
+
+  // Look up the subscription (billing agreement) id behind a sale. Refund and
+  // reversal webhook resources do not carry the subscription id directly, so we
+  // resolve it from the referenced sale.
+  async getSaleBillingAgreementId(saleId: string): Promise<string | null> {
+    try {
+      const res = await this.api().get(`/v1/payments/sale/${saleId}`, {
+        headers: await this.authHeader(),
+      });
+      return res.data?.billing_agreement_id || null;
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to look up sale ${saleId}`,
+        error.response?.data || error.message,
+      );
+      return null;
     }
   }
 }
