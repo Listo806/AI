@@ -8,14 +8,14 @@ const t = {
       'This Cancellation Policy explains how you may cancel your account or subscription to CORTEXA AI Revenue OS ("Cortexa", "we", "our", "us"). By using our Services, you agree to this policy.',
     sections: [
       {
-        title: "1. Free Trial — No Charge, No Auto-Conversion",
+        title: "1. Setup Fee, Free Trial, and Cancellation",
         blocks: [
           {
             type: "ul",
             items: [
-              "Your free trial collects no payment and requires no card on file.",
-              "The free trial does not automatically convert to a paid subscription, and you are never charged automatically.",
-              "You can stop using your trial account at any time with nothing owed.",
+              "A one-time $97 USD setup fee is charged today at signup, and a payment method (PayPal) is required.",
+              "Your 14-day free trial begins after the setup fee is paid, and your monthly plan is billed automatically when the trial ends.",
+              "You can cancel during the 14-day free trial to stop your subscription before the first monthly charge.",
             ],
           },
         ],
@@ -55,7 +55,7 @@ const t = {
               "Cancel before your next billing date to avoid the next billing cycle.",
               "You retain access to paid features until the end of the current paid billing period.",
               "After that period ends, paid features may be limited, downgraded, or deactivated.",
-              "Cancellation stops future charges but does not refund a billing period that has already been paid (see the Refund Policy).",
+              "Cancellation stops future monthly charges but does not refund the one-time $97 setup fee or a monthly period already paid (see the Refund Policy).",
             ],
           },
         ],
@@ -146,14 +146,14 @@ const t = {
       'Esta Política de Cancelación explica cómo puede cancelar su cuenta o suscripción a CORTEXA AI Revenue OS ("Cortexa", "nosotros", "nuestro", "nos"). Al utilizar nuestros Servicios, usted acepta esta política.',
     sections: [
       {
-        title: "1. Prueba Gratuita — Sin Cargo ni Conversión Automática",
+        title: "1. Tarifa de Configuración, Prueba Gratuita y Cancelación",
         blocks: [
           {
             type: "ul",
             items: [
-              "La prueba gratuita no cobra ningún pago ni requiere una tarjeta registrada.",
-              "La prueba no se convierte automáticamente en una suscripción de pago y nunca se le cobrará automáticamente.",
-              "Puede dejar de utilizar su cuenta de prueba en cualquier momento sin deber ningún importe.",
+              "Hoy se cobra una tarifa única de configuración de $97 USD al registrarte, y se requiere un método de pago (PayPal).",
+              "Tu prueba gratuita de 14 días comienza después de pagar la tarifa de configuración, y tu plan mensual se cobra automáticamente cuando termina la prueba.",
+              "Puedes cancelar durante la prueba gratuita de 14 días para detener tu suscripción antes del primer cobro mensual.",
             ],
           },
         ],
@@ -193,7 +193,7 @@ const t = {
               "Cancele antes de la próxima fecha de facturación para evitar el siguiente ciclo de cobro.",
               "Conservará el acceso a las funciones de pago hasta el final del periodo de facturación ya pagado.",
               "Cuando finalice dicho periodo, las funciones de pago podrán limitarse, degradarse o desactivarse.",
-              "La cancelación detiene los cobros futuros, pero no reembolsa un periodo de facturación ya pagado (consulte la Política de Reembolsos).",
+              "La cancelación detiene los cobros mensuales futuros, pero no reembolsa la tarifa única de configuración de $97 ni un periodo mensual ya pagado (consulte la Política de Reembolsos).",
             ],
           },
         ],
@@ -284,14 +284,14 @@ const t = {
       'Esta Política de Cancelamento explica como você pode cancelar sua conta ou assinatura do CORTEXA AI Revenue OS ("Cortexa", "nós", "nosso", "conosco"). Ao utilizar nossos Serviços, você concorda com esta política.',
     sections: [
       {
-        title: "1. Teste Gratuito — Sem Cobrança e Sem Conversão Automática",
+        title: "1. Taxa de Configuração, Teste Gratuito e Cancelamento",
         blocks: [
           {
             type: "ul",
             items: [
-              "O teste gratuito não cobra nenhum pagamento e não exige cartão cadastrado.",
-              "O teste não é convertido automaticamente em uma assinatura paga e nenhuma cobrança automática é realizada.",
-              "Você pode deixar de utilizar sua conta de teste a qualquer momento sem nenhum valor devido.",
+              "Hoje é cobrada uma taxa única de configuração de $97 USD no cadastro, e um método de pagamento (PayPal) é necessário.",
+              "Seu teste gratuito de 14 dias começa após o pagamento da taxa de configuração, e seu plano mensal é cobrado automaticamente quando o teste termina.",
+              "Você pode cancelar durante o teste gratuito de 14 dias para interromper sua assinatura antes da primeira cobrança mensal.",
             ],
           },
         ],
@@ -331,7 +331,7 @@ const t = {
               "Cancele antes da próxima data de cobrança para evitar o próximo ciclo de faturamento.",
               "Você continuará com acesso aos recursos pagos até o final do período de cobrança já pago.",
               "Após o término desse período, os recursos pagos poderão ser limitados, rebaixados ou desativados.",
-              "O cancelamento interrompe cobranças futuras, mas não reembolsa um período de cobrança já pago (consulte a Política de Reembolso).",
+              "O cancelamento interrompe cobranças mensais futuras, mas não reembolsa a taxa única de configuração de $97 nem um período mensal já pago (consulte a Política de Reembolso).",
             ],
           },
         ],

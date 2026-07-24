@@ -6,29 +6,29 @@ const t = {
     effectiveDate: "Effective Date: July 20, 2026",
     sections: [
       {
-        title: "1. Free Trial — No Payment Collected",
+        title: "1. Setup Fee and 14-Day Free Trial",
         blocks: [
           {
-            p: "Cortexa offers a free trial to new users.",
+            p: "Cortexa charges a one-time setup fee at signup, then gives you a 14-day free trial before monthly billing begins.",
           },
           {
             ul: [
-              "No payment is collected when you start your free trial.",
-              "No credit card or payment method is required to sign up.",
-              "Your free trial does not automatically convert to a paid subscription.",
-              "No charge is ever made automatically.",
+              "A one-time setup and activation fee of $97 USD is charged today at signup.",
+              "A payment method (PayPal) is required to sign up.",
+              "Your 14-day free trial begins after the setup fee is paid, with no monthly charge during the trial.",
+              "After the free trial, your monthly plan is billed automatically until you cancel.",
             ],
           },
           {
-            p: "Because no payment is taken during the free trial, there is nothing to refund for the trial itself.",
+            p: "The $97 setup fee covers onboarding and activation and is generally non-refundable once paid, except where required by law.",
           },
         ],
       },
       {
-        title: "2. Future Paid Subscriptions",
+        title: "2. Subscription Pricing",
         blocks: [
           {
-            p: "If you later choose to subscribe to a paid plan, you will be asked to add a payment method and actively confirm the purchase at that time. Nothing is charged until you do so.",
+            p: "Your selected plan begins after your 14-day free trial and is billed automatically each month until you cancel.",
           },
           {
             p: "Current plan pricing:",
@@ -38,11 +38,11 @@ const t = {
               "Solo Plan: $197 USD/month",
               "Team Plan: $347 USD/month",
               "Growth Plan: $497 USD/month",
-              "One-time setup fee: $97 USD when applicable.",
+              "One-time setup fee: $97 USD, charged today at signup.",
             ],
           },
           {
-            p: "No payment method is charged without your explicit authorization.",
+            p: "Your subscription renews automatically each month until you cancel. You can cancel anytime to stop future charges.",
           },
         ],
       },
@@ -52,7 +52,8 @@ const t = {
           {
             ul: [
               "You may cancel anytime to prevent future charges.",
-              "Paid billing periods are generally non-refundable except where required by law.",
+              "Cancelling during the 14-day free trial stops your subscription before the first monthly charge.",
+              "The one-time $97 setup fee and paid monthly periods are generally non-refundable except where required by law.",
             ],
           },
           {
@@ -87,29 +88,29 @@ const t = {
     effectiveDate: "Fecha de entrada en vigor: 20 de julio de 2026",
     sections: [
       {
-        title: "1. Prueba Gratuita — Sin Pago",
+        title: "1. Tarifa de Configuración y Prueba Gratuita de 14 Días",
         blocks: [
           {
-            p: "Cortexa ofrece una prueba gratuita.",
+            p: "Cortexa cobra una tarifa única de configuración al registrarte y luego te da una prueba gratuita de 14 días antes de que comience la facturación mensual.",
           },
           {
             ul: [
-              "No se cobra ningún pago.",
-              "No se requiere tarjeta.",
-              "La prueba no se convierte automáticamente en una suscripción.",
-              "Nunca se realiza un cargo automático.",
+              "Hoy se cobra una tarifa única de configuración y activación de $97 USD al registrarte.",
+              "Se requiere un método de pago (PayPal) para registrarte.",
+              "Tu prueba gratuita de 14 días comienza después de pagar la tarifa de configuración, sin cargo mensual durante la prueba.",
+              "Al terminar la prueba, tu plan mensual se cobra automáticamente hasta que canceles.",
             ],
           },
           {
-            p: "No existe nada que reembolsar durante la prueba gratuita.",
+            p: "La tarifa de configuración de $97 cubre la incorporación y la activación y normalmente no es reembolsable una vez pagada, salvo obligación legal.",
           },
         ],
       },
       {
-        title: "2. Suscripciones de Pago",
+        title: "2. Precios de Suscripción",
         blocks: [
           {
-            p: "Si decide suscribirse, deberá agregar un método de pago y confirmar la compra.",
+            p: "Tu plan seleccionado comienza después de tu prueba gratuita de 14 días y se cobra automáticamente cada mes hasta que canceles.",
           },
           {
             p: "Planes:",
@@ -119,11 +120,11 @@ const t = {
               "Solo: $197 USD/mes",
               "Team: $347 USD/mes",
               "Growth: $497 USD/mes",
-              "Configuración única: $97 USD",
+              "Tarifa única de configuración: $97 USD, cobrada hoy al registrarte.",
             ],
           },
           {
-            p: "Nunca cobramos sin autorización expresa.",
+            p: "Tu suscripción se renueva automáticamente cada mes hasta que canceles. Puedes cancelar en cualquier momento para evitar cobros futuros.",
           },
         ],
       },
@@ -132,8 +133,9 @@ const t = {
         blocks: [
           {
             ul: [
-              "Puede cancelar en cualquier momento.",
-              "Los periodos ya facturados normalmente no son reembolsables salvo obligación legal.",
+              "Puede cancelar en cualquier momento para evitar cobros futuros.",
+              "Cancelar durante la prueba gratuita de 14 días detiene la suscripción antes del primer cobro mensual.",
+              "La tarifa única de configuración de $97 y los periodos mensuales ya facturados normalmente no son reembolsables salvo obligación legal.",
             ],
           },
         ],
@@ -165,29 +167,29 @@ const t = {
     effectiveDate: "Data de vigência: 20 de julho de 2026",
     sections: [
       {
-        title: "1. Teste Gratuito — Sem Cobrança",
+        title: "1. Taxa de Configuração e Teste Gratuito de 14 Dias",
         blocks: [
           {
-            p: "A Cortexa oferece um teste gratuito.",
+            p: "A Cortexa cobra uma taxa única de configuração no cadastro e depois oferece um teste gratuito de 14 dias antes do início da cobrança mensal.",
           },
           {
             ul: [
-              "Nenhum pagamento é cobrado.",
-              "Nenhum cartão é necessário.",
-              "O teste não se converte automaticamente.",
-              "Nenhuma cobrança automática é realizada.",
+              "Hoje é cobrada uma taxa única de configuração e ativação de $97 USD no cadastro.",
+              "Um método de pagamento (PayPal) é necessário para o cadastro.",
+              "Seu teste gratuito de 14 dias começa após o pagamento da taxa de configuração, sem cobrança mensal durante o teste.",
+              "Ao terminar o teste, seu plano mensal é cobrado automaticamente até você cancelar.",
             ],
           },
           {
-            p: "Não há nada a reembolsar durante o teste.",
+            p: "A taxa de configuração de $97 cobre o onboarding e a ativação e normalmente não é reembolsável após o pagamento, salvo exigência legal.",
           },
         ],
       },
       {
-        title: "2. Assinaturas Pagas",
+        title: "2. Preços de Assinatura",
         blocks: [
           {
-            p: "Se decidir assinar, você adicionará um método de pagamento e confirmará a compra.",
+            p: "Seu plano selecionado começa após seu teste gratuito de 14 dias e é cobrado automaticamente a cada mês até você cancelar.",
           },
           {
             p: "Planos:",
@@ -197,11 +199,11 @@ const t = {
               "Solo: $197 USD/mês",
               "Team: $347 USD/mês",
               "Growth: $497 USD/mês",
-              "Taxa única de setup: $97 USD",
+              "Taxa única de configuração: $97 USD, cobrada hoje no cadastro.",
             ],
           },
           {
-            p: "Nunca cobramos sem autorização expressa.",
+            p: "Sua assinatura é renovada automaticamente a cada mês até você cancelar. Você pode cancelar a qualquer momento para evitar cobranças futuras.",
           },
         ],
       },
@@ -210,8 +212,9 @@ const t = {
         blocks: [
           {
             ul: [
-              "Você pode cancelar a qualquer momento.",
-              "Períodos já pagos normalmente não são reembolsáveis, salvo exigência legal.",
+              "Você pode cancelar a qualquer momento para evitar cobranças futuras.",
+              "Cancelar durante o teste gratuito de 14 dias interrompe a assinatura antes da primeira cobrança mensal.",
+              "A taxa única de configuração de $97 e os períodos mensais já pagos normalmente não são reembolsáveis, salvo exigência legal.",
             ],
           },
         ],
