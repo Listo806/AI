@@ -497,10 +497,12 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Get Instant Leads.",
-      heroTitleLine2: "Close More Deals.",
-      heroTitleLine3: "Run Your Real Estate Bussiness",
-      heroTitleLine4: "with AI.",
+      heroTitleLine1: "Agentic",
+      heroTitleLine2: "AI",
+      heroTitleLine3: "Revenue OS",
+      heroTitleLine4: "Built to Turn",
+      heroTitleLine5: "Conversations",
+      heroTitleLine6: "Into Revenue.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
       herotextabove: "AI finds. AI qualifies. AI follows up. You close.",
@@ -1040,10 +1042,12 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Obtén clientes potenciales al instante.",
-      heroTitleLine2: "Cierra más ventas.",
-      heroTitleLine3: "Gestiona tu negocio inmobiliario",
-      heroTitleLine4: "con IA.",
+      heroTitleLine1: "Agentic",
+      heroTitleLine2: "IA",
+      heroTitleLine3: "Sistema Operativo de Ingresos",
+      heroTitleLine4: "Diseñado para convertir",
+      heroTitleLine5: "las conversaciones",
+      heroTitleLine6: "en ingresos.",
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
       herotextabove:
@@ -1586,10 +1590,13 @@ export default function Landing() {
         },
       ],
 
-      heroTitleLine1: "Receba leads instantaneamente.",
-      heroTitleLine2: "Feche mais negócios.",
-      heroTitleLine3: "Gerencie seu negócio imobiliário",
-      heroTitleLine4: "com IA.",
+      heroTitleLine1: "Agentic",
+      heroTitleLine2: "IA",
+      heroTitleLine3: "Sistema Operacional de Receita",
+      heroTitleLine4: "Criado para transformar",
+      heroTitleLine5: "conversas",
+      heroTitleLine6: "em receita.",
+
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
       herotextabove:
@@ -1990,10 +1997,11 @@ export default function Landing() {
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
               <h1 className="hero-title">
-                {tr.heroTitleLine1} <br /> {tr.heroTitleLine2}
+                {tr.heroTitleLine1} <span className="text-os">{tr.heroTitleLine2}</span> {tr.heroTitleLine3}
                 <br />
-                <span> 24/7 </span>
-                {tr.heroTitleLine4}
+                {tr.heroTitleLine4} <br/>
+                {tr.heroTitleLine5} <br/>
+                <span> {tr.heroTitleLine6}</span>
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>
