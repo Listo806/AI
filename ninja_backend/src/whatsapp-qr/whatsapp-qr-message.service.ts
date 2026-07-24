@@ -162,14 +162,6 @@ export class WhatsAppQrMessageService {
       ? new Date()
       : occurredAt;
 
-    /*
-     * Không cho trạng thái bị lùi:
-     *
-     * sent      = 1
-     * delivered = 2
-     * read      = 3
-     * failed    = trạng thái lỗi riêng
-     */
     const { rows } = await this.db.query(
       `
       UPDATE whatsapp_qr_messages

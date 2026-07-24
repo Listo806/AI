@@ -693,6 +693,7 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
+  align-items: end;
 }
 
 .cx-agent-brand {
@@ -2143,26 +2144,23 @@
 }
 
 .cx-agent-sidebar.collapsed {
-  width: 76px;
-  min-width: 76px;
-  padding-left: 10px;
+  width: 60px;
   padding-right: 10px;
+  align-items: center;
 }
 
 .cx-agent-sidebar-toggle-inside {
-  position: absolute;
   top: 22px;
   right: -14px;
   z-index: 10;
   width: 28px;
   height: 28px;
-  border: 1px solid #dfe4f2;
+  border: 0;
   border-radius: 50%;
   background: #ffffff;
   color: #596584;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 14px rgba(12, 22, 70, 0.12);
   cursor: pointer;
 }
 

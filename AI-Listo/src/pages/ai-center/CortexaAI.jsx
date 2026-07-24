@@ -50,8 +50,11 @@ import {
   MoreHorizontal,
   Trash2,
   X,
+  ChevronsRight,
+  ChevronsLeft
 } from "lucide-react";
-
+import { useLocation } from "react-router-dom";
+import CortexaAISetup from "./CortexaAISetup";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import WhatsAppConnectCard from "./components/WhatsAppConnectCard";
@@ -69,8 +72,10 @@ import KnowledgeImportModal from "./components/KnowledgeImportModal";
 import KnowledgeInsightsModal from "./components/KnowledgeInsightsModal";
 
 export default function CortexaAI() {
+  const location = useLocation();
+  const isSetupRoute = location.pathname === "/dashboard/ai-cortexa-setup";
   const { user } = useAuth();
-  const [activePage, setActivePage] = useState("setup");
+  const [activePage, setActivePage] = useState("chat");
   const [openStep, setOpenStep] = useState(1);
   const [message, setMessage] = useState("");
   const [controlTab, setControlTab] = useState("General");
@@ -951,16 +956,19 @@ export default function CortexaAI() {
   }, [loadSetup]);
 
   useEffect(() => {
-    if (activePage === "setup") {
+    if (isSetupRoute) {
       return;
     }
+
     let cancelled = false;
+
     const loadPage = async () => {
       setLoadingPage(true);
       setPageError("");
 
       try {
         let data = null;
+
         if (activePage === "chat") {
           const [dashboardResponse] = await Promise.all([
             request("/ai-center/agent/dashboard"),
@@ -968,6 +976,7 @@ export default function CortexaAI() {
               openLatest: true,
             }),
           ]);
+
           if (!cancelled) {
             setDashboardData(dashboardResponse);
           }
@@ -975,6 +984,7 @@ export default function CortexaAI() {
 
         if (activePage === "knowledge") {
           data = await aiAgentSetupService.getKnowledge(knowledgeFilters);
+
           if (!cancelled) {
             setKnowledgeData(data);
           }
@@ -992,10 +1002,14 @@ export default function CortexaAI() {
 
         if (activePage === "controls") {
           data = await request("/ai-center/agent/controls");
-          if (!cancelled) setControlsData(data);
+
+          if (!cancelled) {
+            setControlsData(data);
+          }
         }
       } catch (error) {
         console.error(`LOAD ${activePage.toUpperCase()} FAILED:`, error);
+
         if (!cancelled) {
           setPageError(
             error?.response?.data?.message ||
@@ -1004,7 +1018,9 @@ export default function CortexaAI() {
           );
         }
       } finally {
-        if (!cancelled) setLoadingPage(false);
+        if (!cancelled) {
+          setLoadingPage(false);
+        }
       }
     };
 
@@ -1014,6 +1030,7 @@ export default function CortexaAI() {
       cancelled = true;
     };
   }, [
+    isSetupRoute,
     activePage,
     setupData?.isSetupComplete,
     loadChatSessions,
@@ -1175,12 +1192,6 @@ export default function CortexaAI() {
 
   const agentMenus = [
     {
-      key: "setup",
-      title: "Setup",
-      desc: "Configure your AI Agent",
-      icon: Settings2,
-    },
-    {
       key: "chat",
       title: "AI Chat",
       desc: "Chat with your AI Agent",
@@ -1281,35 +1292,54 @@ export default function CortexaAI() {
   );
   return (
     <>
-      <div
-        className={`cx-ai-shell ${
-          agentSidebarCollapsed ? "agent-sidebar-collapsed" : ""
-        }`}
-      >
-        <aside
-          className={`cx-agent-sidebar ${
-            agentSidebarCollapsed ? "collapsed" : ""
+      {isSetupRoute ? (
+        <CortexaAISetup
+          setupData={setupData}
+          openStep={openStep}
+          setOpenStep={setOpenStep}
+          whatsappSetup={whatsappSetup}
+          onBusinessProfile={openBusinessProfile}
+          onPropertyImport={openPropertyImport}
+          onAppointmentRules={openAppointmentRules}
+          onBehavior={openBehavior}
+          onAutomations={openAutomations}
+          onTestAgent={openAgentTest}
+          onLaunch={launchAgent}
+          launchingAgent={launchingAgent}
+          launchError={launchError}
+        />
+      ) : (
+        <div
+          className={`cx-ai-shell ${
+            agentSidebarCollapsed ? "agent-sidebar-collapsed" : ""
           }`}
         >
-          <button
-            type="button"
-            className="cx-agent-sidebar-toggle-inside"
-            onClick={toggleAgentSidebar}
-            aria-label={
-              agentSidebarCollapsed
-                ? "Expand AI Agent sidebar"
-                : "Collapse AI Agent sidebar"
-            }
-            title={
-              agentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-            }
+          <aside
+            className={`cx-agent-sidebar ${
+              agentSidebarCollapsed ? "collapsed" : ""
+            }`}
           >
-            <ChevronRight
-              size={18}
-              className={agentSidebarCollapsed ? "" : "is-expanded"}
-            />
-          </button>
-          {/*<div className="cx-agent-brand">
+            <button
+              type="button"
+              className="cx-agent-sidebar-toggle-inside"
+              onClick={toggleAgentSidebar}
+              aria-label={
+                agentSidebarCollapsed
+                  ? "Expand AI Agent sidebar"
+                  : "Collapse AI Agent sidebar"
+              }
+              title={
+                agentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
+            >
+              {agentSidebarCollapsed ? (
+                <ChevronsRight size={18} />
+              ) : (
+                <ChevronsLeft size={18} />
+              )}
+              
+            </button>
+            {/*<div className="cx-agent-brand">
             <div className="cx-agent-bot">
               <Bot size={24} />
             </div>
@@ -1331,355 +1361,356 @@ export default function CortexaAI() {
             )}
           </div>*/}
 
-          <nav className="cx-agent-menu">
-            {agentMenus.map((item) => {
-              const Icon = item.icon;
+            <nav className="cx-agent-menu">
+              {agentMenus.map((item) => {
+                const Icon = item.icon;
 
-              return (
-                <button
-                  type="button"
-                  key={item.key}
-                  title={agentSidebarCollapsed ? item.title : undefined}
-                  className={activePage === item.key ? "active" : ""}
-                  onClick={() => {
-                    setActivePage(item.key);
-                  }}
-                >
-                  <Icon size={18} />
-                  {!agentSidebarCollapsed && (
-                    <div className="cx-agent-menu-copy">
-                      <strong>{item.title}</strong>
-                      <small>{item.desc}</small>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-
-          {agentSidebarCollapsed ? (
-            <button
-              type="button"
-              className="cx-agent-status-collapsed"
-              title={
-                setupData?.isSetupComplete
-                  ? "AI Agent Online"
-                  : "Setup in progress"
-              }
-              onClick={() => {
-                setActivePage(
-                  setupData?.isSetupComplete ? "activity" : "setup",
+                return (
+                  <button
+                    type="button"
+                    key={item.key}
+                    title={agentSidebarCollapsed ? item.title : undefined}
+                    className={activePage === item.key ? "active" : ""}
+                    onClick={() => {
+                      setActivePage(item.key);
+                    }}
+                  >
+                    <Icon size={18} />
+                    {!agentSidebarCollapsed && (
+                      <div className="cx-agent-menu-copy">
+                        <strong>{item.title}</strong>
+                        <small>{item.desc}</small>
+                      </div>
+                    )}
+                  </button>
                 );
-              }}
-            >
-              <span
-                className={`cx-agent-status-dot ${
-                  setupData?.agentStatus === "paused"
-                    ? "paused"
-                    : setupData?.isSetupComplete
-                      ? "online"
-                      : "setup"
-                }`}
-              />
+              })}
+            </nav>
 
-              {setupData?.agentStatus === "paused" ? (
-                <PauseCircle size={20} />
-              ) : setupData?.isSetupComplete ? (
-                <Activity size={20} />
-              ) : (
-                <Settings2 size={20} />
-              )}
-            </button>
-          ) : (
-            <div className="cx-agent-status-card">
-              <h3>AI Agent Status</h3>
-
-              <p className={setupData?.isSetupComplete ? "online" : "setup"}>
-                <i />
-
-                {setupData?.agentStatus === "paused"
-                  ? "Paused"
-                  : setupData?.isSetupComplete
-                    ? "Online"
-                    : "Setup in progress"}
-              </p>
-
-              <p>
-                {setupData?.isSetupComplete
-                  ? "Your AI Agent is active and ready to help."
-                  : `${Number(setupData?.completedSteps || 0)} of ${Number(
-                      setupData?.totalSteps || 8,
-                    )} setup steps completed.`}
-              </p>
-
+            {agentSidebarCollapsed ? (
               <button
                 type="button"
+                className="cx-agent-status-collapsed"
+                title={
+                  setupData?.isSetupComplete
+                    ? "AI Agent Online"
+                    : "Setup in progress"
+                }
                 onClick={() => {
                   setActivePage(
                     setupData?.isSetupComplete ? "activity" : "setup",
                   );
                 }}
               >
-                {setupData?.isSetupComplete
-                  ? "View Activity"
-                  : "Continue Setup"}
-              </button>
-            </div>
-          )}
-        </aside>
+                <span
+                  className={`cx-agent-status-dot ${
+                    setupData?.agentStatus === "paused"
+                      ? "paused"
+                      : setupData?.isSetupComplete
+                        ? "online"
+                        : "setup"
+                  }`}
+                />
 
-        <section className="cx-agent-content">
-          {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
-          {isAgentReadOnly && activePage !== "setup" && (
-            <div className="cx-agent-readonly-notice">
-              <div>
-                <ShieldCheck size={18} />
-                <div>
-                  <strong>Preview mode</strong>
-                  <p>
-                    Complete AI Agent setup to enable actions and save changes.
-                  </p>
-                </div>
+                {setupData?.agentStatus === "paused" ? (
+                  <PauseCircle size={20} />
+                ) : setupData?.isSetupComplete ? (
+                  <Activity size={20} />
+                ) : (
+                  <Settings2 size={20} />
+                )}
+              </button>
+            ) : (
+              <div className="cx-agent-status-card">
+                <h3>AI Agent Status</h3>
+
+                <p className={setupData?.isSetupComplete ? "online" : "setup"}>
+                  <i />
+
+                  {setupData?.agentStatus === "paused"
+                    ? "Paused"
+                    : setupData?.isSetupComplete
+                      ? "Online"
+                      : "Setup in progress"}
+                </p>
+
+                <p>
+                  {setupData?.isSetupComplete
+                    ? "Your AI Agent is active and ready to help."
+                    : `${Number(setupData?.completedSteps || 0)} of ${Number(
+                        setupData?.totalSteps || 8,
+                      )} setup steps completed.`}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivePage(
+                      setupData?.isSetupComplete ? "activity" : "setup",
+                    );
+                  }}
+                >
+                  {setupData?.isSetupComplete
+                    ? "View Activity"
+                    : "Continue Setup"}
+                </button>
               </div>
-              <button type="button" onClick={() => setActivePage("setup")}>
-                Continue Setup
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
-          {loadingPage && activePage !== "chat" && (
-            <div className="cx-ai-inline-loading">
-              <RefreshCw className="cx-ai-loading-spinner" size={18} />
-              Loading data...
-            </div>
-          )}
+            )}
+          </aside>
 
-          {activePage === "setup" && (
-            <SetupLayout
-              setupData={setupData}
-              openStep={openStep}
-              setOpenStep={setOpenStep}
-              onRefresh={loadSetup}
-              whatsappSetup={whatsappSetup}
-              onBusinessProfile={openBusinessProfile}
-              onPropertyImport={openPropertyImport}
-              onAppointmentRules={openAppointmentRules}
-              onBehavior={openBehavior}
-              onAutomations={openAutomations}
-              onTestAgent={openAgentTest}
-              onLaunch={launchAgent}
-              launchingAgent={launchingAgent}
-              launchError={launchError}
-            />
-          )}
+          <section className="cx-agent-content">
+            {pageError && <div className="cx-ai-error-banner">{pageError}</div>}
+            {isAgentReadOnly && activePage !== "setup" && (
+              <div className="cx-agent-readonly-notice">
+                <div>
+                  <ShieldCheck size={18} />
+                  <div>
+                    <strong>Preview mode</strong>
+                    <p>
+                      Complete AI Agent setup to enable actions and save
+                      changes.
+                    </p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setActivePage("setup")}>
+                  Continue Setup
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+            {loadingPage && activePage !== "chat" && (
+              <div className="cx-ai-inline-loading">
+                <RefreshCw className="cx-ai-loading-spinner" size={18} />
+                Loading data...
+              </div>
+            )}
 
-          {activePage === "chat" && (
-            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
-              <ChatLayout
-                user={user}
-                message={message}
-                setMessage={setMessage}
-                dashboardData={dashboardData}
-                messages={messages}
-                sessions={chatSessions}
-                activeSessionId={activeChatSessionId}
-                sessionsLoading={chatSessionsLoading}
-                sessionLoading={chatSessionLoading}
-                creatingSession={creatingChatSession}
-                sendingMessage={sendingMessage}
-                error={chatError}
-                onSend={sendChatMessage}
-                onNewChat={createNewChat}
-                onSelectSession={loadChatSession}
-                onOpenActivity={(filters = {}) => {
-                  setActivePage("activity");
+            {activePage === "setup" && (
+              <SetupLayout
+                setupData={setupData}
+                openStep={openStep}
+                setOpenStep={setOpenStep}
+                onRefresh={loadSetup}
+                whatsappSetup={whatsappSetup}
+                onBusinessProfile={openBusinessProfile}
+                onPropertyImport={openPropertyImport}
+                onAppointmentRules={openAppointmentRules}
+                onBehavior={openBehavior}
+                onAutomations={openAutomations}
+                onTestAgent={openAgentTest}
+                onLaunch={launchAgent}
+                launchingAgent={launchingAgent}
+                launchError={launchError}
+              />
+            )}
 
-                  setTimeout(() => {
+            {activePage === "chat" && (
+              <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+                <ChatLayout
+                  user={user}
+                  message={message}
+                  setMessage={setMessage}
+                  dashboardData={dashboardData}
+                  messages={messages}
+                  sessions={chatSessions}
+                  activeSessionId={activeChatSessionId}
+                  sessionsLoading={chatSessionsLoading}
+                  sessionLoading={chatSessionLoading}
+                  creatingSession={creatingChatSession}
+                  sendingMessage={sendingMessage}
+                  error={chatError}
+                  onSend={sendChatMessage}
+                  onNewChat={createNewChat}
+                  onSelectSession={loadChatSession}
+                  onOpenActivity={(filters = {}) => {
+                    setActivePage("activity");
+
+                    setTimeout(() => {
+                      loadActivity({
+                        ...activityFilters,
+                        page: 1,
+                        ...filters,
+                      });
+                    }, 0);
+                  }}
+                  readOnly={isAgentReadOnly}
+                />
+              </AgentReadOnlyBoundary>
+            )}
+
+            {activePage === "knowledge" && (
+              <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+                <KnowledgeLayout
+                  knowledgeData={knowledgeData}
+                  filters={knowledgeFilters}
+                  loading={loadingPage}
+                  error={knowledgeError}
+                  deletingId={knowledgeDeletingId}
+                  showInactiveCategories={showInactiveCategories}
+                  onToggleInactiveCategories={() =>
+                    setShowInactiveCategories((current) => !current)
+                  }
+                  onViewInsights={() => setKnowledgeInsightsOpen(true)}
+                  onAdd={openCreateKnowledge}
+                  onEdit={openEditKnowledge}
+                  onDelete={deleteKnowledgeItem}
+                  onImport={() => {
+                    setKnowledgeImportError("");
+                    setKnowledgeImportOpen(true);
+                  }}
+                  onFilterChange={(patch) => {
+                    const nextFilters = {
+                      ...knowledgeFilters,
+                      ...patch,
+                    };
+
+                    if (
+                      patch.category !== undefined ||
+                      patch.status !== undefined ||
+                      patch.search !== undefined
+                    ) {
+                      nextFilters.page = 1;
+                    }
+
+                    loadKnowledge(nextFilters);
+                  }}
+                  onQuickAction={(type) => {
+                    const category =
+                      knowledgeFilters.category !== "all"
+                        ? knowledgeFilters.category
+                        : "company_information";
+
+                    if (type === "text") {
+                      openCreateKnowledge(category, {
+                        sourceType: "text",
+                      });
+                      return;
+                    }
+
+                    if (type === "qa") {
+                      openCreateKnowledge("faqs", {
+                        sourceType: "qa",
+                        metadata: {
+                          format: "question_answer",
+                        },
+                      });
+                      return;
+                    }
+
+                    if (type === "website") {
+                      openCreateKnowledge(category, {
+                        sourceType: "website",
+                      });
+                      return;
+                    }
+
+                    if (type === "document") {
+                      setKnowledgeImportError("");
+                      setKnowledgeImportOpen(true);
+                      return;
+                    }
+
+                    if (type === "data_source") {
+                      setKnowledgeImportError("");
+                      setKnowledgeImportOpen(true);
+                    }
+                  }}
+                  readOnly={isAgentReadOnly}
+                />
+              </AgentReadOnlyBoundary>
+            )}
+
+            {activePage === "activity" && (
+              <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+                <ActivityLayout
+                  activityData={activityData}
+                  loading={activityLoading}
+                  error={activityError}
+                  filters={activityFilters}
+                  exporting={activityExporting}
+                  onExport={exportActivityCsv}
+                  onFilterChange={(patch) => {
+                    const nextFilters = {
+                      ...activityFilters,
+                      ...patch,
+                    };
+                    if (
+                      patch.type !== undefined ||
+                      patch.status !== undefined ||
+                      patch.search !== undefined
+                    ) {
+                      nextFilters.page = 1;
+                    }
+                    loadActivity(nextFilters);
+                  }}
+                  onPageChange={(page) => {
                     loadActivity({
                       ...activityFilters,
-                      page: 1,
-                      ...filters,
+                      page,
                     });
-                  }, 0);
-                }}
-                readOnly={isAgentReadOnly}
-              />
-            </AgentReadOnlyBoundary>
-          )}
-
-          {activePage === "knowledge" && (
-            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
-              <KnowledgeLayout
-                knowledgeData={knowledgeData}
-                filters={knowledgeFilters}
-                loading={loadingPage}
-                error={knowledgeError}
-                deletingId={knowledgeDeletingId}
-                showInactiveCategories={showInactiveCategories}
-                onToggleInactiveCategories={() =>
-                  setShowInactiveCategories((current) => !current)
-                }
-                onViewInsights={() => setKnowledgeInsightsOpen(true)}
-                onAdd={openCreateKnowledge}
-                onEdit={openEditKnowledge}
-                onDelete={deleteKnowledgeItem}
-                onImport={() => {
-                  setKnowledgeImportError("");
-                  setKnowledgeImportOpen(true);
-                }}
-                onFilterChange={(patch) => {
-                  const nextFilters = {
-                    ...knowledgeFilters,
-                    ...patch,
-                  };
-
-                  if (
-                    patch.category !== undefined ||
-                    patch.status !== undefined ||
-                    patch.search !== undefined
-                  ) {
-                    nextFilters.page = 1;
-                  }
-
-                  loadKnowledge(nextFilters);
-                }}
-                onQuickAction={(type) => {
-                  const category =
-                    knowledgeFilters.category !== "all"
-                      ? knowledgeFilters.category
-                      : "company_information";
-
-                  if (type === "text") {
-                    openCreateKnowledge(category, {
-                      sourceType: "text",
-                    });
-                    return;
-                  }
-
-                  if (type === "qa") {
-                    openCreateKnowledge("faqs", {
-                      sourceType: "qa",
-                      metadata: {
-                        format: "question_answer",
+                  }}
+                  onRefresh={() =>
+                    loadActivity(
+                      {
+                        ...activityFilters,
+                        page: 1,
                       },
-                    });
-                    return;
+                      {
+                        silent: false,
+                      },
+                    )
                   }
-
-                  if (type === "website") {
-                    openCreateKnowledge(category, {
-                      sourceType: "website",
-                    });
-                    return;
-                  }
-
-                  if (type === "document") {
-                    setKnowledgeImportError("");
-                    setKnowledgeImportOpen(true);
-                    return;
-                  }
-
-                  if (type === "data_source") {
-                    setKnowledgeImportError("");
-                    setKnowledgeImportOpen(true);
-                  }
-                }}
-                readOnly={isAgentReadOnly}
-              />
-            </AgentReadOnlyBoundary>
-          )}
-
-          {activePage === "activity" && (
-            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
-              <ActivityLayout
-                activityData={activityData}
-                loading={activityLoading}
-                error={activityError}
-                filters={activityFilters}
-                exporting={activityExporting}
-                onExport={exportActivityCsv}
-                onFilterChange={(patch) => {
-                  const nextFilters = {
-                    ...activityFilters,
-                    ...patch,
-                  };
-                  if (
-                    patch.type !== undefined ||
-                    patch.status !== undefined ||
-                    patch.search !== undefined
-                  ) {
-                    nextFilters.page = 1;
-                  }
-                  loadActivity(nextFilters);
-                }}
-                onPageChange={(page) => {
-                  loadActivity({
-                    ...activityFilters,
-                    page,
-                  });
-                }}
-                onRefresh={() =>
-                  loadActivity(
-                    {
-                      ...activityFilters,
-                      page: 1,
-                    },
-                    {
-                      silent: false,
-                    },
-                  )
-                }
-                onOpen={openActivity}
-                onViewActivityTypes={() => {
-                  setActivitySummaryModal({
-                    type: "activity_types",
-                    title: "Activity by Type",
-                    items: Array.isArray(activityData?.activityByType)
-                      ? activityData.activityByType
-                      : [],
-                  });
-                }}
-                onViewTopActions={() => {
-                  setActivitySummaryModal({
-                    type: "top_actions",
-                    title: "Top Actions",
-                    items: Array.isArray(activityData?.topActions)
-                      ? activityData.topActions
-                      : [],
-                  });
-                }}
-                onViewRecentRuns={() => {
-                  setActivitySummaryModal({
-                    type: "recent_runs",
-                    title: "Recent AI Runs",
-                    items: Array.isArray(activityData?.recentRuns)
-                      ? activityData.recentRuns
-                      : Array.isArray(activityData?.recentAiRuns)
-                        ? activityData.recentAiRuns
+                  onOpen={openActivity}
+                  onViewActivityTypes={() => {
+                    setActivitySummaryModal({
+                      type: "activity_types",
+                      title: "Activity by Type",
+                      items: Array.isArray(activityData?.activityByType)
+                        ? activityData.activityByType
                         : [],
-                  });
-                }}
-                readOnly={isAgentReadOnly}
-              />
-            </AgentReadOnlyBoundary>
-          )}
+                    });
+                  }}
+                  onViewTopActions={() => {
+                    setActivitySummaryModal({
+                      type: "top_actions",
+                      title: "Top Actions",
+                      items: Array.isArray(activityData?.topActions)
+                        ? activityData.topActions
+                        : [],
+                    });
+                  }}
+                  onViewRecentRuns={() => {
+                    setActivitySummaryModal({
+                      type: "recent_runs",
+                      title: "Recent AI Runs",
+                      items: Array.isArray(activityData?.recentRuns)
+                        ? activityData.recentRuns
+                        : Array.isArray(activityData?.recentAiRuns)
+                          ? activityData.recentAiRuns
+                          : [],
+                    });
+                  }}
+                  readOnly={isAgentReadOnly}
+                />
+              </AgentReadOnlyBoundary>
+            )}
 
-          {activePage === "controls" && (
-            <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
-              <ControlsLayout
-                controlTab={controlTab}
-                setControlTab={setControlTab}
-                controlsData={controlsData}
-                onSave={saveControls}
-                onOpenAutomations={openAutomations}
-                onEditBehavior={openBehavior}
-                readOnly={isAgentReadOnly}
-              />
-            </AgentReadOnlyBoundary>
-          )}
-        </section>
-      </div>
-
+            {activePage === "controls" && (
+              <AgentReadOnlyBoundary readOnly={isAgentReadOnly}>
+                <ControlsLayout
+                  controlTab={controlTab}
+                  setControlTab={setControlTab}
+                  controlsData={controlsData}
+                  onSave={saveControls}
+                  onOpenAutomations={openAutomations}
+                  onEditBehavior={openBehavior}
+                  readOnly={isAgentReadOnly}
+                />
+              </AgentReadOnlyBoundary>
+            )}
+          </section>
+        </div>
+      )}
       <BusinessProfileModal
         open={businessProfileOpen}
         profile={businessProfile}

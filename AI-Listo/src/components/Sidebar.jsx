@@ -19,6 +19,11 @@ const AI_CENTER_PATHS = [
 
 const AI_CENTER_ITEMS = [
   {
+    path: "/dashboard/ai-cortexa-setup",
+    icon: "Cog",
+    labelKey: "nav.aiCenter.cortexasetup",
+  },
+  {
     path: "/dashboard/ai-cortexa",
     icon: "bot",
     labelKey: "nav.aiCenter.cortexa",

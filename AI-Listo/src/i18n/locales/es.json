@@ -53,6 +53,7 @@
     "contacts": "Contactos",
     "aiCenter": {
       "label": "AI Setter",
+      "cortexasetup": "Configuración de IA",
       "cortexa": "AI Agent",
       "overview": "Resumen",
       "aiAssistant": "Asistente IA",
