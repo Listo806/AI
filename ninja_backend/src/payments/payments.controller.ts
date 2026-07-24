@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body } from '@nestjs/common';
+import { Controller, Post, Get, Body, Headers, HttpCode } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PayPalService } from './paypal.service';
 import { ConfigService } from '../config/config.service';
@@ -63,5 +63,39 @@ export class PaymentsController {
       body.plan,
     );
     return { success: true, status };
+  }
+
+  // PayPal webhook receiver. Verifies the signature, then processes the event
+  // idempotently and updates the user's subscription status. Always answers
+  // 200 so PayPal does not retry events we have already accepted.
+  @Post('paypal/webhook')
+  @HttpCode(200)
+  async paypalWebhook(@Headers() headers: any, @Body() body: any) {
+    let valid: boolean;
+    try {
+      valid = await this.paypalService.verifyWebhook(headers, body);
+    } catch (err: any) {
+      // Could not verify (missing webhook id or transient PayPal error). Throw
+      // so we answer 5xx and PayPal retries, rather than dropping a real event.
+      console.error(
+        'PayPal webhook could not be verified, will retry:',
+        body?.id,
+        err?.message,
+      );
+      throw err;
+    }
+    if (!valid) {
+      // Definitively invalid signature (forged). Accept and drop silently.
+      console.error(
+        'PayPal webhook signature invalid, dropping event',
+        body?.id,
+        body?.event_type,
+      );
+      return { received: true };
+    }
+    // processPayPalWebhook throws for a status event that matches no user yet,
+    // which becomes a 5xx so PayPal retries until checkout links the account.
+    await this.paymentsService.processPayPalWebhook(body);
+    return { received: true };
   }
 }
