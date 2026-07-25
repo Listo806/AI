@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
+import { trackEvent } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import "./CheckoutPage.css";
 
@@ -297,6 +298,13 @@ export default function CheckoutPage() {
                   transaction_id: data.subscriptionID,
                 });
               }
+              // Retargeting: trial activated (paid). Used to exclude these
+              // customers from acquisition retargeting audiences.
+              trackEvent("trial_activated", {
+                plan: selectedPlan,
+                value: SETUP_FEE,
+                currency: "USD",
+              });
               await finishAndLogin(userId);
             } catch (error) {
               console.error("PAYPAL APPROVE ERROR:", error);
