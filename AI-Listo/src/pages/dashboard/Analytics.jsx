@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -63,6 +64,7 @@ import {
   getActivityMetrics,
   getOwnerLeads,
 } from "../../api/analyticsApi";
+import { downloadCsv } from "../../utils/helpers";
 
 import "./analytics.css";
 
@@ -118,7 +120,10 @@ function shortDate(value) {
 }
 
 export default function CortexaAnalyticsDashboard() {
+  const navigate = useNavigate();
   const [range, setRange] = useState("30d");
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refresh = () => setRefreshTick((t) => t + 1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -162,7 +167,7 @@ export default function CortexaAnalyticsDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [range]);
+  }, [range, refreshTick]);
 
   // ---- Derived data (real backend fields with safe fallbacks) ----
   const leads = dash?.leads || null;
@@ -290,6 +295,58 @@ export default function CortexaAnalyticsDashboard() {
   const lostReasons = [];
   const teamPerformance = [];
 
+  // Build a CSV from the already-loaded analytics data (no fabricated values).
+  function exportData() {
+    const rows = [];
+
+    // Lead metrics
+    if (leads) {
+      rows.push(["Lead Metrics"]);
+      rows.push(["Metric", "Value"]);
+      rows.push(["Total Leads", totalLeads]);
+      rows.push(["New / Created", leads.created ?? 0]);
+      rows.push([
+        "Conversion Rate",
+        `${Number(leads.conversionRate || 0).toFixed(1)}%`,
+      ]);
+    }
+
+    // Lead status breakdown
+    if (byStatus) {
+      rows.push([]);
+      rows.push(["Lead Status Breakdown"]);
+      rows.push(["Status", "Count"]);
+      rows.push(["New", byStatus.new ?? 0]);
+      rows.push(["Contacted", byStatus.contacted ?? 0]);
+      rows.push(["Qualified", byStatus.qualified ?? 0]);
+      rows.push(["Converted", byStatus.converted ?? 0]);
+      rows.push(["Lost", byStatus.lost ?? 0]);
+    }
+
+    // Lead sources (aggregated from owner leads by .source)
+    if (leadSources.length > 0) {
+      rows.push([]);
+      rows.push(["Lead Sources"]);
+      rows.push(["Source", "Count", "Percentage"]);
+      leadSources.forEach((s) => {
+        rows.push([s.name, s.value, s.percentage]);
+      });
+    }
+
+    // Activity by day
+    const events = activity?.eventsByDay || [];
+    if (events.length > 0) {
+      rows.push([]);
+      rows.push(["Activity By Day"]);
+      rows.push(["Date", "Events"]);
+      events.forEach((d) => {
+        rows.push([d.date, d.count ?? 0]);
+      });
+    }
+
+    downloadCsv("analytics-export.csv", rows);
+  }
+
   const infoStyle = {
     display: "flex",
     alignItems: "center",
@@ -337,10 +394,10 @@ export default function CortexaAnalyticsDashboard() {
             <ChevronDown size={14} className="select-arrow" />
           </div>
 
-          <button className="btn-secondary">
+          <button className="btn-secondary" onClick={exportData}>
             <Download size={15} /> Export
           </button>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={refresh}>
             <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
           </button>
         </div>
@@ -460,7 +517,10 @@ export default function CortexaAnalyticsDashboard() {
 
           {/* Footer Link */}
           <div className="card-footer-action">
-            <button className="btn-view-all">
+            <button
+              className="btn-view-all"
+              onClick={() => navigate("/dashboard/leads")}
+            >
               View all sources <ArrowRight size={14} />
             </button>
           </div>
@@ -523,7 +583,10 @@ export default function CortexaAnalyticsDashboard() {
               })}
             </div>
             <div className="funnel-footer">
-              <button className="btn-view-all">
+              <button
+                className="btn-view-all"
+                onClick={() => navigate("/dashboard/pipeline")}
+              >
                 View full pipeline <ArrowRight size={14} />
               </button>
             </div>
@@ -637,7 +700,10 @@ export default function CortexaAnalyticsDashboard() {
 
           {/* Footer Action Link */}
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button
+              className="btn-view-all"
+              onClick={() => navigate("/dashboard/whatsapp")}
+            >
               Open WhatsApp Workspace <ArrowRight size={14} />
             </button>
           </div>
@@ -680,7 +746,10 @@ export default function CortexaAnalyticsDashboard() {
             )}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button
+              className="btn-view-all"
+              onClick={() => navigate("/dashboard/pipeline")}
+            >
               View all reasons <ArrowRight size={14} />
             </button>
           </div>
@@ -734,7 +803,10 @@ export default function CortexaAnalyticsDashboard() {
             )}
           </div>
           <div className="funnel-footer">
-            <button className="btn-view-all">
+            <button
+              className="btn-view-all"
+              onClick={() => navigate("/dashboard/team")}
+            >
               View full team report <ArrowRight size={14} />
             </button>
           </div>
@@ -747,7 +819,10 @@ export default function CortexaAnalyticsDashboard() {
                 <Sparkles size={18} className="text-royal-blue" />
                 <h3>AI Revenue Insights</h3>
               </div>
-              <button className="btn-view-all">
+              <button
+                className="btn-view-all"
+                onClick={() => navigate("/dashboard/leads")}
+              >
                 View all insights <ArrowRight size={14} />
               </button>
             </div>
