@@ -1,8 +1,9 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import Landing from "./pages/landing/Landing";
 
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+import { trackEvent } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -317,11 +318,26 @@ function AppRoutes() {
   );
 }
 
+// Fire a page_view on every route change so Google Ads sees each page in this
+// single-page app. Without this the tag fires only once per visit, which makes
+// page-based retargeting audiences (e.g. pricing visitors) miss most people.
+function PageViewTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackEvent("page_view", {
+      page_path: location.pathname + location.search,
+      page_location: window.location.href,
+    });
+  }, [location.pathname, location.search]);
+  return null;
+}
+
 export default function App() {
     return (
         <ThemeProvider>
           <AuthProvider>
             <NotificationProvider>
+              <PageViewTracker />
               <AppRoutes />
               <NotificationToast />
             </NotificationProvider>
