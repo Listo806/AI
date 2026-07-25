@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -57,6 +57,13 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import {
+  getAnalyticsDashboard,
+  getDashboardSummary,
+  getActivityMetrics,
+  getOwnerLeads,
+} from "../../api/analyticsApi";
+
 import "./analytics.css";
 
 function money(value) {
@@ -66,239 +73,240 @@ function money(value) {
   return `$${amount.toLocaleString()}`;
 }
 
+/** Colors reused for the lead-source donut/legend */
+const SOURCE_COLORS = [
+  "#0ea5e9",
+  "#d946ef",
+  "#3b82f6",
+  "#f97316",
+  "#64748b",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+];
+
+const NO_DATA = "—";
+
+function rangeToDays(range) {
+  if (range === "today") return 1;
+  if (range === "7d") return 7;
+  return 30;
+}
+
+function periodLabel(range) {
+  if (range === "today") return "Today";
+  if (range === "7d") return "Last 7 days";
+  return "Last 30 days";
+}
+
+function dateRangeLabel(range) {
+  const days = rangeToDays(range);
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  const opts = { month: "short", day: "numeric" };
+  return `${start.toLocaleDateString("en-US", opts)} – ${end.toLocaleDateString(
+    "en-US",
+    opts
+  )}, ${end.getFullYear()}`;
+}
+
+function shortDate(value) {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
 export default function CortexaAnalyticsDashboard() {
+  const [range, setRange] = useState("30d");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [dash, setDash] = useState(null); // getAnalyticsDashboard(range)
+  const [summary, setSummary] = useState(null); // getDashboardSummary()
+  const [activity, setActivity] = useState(null); // getActivityMetrics(range)
+  const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – for lead-source aggregation
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [dashRes, summaryRes, activityRes] = await Promise.all([
+          getAnalyticsDashboard(range),
+          getDashboardSummary(),
+          getActivityMetrics(range),
+        ]);
+        if (cancelled) return;
+        setDash(dashRes || null);
+        setSummary(summaryRes || null);
+        setActivity(activityRes || null);
+
+        // Owner leads require CRM access and may be forbidden – never let it break the page.
+        try {
+          const leads = await getOwnerLeads(500);
+          if (!cancelled) setLeadsList(Array.isArray(leads) ? leads : []);
+        } catch (_e) {
+          if (!cancelled) setLeadsList([]);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e?.message || "Failed to load analytics data.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [range]);
+
+  // ---- Derived data (real backend fields with safe fallbacks) ----
+  const leads = dash?.leads || null;
+  const byStatus = leads?.byStatus || null;
+  const metrics = summary?.data?.metrics || null; // { leads_total, leads_new, leads_active, leads_closed, conversations_total, conversations_unread, ai_actions_today }
+  const totalLeads = leads?.total ?? 0;
+  const label = periodLabel(range);
+
   const kpisRow1 = [
     {
       title: "Projected Revenue",
-      value: "$2.48M",
-      delta: "18.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
+      value: NO_DATA, // no backend source (no revenue/deal-value field)
+      delta: null,
+      subtext: label,
       icon: DollarSign,
       iconBg: "bg-green-light",
       iconColor: "text-green-strong",
     },
     {
       title: "New Leads",
-      value: "248",
-      delta: "15.7%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
+      value: leads ? String(leads.created ?? 0) : NO_DATA, // leads.created (in period)
+      delta: null,
+      subtext: label,
       icon: User,
       iconBg: "bg-blue-light",
       iconColor: "text-blue-strong",
     },
     {
       title: "Conversion Rate",
-      value: "21.8%",
-      delta: "3.2%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
+      value: leads ? `${Number(leads.conversionRate || 0).toFixed(1)}%` : NO_DATA, // leads.conversionRate
+      delta: null,
+      subtext: label,
       icon: Filter,
       iconBg: "bg-cyan-light",
       iconColor: "text-cyan-strong",
     },
     {
       title: "Appointments Booked",
-      value: "148",
-      delta: "16.4%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
+      value: NO_DATA, // no backend source
+      delta: null,
+      subtext: label,
       icon: CalendarCheck,
       iconBg: "bg-pink-light",
       iconColor: "text-pink-strong",
     },
     {
       title: "Avg Speed to Lead",
-      value: "2m 34s",
-      delta: "8.6%",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
+      value: NO_DATA, // no backend source
+      delta: null,
+      subtext: label,
       icon: Timer,
       iconBg: "bg-orange-light",
       iconColor: "text-orange-strong",
     },
     {
       title: "Avg Time to Close",
-      value: "18 Days",
-      delta: "4 days",
-      type: "down-good",
-      subtext: "vs May 5 – May 11",
+      value: NO_DATA, // no backend source (averageTimeToConvert not returned)
+      delta: null,
+      subtext: label,
       icon: Clock,
       iconBg: "bg-red-light",
       iconColor: "text-red-strong",
     },
     {
       title: "Pipeline Value",
-      value: "$5.72M",
-      delta: "12.1%",
-      type: "up-good",
-      subtext: "vs May 5 – May 11",
+      value: NO_DATA, // no backend source (no pipeline/deal-value field)
+      delta: null,
+      subtext: label,
       icon: PieChartIcon,
       iconBg: "bg-blue-light",
       iconColor: "text-blue-strong",
     },
     {
       title: "Follow-Up Completion",
-      value: "68%",
-      delta: "9.3%",
-      type: "up-good", 
-      subtext: "vs May 5 – May 11",
+      value: leads
+        ? totalLeads > 0
+          ? `${Math.round(((byStatus?.contacted || 0) / totalLeads) * 100)}%`
+          : "0%"
+        : NO_DATA, // derived: contacted / total leads
+      delta: null,
+      subtext: label,
       icon: CheckCircle,
       iconBg: "bg-green-light",
       iconColor: "text-green-strong",
     },
   ];
 
-  const kpisRow2 = [
-    {
-      title: "Ad Spend",
-      value: "$53,420",
-      delta: "6.2%",
-      positive: true,
-      subtext: "Total campaign spend",
-      icon: Megaphone,
-      iconColor: "text-blue-spend",
-      iconBg: "bg-blue-light",
-    },
-    {
-      title: "Cost Per Lead",
-      value: "$12.48",
-      delta: "8.5%",
-      positive: false,
-      subtext: "Average CPL",
-      icon: Target,
-      iconColor: "text-red-cpl",
-      iconBg: "bg-red-light",
-    },
-    {
-      title: "Cost Per Appointment",
-      value: "$48.21",
-      delta: "5.1%",
-      positive: true,
-      subtext: "Cost to book a showing",
-      icon: Calendar,
-      iconColor: "text-purple-cpa",
-      iconBg: "bg-purple-light",
-    },
-    {
-      title: "Cost Per Closing",
-      value: "$342.65",
-      delta: "7.7%",
-      positive: true,
-      subtext: "Cost to close a deal",
-      icon: DollarSign,
-      iconColor: "text-darkblue-cpc",
-      iconBg: "bg-cyan-light",
-    },
-  ];
+  // Lead Source Intelligence – aggregate real owner leads by `source`
+  const sourceAgg = {};
+  (leadsList || []).forEach((l) => {
+    const src = (l?.source && String(l.source).trim()) || "Unknown";
+    sourceAgg[src] = (sourceAgg[src] || 0) + 1;
+  });
+  const totalSourceLeads = (leadsList || []).length;
+  const leadSources = Object.entries(sourceAgg)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value], i) => ({
+      name,
+      value,
+      percentage: totalSourceLeads
+        ? `${((value / totalSourceLeads) * 100).toFixed(1)}%`
+        : "0%",
+      fill: SOURCE_COLORS[i % SOURCE_COLORS.length],
+    }));
 
-  const revenueTrend = [
-    { month: "Jan", revenue: 180000 },
-    { month: "Feb", revenue: 240000 },
-    { month: "Mar", revenue: 210000 },
-    { month: "Apr", revenue: 310000 },
-    { month: "May", revenue: 510000 },
-    { month: "Jun", revenue: 600000 },
-  ];
+  // Pipeline Leakage – real lead funnel from leads.byStatus
+  const pipelineStages = leads
+    ? [
+        { name: "Leads", count: totalLeads },
+        { name: "Contacted", count: byStatus?.contacted || 0 },
+        { name: "Qualified", count: byStatus?.qualified || 0 },
+        { name: "Converted", count: byStatus?.converted || 0 },
+        { name: "Lost", count: byStatus?.lost || 0 },
+      ]
+    : [];
+  const funnelMax = Math.max(1, ...pipelineStages.map((s) => s.count));
 
-  const leadSources = [
-    { name: "WhatsApp", value: 96, percentage: "38.7%", fill: "#0ea5e9" },
-    { name: "Instagram", value: 52, percentage: "21.0%", fill: "#d946ef" },
-    { name: "Website", value: 46, percentage: "18.5%", fill: "#3b82f6" },
-    { name: "Marketplace", value: 28, percentage: "11.3%", fill: "#f97316" },
-    { name: "Referrals", value: 26, percentage: "10.5%", fill: "#64748b" },
-  ];
+  // Activity over time – real activity.eventsByDay (feeds the area chart)
+  const activityData = (activity?.eventsByDay || []).map((d) => ({
+    day: shortDate(d.date),
+    conversations: d.count,
+  }));
 
-  const pipelineStages = [
-    { name: "Leeds", count: 218, conversion: "156%", drop: "-" },
-    { name: "Qualified", count: 218, conversion: "68%", drop: "-32%" },
-    { name: "Showings", count: 216, conversion: "37%", drop: "-32%" },
-    { name: "Offers", count: 54, conversion: "17%", drop: "-22%" },
-    { name: "Closings", count: 16, conversion: "6%", drop: "-11%" },
-  ];
+  // No backend source for these – kept empty (graceful empty state)
+  const lostReasons = [];
+  const teamPerformance = [];
 
-  const aiPerformance = [
-    { day: "Mon", replies: 42, appointments: 8 },
-    { day: "Tue", replies: 51, appointments: 11 },
-    { day: "Wed", replies: 67, appointments: 15 },
-    { day: "Thu", replies: 74, appointments: 18 },
-    { day: "Fri", replies: 83, appointments: 21 },
-    { day: "Sat", replies: 58, appointments: 12 },
-    { day: "Sun", replies: 63, appointments: 14 },
-  ];
+  const infoStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 13,
+    color: "#64748b",
+    padding: "8px 0",
+    margin: "0 0 8px",
+  };
+  const errorStyle = { ...infoStyle, color: "#dc2626" };
+  const emptyStyle = {
+    fontSize: 12,
+    color: "#94a3b8",
+    padding: "12px 0",
+    textAlign: "center",
+  };
 
-  const lostReasons = [
-    { reason: "No response", count: 42, percentage: 28, width: "85%" },
-    { reason: "Price too high", count: 31, percentage: 20, width: "65%" },
-    { reason: "Wrong location", count: 22, percentage: 15, width: "45%" },
-    { reason: "Financing issue", count: 18, percentage: 12, width: "35%" },
-    { reason: "Bought elsewhere", count: 15, percentage: 10, width: "30%" },
-    { reason: "Not qualified", count: 12, percentage: 8, width: "20%" },
-    {
-      reason: "Agent did not follow up",
-      count: 10,
-      percentage: 7,
-      width: "15%",
-    },
-  ];
-
-  const teamPerformance = [
-    {
-      name: "Sofia Reyes",
-      rate: "27%",
-      time: "5m",
-      deals: 18,
-      revenue: "$640,000",
-      color: "bg-green-strong",
-      width: "80%",
-    },
-    {
-      name: "Carlos Vega",
-      rate: "27%",
-      time: "4m",
-      deals: 14,
-      revenue: "$450,000",
-      color: "bg-green-strong",
-      width: "70%",
-    },
-    {
-      name: "Maria Lopez",
-      rate: "24%",
-      time: "5m",
-      deals: 11,
-      revenue: "$310,000",
-      color: "bg-green-strong",
-      width: "60%",
-    },
-    {
-      name: "Diego Ruiz",
-      rate: "21%",
-      time: "6m",
-      deals: 9,
-      revenue: "$270,000",
-      color: "bg-green-strong",
-      width: "50%",
-    },
-    {
-      name: "Ana Torres",
-      rate: "19%",
-      time: "8m",
-      deals: 7,
-      revenue: "$210,000",
-      color: "bg-green-strong",
-      width: "40%",
-    },
-  ];
-  const whatsappChartData = [
-    { day: "Mon", conversations: 34 },
-    { day: "Tue", conversations: 49 },
-    { day: "Wed", conversations: 44 },
-    { day: "Thu", conversations: 55 },
-    { day: "Fri", conversations: 78 },
-    { day: "Sat", conversations: 69 },
-    { day: "Sun", conversations: 84 },
-  ];
   return (
     <div className="analytics-page">
       <div className="heading_page">
@@ -312,13 +320,19 @@ export default function CortexaAnalyticsDashboard() {
       <header className="main-header">
         <div className="header-controls">
           <div className="date-picker-wrapper">
-            <span>May 12 – May 18, 2025</span>
+            <span>{dateRangeLabel(range)}</span>
             <Calendar size={16} className="text-gray-icon" />
           </div>
 
           <div className="select-wrapper">
-            <select className="control-select">
-              <option>vs Previous Period</option>
+            <select
+              className="control-select"
+              value={range}
+              onChange={(e) => setRange(e.target.value)}
+            >
+              <option value="today">Today</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
             </select>
             <ChevronDown size={14} className="select-arrow" />
           </div>
@@ -332,12 +346,24 @@ export default function CortexaAnalyticsDashboard() {
         </div>
       </header>
 
+      {loading && (
+        <div style={infoStyle}>
+          <RefreshCw size={14} /> Loading analytics…
+        </div>
+      )}
+      {error && (
+        <div style={errorStyle}>
+          <AlertTriangle size={14} /> {error}
+        </div>
+      )}
+
       {/* KPI ROW 1 */}
       <div className="kpi-grid-row1">
         {kpisRow1.map((kpi, i) => {
           const Icon = kpi.icon;
 
-          const isUp = kpi.type.startsWith("up");
+          const hasDelta = kpi.delta != null;
+          const isUp = kpi.type ? kpi.type.startsWith("up") : true;
           const arrow = isUp ? "↑" : "↓";
 
           const badgeClass = "kpi-badge pos";
@@ -356,7 +382,7 @@ export default function CortexaAnalyticsDashboard() {
                 <span className="kpi-value">{kpi.value}</span>
                 <div className="kpi-footer-meta">
                   <span className={badgeClass}>
-                    {arrow} {kpi.delta}
+                    {hasDelta ? `${arrow} ${kpi.delta}` : NO_DATA}
                   </span>
                   <span className="kpi-subtext">{kpi.subtext}</span>
                 </div>
@@ -368,7 +394,7 @@ export default function CortexaAnalyticsDashboard() {
 
       {/* ROW 3: REVENUE + LEAD SOURCE + PIPELINE LEAKAGE */}
       <div className="charts-grid-3col">
-        
+
         {/* Lead Source Intelligence */}
         <div className="dashboard-card">
           <div className="card-header">
@@ -404,27 +430,31 @@ export default function CortexaAnalyticsDashboard() {
               </ResponsiveContainer>
 
               <div className="donut-center-text">
-                <span className="total-number">248</span>
+                <span className="total-number">{totalSourceLeads}</span>
                 <span className="total-label">Total Leads</span>
               </div>
             </div>
 
             <div className="lead-source-list-v2">
-              {leadSources.map((src, i) => (
-                <div key={i} className="list-item-row-v2">
-                  <div className="src-name-dot">
-                    <span
-                      className="dot-indicator"
-                      style={{ backgroundColor: src.fill }}
-                    ></span>
-                    <span className="src-name">{src.name}</span>
+              {leadSources.length === 0 ? (
+                <span style={emptyStyle}>No lead source data</span>
+              ) : (
+                leadSources.map((src, i) => (
+                  <div key={i} className="list-item-row-v2">
+                    <div className="src-name-dot">
+                      <span
+                        className="dot-indicator"
+                        style={{ backgroundColor: src.fill }}
+                      ></span>
+                      <span className="src-name">{src.name}</span>
+                    </div>
+                    <div className="src-values">
+                      <span className="val-count">{src.value}</span>
+                      <span className="val-percent">({src.percentage})</span>
+                    </div>
                   </div>
-                  <div className="src-values">
-                    <span className="val-count">{src.value}</span>
-                    <span className="val-percent">({src.percentage})</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -457,7 +487,16 @@ export default function CortexaAnalyticsDashboard() {
             </div>
             <div className="funnel-bars-container">
               {pipelineStages.map((stage, i) => {
-                const widths = ["100%", "100%", "98%", "35%", "12%"];
+                const width = `${Math.round((stage.count / funnelMax) * 100)}%`;
+                const conversion =
+                  totalLeads > 0
+                    ? `${Math.round((stage.count / totalLeads) * 100)}%`
+                    : "0%";
+                const prev = i > 0 ? pipelineStages[i - 1].count : null;
+                const drop =
+                  i > 0 && prev > 0
+                    ? `${Math.round(((stage.count - prev) / prev) * 100)}%`
+                    : "-";
                 return (
                   <div key={i} className="funnel-row">
                     <div className="funnel-label-bar">
@@ -466,18 +505,18 @@ export default function CortexaAnalyticsDashboard() {
                         <div
                           className="funnel-bar-fill"
                           style={{
-                            width: widths[i],
+                            width: width,
                             backgroundColor: i === 4 ? "#2563eb" : "#2563eb",
                           }}
                         ></div>
                       </div>
                       <span className="stage-count">{stage.count}</span>
                     </div>
-                    <span className="funnel-percent">{stage.conversion}</span>
+                    <span className="funnel-percent">{conversion}</span>
                     <span
-                      className={`funnel-drop ${stage.drop !== "-" ? "text-red-strong" : "text-gray-400"}`}
+                      className={`funnel-drop ${drop !== "-" ? "text-red-strong" : "text-gray-400"}`}
                     >
-                      {stage.drop}
+                      {drop}
                     </span>
                   </div>
                 );
@@ -504,86 +543,94 @@ export default function CortexaAnalyticsDashboard() {
           </p>
           <div className="wa-analytics-layout">
             <div className="wa-chart-container">
-              <ResponsiveContainer width="100%" height={180}>
-                <AreaChart
-                  data={whatsappChartData}
-                  margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="colorConversations"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor="#10b981"
-                        stopOpacity={0.15}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="#10b981"
-                        stopOpacity={0.01}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                  />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#64748b", fontSize: 11 }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="conversations"
-                    stroke="#10b981"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#colorConversations)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {activityData.length === 0 ? (
+                <div style={{ ...emptyStyle, height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  No activity in this period
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={180}>
+                  <AreaChart
+                    data={activityData}
+                    margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorConversations"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.15}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0.01}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
+                    />
+                    <Tooltip />
+                    <Area
+                      type="monotone"
+                      dataKey="conversations"
+                      stroke="#10b981"
+                      strokeWidth={2.5}
+                      fillOpacity={1}
+                      fill="url(#colorConversations)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             <div className="wa-metrics-grid">
-              {/* Card 1 */}
+              {/* Card 1 – real summary metric: conversations_total */}
               <div className="wa-metric-card">
                 <span className="metric-title">Conversations</span>
-                <span className="metric-value">246</span>
-                <span className="metric-badge pos">↑ 14.6%</span>
+                <span className="metric-value">
+                  {metrics ? metrics.conversations_total ?? 0 : NO_DATA}
+                </span>
+                <span className="metric-badge pos">{NO_DATA}</span>
               </div>
 
-              {/* Card 2 */}
+              {/* Card 2 – no backend source */}
               <div className="wa-metric-card">
                 <span className="metric-title">Replies Sent</span>
-                <span className="metric-value">382</span>
-                <span className="metric-badge pos">↑ 12.1%</span>
+                <span className="metric-value">{NO_DATA}</span>
+                <span className="metric-badge pos">{NO_DATA}</span>
               </div>
 
-              {/* Card 3 */}
+              {/* Card 3 – no backend source */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Replies This Period</span>
-                <span className="metric-value">438</span>
+                <span className="metric-value">{NO_DATA}</span>
               </div>
 
-              {/* Card 4 */}
+              {/* Card 4 – no backend source */}
               <div className="wa-metric-card no-badge">
                 <span className="metric-title">Appointments Booked</span>
-                <span className="metric-value">101</span>
+                <span className="metric-value">{NO_DATA}</span>
               </div>
             </div>
           </div>
@@ -615,18 +662,22 @@ export default function CortexaAnalyticsDashboard() {
               <span className="text-right">Last Deals</span>
               <span className="text-right">% of Total</span>
             </div>
-            {lostReasons.map((item, i) => (
-              <div key={i} className="lost-item-row">
-                <span className="reason-text">{item.reason}</span>
-                <div className="reason-progress-bar">
-                  <div className="bar-fill" style={{ width: item.width }}></div>
+            {lostReasons.length === 0 ? (
+              <span style={emptyStyle}>No data available</span>
+            ) : (
+              lostReasons.map((item, i) => (
+                <div key={i} className="lost-item-row">
+                  <span className="reason-text">{item.reason}</span>
+                  <div className="reason-progress-bar">
+                    <div className="bar-fill" style={{ width: item.width }}></div>
+                  </div>
+                  <span className="count-text font-semibold">{item.count}</span>
+                  <span className="percent-text font-semibold">
+                    {item.percentage}%
+                  </span>
                 </div>
-                <span className="count-text font-semibold">{item.count}</span>
-                <span className="percent-text font-semibold">
-                  {item.percentage}%
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           <div className="funnel-footer">
             <button className="btn-view-all">
@@ -652,31 +703,35 @@ export default function CortexaAnalyticsDashboard() {
               <span>Deals</span>
               <span className="text-right">Revenue</span>
             </div>
-            {teamPerformance.map((agent, i) => (
-              <div key={i} className="team-item-row">
-                <span className="agent-name">
-                  <img
-                    src="https://i.pravatar.cc/150"
-                    className="team-avatar"
-                  />
-                  <span>{agent.name}</span>
-                </span>
-                <div className="rate-progress-wrapper">
-                  <span className="rate-val font-semibold">{agent.rate}</span>
-                  <div className="mini-progress-bg">
-                    <div
-                      className={`mini-progress-fill ${agent.color}`}
-                      style={{ width: agent.width }}
-                    ></div>
+            {teamPerformance.length === 0 ? (
+              <span style={emptyStyle}>No data available</span>
+            ) : (
+              teamPerformance.map((agent, i) => (
+                <div key={i} className="team-item-row">
+                  <span className="agent-name">
+                    <img
+                      src="https://i.pravatar.cc/150"
+                      className="team-avatar"
+                    />
+                    <span>{agent.name}</span>
+                  </span>
+                  <div className="rate-progress-wrapper">
+                    <span className="rate-val font-semibold">{agent.rate}</span>
+                    <div className="mini-progress-bg">
+                      <div
+                        className={`mini-progress-fill ${agent.color}`}
+                        style={{ width: agent.width }}
+                      ></div>
+                    </div>
                   </div>
+                  <span className="time-val text-gray-400">{agent.time}</span>
+                  <span className="deals-val font-semibold">{agent.deals}</span>
+                  <span className="rev-val font-bold text-gray-800">
+                    {agent.revenue}
+                  </span>
                 </div>
-                <span className="time-val text-gray-400">{agent.time}</span>
-                <span className="deals-val font-semibold">{agent.deals}</span>
-                <span className="rev-val font-bold text-gray-800">
-                  {agent.revenue}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           <div className="funnel-footer">
             <button className="btn-view-all">
@@ -771,11 +826,11 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="forecast-metrics">
                 <div className="m-box">
-                  <h3>$1.25M</h3>
+                  <h3>{NO_DATA}</h3>
                 </div>
                 <p className="forecast-desc">Estimated revenue next 30 days</p>
                 <p className="top-opp">
-                  Top Opportunity: Conerotau Agortment – $420K
+                  Top Opportunity: {NO_DATA}
                 </p>
               </div>
 
