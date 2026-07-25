@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -54,6 +55,7 @@ import {
   getActivityMetrics,
   getOwnerLeads,
 } from "../../api/analyticsApi";
+import { downloadCsv } from "../../utils/helpers";
 
 import "./dashboard.css";
 
@@ -97,6 +99,7 @@ function relativeTime(value) {
 }
 
 export default function CortexaDashboard() {
+  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -115,10 +118,12 @@ export default function CortexaDashboard() {
   const [showFilters, setShowFilters] = useState(false);
 
   // ---- Data fetching (real backend) --------------------------------------
-  // Dashboard has no functional range selector in the UI, so we load the
-  // 30-day window the task specifies. `range` is kept in state so a filter
-  // can be wired later without restructuring the fetch.
-  const [range] = useState("30d");
+  // `range` is driven by the period selector in the header; changing it
+  // refetches. `refreshTick` lets action buttons (Run AI Review / Export
+  // drawer refresh) re-run the same load without changing the range.
+  const [range, setRange] = useState("30d");
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refresh = () => setRefreshTick((t) => t + 1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -163,7 +168,7 @@ export default function CortexaDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [range]);
+  }, [range, refreshTick]);
 
   // ---- Derived data (real fields, honest fallbacks) ----------------------
   const leads = dash?.leads || null;
@@ -423,6 +428,46 @@ export default function CortexaDashboard() {
   const bannerNewLeads =
     metrics?.leads_new ?? byStatus?.new ?? leads?.created ?? null;
 
+  // Export the real, loaded dashboard data to CSV (KPIs, lead-status
+  // breakdown, lead sources, activity-by-day). No fabricated values.
+  const exportData = () => {
+    const rows = [];
+    rows.push(["Cortexa Dashboard Export"]);
+    rows.push(["Period", period]);
+    rows.push(["Generated", new Date().toISOString()]);
+    rows.push([]);
+
+    rows.push(["KPI", "Value", "Window"]);
+    [...miniKpis, ...secondaryKpis].forEach((k) =>
+      rows.push([k.title, k.value, k.intime || ""]),
+    );
+    rows.push([]);
+
+    rows.push(["Lead Status", "Count"]);
+    if (byStatus) {
+      rows.push(["Total", totalLeads]);
+      rows.push(["New", byStatus.new || 0]);
+      rows.push(["Contacted", byStatus.contacted || 0]);
+      rows.push(["Qualified", byStatus.qualified || 0]);
+      rows.push(["Converted", byStatus.converted || 0]);
+      rows.push(["Lost", byStatus.lost || 0]);
+    } else {
+      rows.push(["No lead status data", ""]);
+    }
+    rows.push([]);
+
+    rows.push(["Lead Source", "Leads"]);
+    if (leadSources.length === 0) rows.push(["No lead source data", ""]);
+    leadSources.forEach((s) => rows.push([s.source, s.leads]));
+    rows.push([]);
+
+    rows.push(["Date", "Activity Events"]);
+    if (eventsByDay.length === 0) rows.push(["No activity in period", ""]);
+    eventsByDay.forEach((d) => rows.push([d.date, d.count]));
+
+    downloadCsv(`cortexa-dashboard-${range}.csv`, rows);
+  };
+
   const CustomXAxisTick = ({ x, y, payload }) => {
     const matchedSource = leadSources.find(
       (src) => src.source === payload.value,
@@ -466,8 +511,22 @@ export default function CortexaDashboard() {
             <>
               <div className="control-btn">
                 <Calendar size={15} />
-                <span>This Week</span>
-                <ChevronDown size={14} />
+                <select
+                  value={range}
+                  onChange={(e) => setRange(e.target.value)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    outline: "none",
+                    cursor: "pointer",
+                    font: "inherit",
+                    color: "inherit",
+                  }}
+                >
+                  <option value="today">Today</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d">Last 30 days</option>
+                </select>
               </div>
 
               <div className="control-btn">
@@ -484,7 +543,22 @@ export default function CortexaDashboard() {
             <>
               <div className="control-btn">
                 <Calendar size={15} />
-                <span>This Week</span>
+                <select
+                  value={range}
+                  onChange={(e) => setRange(e.target.value)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    outline: "none",
+                    cursor: "pointer",
+                    font: "inherit",
+                    color: "inherit",
+                  }}
+                >
+                  <option value="today">Today</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d">Last 30 days</option>
+                </select>
               </div>
 
               <div className="control-btn">
@@ -511,7 +585,11 @@ export default function CortexaDashboard() {
                 <ChevronDown size={14} />
               </div>
 
-              <div className="control-btn">
+              <div
+                className="control-btn"
+                onClick={() => setShowFilters(true)}
+                style={{ cursor: "pointer" }}
+              >
                 <SlidersHorizontal size={15} />
                 <span>Filters</span>
               </div>
@@ -521,7 +599,7 @@ export default function CortexaDashboard() {
                 <span className="notif-badge">8</span>
               </div>*/}
 
-              <button className="btn-export">
+              <button className="btn-export" onClick={exportData}>
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -530,7 +608,7 @@ export default function CortexaDashboard() {
           )}
         </div>
       </header>
-      {isMobile && showFilters && (
+      {showFilters && (
         <>
           <div
             className="filter-overlay"
@@ -568,7 +646,13 @@ export default function CortexaDashboard() {
                 <span>All Stages</span>
                 <ChevronDown size={14} />
               </div>
-              <button className="btn-export">
+              <button
+                className="btn-export"
+                onClick={() => {
+                  exportData();
+                  setShowFilters(false);
+                }}
+              >
                 <Download size={15} />
                 Export
                 <ChevronDown size={14} />
@@ -606,7 +690,11 @@ export default function CortexaDashboard() {
             </h2>
             <p>
               Next best action:{" "}
-              <span className="clickable-link">
+              <span
+                className="clickable-link"
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate("/dashboard/leads")}
+              >
                 follow up with your newest leads
               </span>
             </p>
@@ -675,16 +763,28 @@ export default function CortexaDashboard() {
             </div>
           </div>
           <div className="banner-action-row">
-            <button className="banner-btn text-dark">
+            <button
+              className="banner-btn text-dark"
+              onClick={() => navigate("/dashboard/leads")}
+            >
               <Phone size={16} /> Call
             </button>
-            <button className="banner-btn btn-whatsapp-color">
+            <button
+              className="banner-btn btn-whatsapp-color"
+              onClick={() => navigate("/dashboard/whatsapp")}
+            >
               <MessageCircle size={16} /> WhatsApp
             </button>
-            <button className="banner-btn btn-assign-color">
+            <button
+              className="banner-btn btn-assign-color"
+              onClick={() => navigate("/dashboard/team")}
+            >
               <Users size={16} /> Assign
             </button>
-            <button className="banner-btn btn-followup-color">
+            <button
+              className="banner-btn btn-followup-color"
+              onClick={() => navigate("/dashboard/leads")}
+            >
               <Calendar size={16} /> Follow-up
             </button>
           </div>
@@ -826,7 +926,11 @@ export default function CortexaDashboard() {
               <Target size={16} className="text-royal-blue" />
               <h3>Lead Source Performance</h3>
             </div>
-            <a href="#all-sources" className="card-text-link">
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/leads")}
+            >
               View All Sources →
             </a>
           </div>
@@ -911,7 +1015,11 @@ export default function CortexaDashboard() {
               <Zap size={16} className="text-orange" />
               <h3>AI Priority Queue</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/leads")}
+            >
               View All →
             </a>
           </div>
@@ -936,13 +1044,22 @@ export default function CortexaDashboard() {
                   <span className="meta-intent">{lead.intent}</span>
                   <span className="prob-badge">{lead.prob}</span>
                   <div className="action-icon-shortcuts">
-                    <button className="shortcut-btn black-btn">
+                    <button
+                      className="shortcut-btn black-btn"
+                      onClick={() => navigate("/dashboard/leads")}
+                    >
                       <Phone size={12} />
                     </button>
-                    <button className="shortcut-btn green-btn">
+                    <button
+                      className="shortcut-btn green-btn"
+                      onClick={() => navigate("/dashboard/whatsapp")}
+                    >
                       <MessageCircle size={12} />
                     </button>
-                    <button className="shortcut-btn white-btn">
+                    <button
+                      className="shortcut-btn white-btn"
+                      onClick={() => navigate("/dashboard/team")}
+                    >
                       <Users size={12} />
                     </button>
                   </div>
@@ -961,7 +1078,11 @@ export default function CortexaDashboard() {
               <AlertTriangle size={16} className="text-red" />
               <h3>Today's Revenue Risk</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/leads")}
+            >
               View All →
             </a>
           </div>
@@ -984,7 +1105,11 @@ export default function CortexaDashboard() {
               <ShieldCheck size={16} className="text-royal-blue" />
               <h3>Live AI Tracking</h3>
             </div>
-            <a href="#view-all" className="card-text-link">
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/whatsapp")}
+            >
               View All →
             </a>
           </div>
@@ -1010,7 +1135,11 @@ export default function CortexaDashboard() {
               <Briefcase size={16} className="text-royal-blue" />
               <h3>Active Deals by Stage</h3>
             </div>
-            <a href="#pipeline" className="card-text-link">
+            <a
+              className="card-text-link"
+              style={{ cursor: "pointer" }}
+              onClick={() => navigate("/dashboard/pipeline")}
+            >
               View Pipeline →
             </a>
           </div>
@@ -1190,7 +1319,11 @@ export default function CortexaDashboard() {
                 <h3 className="text-red">{hasLeads ? urgentCount : NO_DATA}</h3>
               </div>
             </div>
-            <button className="btn-run-analysis">
+            <button
+              className="btn-run-analysis"
+              onClick={refresh}
+              disabled={loading}
+            >
               Run AI Dashboard Review <Zap size={14} fill="currentColor" />
             </button>
           </div>
