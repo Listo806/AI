@@ -166,7 +166,7 @@ export default function LandingMobile() {
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
       ctaButtonText: "Start Your Free Trial",
-      underCTA: "No payment today. No card required.",
+      underCTA: "One-time setup fee: $97",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -423,7 +423,7 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
       ctaButtonText: "Comienza Tu Prueba Gratis",
-      underCTA: "Hoy no se cobra nada. No se requiere tarjeta.",
+      underCTA: "Tarifa única de configuración: $97",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -682,7 +682,7 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
       ctaButtonText: "Comece Seu Teste Grátis",
-      underCTA: "Nenhum pagamento hoje. Nenhum cartão necessário.",
+      underCTA: "Taxa única de configuração: $97",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
