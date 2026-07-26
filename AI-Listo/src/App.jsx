@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import Landing from "./pages/landing/Landing";
 
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
-import { trackEvent } from "./utils/track";
+import { trackEvent, initAnalytics } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -324,6 +324,9 @@ function AppRoutes() {
 function PageViewTracker() {
   const location = useLocation();
   useEffect(() => {
+    // Configure GA4 once (no-op until a Measurement ID is set), then record the
+    // page view for both GA4 (funnel analysis) and Google Ads (audiences).
+    initAnalytics();
     trackEvent("page_view", {
       page_path: location.pathname + location.search,
       page_location: window.location.href,

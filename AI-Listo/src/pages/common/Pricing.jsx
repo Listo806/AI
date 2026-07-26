@@ -3,6 +3,7 @@ import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import "./Common.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+import { trackEvent } from "../../utils/track";
 import {
   Menu,
   X,
@@ -968,6 +969,7 @@ export default function PricingPage() {
               <Link
                 to="/trial?plan=solo"
                 className="cx-plans-btn"
+                onClick={() => trackEvent("choose_plan_click", { plan: "solo" })}
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </Link>
@@ -1012,6 +1014,7 @@ export default function PricingPage() {
               <Link
                 to="/trial?plan=team"
                 className="cx-plans-btn"
+                onClick={() => trackEvent("choose_plan_click", { plan: "team" })}
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </Link>
@@ -1055,6 +1058,7 @@ export default function PricingPage() {
               <Link
                 to="/trial?plan=growth"
                 className="cx-plans-btn"
+                onClick={() => trackEvent("choose_plan_click", { plan: "growth" })}
               >
                 <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
               </Link>

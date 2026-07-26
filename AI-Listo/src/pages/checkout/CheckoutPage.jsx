@@ -9,7 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
-import { trackEvent } from "../../utils/track";
+import { trackEvent, trackAdsConversion, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import "./CheckoutPage.css";
 
@@ -20,10 +20,12 @@ import "./CheckoutPage.css";
 const API_BASE = "https://backend.cortexaaicrm.com";
 const SETUP_FEE = 97;
 
-// Google Ads purchase conversion. Reusing the existing conversion action for
-// now so purchases start counting immediately; swap this for a dedicated
-// Purchase label when the client provides one from Google Ads.
-const PURCHASE_CONVERSION_SEND_TO = "AW-17836518151/z4trCLizpNgbEIfWjrlC";
+// Dedicated Purchase conversion action. Set VITE_ADS_PURCHASE_CONVERSION to a
+// dedicated "Purchase" action ("AW-XXXX/label") once it is created in Google
+// Ads; until then it falls back to the shared action so purchases keep counting.
+const PURCHASE_CONVERSION_SEND_TO =
+  import.meta.env.VITE_ADS_PURCHASE_CONVERSION ||
+  "AW-17836518151/z4trCLizpNgbEIfWjrlC";
 
 const PLAN_DATA = {
   solo: { price: 197, users: 1 },
@@ -200,6 +202,11 @@ export default function CheckoutPage() {
     acceptedTermsRef.current = acceptedTerms;
   }, [acceptedTerms]);
 
+  // Funnel: record that the checkout / plan-review page was viewed.
+  useEffect(() => {
+    trackEvent("checkout_view", { plan: selectedPlan });
+  }, [selectedPlan]);
+
   const usersText =
     plan.users === 1
       ? tr.userCount.one
@@ -250,6 +257,8 @@ export default function CheckoutPage() {
           },
           // Block the flow until terms are accepted and an account exists.
           onClick: (data, actions) => {
+            // Funnel: customer clicked the PayPal button.
+            trackEvent("paypal_button_click", { plan: selectedPlan });
             if (!acceptedTermsRef.current) {
               alert(tr.validation.terms);
               return actions.reject();
@@ -261,6 +270,8 @@ export default function CheckoutPage() {
               navigate(`/trial?plan=${encodeURIComponent(selectedPlan)}`);
               return actions.reject();
             }
+            // Funnel: validation passed, the PayPal checkout is opening.
+            trackEvent("paypal_checkout_started", { plan: selectedPlan });
             return actions.resolve();
           },
           createSubscription: (data, actions) =>
@@ -289,17 +300,17 @@ export default function CheckoutPage() {
                 setProcessing(false);
                 return;
               }
+              // Enhanced Conversions: pass the customer's contact info so Google
+              // Ads can match this purchase to the ad click (gtag hashes it).
+              setUserData({ email: customer.email, phone: customer.phone });
               // Google Ads: count the completed $97 purchase as a conversion.
-              if (typeof window.gtag === "function") {
-                window.gtag("event", "conversion", {
-                  send_to: PURCHASE_CONVERSION_SEND_TO,
-                  value: SETUP_FEE,
-                  currency: "USD",
-                  transaction_id: data.subscriptionID,
-                });
-              }
-              // Retargeting: trial activated (paid). Used to exclude these
-              // customers from acquisition retargeting audiences.
+              trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+                value: SETUP_FEE,
+                currency: "USD",
+                transaction_id: data.subscriptionID,
+              });
+              // Funnel + retargeting: trial activated (paid). Used to exclude
+              // these customers from acquisition retargeting audiences.
               trackEvent("trial_activated", {
                 plan: selectedPlan,
                 value: SETUP_FEE,
@@ -314,6 +325,8 @@ export default function CheckoutPage() {
           },
           onError: (err) => {
             console.error("PAYPAL ERROR:", err);
+            // Funnel: PayPal checkout errored (helps quantify checkout blocks).
+            trackEvent("paypal_checkout_error", { plan: selectedPlan });
             setErrorMsg(tr.validation.server);
           },
         })
