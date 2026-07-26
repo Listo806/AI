@@ -1320,20 +1320,30 @@ export class WhatsAppQrConversationService {
         `
   -- Average time from each inbound message to its NEXT outbound reply.
   -- (Pairing with only the next reply avoids the inflated cross-join average.)
+  -- Scoped to this user's team/conversations so it never averages in
+  -- other accounts' or old test data (mirrors the messageStats query above).
+  WITH scoped AS (
+    SELECT c.id
+    FROM whatsapp_qr_conversations c
+    INNER JOIN leads l ON l.id = c.lead_id
+    WHERE ${user.teamId ? "c.team_id = $1" : "c.user_id = $1"}
+  )
   SELECT COALESCE(ROUND(AVG(resp_sec)), 0) AS avg
   FROM (
     SELECT EXTRACT(EPOCH FROM (
       (SELECT MIN(a.created_at)
          FROM whatsapp_qr_messages a
-        WHERE a.conversation_id = l.conversation_id
+        WHERE a.conversation_id = m.conversation_id
           AND a.direction = 'outbound'
-          AND a.created_at > l.created_at) - l.created_at
+          AND a.created_at > m.created_at) - m.created_at
     )) AS resp_sec
-    FROM whatsapp_qr_messages l
-    WHERE l.direction = 'inbound'
+    FROM whatsapp_qr_messages m
+    WHERE m.direction = 'inbound'
+      AND m.conversation_id IN (SELECT id FROM scoped)
   ) t
   WHERE t.resp_sec IS NOT NULL
   `,
+        [user.teamId || user.id],
       )
       .catch(() => ({ rows: [{ avg: 0 }] }));
 
