@@ -1318,23 +1318,39 @@ export class WhatsAppQrConversationService {
     const avgResponseSeconds = await this.db
       .query(
         `
-  SELECT
-  COALESCE(
-      ROUND(AVG(
-        EXTRACT(EPOCH FROM (
-            agent.created_at - lead.created_at
-        ))
-      )),0
-  ) avg
-  FROM whatsapp_qr_messages lead
-  JOIN whatsapp_qr_messages agent
-       ON agent.conversation_id=lead.conversation_id
-      AND agent.direction='outbound'
-      AND lead.direction='inbound'
-      AND agent.created_at>lead.created_at
+  -- Average time from each inbound message to its NEXT outbound reply.
+  -- (Pairing with only the next reply avoids the inflated cross-join average.)
+  SELECT COALESCE(ROUND(AVG(resp_sec)), 0) AS avg
+  FROM (
+    SELECT EXTRACT(EPOCH FROM (
+      (SELECT MIN(a.created_at)
+         FROM whatsapp_qr_messages a
+        WHERE a.conversation_id = l.conversation_id
+          AND a.direction = 'outbound'
+          AND a.created_at > l.created_at) - l.created_at
+    )) AS resp_sec
+    FROM whatsapp_qr_messages l
+    WHERE l.direction = 'inbound'
+  ) t
+  WHERE t.resp_sec IS NOT NULL
   `,
       )
       .catch(() => ({ rows: [{ avg: 0 }] }));
+
+    // Format the average response time as a readable duration (e.g. "2m 5s").
+    const avgResponseSec = Math.round(
+      Number(avgResponseSeconds.rows[0]?.avg) || 0,
+    );
+    const avgResponseLabel =
+      avgResponseSec <= 0
+        ? '0s'
+        : avgResponseSec < 60
+          ? `${avgResponseSec}s`
+          : avgResponseSec < 3600
+            ? `${Math.floor(avgResponseSec / 60)}m ${avgResponseSec % 60}s`
+            : `${Math.floor(avgResponseSec / 3600)}h ${Math.floor(
+                (avgResponseSec % 3600) / 60,
+              )}m`;
 
     const stats = [
       {
@@ -1360,7 +1376,7 @@ export class WhatsAppQrConversationService {
       },
       {
         label: "Avg Response Time",
-        value: `${avgResponseSeconds.rows[0].avg || 0}s`,
+        value: avgResponseLabel,
         subtext: "AI + Human",
         className: "text-green",
         iconKey: "clock",
@@ -1392,7 +1408,7 @@ export class WhatsAppQrConversationService {
         human: humanHandled,
         conversationsToday: totalConversations,
         appointmentsToday: appointmentsBooked.rows[0].total,
-        averageResponseTime: `${avgResponseSeconds.rows[0].avg || 0}s`,
+        averageResponseTime: avgResponseLabel,
       },
     };
   }

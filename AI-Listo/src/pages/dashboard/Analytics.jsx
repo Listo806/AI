@@ -535,7 +535,7 @@ export default function CortexaAnalyticsDashboard() {
             </div>
           </div>
           <p className="card-subtitle">
-            Identtfy dently deals ine shopping in the pipeline
+            Identify where deals are dropping off in the pipeline
           </p>
 
           <div className="pipeline-funnel-wrapper">
