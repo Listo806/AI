@@ -64,6 +64,7 @@ import {
   getActivityMetrics,
   getOwnerLeads,
 } from "../../api/analyticsApi";
+import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
 
 import "./analytics.css";
@@ -131,6 +132,7 @@ export default function CortexaAnalyticsDashboard() {
   const [summary, setSummary] = useState(null); // getDashboardSummary()
   const [activity, setActivity] = useState(null); // getActivityMetrics(range)
   const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – for lead-source aggregation
+  const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +158,17 @@ export default function CortexaAnalyticsDashboard() {
         } catch (_e) {
           if (!cancelled) setLeadsList([]);
         }
+
+        // Team revenue/pipeline stats power the money KPIs. A user with no
+        // team (or a 403) must degrade those tiles to "—", never break the page.
+        try {
+          const teams = await fetchTeams();
+          const teamId = teams?.[0]?.id;
+          const teamDash = teamId ? await fetchTeamDashboard(teamId) : null;
+          if (!cancelled) setTeamStats(teamDash?.stats || null);
+        } catch (_e) {
+          if (!cancelled) setTeamStats(null);
+        }
       } catch (e) {
         if (!cancelled) setError(e?.message || "Failed to load analytics data.");
       } finally {
@@ -179,7 +192,7 @@ export default function CortexaAnalyticsDashboard() {
   const kpisRow1 = [
     {
       title: "Projected Revenue",
-      value: NO_DATA, // no backend source (no revenue/deal-value field)
+      value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
       delta: null,
       subtext: label,
       icon: DollarSign,
@@ -233,7 +246,7 @@ export default function CortexaAnalyticsDashboard() {
     },
     {
       title: "Pipeline Value",
-      value: NO_DATA, // no backend source (no pipeline/deal-value field)
+      value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
       delta: null,
       subtext: label,
       icon: PieChartIcon,
