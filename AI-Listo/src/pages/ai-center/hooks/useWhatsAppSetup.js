@@ -251,7 +251,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
     }
 
     if (!token) {
-      setError("Authentication token was not found. Please sign in again.");
+      //setError("Authentication token was not found. Please sign in again.");
 
       return;
     }

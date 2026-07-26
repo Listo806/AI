@@ -1039,7 +1039,13 @@ export default function LeadsPage() {
 
   const createLead = async (e) => {
     e.preventDefault();
-
+    if (
+      createLeadForm.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createLeadForm.email)
+    ) {
+      alert("Please enter a valid email address.");
+      return;
+    }
     try {
       await apiClient.request("/leads", {
         method: "POST",
@@ -3206,6 +3212,7 @@ export default function LeadsPage() {
                   <label>Email</label>
                   <input
                     type="email"
+                    required
                     value={createLeadForm.email}
                     onChange={(e) =>
                       setCreateLeadForm({
@@ -3219,6 +3226,7 @@ export default function LeadsPage() {
                 <div className="lead-form-field">
                   <label>Phone</label>
                   <input
+                    required
                     value={createLeadForm.phone}
                     onChange={(e) =>
                       setCreateLeadForm({
