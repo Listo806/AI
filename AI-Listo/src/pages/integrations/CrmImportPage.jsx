@@ -42,29 +42,22 @@ export default function CrmImportPage() {
 
       formData.append("file", selectedFile);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/integrations/crm-import/upload`,
+      // Route through apiClient so the request uses the correct base URL and
+      // the stored auth token (listo_access_token). apiClient drops the JSON
+      // Content-Type automatically for FormData bodies.
+      const data = await apiClient.request(
+        "/integrations/crm-import/upload",
         {
           method: "POST",
-
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem(
-              "token",
-            )}`,
-          },
-
           body: formData,
         },
       );
-
-      const data =
-        await response.json();
 
       setImportData(data);
 
       const initialMapping = {};
 
-      data.columns.forEach((column) => {
+      (data.columns || []).forEach((column) => {
         initialMapping[column] = "";
       });
 
