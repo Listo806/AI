@@ -1,43 +1,92 @@
+import { Trophy, TrendingUp, ArrowUpRight } from "lucide-react";
+
+import { useEffect, useState } from "react";
+
 import {
-  Trophy,
-  TrendingUp,
-  Clock3,
-  Target,
-  Sparkles,
-  ArrowUpRight,
-} from "lucide-react";
+  fetchTeamMembersDashboard,
+  fetchTeamDashboard,
+} from "./services/team.service";
+import { downloadCsv } from "../../utils/helpers";
+import useTeamDashboard from "./hooks/useTeamDashboard";
+
 import "./performance.css";
+
 export default function TeamPerformancePage() {
-  const topMembers = [
-    {
-      name: "Sarah Johnson",
-      role: "Sales Manager",
-      metric: "Top Performer",
-      value: "98%",
-      icon: Trophy,
-    },
-    {
-      name: "Michael Chen",
-      role: "Account Executive",
-      metric: "Fastest Response",
-      value: "2m",
-      icon: Clock3,
-    },
-    {
-      name: "Emma Davis",
-      role: "Closer",
-      metric: "Most Leads Closed",
-      value: "42",
-      icon: Target,
-    },
-    {
-      name: "Daniel Lee",
-      role: "Pipeline Owner",
-      metric: "Highest Pipeline",
-      value: "$84k",
-      icon: TrendingUp,
-    },
-  ];
+  const { selectedTeamId } = useTeamDashboard();
+
+  const [members, setMembers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!selectedTeamId) return;
+
+    async function loadPerformance() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [membersRes, dashboardRes] = await Promise.all([
+          fetchTeamMembersDashboard(selectedTeamId),
+          fetchTeamDashboard(selectedTeamId),
+        ]);
+
+        setMembers(
+          Array.isArray(membersRes) ? membersRes : membersRes?.data || [],
+        );
+        setStats(dashboardRes?.stats || null);
+      } catch (err) {
+        console.error("LOAD TEAM PERFORMANCE ERROR", err);
+        setError("Unable to load performance data. Please try again.");
+        setMembers([]);
+        setStats(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadPerformance();
+  }, [selectedTeamId]);
+
+  /* Real per-member leaderboard, ranked by the backend-computed AI score */
+  const leaders = [...members].sort(
+    (a, b) => Number(b.aiScore || 0) - Number(a.aiScore || 0),
+  );
+
+  /* AI Performance = average of the real per-member AI scores */
+  const avgAiScore = members.length
+    ? Math.round(
+        members.reduce((sum, m) => sum + Number(m.aiScore || 0), 0) /
+          members.length,
+      )
+    : null;
+
+  const handleExport = () => {
+    if (!leaders.length) return;
+
+    const headers = [
+      "Rank",
+      "Name",
+      "Role",
+      "Assigned Leads",
+      "Deals Won",
+      "Pipeline Value",
+      "AI Score",
+    ];
+
+    const rows = leaders.map((member, index) => [
+      index + 1,
+      member.name || "",
+      member.jobTitle || member.role || "",
+      member.totalLeads ?? 0,
+      member.dealsWon ?? 0,
+      member.pipelineValue ?? 0,
+      `${member.aiScore ?? 0}%`,
+    ]);
+
+    downloadCsv("team-performance.csv", [headers, ...rows]);
+  };
 
   return (
     <div className="team-performance-page">
@@ -47,10 +96,19 @@ export default function TeamPerformancePage() {
         <h1 className="team-page-title">Team Performance</h1>
       </div>
       <div className="team-performance-hero">
-        <button className="team-primary-btn">Export Report</button>
+        <button className="team-primary-btn" onClick={handleExport}>
+          Export Report
+        </button>
       </div>
 
       {/* STATS */}
+      {/*
+        Total Revenue and Deals Closed come from the real SQL aggregates in the
+        team dashboard stats (stats.revenue / stats.dealsWon). Avg Response has
+        no backend data, so it stays "—". AI Performance is the real average of
+        the per-member AI scores (stats.avgAIScore / conversionRate are
+        hardcoded in the backend, so they are intentionally NOT used).
+      */}
 
       <div className="team-performance-grid">
         <div className="team-performance-stat-card">
@@ -60,8 +118,10 @@ export default function TeamPerformancePage() {
             </div>
             <span>Total Revenue</span>
           </div>
-          <h2>$128,400</h2>
-          <p>+18% this month</p>
+          <h2>
+            {stats ? `$${Number(stats.revenue || 0).toLocaleString()}` : "—"}
+          </h2>
+          <p>Closed-won deal value</p>
         </div>
 
         <div className="team-performance-stat-card">
@@ -71,8 +131,8 @@ export default function TeamPerformancePage() {
             </div>
             <span>Deals Closed</span>
           </div>
-          <h2>214</h2>
-          <p>+9% this month</p>
+          <h2>{stats ? Number(stats.dealsWon || 0).toLocaleString() : "—"}</h2>
+          <p>Won deals to date</p>
         </div>
 
         <div className="team-performance-stat-card">
@@ -82,8 +142,8 @@ export default function TeamPerformancePage() {
             </div>
             <span>Avg Response</span>
           </div>
-          <h2>4m 21s</h2>
-          <p>Improved from last week</p>
+          <h2>—</h2>
+          <p>No response-time data available</p>
         </div>
 
         <div className="team-performance-stat-card">
@@ -93,8 +153,8 @@ export default function TeamPerformancePage() {
             </div>
             <span>AI Performance</span>
           </div>
-          <h2>92%</h2>
-          <p>Excellent engagement score</p>
+          <h2>{avgAiScore === null ? "—" : `${avgAiScore}%`}</h2>
+          <p>Average member AI score</p>
         </div>
       </div>
 
@@ -119,49 +179,68 @@ export default function TeamPerformancePage() {
           </div>
 
           <div className="team-performance-table-body">
-            {topMembers.map((member, index) => {
-              const Icon = member.icon;
+            {loading ? (
+              <div className="team-performance-row">
+                <div>Loading performance...</div>
+              </div>
+            ) : error ? (
+              <div className="team-performance-row">
+                <div>{error}</div>
+              </div>
+            ) : leaders.length === 0 ? (
+              <div className="team-performance-row">
+                <div>No performance data</div>
+              </div>
+            ) : (
+              leaders.map((member, index) => {
+                const Icon = index === 0 ? Trophy : TrendingUp;
 
-              return (
-                <div key={index} className="team-performance-row">
-                  {/* LEFT */}
+                return (
+                  <div
+                    key={member.id || index}
+                    className="team-performance-row"
+                  >
+                    {/* LEFT */}
 
-                  <div className="team-performance-member">
-                    <div className="team-performance-rank">#{index + 1}</div>
+                    <div className="team-performance-member">
+                      <div className="team-performance-rank">#{index + 1}</div>
 
-                    <div className="team-performance-avatar">
-                      <Icon size={18} />
-                    </div>
-
-                    <div>
-                      <div className="team-performance-member-name">
-                        {member.name}
+                      <div className="team-performance-avatar">
+                        <Icon size={18} />
                       </div>
 
-                      <div className="team-performance-member-role">
-                        {member.role}
+                      <div>
+                        <div className="team-performance-member-name">
+                          {member.name || "Unknown"}
+                        </div>
+
+                        <div className="team-performance-member-role">
+                          {member.jobTitle || member.role || "Member"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CENTER */}
+
+                    <div className="team-performance-metric-badge">
+                      {Number(member.totalLeads || 0)} leads
+                    </div>
+
+                    {/* RIGHT */}
+
+                    <div className="team-performance-score-wrapper">
+                      <div className="team-performance-score">
+                        {Number(member.aiScore || 0)}%
+                      </div>
+
+                      <div className="team-performance-arrow">
+                        <ArrowUpRight size={16} />
                       </div>
                     </div>
                   </div>
-
-                  {/* CENTER */}
-
-                  <div className="team-performance-metric-badge">
-                    {member.metric}
-                  </div>
-
-                  {/* RIGHT */}
-
-                  <div className="team-performance-score-wrapper">
-                    <div className="team-performance-score">{member.value}</div>
-
-                    <div className="team-performance-arrow">
-                      <ArrowUpRight size={16} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>

@@ -1,92 +1,128 @@
 import {
-  AlertTriangle,
   CheckCircle2,
   Bell,
   CreditCard,
-  Sparkles,
   UserPlus,
   UserMinus,
   ShieldAlert,
   ArrowUpRight,
 } from "lucide-react";
 
+import { useEffect, useState } from "react";
+
+import { fetchTeamNotifications } from "./services/team.service";
+import { formatTimeAgo } from "../../utils/helpers";
+import useTeamDashboard from "./hooks/useTeamDashboard";
+
 import "./notifications.css";
 
-const notifications = [
-  {
-    id: 1,
-    type: "team_created",
-    title: "New workspace created successfully",
-    description: "Marketing Growth Team was initialized",
-    time: "2 min ago",
-  },
+/* =====================================================
+  HELPERS
+===================================================== */
 
-  {
-    id: 2,
-    type: "member_added",
-    title: "New member joined the workspace",
-    description: "Emma Davis was invited to Sales Team",
-    time: "12 min ago",
-  },
+const formatType = (type) =>
+  String(type || "notification")
+    .replaceAll(".", " ")
+    .replaceAll("_", " ")
+    .trim();
 
-  {
-    id: 3,
-    type: "billing",
-    title: "Monthly subscription processed",
-    description: "Pro Team plan renewed successfully",
-    time: "1 hour ago",
-  },
+const matchesBilling = (item) => {
+  const type = String(item?.type || "").toLowerCase();
+  const category = String(item?.category || "").toLowerCase();
 
-  {
-    id: 4,
-    type: "member_removed",
-    title: "Member removed from workspace",
-    description: "Access permissions were revoked",
-    time: "3 hours ago",
-  },
+  return (
+    category === "billing" ||
+    type.includes("billing") ||
+    type.includes("seat") ||
+    type.includes("payment") ||
+    type.includes("subscription") ||
+    type.includes("invoice")
+  );
+};
 
-  {
-    id: 5,
-    type: "security",
-    title: "Security verification required",
-    description: "New login detected from another device",
-    time: "5 hours ago",
-  },
-];
+const matchesSecurity = (item) => {
+  const type = String(item?.type || "").toLowerCase();
+  const category = String(item?.category || "").toLowerCase();
 
-const notificationConfig = {
-  team_created: {
-    icon: CheckCircle2,
-    className: "success",
-  },
+  return (
+    category === "security" ||
+    type.includes("security") ||
+    type.includes("login") ||
+    type.includes("auth") ||
+    type.includes("password")
+  );
+};
 
-  member_added: {
-    icon: UserPlus,
-    className: "success",
-  },
+const getNotificationConfig = (item) => {
+  const type = String(item?.type || "").toLowerCase();
 
-  member_removed: {
-    icon: UserMinus,
-    className: "danger",
-  },
+  if (
+    type.includes("member_added") ||
+    type.includes("invited") ||
+    type.includes("joined")
+  ) {
+    return { icon: UserPlus, className: "success" };
+  }
 
-  billing: {
-    icon: CreditCard,
-    className: "billing",
-  },
+  if (
+    type.includes("member_removed") ||
+    type.includes("deactivated") ||
+    type.includes("removed")
+  ) {
+    return { icon: UserMinus, className: "danger" };
+  }
 
-  security: {
-    icon: ShieldAlert,
-    className: "warning",
-  },
+  if (matchesBilling(item)) {
+    return { icon: CreditCard, className: "billing" };
+  }
 
-  default: {
-    icon: Bell,
-    className: "info",
-  },
+  if (matchesSecurity(item)) {
+    return { icon: ShieldAlert, className: "warning" };
+  }
+
+  if (type.includes("created") || type.includes("success")) {
+    return { icon: CheckCircle2, className: "success" };
+  }
+
+  return { icon: Bell, className: "info" };
 };
 
 export default function TeamNotificationsPage() {
+  const { selectedTeamId } = useTeamDashboard();
+
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!selectedTeamId) return;
+
+    async function loadNotifications() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const res = await fetchTeamNotifications(selectedTeamId);
+
+        setNotifications(Array.isArray(res) ? res : res?.data || []);
+      } catch (err) {
+        console.error("LOAD TEAM NOTIFICATIONS ERROR", err);
+        setError("Unable to load notifications. Please try again.");
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadNotifications();
+  }, [selectedTeamId]);
+
+  /* Stat cards derived from the real fetched notifications */
+  const totalCount = notifications.length;
+  const unreadCount = notifications.filter((item) => !item.isRead).length;
+  const billingCount = notifications.filter(matchesBilling).length;
+  const securityCount = notifications.filter(matchesSecurity).length;
+
   return (
     <div className="team-notifications-page">
       {/* HEADER */}
@@ -94,32 +130,32 @@ export default function TeamNotificationsPage() {
         <Bell />
         <h1 className="team-page-title">Team Notifications</h1>
       </div>
-      
+
       {/* STATS */}
 
       <div className="team-notifications-stats">
         <div className="team-notifications-stat-card">
           <span>Total Notifications</span>
-          <h2>1,248</h2>
-          <p>+18% this week</p>
+          <h2>{totalCount}</h2>
+          <p>Recent notifications</p>
         </div>
 
         <div className="team-notifications-stat-card">
           <span>Unread Alerts</span>
-          <h2>18</h2>
+          <h2>{unreadCount}</h2>
           <p>Requires attention</p>
         </div>
 
         <div className="team-notifications-stat-card">
           <span>Billing Events</span>
-          <h2>42</h2>
-          <p>All payments successful</p>
+          <h2>{billingCount}</h2>
+          <p>Billing-related notifications</p>
         </div>
 
         <div className="team-notifications-stat-card">
           <span>Security Events</span>
-          <h2>3</h2>
-          <p>No suspicious activity</p>
+          <h2>{securityCount}</h2>
+          <p>Security-related notifications</p>
         </div>
       </div>
 
@@ -144,54 +180,81 @@ export default function TeamNotificationsPage() {
           </div>
 
           <div className="team-notifications-table-body">
-            {notifications.map((item) => {
-              const config =
-                notificationConfig[item.type] || notificationConfig.default;
+            {loading ? (
+              <div className="team-notifications-row">
+                <div>Loading notifications...</div>
+              </div>
+            ) : error ? (
+              <div className="team-notifications-row">
+                <div>{error}</div>
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="team-notifications-row">
+                <div>No notifications</div>
+              </div>
+            ) : (
+              notifications.map((item, index) => {
+                const config = getNotificationConfig(item);
+                const Icon = config.icon;
 
-              const Icon = config.icon;
-
-              return (
-                <div key={item.id} className="team-notifications-row">
-                  {/* LEFT */}
-
-                  <div className="team-notifications-main">
-                    <div
-                      className={`team-notifications-icon ${config.className}`}
-                    >
-                      <Icon size={18} />
-                    </div>
-
-                    <div>
-                      <div className="team-notifications-title">
-                        {item.title}
-                      </div>
-
-                      <div className="team-notifications-description">
-                        {item.description}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CATEGORY */}
-
+                return (
                   <div
-                    className={`team-notifications-badge ${config.className}`}
+                    key={item.id || index}
+                    className="team-notifications-row"
                   >
-                    {item.type.replaceAll("_", " ")}
-                  </div>
+                    {/* LEFT */}
 
-                  {/* TIME */}
+                    <div className="team-notifications-main">
+                      <div
+                        className={`team-notifications-icon ${config.className}`}
+                      >
+                        <Icon size={18} />
+                      </div>
 
-                  <div className="team-notifications-time">
-                    <span>{item.time}</span>
+                      <div>
+                        <div className="team-notifications-title">
+                          {!item.isRead && (
+                            <span
+                              style={{
+                                display: "inline-block",
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: "#3b82f6",
+                                marginRight: 8,
+                              }}
+                            />
+                          )}
+                          {item.title || formatType(item.type)}
+                        </div>
 
-                    <div className="team-notifications-arrow">
-                      <ArrowUpRight size={16} />
+                        <div className="team-notifications-description">
+                          {item.message || "No additional details"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CATEGORY */}
+
+                    <div
+                      className={`team-notifications-badge ${config.className}`}
+                    >
+                      {formatType(item.type)}
+                    </div>
+
+                    {/* TIME */}
+
+                    <div className="team-notifications-time">
+                      <span>{formatTimeAgo(item.createdAt)}</span>
+
+                      <div className="team-notifications-arrow">
+                        <ArrowUpRight size={16} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
