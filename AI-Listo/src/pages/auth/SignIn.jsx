@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Navigate } from "react-router-dom";
 import './Auth.css';
 import { Eye, EyeOff } from 'lucide-react';
+import { trackEvent } from '../../utils/track';
 
 const t = {
   en: {
@@ -101,6 +102,13 @@ export default function SignIn({ variant = 'crm' }) {
 
     try {
       await login(email, password);
+      // Funnel: successful login. Fire first_login once per device so the first
+      // login after signup is distinguishable from repeat logins.
+      if (!localStorage.getItem('listo_has_logged_in')) {
+        localStorage.setItem('listo_has_logged_in', '1');
+        trackEvent('first_login');
+      }
+      trackEvent('login');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {

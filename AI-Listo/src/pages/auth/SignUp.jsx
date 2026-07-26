@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
+import { trackEvent } from '../../utils/track';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
@@ -31,10 +32,16 @@ export default function SignUp() {
       if (res.accessToken) {
         apiClient.setTokens(res.accessToken, res.refreshToken);
         localStorage.setItem('listo_user', JSON.stringify(res.user));
-        // Google Ads conversion: fire only on a successful signup
+        // Funnel: account created via the marketplace signup form.
+        trackEvent('account_created');
+        // Google Ads sign-up conversion. Set VITE_ADS_SIGNUP_CONVERSION to a
+        // dedicated "Sign-up" action once created in Ads; falls back to the
+        // shared action until then.
         if (typeof window.gtag === 'function') {
           window.gtag('event', 'conversion', {
-            send_to: 'AW-17836518151/z4trCLizpNgbEIfWjrlC',
+            send_to:
+              import.meta.env.VITE_ADS_SIGNUP_CONVERSION ||
+              'AW-17836518151/z4trCLizpNgbEIfWjrlC',
             value: 67.0,
             currency: 'USD',
           });
