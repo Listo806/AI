@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
   UnauthorizedException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AppsIntegrationsService } from "./apps-integrations.service";
@@ -17,11 +18,6 @@ export class AppsIntegrationsController {
   constructor(private readonly service: AppsIntegrationsService) {}
 
   private getAuthData(req: any) {
-    /*
-     * DEBUG USER
-     */
-    console.log("REQ USER:", req.user);
-
     const teamId =
       req.user?.teamId ||
       req.user?.team_id ||
@@ -30,17 +26,12 @@ export class AppsIntegrationsController {
 
     const userId = req.user?.id || req.user?._id || req.user?.userId;
 
-    if (!teamId || !userId) {
-      console.log("REQ USER INVALID:", req.user);
+    if (!userId) {
+      throw new UnauthorizedException("Not authenticated");
+    }
 
-      /*
-       * TEMP DEV FALLBACK
-       * REMOVE IN PRODUCTION
-       */
-      return {
-        teamId: "4173a700-e25c-4d97-b556-4c2ac831d990",
-        userId: "9f5fd499-ead3-47ff-8d33-54c23ad0a7ab",
-      };
+    if (!teamId) {
+      throw new ForbiddenException("User must belong to a team");
     }
 
     return {
@@ -51,8 +42,6 @@ export class AppsIntegrationsController {
 
   @Get()
   async getAll(@Req() req: any) {
-    console.log("HEADERS:", req.headers);
-    console.log("REQ USER:", req.user);
     const { teamId, userId } = this.getAuthData(req);
 
     const integrations = await this.service.getAll(teamId, userId);

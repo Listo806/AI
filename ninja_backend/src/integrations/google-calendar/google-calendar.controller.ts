@@ -2,11 +2,14 @@ import {
   Controller,
   Get,
   Query,
+  Res,
   UseGuards,
   ForbiddenException,
 } from "@nestjs/common";
+import { Response } from "express";
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { Public } from "../../auth/decorators/public.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 import { GoogleCalendarService } from "./google-calendar.service";
@@ -37,14 +40,20 @@ export class GoogleCalendarController {
     );
   }
 
+  @Public()
   @Get("callback")
   async callback(
     @Query("code") code: string,
     @Query("state") state: string,
+    @Res() res: Response,
   ) {
-    return this.googleCalendarService.handleCallback(
+    await this.googleCalendarService.handleCallback(
       code,
       state,
+    );
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/dashboard/integrations?connected=google_calendar`,
     );
   }
 

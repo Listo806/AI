@@ -35,29 +35,22 @@ export default function CsvLeadImportPage() {
 
       formData.append("file", file);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/imports/csv-leads/upload`,
+      // Route through apiClient so the request uses the correct base URL and
+      // the stored auth token (listo_access_token). apiClient drops the JSON
+      // Content-Type automatically for FormData bodies.
+      const result = await apiClient.request(
+        "/imports/csv-leads/upload",
         {
           method: "POST",
-
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem(
-              "token",
-            )}`,
-          },
-
           body: formData,
         },
       );
-
-      const result =
-        await response.json();
 
       setData(result);
 
       const initial = {};
 
-      result.columns.forEach((c) => {
+      (result.columns || []).forEach((c) => {
         initial[c] = "";
       });
 
