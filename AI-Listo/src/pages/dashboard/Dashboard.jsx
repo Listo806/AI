@@ -55,12 +55,18 @@ import {
   getActivityMetrics,
   getOwnerLeads,
 } from "../../api/analyticsApi";
+import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
 
 import "./dashboard.css";
 
 /** Placeholder shown for any widget that has no honest backend source. */
 const NO_DATA = "—";
+
+/** Format a numeric amount as a plain currency string. */
+function money(v) {
+  return `$${Number(v || 0).toLocaleString()}`;
+}
 
 /** Palette reused for lead-source bars/dots. */
 const SOURCE_COLORS = [
@@ -131,6 +137,7 @@ export default function CortexaDashboard() {
   const [summary, setSummary] = useState(null); // getDashboardSummary()
   const [activity, setActivity] = useState(null); // getActivityMetrics(range)
   const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – CRM access only
+  const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +163,17 @@ export default function CortexaDashboard() {
           if (!cancelled) setLeadsList(Array.isArray(leads) ? leads : []);
         } catch (_e) {
           if (!cancelled) setLeadsList([]);
+        }
+
+        // Team revenue/pipeline stats power the money KPIs. A user with no
+        // team (or a 403) must degrade those tiles to "—", never break the page.
+        try {
+          const teams = await fetchTeams();
+          const teamId = teams?.[0]?.id;
+          const teamDash = teamId ? await fetchTeamDashboard(teamId) : null;
+          if (!cancelled) setTeamStats(teamDash?.stats || null);
+        } catch (_e) {
+          if (!cancelled) setTeamStats(null);
         }
       } catch (e) {
         if (!cancelled) setError(e?.message || "Failed to load dashboard data.");
@@ -205,16 +223,16 @@ export default function CortexaDashboard() {
     },
     {
       title: "Active Deals",
-      value: NO_DATA, // no deal-value source
-      subtext: "No deal-value data available",
+      value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
+      subtext: teamStats ? "Active pipeline value" : "No deal-value data available",
       icon: <Briefcase size={16} className="text-purple" />,
       iconBg: "bg-light-purple",
       intime: period,
     },
     {
       title: "Revenue",
-      value: NO_DATA, // no revenue source
-      subtext: "No revenue data available",
+      value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
+      subtext: teamStats ? "Revenue from won deals" : "No revenue data available",
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
       intime: period,
