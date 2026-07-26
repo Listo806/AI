@@ -5,20 +5,21 @@ import {
   Req,
   Post,
   Body,
+  Res,
   UseGuards,
   ForbiddenException,
 } from "@nestjs/common";
+import { Response } from "express";
 
 import { GoogleAdsService } from "./google-ads.service";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { Public } from "../../auth/decorators/public.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 @Controller("integrations/google-ads")
 @UseGuards(JwtAuthGuard)
 export class GoogleAdsController {
-  constructor(private readonly googleAdsService: GoogleAdsService) {
-    console.log("GoogleAdsController INIT");
-  }
+  constructor(private readonly googleAdsService: GoogleAdsService) {}
 
   private requireTeam(user: any): string {
     if (!user?.teamId) {
@@ -55,13 +56,20 @@ export class GoogleAdsController {
    |------------------------------------------------------------------
    */
 
+  @Public()
   @Get("callback")
   async callback(
     @Query("code") code: string,
 
     @Query("state") teamId: string,
+
+    @Res() res: Response,
   ) {
-    return this.googleAdsService.handleCallback(code, teamId);
+    await this.googleAdsService.handleCallback(code, teamId);
+
+    return res.redirect(
+      `${process.env.FRONTEND_URL}/dashboard/integrations/google-ads?connected=true`,
+    );
   }
 
   /*

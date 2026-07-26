@@ -48,7 +48,7 @@ export class CrmImportController {
 
     const rows = await this.crmImportService.parseCsv(file);
 
-    await this.crmImportService.updateTotalRows(importJob.id, rows.length);
+    await this.crmImportService.saveParsedRows(importJob.id, rows);
 
     return {
       importId: importJob.id,

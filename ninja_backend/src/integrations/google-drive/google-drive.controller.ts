@@ -14,6 +14,7 @@ import {
 } from "@nestjs/common";
 import { Response } from "express";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { Public } from "../../auth/decorators/public.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 import { GoogleDriveService } from "./google-drive.service";
@@ -47,6 +48,7 @@ export class GoogleDriveController {
     return this.googleDriveService.getAuthUrl(this.requireTeam(user));
   }
 
+  @Public()
   @Get("callback")
   async callback(
     @Query("code") code: string,

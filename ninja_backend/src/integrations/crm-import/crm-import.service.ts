@@ -101,32 +101,154 @@ export class CrmImportService {
 
     const importJob = rows[0];
 
+    if (!importJob) {
+      return { success: false, error: "Import not found" };
+    }
+
     await this.db.query(
       `
       UPDATE crm_imports_integrations
-      SET status = 'processing'
+      SET status = 'processing', updated_at = NOW()
       WHERE id = $1
       `,
       [importId],
     );
 
-    // TODO:
-    // actual CRM import logic
+    const teamId = importJob.team_id;
+
+    const mapping =
+      typeof importJob.mapping === "string"
+        ? JSON.parse(importJob.mapping)
+        : importJob.mapping || {};
+
+    const strategy = importJob.duplicate_strategy || "skip";
+
+    const sourceRows =
+      typeof importJob.raw_rows === "string"
+        ? JSON.parse(importJob.raw_rows)
+        : importJob.raw_rows || [];
+
+    let imported = 0;
+    let failed = 0;
+    let processed = 0;
+
+    for (const row of sourceRows) {
+      processed++;
+
+      // Map CSV columns to CRM fields via the saved mapping.
+      const mapped: any = {};
+      Object.keys(mapping).forEach((csvColumn) => {
+        const field = mapping[csvColumn];
+        if (field) {
+          mapped[field] = row[csvColumn];
+        }
+      });
+
+      // A contact needs at least an email or a phone.
+      if (!mapped.email && !mapped.phone) {
+        failed++;
+        continue;
+      }
+
+      const { rows: existing } = await this.db.query(
+        `
+        SELECT id
+        FROM contacts
+        WHERE team_id = $1
+        AND (email = $2 OR phone = $3)
+        LIMIT 1
+        `,
+        [teamId, mapped.email || null, mapped.phone || null],
+      );
+
+      if (existing.length > 0) {
+        const contactId = existing[0].id;
+
+        if (strategy === "overwrite") {
+          await this.db.query(
+            `
+            UPDATE contacts
+            SET full_name = $1, email = $2, phone = $3, company = $4
+            WHERE id = $5
+            `,
+            [
+              mapped.full_name || null,
+              mapped.email || null,
+              mapped.phone || null,
+              mapped.company || null,
+              contactId,
+            ],
+          );
+          imported++;
+        } else if (strategy === "merge") {
+          // Fill only the fields that are currently empty.
+          await this.db.query(
+            `
+            UPDATE contacts
+            SET
+              full_name = COALESCE(full_name, $1),
+              email = COALESCE(email, $2),
+              phone = COALESCE(phone, $3),
+              company = COALESCE(company, $4)
+            WHERE id = $5
+            `,
+            [
+              mapped.full_name || null,
+              mapped.email || null,
+              mapped.phone || null,
+              mapped.company || null,
+              contactId,
+            ],
+          );
+          imported++;
+        }
+        // strategy === "skip" (default): leave the existing contact untouched.
+        continue;
+      }
+
+      await this.db.query(
+        `
+        INSERT INTO contacts (
+          team_id,
+          full_name,
+          email,
+          phone,
+          company,
+          created_at
+        )
+        VALUES ($1,$2,$3,$4,$5,NOW())
+        `,
+        [
+          teamId,
+          mapped.full_name || null,
+          mapped.email || null,
+          mapped.phone || null,
+          mapped.company || null,
+        ],
+      );
+
+      imported++;
+    }
 
     await this.db.query(
       `
       UPDATE crm_imports_integrations
       SET
         status = 'completed',
-        processed_rows = total_rows,
-        imported_rows = total_rows
-      WHERE id = $1
+        processed_rows = $1,
+        imported_rows = $2,
+        failed_rows = $3,
+        updated_at = NOW()
+      WHERE id = $4
       `,
-      [importId],
+      [processed, imported, failed, importId],
     );
 
     return {
       success: true,
+      imported,
+      failed,
+      processed,
     };
   }
 
@@ -144,14 +266,17 @@ export class CrmImportService {
     return rows;
   }
 
-  async updateTotalRows(importId: string, totalRows: number) {
+  async saveParsedRows(importId: string, rows: any[]) {
     await this.db.query(
       `
-    UPDATE crm_imports
-    SET total_rows = $1
-    WHERE id = $2
+    UPDATE crm_imports_integrations
+    SET
+      total_rows = $1,
+      raw_rows = $2,
+      updated_at = NOW()
+    WHERE id = $3
     `,
-      [totalRows, importId],
+      [rows.length, JSON.stringify(rows), importId],
     );
   }
 }
