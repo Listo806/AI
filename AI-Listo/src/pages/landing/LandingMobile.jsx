@@ -47,7 +47,7 @@ import "./LandingMobile.css";
 
 import headlogoImg from "../../assets/cortexa/headlogotran.png";
 import landingDashImg from "../../assets/cortexa/mobile/m_dash1.png";
-import dashboardMockupImg from "../../assets/cortexa/img_desktop_none.png";
+import dashboardMockupImg from "../../assets/cortexa/mobile/im_auto.png";
 import featurechart from "../../assets/cortexa/mobile/featurechart.png";
 import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
 import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
@@ -346,37 +346,20 @@ function UnlimitedAISection({ tr }) {
 
   return (
     <section className="m-unlimited-ai">
-      <div className="m-unlimited-ai-glow" aria-hidden="true">
-        <span className="m-unlimited-ai-orbit orbit-one" />
-        <span className="m-unlimited-ai-orbit orbit-two" />
-
-        <div className="m-unlimited-ai-core">
-          <Bot size={54} />
+      <div className="m-ai-usage-card">
+        <div className="m-ai-usage-card-head">
+          <span>{copy.usageLabel}</span>
+          <strong>{copy.usageAvailable}</strong>
         </div>
 
-        <span className="m-unlimited-ai-floating-icon icon-one">
-          <Infinity size={26} />
-        </span>
+        <div className="m-ai-usage-progress">
+          <div
+            className="m-ai-usage-progress-fill"
+            style={{ width: "100%" }}
+          />
+        </div>
 
-        <span className="m-unlimited-ai-floating-icon icon-two">
-          <Sparkles size={24} />
-        </span>
-
-        <span className="m-unlimited-ai-floating-icon icon-three">
-          <BarChart3 size={24} />
-        </span>
-
-        <span className="m-unlimited-ai-floating-icon icon-four">
-          <MessageCircle size={24} />
-        </span>
-
-        <span className="m-unlimited-ai-floating-icon icon-five">
-          <FileText size={23} />
-        </span>
-
-        <span className="m-unlimited-ai-floating-icon icon-six">
-          <LayoutDashboard size={23} />
-        </span>
+        <p>{copy.usageDescription}</p>
       </div>
 
       <div className="m-unlimited-ai-header">
@@ -574,13 +557,14 @@ export default function LandingMobile() {
 
   const t = {
     en: {
-      badge: "AI-POWERED",
-      badge1: "REAL ESTATE AGENTS & TEAMS",
-      heroTitle1: "Get Instant Leads.",
-      heroTitle2: "Close More Deals.",
-      heroTitle3: "24/7 with AI.",
-      heroDesc:
-        "All-in-one AI platform that helps you capture more leads, follow up instantly, close more deals, and grow revenue on autopilot.",
+      badge: "Real Estate Agents & Teams",
+      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle2: "Built to Turn",
+      heroTitle3: "Conversations",
+      heroTitle4: "Into Revenue.",
+      heroDesc:  "AI finds. AI qualifies. AI follows up. You close.",
+      heroTopBanner1: "Agentic AI",
+      heroTopBanner2:  "revenue operating system for businesses tired of complicated, overpriced CRM software.",
       login: "Log in",
       trial: "Get Started",
       nav: [
@@ -711,11 +695,10 @@ export default function LandingMobile() {
       ],
 
       finalCtaSubtitle: "AUTOMATE YOUR SUCCESS",
-      finalCtaTitle1: "Get More Leads.",
-      finalCtaTitle2: "Close More Deals.",
-      finalCtaTitle3: "Grow Your Business.",
-      finalCtaDesc:
-        "Join real estate professionals who are growing with CORTEXA.",
+      finalCtaTitle1: "Automate Your",
+      finalCtaTitle2: "Entire Workflow",
+      finalCtaTitle3: "",
+      finalCtaDesc: "AI Leads. AI Qualifies. AI Closes. All in your ",
       finalCtaBtn: "Start Your Free Trial",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Unlock potential today",
@@ -874,6 +857,9 @@ export default function LandingMobile() {
           "Product demo — names, numbers, and activity shown are sample data for illustration only, not real customer results.",
       },
       unlimitedAISection: {
+        usageLabel: "AI Usage",
+        usageAvailable: "100% Available",
+        usageDescription: "Unlimited AI usage included in your plan",
         titleLine1: "Unlimited AI",
         titleHighlight: "Usage Included",
         titleLine3: "in Every Plan",
@@ -975,13 +961,15 @@ export default function LandingMobile() {
     },
 
     es: {
-      badge: "IMPULSADO POR IA",
-      badge1: "AGENTES Y EQUIPOS INMOBILIARIOS",
-      heroTitle1: "Obtén Más Leads.",
-      heroTitle2: "Cierra Más Ventas.",
-      heroTitle3: "24/7 con IA.",
-      heroDesc:
-        "Plataforma de IA todo en uno que te ayuda a captar más clientes potenciales, dar seguimiento al instante, cerrar más ventas y aumentar los ingresos en piloto automático.",
+      badge: "Agentes y Equipos Inmobiliarios",
+      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle2: "Creado para Convertir",
+      heroTitle3: "Conversaciones",
+      heroTitle4: "en Ingresos.",
+      heroDesc: "La IA encuentra. La IA califica. La IA da seguimiento. Tú cierras.",
+      heroTopBanner1: "Agentic AI",
+      heroTopBanner2:
+        "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
       login: "Iniciar sesión",
       trial: "Comenzar",
       nav: [
@@ -1112,11 +1100,10 @@ export default function LandingMobile() {
       ],
 
       finalCtaSubtitle: "AUTOMATIZA TU ÉXITO",
-      finalCtaTitle1: "Obtén Más Leads.",
-      finalCtaTitle2: "Cierra Más Tratos.",
-      finalCtaTitle3: "Haz Crecer Tu Negocio.",
-      finalCtaDesc:
-        "Únete a profesionales inmobiliarios que están creciendo con CORTEXA.",
+      finalCtaTitle1: "Automatiza Todo",
+      finalCtaTitle2: "Tu Flujo de Trabajo",
+      finalCtaTitle3: "",
+      finalCtaDesc: "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
       finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
@@ -1280,6 +1267,9 @@ export default function LandingMobile() {
           "Demostración del producto: los nombres, cifras y actividades son datos de ejemplo, no resultados reales de clientes.",
       },
       unlimitedAISection: {
+        usageLabel: "Uso de IA",
+        usageAvailable: "100% Disponible",
+        usageDescription: "Uso ilimitado de IA incluido en tu plan",
         titleLine1: "Uso Ilimitado de IA",
         titleHighlight: "Incluido",
         titleLine3: "en Todos los Planes",
@@ -1383,13 +1373,15 @@ export default function LandingMobile() {
     },
 
     pt: {
-      badge: "POTENCIALIZADO POR IA",
-      badge1: "CORRETORES E EQUIPES IMOBILIÁRIAS",
-      heroTitle1: "Mais Leads.",
-      heroTitle2: "Mais Negócios.",
-      heroTitle3: "24/7 com IA.",
-      heroDesc:
-        "Plataforma de IA tudo-em-um que ajuda você a captar mais leads, fazer o acompanhamento instantaneamente, fechar mais negócios e aumentar a receita no piloto automático.",
+      badge: "Corretores e Equipes Imobiliárias",
+      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle2: "Criado para Transformar",
+      heroTitle3: "Conversas",
+      heroTitle4: "em Receita.",
+      heroDesc: "A IA encontra. A IA qualifica. A IA acompanha. Você fecha.",
+      heroTopBanner1: "Agentic AI",
+      heroTopBanner2:
+        "sistema operacional de receita com IA para empresas cansadas de CRMs complicados e caros.",
       login: "Entrar",
       trial: "Começar",
       nav: [
@@ -1520,11 +1512,10 @@ export default function LandingMobile() {
       ],
 
       finalCtaSubtitle: "AUTOMATIZE SEU SUCESSO",
-      finalCtaTitle1: "Consiga Mais Leads.",
-      finalCtaTitle2: "Feche Mais Negócios.",
-      finalCtaTitle3: "Cresça Seu Negócio.",
-      finalCtaDesc:
-        "Junte-se a profissionais do setor imobiliário que estão crescendo com a CORTEXA.",
+      finalCtaTitle1: "Automatize Todo",
+      finalCtaTitle2: "Seu Fluxo de Trabalho",
+      finalCtaTitle3: "",
+      finalCtaDesc: "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
       finalCtaBtn: "Comece Seu Teste Grátis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloqueie seu potencial hoje",
@@ -1687,6 +1678,9 @@ export default function LandingMobile() {
           "Demonstração do produto: nomes, números e atividades são dados de exemplo, não resultados reais de clientes.",
       },
       unlimitedAISection: {
+        usageLabel: "Uso de IA",
+        usageAvailable: "100% Disponível",
+        usageDescription: "Uso ilimitado de IA incluído no seu plano",
         titleLine1: "Uso Ilimitado de IA",
         titleHighlight: "Incluído",
         titleLine3: "em Todos os Planos",
@@ -1928,18 +1922,32 @@ export default function LandingMobile() {
       {/* HERO */}
 
       <section className="m-hero">
+        <div className="m-hero-banner">
+          <Zap size={28} />
+
+          <p>
+            <span>{tr.heroTopBanner1}</span>{" "}
+            {tr.heroTopBanner2}
+          </p>
+        </div>
+
         <div className="m-badge">
           {tr.badge}
-          <br />
-          {tr.badge1}
         </div>
+
         <h1 className="m-title">
           {tr.heroTitle1}
           <br />
-          {tr.heroTitle2} <br />
-          <span>{tr.heroTitle3}</span>
+          {tr.heroTitle2}
+          <br />
+          {tr.heroTitle3}
+          <br />
+          <span>{tr.heroTitle4}</span>
         </h1>
-        <p className="m-description">{tr.heroDesc}</p>
+
+        <p className="m-description">
+          {tr.heroDesc}
+        </p>
         <div className="m-hero-actions">
           <a href="/trial" className="m-primary-btn">
             <Zap size={18} />
@@ -2870,15 +2878,12 @@ export default function LandingMobile() {
       {/* FINAL BACKGROUND CTA BLOCK */}
       <section className="m-bottom-cta" id="analytics">
         <div className="m-bottom-cta-inner">
-          <p className="m-bottom-subtitle">{tr.finalCtaSubtitle}</p>
           <h2 className="m-bottom-title">
             {tr.finalCtaTitle1}
             <br />
             {tr.finalCtaTitle2}
-            <br />
-            <span>{tr.finalCtaTitle3}</span>
           </h2>
-          <p className="m-bottom-desc">{tr.finalCtaDesc}</p>
+          <p className="m-bottom-desc">{tr.finalCtaDesc} <span className="text-blue">Revenue OS.</span></p>
 
           <div className="m-bottom-action-wrapper">
             <a href="/trial" className="m-bottom-primary-btn">
@@ -2894,7 +2899,6 @@ export default function LandingMobile() {
               </svg>
               <div className="trial-wrap">
                 <span>{tr.finalCtaBtn}</span>
-                <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
