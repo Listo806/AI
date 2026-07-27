@@ -1659,7 +1659,13 @@ export class TeamsService {
     role: string,
     requestingUserId: string,
   ) {
+    const normalizedRole = String(role || "")
+      .trim()
+      .toLowerCase();
+
     const allowedRoles = [
+      "owner",
+      "admin",
       "manager",
       "agent",
       "developer",
@@ -1667,14 +1673,16 @@ export class TeamsService {
       "wholesaler",
       "investor",
       "va",
+      "va_uploader",
+      "user",
     ];
 
-    const normalizedRole = String(role || "")
-      .trim()
-      .toLowerCase();
+    if (!normalizedRole) {
+      throw new BadRequestException("Role is required");
+    }
 
     if (!allowedRoles.includes(normalizedRole)) {
-      throw new BadRequestException("Invalid team member role");
+      throw new BadRequestException(`Invalid role: ${normalizedRole}`);
     }
 
     const team = await this.findById(teamId);
@@ -1683,27 +1691,27 @@ export class TeamsService {
       throw new NotFoundException("Team not found");
     }
 
-    if (team.ownerId !== requestingUserId) {
+    if (String(team.ownerId) !== String(requestingUserId)) {
       throw new ForbiddenException("Only team owner can change member roles");
     }
 
-    if (memberUserId === team.ownerId) {
+    if (String(memberUserId) === String(team.ownerId)) {
       throw new BadRequestException("The team owner role cannot be changed");
     }
 
     const memberResult = await this.db.query(
       `
     SELECT
-      tm.user_id,
+      tm.user_id as "userId",
       tm.role,
       tm.status,
       u.name,
       u.email
     FROM team_members tm
-    INNER JOIN users u ON u.id = tm.user_id
+    INNER JOIN users u
+      ON u.id = tm.user_id
     WHERE tm.team_id = $1
       AND tm.user_id = $2
-      AND tm.status = 'active'
     LIMIT 1
     `,
       [teamId, memberUserId],
@@ -1712,66 +1720,180 @@ export class TeamsService {
     const member = memberResult.rows[0];
 
     if (!member) {
-      throw new NotFoundException("Active team member not found");
+      throw new NotFoundException("Member not found in this team");
     }
 
-    if (String(member.role).toLowerCase() === normalizedRole) {
+    if (member.status !== "active") {
+      throw new BadRequestException(
+        "Only active team members can have their role changed",
+      );
+    }
+
+    const previousRole = String(member.role || "").toLowerCase();
+
+    if (previousRole === normalizedRole) {
       return {
         success: true,
+        message: "Member already has this role",
         member: {
-          id: member.user_id,
+          id: member.userId,
           name: member.name,
           email: member.email,
-          role: normalizedRole,
+          role: previousRole,
+          status: member.status,
         },
       };
     }
 
-    const result = await this.db.query(
-      `
-    UPDATE team_members
-    SET
-      role = $3,
-      updated_at = NOW()
-    WHERE team_id = $1
-      AND user_id = $2
-      AND status = 'active'
-    RETURNING
-      user_id as id,
-      role,
-      status,
-      updated_at as "updatedAt"
-    `,
-      [teamId, memberUserId, normalizedRole],
-    );
+    try {
+      const updateResult = await this.db.query(
+        `
+      UPDATE team_members
+      SET
+        role = $3,
+        updated_at = NOW()
+      WHERE team_id = $1
+        AND user_id = $2
+        AND status = 'active'
+      RETURNING
+        user_id as id,
+        role,
+        status,
+        updated_at as "updatedAt"
+      `,
+        [teamId, memberUserId, normalizedRole],
+      );
 
-    await this.notificationsService.create({
-      teamId,
-      userId: memberUserId,
-      actorUserId: requestingUserId,
-      type: "team.member_role_changed",
-      category: "team",
-      priority: "medium",
-      title: "Team role updated",
-      message: `Your team role was changed from ${member.role} to ${normalizedRole}`,
-      url: "/dashboard/team",
-      entityType: "user",
-      entityId: memberUserId,
-      icon: "shield",
-      metadata: {
+      if (updateResult.rowCount === 0) {
+        throw new NotFoundException("Active team member not found");
+      }
+
+      const updatedMember = updateResult.rows[0];
+
+      try {
+        await this.notificationsService.create({
+          teamId,
+          actorUserId: requestingUserId,
+
+          type: "team.member_role_changed",
+          category: "team",
+          priority: "medium",
+
+          title: "Team member role updated",
+          message: `${member.name || member.email || "Team member"} role changed from ${previousRole} to ${normalizedRole}`,
+
+          url: `/dashboard/team/members`,
+
+          entityType: "user",
+          entityId: memberUserId,
+
+          icon: "shield",
+
+          metadata: {
+            userId: memberUserId,
+            previousRole,
+            newRole: normalizedRole,
+          },
+        });
+      } catch (notificationError) {
+        console.error(
+          "CREATE ROLE CHANGE NOTIFICATION ERROR",
+          notificationError,
+        );
+      }
+
+      try {
+        await this.db.query(
+          `
+        INSERT INTO events (
+          team_id,
+          user_id,
+          event_type,
+          entity_type,
+          entity_id,
+          metadata,
+          created_at
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6::jsonb,
+          NOW()
+        )
+        `,
+          [
+            teamId,
+            requestingUserId,
+            "team.member_role_changed",
+            "user",
+            memberUserId,
+            JSON.stringify({
+              title: "Member role changed",
+              sub: `${member.name || member.email || "Team member"} changed from ${previousRole} to ${normalizedRole}`,
+              memberUserId,
+              memberName: member.name || null,
+              memberEmail: member.email || null,
+              previousRole,
+              newRole: normalizedRole,
+            }),
+          ],
+        );
+      } catch (eventError) {
+        console.error("CREATE ROLE CHANGE EVENT ERROR", eventError);
+      }
+
+      return {
+        success: true,
+        message: "Member role updated successfully",
+        member: {
+          ...updatedMember,
+          name: member.name,
+          email: member.email,
+          previousRole,
+        },
+      };
+    } catch (error: any) {
+      console.error("CHANGE MEMBER ROLE SERVICE ERROR", {
+        teamId,
         memberUserId,
-        previousRole: member.role,
-        newRole: normalizedRole,
-      },
-    });
+        requestingUserId,
+        requestedRole: normalizedRole,
+        databaseCode: error?.code,
+        databaseConstraint: error?.constraint,
+        databaseDetail: error?.detail,
+        message: error?.message,
+        stack: error?.stack,
+      });
 
-    return {
-      success: true,
-      member: {
-        ...result.rows[0],
-        name: member.name,
-        email: member.email,
-      },
-    };
+      /*
+       * PostgreSQL check constraint violation.
+       */
+      if (error?.code === "23514") {
+        throw new BadRequestException(
+          `Role "${normalizedRole}" is not allowed by the team_members role constraint`,
+        );
+      }
+
+      /*
+       * PostgreSQL enum invalid value.
+       */
+      if (error?.code === "22P02") {
+        throw new BadRequestException(
+          `Role "${normalizedRole}" is not supported by the database`,
+        );
+      }
+
+      /*
+       * Foreign key violation.
+       */
+      if (error?.code === "23503") {
+        throw new BadRequestException("Invalid team or member");
+      }
+
+      throw error;
+    }
   }
 }
