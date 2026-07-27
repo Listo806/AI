@@ -392,6 +392,58 @@ export class PaddleService {
   }
 
   /**
+   * One-time setup: create the product and the prices for our billing model —
+   * a one-time $97 setup fee plus a 14-day-trial monthly price per tier. Returns
+   * the ids to store as PADDLE_PRICE_SOLO/TEAM/GROWTH and PADDLE_SETUP_PRICE.
+   * Run once per environment (sandbox, then live). Amounts are in minor units.
+   */
+  async setupPlans(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const product: any = await (this.paddle as any).products.create({
+      name: 'CORTEXA AI Revenue OS',
+      taxCategory: 'standard',
+      description: 'CORTEXA AI Revenue OS subscription',
+    });
+    const productId = product.id;
+
+    const makeMonthly = (label: string, amount: string) =>
+      (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA ${label} plan (monthly, 14-day free trial)`,
+        unitPrice: { amount, currencyCode: 'USD' },
+        billingCycle: { interval: 'month', frequency: 1 },
+        trialPeriod: { interval: 'day', frequency: 14 },
+      });
+
+    const solo: any = await makeMonthly('Solo', '19700');
+    const team: any = await makeMonthly('Team', '34700');
+    const growth: any = await makeMonthly('Growth', '49700');
+
+    // One-time setup fee: a price with no billing cycle.
+    const setup: any = await (this.paddle as any).prices.create({
+      productId,
+      description: 'CORTEXA one-time setup fee',
+      unitPrice: { amount: '9700', currencyCode: 'USD' },
+    });
+
+    return {
+      productId,
+      prices: { solo: solo.id, team: team.id, growth: growth.id },
+      setupPrice: setup.id,
+      env: {
+        PADDLE_PRICE_SOLO: solo.id,
+        PADDLE_PRICE_TEAM: team.id,
+        PADDLE_PRICE_GROWTH: growth.id,
+        PADDLE_SETUP_PRICE: setup.id,
+      },
+      note: 'Store these ids as env vars, then the checkout config will serve them.',
+    };
+  }
+
+  /**
    * Get subscription details
    */
   async getSubscription(subscriptionId: string): Promise<any> {

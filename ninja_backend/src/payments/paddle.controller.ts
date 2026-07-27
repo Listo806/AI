@@ -6,10 +6,12 @@ import {
   Headers,
   HttpCode,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PaddleService } from './paddle.service';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('payments/paddle')
 export class PaddleController {
@@ -29,6 +31,18 @@ export class PaddleController {
   @Get('config')
   getConfig() {
     return this.paddleService.getPublicConfig();
+  }
+
+  // One-time (admin) setup: create the product + prices for our billing model.
+  // Returns the price ids to store as env vars. Guarded to admins/owners.
+  @Post('setup-plans')
+  @UseGuards(JwtAuthGuard)
+  async setupPlans(@CurrentUser() user: any) {
+    const role = String(user?.role || '').toLowerCase();
+    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
+      throw new ForbiddenException('Admins only');
+    }
+    return this.paddleService.setupPlans();
   }
 
   @Get('client-token')
