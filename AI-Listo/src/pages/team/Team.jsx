@@ -78,6 +78,9 @@ export default function TeamWorkspace() {
     setFilterDashboard,
 
     members: filteredMembers,
+
+    reloadMembers,
+    updateMemberRoleLocally,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -193,19 +196,42 @@ export default function TeamWorkspace() {
   };
 
   const handleChangeRole = async ({ memberId, role }) => {
-    if (!selectedTeamId || !memberId || !role) return;
+    if (!selectedTeamId || !memberId || !role) {
+      return false;
+    }
+
+    const previousRole = roleMember?.role || "agent";
 
     try {
       setRoleUpdating(true);
 
-      await updateTeamMemberRole(selectedTeamId, memberId, role);
+      updateMemberRoleLocally(memberId, role);
 
-      await reloadDashboard();
+      const response = await updateTeamMemberRole(
+        selectedTeamId,
+        memberId,
+        role,
+      );
+
+      const updatedMember =
+        response?.member || response?.data?.member || response?.data || null;
+
+      if (updatedMember?.role) {
+        updateMemberRoleLocally(memberId, updatedMember.role);
+      }
 
       setRoleModalOpen(false);
       setRoleMember(null);
+
+      await Promise.all([reloadMembers(), reloadDashboard()]);
+
+      return true;
     } catch (error) {
       console.error("CHANGE MEMBER ROLE ERROR", error);
+
+      updateMemberRoleLocally(memberId, previousRole);
+
+      return false;
     } finally {
       setRoleUpdating(false);
     }

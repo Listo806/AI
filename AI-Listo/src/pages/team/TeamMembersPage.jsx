@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { ROLE_STYLES } from "./utils/teamConstants";
 import "./team.css";
 
 import {
@@ -19,6 +19,7 @@ import {
 import useTeamDashboard from "./hooks/useTeamDashboard";
 import useTeamMembers from "./hooks/useTeamMembers";
 import InviteMemberModal from "./components/InviteMemberModal";
+import { updateTeamMemberRole } from "./services/team.service";
 export default function TeamMembersPage() {
   /* =====================================================
     DASHBOARD
@@ -54,7 +55,12 @@ export default function TeamMembersPage() {
     pagination,
     page,
     setPage,
+
     toast,
+    showToast,
+
+    reloadMembers,
+    updateMemberRoleLocally,
   } = useTeamMembers({
     teamId: selectedTeamId,
     onReload: reloadDashboard,
@@ -67,6 +73,7 @@ export default function TeamMembersPage() {
 
   const [selectedMember, setSelectedMember] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [roleUpdating, setRoleUpdating] = useState(false);
   /* =====================================================
     REMOVE MEMBER
   ===================================================== */
@@ -87,6 +94,79 @@ export default function TeamMembersPage() {
 
     if (success !== false) {
       setShowInviteModal(false);
+    }
+  };
+
+  const handleChangeMemberRole = async (newRole) => {
+    const memberId = selectedMember?.id || selectedMember?._id;
+
+    if (!selectedTeamId || !memberId || !newRole) {
+      return;
+    }
+
+    const previousRole = selectedMember.role || "agent";
+
+    if (String(previousRole).toLowerCase() === String(newRole).toLowerCase()) {
+      return;
+    }
+
+    try {
+      setRoleUpdating(true);
+
+      updateMemberRoleLocally(memberId, newRole);
+
+      setSelectedMember((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          role: newRole,
+        };
+      });
+
+      const response = await updateTeamMemberRole(
+        selectedTeamId,
+        memberId,
+        newRole,
+      );
+
+      const updatedMember =
+        response?.member || response?.data?.member || response?.data || null;
+
+      const backendRole = updatedMember?.role || newRole;
+
+      updateMemberRoleLocally(memberId, backendRole);
+
+      setSelectedMember((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          ...(updatedMember || {}),
+          role: backendRole,
+        };
+      });
+
+      showToast("Member role updated successfully", "success");
+
+      await Promise.all([reloadMembers(), reloadDashboard()]);
+    } catch (error) {
+      console.error("CHANGE MEMBER ROLE ERROR", error);
+
+      updateMemberRoleLocally(memberId, previousRole);
+
+      setSelectedMember((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          role: previousRole,
+        };
+      });
+
+      showToast(error?.message || "Failed to update member role", "error");
+    } finally {
+      setRoleUpdating(false);
     }
   };
 
@@ -180,6 +260,11 @@ export default function TeamMembersPage() {
     return "Inactive";
   };
 
+  const getRoleStyle = (role) => {
+    return (
+      ROLE_STYLES[String(role || "agent").toLowerCase()] || ROLE_STYLES.agent
+    );
+  };
   return (
     <div className="team-members-page team-workspace">
       {/* =================================================
@@ -310,7 +395,17 @@ export default function TeamMembersPage() {
                     </td>
 
                     {/* ROLE */}
-                    <td>{member.role}</td>
+                    <td>
+                      <span
+                        className="team-role-badge"
+                        style={{
+                          background: getRoleStyle(member.role).bg,
+                          color: getRoleStyle(member.role).text,
+                        }}
+                      >
+                        {member.role || "agent"}
+                      </span>
+                    </td>
 
                     {/* STATUS */}
                     <td>
@@ -442,6 +537,40 @@ export default function TeamMembersPage() {
               <p>{selectedMember.email}</p>
             </div>
 
+            {/* CHANGE ROLE */}
+
+            <div className="team-member-section">
+              <h4>
+                <Shield size={16} />
+                Member Role
+              </h4>
+
+              <div className="team-drawer-role-field">
+                <label htmlFor="drawer-member-role">Account role</label>
+
+                <select
+                  id="drawer-member-role"
+                  value={String(selectedMember.role || "agent").toLowerCase()}
+                  onChange={(event) =>
+                    handleChangeMemberRole(event.target.value)
+                  }
+                  disabled={roleUpdating}
+                  className="team-filter-select"
+                >
+                  <option value="agent">Agent</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+
+                {roleUpdating && (
+                  <span className="team-drawer-role-updating">
+                    Updating role...
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* PERMISSIONS */}
             <div className="team-member-section">
               <h4>
@@ -504,7 +633,17 @@ export default function TeamMembersPage() {
               </div>
 
               <div className="team-log-item">
-                Role: {selectedMember.role || "agent"}
+                <span>Role: </span>
+
+                <span
+                  className="team-role-badge"
+                  style={{
+                    background: getRoleStyle(selectedMember.role).bg,
+                    color: getRoleStyle(selectedMember.role).text,
+                  }}
+                >
+                  {selectedMember.role || "agent"}
+                </span>
               </div>
             </div>
 

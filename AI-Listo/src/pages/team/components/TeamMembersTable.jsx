@@ -90,9 +90,7 @@ export default function TeamMembersTable({
 
                 <div className="m-stats-grid">
                   <div className="m-stat-item">
-                    <span className="m-stat-val">
-                      {user.totalLeads ?? 0}
-                    </span>
+                    <span className="m-stat-val">{user.totalLeads ?? 0}</span>
                     <span className="m-stat-lbl">Leads</span>
                   </div>
 
@@ -202,7 +200,27 @@ export default function TeamMembersTable({
                   {member.role || "agent"}
                 </span>
               </div>
-
+              <div className="team-member-team">
+                {member.teamName || "—"}
+              </div>
+              <div className="team-member-team">
+                <span
+                  className={`team-status-badge ${
+                    member.isActive ? "active" : "inactive"
+                  }`}
+                >
+                  {member.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="team-member-team">
+                {member.joinedAt
+                  ? new Date(member.joinedAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </div>
               <div className="team-stat-mini">
                 <strong>{member.totalLeads || 0}</strong>
                 <span>Leads</span>

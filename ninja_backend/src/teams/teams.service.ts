@@ -534,6 +534,10 @@ export class TeamsService {
         u.last_seen_at as "lastSeenAt",
 
         u.created_at as "createdAt",
+        t.id as "teamId",
+        t.name as "teamName",
+
+        tm.created_at as "joinedAt",
 
         COUNT(DISTINCT l.id) as "totalLeads",
 
@@ -559,6 +563,9 @@ export class TeamsService {
 
       INNER JOIN users u
         ON u.id = tm.user_id
+      
+      INNER JOIN teams t
+        ON t.id = tm.team_id
 
       LEFT JOIN leads l
         ON l.assigned_to = u.id
@@ -580,7 +587,10 @@ export class TeamsService {
         u.job_title,
         u.last_seen_at,
         u.created_at,
-        tm.role
+        tm.role,
+        t.id,
+        t.name,
+        tm.created_at
 
       ORDER BY u.created_at DESC
 
@@ -1144,6 +1154,10 @@ export class TeamsService {
         u.phone,
 
         tm.role,
+        t.id as "teamId",
+        t.name as "teamName",
+
+        tm.created_at as "joinedAt",
 
         u.avatar_url as avatar,
 
@@ -1165,6 +1179,9 @@ export class TeamsService {
 
       INNER JOIN users u
         ON u.id = tm.user_id
+
+      INNER JOIN teams t
+        ON t.id = tm.team_id
 
       LEFT JOIN (
         SELECT
@@ -1663,19 +1680,7 @@ export class TeamsService {
       .trim()
       .toLowerCase();
 
-    const allowedRoles = [
-      "owner",
-      "admin",
-      "manager",
-      "agent",
-      "developer",
-      "viewer",
-      "wholesaler",
-      "investor",
-      "va",
-      "va_uploader",
-      "user",
-    ];
+    const allowedRoles = ["manager", "agent", "admin", "viewer"];
 
     if (!normalizedRole) {
       throw new BadRequestException("Role is required");

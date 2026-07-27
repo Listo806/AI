@@ -2536,7 +2536,69 @@ TEAM QUICK ACTIONS
   border-top: 1px solid #e2e8f0;
   background: #f8fafc;
 }
+.team-drawer-role-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.team-drawer-role-field label {
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.team-drawer-role-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+
+  background: var(--card-bg, #ffffff);
+  color: var(--text-primary, #0f172a);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.team-drawer-role-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.team-drawer-role-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.team-drawer-role-updating {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.team-member-role-badge {
+  display: inline-flex;
+  align-items: center;
+
+  margin-left: 8px;
+  padding: 4px 9px;
+
+  border-radius: 999px;
+
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
 @media (max-width: 600px) {
   .team-modal-overlay {
     align-items: flex-end;
