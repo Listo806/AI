@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 import { google } from "googleapis";
-import * as fs from "fs";
+import { Readable } from "stream";
 import { DatabaseService } from "../../database/database.service";
 
 @Injectable()
@@ -113,6 +113,8 @@ export class GoogleDriveService {
       integration: {
         google_email: rows[0].google_email,
         root_folder_id: rows[0].root_folder_id,
+        root_folder_name: rows[0].root_folder_name,
+        sync_enabled: rows[0].sync_enabled,
         is_active: rows[0].is_active,
       },
     };
@@ -230,7 +232,7 @@ export class GoogleDriveService {
 
       media: {
         mimeType: file.mimetype,
-        body: Buffer.from(file.buffer),
+        body: Readable.from(file.buffer),
       },
 
       fields: "id,name,webViewLink,webContentLink",
@@ -245,27 +247,10 @@ export class GoogleDriveService {
   }
 
   async listFolders(teamId: string) {
-    const integration = await this.getIntegration(teamId);
-
-    if (!integration) {
-      throw new Error("Google Drive not connected");
-    }
-
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.GOOGLE_DRIVE_CLIENT_ID,
-      process.env.GOOGLE_DRIVE_CLIENT_SECRET,
-      process.env.GOOGLE_DRIVE_REDIRECT_URI,
-    );
-
-    oauth2Client.setCredentials({
-      access_token: integration.access_token,
-      refresh_token: integration.refresh_token,
-    });
-
-    const drive = google.drive({
-      version: "v3",
-      auth: oauth2Client,
-    });
+    // Reuse getDriveClient so the OAuth env vars stay consistent with the rest
+    // of the service (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) instead of the
+    // mismatched GOOGLE_DRIVE_CLIENT_ID that broke token refresh here.
+    const { drive } = await this.getDriveClient(teamId);
 
     const res = await drive.files.list({
       q: "mimeType='application/vnd.google-apps.folder' and trashed=false",

@@ -63,14 +63,21 @@ export class CrmImportController {
 
   @Get(":importId/analyze")
   async analyze(
+    @CurrentUser() user: any,
+
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.analyzeImport(importId);
+    return this.crmImportService.analyzeImport(
+      importId,
+      this.requireTeam(user),
+    );
   }
 
   @Post(":importId/mapping")
   async saveMapping(
+    @CurrentUser() user: any,
+
     @Param("importId")
     importId: string,
 
@@ -86,30 +93,47 @@ export class CrmImportController {
       body.mapping,
 
       body.duplicateStrategy,
+
+      this.requireTeam(user),
     );
   }
 
   @Post(":importId/start")
   async startImport(
+    @CurrentUser() user: any,
+
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.startImport(importId);
+    return this.crmImportService.startImport(
+      importId,
+      this.requireTeam(user),
+    );
   }
 
   @Get(":importId/progress")
   async progress(
+    @CurrentUser() user: any,
+
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.getProgress(importId);
+    return this.crmImportService.getProgress(
+      importId,
+      this.requireTeam(user),
+    );
   }
 
   @Get(":importId/logs")
   async logs(
+    @CurrentUser() user: any,
+
     @Param("importId")
     importId: string,
   ) {
-    return this.crmImportService.getLogs(importId);
+    return this.crmImportService.getLogs(
+      importId,
+      this.requireTeam(user),
+    );
   }
 }
