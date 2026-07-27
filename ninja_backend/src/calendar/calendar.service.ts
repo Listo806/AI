@@ -100,9 +100,9 @@ export class CalendarService {
         p.title  AS property_title
       FROM appointments a
       LEFT JOIN users ua    ON ua.id = a.assigned_to
-      LEFT JOIN leads l     ON l.id  = a.lead_id
-      LEFT JOIN contacts c  ON c.id  = a.contact_id
-      LEFT JOIN properties p ON p.id = a.property_id
+      LEFT JOIN leads l     ON l.id  = a.lead_id     AND l.team_id = a.team_id
+      LEFT JOIN contacts c  ON c.id  = a.contact_id  AND c.team_id = a.team_id
+      LEFT JOIN properties p ON p.id = a.property_id AND p.team_id = a.team_id
       WHERE ${clauses.join(" AND ")}
       ORDER BY a.start_at ASC
       `,
@@ -201,6 +201,13 @@ export class CalendarService {
     const type = TYPES.includes(body.type) ? body.type : "other";
     const status = STATUSES.includes(body.status) ? body.status : "pending";
 
+    // Validate every CRM link belongs to THIS team before storing it, so the
+    // enriched list() join can never surface another team's lead/contact/agent.
+    const leadId = await this.resolveTeamRef("leads", body.leadId, teamId);
+    const contactId = await this.resolveTeamRef("contacts", body.contactId, teamId);
+    const propertyId = await this.resolveTeamRef("properties", body.propertyId, teamId);
+    const assignedTo = await this.resolveTeamMember(body.assignedTo, teamId);
+
     // Mirror to the team's connected Google Calendar (best-effort; a missing
     // connection or API error must not block creating the appointment).
     let googleEventId: string | null = null;
@@ -233,10 +240,10 @@ export class CalendarService {
       [
         teamId,
         userId,
-        body.assignedTo || null,
-        body.leadId || null,
-        body.contactId || null,
-        body.propertyId || null,
+        assignedTo,
+        leadId,
+        contactId,
+        propertyId,
         body.title,
         type,
         status,
@@ -266,6 +273,25 @@ export class CalendarService {
   ) {
     const existing = await this.getOwned(teamId, id);
 
+    // Re-validate any CRM link that is being changed against this team; existing
+    // values were already validated when they were set.
+    const leadId =
+      body.leadId !== undefined
+        ? await this.resolveTeamRef("leads", body.leadId, teamId)
+        : existing.lead_id;
+    const contactId =
+      body.contactId !== undefined
+        ? await this.resolveTeamRef("contacts", body.contactId, teamId)
+        : existing.contact_id;
+    const propertyId =
+      body.propertyId !== undefined
+        ? await this.resolveTeamRef("properties", body.propertyId, teamId)
+        : existing.property_id;
+    const assignedTo =
+      body.assignedTo !== undefined
+        ? await this.resolveTeamMember(body.assignedTo, teamId)
+        : existing.assigned_to;
+
     const pick = (key: string, col: string) =>
       body[key] !== undefined ? body[key] : existing[col];
 
@@ -287,12 +313,10 @@ export class CalendarService {
       notes: pick("notes", "notes"),
       attendee_name: pick("attendeeName", "attendee_name"),
       attendee_email: pick("attendeeEmail", "attendee_email"),
-      assigned_to: pick("assignedTo", "assigned_to"),
-      lead_id: body.leadId !== undefined ? body.leadId || null : existing.lead_id,
-      contact_id:
-        body.contactId !== undefined ? body.contactId || null : existing.contact_id,
-      property_id:
-        body.propertyId !== undefined ? body.propertyId || null : existing.property_id,
+      assigned_to: assignedTo,
+      lead_id: leadId,
+      contact_id: contactId,
+      property_id: propertyId,
       start_at: pick("startAt", "start_at"),
       end_at: pick("endAt", "end_at"),
       timezone: pick("timezone", "timezone"),
@@ -384,6 +408,50 @@ export class CalendarService {
     );
 
     return { success: true };
+  }
+
+  // Return the id only if that record exists AND belongs to this team; else null.
+  // Prevents linking (and later enriching) another team's lead/contact/property.
+  private async resolveTeamRef(
+    table: "leads" | "contacts" | "properties",
+    id: any,
+    teamId: string,
+  ): Promise<string | null> {
+    if (!id) return null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT 1 FROM ${table} WHERE id = $1 AND team_id = $2 LIMIT 1`,
+        [id, teamId],
+      );
+      return rows[0] ? id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Return the userId only if they are an active member (or the owner) of this
+  // team; else null. Keeps assigned_to from pointing at a foreign/nonexistent user.
+  private async resolveTeamMember(
+    userId: any,
+    teamId: string,
+  ): Promise<string | null> {
+    if (!userId) return null;
+    try {
+      const { rows } = await this.db.query(
+        `
+        SELECT 1
+        FROM team_members
+        WHERE user_id = $1 AND team_id = $2 AND status = 'active'
+        UNION
+        SELECT 1 FROM teams WHERE id = $2 AND owner_id = $1
+        LIMIT 1
+        `,
+        [userId, teamId],
+      );
+      return rows[0] ? userId : null;
+    } catch {
+      return null;
+    }
   }
 
   private normalizeReminder(value: any): number {
