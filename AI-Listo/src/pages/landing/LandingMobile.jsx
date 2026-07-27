@@ -23,6 +23,23 @@ import {
   CheckCircle2,
   TrendingUp,
   CheckCircle,
+  BarChart3,
+  ChartNoAxesCombined,
+  GitFork,
+  Users2,
+  FileText,
+  Sparkles,
+  Infinity,
+  CreditCard,
+  ReceiptText,
+  ShieldCheck,
+  Contact2,
+  Funnel,
+  Mail,
+  CalendarDays,
+  Workflow,
+  CircleDollarSign,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { HashLink } from "react-router-hash-link";
@@ -36,7 +53,495 @@ import powerfulM from "../../assets/cortexa/mobile/powerfulM.png";
 import workspaceImg from "../../assets/cortexa/mobile/workspaceM.png";
 import workspaceImgES from "../../assets/cortexa/mobile/workspaceESM.png";
 import workspaceImgPT from "../../assets/cortexa/mobile/workspacePTM.png";
+import bgreportingImg from "../../assets/cortexa/mobile/bg_reporting.png";
 
+function ReportingSection({ tr }) {
+  const copy = tr.reportingSection;
+
+  const pipelineRows = [
+    { name: "Alex Johnson", value: "$48,100", stage: copy.stageNew },
+    { name: "David Kim", value: "$36,000", stage: copy.stageContacted },
+    { name: "David Brown", value: "$19,000", stage: copy.stageProposal },
+    { name: "Jane Brown", value: "$17,000", stage: copy.stageWon },
+  ];
+
+  const teamRows = [
+    { name: "Sophia Moore", action: copy.updatedDeal, time: "2m" },
+    { name: "Daniel Kim", action: copy.addedNote, time: "15m" },
+    { name: "Olivia Martinez", action: copy.commented, time: "1h" },
+    { name: "James Wilson", action: copy.changedStage, time: "2h" },
+  ];
+
+  return (
+    <section className="cx-reporting-section">
+      <div className="cx-reporting-container">
+        <div className="cx-reporting-eyebrow">
+          <BarChart3 size={19} />
+          <span>{copy.eyebrow}</span>
+        </div>
+        <div className="cx-reporting-intro-wrap">
+          <div className="cx-reporting-intro">
+            <h2>
+              {copy.titleLine1}
+              <br />
+              {copy.titleLine2}
+              <br />
+              <span>{copy.titleHighlight}</span>
+            </h2>
+
+            <div className="cx-reporting-line" />
+          </div>
+          <div className="cx-reporting-intro-right">
+            <img src={bgreportingImg} alt="CORTEXA" className="background" />
+          </div>
+        </div>
+
+        <div className="cx-reporting-wrap">
+          <div className="cx-reporting-feature-list">
+            <p>{copy.description}</p>
+            {copy.features.map((feature, index) => {
+              const icons = [ChartNoAxesCombined, GitFork, Users2, FileText];
+              const Icon = icons[index];
+
+              return (
+                <article className="cx-reporting-feature" key={feature.title}>
+                  <div className="cx-reporting-feature-icon-wrap">
+                    <div className="cx-reporting-feature-icon">
+                      <Icon size={16} />
+                    </div>
+                    <h3>{feature.title}</h3>
+                  </div>
+                  <p>{feature.description}</p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="cx-reporting-showcase">
+            <article className="cx-report-card cx-performance-card">
+              <div className="cx-report-card-head">
+                <strong>{copy.performanceTitle}</strong>
+                <span>•••</span>
+              </div>
+
+              <div className="cx-report-kpis">
+                <div>
+                  <span>{copy.conversionRate}</span>
+                  <strong>34.8%</strong>
+                  <small>↑ 12.4%</small>
+                </div>
+                <div>
+                  <span>{copy.revenueGenerated}</span>
+                  <strong>$18,450</strong>
+                  <small>↑ 9.1%</small>
+                </div>
+                <div>
+                  <span>{copy.responseTime}</span>
+                  <strong>2.4h</strong>
+                  <small>↓ 8.3%</small>
+                </div>
+              </div>
+
+              <div className="cx-report-line-chart">
+                <svg
+                  viewBox="0 0 520 150"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient id="reportFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="0%"
+                        stopColor="#7c3aed"
+                        stopOpacity="0.25"
+                      />
+                      <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M5,120 L45,100 L85,82 L125,104 L165,60 L205,92 L245,67 L285,43 L325,60 L365,48 L405,30 L455,20 L515,6 L515,150 L5,150 Z"
+                    fill="url(#reportFill)"
+                  />
+                  <polyline
+                    points="5,120 45,100 85,82 125,104 165,60 205,92 245,67 285,43 325,60 365,48 405,30 455,20 515,6"
+                    fill="none"
+                    stroke="#6d28d9"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="cx-report-growth">
+                  ↑ 22%<small>{copy.lastSevenDays}</small>
+                </span>
+              </div>
+
+              <div className="cx-report-insight">
+                <Sparkles size={18} />
+                <div>
+                  <strong>{copy.aiInsight}</strong>
+                </div>
+              </div>
+              <p>{copy.insightText}</p>
+            </article>
+
+            <article className="cx-report-card cx-pipeline-card">
+              <div className="cx-report-card-head">
+                <strong>{copy.pipelineTitle}</strong>
+                <span>•••</span>
+              </div>
+
+              <div className="cx-pipeline-stages">
+                <span>
+                  {copy.stageNew}
+                  <small>12 {copy.deals}</small>
+                </span>
+                <span>
+                  {copy.stageContacted}
+                  <small>8 {copy.deals}</small>
+                </span>
+                <span>
+                  {copy.stageProposal}
+                  <small>6 {copy.deals}</small>
+                </span>
+                <span>
+                  {copy.stageWon}
+                  <small>5 {copy.deals}</small>
+                </span>
+              </div>
+
+              <div className="cx-pipeline-list">
+                {pipelineRows.map((row, index) => (
+                  <div className="cx-pipeline-row" key={`${row.name}-${index}`}>
+                    <span className="cx-mini-avatar">{row.name.charAt(0)}</span>
+                    <strong>{row.name}</strong>
+                    <span>{row.value}</span>
+                    <em>{row.stage}</em>
+                  </div>
+                ))}
+              </div>
+
+              <button type="button" className="cx-report-button">
+                {copy.viewPipeline} <ArrowRight size={16} />
+              </button>
+            </article>
+
+            <article className="cx-report-card cx-team-card">
+              <div className="cx-report-card-head">
+                <strong>{copy.teamActivityTitle}</strong>
+                <button type="button">+ {copy.invite}</button>
+              </div>
+
+              <div className="cx-team-activity-list">
+                {teamRows.map((row, index) => (
+                  <div
+                    className="cx-team-activity-row"
+                    key={`${row.name}-${index}`}
+                  >
+                    <span className="cx-mini-avatar">{row.name.charAt(0)}</span>
+                    <div>
+                      <strong>{row.name}</strong>
+                      <small>{row.action}</small>
+                    </div>
+                    <time>{row.time} ago</time>
+                    <i />
+                  </div>
+                ))}
+              </div>
+
+              <button type="button" className="cx-report-link">
+                {copy.viewActivity} <ArrowRight size={15} />
+              </button>
+            </article>
+
+            <article className="cx-report-card cx-revenue-card">
+              <div className="cx-report-card-head">
+                <strong>{copy.revenueReportTitle}</strong>
+                <span>{copy.thisMonth}⌄</span>
+              </div>
+
+              <div className="cx-revenue-kpis">
+                <div>
+                  <span>{copy.totalRevenue}</span>
+                  <strong>$28,450</strong>
+                  <small>↑ 18.6%</small>
+                </div>
+                <div>
+                  <span>{copy.dealsClosed}</span>
+                  <strong>24</strong>
+                  <small>↑ 26.3%</small>
+                </div>
+                <div>
+                  <span>{copy.averageDeal}</span>
+                  <strong>$1,185</strong>
+                  <small>↑ 11.4%</small>
+                </div>
+              </div>
+
+              <div className="cx-revenue-bars">
+                {[42, 62, 76, 55, 88].map((height, index) => (
+                  <div key={index}>
+                    <span style={{ height: `${height}%` }} />
+                    <small>
+                      {["May 1", "May 8", "May 15", "May 22", "May 29"][index]}
+                    </small>
+                  </div>
+                ))}
+              </div>
+
+              <button type="button" className="cx-report-link">
+                {copy.downloadReport} <ArrowRight size={15} />
+              </button>
+            </article>
+          </div>
+        </div>
+
+        <div className="cx-reporting-footer">
+          <Sparkles size={28} />
+          <div>
+            <strong>{copy.footerTitle}</strong>
+            <p>{copy.footerDescription}</p>
+          </div>
+        </div>
+
+        <i className="cx-reporting-disclaimer">{copy.disclaimer}</i>
+      </div>
+    </section>
+  );
+}
+
+function UnlimitedAISection({ tr }) {
+  const copy = tr.unlimitedAISection;
+
+  const features = [
+    {
+      key: "unlimited",
+      icon: Infinity,
+      rightIcon: Infinity,
+      title: copy.unlimitedTitle,
+      description: copy.unlimitedDescription,
+    },
+    {
+      key: "credits",
+      icon: CreditCard,
+      rightIcon: XCircle,
+      title: copy.noCreditsTitle,
+      description: copy.noCreditsDescription,
+    },
+    {
+      key: "bills",
+      icon: ReceiptText,
+      rightIcon: ReceiptText,
+      title: copy.noBillsTitle,
+      description: copy.noBillsDescription,
+    },
+    {
+      key: "growth",
+      icon: Zap,
+      rightIcon: TrendingUp,
+      title: copy.growthTitle,
+      description: copy.growthDescription,
+    },
+  ];
+
+  return (
+    <section className="m-unlimited-ai">
+      <div className="m-unlimited-ai-glow" aria-hidden="true">
+        <span className="m-unlimited-ai-orbit orbit-one" />
+        <span className="m-unlimited-ai-orbit orbit-two" />
+
+        <div className="m-unlimited-ai-core">
+          <Bot size={54} />
+        </div>
+
+        <span className="m-unlimited-ai-floating-icon icon-one">
+          <Infinity size={26} />
+        </span>
+
+        <span className="m-unlimited-ai-floating-icon icon-two">
+          <Sparkles size={24} />
+        </span>
+
+        <span className="m-unlimited-ai-floating-icon icon-three">
+          <BarChart3 size={24} />
+        </span>
+
+        <span className="m-unlimited-ai-floating-icon icon-four">
+          <MessageCircle size={24} />
+        </span>
+
+        <span className="m-unlimited-ai-floating-icon icon-five">
+          <FileText size={23} />
+        </span>
+
+        <span className="m-unlimited-ai-floating-icon icon-six">
+          <LayoutDashboard size={23} />
+        </span>
+      </div>
+
+      <div className="m-unlimited-ai-header">
+        <h2>
+          {copy.titleLine1}
+          <br />
+
+          <span>{copy.titleHighlight}</span>
+          <br />
+
+          {copy.titleLine3}
+        </h2>
+
+        <p>
+          {copy.descriptionLine1}
+          <br />
+          {copy.descriptionLine2}
+          <br />
+
+          <strong>{copy.descriptionHighlight}</strong>
+        </p>
+      </div>
+
+      <div className="m-unlimited-ai-list">
+        {features.map((feature) => {
+          const Icon = feature.icon;
+          const RightIcon = feature.rightIcon;
+
+          return (
+            <article className="m-unlimited-ai-item" key={feature.key}>
+              <div className="m-unlimited-ai-item-icon">
+                <Icon size={30} />
+              </div>
+
+              <div className="m-unlimited-ai-item-content">
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+
+              <div className="m-unlimited-ai-item-divider" />
+
+              <div className="m-unlimited-ai-item-right-icon">
+                <RightIcon size={31} />
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="m-unlimited-ai-footer">
+        <div className="m-unlimited-ai-footer-icon">
+          <ShieldCheck size={34} />
+        </div>
+
+        <div>
+          <strong>{copy.footerTitle}</strong>
+          <p>{copy.footerHighlight}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EverythingIncludedSection({ tr }) {
+  const copy = tr.everythingIncludedSection;
+
+  const iconList = [
+    Contact2,
+    Funnel,
+    Mail,
+    Bot,
+    MessageCircle,
+    CalendarDays,
+    BarChart3,
+    Users2,
+    Workflow,
+    Sparkles,
+    CircleDollarSign,
+  ];
+
+  return (
+    <section className="m-everything-included">
+      <div className="m-everything-included-inner">
+        <div className="m-everything-eyebrow">
+          <ShieldCheck size={18} />
+          <span>{copy.eyebrow}</span>
+        </div>
+
+        <div className="m-everything-header">
+          <h2>
+            {copy.titleLine1} <span>{copy.titleHighlight}</span>
+            <br />
+            {copy.titleLine2}
+          </h2>
+
+          <p>{copy.description}</p>
+        </div>
+
+        <div className="m-everything-table">
+          <div className="m-everything-table-head">
+            <div>{copy.columnFeature}</div>
+
+            <div>{copy.columnOthers}</div>
+
+            <div className="m-everything-cortexa-head">
+              <Bot size={26} />
+              <span>
+                CORTEXA
+                <small>AIOS</small>
+              </span>
+            </div>
+          </div>
+
+          <div className="m-everything-table-body">
+            {copy.rows.map((row, index) => {
+              const Icon = iconList[index] || Sparkles;
+
+              return (
+                <article
+                  className="m-everything-row"
+                  key={`${row.feature}-${index}`}
+                >
+                  <div className="m-everything-feature">
+                    <span className="m-everything-feature-icon">
+                      <Icon size={24} />
+                    </span>
+
+                    <strong>{row.feature}</strong>
+                  </div>
+
+                  <div className="m-everything-other">
+                    <span className="m-everything-x">
+                      <X size={14} />
+                    </span>
+
+                    <p>{row.other}</p>
+                  </div>
+
+                  <div className="m-everything-included-value">
+                    <span className="m-everything-check">
+                      <Check size={15} />
+                    </span>
+
+                    <strong>{row.included}</strong>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="m-everything-footer">
+          <div className="m-everything-footer-icon">
+            <Zap size={34} />
+          </div>
+
+          <div>
+            <strong>{copy.footerTitle}</strong>
+            <p>{copy.footerDescription}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 export default function LandingMobile() {
   const [lang, setLang] = useState(() => {
     return localStorage.getItem("cortexa_lang") || "en";
@@ -288,18 +793,6 @@ export default function LandingMobile() {
       rightBenefit5: "Transparent pricing. No surprises.",
       stat2Title: "",
 
-      titlePre: "Reporting that ",
-      titleActive: "actually ",
-      titleActive1: "works.",
-      subtitle: "In-app. Live. Actionable.",
-      card1Title: "Live Performance",
-      card1Right: "Live Performance Dashboards",
-      card2Title: "Customer Report",
-      card2Right: "Custom Reports in Seconds",
-      card3Title: "Analytics Overview",
-      card3Right: "Visual Insights That Drive Action",
-      card4Title: "Pipeline Overview",
-      card4Right: "Team & Pipeline Visibility",
       thCustomer: "Customer",
       thDeals: "Deals",
       thRevenue: "Revenue",
@@ -323,6 +816,162 @@ export default function LandingMobile() {
       workspacelang1: "Team",
       workspacelang2: "Revenue",
       workspacelang3: "Workspace",
+      reportingSection: {
+        eyebrow: "REPORTING & WORKFLOW",
+        titleLine1: "Reporting",
+        titleLine2: "turns to",
+        titleHighlight: "revenue.",
+        description:
+          "Track leads, conversions, response times, and team performance in real time. No more scattered data. Just clarity.",
+        features: [
+          {
+            title: "Analytics",
+            description: "Track leads and team performance in real time.",
+          },
+          {
+            title: "Pipeline",
+            description: "Manage every deal from one workspace.",
+          },
+          {
+            title: "Team Visibility",
+            description: "See what your team is doing instantly.",
+          },
+          {
+            title: "Reports",
+            description: "Custom reports that drive revenue.",
+          },
+        ],
+        performanceTitle: "Performance Overview",
+        conversionRate: "Conversion Rate",
+        revenueGenerated: "Revenue Generated",
+        responseTime: "Response Time",
+        lastSevenDays: "vs last 7 days",
+        aiInsight: "AI Insight",
+        insightText: "Response times are improving. Keep it up!",
+        pipelineTitle: "Pipeline",
+        deals: "deals",
+        stageNew: "New Lead",
+        stageContacted: "Contacted",
+        stageProposal: "Proposal",
+        stageWon: "Closed Won",
+        viewPipeline: "View Pipeline",
+        teamActivityTitle: "Team Activity",
+        invite: "Invite",
+        updatedDeal: "Updated a deal",
+        addedNote: "Added a note",
+        commented: "Commented",
+        changedStage: "Changed stage",
+        viewActivity: "View all activity",
+        revenueReportTitle: "Revenue Report",
+        thisMonth: "This Month",
+        totalRevenue: "Total Revenue",
+        dealsClosed: "Deals Closed",
+        averageDeal: "Avg. Deal Value",
+        downloadReport: "Download Report",
+        footerTitle: "Your data. Your decisions. Your revenue.",
+        footerDescription: "Cortexa AI turns your data into action.",
+        disclaimer:
+          "Product demo — names, numbers, and activity shown are sample data for illustration only, not real customer results.",
+      },
+      unlimitedAISection: {
+        titleLine1: "Unlimited AI",
+        titleHighlight: "Usage Included",
+        titleLine3: "in Every Plan",
+
+        descriptionLine1: "No AI credits. No credit packs. No usage limits.",
+        descriptionLine2:
+          "No surprise AI bills. Use Cortexa as much as your business needs —",
+        descriptionHighlight: "your monthly price stays predictable.",
+
+        unlimitedTitle: "Unlimited AI",
+        unlimitedDescription: "Use AI tools as much as you need.",
+
+        noCreditsTitle: "No Credits",
+        noCreditsDescription: "No credit packs. No top-ups.",
+
+        noBillsTitle: "No Surprise Bills",
+        noBillsDescription: "One predictable monthly price.",
+
+        growthTitle: "Built for Growth",
+        growthDescription: "Scale your business without limits.",
+
+        footerTitle: "Powerful AI. Predictable pricing.",
+        footerHighlight: "That’s the Cortexa way.",
+      },
+      everythingIncludedSection: {
+        eyebrow: "EVERYTHING INCLUDED. NOTHING EXTRA.",
+
+        titleLine1: "See",
+        titleHighlight: "Exactly",
+        titleLine2: "What You Get",
+
+        description:
+          "Other platforms charge extra for the tools and features your team actually needs. Cortexa includes everything—so you can focus on what matters: closing deals.",
+
+        columnFeature: "WHAT YOU GET",
+        columnOthers: "WITH OTHERS",
+
+        rows: [
+          {
+            feature: "CRM & Contact Management",
+            other: "Add-on or higher plan",
+            included: "Included",
+          },
+          {
+            feature: "Leads & Pipeline Management",
+            other: "Add-on or separate tool",
+            included: "Included",
+          },
+          {
+            feature: "Email & SMS Campaigns",
+            other: "Add-on or separate tool",
+            included: "Included",
+          },
+          {
+            feature: "AI Agent (24/7)",
+            other: "Add-on or separate platform",
+            included: "Included",
+          },
+          {
+            feature: "WhatsApp Automation",
+            other: "Add-on or extra integration",
+            included: "Included",
+          },
+          {
+            feature: "Appointment Booking",
+            other: "Add-on or higher plan",
+            included: "Included",
+          },
+          {
+            feature: "Reporting & Analytics",
+            other: "Add-on or higher tier",
+            included: "Included",
+          },
+          {
+            feature: "Team Collaboration",
+            other: "Add-on or higher plan",
+            included: "Included",
+          },
+          {
+            feature: "Workflow Automation",
+            other: "Add-on or separate tool",
+            included: "Included",
+          },
+          {
+            feature: "Unlimited AI Usage",
+            other: "Usage limits or extra cost",
+            included: "Unlimited. No extra cost.",
+          },
+          {
+            feature: "Marketing Contact Fees",
+            other: "Billed separately as usage grows",
+            included: "No extra fees. Ever.",
+          },
+        ],
+
+        footerTitle: "One platform. Everything included.",
+        footerDescription: "No add-ons. No surprises. Just results.",
+      },
     },
 
     es: {
@@ -545,18 +1194,6 @@ export default function LandingMobile() {
       rightBenefit5: "Precios transparentes. Sin sorpresas.",
       stat2Title: "",
 
-      titlePre: "Informes que ",
-      titleActive: "realmente ",
-      titleActive1: "funcionan.",
-      subtitle: "En la aplicación. En vivo. Accionable.",
-      card1Title: "Rendimiento en Vivo",
-      card1Right: "Paneles de Rendimiento en Vivo",
-      card2Title: "Informe de Clientes",
-      card2Right: "Informes Personalizados en Segundos",
-      card3Title: "Resumen Analítico",
-      card3Right: "Información Visual que Impulsa la Acción",
-      card4Title: "Resumen de Pipeline",
-      card4Right: "Visibilidad del Equipo y Pipeline",
       thCustomer: "Cliente",
       thDeals: "Tratos",
       thRevenue: "Ingresos",
@@ -582,6 +1219,167 @@ export default function LandingMobile() {
       workspacelang1: "Equipo",
       workspacelang2: "Ingresos",
       workspacelang3: "Espacio de trabajo",
+
+      reportingSection: {
+        eyebrow: "INFORMES Y FLUJO DE TRABAJO",
+        titleLine1: "Los informes",
+        titleLine2: "se convierten en",
+        titleHighlight: "ingresos.",
+        description:
+          "Controla clientes potenciales, conversiones, tiempos de respuesta y rendimiento del equipo en tiempo real. Sin datos dispersos. Solo claridad.",
+        features: [
+          {
+            title: "Analítica",
+            description:
+              "Controla clientes potenciales y el rendimiento del equipo en tiempo real.",
+          },
+          {
+            title: "Pipeline",
+            description:
+              "Gestiona cada negocio desde un solo espacio de trabajo.",
+          },
+          {
+            title: "Visibilidad del equipo",
+            description: "Ve al instante lo que está haciendo tu equipo.",
+          },
+          {
+            title: "Informes",
+            description: "Informes personalizados que impulsan los ingresos.",
+          },
+        ],
+        performanceTitle: "Resumen de rendimiento",
+        conversionRate: "Tasa de conversión",
+        revenueGenerated: "Ingresos generados",
+        responseTime: "Tiempo de respuesta",
+        lastSevenDays: "vs últimos 7 días",
+        aiInsight: "Insight de IA",
+        insightText: "Los tiempos de respuesta están mejorando. ¡Sigue así!",
+        pipelineTitle: "Pipeline",
+        deals: "negocios",
+        stageNew: "Nuevo lead",
+        stageContacted: "Contactado",
+        stageProposal: "Propuesta",
+        stageWon: "Cerrado ganado",
+        viewPipeline: "Ver pipeline",
+        teamActivityTitle: "Actividad del equipo",
+        invite: "Invitar",
+        updatedDeal: "Actualizó un negocio",
+        addedNote: "Añadió una nota",
+        commented: "Comentó",
+        changedStage: "Cambió la etapa",
+        viewActivity: "Ver toda la actividad",
+        revenueReportTitle: "Informe de ingresos",
+        thisMonth: "Este mes",
+        totalRevenue: "Ingresos totales",
+        dealsClosed: "Negocios cerrados",
+        averageDeal: "Valor medio",
+        downloadReport: "Descargar informe",
+        footerTitle: "Tus datos. Tus decisiones. Tus ingresos.",
+        footerDescription: "Cortexa AI convierte tus datos en acciones.",
+        disclaimer:
+          "Demostración del producto: los nombres, cifras y actividades son datos de ejemplo, no resultados reales de clientes.",
+      },
+      unlimitedAISection: {
+        titleLine1: "Uso Ilimitado de IA",
+        titleHighlight: "Incluido",
+        titleLine3: "en Todos los Planes",
+
+        descriptionLine1:
+          "Sin créditos de IA. Sin paquetes de créditos. Sin límites de uso.",
+        descriptionLine2:
+          "Sin facturas sorpresa por IA. Usa Cortexa tanto como tu negocio lo necesite —",
+        descriptionHighlight: "tu precio mensual siempre será predecible.",
+
+        unlimitedTitle: "IA Ilimitada",
+        unlimitedDescription:
+          "Utiliza las herramientas de IA tanto como necesites.",
+
+        noCreditsTitle: "Sin Créditos",
+        noCreditsDescription: "Sin paquetes de créditos. Sin recargas.",
+
+        noBillsTitle: "Sin Facturas Sorpresa",
+        noBillsDescription: "Un precio mensual predecible.",
+
+        growthTitle: "Creado para Crecer",
+        growthDescription: "Escala tu negocio sin límites.",
+
+        footerTitle: "IA potente. Precios predecibles.",
+        footerHighlight: "Así funciona Cortexa.",
+      },
+      everythingIncludedSection: {
+        eyebrow: "TODO INCLUIDO. NADA EXTRA.",
+
+        titleLine1: "Mira",
+        titleHighlight: "Exactamente",
+        titleLine2: "Lo Que Obtienes",
+
+        description:
+          "Otras plataformas cobran extra por las herramientas y funciones que tu equipo realmente necesita. Cortexa incluye todo para que puedas enfocarte en lo importante: cerrar negocios.",
+
+        columnFeature: "LO QUE OBTIENES",
+        columnOthers: "CON OTROS",
+
+        rows: [
+          {
+            feature: "CRM y Gestión de Contactos",
+            other: "Complemento o plan superior",
+            included: "Incluido",
+          },
+          {
+            feature: "Leads y Gestión de Pipeline",
+            other: "Complemento o herramienta separada",
+            included: "Incluido",
+          },
+          {
+            feature: "Campañas de Email y SMS",
+            other: "Complemento o herramienta separada",
+            included: "Incluido",
+          },
+          {
+            feature: "Agente de IA 24/7",
+            other: "Complemento o plataforma separada",
+            included: "Incluido",
+          },
+          {
+            feature: "Automatización de WhatsApp",
+            other: "Complemento o integración adicional",
+            included: "Incluido",
+          },
+          {
+            feature: "Reserva de Citas",
+            other: "Complemento o plan superior",
+            included: "Incluido",
+          },
+          {
+            feature: "Informes y Analítica",
+            other: "Complemento o nivel superior",
+            included: "Incluido",
+          },
+          {
+            feature: "Colaboración de Equipo",
+            other: "Complemento o plan superior",
+            included: "Incluido",
+          },
+          {
+            feature: "Automatización de Flujos",
+            other: "Complemento o herramienta separada",
+            included: "Incluido",
+          },
+          {
+            feature: "Uso Ilimitado de IA",
+            other: "Límites de uso o costo adicional",
+            included: "Ilimitado. Sin costo extra.",
+          },
+          {
+            feature: "Tarifas de Contactos de Marketing",
+            other: "Cobrado por separado según el uso",
+            included: "Sin tarifas adicionales.",
+          },
+        ],
+
+        footerTitle: "Una plataforma. Todo incluido.",
+        footerDescription: "Sin complementos. Sin sorpresas. Solo resultados.",
+      },
     },
 
     pt: {
@@ -804,18 +1602,6 @@ export default function LandingMobile() {
       rightBenefit5: "Preços transparentes. Sem surpresas.",
       stat2Title: "",
 
-      titlePre: "Relatórios que ",
-      titleActive: "realmente ",
-      titleActive1: "funcionam.",
-      subtitle: "No aplicativo. Ao vivo. Prático.",
-      card1Title: "Desempenho ao Vivo",
-      card1Right: "Painéis de Desempenho ao Vivo",
-      card2Title: "Relatório de Clientes",
-      card2Right: "Relatórios Personalizados em Segundos",
-      card3Title: "Visão Geral Analítica",
-      card3Right: "Insights Visuais que Impulsionam a Ação",
-      card4Title: "Visão Geral do Pipeline",
-      card4Right: "Visibilidade da Equipe e Pipeline",
       thCustomer: "Cliente",
       thDeals: "Negócios",
       thRevenue: "Receita",
@@ -841,6 +1627,165 @@ export default function LandingMobile() {
       workspacelang1: "Equipe",
       workspacelang2: "Receita",
       workspacelang3: "Espaço de trabalho",
+
+      reportingSection: {
+        eyebrow: "RELATÓRIOS E FLUXO DE TRABALHO",
+        titleLine1: "Relatórios",
+        titleLine2: "viram",
+        titleHighlight: "receita.",
+        description:
+          "Acompanhe leads, conversões, tempos de resposta e desempenho da equipe em tempo real. Chega de dados espalhados. Apenas clareza.",
+        features: [
+          {
+            title: "Análises",
+            description:
+              "Acompanhe leads e o desempenho da equipe em tempo real.",
+          },
+          {
+            title: "Pipeline",
+            description: "Gerencie cada negócio em um só espaço de trabalho.",
+          },
+          {
+            title: "Visibilidade da equipe",
+            description: "Veja instantaneamente o que sua equipe está fazendo.",
+          },
+          {
+            title: "Relatórios",
+            description: "Relatórios personalizados que geram receita.",
+          },
+        ],
+        performanceTitle: "Visão geral do desempenho",
+        conversionRate: "Taxa de conversão",
+        revenueGenerated: "Receita gerada",
+        responseTime: "Tempo de resposta",
+        lastSevenDays: "vs últimos 7 dias",
+        aiInsight: "Insight de IA",
+        insightText: "Os tempos de resposta estão melhorando. Continue assim!",
+        pipelineTitle: "Pipeline",
+        deals: "negócios",
+        stageNew: "Novo lead",
+        stageContacted: "Contatado",
+        stageProposal: "Proposta",
+        stageWon: "Fechado ganho",
+        viewPipeline: "Ver pipeline",
+        teamActivityTitle: "Atividade da equipe",
+        invite: "Convidar",
+        updatedDeal: "Atualizou um negócio",
+        addedNote: "Adicionou uma nota",
+        commented: "Comentou",
+        changedStage: "Alterou a etapa",
+        viewActivity: "Ver toda a atividade",
+        revenueReportTitle: "Relatório de receita",
+        thisMonth: "Este mês",
+        totalRevenue: "Receita total",
+        dealsClosed: "Negócios fechados",
+        averageDeal: "Valor médio",
+        downloadReport: "Baixar relatório",
+        footerTitle: "Seus dados. Suas decisões. Sua receita.",
+        footerDescription: "A Cortexa AI transforma seus dados em ação.",
+        disclaimer:
+          "Demonstração do produto: nomes, números e atividades são dados de exemplo, não resultados reais de clientes.",
+      },
+      unlimitedAISection: {
+        titleLine1: "Uso Ilimitado de IA",
+        titleHighlight: "Incluído",
+        titleLine3: "em Todos os Planos",
+
+        descriptionLine1:
+          "Sem créditos de IA. Sem pacotes de créditos. Sem limites de uso.",
+        descriptionLine2:
+          "Sem cobranças inesperadas de IA. Use o Cortexa o quanto sua empresa precisar —",
+        descriptionHighlight: "seu preço mensal permanece previsível.",
+
+        unlimitedTitle: "IA Ilimitada",
+        unlimitedDescription: "Use as ferramentas de IA o quanto precisar.",
+
+        noCreditsTitle: "Sem Créditos",
+        noCreditsDescription: "Sem pacotes de créditos. Sem recargas.",
+
+        noBillsTitle: "Sem Cobranças Surpresa",
+        noBillsDescription: "Um preço mensal previsível.",
+
+        growthTitle: "Criado para Crescer",
+        growthDescription: "Escale sua empresa sem limites.",
+
+        footerTitle: "IA poderosa. Preço previsível.",
+        footerHighlight: "Esse é o jeito Cortexa.",
+      },
+      everythingIncludedSection: {
+        eyebrow: "TUDO INCLUÍDO. NADA EXTRA.",
+
+        titleLine1: "Veja",
+        titleHighlight: "Exatamente",
+        titleLine2: "O Que Você Recebe",
+
+        description:
+          "Outras plataformas cobram à parte pelas ferramentas e recursos que sua equipe realmente precisa. O Cortexa inclui tudo para que você possa focar no que importa: fechar negócios.",
+
+        columnFeature: "O QUE VOCÊ RECEBE",
+        columnOthers: "COM OUTROS",
+
+        rows: [
+          {
+            feature: "CRM e Gestão de Contatos",
+            other: "Complemento ou plano superior",
+            included: "Incluído",
+          },
+          {
+            feature: "Leads e Gestão de Pipeline",
+            other: "Complemento ou ferramenta separada",
+            included: "Incluído",
+          },
+          {
+            feature: "Campanhas de E-mail e SMS",
+            other: "Complemento ou ferramenta separada",
+            included: "Incluído",
+          },
+          {
+            feature: "Agente de IA 24/7",
+            other: "Complemento ou plataforma separada",
+            included: "Incluído",
+          },
+          {
+            feature: "Automação do WhatsApp",
+            other: "Complemento ou integração adicional",
+            included: "Incluído",
+          },
+          {
+            feature: "Agendamento de Compromissos",
+            other: "Complemento ou plano superior",
+            included: "Incluído",
+          },
+          {
+            feature: "Relatórios e Análises",
+            other: "Complemento ou nível superior",
+            included: "Incluído",
+          },
+          {
+            feature: "Colaboração em Equipe",
+            other: "Complemento ou plano superior",
+            included: "Incluído",
+          },
+          {
+            feature: "Automação de Fluxos",
+            other: "Complemento ou ferramenta separada",
+            included: "Incluído",
+          },
+          {
+            feature: "Uso Ilimitado de IA",
+            other: "Limites de uso ou custo adicional",
+            included: "Ilimitado. Sem custo extra.",
+          },
+          {
+            feature: "Taxas de Contatos de Marketing",
+            other: "Cobrado separadamente conforme o uso",
+            included: "Sem taxas extras.",
+          },
+        ],
+
+        footerTitle: "Uma plataforma. Tudo incluído.",
+        footerDescription: "Sem adicionais. Sem surpresas. Apenas resultados.",
+      },
     },
   };
   const switchLocale = useLocaleSwitch();
@@ -1024,14 +1969,15 @@ export default function LandingMobile() {
         </div>
 
         <div className="m-trust">
-          <div className="m-trust-text">
-            {tr.trusted}
-          </div>
+          <div className="m-trust-text">{tr.trusted}</div>
         </div>
         {/* dashboard image */}
         <div className="m-dashboard">
           <img src={landingDashImg} alt="" />
-          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+          <i>
+            Product demo — the names, numbers, and activity shown are sample
+            data for illustration only, not real customer results.
+          </i>
         </div>
       </section>
 
@@ -1136,7 +2082,6 @@ export default function LandingMobile() {
               </li>
             </ul>
           </div>
-
         </div>
       </section>
       {/* BENEFITS SECTION */}
@@ -1265,7 +2210,7 @@ export default function LandingMobile() {
           </div>
         </div>
       </section>
-
+      <UnlimitedAISection tr={tr} />
       {/* REAL ESTATE PLATFORM SECTION */}
       <section className="m-platform">
         <div className="m-platform-header">
@@ -1390,7 +2335,10 @@ export default function LandingMobile() {
         </div>
         <div className="m-platform-dashboard">
           <img src={landingDashImg} alt="Dashboard mockup" />
-          <i>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
+          <i>
+            Product demo — the names, numbers, and activity shown are sample
+            data for illustration only, not real customer results.
+          </i>
         </div>
       </section>
 
@@ -1688,264 +2636,8 @@ export default function LandingMobile() {
           </div>
         </div>
       </section>
-      <section className="reporting">
-        <div className="cx-rep-container">
-          <div className="cx-rep-header">
-            <h2 className="cx-rep-title">
-              {tr.titlePre}
-              <span className="cx-rep-purple">{tr.titleActive}</span>
-              {tr.titleActive1}
-            </h2>
-            <p className="cx-rep-subtitle">{tr.subtitle}</p>
-          </div>
 
-          <div className="cx-rep-grid">
-            <div className="cx-rep-row">
-              <div className="cx-rep-card">
-                <div className="cx-card-inside">
-                  <span className="cx-card-label">{tr.card1Title}</span>
-                  <div className="cx-mock-chart-line">
-                    <div className="cx-chart-y-axis">
-                      <span>100K</span>
-                      <span>75K</span>
-                      <span>50K</span>
-                      <span>25K</span>
-                      <span>0</span>
-                    </div>
-                    <div className="cx-line-graphic-container">
-                      <svg viewBox="0 0 300 100" className="cx-svg-line">
-                        <path
-                          d="M10,80 L70,55 L130,48 L190,70 L250,42 L280,35 L320,15"
-                          fill="none"
-                          stroke="#4f46e5"
-                          strokeWidth="2"
-                        />
-                        <circle cx="10" cy="80" r="3" fill="#4f46e5" />
-                        <circle cx="70" cy="55" r="3" fill="#4f46e5" />
-                        <circle cx="130" cy="48" r="3" fill="#4f46e5" />
-                        <circle cx="190" cy="70" r="3" fill="#4f46e5" />
-                        <circle cx="250" cy="42" r="3" fill="#4f46e5" />
-                        <circle cx="280" cy="35" r="3" fill="#4f46e5" />
-                      </svg>
-                    </div>
-                    <div className="cx-chart-x-axis">
-                      <span>Jan 1</span>
-                      <span>Jan 8</span>
-                      <span>Jan 15</span>
-                      <span>Jan 22</span>
-                      <span>Jan 29</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="cx-rep-text-side">
-                <h3>{tr.card1Right}</h3>
-              </div>
-            </div>
-
-            <div className="cx-rep-row">
-              <div className="cx-rep-card">
-                <div className="cx-card-inside">
-                  <span className="cx-card-label">{tr.card2Title}</span>
-                  <table className="cx-rep-table">
-                    <thead>
-                      <tr>
-                        <th className="text-left">{tr.thCustomer}</th>
-                        <th className="text-center">{tr.thDeals}</th>
-                        <th className="text-right">{tr.thRevenue}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="text-left font-grey">Brookstone</td>
-                        <td className="text-center">8</td>
-                        <td className="text-right">$24,600</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey">Riverside</td>
-                        <td className="text-center">6</td>
-                        <td className="text-right">$18,350</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey">Summit</td>
-                        <td className="text-center">4</td>
-                        <td className="text-right">$12,960</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey">Westview</td>
-                        <td className="text-center">3</td>
-                        <td className="text-right">$9,420</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="cx-rep-text-side">
-                <h3>{tr.card2Right}</h3>
-              </div>
-            </div>
-
-            <div className="cx-rep-row">
-              <div className="cx-rep-card">
-                <div className="cx-card-inside">
-                  <span className="cx-card-label">{tr.card3Title}</span>
-                  <div className="cx-mock-chart-bar">
-                    <div className="cx-chart-y-axis">
-                      <span>100K</span>
-                      <span>75K</span>
-                      <span>50K</span>
-                      <span>25K</span>
-                      <span>0</span>
-                    </div>
-                    <div className="cx-bar-graphic-container">
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "35%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "25%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "30%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill filled-blue"
-                          style={{ height: "60%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "40%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill filled-purple"
-                          style={{ height: "80%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "75%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "32%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill filled-purple"
-                          style={{ height: "85%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "45%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill filled-blue-bright"
-                          style={{ height: "90%" }}
-                        ></div>
-                      </div>
-                      <div className="cx-bar-col">
-                        <div
-                          className="cx-bar-fill"
-                          style={{ height: "55%" }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="cx-chart-x-axis padding-left-bars">
-                      <span>Jan</span>
-                      <span>Feb</span>
-                      <span>Mar</span>
-                      <span>Apr</span>
-                      <span>May</span>
-                      <span>Jun</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="cx-rep-text-side">
-                <h3>{tr.card3Right}</h3>
-              </div>
-            </div>
-
-            <div className="cx-rep-row">
-              <div className="cx-rep-card">
-                <div className="cx-card-inside">
-                  <span className="cx-card-label">{tr.card4Title}</span>
-                  <table className="cx-rep-table-pipeline">
-                    <thead>
-                      <tr>
-                        <th className="text-left">{tr.thStage}</th>
-                        <th className="text-right">{tr.thDeals}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="text-left font-grey flex-cell">
-                          <CheckCircle2 size={14} className="cx-pipe-check" />
-                          <span>{tr.stageNew}</span>
-                        </td>
-                        <td className="text-right font-bold">320</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey flex-cell">
-                          <CheckCircle2 size={14} className="cx-pipe-check" />
-                          <span>{tr.stageContacted}</span>
-                        </td>
-                        <td className="text-right font-bold">210</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey flex-cell">
-                          <CheckCircle2 size={14} className="cx-pipe-check" />
-                          <span>{tr.stageQualified}</span>
-                        </td>
-                        <td className="text-right font-bold">150</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey flex-cell">
-                          <CheckCircle2 size={14} className="cx-pipe-check" />
-                          <span>{tr.stageProposal}</span>
-                        </td>
-                        <td className="text-right font-bold">96</td>
-                      </tr>
-                      <tr>
-                        <td className="text-left font-grey flex-cell">
-                          <CheckCircle2 size={14} className="cx-pipe-check" />
-                          <span>{tr.stageClosed}</span>
-                        </td>
-                        <td className="text-right font-bold">54</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="cx-rep-text-side">
-                <h3>{tr.card4Right}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-        <i style={{ display: "block", fontSize: "11px", opacity: 0.7, marginTop: "10px", textAlign: "center" }}>Product demo — the names, numbers, and activity shown are sample data for illustration only, not real customer results.</i>
-      </section>
+      <ReportingSection tr={tr} />
       <section id="m-workspace">
         <div className="aios-container">
           <img src={workspace} alt="workspace" />
@@ -2069,7 +2761,6 @@ export default function LandingMobile() {
           </h2>
         </div>
 
-
         <div className="m-final-cta-action">
           <a href="/trial" className="m-final-purple-btn">
             <svg
@@ -2118,8 +2809,8 @@ export default function LandingMobile() {
         </div>
       </section>
       {/* TESTIMONIALS SECTION */}
-      
 
+      <EverythingIncludedSection tr={tr} />
       {/* FAQ SECTION */}
       <section className="m-faq">
         <div className="m-faq-header">
