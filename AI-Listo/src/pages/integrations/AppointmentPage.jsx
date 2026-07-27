@@ -125,7 +125,7 @@ export default function AppointmentIntegrationPage() {
             marginBottom: 10,
           }}
         >
-          AI Appointment Booking
+          Appointment Settings
         </h1>
 
         <p
@@ -134,7 +134,7 @@ export default function AppointmentIntegrationPage() {
             marginBottom: 30,
           }}
         >
-          Automatically schedule calls, meetings, and property tours with qualified leads.
+          Configure how appointments will work for your team. Automated scheduling of calls, meetings, and property tours with qualified leads is coming soon.
         </p>
 
         <div
@@ -159,14 +159,6 @@ export default function AppointmentIntegrationPage() {
             >
               <option value="google_calendar">
                 Google Calendar
-              </option>
-
-              <option value="outlook">
-                Microsoft Outlook
-              </option>
-
-              <option value="caldav">
-                CalDAV
               </option>
             </select>
           </div>
@@ -249,7 +241,7 @@ export default function AppointmentIntegrationPage() {
               }
             />
 
-            Enable appointment booking
+            Enable appointment booking (coming soon)
           </label>
 
           <label style={checkboxRow}>

@@ -89,10 +89,12 @@ export class MakeService {
     return rows[0];
   }
 
-  async triggerWebhook(body: any) {
+  async triggerWebhook(
+    teamId: string,
+    body: any,
+  ) {
     try {
       const {
-        teamId,
         event,
         payload,
       } = body;

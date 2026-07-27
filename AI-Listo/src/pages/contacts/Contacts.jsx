@@ -26,7 +26,6 @@ import {
   Archive,
   UserCog,
   StickyNote,
-  GitBranch,
   Building2,
   ChevronLeft,
   Calendar,
@@ -1290,14 +1289,6 @@ export default function ContactsRelationshipsPage() {
                     <Bot /> Run AI Review
                   </button>
                   <button
-                    className="action-btn map"
-                    onClick={() =>
-                      navigate("/dashboard/contacts/relationship-map")
-                    }
-                  >
-                    <Handshake /> Relationship Map
-                  </button>
-                  <button
                     className="primary-btn"
                     onClick={() => setShowCreateModal(true)}
                   >
@@ -1391,15 +1382,6 @@ export default function ContactsRelationshipsPage() {
                                 )}
                               </div>
                             </div>
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/contacts/relationship-map?id=${contact.id}`,
-                                )
-                              }
-                            >
-                              <GitBranch size={15} /> Open Relationship Map
-                            </button>
                             <button onClick={runAiReview}>
                               <Bot size={15} /> Run AI Review
                             </button>

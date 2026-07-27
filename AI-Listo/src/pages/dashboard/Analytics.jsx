@@ -24,12 +24,10 @@ import {
   Users,
   AlertTriangle,
   Sparkles,
-  Zap,
   Bot,
   CalendarCheck,
   Globe,
   Clock3,
-  Target,
   Download,
   MessageCircle,
   Megaphone,
@@ -411,7 +409,7 @@ export default function CortexaAnalyticsDashboard() {
             <Download size={15} /> Export
           </button>
           <button className="btn-primary" onClick={refresh}>
-            <Zap size={15} fill="currentColor" /> Run AI Revenue Analysis
+            <RefreshCw size={15} /> Refresh
           </button>
         </div>
       </header>
@@ -847,55 +845,17 @@ export default function CortexaAnalyticsDashboard() {
               <div className="insight-item-box">
                 <div className="insight-icon-title">
                   <div className="insight-left-wrap">
-                    <div className="insight-icon-wrap green">
-                      <MessageCircle size={16} className="text-green-strong" />
+                    <div className="insight-icon-wrap">
+                      <Sparkles size={16} className="text-royal-blue" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>WhatsApp is outperforming of other sources</h4>
-                      <p>You're converting 2.4x higher than Instagram traffic.</p>
-                  </div>
-                  </div>
-                  <a href="#action" className="text-royal-blue">
-                    Open WhatsApp Leads →
-                  </a>
-                </div>
-              </div>
-
-              <div className="insight-item-box">
-                <div className="insight-icon-title">
-                  <div className="insight-left-wrap">
-                    <div className="insight-icon-wrap orange">
-                      <Target size={20} className="text-orange-strong" />
-                    </div>
-                    <div className="insight-icon-box-wrap">
-                      <h4>41% of showing are not converting</h4>
+                      <h4>AI insights coming soon</h4>
                       <p>
-                        Follow up within 24 hours to increase your close rate.
+                        Automated revenue insights aren't available yet. This
+                        section will populate once the feature is live.
                       </p>
                     </div>
                   </div>
-                  <a href="#action" className="text-royal-blue">
-                    Reviewing Showings →
-                  </a>
-                </div>
-              </div>
-
-              <div className="insight-item-box">
-                <div className="insight-icon-title">
-                  <div className="insight-left-wrap">
-                    <div className="insight-icon-wrap purple">
-                      <Zap size={20} className="text-purple-strong" />
-                    </div>
-                    <div className="insight-icon-box-wrap">
-                      <h4>AI follow up can boost appointments</h4>
-                      <p>
-                        Enable AI follow-up to re-engage cold leads automatically.
-                      </p>
-                    </div>
-                  </div>
-                  <a href="#action" className="text-royal-blue">
-                    Open AI Automation →
-                  </a>
                 </div>
               </div>
             </div>
@@ -922,21 +882,18 @@ export default function CortexaAnalyticsDashboard() {
                 </p>
               </div>
 
-              <button className="btn-forecast-action">
-                Generate AI Forecast →
-              </button>
+              <p className="forecast-desc">
+                Predictive forecasting is coming soon.
+              </p>
             </div>
 
             <div className="forecast-chart-graphic">
-              <div className="bar white-bar" style={{ height: "30%" }}></div>
-              <div className="bar white-bar" style={{ height: "45%" }}></div>
-              <div className="bar white-bar" style={{ height: "60%" }}></div>
-              <div className="bar white-bar" style={{ height: "50%" }}></div>
-              <div className="bar blue-bar" style={{ height: "75%" }}></div>
-              <div
-                className="bar blue-bar animate-pulse"
-                style={{ height: "90%" }}
-              ></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
+              <div className="bar white-bar" style={{ height: "20%" }}></div>
             </div>
           </div>
         </div>

@@ -50,10 +50,13 @@ export class MakeController {
 
   @Post("trigger")
   async triggerWebhook(
+    @CurrentUser() user: any,
+
     @Body()
     body: any,
   ) {
     return this.makeService.triggerWebhook(
+      user.teamId,
       body,
     );
   }

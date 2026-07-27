@@ -217,6 +217,7 @@ export default function LeadsPage() {
     stage: "all",
     agent: "all",
   });
+  const [teamMembers, setTeamMembers] = useState([]);
   const [showingForm, setShowingForm] = useState({
     date: "",
     time: "",
@@ -1239,6 +1240,33 @@ export default function LeadsPage() {
     );
   });
 
+  const fetchTeamMembers = async () => {
+    try {
+      const teams = await apiClient.request("/teams", { method: "GET" });
+      const teamList = teams?.data || teams || [];
+      const teamId = teamList?.[0]?.id;
+
+      if (!teamId) {
+        setTeamMembers([]);
+        return;
+      }
+
+      const membersRes = await apiClient.request(`/teams/${teamId}/members`, {
+        method: "GET",
+      });
+
+      const membersData = membersRes?.data || membersRes || [];
+      const members = Array.isArray(membersData)
+        ? membersData
+        : membersData.members || [];
+
+      setTeamMembers(members);
+    } catch (err) {
+      console.error("Fetch team members error:", err);
+      setTeamMembers([]);
+    }
+  };
+
   const fetchDashboard = async (page = 1, append = false) => {
     try {
       if (append) setLeadLoadingMore(true);
@@ -1303,6 +1331,10 @@ export default function LeadsPage() {
     setLeadsData([]);
     fetchDashboard(1, false);
   }, [location.search, dateRange]);
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
 
   const uploadLeadChatFile = async (file) => {
     if (!selectedLead?.id || !file) return;
@@ -1838,6 +1870,14 @@ export default function LeadsPage() {
                   onChange={(e) => updateLeadFilter("agent", e.target.value)}
                 >
                   <option value="all">All Agents</option>
+                  {teamMembers.map((member) => (
+                    <option
+                      key={member.userId || member.id}
+                      value={member.userId || member.id}
+                    >
+                      {member.name || member.email || "Team Member"}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown size={15} />
               </div>
@@ -1917,6 +1957,14 @@ export default function LeadsPage() {
               onChange={(e) => updateLeadFilter("agent", e.target.value)}
             >
               <option value="all">All Agents</option>
+              {teamMembers.map((member) => (
+                <option
+                  key={member.userId || member.id}
+                  value={member.userId || member.id}
+                >
+                  {member.name || member.email || "Team Member"}
+                </option>
+              ))}
             </select>
             <ChevronDown size={15} />
           </div>
