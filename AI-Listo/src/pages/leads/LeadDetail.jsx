@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
+import { fetchAppointmentsForLead } from '../../api/calendarApi';
 import { useAuth } from '../../context/AuthContext';
 import { buildWhatsAppLink, normalizePhoneToE164 } from '../../utils/whatsapp';
 import WhatsAppChat from '../../components/WhatsAppChat';
@@ -20,6 +21,7 @@ export default function LeadDetail() {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [appointments, setAppointments] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,6 +62,32 @@ export default function LeadDetail() {
     })();
     return () => { cancelled = true; };
   }, [id, user]);
+
+  // Appointments booked for this lead (past + upcoming), shown on the profile.
+  useEffect(() => {
+    if (!id || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchAppointmentsForLead(id);
+        const arr = Array.isArray(res) ? res : res?.data ?? [];
+        if (!cancelled) setAppointments(arr);
+      } catch {
+        if (!cancelled) setAppointments([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [id, user]);
+
+  const apptStatusStyle = (status) => {
+    switch (status) {
+      case 'confirmed': return { background: '#f0fdf4', color: '#16a34a' };
+      case 'pending': return { background: '#fffbeb', color: '#d97706' };
+      case 'completed': return { background: '#eff6ff', color: '#2563eb' };
+      case 'canceled': return { background: '#fef2f2', color: '#dc2626' };
+      default: return { background: '#f1f5f9', color: '#475569' };
+    }
+  };
 
   const loadLead = async () => {
     setLoading(true);
@@ -765,6 +793,57 @@ export default function LeadDetail() {
                 <div><strong>Source:</strong> {lead.source || 'N/A'}</div>
               </div>
             </div>
+
+          {/* Appointments linked to this lead */}
+          <div className="crm-section" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 className="crm-section-title" style={{ margin: 0 }}>Appointments</h3>
+              <Link to="/dashboard/calendar" className="crm-btn crm-btn-secondary" style={{ fontSize: '13px', padding: '6px 12px' }}>
+                Open Calendar
+              </Link>
+            </div>
+            {appointments.length === 0 ? (
+              <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+                No appointments yet. Create one from the Calendar.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                {[...appointments]
+                  .sort((a, b) => new Date(a.startAt) - new Date(b.startAt))
+                  .map((appt) => {
+                    const start = new Date(appt.startAt);
+                    const isPast = new Date(appt.endAt) < new Date();
+                    return (
+                      <div
+                        key={appt.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '10px 12px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          background: isPast ? '#f8fafc' : '#fff',
+                          opacity: isPast ? 0.8 : 1,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{appt.title}</div>
+                          <div style={{ fontSize: '13px', color: '#64748b' }}>
+                            {start.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            {appt.assignedToName ? ` · ${appt.assignedToName}` : ''}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: '12px', fontWeight: 600, padding: '2px 10px', borderRadius: '999px', whiteSpace: 'nowrap', ...apptStatusStyle(appt.status) }}>
+                          {appt.status ? appt.status[0].toUpperCase() + appt.status.slice(1) : ''}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
 
           <div className="crm-section" style={{ marginBottom: '24px' }}>
             <h3 className="crm-section-title">Assign to Agent</h3>

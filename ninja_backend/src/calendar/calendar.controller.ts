@@ -36,8 +36,15 @@ export class CalendarController {
     @CurrentUser() user: any,
     @Query("from") from?: string,
     @Query("to") to?: string,
+    @Query("leadId") leadId?: string,
+    @Query("contactId") contactId?: string,
   ) {
-    return this.calendar.list(this.requireTeam(user), from, to);
+    return this.calendar.list(this.requireTeam(user), {
+      from,
+      to,
+      leadId,
+      contactId,
+    });
   }
 
   @Get("stats")
@@ -47,6 +54,19 @@ export class CalendarController {
     @Query("to") to?: string,
   ) {
     return this.calendar.stats(this.requireTeam(user), from, to);
+  }
+
+  // Active team members for the "Assigned Agent" dropdown.
+  @Get("team-members")
+  teamMembers(@CurrentUser() user: any) {
+    return this.calendar.teamMembers(this.requireTeam(user));
+  }
+
+  // Type-ahead search across leads + contacts for linking an appointment to a
+  // CRM record.
+  @Get("crm-search")
+  crmSearch(@CurrentUser() user: any, @Query("q") q = "") {
+    return this.calendar.crmSearch(this.requireTeam(user), q);
   }
 
   @Post("appointments")
