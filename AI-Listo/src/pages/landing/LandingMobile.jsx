@@ -762,18 +762,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      vsTitleLeft: "OTHER TOOLS OFTEN COME WITH",
-      leftCost1: "High setup fees",
-      leftCost2: "Add-ons and upgrades you pay for separately",
-      leftCost3: "Multiple disconnected tools",
-      leftCost4: "Complex onboarding that slows your team down",
-      leftCost5: "Hidden costs that add up over time",
-      vsTitleRight: "OUR ALL-IN-ONE WORKSPACE",
-      rightBenefit1: "Simple setup fee",
-      rightBenefit2: "Everything included. No add-ons.",
-      rightBenefit3: "One connected workspace",
-      rightBenefit4: "Faster implementation",
-      rightBenefit5: "Transparent pricing. No surprises.",
+      
       stat2Title: "",
 
       thCustomer: "Customer",
@@ -1167,18 +1156,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
-      leftCost1: "Altas tarifas de configuración",
-      leftCost2: "Complementos y actualizaciones que pagas por separado",
-      leftCost3: "Múltiples herramientas desconectadas",
-      leftCost4: "Onboarding complejo que frena a tu equipo",
-      leftCost5: "Costos ocultos que se acumulan con el tiempo",
-      vsTitleRight: "NUESTRO ESPACIO TODO EN UNO",
-      rightBenefit1: "Tarifa de configuración simple",
-      rightBenefit2: "Todo incluido. Sin complementos.",
-      rightBenefit3: "Un espacio de trabajo conectado",
-      rightBenefit4: "Implementación más rápida",
-      rightBenefit5: "Precios transparentes. Sin sorpresas.",
+      
       stat2Title: "",
 
       thCustomer: "Cliente",
@@ -1579,18 +1557,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
-      leftCost1: "Altas taxas de configuração",
-      leftCost2: "Adicionais e atualizações pagos separadamente",
-      leftCost3: "Múltiplas ferramentas desconectadas",
-      leftCost4: "Integração complexa que desacelera sua equipe",
-      leftCost5: "Custos ocultos que se acumulam com el tempo",
-      vsTitleRight: "NOSSO ESPAÇO TUDO-EM-UM",
-      rightBenefit1: "Taxa de configuração simples",
-      rightBenefit2: "Tudo incluído. Sem adicionais.",
-      rightBenefit3: "Um espaço de trabalho conectado",
-      rightBenefit4: "Implementação mais rápida",
-      rightBenefit5: "Preços transparentes. Sem surpresas.",
+      
       stat2Title: "",
 
       thCustomer: "Cliente",
@@ -2012,84 +1979,6 @@ export default function LandingMobile() {
             <p>{tr.stat1Desc}</p>
           </div>
 
-          <div className="cx-mob-list-section">
-            <div className="cx-mob-list-heading heading-red">
-              <XCircle size={20} />
-              <h5>{tr.vsTitleLeft}</h5>
-            </div>
-            <ul className="cx-mob-ul">
-              <li>
-                <div className="cx-mob-li-left">
-                  <XCircle size={14} className="icon-red" />
-                  <span>{tr.leftCost1}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <XCircle size={14} className="icon-red" />
-                  <span>{tr.leftCost2}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <XCircle size={14} className="icon-red" />
-                  <span>{tr.leftCost3}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <XCircle size={14} className="icon-red" />
-                  <span>{tr.leftCost4}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <XCircle size={14} className="icon-red" />
-                  <span>{tr.leftCost5}</span>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div className="line"></div>
-          <div className="cx-mob-list-section">
-            <div className="cx-mob-list-heading heading-blue">
-              <CheckCircle2 size={20} />
-              <h5>{tr.vsTitleRight}</h5>
-            </div>
-            <ul className="cx-mob-ul blue">
-              <li>
-                <div className="cx-mob-li-left">
-                  <CheckCircle2 size={14} className="icon-blue" />
-                  <span>{tr.rightBenefit1}</span>
-                </div>
-                <strong className="cx-val-blue">$97</strong>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <CheckCircle2 size={14} className="icon-blue" />
-                  <span>{tr.rightBenefit2}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <CheckCircle2 size={14} className="icon-blue" />
-                  <span>{tr.rightBenefit3}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <CheckCircle2 size={14} className="icon-blue" />
-                  <span>{tr.rightBenefit4}</span>
-                </div>
-              </li>
-              <li>
-                <div className="cx-mob-li-left">
-                  <CheckCircle2 size={14} className="icon-blue" />
-                  <span>{tr.rightBenefit5}</span>
-                </div>
-              </li>
-            </ul>
-          </div>
         </div>
       </section>
       {/* BENEFITS SECTION */}

@@ -3145,7 +3145,7 @@
   .trial-v2-field input{
     height: 46px;
   }
-  .trial-v2-page, .trial-v2-shell, .trial-v2-plan {
+  .trial-v2-page, .trial-v2-shell {
     background: #000;
   }
   .trial-v2-card, .trial-v2-field, .trial-v2-plan {
@@ -3154,16 +3154,10 @@
   .trial-v2-field svg {
     color: #908e8e;
   }
-  .trial-v2-plan-heading h2, .trial-v2-plan-copy strong, .trial-v2-security p{
+  .trial-v2-plan-heading h2, .trial-v2-security p{
     color: #908e8e;
   }
-  .trial-v2-plan-symbol {
-    background: #420a6266;
-    padding: 7px;
-    border-radius: 50%;
-    width: 52px;
-    height: 52px;
-  }
+ 
   .trial-v2-popular {
     transform: translateY(100%);
   }
