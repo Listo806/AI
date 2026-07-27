@@ -69,6 +69,12 @@ export class CalendarController {
     return this.calendar.crmSearch(this.requireTeam(user), q);
   }
 
+  // Activity log for a single appointment (who did what, and when).
+  @Get("appointments/:id/activity")
+  activity(@CurrentUser() user: any, @Param("id") id: string) {
+    return this.calendar.getActivity(this.requireTeam(user), id);
+  }
+
   @Post("appointments")
   create(@CurrentUser() user: any, @Body() body: any) {
     return this.calendar.create(this.requireTeam(user), this.userId(user), body);
@@ -80,7 +86,12 @@ export class CalendarController {
     @Param("id") id: string,
     @Body() body: any,
   ) {
-    return this.calendar.update(this.requireTeam(user), id, body);
+    return this.calendar.update(
+      this.requireTeam(user),
+      id,
+      body,
+      this.userId(user),
+    );
   }
 
   @Delete("appointments/:id")

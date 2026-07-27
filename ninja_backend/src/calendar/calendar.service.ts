@@ -253,10 +253,17 @@ export class CalendarService {
       ],
     );
 
-    return this.serialize(rows[0]);
+    const created = this.serialize(rows[0]);
+    await this.logActivity(created.id, teamId, userId, "created");
+    return created;
   }
 
-  async update(teamId: string, id: string, body: any) {
+  async update(
+    teamId: string,
+    id: string,
+    body: any,
+    actorId: string | null = null,
+  ) {
     const existing = await this.getOwned(teamId, id);
 
     const pick = (key: string, col: string) =>
@@ -340,6 +347,8 @@ export class CalendarService {
       ],
     );
 
+    await this.logUpdateActivity(existing, next, teamId, id, actorId);
+
     if (existing.google_event_id) {
       try {
         await this.googleCalendar.updateEvent(teamId, existing.google_event_id, {
@@ -393,6 +402,104 @@ export class CalendarService {
       throw new NotFoundException("Appointment not found");
     }
     return rows[0];
+  }
+
+  // ── Activity log ───────────────────────────────────────────────────
+  // Best-effort; a logging failure must never break the appointment action.
+  private async logActivity(
+    appointmentId: string,
+    teamId: string,
+    actorId: string | null,
+    action: string,
+    detail: string | null = null,
+  ) {
+    try {
+      await this.db.query(
+        `INSERT INTO appointment_activity (appointment_id, team_id, actor_id, action, detail)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [appointmentId, teamId, actorId || null, action, detail],
+      );
+    } catch (err: any) {
+      this.logger.warn(`Could not log appointment activity: ${err?.message}`);
+    }
+  }
+
+  // Classify what an edit did (rescheduled / canceled / other change) and log
+  // one entry. A no-op save logs nothing.
+  private async logUpdateActivity(
+    existing: any,
+    next: any,
+    teamId: string,
+    id: string,
+    actorId: string | null,
+  ) {
+    const timeChanged =
+      this.toIso(existing.start_at) !== this.toIso(next.start_at) ||
+      this.toIso(existing.end_at) !== this.toIso(next.end_at);
+    const nowCanceled =
+      next.status === "canceled" && existing.status !== "canceled";
+
+    const labels: Record<string, string> = {
+      title: "title",
+      type: "meeting type",
+      location: "location",
+      notes: "notes",
+      attendee_name: "attendee",
+      attendee_email: "attendee email",
+      assigned_to: "assigned agent",
+      lead_id: "linked lead",
+      contact_id: "linked contact",
+      property_id: "property",
+      reminder_minutes_before: "reminder",
+    };
+    const changed: string[] = [];
+    for (const [col, label] of Object.entries(labels)) {
+      if (String(existing[col] ?? "") !== String(next[col] ?? "")) {
+        changed.push(label);
+      }
+    }
+    const statusChanged = existing.status !== next.status;
+
+    let action: string | null = null;
+    let detail: string | null = null;
+    if (nowCanceled) {
+      action = "canceled";
+    } else if (timeChanged) {
+      action = "rescheduled";
+      detail = `Moved to ${this.formatWhen(next.start_at, next.timezone)}`;
+    } else if (statusChanged) {
+      action = "updated";
+      detail = `Status changed to ${next.status}`;
+    } else if (changed.length) {
+      action = "updated";
+      detail = `Changed ${changed.join(", ")}`;
+    }
+
+    if (action) {
+      await this.logActivity(id, teamId, actorId, action, detail);
+    }
+  }
+
+  async getActivity(teamId: string, appointmentId: string) {
+    const { rows } = await this.db.query(
+      `
+      SELECT aa.id, aa.action, aa.detail, aa.created_at, aa.actor_id,
+             u.name AS actor_name, u.email AS actor_email
+      FROM appointment_activity aa
+      LEFT JOIN users u ON u.id = aa.actor_id
+      WHERE aa.appointment_id = $1 AND aa.team_id = $2
+      ORDER BY aa.created_at DESC
+      `,
+      [appointmentId, teamId],
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      action: r.action,
+      detail: r.detail,
+      createdAt: r.created_at,
+      actorId: r.actor_id,
+      actorName: r.actor_name || r.actor_email || "Someone",
+    }));
   }
 
   // ── Email reminders ────────────────────────────────────────────────

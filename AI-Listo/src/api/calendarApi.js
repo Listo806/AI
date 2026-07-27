@@ -46,3 +46,7 @@ export const updateAppointment = (id, payload) =>
 
 export const deleteAppointment = (id) =>
   apiClient.request(`/calendar/appointments/${id}`, { method: "DELETE" });
+
+// Activity log for one appointment (created / edited / rescheduled / canceled).
+export const fetchAppointmentActivity = (id) =>
+  apiClient.request(`/calendar/appointments/${id}/activity`);

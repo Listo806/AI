@@ -11,7 +11,16 @@ import {
   fetchTeamMembers,
   searchCrm,
   fetchProperties,
+  fetchAppointmentActivity,
 } from "../../api/calendarApi";
+
+// How each logged action reads in the appointment Activity list.
+const ACTION_VERB = {
+  created: "created this appointment",
+  updated: "updated the appointment",
+  rescheduled: "rescheduled the appointment",
+  canceled: "canceled the appointment",
+};
 
 // Meeting types. Labels match what the client asked for; keys are unchanged so
 // existing appointments keep their type.
@@ -80,6 +89,7 @@ export default function CalendarPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState(null);
+  const [activity, setActivity] = useState([]);
 
   // CRM picker state (type-ahead over leads + contacts).
   const [crmQuery, setCrmQuery] = useState("");
@@ -179,11 +189,18 @@ export default function CalendarPage() {
   };
 
   // Clicking an appointment opens the read-only detail view first.
-  const openView = (a) => {
+  const openView = async (a) => {
     setEditing(a);
     setError("");
     setMode("view");
     setModalOpen(true);
+    setActivity([]);
+    try {
+      const log = await fetchAppointmentActivity(a.id);
+      setActivity(Array.isArray(log) ? log : log?.data || []);
+    } catch {
+      setActivity([]);
+    }
   };
 
   const openEditFromView = () => {
@@ -487,6 +504,25 @@ export default function CalendarPage() {
               {editing.propertyTitle && <div className="cal-detail-row"><span>Property</span><div>{editing.propertyTitle}</div></div>}
               <div className="cal-detail-row"><span>Reminder</span><div>{(REMINDERS.find((r) => r.v === editing.reminderMinutesBefore) || { l: "No reminder" }).l}{editing.reminderSentAt ? " (sent)" : ""}</div></div>
               {editing.notes && <div className="cal-detail-row"><span>Notes</span><div style={{ whiteSpace: "pre-wrap" }}>{editing.notes}</div></div>}
+            </div>
+
+            <div className="cal-activity">
+              <h4>Activity</h4>
+              {activity.length === 0 ? (
+                <div className="cal-empty">No activity recorded yet.</div>
+              ) : (
+                <div className="cal-activity-list">
+                  {activity.map((ev) => (
+                    <div key={ev.id} className="cal-activity-item">
+                      <span className="dot" />
+                      <div>
+                        <div className="a"><strong>{ev.actorName}</strong> {ACTION_VERB[ev.action] || ev.action}{ev.detail ? ` · ${ev.detail}` : ""}</div>
+                        <div className="ts">{new Date(ev.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="cal-modal-actions">
