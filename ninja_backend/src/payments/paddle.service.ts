@@ -1,4 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { ConfigService } from '../config/config.service';
 import { Paddle } from '@paddle/paddle-node-sdk';
 
@@ -435,51 +436,74 @@ export class PaddleService {
   }
 
   /**
-   * Verify webhook signature
-   * Paddle webhook verification implementation
+   * Verify a Paddle Billing webhook signature.
+   * The Paddle-Signature header is "ts=<unix>;h1=<hex>". The signed payload is
+   * "<ts>:<raw request body>" hashed with HMAC-SHA256 using the endpoint secret
+   * (PADDLE_WEBHOOK_SECRET). Comparison is timing-safe. The RAW body must be
+   * passed unmodified (main.ts enables rawBody so req.rawBody is the Buffer).
+   * Returns false (never true) whenever it cannot be positively verified.
    */
   verifyWebhookSignature(signature: string, payload: string | Buffer): boolean {
-    if (!this.isConfigured || !this.paddle) {
-      this.logger.warn('Paddle not configured, skipping webhook verification');
+    const secret = this.configService.get('PADDLE_WEBHOOK_SECRET');
+    if (!secret) {
+      this.logger.error(
+        'PADDLE_WEBHOOK_SECRET is not set; cannot verify Paddle webhook',
+      );
       return false;
     }
-
     if (!signature) {
-      this.logger.warn('Webhook signature missing');
+      this.logger.warn('Paddle webhook signature header missing');
       return false;
     }
 
     try {
-      const paddleAny = this.paddle as any;
-      
-      // Try Paddle SDK webhook verification methods
-      if (paddleAny.webhooks?.verify) {
-        return paddleAny.webhooks.verify(payload, signature);
-      } else if (paddleAny.webhooks?.unmarshal) {
-        try {
-          paddleAny.webhooks.unmarshal(payload, signature);
-          return true;
-        } catch {
-          return false;
+      const parts: Record<string, string> = {};
+      for (const kv of signature.split(';')) {
+        const idx = kv.indexOf('=');
+        if (idx > 0) {
+          parts[kv.slice(0, idx).trim()] = kv.slice(idx + 1).trim();
         }
-      } else {
-        // For development/testing: log warning but allow
-        // In production, implement proper verification
-        // See: https://developer.paddle.com/webhook-reference/overview
-        this.logger.warn(
-          'Paddle webhook verification method not found in SDK. ' +
-          'Implementing proper verification is required for production. ' +
-          'See: https://developer.paddle.com/webhook-reference/overview'
-        );
-        
-        // For now, return true to allow webhook processing
-        // TODO: Implement proper Paddle webhook signature verification
-        return true;
       }
+      const ts = parts['ts'];
+      const h1 = parts['h1'];
+      if (!ts || !h1) {
+        this.logger.warn('Paddle signature header malformed');
+        return false;
+      }
+
+      const body = Buffer.isBuffer(payload)
+        ? payload.toString('utf8')
+        : payload;
+      const expected = crypto
+        .createHmac('sha256', secret)
+        .update(`${ts}:${body}`, 'utf8')
+        .digest('hex');
+
+      const a = Buffer.from(h1, 'utf8');
+      const b = Buffer.from(expected, 'utf8');
+      return a.length === b.length && crypto.timingSafeEqual(a, b);
     } catch (error) {
-      this.logger.error('Webhook signature verification failed', error);
+      this.logger.error('Paddle webhook signature verification failed', error);
       return false;
     }
+  }
+
+  /**
+   * Public config for the frontend Paddle.js checkout: the client-side token,
+   * the environment, and the plan/setup price ids. All come from env — the
+   * client-side token is publishable (it ships in the browser bundle).
+   */
+  getPublicConfig() {
+    return {
+      clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
+      environment: this.environment === 'production' ? 'production' : 'sandbox',
+      prices: {
+        solo: this.configService.get('PADDLE_PRICE_SOLO') || null,
+        team: this.configService.get('PADDLE_PRICE_TEAM') || null,
+        growth: this.configService.get('PADDLE_PRICE_GROWTH') || null,
+      },
+      setupPrice: this.configService.get('PADDLE_SETUP_PRICE') || null,
+    };
   }
 
   /**

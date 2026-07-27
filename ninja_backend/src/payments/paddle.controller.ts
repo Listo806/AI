@@ -1,15 +1,34 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  Headers,
+  HttpCode,
+  UseGuards,
+} from '@nestjs/common';
 import { PaddleService } from './paddle.service';
+import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('payments/paddle')
 export class PaddleController {
-  constructor(private readonly paddleService: PaddleService) {}
+  constructor(
+    private readonly paddleService: PaddleService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
   @Get('config/status')
   @UseGuards(JwtAuthGuard)
   async getConfigStatus() {
     return this.paddleService.getConfigStatus();
+  }
+
+  // Public: the frontend Paddle.js checkout reads the client-side token, the
+  // environment, and the price ids from here (the client token is publishable).
+  @Get('config')
+  getConfig() {
+    return this.paddleService.getPublicConfig();
   }
 
   @Get('client-token')
@@ -19,5 +38,23 @@ export class PaddleController {
     // If token is null, frontend will automatically fall back to vendor ID
     return { clientToken: token };
   }
-}
 
+  // Paddle webhook receiver. Verifies the signature against the raw body, then
+  // processes the event idempotently. Answers 200 on accept; an unmatched status
+  // event throws (5xx) so Paddle retries until checkout has linked the account.
+  @Post('webhook')
+  @HttpCode(200)
+  async webhook(
+    @Req() req: any,
+    @Headers('paddle-signature') signature: string,
+  ) {
+    const raw = req.rawBody; // Buffer; rawBody is enabled in main.ts
+    const valid = this.paddleService.verifyWebhookSignature(signature, raw);
+    if (!valid) {
+      // Invalid/forged signature: accept and drop so Paddle stops retrying.
+      return { received: true };
+    }
+    await this.paymentsService.processPaddleWebhook(req.body);
+    return { received: true };
+  }
+}
