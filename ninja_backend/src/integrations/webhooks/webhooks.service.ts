@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { createHmac } from 'crypto';
 import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
@@ -50,9 +51,18 @@ export class WebhooksService {
     let errorMessage: string | null = null;
 
     try {
+      if (!this.isSafeWebhookUrl(endpoint.url)) {
+        throw new Error('Blocked non-public webhook URL');
+      }
+
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (endpoint.secret_token) {
         headers['X-CORTEXA-Webhook-Secret'] = endpoint.secret_token;
+        // Sign the body so receivers can verify authenticity. Sent alongside
+        // the legacy secret header so existing receivers keep working.
+        headers['X-CORTEXA-Signature'] =
+          'sha256=' +
+          createHmac('sha256', endpoint.secret_token).update(payload).digest('hex');
       }
 
       const controller = new AbortController();
@@ -93,6 +103,9 @@ export class WebhooksService {
   // ── CRUD ──────────────────────────────────────────────────────────
 
   async create(teamId: string, dto: { url: string; events: string[]; is_active?: boolean; secret_token?: string }) {
+    if (!this.isSafeWebhookUrl(dto.url)) {
+      throw new BadRequestException('Webhook URL must be a public http or https URL');
+    }
     const { rows } = await this.db.query(
       `INSERT INTO webhook_endpoints (team_id, url, events, is_active, secret_token)
        VALUES ($1, $2, $3::jsonb, $4, $5)
@@ -130,6 +143,10 @@ export class WebhooksService {
   async update(id: string, teamId: string, dto: { url?: string; events?: string[]; is_active?: boolean; secret_token?: string }) {
     // Verify ownership
     await this.findOne(id, teamId);
+
+    if (dto.url !== undefined && !this.isSafeWebhookUrl(dto.url)) {
+      throw new BadRequestException('Webhook URL must be a public http or https URL');
+    }
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -200,6 +217,7 @@ export class WebhooksService {
       team_id: teamId,
       data: { message: 'This is a test webhook from CORTEXA CRM' },
     };
+    const body = JSON.stringify(testPayload);
 
     const start = Date.now();
     let statusCode: number | null = null;
@@ -207,9 +225,16 @@ export class WebhooksService {
     let errorMessage: string | null = null;
 
     try {
+      if (!this.isSafeWebhookUrl(endpoint.url)) {
+        throw new Error('Blocked non-public webhook URL');
+      }
+
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (endpoint.secretToken) {
         headers['X-CORTEXA-Webhook-Secret'] = endpoint.secretToken;
+        headers['X-CORTEXA-Signature'] =
+          'sha256=' +
+          createHmac('sha256', endpoint.secretToken).update(body).digest('hex');
       }
 
       const controller = new AbortController();
@@ -218,7 +243,7 @@ export class WebhooksService {
       const response = await fetch(endpoint.url, {
         method: 'POST',
         headers,
-        body: JSON.stringify(testPayload),
+        body,
         signal: controller.signal,
       });
 
@@ -244,5 +269,50 @@ export class WebhooksService {
     );
 
     return { success, statusCode, responseTimeMs, errorMessage };
+  }
+
+  // ── Security ──────────────────────────────────────────────────────
+  // Basic SSRF guard: allow only public http(s) URLs, blocking loopback,
+  // private, and link-local / cloud-metadata address ranges.
+  private isSafeWebhookUrl(rawUrl: string): boolean {
+    let u: URL;
+    try {
+      u = new URL(rawUrl);
+    } catch {
+      return false;
+    }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+
+    const host = u.hostname.toLowerCase();
+    if (
+      host === 'localhost' ||
+      host.endsWith('.localhost') ||
+      host.endsWith('.local') ||
+      host.endsWith('.internal')
+    ) {
+      return false;
+    }
+
+    const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4) {
+      const a = Number(ipv4[1]);
+      const b = Number(ipv4[2]);
+      if (a === 0 || a === 10 || a === 127) return false;
+      if (a === 169 && b === 254) return false; // link-local + cloud metadata
+      if (a === 172 && b >= 16 && b <= 31) return false;
+      if (a === 192 && b === 168) return false;
+    }
+
+    if (
+      host === '::1' ||
+      host === '[::1]' ||
+      host.startsWith('fc') ||
+      host.startsWith('fd') ||
+      host.startsWith('fe80')
+    ) {
+      return false;
+    }
+
+    return true;
   }
 }
