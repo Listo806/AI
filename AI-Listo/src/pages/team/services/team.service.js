@@ -14,6 +14,7 @@ import {
   getTeamMembersDashboard,
   getTeamAIInsights,
   getTeamActivities,
+  updateMemberRole,
 } from '../../../api/platformApi';
 
 /* ======================================================
@@ -136,4 +137,8 @@ export async function fetchTeamAIInsights(teamId) {
 
 export async function fetchTeamActivities(teamId, params) {
   return await getTeamActivities(teamId, params);
+}
+
+export async function updateTeamMemberRole(teamId, memberId, role) {
+  return await updateMemberRole(teamId, memberId, role);
 }

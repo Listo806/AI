@@ -409,10 +409,6 @@
 }
 
 .team-workspace .team-main-grid {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 2.5fr) minmax(300px, 1fr);
-  gap: 20px;
   margin-bottom: 20px;
 }
 
@@ -423,7 +419,6 @@
 .team-workspace .team-card {
   border: 1px solid #dbe1ea;
   border-radius: 12px;
-  margin-bottom: 16px;
 }
 
 .team-workspace .team-padding {
@@ -1324,7 +1319,8 @@ TEAM BILLING
   border-radius: 12px;
   padding: 16px 12px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 24px;
 }
 
 .team-workspace .team-billing-modern-header {
@@ -1376,7 +1372,7 @@ TEAM BILLING
 
 .team-workspace .team-billing-stats-list {
   display: flex;
-  flex-direction: column;
+  gap: 40px;
 }
 
 .team-workspace .team-billing-stat-row {
@@ -1387,6 +1383,7 @@ TEAM BILLING
   color: #3d4047;
   font-weight: 600;
   padding: 14px 0;
+  gap: 10px;
 }
 
 .team-workspace .team-billing-stat-row:last-child {
@@ -1397,15 +1394,49 @@ TEAM BILLING
   color: #111827;
   font-weight: 700;
 }
+.team-workspace .team-billing-stat-row span{
+  color: #676c77d4;
+}
 
+/* Progress */
+
+.team-workspace .team-billing-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 220px;
+  padding: 14px 0;
+}
+
+.team-workspace .team-billing-progress-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+  position: relative;
+}
+
+.team-workspace .team-billing-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+  transition: width .35s ease;
+}
+
+.team-workspace .team-billing-progress-text {
+  min-width: 38px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
 /* FOOTER */
 
 .team-workspace .team-billing-footer {
   margin-top: auto;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-top: 14px;
+  gap: 10px;
 }
 
 .team-workspace .team-billing-add-seat-btn {
@@ -2006,6 +2037,7 @@ TEAM QUICK ACTIONS
   align-items: center;
   gap: 14px;
   margin-top: 24px;
+  margin-bottom: 20px;
 }
 
 .team-search-box {
@@ -2347,17 +2379,189 @@ TEAM QUICK ACTIONS
   background: #b1f0db;
 }
 
+.team-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(4px);
+}
 
+.team-role-modal {
+  width: min(520px, 100%);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.team-role-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.team-role-modal-header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.team-role-modal-header h3 {
+  margin: 0;
+  font-size: 19px;
+  color: #0f172a;
+}
+
+.team-role-modal-header p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.team-role-modal-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 13px;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.team-role-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.team-role-member {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 15px;
+  background: #f8fafc;
+}
+
+.team-role-member img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.team-role-member div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.team-role-member strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.team-role-member span {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.team-role-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-role-field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.team-role-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #0f172a;
+  background: #ffffff;
+  outline: none;
+}
+
+.team-role-field select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.team-role-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 13px 15px;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.team-role-summary strong {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.team-role-summary span {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: #2563eb;
+}
+
+.team-role-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+@media (max-width: 600px) {
+  .team-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .team-role-modal {
+    width: 100%;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .team-role-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .team-role-modal-actions button {
+    width: 100%;
+  }
+}
 
 
 
 @media (max-width: 1366px) {}
 
 @media (max-width: 1300px) {
-  .team-workspace .team-main-grid {
-    grid-template-columns:
-      minmax(0, 1fr) minmax(320px, 380px);
-  }
 
   .team-workspace .team-members-wrapper {
     grid-column: 1 / -1;
@@ -2429,11 +2633,6 @@ TEAM QUICK ACTIONS
     position: absolute;
     top: 16px;
     right: 16px;
-  }
-
-  .team-workspace .team-main-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
   }
 
   .team-main-grid-right {

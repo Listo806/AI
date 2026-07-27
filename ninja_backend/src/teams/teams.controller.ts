@@ -184,6 +184,21 @@ export class TeamsController {
     return { message: "Member added successfully" };
   }
 
+  @Patch(":id/members/:userId/role")
+  async changeMemberRole(
+    @Param("id") teamId: string,
+    @Param("userId") memberUserId: string,
+    @Body() body: { role: string },
+    @CurrentUser() user: any,
+  ) {
+    return this.teamsService.changeMemberRole(
+      teamId,
+      memberUserId,
+      body.role,
+      user.id,
+    );
+  }
+
   @Delete(":id/members/:userId")
   @ApiOperation({ summary: "Remove member from team" })
   @ApiParam({ name: "id", description: "Team ID" })

@@ -1652,4 +1652,126 @@ export class TeamsService {
   async refreshAIInsights(teamId: string, userId: string) {
     return this.aiInsightsService.refreshAIInsights(teamId, userId);
   }
+
+  async changeMemberRole(
+    teamId: string,
+    memberUserId: string,
+    role: string,
+    requestingUserId: string,
+  ) {
+    const allowedRoles = [
+      "manager",
+      "agent",
+      "developer",
+      "viewer",
+      "wholesaler",
+      "investor",
+      "va",
+    ];
+
+    const normalizedRole = String(role || "")
+      .trim()
+      .toLowerCase();
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      throw new BadRequestException("Invalid team member role");
+    }
+
+    const team = await this.findById(teamId);
+
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    if (team.ownerId !== requestingUserId) {
+      throw new ForbiddenException("Only team owner can change member roles");
+    }
+
+    if (memberUserId === team.ownerId) {
+      throw new BadRequestException("The team owner role cannot be changed");
+    }
+
+    const memberResult = await this.db.query(
+      `
+    SELECT
+      tm.user_id,
+      tm.role,
+      tm.status,
+      u.name,
+      u.email
+    FROM team_members tm
+    INNER JOIN users u ON u.id = tm.user_id
+    WHERE tm.team_id = $1
+      AND tm.user_id = $2
+      AND tm.status = 'active'
+    LIMIT 1
+    `,
+      [teamId, memberUserId],
+    );
+
+    const member = memberResult.rows[0];
+
+    if (!member) {
+      throw new NotFoundException("Active team member not found");
+    }
+
+    if (String(member.role).toLowerCase() === normalizedRole) {
+      return {
+        success: true,
+        member: {
+          id: member.user_id,
+          name: member.name,
+          email: member.email,
+          role: normalizedRole,
+        },
+      };
+    }
+
+    const result = await this.db.query(
+      `
+    UPDATE team_members
+    SET
+      role = $3,
+      updated_at = NOW()
+    WHERE team_id = $1
+      AND user_id = $2
+      AND status = 'active'
+    RETURNING
+      user_id as id,
+      role,
+      status,
+      updated_at as "updatedAt"
+    `,
+      [teamId, memberUserId, normalizedRole],
+    );
+
+    await this.notificationsService.create({
+      teamId,
+      userId: memberUserId,
+      actorUserId: requestingUserId,
+      type: "team.member_role_changed",
+      category: "team",
+      priority: "medium",
+      title: "Team role updated",
+      message: `Your team role was changed from ${member.role} to ${normalizedRole}`,
+      url: "/dashboard/team",
+      entityType: "user",
+      entityId: memberUserId,
+      icon: "shield",
+      metadata: {
+        memberUserId,
+        previousRole: member.role,
+        newRole: normalizedRole,
+      },
+    });
+
+    return {
+      success: true,
+      member: {
+        ...result.rows[0],
+        name: member.name,
+        email: member.email,
+      },
+    };
+  }
 }

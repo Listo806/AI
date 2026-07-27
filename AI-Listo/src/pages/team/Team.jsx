@@ -29,7 +29,8 @@ import { fetchTeamAIInsights } from "./services/team.service";
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
 import useTeamMembers from "./hooks/useTeamMembers";
-
+import ChangeMemberRoleModal from "./components/ChangeMemberRoleModal";
+import { updateTeamMemberRole } from "./services/team.service";
 export default function TeamWorkspace() {
   /* =====================================================
     DASHBOARD
@@ -99,6 +100,9 @@ export default function TeamWorkspace() {
   const [aiLoading, setAiLoading] = useState(false);
 
   const [aiError, setAiError] = useState(null);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [roleUpdating, setRoleUpdating] = useState(false);
+  const [roleMember, setRoleMember] = useState(null);
   /* =====================================================
     DELETE MEMBER
   ===================================================== */
@@ -176,10 +180,36 @@ export default function TeamWorkspace() {
       setAiLoading(false);
     }
   };
-  /* =====================================================
-    RENDER
-  ===================================================== */
+  const handleOpenChangeRole = (member) => {
+    setRoleMember(member);
+    setRoleModalOpen(true);
+  };
 
+  const handleCloseChangeRole = () => {
+    if (roleUpdating) return;
+
+    setRoleModalOpen(false);
+    setRoleMember(null);
+  };
+
+  const handleChangeRole = async ({ memberId, role }) => {
+    if (!selectedTeamId || !memberId || !role) return;
+
+    try {
+      setRoleUpdating(true);
+
+      await updateTeamMemberRole(selectedTeamId, memberId, role);
+
+      await reloadDashboard();
+
+      setRoleModalOpen(false);
+      setRoleMember(null);
+    } catch (error) {
+      console.error("CHANGE MEMBER ROLE ERROR", error);
+    } finally {
+      setRoleUpdating(false);
+    }
+  };
   return (
     <div className="team-workspace">
       {/* =================================================
@@ -199,6 +229,17 @@ export default function TeamWorkspace() {
 
       <TeamStats stats={stats} />
 
+      <TeamBillingCard
+        onInvite={() => setInviteModalOpen(true)}
+        billing={{
+          plan: team?.name || "Team Workspace",
+          status: "Active",
+          includedSeats: seatInfo?.total || 0,
+          activeSeats: seatInfo?.used || 0,
+          additionalSeats: 0,
+          nextInvoice: 0,
+        }}
+      />
       {/* =================================================
         TOOLBAR
       ================================================= */}
@@ -221,27 +262,18 @@ export default function TeamWorkspace() {
           loading={loading}
           onRemove={handleOpenDelete}
           onInvite={() => setInviteModalOpen(true)}
+          onChangeRole={handleOpenChangeRole}
         />
-        <div className="team-main-grid-right">
-          <TeamBillingCard
-            onInvite={() => setInviteModalOpen(true)}
-            billing={{
-              plan: team?.name || "Team Workspace",
-              status: "Active",
-              includedSeats: seatInfo?.total || 0,
-              activeSeats: seatInfo?.used || 0,
-              additionalSeats: 0,
-              nextInvoice: 0,
-            }}
-          />
-          <TeamInsightsCard insights={insights} />
-        </div>
+        {/*<div className="team-main-grid-right">
+          
+        </div>*/}
       </div>
 
       <div className="team-bottom-grid">
         <TeamPerformanceCard leaderboard={leaderboard} />
         <TeamActivityCard activity={activities} />
-        <TeamNotificationsCard notifications={notifications} />
+        {/*<TeamNotificationsCard notifications={notifications} />*/}
+        <TeamInsightsCard insights={insights} />
         <TeamQuickActionsCard />
       </div>
 
@@ -264,6 +296,13 @@ export default function TeamWorkspace() {
         member={selectedMember}
         onConfirm={handleConfirmDelete}
         removing={removing}
+      />
+      <ChangeMemberRoleModal
+        open={roleModalOpen}
+        member={roleMember}
+        updating={roleUpdating}
+        onClose={handleCloseChangeRole}
+        onSubmit={handleChangeRole}
       />
       {toast && (
         <div

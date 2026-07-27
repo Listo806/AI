@@ -378,3 +378,15 @@ export async function getTeamActivities(teamId, params = {}) {
 
   return res;
 }
+
+export async function updateMemberRole(teamId, memberId, role) {
+  const res = await apiClient.request(
+    `/teams/${teamId}/members/${memberId}/role`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    },
+  );
+
+  return res?.data ?? res;
+}

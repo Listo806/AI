@@ -10,33 +10,23 @@ import {
 import { useNavigate } from "react-router-dom";
 const actions = [
   {
-    icon: Users,
-    label: "Assign Leads",
-    route: "/assign-leads",
-  },
-  {
-    icon: Shuffle,
-    label: "Reassign Ownership",
-    route: "/reassign-ownership",
-  },
-  {
     icon: ShieldCheck,
-    label: "Manage Permissions",
+    label: "Manage Roles & Permissions",
     route: "/manage-permissions",
   },
   {
     icon: Settings,
-    label: "Team Settings",
+    label: "Manage Teams",
     route: "/team-settings",
   },
   {
     icon: Sparkles,
-    label: "AI Team Review",
+    label: "View Pending Invites",
     route: "/dashboard/team/ai-insights",
   },
   {
     icon: BarChart3,
-    label: "View Analytics",
+    label: "Activity Log",
     route: "/view-analytics",
   },
 ];
