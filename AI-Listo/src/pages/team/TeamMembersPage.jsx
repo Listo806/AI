@@ -345,21 +345,13 @@ export default function TeamMembersPage() {
             <thead>
               <tr>
                 <th>Member</th>
-
                 <th>Role</th>
-
+                <th>Team</th>
                 <th>Status</th>
-
-                <th>Permissions</th>
-
+                <th>Joined</th>
                 <th>Assigned Leads</th>
-
-                <th>Performance</th>
-
+                <th>Pipeline Value</th>
                 <th>Last Active</th>
-
-                <th>Seat Usage</th>
-
                 <th></th>
               </tr>
             </thead>
@@ -385,10 +377,8 @@ export default function TeamMembersPage() {
                           src={member.avatar || "https://i.pravatar.cc/150"}
                           alt=""
                         />
-
                         <div>
                           <strong>{member.name}</strong>
-
                           <span>{member.email}</span>
                         </div>
                       </div>
@@ -406,7 +396,11 @@ export default function TeamMembersPage() {
                         {member.role || "agent"}
                       </span>
                     </td>
-
+                    <td>
+                      <span className="team-member-team">
+                        {member.teamName || "—"}
+                      </span>
+                    </td>
                     {/* STATUS */}
                     <td>
                       <span
@@ -417,23 +411,25 @@ export default function TeamMembersPage() {
                         {member.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-
-                    {/* PERMISSIONS */}
-                    <td>CRM Access</td>
-
-                    {/* LEADS */}
-                    <td>{member.totalLeads || 0}</td>
-
-                    {/* PERFORMANCE */}
                     <td>
-                      <strong>{member.aiScore || 0}%</strong>
+                      {member.joinedAt
+                        ? new Date(member.joinedAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )
+                        : "—"}
+                    </td>
+                    <td>{member.totalLeads || 0}</td>
+                    <td>
+                      <strong>${Number(member.pipelineValue || 0).toLocaleString()}</strong>
                     </td>
 
                     {/* LAST ACTIVE */}
                     <td>{formatLastActive(member.lastSeenAt)}</td>
-
-                    {/* SEAT */}
-                    <td>1 Seat</td>
 
                     {/* ACTIONS */}
                     <td>

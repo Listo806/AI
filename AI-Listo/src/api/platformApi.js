@@ -285,22 +285,44 @@ export async function getTeamNotifications(teamId) {
 export async function getTeamMembers(teamId, params = {}) {
   const qs = new URLSearchParams();
 
-  if (params.page) qs.append("page", String(params.page));
-  if (params.limit) qs.append("limit", String(params.limit));
-  if (params.search) qs.append("search", params.search);
-  if (params.filter) qs.append("filter", params.filter);
-  if (params.role) qs.append("role", params.role);
-  if (params.sort) qs.append("sort", params.sort);
+  if (params.page) {
+    qs.append("page", String(params.page));
+  }
+
+  if (params.limit) {
+    qs.append("limit", String(params.limit));
+  }
+
+  if (params.search) {
+    qs.append("search", params.search);
+  }
+
+  if (params.filter) {
+    qs.append("filter", params.filter);
+  }
+
+  if (params.role) {
+    qs.append("role", params.role);
+  }
+
+  if (params.sort) {
+    qs.append("sort", params.sort);
+  }
 
   const queryString = qs.toString();
 
   const res = await apiClient.request(
-    `/teams/members/${teamId}${queryString ? `?${queryString}` : ""}`,
+    `/teams/${teamId}/members${
+      queryString ? `?${queryString}` : ""
+    }`,
+    {
+      method: "GET",
+    },
   );
 
   console.log("TEAM MEMBERS API RAW", res);
 
-  return res;
+  return res?.data || res;
 }
 
 export async function getTeamMembersDashboard(teamId, params = {}) {

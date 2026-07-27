@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchTeamActivities } from "./services/team.service";
+import { useSearchParams } from "react-router-dom";
 import "./activity.css";
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
@@ -53,13 +54,13 @@ export default function TeamActivityPage() {
   });
 
   const { selectedTeamId } = useTeamDashboard();
-
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [search, setSearch] = useState("");
-  const [type, setType] = useState("all");
+  const [type, setType] = useState(searchParams.get("type") || "all");
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [userId, setUserId] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -132,6 +133,17 @@ export default function TeamActivityPage() {
     dateTo,
     sort,
   ]);
+
+  useEffect(() => {
+    const queryType = searchParams.get("type") || "all";
+
+    const allowedTypes = ["all", "team", "lead", "property", "user", "ai"];
+
+    const nextType = allowedTypes.includes(queryType) ? queryType : "all";
+
+    setType(nextType);
+    setPage(1);
+  }, [searchParams]);
 
   const exportActivitiesCsv = () => {
     const headers = [
@@ -231,9 +243,19 @@ export default function TeamActivityPage() {
         </select>
         <select
           value={type}
-          onChange={(e) => {
-            setType(e.target.value);
+          onChange={(event) => {
+            const nextType = event.target.value;
+            setType(nextType);
             setPage(1);
+            setSearchParams((currentParams) => {
+              const nextParams = new URLSearchParams(currentParams);
+              if (nextType === "all") {
+                nextParams.delete("type");
+              } else {
+                nextParams.set("type", nextType);
+              }
+              return nextParams;
+            });
           }}
           className="team-filter-select"
         >

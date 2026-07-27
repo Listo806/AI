@@ -27,7 +27,7 @@ const actions = [
   {
     icon: BarChart3,
     label: "Activity Log",
-    route: "/view-analytics",
+    route: "/dashboard/team/activity?type=team",
   },
 ];
 

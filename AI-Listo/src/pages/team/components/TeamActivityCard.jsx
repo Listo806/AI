@@ -8,7 +8,15 @@ export default function TeamActivityCard({ activity }) {
           <h3 className="team-card-title">Recent Activity</h3>
           <p className="team-card-description">Latest team updates</p>
         </div>
-        <button className="team-link-btn" onClick={() => navigate("/dashboard/team/activity")}>View All</button>
+        <button
+          type="button"
+          className="team-link-btn "
+          onClick={() => {
+            navigate("/dashboard/team/activity?type=team");
+          }}
+        >
+          View All
+        </button>
       </div>
       <div className="team-activity-list">
         {activity?.length ? (

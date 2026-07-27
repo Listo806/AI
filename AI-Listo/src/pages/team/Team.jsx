@@ -22,15 +22,15 @@ import DeleteMemberModal from "./components/DeleteMemberModal";
 import TeamNotificationsCard from "./components/TeamNotificationsCard";
 import TeamQuickActionsCard from "./components/TeamQuickActionsCard";
 import TeamAIInsightsModal from "./components/TeamAIInsightsModal";
-import { fetchTeamAIInsights } from "./services/team.service";
-/* =========================================================
-  HOOKS
-========================================================= */
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
 import useTeamMembers from "./hooks/useTeamMembers";
 import ChangeMemberRoleModal from "./components/ChangeMemberRoleModal";
-import { updateTeamMemberRole } from "./services/team.service";
+import {
+  fetchTeamAIInsights,
+  updateTeamMemberRole,
+  updateTeamSeatLimit,
+} from "./services/team.service";
 export default function TeamWorkspace() {
   /* =====================================================
     DASHBOARD
@@ -106,10 +106,19 @@ export default function TeamWorkspace() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState(false);
   const [roleMember, setRoleMember] = useState(null);
-  /* =====================================================
-    DELETE MEMBER
-  ===================================================== */
+  const [addingSeat, setAddingSeat] = useState(false);
 
+  const [seatToast, setSeatToast] = useState(null);
+
+  const showSeatToast = (message, type = "success") => {
+    setSeatToast({
+      message,
+      type,
+    });
+    window.setTimeout(() => {
+      setSeatToast(null);
+    }, 3000);
+  };
   const handleOpenDelete = (member) => {
     setSelectedMember(member);
 
@@ -236,6 +245,25 @@ export default function TeamWorkspace() {
       setRoleUpdating(false);
     }
   };
+
+  const handleAddSeat = async () => {
+    if (!selectedTeamId || addingSeat) {
+      return;
+    }
+    const currentSeatLimit = Number(seatInfo?.total || team?.seatLimit || 0);
+    const nextSeatLimit = currentSeatLimit + 1;
+    try {
+      setAddingSeat(true);
+      await updateTeamSeatLimit(selectedTeamId, nextSeatLimit);
+      await reloadDashboard();
+      showSeatToast(`Seat limit increased to ${nextSeatLimit}`, "success");
+    } catch (error) {
+      console.error("ADD TEAM SEAT ERROR", error);
+      showSeatToast(error?.message || "Failed to add seat", "error");
+    } finally {
+      setAddingSeat(false);
+    }
+  };
   return (
     <div className="team-workspace">
       {/* =================================================
@@ -257,6 +285,8 @@ export default function TeamWorkspace() {
 
       <TeamBillingCard
         onInvite={() => setInviteModalOpen(true)}
+        onAddSeat={handleAddSeat}
+        addingSeat={addingSeat}
         billing={{
           plan: team?.name || "Team Workspace",
           status: "Active",
@@ -297,7 +327,7 @@ export default function TeamWorkspace() {
 
       <div className="team-bottom-grid">
         <TeamPerformanceCard leaderboard={leaderboard} />
-        <TeamActivityCard activity={activities} />
+        <TeamActivityCard activity={activities} teamId={selectedTeamId} />
         {/*<TeamNotificationsCard notifications={notifications} />*/}
         <TeamInsightsCard insights={insights} />
         <TeamQuickActionsCard />
@@ -347,6 +377,25 @@ export default function TeamWorkspace() {
           }}
         >
           {toast.message}
+        </div>
+      )}
+      {seatToast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: seatToast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {seatToast.message}
         </div>
       )}
       <TeamAIInsightsModal

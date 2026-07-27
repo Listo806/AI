@@ -165,6 +165,16 @@ export default function TeamMembersTable({
       </div>
 
       <div className="team-members-modern">
+        <div className="team-members-column-header">
+          <div>Member</div>
+          <div>Role</div>
+          <div>Team</div>
+          <div>Status</div>
+          <div>Joined</div>
+          <div>Pipeline Value</div>
+          <div>Actions</div>
+        </div>
+
         {members?.map((member) => {
           const memberId = member._id || member.id;
 
@@ -189,7 +199,7 @@ export default function TeamMembersTable({
                 </div>
               </div>
 
-              <div className="team-member-name">
+              <div className="team-member-role-column">
                 <span
                   className="team-role-badge"
                   style={{
@@ -200,10 +210,8 @@ export default function TeamMembersTable({
                   {member.role || "agent"}
                 </span>
               </div>
-              <div className="team-member-team">
-                {member.teamName || "—"}
-              </div>
-              <div className="team-member-team">
+              <div className="team-member-team">{member.teamName || "—"}</div>
+              <div className="team-member-status-column">
                 <span
                   className={`team-status-badge ${
                     member.isActive ? "active" : "inactive"
@@ -212,7 +220,7 @@ export default function TeamMembersTable({
                   {member.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
-              <div className="team-member-team">
+              <div className="team-member-joined-column">
                 {member.joinedAt
                   ? new Date(member.joinedAt).toLocaleDateString("en-US", {
                       month: "short",
@@ -221,23 +229,9 @@ export default function TeamMembersTable({
                     })
                   : "—"}
               </div>
-              <div className="team-stat-mini">
-                <strong>{member.totalLeads || 0}</strong>
-                <span>Leads</span>
-              </div>
 
-              <div className="team-stat-mini">
-                <strong>
-                  ${Number(member.pipelineValue || 0).toLocaleString()}
-                </strong>
-                <span>Pipeline</span>
-              </div>
-
-              <div className="team-stat-mini">
-                <strong className="team-ai-score">
-                  {member.aiScore || 0}%
-                </strong>
-                <span>AI Score</span>
+              <div className="team-member-pipeline">
+                ${Number(member.pipelineValue || 0).toLocaleString()}
               </div>
 
               <div className="team-member-actions">
@@ -287,17 +281,6 @@ export default function TeamMembersTable({
             </div>
           );
         })}
-      </div>
-
-      <div className="team-insights-footer">
-        <button
-          type="button"
-          onClick={onInvite}
-          className="team-insights-report-btn team-member"
-        >
-          <Plus size={16} />
-          Invite New Member
-        </button>
       </div>
     </div>
   );

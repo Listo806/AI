@@ -665,7 +665,7 @@ export class TeamsService {
       this.getTeam(teamId),
       this.getStats(teamId),
       this.getDashboardMembers(teamId),
-      this.getActivities(teamId, 5),
+      this.getActivities(teamId, 4),
       this.getSubscription(teamId),
       this.aiInsightsService.generate(teamId),
       this.getLeaderboard(teamId),

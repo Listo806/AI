@@ -142,3 +142,27 @@ export async function fetchTeamActivities(teamId, params) {
 export async function updateTeamMemberRole(teamId, memberId, role) {
   return await updateMemberRole(teamId, memberId, role);
 }
+
+export async function updateTeamSeatLimit(
+  teamId,
+  seatLimit,
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  const nextSeatLimit = Number(seatLimit);
+
+  if (
+    !Number.isFinite(nextSeatLimit) ||
+    nextSeatLimit < 1
+  ) {
+    throw new Error(
+      "Seat limit must be at least 1",
+    );
+  }
+
+  return await updateTeam(teamId, {
+    seatLimit: nextSeatLimit,
+  });
+}
