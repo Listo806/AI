@@ -24,6 +24,11 @@ const AI_CENTER_ITEMS = [
     labelKey: "nav.aiCenter.cortexasetup",
   },
   {
+    path: "/dashboard/calendar",
+    icon: "calendar",
+    label: "Calendar",
+  },
+  {
     path: "/dashboard/ai-cortexa",
     icon: "bot",
     labelKey: "nav.aiCenter.cortexa",
@@ -384,7 +389,7 @@ export default function Sidebar({
                       <i data-lucide={item.icon} className="crm-nav-icon"></i>
                       {!isCollapsed && (
                         <span className="crm-nav-label">
-                          {t(item.labelKey)}
+                          {item.label || t(item.labelKey)}
                         </span>
                       )}
                     </NavLink>

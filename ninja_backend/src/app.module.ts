@@ -27,6 +27,7 @@ import { VacationRentalsModule } from './vacation-rentals/vacation-rentals.modul
 import { TrialModule } from './trial/trial.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { PipelineModule } from "./pipeline/pipeline.module";
+import { CalendarModule } from "./calendar/calendar.module";
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { PipelineModule } from "./pipeline/pipeline.module";
     TrialModule,
     ScheduleModule.forRoot(),
     PipelineModule,
+    CalendarModule,
   ],
   controllers: [AppController],
 })

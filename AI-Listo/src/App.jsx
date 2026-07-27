@@ -63,6 +63,7 @@ import EmailProviderPage from "./pages/integrations/EmailProviderPage";
 import ZapierPage from "./pages/integrations/ZapierPage";
 import { WhatsAppPrimaryRoute, WhatsAppQrRoute } from "./components/WhatsAppRoute";
 import Instagram from "./pages/instagram/Instagram";
+import CalendarPage from "./pages/calendar/CalendarPage";
 import Billing from "./pages/billing/Billing";
 import Settings from "./pages/dashboard/Settings";
 import Profile from "./pages/account/Profile";
@@ -274,6 +275,7 @@ function AppRoutes() {
         <Route path="integrations/tiktok" element={<TiktokPage  />} />
         <Route path="integrations/ai-appointment" element={<AppointmentPage  />} />
         <Route path="whatsapp" element={<WhatsAppPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
         <Route path="generator" element={<LeadGeneratorPage />} />
         
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 
