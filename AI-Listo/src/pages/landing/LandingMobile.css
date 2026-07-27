@@ -1997,82 +1997,6 @@ body #analytics.m-bottom-cta {
   margin: 10px 0 14px;
 }
 
-.features .cx-mob-list-section {
-  padding: 0 10px;
-}
-
-.features .cx-mob-list-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.features .heading-red {
-  color: #ef4444;
-}
-
-.features .heading-red svg {
-  fill: #ef4444;
-  color: #fff;
-  stroke: #000;
-}
-
-.features .heading-blue {
-  color: #3b82f6;
-}
-
-.features .heading-blue svg {
-  fill: #3b82f6;
-  color: #fff;
-  stroke: #000;
-}
-
-.features .blue .cx-mob-li-left svg {
-  fill: #3b82f6;
-}
-
-.features .cx-mob-list-heading h5 {
-  font-size: 13px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: 0.02em;
-}
-
-.features .cx-mob-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.features .cx-mob-ul li {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #cbd5e1;
-  padding-bottom: 10px;
-}
-
-.features .cx-mob-li-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding-right: 15px;
-}
-
-.features .cx-mob-li-left svg {
-  margin-top: 2px;
-  flex-shrink: 0;
-  fill: #ef4444;
-  color: #fff;
-  stroke: #000;
-}
-
 .features .icon-red {
   color: #ef4444;
 }
@@ -2381,9 +2305,9 @@ body #analytics.m-bottom-cta {
 
 .cx-pipeline-row,
 .cx-team-activity-row {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   padding: 5px 0;
   border-bottom: 1px solid #f1f5f9;
   justify-content: space-between;
@@ -2557,7 +2481,7 @@ body #analytics.m-bottom-cta {
     padding: 10px;
     border-radius: 10px;
     text-align: left;
-    font-size: 11px;
+    font-size: 9px;
   }
 
   .cx-report-kpis strong,
@@ -2571,11 +2495,7 @@ body #analytics.m-bottom-cta {
   }
 
   .cx-pipeline-row {
-    grid-template-columns: 28px 1fr auto;
-  }
-
-  .cx-pipeline-row em {
-    grid-column: 2 / -1;
+    grid-template-columns: 28px 0.6fr 0.3fr 0.4fr;
   }
 
   .cx-reporting-footer {

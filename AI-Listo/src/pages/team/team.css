@@ -1623,7 +1623,7 @@ TEAM ACTIVITY
 .team-workspace .team-activity-item {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 6px;
   padding: 10px 0;
   position: relative;
   transition: all 0.2s ease;

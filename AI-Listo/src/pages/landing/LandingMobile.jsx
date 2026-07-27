@@ -213,7 +213,11 @@ function ReportingSection({ tr }) {
               <div className="cx-pipeline-list">
                 {pipelineRows.map((row, index) => (
                   <div className="cx-pipeline-row" key={`${row.name}-${index}`}>
-                    <span className="cx-mini-avatar">{row.name.charAt(0)}</span>
+                    <img
+                      src="https://i.pravatar.cc/150"
+                      alt="Team member"
+                      className="cx-mini-avatar"
+                    />
                     <strong>{row.name}</strong>
                     <span>{row.value}</span>
                     <em>{row.stage}</em>
@@ -238,7 +242,11 @@ function ReportingSection({ tr }) {
                     className="cx-team-activity-row"
                     key={`${row.name}-${index}`}
                   >
-                    <span className="cx-mini-avatar">{row.name.charAt(0)}</span>
+                    <img
+                      src="https://i.pravatar.cc/149"
+                      alt="Team member"
+                      className="cx-mini-avatar"
+                    />
                     <div>
                       <strong>{row.name}</strong>
                       <small>{row.action}</small>
@@ -353,10 +361,7 @@ function UnlimitedAISection({ tr }) {
         </div>
 
         <div className="m-ai-usage-progress">
-          <div
-            className="m-ai-usage-progress-fill"
-            style={{ width: "100%" }}
-          />
+          <div className="m-ai-usage-progress-fill" style={{ width: "100%" }} />
         </div>
 
         <p>{copy.usageDescription}</p>
@@ -562,9 +567,10 @@ export default function LandingMobile() {
       heroTitle2: "Built to Turn",
       heroTitle3: "Conversations",
       heroTitle4: "Into Revenue.",
-      heroDesc:  "AI finds. AI qualifies. AI follows up. You close.",
+      heroDesc: "AI finds. AI qualifies. AI follows up. You close.",
       heroTopBanner1: "Agentic AI",
-      heroTopBanner2:  "revenue operating system for businesses tired of complicated, overpriced CRM software.",
+      heroTopBanner2:
+        "revenue operating system for businesses tired of complicated, overpriced CRM software.",
       login: "Log in",
       trial: "Get Started",
       nav: [
@@ -762,7 +768,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      
+
       stat2Title: "",
 
       thCustomer: "Customer",
@@ -955,7 +961,8 @@ export default function LandingMobile() {
       heroTitle2: "Creado para Convertir",
       heroTitle3: "Conversaciones",
       heroTitle4: "en Ingresos.",
-      heroDesc: "La IA encuentra. La IA califica. La IA da seguimiento. Tú cierras.",
+      heroDesc:
+        "La IA encuentra. La IA califica. La IA da seguimiento. Tú cierras.",
       heroTopBanner1: "Agentic AI",
       heroTopBanner2:
         "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
@@ -1092,7 +1099,8 @@ export default function LandingMobile() {
       finalCtaTitle1: "Automatiza Todo",
       finalCtaTitle2: "Tu Flujo de Trabajo",
       finalCtaTitle3: "",
-      finalCtaDesc: "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
+      finalCtaDesc:
+        "La IA capta leads. La IA califica. La IA cierra. Todo en tu ",
       finalCtaBtn: "Comienza Tu Prueba Gratis",
       finalCtaSubBtn: "",
       finalCtaSubBtn1: "Desbloquea tu potencial hoy",
@@ -1156,7 +1164,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      
+
       stat2Title: "",
 
       thCustomer: "Cliente",
@@ -1557,7 +1565,7 @@ export default function LandingMobile() {
       stat1Title: "",
       stat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      
+
       stat2Title: "",
 
       thCustomer: "Cliente",
@@ -1893,14 +1901,11 @@ export default function LandingMobile() {
           <Zap size={28} />
 
           <p>
-            <span>{tr.heroTopBanner1}</span>{" "}
-            {tr.heroTopBanner2}
+            <span>{tr.heroTopBanner1}</span> {tr.heroTopBanner2}
           </p>
         </div>
 
-        <div className="m-badge">
-          {tr.badge}
-        </div>
+        <div className="m-badge">{tr.badge}</div>
 
         <h1 className="m-title">
           {tr.heroTitle1}
@@ -1912,9 +1917,7 @@ export default function LandingMobile() {
           <span>{tr.heroTitle4}</span>
         </h1>
 
-        <p className="m-description">
-          {tr.heroDesc}
-        </p>
+        <p className="m-description">{tr.heroDesc}</p>
         <div className="m-hero-actions">
           <a href="/trial" className="m-primary-btn">
             <Zap size={18} />
@@ -1978,7 +1981,6 @@ export default function LandingMobile() {
             <h4>{tr.stat1Title}</h4>
             <p>{tr.stat1Desc}</p>
           </div>
-
         </div>
       </section>
       {/* BENEFITS SECTION */}
@@ -2772,7 +2774,9 @@ export default function LandingMobile() {
             <br />
             {tr.finalCtaTitle2}
           </h2>
-          <p className="m-bottom-desc">{tr.finalCtaDesc} <span className="text-blue">Revenue OS.</span></p>
+          <p className="m-bottom-desc">
+            {tr.finalCtaDesc} <span className="text-blue">Revenue OS.</span>
+          </p>
 
           <div className="m-bottom-action-wrapper">
             <a href="/trial" className="m-bottom-primary-btn">
