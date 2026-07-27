@@ -34,14 +34,13 @@ export default function SignUp() {
         localStorage.setItem('listo_user', JSON.stringify(res.user));
         // Funnel: account created via the marketplace signup form.
         trackEvent('account_created');
-        // Google Ads sign-up conversion. Set VITE_ADS_SIGNUP_CONVERSION to a
-        // dedicated "Sign-up" action once created in Ads; falls back to the
-        // shared action until then.
+        // Google Ads sign-up conversion. The default below is the dedicated
+        // "Sign-up" action created in Ads; VITE_ADS_SIGNUP_CONVERSION overrides.
         if (typeof window.gtag === 'function') {
           window.gtag('event', 'conversion', {
             send_to:
               import.meta.env.VITE_ADS_SIGNUP_CONVERSION ||
-              'AW-17836518151/z4trCLizpNgbEIfWjrlC',
+              'AW-17836518151/G2jxCOX7mNccEIfWjrlC',
             value: 67.0,
             currency: 'USD',
           });
