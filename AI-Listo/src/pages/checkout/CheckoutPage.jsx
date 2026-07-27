@@ -20,12 +20,12 @@ import "./CheckoutPage.css";
 const API_BASE = "https://backend.cortexaaicrm.com";
 const SETUP_FEE = 97;
 
-// Dedicated Purchase conversion action. Set VITE_ADS_PURCHASE_CONVERSION to a
-// dedicated "Purchase" action ("AW-XXXX/label") once it is created in Google
-// Ads; until then it falls back to the shared action so purchases keep counting.
+// Dedicated Purchase conversion action (Google Ads). The default below is the
+// dedicated "Purchase" action created in Google Ads, separate from Sign-up.
+// VITE_ADS_PURCHASE_CONVERSION can override it if it ever changes.
 const PURCHASE_CONVERSION_SEND_TO =
   import.meta.env.VITE_ADS_PURCHASE_CONVERSION ||
-  "AW-17836518151/z4trCLizpNgbEIfWjrlC";
+  "AW-17836518151/2dX2CMD3mNccEIfWjrlC";
 
 const PLAN_DATA = {
   solo: { price: 197, users: 1 },
