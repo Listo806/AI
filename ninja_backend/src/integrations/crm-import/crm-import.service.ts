@@ -39,20 +39,25 @@ export class CrmImportService {
     });
   }
 
-  async analyzeImport(importId: string) {
+  async analyzeImport(importId: string, teamId: string) {
     const { rows } = await this.db.query(
       `
       SELECT *
       FROM crm_imports_integrations
-      WHERE id = $1
+      WHERE id = $1 AND team_id = $2
       `,
-      [importId],
+      [importId, teamId],
     );
 
     return rows[0];
   }
 
-  async saveMapping(importId: string, mapping: any, duplicateStrategy: string) {
+  async saveMapping(
+    importId: string,
+    mapping: any,
+    duplicateStrategy: string,
+    teamId: string,
+  ) {
     await this.db.query(
       `
       UPDATE crm_imports_integrations
@@ -60,9 +65,9 @@ export class CrmImportService {
         mapping = $1,
         duplicate_strategy = $2,
         updated_at = NOW()
-      WHERE id = $3
+      WHERE id = $3 AND team_id = $4
       `,
-      [JSON.stringify(mapping), duplicateStrategy, importId],
+      [JSON.stringify(mapping), duplicateStrategy, importId, teamId],
     );
 
     return {
@@ -70,7 +75,7 @@ export class CrmImportService {
     };
   }
 
-  async getProgress(importId: string) {
+  async getProgress(importId: string, teamId: string) {
     const { rows } = await this.db.query(
       `
       SELECT
@@ -81,22 +86,22 @@ export class CrmImportService {
         imported_rows as "importedRows",
         failed_rows as "failedRows"
       FROM crm_imports_integrations
-      WHERE id = $1
+      WHERE id = $1 AND team_id = $2
       `,
-      [importId],
+      [importId, teamId],
     );
 
     return rows[0];
   }
 
-  async startImport(importId: string) {
+  async startImport(importId: string, teamId: string) {
     const { rows } = await this.db.query(
       `
       SELECT *
       FROM crm_imports_integrations
-      WHERE id = $1
+      WHERE id = $1 AND team_id = $2
       `,
-      [importId],
+      [importId, teamId],
     );
 
     const importJob = rows[0];
@@ -113,8 +118,6 @@ export class CrmImportService {
       `,
       [importId],
     );
-
-    const teamId = importJob.team_id;
 
     const mapping =
       typeof importJob.mapping === "string"
@@ -252,7 +255,22 @@ export class CrmImportService {
     };
   }
 
-  async getLogs(importId: string) {
+  async getLogs(importId: string, teamId: string) {
+    // Only expose logs for an import that belongs to the caller's team.
+    const { rows: owner } = await this.db.query(
+      `
+      SELECT id
+      FROM crm_imports_integrations
+      WHERE id = $1 AND team_id = $2
+      LIMIT 1
+      `,
+      [importId, teamId],
+    );
+
+    if (owner.length === 0) {
+      return [];
+    }
+
     const { rows } = await this.db.query(
       `
       SELECT *
