@@ -10,7 +10,8 @@
 // Conversions (sign-up, purchase) go through trackAdsConversion() to a specific
 // Google Ads conversion action.
 const GOOGLE_ADS_ID = "AW-17836518151";
-const GA4_MEASUREMENT_ID = import.meta.env.VITE_GA4_MEASUREMENT_ID || "";
+const GA4_MEASUREMENT_ID =
+  import.meta.env.VITE_GA4_MEASUREMENT_ID || "G-WTDN8QJ9CM";
 
 let ga4Configured = false;
 
