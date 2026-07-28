@@ -189,16 +189,19 @@ body .m-header {
   font-weight: 500;
   color: #e9e3e3;
 }
-.m-hero-banner span{
+
+.m-hero-banner span {
   background: linear-gradient(90deg, #0b63ff, #d21fdd);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.m-hero-banner svg{
+
+.m-hero-banner svg {
   fill: #7c4dff;
   color: #7c4dff;
 }
+
 .m-title {
   font-size: 40px;
   line-height: 1.2;
@@ -2171,8 +2174,10 @@ body #analytics.m-bottom-cta {
 .cx-report-card {
   background: #fff;
   color: #171923;
-  border-radius: 22px;
-  padding: 22px;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 9px;
 }
 
 .cx-report-card-head {
@@ -2279,9 +2284,11 @@ body #analytics.m-bottom-cta {
   margin: 5px 0 0;
   color: #1f2937;
 }
-.cx-report-insight strong{
+
+.cx-report-insight strong {
   color: #000;
 }
+
 .cx-pipeline-stages {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2296,18 +2303,23 @@ body #analytics.m-bottom-cta {
   color: #5b21b6;
   font-size: 9px;
 }
-.cx-pipeline-stages .blue{
+
+.cx-pipeline-stages .blue {
   color: #063ce5;
 }
-.cx-pipeline-stages .purple{
+
+.cx-pipeline-stages .purple {
   color: #5a08c4;
 }
-.cx-pipeline-stages .green{
+
+.cx-pipeline-stages .green {
   color: #09b921;
 }
-.cx-pipeline-stages .yellow{
+
+.cx-pipeline-stages .yellow {
   color: #e77605;
 }
+
 .cx-pipeline-stages small {
   display: block;
   margin-top: 3px;
@@ -2683,7 +2695,7 @@ body #analytics.m-bottom-cta {
 .m-ai-usage-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background:#23f26e;
+  background: #23f26e;
 }
 
 .m-ai-usage-card p {
