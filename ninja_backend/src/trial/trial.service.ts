@@ -10,10 +10,12 @@ export class TrialService {
     try {
       console.log('DTO:', dto);
 
-      const { email, password, name, phone, role } = dto;
+      const { password, name, phone, role } = dto;
+      // Normalize the email so it matches at login regardless of casing/spaces.
+      const email = (dto.email || '').trim().toLowerCase();
 
       const { rows: existing } = await this.db.query(
-        `SELECT id FROM users WHERE email = $1`,
+        `SELECT id FROM users WHERE LOWER(email) = LOWER($1)`,
         [email],
       );
 

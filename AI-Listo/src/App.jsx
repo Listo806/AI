@@ -16,6 +16,8 @@ import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyR
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import SignUpDev from "./pages/auth/SignUpDev";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/leads/LeadsList";
@@ -143,6 +145,8 @@ function publicRoutes(prefix) {
       <Route path={p || "/"} element={<RootRoute />} />
       <Route path={`${p}/sign-in`} element={<SignIn variant="crm" />} />
       <Route path={`${p}/sign-up`} element={<SignUp />} />
+      <Route path={`${p}/forgot-password`} element={<ForgotPassword />} />
+      <Route path={`${p}/reset-password`} element={<ResetPassword />} />
       <Route path={`${p}/privacy-policy`} element={<Privacy />} />
       <Route path={`${p}/refund-policy`} element={<Refund />} />
       <Route path={`${p}/terms`} element={<Terms />} />

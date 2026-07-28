@@ -22,7 +22,8 @@ const t = {
     btnSigningIn: 'Signing in...',
     footerText: 'New user?',
     footerLink: 'Sign Up',
-    loginFailed: 'Login failed'
+    loginFailed: 'Login failed',
+    forgotLink: 'Forgot password?'
   },
   es: {
     crmBadge: 'Cortexa AI OS',
@@ -39,7 +40,8 @@ const t = {
     btnSigningIn: 'Iniciando sesión...',
     footerText: '¿Usuario nuevo?',
     footerLink: 'Registrarse',
-    loginFailed: 'Error al iniciar sesión'
+    loginFailed: 'Error al iniciar sesión',
+    forgotLink: '¿Olvidaste tu contraseña?'
   },
   pt: {
     crmBadge: 'Cortexa AI OS',
@@ -56,7 +58,8 @@ const t = {
     btnSigningIn: 'Entrando...',
     footerText: 'Novo usuário?',
     footerLink: 'Cadastre-se',
-    loginFailed: 'Falha no login'
+    loginFailed: 'Falha no login',
+    forgotLink: 'Esqueceu sua senha?'
   }
 };
 export default function SignIn({ variant = 'crm' }) {
@@ -101,7 +104,8 @@ export default function SignIn({ variant = 'crm' }) {
     setLoading(true);
 
     try {
-      await login(email, password);
+      // Normalize so a capitalized/spaced email still matches the stored one.
+      await login(email.trim().toLowerCase(), password);
       // Funnel: successful login. Fire first_login once per device so the first
       // login after signup is distinguishable from repeat logins.
       if (!localStorage.getItem('listo_has_logged_in')) {
@@ -136,6 +140,9 @@ export default function SignIn({ variant = 'crm' }) {
               placeholder={tr.emailPlaceholder}
               required
               disabled={loading}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
@@ -178,7 +185,11 @@ export default function SignIn({ variant = 'crm' }) {
           </button>
         </form>
 
-        <p className="auth-footer" style={{ marginTop: '20px' }}>
+        <p className="auth-footer" style={{ marginTop: '12px' }}>
+          <Link to="/forgot-password">{tr.forgotLink}</Link>
+        </p>
+
+        <p className="auth-footer" style={{ marginTop: '8px' }}>
           {tr.footerText} <Link to="/sign-up">{tr.footerLink}</Link>
         </p>
       </div>
