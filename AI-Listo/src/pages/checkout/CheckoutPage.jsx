@@ -11,6 +11,8 @@ import {
 import apiClient from "../../api/apiClient";
 import { trackEvent, trackAdsConversion, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
+import { fetchPaddleConfig } from "../../api/paddleApi";
+import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
 import "./CheckoutPage.css";
 
 // Checkout with PayPal subscriptions. The customer pays a one-time $97 setup fee
@@ -198,6 +200,11 @@ export default function CheckoutPage() {
   const paypalContainerRef = useRef(null);
   const buttonsRenderedRef = useRef(false);
 
+  // Paddle stays dormant until its config carries a client token AND a price for
+  // this plan; until then the PayPal path below is used exactly as before.
+  const [paddleConfig, setPaddleConfig] = useState(null);
+  const paddleInitRef = useRef(false);
+
   useEffect(() => {
     acceptedTermsRef.current = acceptedTerms;
   }, [acceptedTerms]);
@@ -206,6 +213,18 @@ export default function CheckoutPage() {
   useEffect(() => {
     trackEvent("checkout_view", { plan: selectedPlan });
   }, [selectedPlan]);
+
+  // Load Paddle config once (null on error, so PayPal remains the fallback).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const cfg = await fetchPaddleConfig();
+      if (!cancelled) setPaddleConfig(cfg);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const usersText =
     plan.users === 1
@@ -234,7 +253,60 @@ export default function CheckoutPage() {
     navigate("/sign-in", { replace: true });
   };
 
+  // Paddle overlay checkout. Active only when paddleReady (client token + a
+  // price for this plan); otherwise the PayPal path below runs unchanged. On a
+  // completed checkout the account is activated server-side by the Paddle
+  // webhook; here we fire the same conversion/funnel events and log the user in.
+  const usePaddle = paddleReady(paddleConfig, selectedPlan);
+
+  const startPaddle = async () => {
+    if (!acceptedTermsRef.current) {
+      alert(tr.validation.terms);
+      return;
+    }
+    const userId = customer.userId || localStorage.getItem("trialUserId");
+    if (!userId) {
+      alert(tr.validation.signup);
+      navigate(`/trial?plan=${encodeURIComponent(selectedPlan)}`);
+      return;
+    }
+    setErrorMsg("");
+    try {
+      if (!paddleInitRef.current) {
+        paddleInitRef.current = true;
+        await initPaddle(paddleConfig, (ev) => {
+          if (ev?.name === "checkout.completed") {
+            const uid = customer.userId || localStorage.getItem("trialUserId");
+            setUserData({ email: customer.email, phone: customer.phone });
+            trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+              value: SETUP_FEE,
+              currency: "USD",
+            });
+            trackEvent("trial_activated", {
+              plan: selectedPlan,
+              value: SETUP_FEE,
+              currency: "USD",
+            });
+            setProcessing(true);
+            if (uid) finishAndLogin(uid);
+          }
+        });
+      }
+      trackEvent("paypal_checkout_started", { plan: selectedPlan });
+      openPaddleCheckout({
+        config: paddleConfig,
+        plan: selectedPlan,
+        userId,
+        email: customer.email,
+      });
+    } catch (error) {
+      console.error("PADDLE CHECKOUT ERROR:", error);
+      setErrorMsg(tr.validation.server);
+    }
+  };
+
   useEffect(() => {
+    if (usePaddle) return; // Paddle handles checkout; skip PayPal init.
     let cancelled = false;
 
     const renderButtons = (planId) => {
@@ -358,7 +430,7 @@ export default function CheckoutPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPlan]);
+  }, [selectedPlan, usePaddle]);
 
   return (
     <main className="checkout-page">
@@ -480,21 +552,53 @@ export default function CheckoutPage() {
               </label>
 
               <div className="checkout-paypal">
-                <div
-                  ref={paypalContainerRef}
-                  className="checkout-paypal-buttons"
-                />
-                {sdkStatus === "loading" && (
-                  <p className="checkout-paypal-status">{tr.sdkLoading}</p>
-                )}
-                {sdkStatus === "error" && (
-                  <p className="checkout-paypal-error">{tr.sdkError}</p>
-                )}
-                {processing && (
-                  <p className="checkout-paypal-status">{tr.processing}</p>
-                )}
-                {errorMsg && (
-                  <p className="checkout-paypal-error">{errorMsg}</p>
+                {usePaddle ? (
+                  <>
+                    <button
+                      type="button"
+                      className="checkout-paddle-btn"
+                      onClick={startPaddle}
+                      disabled={processing}
+                      style={{
+                        width: "100%",
+                        padding: "14px 16px",
+                        borderRadius: "8px",
+                        border: "none",
+                        background: "#111827",
+                        color: "#fff",
+                        fontSize: "16px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {`Pay $${SETUP_FEE} and start your trial`}
+                    </button>
+                    {processing && (
+                      <p className="checkout-paypal-status">{tr.processing}</p>
+                    )}
+                    {errorMsg && (
+                      <p className="checkout-paypal-error">{errorMsg}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div
+                      ref={paypalContainerRef}
+                      className="checkout-paypal-buttons"
+                    />
+                    {sdkStatus === "loading" && (
+                      <p className="checkout-paypal-status">{tr.sdkLoading}</p>
+                    )}
+                    {sdkStatus === "error" && (
+                      <p className="checkout-paypal-error">{tr.sdkError}</p>
+                    )}
+                    {processing && (
+                      <p className="checkout-paypal-status">{tr.processing}</p>
+                    )}
+                    {errorMsg && (
+                      <p className="checkout-paypal-error">{errorMsg}</p>
+                    )}
+                  </>
                 )}
               </div>
 

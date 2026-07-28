@@ -94,6 +94,208 @@ export class PaymentsService {
     return { success: true };
   }
 
+  // --- Paddle activation + webhook processing ---
+
+  private paddleColumnReady = false;
+  private async ensurePaddleColumn(): Promise<void> {
+    if (this.paddleColumnReady) return;
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS paddle_subscription_id TEXT`,
+    );
+    this.paddleColumnReady = true;
+  }
+
+  // Activate the account after a Paddle subscription is confirmed. Stores the
+  // Paddle subscription id and the selected plan.
+  async activatePaddleSubscription(
+    userId: string,
+    subscriptionId: string,
+    plan: string,
+  ) {
+    await this.ensurePaddleColumn();
+    const { rows } = await this.db.query(`SELECT id FROM users WHERE id = $1`, [
+      userId,
+    ]);
+    if (!rows[0]) {
+      throw new NotFoundException('User not found');
+    }
+    await this.db.query(
+      `UPDATE users
+       SET payment_status = 'active',
+           is_active = true,
+           plan = $2,
+           paddle_subscription_id = $3,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [userId, plan || 'pro', subscriptionId],
+    );
+    return { success: true };
+  }
+
+  private async setUserStatusByPaddleSub(
+    subscriptionId: string | null,
+    fields: { payment_status?: string; is_active?: boolean },
+  ): Promise<boolean> {
+    if (!subscriptionId) return false;
+    await this.ensurePaddleColumn();
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let i = 1;
+    if (fields.payment_status !== undefined) {
+      sets.push(`payment_status = $${i++}`);
+      vals.push(fields.payment_status);
+    }
+    if (fields.is_active !== undefined) {
+      sets.push(`is_active = $${i++}`);
+      vals.push(fields.is_active);
+    }
+    if (!sets.length) return false;
+    sets.push(`updated_at = NOW()`);
+    vals.push(subscriptionId);
+    const res = await this.db.query(
+      `UPDATE users SET ${sets.join(', ')} WHERE paddle_subscription_id = $${i}`,
+      vals,
+    );
+    return (res.rowCount || 0) > 0;
+  }
+
+  // Idempotently process a signature-verified Paddle webhook. Activation happens
+  // here: the checkout passes custom_data.userId, so subscription.activated/
+  // created links the Paddle subscription to our user; later events map by the
+  // stored paddle_subscription_id. Duplicate deliveries are ignored via
+  // webhook_events. A status event that matches no user yet throws, so the caller
+  // returns 5xx and Paddle retries until checkout has linked the subscription.
+  async processPaddleWebhook(body: any): Promise<{
+    status: string;
+    idempotent?: boolean;
+    matched?: boolean;
+    eventType?: string;
+  }> {
+    const eventId = body?.event_id || body?.notification_id;
+    const eventType = body?.event_type;
+    const data = body?.data;
+    if (!eventId || !eventType) return { status: 'ignored' };
+
+    await this.ensureWebhookTable();
+
+    const existing = await this.db.query(
+      `SELECT id FROM webhook_events WHERE provider = 'paddle' AND event_id = $1`,
+      [eventId],
+    );
+    if (existing.rows.length > 0) {
+      return { status: 'success', idempotent: true, eventType };
+    }
+
+    // subscription.* events carry the subscription id in data.id; transaction.*
+    // and adjustment.* carry it in data.subscription_id.
+    const subId: string | null = eventType.startsWith('subscription.')
+      ? data?.id || null
+      : data?.subscription_id || null;
+    const customUserId: string | null =
+      data?.custom_data?.userId || data?.custom_data?.user_id || null;
+    const customPlan: string | null = data?.custom_data?.plan || null;
+
+    let handled = false;
+    let matched = false;
+
+    switch (eventType) {
+      case 'subscription.activated':
+      case 'subscription.created':
+        handled = true;
+        if (customUserId && subId) {
+          await this.activatePaddleSubscription(
+            customUserId,
+            subId,
+            customPlan || 'pro',
+          );
+          matched = true;
+        } else {
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'active',
+            is_active: true,
+          });
+        }
+        break;
+      case 'transaction.completed':
+      case 'transaction.paid':
+        handled = true;
+        matched = await this.setUserStatusByPaddleSub(subId, {
+          payment_status: 'active',
+          is_active: true,
+        });
+        break;
+      case 'subscription.updated': {
+        const status = data?.status;
+        if (status === 'active') {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'active',
+            is_active: true,
+          });
+        } else if (status === 'past_due') {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'past_due',
+          });
+        } else if (status === 'paused') {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'suspended',
+            is_active: false,
+          });
+        } else if (status === 'canceled') {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'canceled',
+            is_active: false,
+          });
+        }
+        break;
+      }
+      case 'subscription.past_due':
+        handled = true;
+        matched = await this.setUserStatusByPaddleSub(subId, {
+          payment_status: 'past_due',
+        });
+        break;
+      case 'subscription.canceled':
+        handled = true;
+        matched = await this.setUserStatusByPaddleSub(subId, {
+          payment_status: 'canceled',
+          is_active: false,
+        });
+        break;
+      case 'adjustment.created':
+      case 'adjustment.updated':
+        // Treat a full/partial refund adjustment as loss of access.
+        if (data?.action === 'refund' && subId) {
+          handled = true;
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'refunded',
+            is_active: false,
+          });
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (handled && !matched) {
+      throw new Error(
+        `Paddle ${eventType} for ${subId || 'unknown'} matched no user yet; will retry`,
+      );
+    }
+
+    await this.db.query(
+      `INSERT INTO webhook_events (provider, event_id, event_type, payload)
+       VALUES ('paddle', $1, $2, $3::jsonb)
+       ON CONFLICT (provider, event_id) DO NOTHING`,
+      [eventId, eventType, JSON.stringify(body)],
+    );
+
+    return { status: 'success', matched, eventType };
+  }
+
   // --- PayPal webhook processing (keeps the users table in sync with PayPal) ---
 
   // Update a user's payment status by their PayPal subscription id.
