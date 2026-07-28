@@ -62,7 +62,7 @@ const t = {
     sdkError:
       "We could not load the payment options. Please refresh the page or contact support.",
     processing: "Activating your account...",
-    footer: "Secure payment powered by PayPal. Cancel anytime.",
+    footer: "Secure payment powered by Paddle. Cancel anytime.",
     validation: {
       terms: "Please accept the Terms and Conditions.",
       signup: "Please sign up first to start your subscription.",
@@ -95,7 +95,7 @@ const t = {
     sdkError:
       "No pudimos cargar las opciones de pago. Actualiza la página o contacta con soporte.",
     processing: "Activando tu cuenta...",
-    footer: "Pago seguro con PayPal. Cancela cuando quieras.",
+    footer: "Pago seguro con Paddle. Cancela cuando quieras.",
     validation: {
       terms: "Acepta los Términos y Condiciones.",
       signup: "Primero regístrate para comenzar tu suscripción.",
@@ -128,7 +128,7 @@ const t = {
     sdkError:
       "Não foi possível carregar as opções de pagamento. Atualize a página ou contate o suporte.",
     processing: "Ativando sua conta...",
-    footer: "Pagamento seguro com PayPal. Cancele quando quiser.",
+    footer: "Pagamento seguro com Paddle. Cancele quando quiser.",
     validation: {
       terms: "Aceite os Termos e Condições.",
       signup: "Primeiro cadastre-se para começar sua assinatura.",
