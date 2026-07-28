@@ -1,6 +1,14 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import * as nodemailer from 'nodemailer';
 import type { StringValue } from 'ms';
 import { UsersService } from '../users/users.service';
 import { DatabaseService } from '../database/database.service';
@@ -12,6 +20,8 @@ import { EventLoggerService } from '../analytics/events/event-logger.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
@@ -21,7 +31,10 @@ export class AuthService {
   ) {}
 
   async signup(signupDto: SignupDto) {
-    const { email, password, role } = signupDto;
+    const { password, role } = signupDto;
+    // Normalize the email so it is stored consistently and can always be matched
+    // at login (avoids capitalized/whitespace mismatches).
+    const email = (signupDto.email || '').trim().toLowerCase();
 
     // Check if user already exists
     const existingUser = await this.usersService.findByEmail(email);
@@ -205,6 +218,125 @@ export class AuthService {
         teamId: user.teamId,
       },
     };
+  }
+
+  // Start a password reset: store a hashed one-time token and email a link.
+  // Always returns a generic response so we never reveal whether an email exists.
+  async forgotPassword(email: string) {
+    const normalized = (email || '').trim().toLowerCase();
+    const genericResponse = {
+      success: true,
+      message:
+        'If an account exists for that email, a password reset link has been sent.',
+    };
+
+    const user = await this.usersService.findByEmail(normalized);
+    if (!user) return genericResponse;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.db.query(
+      `UPDATE users
+       SET reset_token_hash = $1, reset_token_expires_at = $2, updated_at = NOW()
+       WHERE id = $3`,
+      [tokenHash, expiresAt, user.id],
+    );
+
+    const frontendUrl = (
+      this.configService.get('FRONTEND_URL') || 'https://www.cortexaaicrm.com'
+    )
+      .split(',')[0]
+      .trim();
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    await this.sendResetEmail(user.email, resetUrl);
+    return genericResponse;
+  }
+
+  // Complete a reset: verify the token, set the new password, clear the token,
+  // and bump token_version so any existing sessions are invalidated.
+  async resetPassword(token: string, newPassword: string) {
+    if (!token) throw new BadRequestException('Reset token is required');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const { rows } = await this.db.query(
+      `SELECT id FROM users
+       WHERE reset_token_hash = $1 AND reset_token_expires_at > NOW()
+       LIMIT 1`,
+      [tokenHash],
+    );
+    if (!rows.length) {
+      throw new BadRequestException(
+        'This reset link is invalid or has expired. Please request a new one.',
+      );
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.db.query(
+      `UPDATE users
+       SET password = $1,
+           reset_token_hash = NULL,
+           reset_token_expires_at = NULL,
+           token_version = COALESCE(token_version, 1) + 1,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [hashed, rows[0].id],
+    );
+
+    return {
+      success: true,
+      message: 'Your password has been reset. Please sign in.',
+    };
+  }
+
+  // Send the reset email via the platform SMTP sender. Best-effort: a missing or
+  // failing SMTP config must not change the generic forgot-password response,
+  // but we log it so delivery problems are visible.
+  private async sendResetEmail(to: string, resetUrl: string) {
+    try {
+      const host = this.configService.get('SMTP_HOST');
+      const user = this.configService.get('SMTP_USER');
+      const pass = this.configService.get('SMTP_PASS');
+      const from = this.configService.get('EMAIL_FROM') || user;
+      const port = Number(this.configService.get('SMTP_PORT')) || 587;
+
+      if (!host || !user || !pass || !from) {
+        this.logger.warn(
+          'Password reset email not sent: SMTP is not configured (set SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_FROM).',
+        );
+        return;
+      }
+
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      });
+
+      const html = `
+        <div style="font-family:Arial,sans-serif;font-size:15px;color:#111">
+          <h2 style="margin:0 0 12px">Reset your CORTEXA password</h2>
+          <p>We received a request to reset your password. Click the button below to set a new one. This link expires in 1 hour.</p>
+          <p style="margin:20px 0">
+            <a href="${resetUrl}" style="background:#2563eb;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Reset password</a>
+          </p>
+          <p style="color:#64748b;font-size:13px">If you did not request this, you can safely ignore this email.</p>
+          <p style="color:#94a3b8;font-size:12px;word-break:break-all">${resetUrl}</p>
+        </div>`;
+
+      await transporter.sendMail({
+        from,
+        to,
+        subject: 'Reset your CORTEXA password',
+        text: `Reset your password using this link (expires in 1 hour): ${resetUrl}`,
+        html,
+      });
+    } catch (err: any) {
+      this.logger.error(`Failed to send password reset email: ${err?.message}`);
+    }
   }
 }
 
