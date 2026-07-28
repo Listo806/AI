@@ -11,6 +11,7 @@ import { EventLoggerService } from "../analytics/events/event-logger.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
 import { TeamAnalyticsService } from "./analytics/team-analytics.service";
+import { randomBytes } from "crypto";
 @Injectable()
 export class TeamsService {
   constructor(
@@ -90,33 +91,88 @@ export class TeamsService {
   }
 
   /** Teams the user owns (owner_id = userId) OR the single team they are a member of (team_id). One owner can have multiple teams. */
-  async findByUserId(userId: string): Promise<Team[]> {
+  async findByUserId(userId: string): Promise<any[]> {
     const { rows } = await this.db.query(
       `
-      SELECT DISTINCT
+      SELECT
         t.id,
         t.name,
+
         t.owner_id as "ownerId",
+        owner.name as "ownerName",
+        owner.email as "ownerEmail",
+
         t.seat_limit as "seatLimit",
+
         t.created_at as "createdAt",
-        t.updated_at as "updatedAt"
+        t.updated_at as "updatedAt",
+
+        CASE
+          WHEN t.owner_id = $1
+          THEN true
+          ELSE false
+        END as "isOwner",
+
+        COUNT(
+          DISTINCT CASE
+            WHEN tm.status = 'active'
+            THEN tm.user_id
+          END
+        )::int as "memberCount",
+
+        COUNT(
+          DISTINCT CASE
+            WHEN ti.status = 'pending'
+            THEN ti.id
+          END
+        )::int as "pendingInviteCount"
 
       FROM teams t
 
+      LEFT JOIN users owner
+        ON owner.id = t.owner_id
+
       LEFT JOIN team_members tm
         ON tm.team_id = t.id
-        AND tm.status = 'active'
+
+      LEFT JOIN team_invitations ti
+        ON ti.team_id = t.id
 
       WHERE
         t.owner_id = $1
-        OR tm.user_id = $1
+
+        OR EXISTS (
+          SELECT 1
+          FROM team_members access_tm
+          WHERE access_tm.team_id = t.id
+            AND access_tm.user_id = $1
+            AND access_tm.status = 'active'
+        )
+
+      GROUP BY
+        t.id,
+        t.name,
+        t.owner_id,
+        owner.name,
+        owner.email,
+        t.seat_limit,
+        t.created_at,
+        t.updated_at
 
       ORDER BY t.created_at DESC
       `,
       [userId],
     );
 
-    return rows;
+    return rows.map((team: any) => ({
+      ...team,
+      memberCount: Number(team.memberCount || 0),
+      pendingInviteCount: Number(team.pendingInviteCount || 0),
+      availableSeats: Math.max(
+        0,
+        Number(team.seatLimit || 0) - Number(team.memberCount || 0),
+      ),
+    }));
   }
 
   async update(
@@ -626,12 +682,8 @@ export class TeamsService {
     email: string,
     requestingUserId: string,
     role = "agent",
-  ): Promise<void> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException("No user found with this email");
-    }
-    await this.addMember(teamId, user.id, requestingUserId, role);
+  ) {
+    return this.inviteMemberByEmail(teamId, email, requestingUserId, role);
   }
 
   /** Delete a team (owner only). Unlinks all members, then deletes the team. Owner can only delete their own teams. */
@@ -1901,4 +1953,391 @@ export class TeamsService {
       throw error;
     }
   }
+
+  async inviteMemberByEmail(
+    teamId: string,
+    email: string,
+    requestingUserId: string,
+    role = "agent",
+  ) {
+    const normalizedEmail = String(email || "")
+      .trim()
+      .toLowerCase();
+
+    const normalizedRole = String(role || "agent")
+      .trim()
+      .toLowerCase();
+    const allowedRoles = ["admin", "manager", "agent", "viewer"];
+    if (!normalizedEmail) {
+      throw new BadRequestException("Email is required");
+    }
+
+    if (!allowedRoles.includes(normalizedRole)) {
+      throw new BadRequestException(`Invalid team role: ${normalizedRole}`);
+    }
+    const team = await this.findById(teamId);
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    if (String(team.ownerId) !== String(requestingUserId)) {
+      throw new ForbiddenException("Only team owner can invite members");
+    }
+
+    const existingMember = await this.db.query(
+      `
+      SELECT
+        tm.id,
+        tm.status
+      FROM team_members tm
+      INNER JOIN users u
+        ON u.id = tm.user_id
+      WHERE tm.team_id = $1
+        AND LOWER(u.email) = LOWER($2)
+        AND tm.status = 'active'
+      LIMIT 1
+      `,
+      [teamId, normalizedEmail],
+    );
+
+    if (existingMember.rows.length > 0) {
+      throw new BadRequestException(
+        "This user is already an active team member",
+      );
+    }
+
+    const existingInvite = await this.db.query(
+      `
+      SELECT
+        id,
+        status
+      FROM team_invitations
+      WHERE team_id = $1
+        AND LOWER(email) = LOWER($2)
+        AND status = 'pending'
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [teamId, normalizedEmail],
+    );
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    let invitation;
+    if (existingInvite.rows.length > 0) {
+      const invitationId = existingInvite.rows[0].id;
+
+      const result = await this.db.query(
+        `
+      UPDATE team_invitations
+      SET
+        role = $2,
+        token = $3,
+        invited_by = $4,
+        expires_at = $5,
+        created_at = NOW()
+      WHERE id = $1
+      RETURNING
+        id,
+        team_id as "teamId",
+        invited_by as "invitedBy",
+        email,
+        role,
+        status,
+        expires_at as "expiresAt",
+        accepted_at as "acceptedAt",
+        created_at as "createdAt"
+      `,
+        [invitationId, normalizedRole, token, requestingUserId, expiresAt],
+      );
+
+      invitation = result.rows[0];
+    } else {
+      const result = await this.db.query(
+        `
+      INSERT INTO team_invitations (
+        team_id,
+        invited_by,
+        email,
+        role,
+        token,
+        status,
+        expires_at,
+        created_at
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        'pending',
+        $6,
+        NOW()
+      )
+      RETURNING
+        id,
+        team_id as "teamId",
+        invited_by as "invitedBy",
+        email,
+        role,
+        status,
+        expires_at as "expiresAt",
+        accepted_at as "acceptedAt",
+        created_at as "createdAt"
+      `,
+        [
+          teamId,
+          requestingUserId,
+          normalizedEmail,
+          normalizedRole,
+          token,
+          expiresAt,
+        ],
+      );
+
+      invitation = result.rows[0];
+    }
+
+    try {
+      await this.db.query(
+        `
+      INSERT INTO events (
+        team_id,
+        user_id,
+        event_type,
+        entity_type,
+        entity_id,
+        metadata,
+        created_at
+      )
+      VALUES (
+        $1,
+        $2,
+        'team.invitation_created',
+        'team_invitation',
+        $3,
+        $4::jsonb,
+        NOW()
+      )
+      `,
+        [
+          teamId,
+          requestingUserId,
+          invitation.id,
+          JSON.stringify({
+            email: normalizedEmail,
+            role: normalizedRole,
+            expiresAt,
+          }),
+        ],
+      );
+    } catch (error) {
+      console.error("CREATE TEAM INVITE EVENT ERROR", error);
+    }
+
+    return {
+      success: true,
+      message: "Team invitation created successfully",
+      invitation,
+    };
+  }
+
+  async getPendingInvitations({
+    teamId,
+    requestingUserId,
+    page = 1,
+    limit = 20,
+    search = "",
+    role = "all",
+  }: {
+    teamId: string;
+    requestingUserId: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+  }) {
+    const team = await this.findById(teamId);
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    if (String(team.ownerId) !== String(requestingUserId)) {
+      throw new ForbiddenException("Only team owner can manage invitations");
+    }
+    const safePage = Math.max(1, Number(page || 1));
+    const safeLimit = Math.min(100, Math.max(1, Number(limit || 20)));
+    const offset = (safePage - 1) * safeLimit;
+    const conditions: string[] = [`ti.team_id = $1`, `ti.status = 'pending'`];
+    const values: any[] = [teamId];
+    let paramIndex = 2;
+
+    if (search) {
+      conditions.push(`ti.email ILIKE $${paramIndex}`);
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    if (role && role !== "all") {
+      conditions.push(`LOWER(ti.role) = LOWER($${paramIndex})`);
+      values.push(role);
+      paramIndex++;
+    }
+    const whereClause = conditions.join(" AND ");
+    const totalResult = await this.db.query(
+      `
+      SELECT COUNT(*)::int as total
+      FROM team_invitations ti
+      WHERE ${whereClause}
+      `,
+      values,
+    );
+    const total = Number(totalResult.rows[0]?.total || 0);
+    const queryValues = [...values, safeLimit, offset];
+    const result = await this.db.query(
+      `
+    SELECT
+      ti.id,
+      ti.team_id as "teamId",
+      t.name as "teamName",
+
+      ti.email,
+      ti.role,
+      ti.status,
+
+      ti.invited_by as "invitedBy",
+      inviter.name as "invitedByName",
+      inviter.email as "invitedByEmail",
+
+      ti.expires_at as "expiresAt",
+      ti.accepted_at as "acceptedAt",
+      ti.created_at as "createdAt",
+
+      CASE
+        WHEN ti.expires_at IS NOT NULL
+          AND ti.expires_at < NOW()
+        THEN true
+        ELSE false
+      END as "isExpired"
+
+    FROM team_invitations ti
+
+    INNER JOIN teams t
+      ON t.id = ti.team_id
+
+    LEFT JOIN users inviter
+      ON inviter.id = ti.invited_by
+
+    WHERE ${whereClause}
+
+    ORDER BY ti.created_at DESC
+
+    LIMIT $${paramIndex}
+    OFFSET $${paramIndex + 1}
+    `,
+      queryValues,
+    );
+    const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+    return {
+      data: result.rows,
+      pagination: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages,
+        hasNextPage: safePage < totalPages,
+        hasPrevPage: safePage > 1,
+      },
+    };
+  }
+
+  async resendInvitation(
+    teamId: string,
+    invitationId: string,
+    requestingUserId: string,
+  ) {
+    const team = await this.findById(teamId);
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    if (String(team.ownerId) !== String(requestingUserId)) {
+      throw new ForbiddenException("Only team owner can resend invitations");
+    }
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const result = await this.db.query(
+      `
+    UPDATE team_invitations
+    SET
+      token = $3,
+      expires_at = $4,
+      status = 'pending',
+      invited_by = $5,
+      created_at = NOW()
+    WHERE id = $1
+      AND team_id = $2
+      AND status = 'pending'
+    RETURNING
+      id,
+      team_id as "teamId",
+      email,
+      role,
+      status,
+      expires_at as "expiresAt",
+      created_at as "createdAt"
+    `,
+      [invitationId, teamId, token, expiresAt, requestingUserId],
+    );
+
+    if (result.rowCount === 0) {
+      throw new NotFoundException("Pending invitation not found");
+    }
+
+    return {
+      success: true,
+      message: "Invitation resent successfully",
+      invitation: result.rows[0],
+    };
+  }
+
+  async cancelInvitation(
+    teamId: string,
+    invitationId: string,
+    requestingUserId: string,
+  ) {
+    const team = await this.findById(teamId);
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    if (String(team.ownerId) !== String(requestingUserId)) {
+      throw new ForbiddenException("Only team owner can cancel invitations");
+    }
+    const result = await this.db.query(
+      `
+    UPDATE team_invitations
+    SET status = 'cancelled'
+    WHERE id = $1
+      AND team_id = $2
+      AND status = 'pending'
+    RETURNING
+      id,
+      email,
+      role,
+      status
+    `,
+      [invitationId, teamId],
+    );
+    if (result.rowCount === 0) {
+      throw new NotFoundException("Pending invitation not found");
+    }
+    return {
+      success: true,
+      message: "Invitation cancelled successfully",
+      invitation: result.rows[0],
+    };
+  }
+
+  
 }

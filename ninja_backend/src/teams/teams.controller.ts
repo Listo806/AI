@@ -93,29 +93,21 @@ export class TeamsController {
   }
 
   @Post(":id/members/invite")
-  @ApiOperation({ summary: "Invite member by email (owner only)" })
-  @ApiParam({ name: "id", description: "Team ID" })
-  @ApiBody({
-    schema: {
-      type: "object",
-      required: ["email"],
-      properties: { email: { type: "string" } },
-    },
-  })
-  @ApiResponse({ status: 200, description: "Member added" })
-  @ApiResponse({ status: 404, description: "User not found" })
   async inviteByEmail(
     @Param("id") teamId: string,
-    @Body() body: { email: string; role?: string },
+    @Body()
+    body: {
+      email: string;
+      role?: string;
+    },
     @CurrentUser() user: any,
   ) {
-    await this.teamsService.addMemberByEmail(
+    return this.teamsService.inviteMemberByEmail(
       teamId,
       body.email?.trim?.() || "",
       user.id,
       body.role || "agent",
     );
-    return { message: "Member added successfully" };
   }
 
   @Put(":id")
@@ -351,5 +343,44 @@ export class TeamsController {
       dateTo,
       sort,
     });
+  }
+
+  @Get(":id/invitations")
+  async getPendingInvitations(
+    @Param("id") teamId: string,
+    @CurrentUser() user: any,
+    @Query("page") page = "1",
+    @Query("limit") limit = "20",
+    @Query("search") search = "",
+    @Query("role") role = "all",
+  ) {
+    return this.teamsService.getPendingInvitations({
+      teamId,
+      requestingUserId: user.id,
+      page: Number(page),
+      limit: Number(limit),
+      search,
+      role,
+    });
+  }
+
+  @Post(":id/invitations/:invitationId/resend")
+  async resendInvitation(
+    @Param("id") teamId: string,
+    @Param("invitationId")
+    invitationId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.teamsService.resendInvitation(teamId, invitationId, user.id);
+  }
+
+  @Delete(":id/invitations/:invitationId")
+  async cancelInvitation(
+    @Param("id") teamId: string,
+    @Param("invitationId")
+    invitationId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.teamsService.cancelInvitation(teamId, invitationId, user.id);
   }
 }
