@@ -223,7 +223,9 @@ export class LeadsController {
   @ApiParam({ name: "id", description: "Lead ID" })
   @ApiResponse({ status: 200, description: "Lead retrieved successfully" })
   @ApiResponse({ status: 404, description: "Lead not found" })
-  async findOne(@Param("id") id: string) {
+  async findOne(@Param("id") id: string, @CurrentUser() user: any) {
+    // Enforce tenant ownership: a lead is only readable by its team / creator.
+    await this.assertLeadAccess(id, user);
     return this.leadsService.findById(id);
   }
 
@@ -323,15 +325,20 @@ export class LeadsController {
   }
 
   @Get(":id/events")
-  getLeadEvents(
+  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @ApiBearerAuth("JWT-auth")
+  async getLeadEvents(
     @Param("id") id: string,
     @Query("limit") limit = "5",
     @Query("page") page = "1",
-    @Req() req,
+    @CurrentUser() user: any,
   ) {
+    // Previously unguarded: anyone could read any lead's timeline by ID. Now
+    // requires auth + tenant ownership.
+    await this.assertLeadAccess(id, user);
     return this.leadsService.getLeadEvents(
       id,
-      req.user,
+      user,
       Number(limit),
       Number(page),
     );
