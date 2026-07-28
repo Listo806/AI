@@ -43,7 +43,7 @@ export default function AIAppointmentSetter() {
   };
 
   const disable = async () => {
-    if (!window.confirm("Disabling stops new AI bookings. Existing appointments remain unchanged. Continue?")) return;
+    if (!window.confirm("Disabling stops the AI from qualifying and escalating new leads. Continue?")) return;
     setActionLoading(true);
     try {
       await apiClient.request("/ai-center/appointment-setter/disable", { method: "POST" });
@@ -82,7 +82,7 @@ export default function AIAppointmentSetter() {
         AI Setter
       </h1>
       <p className="ai-center-page-subtitle">
-        AI can qualify leads and book appointments across connected channels. Enable to activate.
+        AI qualifies leads across connected channels and escalates them to a human to book. Enable to activate.
       </p>
 
       {!enabled ? (
@@ -91,7 +91,7 @@ export default function AIAppointmentSetter() {
             <span className="ai-center-badge ai-center-badge-neutral">Disabled</span>
           </div>
           <p style={{ marginBottom: "24px" }}>
-            AI can qualify leads, book appointments, and works across connected channels. Requires activation.
+            AI qualifies leads across connected channels and escalates them to a human for booking. Automated booking is coming soon. Requires activation.
           </p>
           <div className="ai-center-actions">
             <button
@@ -112,11 +112,9 @@ export default function AIAppointmentSetter() {
             </div>
             <h2>Metrics</h2>
             {(() => {
-              const booked = status?.appointments_booked_count ?? 0;
-              const rate = status?.conversion_rate ?? 0;
               const qualified = status?.leads_qualified_count ?? 0;
               const escalated = status?.escalated_to_human_count ?? 0;
-              const allZero = booked === 0 && rate === 0 && qualified === 0 && escalated === 0;
+              const allZero = qualified === 0 && escalated === 0;
               if (allZero) {
                 return (
                   <p className="ai-center-metrics-empty">No AI activity yet.</p>
@@ -124,14 +122,6 @@ export default function AIAppointmentSetter() {
               }
               return (
                 <div className="ai-center-kpi-row">
-                  <div className="ai-center-stat-card">
-                    <div className="stat-value">{booked}</div>
-                    <div className="stat-label">Appointments Booked</div>
-                  </div>
-                  <div className="ai-center-stat-card">
-                    <div className="stat-value">{rate}%</div>
-                    <div className="stat-label">Conversion Rate</div>
-                  </div>
                   <div className="ai-center-stat-card">
                     <div className="stat-value">{qualified}</div>
                     <div className="stat-label">Leads Qualified by AI</div>
@@ -173,7 +163,7 @@ export default function AIAppointmentSetter() {
             <h2>Calendar</h2>
             <p style={{ marginBottom: "16px" }}>
               {(status?.connected_calendars?.length ?? 0) === 0
-                ? "Connect a calendar to enable AI booking."
+                ? "Connect a calendar so your team can book escalated leads."
                 : `Connected calendars: ${status.connected_calendars.length}`}
             </p>
             <Link to="/dashboard/integrations" className="crm-btn crm-btn-secondary">
@@ -184,9 +174,9 @@ export default function AIAppointmentSetter() {
           <section className="ai-center-section">
             <h2>Safety & Guardrails</h2>
             <ul className="ai-center-guardrails">
-              <li>Cannot book outside availability</li>
-              <li>Cannot override manual blocks</li>
-              <li>Cannot cancel past events</li>
+              <li>Qualifies leads against your rules only</li>
+              <li>Escalates to a human for booking</li>
+              <li>Never books or cancels on its own</li>
               <li>All actions logged</li>
             </ul>
           </section>
@@ -194,7 +184,7 @@ export default function AIAppointmentSetter() {
           <section className="ai-center-section">
             <h2>Module Control</h2>
             <p style={{ marginBottom: "16px", color: "var(--text-muted)" }}>
-              Disabling stops new AI bookings. Existing appointments remain unchanged.
+              Disabling stops the AI from qualifying and escalating new leads.
             </p>
             <button
               type="button"

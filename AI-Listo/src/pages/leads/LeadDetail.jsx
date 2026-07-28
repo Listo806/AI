@@ -16,6 +16,7 @@ export default function LeadDetail() {
   
   const [lead, setLead] = useState(null);
   const [properties, setProperties] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -42,6 +43,7 @@ export default function LeadDetail() {
     if (isAuthenticated() && user && !authLoading) {
       loadLead();
       loadProperties();
+      loadTeamMembers();
     }
   }, [id, isAuthenticated, user, authLoading]);
 
@@ -112,6 +114,30 @@ export default function LeadDetail() {
       setProperties(propertiesData);
     } catch (err) {
       console.error('Failed to load properties:', err);
+    }
+  };
+
+  const loadTeamMembers = async () => {
+    try {
+      const teams = await apiClient.request('/teams');
+      const teamList = teams?.data || teams || [];
+      const teamId = teamList?.[0]?.id;
+
+      if (!teamId) {
+        setTeamMembers([]);
+        return;
+      }
+
+      const membersRes = await apiClient.request(`/teams/${teamId}/members`);
+      const membersData = membersRes?.data || membersRes || [];
+      const members = Array.isArray(membersData)
+        ? membersData
+        : membersData.members || [];
+
+      setTeamMembers(members);
+    } catch (err) {
+      console.error('Failed to load team members:', err);
+      setTeamMembers([]);
     }
   };
 
@@ -796,6 +822,13 @@ export default function LeadDetail() {
               {user?.id && (
                 <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
               )}
+              {teamMembers
+                .filter((member) => String(member.userId || member.id) !== String(user?.id))
+                .map((member) => (
+                  <option key={member.userId || member.id} value={member.userId || member.id}>
+                    {member.name || member.email || 'Team Member'}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -984,6 +1017,13 @@ export default function LeadDetail() {
                   {user?.id && (
                     <option value={user.id}>Me ({user.email || user.name || 'Current user'})</option>
                   )}
+                  {teamMembers
+                    .filter((member) => String(member.userId || member.id) !== String(user?.id))
+                    .map((member) => (
+                      <option key={member.userId || member.id} value={member.userId || member.id}>
+                        {member.name || member.email || 'Team Member'}
+                      </option>
+                    ))}
                 </select>
               </div>
 

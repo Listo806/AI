@@ -54,6 +54,8 @@ import {
   getDashboardSummary,
   getActivityMetrics,
   getOwnerLeads,
+  getCalendarStats,
+  getUpcomingAppointments,
 } from "../../api/analyticsApi";
 import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
@@ -78,6 +80,16 @@ const SOURCE_COLORS = [
   "#eab308",
   "#3b82f6",
 ];
+
+/** Deterministic accent color for a self-contained initials avatar (no external images). */
+function avatarColor(seed) {
+  const s = String(seed || "");
+  let hash = 0;
+  for (let i = 0; i < s.length; i += 1) {
+    hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  }
+  return SOURCE_COLORS[hash % SOURCE_COLORS.length];
+}
 
 function periodLabel(range) {
   if (range === "today") return "Today";
@@ -138,6 +150,8 @@ export default function CortexaDashboard() {
   const [activity, setActivity] = useState(null); // getActivityMetrics(range)
   const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – CRM access only
   const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
+  const [calStats, setCalStats] = useState(null); // getCalendarStats() – Appointments KPI
+  const [upcoming, setUpcoming] = useState([]); // getUpcomingAppointments() – Upcoming Closings
 
   useEffect(() => {
     let cancelled = false;
@@ -174,6 +188,22 @@ export default function CortexaDashboard() {
           if (!cancelled) setTeamStats(teamDash?.stats || null);
         } catch (_e) {
           if (!cancelled) setTeamStats(null);
+        }
+
+        // Calendar stats/appointments are team-scoped and 403 for users with no
+        // team – degrade the Appointments KPI and Upcoming Closings to empty,
+        // never break the page.
+        try {
+          const stats = await getCalendarStats();
+          if (!cancelled) setCalStats(stats || null);
+        } catch (_e) {
+          if (!cancelled) setCalStats(null);
+        }
+        try {
+          const appts = await getUpcomingAppointments(30);
+          if (!cancelled) setUpcoming(Array.isArray(appts) ? appts : []);
+        } catch (_e) {
+          if (!cancelled) setUpcoming([]);
         }
       } catch (e) {
         if (!cancelled) setError(e?.message || "Failed to load dashboard data.");
@@ -255,11 +285,13 @@ export default function CortexaDashboard() {
     },
     {
       title: "Appointments",
-      value: NO_DATA, // no appointment source
-      subtext: "No appointment data available",
+      value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
+      subtext: calStats
+        ? `${calStats.confirmed ?? 0} confirmed · ${calStats.pending ?? 0} pending`
+        : "No appointment data available",
       icon: <Calendar size={16} className="text-green" />,
       iconBg: "bg-light-green",
-      intime: period,
+      intime: "All time",
     },
   ];
 
@@ -330,12 +362,16 @@ export default function CortexaDashboard() {
 
   // AI Priority Queue => real owner leads (already sorted HOT-first by the API),
   // with their real AI score, label and name.
-  const priorityQueue = (leadsList || []).slice(0, 5).map((l, i) => ({
-    name: l?.name || "Unnamed Lead",
-    intent: l?.aiScoreLabel || l?.aiTier || l?.status || NO_DATA,
-    prob: l?.aiScore != null ? `${Math.round(Number(l.aiScore))}%` : NO_DATA,
-    img: `https://i.pravatar.cc/150?img=${(i % 70) + 1}`,
-  }));
+  const priorityQueue = (leadsList || []).slice(0, 5).map((l) => {
+    const name = l?.name || "Unnamed Lead";
+    return {
+      name,
+      intent: l?.aiScoreLabel || l?.aiTier || l?.status || NO_DATA,
+      prob: l?.aiScore != null ? `${Math.round(Number(l.aiScore))}%` : NO_DATA,
+      initial: name.trim().charAt(0).toUpperCase() || "?",
+      color: avatarColor(name),
+    };
+  });
 
   // Today's Revenue Risk => honest lead-based risk signals from real counts.
   const riskRows = [
@@ -370,6 +406,13 @@ export default function CortexaDashboard() {
   const trackingLogs = (recentActivity || []).slice(0, 6).map((a) => ({
     text: a?.label || a?.type || "Activity",
     time: relativeTime(a?.timestamp),
+  }));
+
+  // Upcoming Closings => real future appointments (next 30 days), team-scoped.
+  const upcomingList = (upcoming || []).slice(0, 5).map((a) => ({
+    title: a?.title || a?.attendeeName || "Appointment",
+    when: shortDate(a?.startAt),
+    status: a?.status || NO_DATA,
   }));
 
   // Pipeline Funnel => real lead funnel from leads.byStatus.
@@ -1054,7 +1097,21 @@ export default function CortexaDashboard() {
               priorityQueue.map((lead, idx) => (
                 <div key={idx} className="queue-item-row">
                   <div className="lead-meta-profile">
-                    <img src={lead.img} alt={lead.name} className="mini-avatar" />
+                    <span
+                      className="mini-avatar"
+                      aria-label={lead.name}
+                      style={{
+                        backgroundColor: lead.color,
+                        color: "#fff",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {lead.initial}
+                    </span>
                     <div className="meta-name">
                       <h4>{lead.name}</h4>
                     </div>
@@ -1311,8 +1368,28 @@ export default function CortexaDashboard() {
             <h5>Upcoming Closings</h5>
           </div>
           <div className="closing-list-wrapper">
-            {/* No appointment / closing schedule data in the backend. */}
-            <span style={emptyStyle}>No upcoming closings</span>
+            {upcomingList.length === 0 ? (
+              <span style={emptyStyle}>No upcoming closings</span>
+            ) : (
+              upcomingList.map((item, idx) => (
+                <div key={idx} className="todo-row-item">
+                  <div className="todo-details">
+                    <span className="todo-txt">
+                      <Calendar
+                        size={13}
+                        className="text-muted"
+                        style={{ marginRight: 4 }}
+                      />{" "}
+                      {item.title}
+                    </span>
+                    <span className="tag-urgent" style={{ background: "transparent", color: "#94a3b8", padding: 0 }}>
+                      {item.status}
+                    </span>
+                  </div>
+                  <span className="todo-time">{item.when}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

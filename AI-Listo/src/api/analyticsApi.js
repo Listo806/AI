@@ -23,10 +23,33 @@ function dateRangeFromDays(days) {
 }
 
 /**
- * Dashboard summary (same as Dashboard page and Leads scope) – for KPI consistency
+ * Dashboard aggregate (metrics + recent activity) – for KPI consistency.
+ * Returns { data: { metrics, recent_activity } }. NOTE: /crm/dashboard/summary
+ * returns {leads,properties,deals,system} with no data.metrics, so the Dashboard
+ * and Analytics pages (which read summary.data.metrics) need the aggregate shape.
  */
 export async function getDashboardSummary() {
-  return apiClient.request('/crm/dashboard/summary');
+  return apiClient.request('/crm/dashboard/aggregate');
+}
+
+/**
+ * Calendar appointment stats (team-scoped): { total, confirmed, pending, completed, canceled }
+ */
+export async function getCalendarStats() {
+  return apiClient.request('/calendar/stats');
+}
+
+/**
+ * Upcoming appointments for the next `days` days (team-scoped). Returns an array.
+ */
+export async function getUpcomingAppointments(days = 30) {
+  const from = new Date();
+  const to = new Date();
+  to.setDate(to.getDate() + (days || 30));
+  const res = await apiClient.request(
+    `/calendar/appointments?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`,
+  );
+  return Array.isArray(res) ? res : res?.items ?? [];
 }
 
 /**
