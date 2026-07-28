@@ -412,3 +412,83 @@ export async function updateMemberRole(teamId, memberId, role) {
 
   return res?.data ?? res;
 }
+
+export async function getPendingTeamInvites(
+  teamId,
+  params = {},
+) {
+  if (!teamId) {
+    throw new Error("Team ID is required");
+  }
+
+  const qs = new URLSearchParams();
+
+  if (params.page) {
+    qs.set("page", String(params.page));
+  }
+
+  if (params.limit) {
+    qs.set("limit", String(params.limit));
+  }
+
+  if (params.search?.trim()) {
+    qs.set("search", params.search.trim());
+  }
+
+  if (
+    params.role &&
+    params.role !== "all"
+  ) {
+    qs.set("role", params.role);
+  }
+
+  const queryString = qs.toString();
+
+  const res = await apiClient.request(
+    `/teams/${teamId}/invitations${
+      queryString
+        ? `?${queryString}`
+        : ""
+    }`,
+    {
+      method: "GET",
+    },
+  );
+
+  console.log(
+    "PENDING TEAM INVITES RAW",
+    res,
+  );
+
+  return res;
+}
+
+export async function resendTeamInvite(
+  teamId,
+  invitationId,
+) {
+  const response =
+    await apiClient.request(
+      `/teams/${teamId}/invitations/${invitationId}/resend`,
+      {
+        method: "POST",
+      },
+    );
+
+  return response?.data || response;
+}
+
+export async function cancelTeamInvite(
+  teamId,
+  invitationId,
+) {
+  const response =
+    await apiClient.request(
+      `/teams/${teamId}/invitations/${invitationId}`,
+      {
+        method: "DELETE",
+      },
+    );
+
+  return response?.data || response;
+}

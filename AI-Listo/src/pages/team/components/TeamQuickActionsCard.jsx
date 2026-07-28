@@ -12,17 +12,17 @@ const actions = [
   {
     icon: ShieldCheck,
     label: "Manage Roles & Permissions",
-    route: "/manage-permissions",
+    route: "#",
   },
   {
     icon: Settings,
     label: "Manage Teams",
-    route: "/team-settings",
+    route: "/dashboard/team/manage",
   },
   {
     icon: Sparkles,
     label: "View Pending Invites",
-    route: "/dashboard/team/ai-insights",
+    route: "/dashboard/team/invites",
   },
   {
     icon: BarChart3,
@@ -31,8 +31,21 @@ const actions = [
   },
 ];
 
-export default function TeamQuickActionsCard() {
+export default function TeamQuickActionsCard({ selectedTeamId }) {
   const navigate = useNavigate();
+
+  const handleAction = (item) => {
+    if (item.route === "/dashboard/team/invites") {
+      navigate(
+        `${item.route}?teamId=${encodeURIComponent(selectedTeamId || "")}`,
+      );
+
+      return;
+    }
+
+    navigate(item.route);
+  };
+
   return (
     <div className="team-card team-quick-actions-card">
       <div className="team-card-header">
@@ -44,11 +57,16 @@ export default function TeamQuickActionsCard() {
       </div>
 
       <div className="team-quick-actions-list">
-        {actions.map((item, index) => {
+        {actions.map((item) => {
           const Icon = item.icon;
 
           return (
-            <button key={index} className="team-quick-action-item" onClick={() => navigate(item.route)}>
+            <button
+              key={item.label}
+              type="button"
+              className="team-quick-action-item"
+              onClick={() => handleAction(item)}
+            >
               <div className="team-quick-action-left">
                 <div className="team-quick-action-icon">
                   <Icon size={18} />

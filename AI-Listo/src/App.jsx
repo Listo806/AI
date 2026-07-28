@@ -1,8 +1,14 @@
-
 import React, { useEffect } from "react";
 import Landing from "./pages/landing/Landing";
 
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import { trackEvent, initAnalytics } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -12,7 +18,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
 import DashboardLayout from "./layouts/DashboardLayout";
 import "./i18n/config";
-import { LegacyPropertyRedirect, LegacyLeadRedirect } from "./components/LegacyRedirect";
+import {
+  LegacyPropertyRedirect,
+  LegacyLeadRedirect,
+} from "./components/LegacyRedirect";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import SignUpDev from "./pages/auth/SignUpDev";
@@ -63,7 +72,10 @@ import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
 import ZapierPage from "./pages/integrations/ZapierPage";
-import { WhatsAppPrimaryRoute, WhatsAppQrRoute } from "./components/WhatsAppRoute";
+import {
+  WhatsAppPrimaryRoute,
+  WhatsAppQrRoute,
+} from "./components/WhatsAppRoute";
 import Instagram from "./pages/instagram/Instagram";
 import CalendarPage from "./pages/calendar/CalendarPage";
 import Billing from "./pages/billing/Billing";
@@ -100,6 +112,8 @@ import TeamAIInsightsPage from "./pages/team/TeamAIInsightsPage";
 import TeamPerformancePage from "./pages/team/TeamPerformancePage";
 import TeamActivityPage from "./pages/team/TeamActivityPage";
 import TeamNotificationsPage from "./pages/team/TeamNotificationsPage";
+import TeamManagePage from "./pages/team/TeamManagePage";
+import TeamPendingInvitesPage from "./pages/team/TeamPendingInvitesPage";
 import WhatsAppPage from "./pages/whatsapp/WhatsAppPage";
 import LeadGeneratorPage from "./pages/generator/LeadGeneratorPage";
 import SetupGuidePage from "./pages/common/SetupGuidePage";
@@ -117,19 +131,26 @@ function RootRoute() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
         <div>Loading...</div>
       </div>
     );
   }
 
   // if (isAuthenticated()) {
-    // const role = user?.role?.toLowerCase?.() || user?.role;
-    // if (role === 'va') return <Navigate to="/dashboard/properties" replace />;
-    // if (role === 'va_uploader') return <Navigate to="/dashboard/va-upload" replace />;
-    // if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/admin/listings" replace />;
-    // if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
-    // return <Navigate to="/dashboard/whatsapp" replace />;
+  // const role = user?.role?.toLowerCase?.() || user?.role;
+  // if (role === 'va') return <Navigate to="/dashboard/properties" replace />;
+  // if (role === 'va_uploader') return <Navigate to="/dashboard/va-upload" replace />;
+  // if (role === 'super_admin' || role === 'admin') return <Navigate to="/dashboard/admin/listings" replace />;
+  // if (role === 'user') return <Navigate to="/dashboard/platform-listings" replace />;
+  // return <Navigate to="/dashboard/whatsapp" replace />;
   // }
   return <Landing />;
   // Not authenticated - show sign-in
@@ -174,22 +195,36 @@ function AppRoutes() {
           The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}
       <Route element={<LocaleLayout code="en" />}>{publicRoutes("")}</Route>
       <Route element={<LocaleLayout code="es" />}>{publicRoutes("es")}</Route>
-      <Route element={<LocaleLayout code="pt" />}>{publicRoutes("pt-br")}</Route>
+      <Route element={<LocaleLayout code="pt" />}>
+        {publicRoutes("pt-br")}
+      </Route>
 
       <Route path="/sign-up-dev" element={<SignUpDev />} />
-      
+
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />
-      
+
       {/* Public Listings (no auth required) — /buy = sale, /rent = rent, /listings = browse */}
       <Route path="/buy" element={<Listings />} />
       <Route path="/rent" element={<Listings />} />
       <Route path="/listings" element={<Listings />} />
       <Route path="/listings/:id" element={<ListingDetail />} />
-      <Route path="/vacation-rentals/search" element={<VacationRentalsSearch />} />
-      <Route path="/vacation-rentals/search/:id" element={<VacationRentalsSearchDetail />} />
-      <Route path="/vacation-rentals/upload" element={<Navigate to="/dashboard/vacation-rentals/upload" replace />} />
-      <Route path="/vacation-rentals/upload/:id" element={<VacationUploadPublicRedirect />} />
+      <Route
+        path="/vacation-rentals/search"
+        element={<VacationRentalsSearch />}
+      />
+      <Route
+        path="/vacation-rentals/search/:id"
+        element={<VacationRentalsSearchDetail />}
+      />
+      <Route
+        path="/vacation-rentals/upload"
+        element={<Navigate to="/dashboard/vacation-rentals/upload" replace />}
+      />
+      <Route
+        path="/vacation-rentals/upload/:id"
+        element={<VacationUploadPublicRedirect />}
+      />
       {/* Tokenized webview link from WhatsApp property card */}
       <Route path="/view" element={<View />} />
 
@@ -206,40 +241,46 @@ function AppRoutes() {
       >
         {/* Dashboard Index - Redirect based on role */}
         <Route index element={<DashboardIndexRedirect />} />
-        
+
         {/* Dashboard Home Route - Actual dashboard page */}
         <Route path="home" element={<Dashboard />} />
-        
+
         {/* Leads Routes */}
         <Route path="leads" element={<LeadsList />} />
         <Route path="leads/:id" element={<LeadDetail />} />
-        
+
         {/* Pipeline Route */}
         <Route path="pipeline" element={<Pipeline />} />
-        
+
         {/* Properties Routes */}
         <Route path="properties" element={<PropertiesList />} />
         <Route path="properties/new" element={<PropertyForm />} />
         <Route path="properties/:id/edit" element={<PropertyForm />} />
         <Route path="properties/:id" element={<PropertyDetail />} />
-        <Route path="vacation-rentals/upload" element={<VacationRentalsUpload />} />
-        <Route path="vacation-rentals/upload/:id" element={<VacationRentalsUpload />} />
-        
+        <Route
+          path="vacation-rentals/upload"
+          element={<VacationRentalsUpload />}
+        />
+        <Route
+          path="vacation-rentals/upload/:id"
+          element={<VacationRentalsUpload />}
+        />
+
         {/* Platform Marketplace (Agent/Owner/User) */}
         <Route path="platform-listings" element={<PlatformListings />} />
-        
+
         {/* VA Upload */}
         <Route path="va-upload" element={<VaUpload />} />
-        
+
         {/* Admin */}
         <Route path="admin/listings" element={<AdminListings />} />
         <Route path="admin/users" element={<AdminUsers />} />
         <Route path="admin/teams" element={<AdminTeams />} />
         <Route path="admin/plans" element={<AdminPlans />} />
-        
+
         {/* Contacts Route */}
         <Route path="contacts" element={<Contacts />} />
-        
+
         {/* AI Center Routes */}
         <Route path="ai-cortexa-setup" element={<CortexaAI />} />
         <Route path="ai-cortexa" element={<CortexaAI />} />
@@ -247,53 +288,70 @@ function AppRoutes() {
         <Route path="ai-assistant" element={<AIAssistant />} />
         <Route path="ai-auto-reply" element={<AIAutoReply />} />
         <Route path="ai-appointment-setter" element={<AIAppointmentSetter />} />
-        <Route path="ai-qualification-rules" element={<AIQualificationRules />} />
+        <Route
+          path="ai-qualification-rules"
+          element={<AIQualificationRules />}
+        />
         <Route path="ai-messaging" element={<AIMessaging />} />
         <Route path="ai-logs" element={<AIActivityLogs />} />
-        
+
         {/* Analytics Route */}
         <Route path="analytics" element={<Analytics />} />
-        
+
         {/* Team Route */}
         <Route path="team" element={<Team />} />
         <Route path="team/members" element={<TeamMembersPage />} />
         <Route path="team/ai-insights" element={<TeamAIInsightsPage />} />
-        <Route path="team/performance" element={<TeamPerformancePage  />} />
-        <Route path="team/activity" element={<TeamActivityPage   />} />
-        <Route path="team/notifications" element={<TeamNotificationsPage   />} />
-        
+        <Route path="team/performance" element={<TeamPerformancePage />} />
+        <Route path="team/activity" element={<TeamActivityPage />} />
+        <Route path="team/notifications" element={<TeamNotificationsPage />} />
+        <Route path="team/manage" element={<TeamManagePage />} />
+        <Route path="team/invites" element={<TeamPendingInvitesPage />} />
+
         {/* Integrations Routes */}
         <Route path="integrations" element={<Integrations />} />
         <Route path="integrations/webhooks" element={<WebhooksPage />} />
         <Route path="integrations/email" element={<EmailProviderPage />} />
         <Route path="integrations/zapier" element={<ZapierPage />} />
-        <Route path="integrations/google-drive" element={<GoogleDrivePage  />} />
-        <Route path="integrations/instagram" element={<InstagramPage  />} />
-        <Route path="integrations/crm-import" element={<CrmImportPage  />} />
-        <Route path="integrations/csv-leads" element={<CsvLeadImportPage  />} />
-        <Route path="integrations/property-feed" element={<PropertyFeedPage  />} />
-        <Route path="integrations/make" element={<MakePage  />} />
-        <Route path="integrations/google-ads" element={<GoogleAdsPage  />} />
-        <Route path="integrations/api-access" element={<ApiAccessPage  />} />
-        <Route path="integrations/mls" element={<MlsIdxPage  />} />
-        <Route path="integrations/tiktok" element={<TiktokPage  />} />
-        <Route path="integrations/ai-appointment" element={<AppointmentPage  />} />
+        <Route path="integrations/google-drive" element={<GoogleDrivePage />} />
+        <Route path="integrations/instagram" element={<InstagramPage />} />
+        <Route path="integrations/crm-import" element={<CrmImportPage />} />
+        <Route path="integrations/csv-leads" element={<CsvLeadImportPage />} />
+        <Route
+          path="integrations/property-feed"
+          element={<PropertyFeedPage />}
+        />
+        <Route path="integrations/make" element={<MakePage />} />
+        <Route path="integrations/google-ads" element={<GoogleAdsPage />} />
+        <Route path="integrations/api-access" element={<ApiAccessPage />} />
+        <Route path="integrations/mls" element={<MlsIdxPage />} />
+        <Route path="integrations/tiktok" element={<TiktokPage />} />
+        <Route
+          path="integrations/ai-appointment"
+          element={<AppointmentPage />}
+        />
         <Route path="whatsapp" element={<WhatsAppPage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="generator" element={<LeadGeneratorPage />} />
-        
+
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />*/}
         <Route path="whatsapp-qr" element={<WhatsAppQrRoute />} />
-        
+
         {/* Instagram Route */}
         <Route path="instagram" element={<Instagram />} />
-        
+
         {/* Billing Route (legacy - redirects to account/billing) */}
-        <Route path="billing" element={<Navigate to="/account/billing" replace />} />
-        
+        <Route
+          path="billing"
+          element={<Navigate to="/account/billing" replace />}
+        />
+
         {/* Settings Route (legacy - redirects to account/settings) */}
-        <Route path="settings" element={<Navigate to="/account/settings" replace />} />
+        <Route
+          path="settings"
+          element={<Navigate to="/account/settings" replace />}
+        />
       </Route>
 
       {/* Account Routes - Outside dashboard but still protected */}
@@ -313,9 +371,15 @@ function AppRoutes() {
       </Route>
 
       {/* Legacy Routes - Redirect to dashboard */}
-      <Route path="/properties" element={<Navigate to="/dashboard/properties" replace />} />
+      <Route
+        path="/properties"
+        element={<Navigate to="/dashboard/properties" replace />}
+      />
       <Route path="/properties/:id" element={<LegacyPropertyRedirect />} />
-      <Route path="/leads" element={<Navigate to="/dashboard/leads" replace />} />
+      <Route
+        path="/leads"
+        element={<Navigate to="/dashboard/leads" replace />}
+      />
       <Route path="/leads/:id" element={<LegacyLeadRedirect />} />
 
       <Route path="/:country/:city" element={<CityPage />} />
@@ -342,16 +406,15 @@ function PageViewTracker() {
 }
 
 export default function App() {
-    return (
-        <ThemeProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <PageViewTracker />
-              <AppRoutes />
-              <NotificationToast />
-            </NotificationProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      );
-  
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <PageViewTracker />
+          <AppRoutes />
+          <NotificationToast />
+        </NotificationProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }

@@ -330,7 +330,7 @@ export default function TeamWorkspace() {
         <TeamActivityCard activity={activities} teamId={selectedTeamId} />
         {/*<TeamNotificationsCard notifications={notifications} />*/}
         <TeamInsightsCard insights={insights} />
-        <TeamQuickActionsCard />
+        <TeamQuickActionsCard selectedTeamId={selectedTeamId} />
       </div>
 
       {/* =================================================

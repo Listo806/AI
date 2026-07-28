@@ -15,6 +15,9 @@ import {
   getTeamAIInsights,
   getTeamActivities,
   updateMemberRole,
+  getPendingTeamInvites,
+  resendTeamInvite,
+  cancelTeamInvite,
 } from '../../../api/platformApi';
 
 /* ======================================================
@@ -165,4 +168,34 @@ export async function updateTeamSeatLimit(
   return await updateTeam(teamId, {
     seatLimit: nextSeatLimit,
   });
+}
+
+export async function fetchPendingTeamInvites(
+  teamId,
+  params,
+) {
+  return await getPendingTeamInvites(
+    teamId,
+    params,
+  );
+}
+
+export async function resendPendingTeamInvite(
+  teamId,
+  invitationId,
+) {
+  return await resendTeamInvite(
+    teamId,
+    invitationId,
+  );
+}
+
+export async function cancelPendingTeamInvite(
+  teamId,
+  invitationId,
+) {
+  return await cancelTeamInvite(
+    teamId,
+    invitationId,
+  );
 }
