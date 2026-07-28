@@ -192,19 +192,19 @@ function ReportingSection({ tr }) {
               </div>
 
               <div className="cx-pipeline-stages">
-                <span>
+                <span className="blue">
                   {copy.stageNew}
                   <small>12 {copy.deals}</small>
                 </span>
-                <span>
+                <span className="purple">
                   {copy.stageContacted}
                   <small>8 {copy.deals}</small>
                 </span>
-                <span>
+                <span className="yellow">
                   {copy.stageProposal}
                   <small>6 {copy.deals}</small>
                 </span>
-                <span>
+                <span className="green">
                   {copy.stageWon}
                   <small>5 {copy.deals}</small>
                 </span>

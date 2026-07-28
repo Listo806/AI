@@ -1624,7 +1624,7 @@ TEAM ACTIVITY
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  padding: 10px 0;
+  padding: 6px 0;
   position: relative;
   transition: all 0.2s ease;
 }

@@ -2081,7 +2081,6 @@ body #analytics.m-bottom-cta {
   margin: 0 0 22px;
   font-size: clamp(50px, 5vw, 78px);
   line-height: 0.98;
-  letter-spacing: -0.055em;
   text-align: left;
 }
 
@@ -2167,6 +2166,7 @@ body #analytics.m-bottom-cta {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 230px;
 }
 
 .cx-report-card {
@@ -2174,7 +2174,6 @@ body #analytics.m-bottom-cta {
   color: #171923;
   border-radius: 22px;
   padding: 22px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
 }
 
 .cx-report-card-head {
@@ -2182,7 +2181,6 @@ body #analytics.m-bottom-cta {
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  margin-bottom: 10px;
 }
 
 .cx-report-card-head strong {
@@ -2193,9 +2191,10 @@ body #analytics.m-bottom-cta {
   border: 0;
   border-radius: 8px;
   padding: 4px 10px;
-  background: #6d28d9;
+  background: #4f21d4;
   color: #fff;
   cursor: pointer;
+  font-size: 11px;
 }
 
 .cx-report-kpis,
@@ -2209,7 +2208,7 @@ body #analytics.m-bottom-cta {
 
 .cx-report-kpis>div,
 .cx-revenue-kpis>div {
-  padding: 10px;
+  padding: 6px;
 }
 
 .cx-report-kpis>div:not(:last-child),
@@ -2220,8 +2219,8 @@ body #analytics.m-bottom-cta {
 .cx-report-kpis span,
 .cx-revenue-kpis span {
   display: block;
-  color: #6b7280;
-  font-size: 11px;
+  color: #000;
+  font-size: 8px;
 }
 
 .cx-report-kpis strong,
@@ -2270,33 +2269,47 @@ body #analytics.m-bottom-cta {
 .cx-report-insight {
   display: flex;
   gap: 10px;
-  padding-top: 10px;
+  padding-top: 6px;
   border-top: 1px solid #edf0f5;
   color: #6d28d9;
   text-align: left;
   font-size: 11px;
+  padding-bottom: 4px;
 }
 
 .cx-report-insight p {
   margin: 5px 0 0;
   color: #1f2937;
 }
-
+.cx-report-insight strong{
+  color: #000;
+}
 .cx-pipeline-stages {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 5px;
+  margin-bottom: 6px;
 }
 
 .cx-pipeline-stages span {
-  padding: 6px;
-  border-radius: 9px;
+  padding: 6px 3px;
+  border-radius: 4px;
   background: #f5f3ff;
   color: #5b21b6;
-  font-size: 10px;
+  font-size: 9px;
 }
-
+.cx-pipeline-stages .blue{
+  color: #063ce5;
+}
+.cx-pipeline-stages .purple{
+  color: #5a08c4;
+}
+.cx-pipeline-stages .green{
+  color: #09b921;
+}
+.cx-pipeline-stages .yellow{
+  color: #e77605;
+}
 .cx-pipeline-stages small {
   display: block;
   margin-top: 3px;
@@ -2308,8 +2321,7 @@ body #analytics.m-bottom-cta {
   display: grid;
   align-items: center;
   gap: 6px;
-  padding: 5px 0;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 4px 0;
   justify-content: space-between;
 }
 
@@ -2319,14 +2331,14 @@ body #analytics.m-bottom-cta {
 
 .cx-pipeline-row em {
   font-style: normal;
-  color: #6d28d9;
-  font-size: 11px;
+  color: #254cf5;
+  font-size: 10px;
   text-align: right;
 }
 
 .cx-mini-avatar {
-  width: 30px;
-  height: 30px;
+  width: 27px;
+  height: 27px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -2349,9 +2361,9 @@ body #analytics.m-bottom-cta {
 }
 
 .cx-report-button {
-  height: 26px;
+  height: 24px;
   border-radius: 9px;
-  background: linear-gradient(90deg, #4f21d4, #8b2be2);
+  background: linear-gradient(90deg, #4f21d4, #6b2ced);
   color: #fff;
 }
 
@@ -2372,7 +2384,7 @@ body #analytics.m-bottom-cta {
 .cx-team-activity-row time,
 .cx-team-activity-row small {
   color: #6b7280;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .cx-team-activity-row i {
@@ -2401,7 +2413,7 @@ body #analytics.m-bottom-cta {
 }
 
 .cx-revenue-bars span {
-  width: 24px;
+  width: 20px;
   border-radius: 5px 5px 0 0;
   background: linear-gradient(180deg, #8b5cf6, #6d28d9);
 }
@@ -2491,7 +2503,7 @@ body #analytics.m-bottom-cta {
 
   .cx-report-kpis span,
   .cx-revenue-kpis span {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .cx-pipeline-row {
