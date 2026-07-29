@@ -8,7 +8,6 @@ import {
   User,
   Users,
 } from "lucide-react";
-import apiClient from "../../api/apiClient";
 import { trackEvent, trackAdsConversion, setUserData } from "../../utils/track";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
@@ -174,7 +173,7 @@ const loadPayPalSdk = (clientId) =>
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setUser, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const tr = t[lang] || t.en;
@@ -231,26 +230,17 @@ export default function CheckoutPage() {
       ? tr.userCount.one
       : tr.userCount.many.replace("{count}", String(plan.users));
 
-  // Log the user in after payment succeeds, then open the product.
+  // The user is already authenticated (from trial signup), so after payment
+  // succeeds we just refresh their status and open the product.
   const finishAndLogin = async (userId) => {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
-    const res = await fetch(`${API_BASE}/api/auth/login-by-id`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (data.accessToken) {
-      apiClient.setTokens(data.accessToken, null);
-      localStorage.setItem("listo_access_token", data.accessToken);
-      localStorage.setItem("listo_user", JSON.stringify(data.user));
-      setUser(data.user);
-      navigate("/dashboard", { replace: true });
-      return;
+    try {
+      await refreshUser();
+    } catch (e) {
+      // ignore; webhook + next load will reconcile status
     }
-    // Payment worked but auto-login is unavailable — send them to sign in.
-    navigate("/sign-in", { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   // Paddle overlay checkout. Active only when paddleReady (client token + a

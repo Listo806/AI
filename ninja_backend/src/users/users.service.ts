@@ -25,7 +25,7 @@ export class UsersService {
     // Case-insensitive so a capitalized-at-signup email still matches a
     // lowercase login (mobile keyboards auto-capitalize email fields).
     const { rows } = await this.db.query(
-      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan"
        FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email],
     );
@@ -34,7 +34,7 @@ export class UsersService {
 
   async findById(id: string): Promise<User | null> {
     const { rows } = await this.db.query(
-      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      `SELECT id, email, name, phone, password, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt", payment_status as "paymentStatus", plan, selected_plan as "selectedPlan"
        FROM users WHERE id = $1`,
       [id],
     );

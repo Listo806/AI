@@ -1,10 +1,14 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class TrialService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly authService: AuthService,
+  ) {}
 
   async startTrial(dto: any) {
     try {
@@ -73,6 +77,7 @@ export class TrialService {
           phone,
           role,
           plan,
+          selected_plan,
           is_active,
           payment_status,
           team_id,
@@ -87,9 +92,10 @@ export class TrialService {
           $4,
           $5,
           'TRIAL',
+          $6,
           true,
           'trial',
-          $6,
+          $7,
           NOW(),
           NOW()
         )
@@ -101,16 +107,20 @@ export class TrialService {
           name || null,
           phone || null,
           role || 'owner',
+          dto.plan || null,
           teamId,
         ],
       );
 
       console.log('INSERTED USER:', rows);
 
+      const session = await this.authService.loginById(rows[0].id);
+
       return {
         success: true,
         userId: rows[0].id,
         teamId,
+        ...session,
       };
     } catch (err) {
       console.error('🔥 TRIAL ERROR:', err);

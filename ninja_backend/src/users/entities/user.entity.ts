@@ -22,5 +22,8 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  paymentStatus?: string | null;
+  plan?: string | null;
+  selectedPlan?: string | null;
 }
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { trackEvent, trackSignupConversion } from "../../utils/track";
+import apiClient from "../../api/apiClient";
+import { useAuth } from "../../context/AuthContext";
 import {
   BarChart3,
   Box,
@@ -117,6 +119,7 @@ const plans = [
 
 export default function StartTrial() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -178,6 +181,13 @@ export default function StartTrial() {
       localStorage.setItem("phone", form.phone);
       localStorage.removeItem("password"); // never persist the raw password client-side
       localStorage.setItem("trialPlan", form.plan);
+      // Log the user in immediately so they stay authenticated through checkout
+      // and can resume checkout later after signing back in.
+      if (data.accessToken) {
+        apiClient.setTokens(data.accessToken, data.refreshToken);
+        localStorage.setItem("listo_user", JSON.stringify(data.user));
+        setUser(data.user);
+      }
       // Retargeting: trial account created (not yet activated/paid).
       trackEvent("account_created", { plan: form.plan });
       // Google Ads: this is the real sign-up. Fire the Sign-up conversion on

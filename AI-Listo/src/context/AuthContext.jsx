@@ -85,6 +85,15 @@ export function AuthProvider({ children }) {
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
 
+        // Resume checkout: an unpaid owner with a selected plan is sent back to
+        // the checkout page instead of the dashboard so they can finish paying.
+        const u = response.user || {};
+        const paid = ['active', 'paid'].includes(String(u.paymentStatus || '').toLowerCase());
+        if (!paid && u.selectedPlan && (u.role === 'owner' || !u.role)) {
+          navigate(`/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
+          return response;
+        }
+
         // Redirect based on user role
         const role = response.user?.role;
         if (role === 'va') {
