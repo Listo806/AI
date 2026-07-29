@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ROLE_STYLES } from "./utils/teamConstants";
 import "./team.css";
 
@@ -19,7 +19,10 @@ import {
 import useTeamDashboard from "./hooks/useTeamDashboard";
 import useTeamMembers from "./hooks/useTeamMembers";
 import InviteMemberModal from "./components/InviteMemberModal";
-import { updateTeamMemberRole } from "./services/team.service";
+import {
+  updateTeamMemberRole,
+  fetchTeamSeatUsage,
+} from "./services/team.service";
 export default function TeamMembersPage() {
   /* =====================================================
     DASHBOARD
@@ -74,6 +77,36 @@ export default function TeamMembersPage() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState(false);
+
+  /* =====================================================
+    SEAT USAGE (plan-based, Feature B)
+  ===================================================== */
+
+  const [seatUsage, setSeatUsage] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedTeamId) {
+      setSeatUsage(null);
+      return;
+    }
+    fetchTeamSeatUsage(selectedTeamId)
+      .then((info) => {
+        if (active) setSeatUsage(info || null);
+      })
+      .catch(() => {
+        if (active) setSeatUsage(null);
+      });
+    return () => {
+      active = false;
+    };
+    // Re-fetch when the member list changes (after invites/removals).
+  }, [selectedTeamId, members]);
+
+  const seatsFull =
+    seatUsage &&
+    Number.isFinite(Number(seatUsage.available)) &&
+    Number(seatUsage.available) <= 0;
   /* =====================================================
     REMOVE MEMBER
   ===================================================== */
@@ -276,6 +309,21 @@ export default function TeamMembersPage() {
         <h1 className="team-page-title">Team Members</h1>
       </div>
       <div className="team-members-header-actions">
+        {seatUsage && (
+          <span
+            className="team-seat-usage"
+            style={{
+              alignSelf: "center",
+              marginRight: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              color: seatsFull ? "#dc2626" : "#475569",
+            }}
+          >
+            {seatUsage.used} of {seatUsage.limit} seats used
+          </span>
+        )}
+
         <button
           type="button"
           className="team-secondary-btn"
@@ -289,6 +337,12 @@ export default function TeamMembersPage() {
           type="button"
           className="team-primary-btn"
           onClick={() => setShowInviteModal(true)}
+          disabled={seatsFull}
+          title={
+            seatsFull
+              ? "Seat limit reached for your plan. Upgrade to add more users."
+              : undefined
+          }
         >
           <Plus size={16} />
           Invite Member

@@ -3,7 +3,9 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from "@nestjs/common";
+import * as nodemailer from "nodemailer";
 import { DatabaseService } from "../database/database.service";
 import { Team, CreateTeamDto, UpdateTeamDto } from "./entities/team.entity";
 import { UsersService } from "../users/users.service";
@@ -11,9 +13,31 @@ import { EventLoggerService } from "../analytics/events/event-logger.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
 import { TeamAnalyticsService } from "./analytics/team-analytics.service";
+import { ConfigService } from "../config/config.service";
 import { randomBytes } from "crypto";
 @Injectable()
 export class TeamsService {
+  private readonly logger = new Logger(TeamsService.name);
+
+  /**
+   * Per-plan seat caps (Feature B). A team's tier lives on the OWNER's
+   * `users.plan` ('solo' | 'team' | 'growth'). 'growth' is the $497 "Business"
+   * tier. Anything unknown (trial / unpaid / no plan) falls back to the Solo cap.
+   */
+  private static readonly PLAN_SEAT_LIMITS: Record<string, number> = {
+    solo: 1,
+    team: 3,
+    growth: 5,
+  };
+
+  /**
+   * Seat-limit error message. The 🔒 prefix follows the existing subscription
+   * gate convention so the frontend apiClient preserves it (instead of replacing
+   * 403 bodies with a generic "no permission" message).
+   */
+  private static readonly SEAT_LIMIT_MESSAGE =
+    "🔒 Seat limit reached for your plan. Upgrade to add more users.";
+
   constructor(
     private readonly db: DatabaseService,
     private readonly usersService: UsersService,
@@ -21,6 +45,7 @@ export class TeamsService {
     private readonly notificationsService: NotificationsService,
     private readonly aiInsightsService: TeamAIInsightsService,
     private readonly analyticsService: TeamAnalyticsService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createTeamDto: CreateTeamDto, ownerId: string): Promise<Team> {
@@ -359,6 +384,16 @@ export class TeamsService {
     requestingUserId: string,
     role = "agent",
   ): Promise<void> {
+    // Seat enforcement (Feature B) based on the team's plan cap, counting active
+    // members plus pending invitations. Checked before we take the row lock.
+    const [planSeatLimit, planSeatUsage] = await Promise.all([
+      this.getTeamSeatLimit(teamId),
+      this.getTeamSeatUsage(teamId),
+    ]);
+    if (planSeatUsage >= planSeatLimit) {
+      throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
+    }
+
     const client = await this.db.getClient();
 
     try {
@@ -399,7 +434,8 @@ export class TeamsService {
       );
 
       const currentSeats = parseInt(seatCountRows[0].count, 10);
-      const availableSeats = team.seat_limit - currentSeats;
+      // Enforce against the plan cap (Feature B), not the legacy teams.seat_limit.
+      const availableSeats = planSeatLimit - currentSeats;
       if (availableSeats === 1) {
         try {
           await this.notificationsService.create({
@@ -417,7 +453,7 @@ export class TeamsService {
             icon: "alert-triangle",
 
             metadata: {
-              seatLimit: team.seat_limit,
+              seatLimit: planSeatLimit,
               usedSeats: currentSeats,
             },
           });
@@ -430,7 +466,7 @@ export class TeamsService {
       }
       if (availableSeats <= 0) {
         //await client.query("ROLLBACK");
-        throw new BadRequestException("No available seats in this team");
+        throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
       }
 
       // Atomically add user to team and activate
@@ -2020,6 +2056,20 @@ export class TeamsService {
       `,
       [teamId, normalizedEmail],
     );
+
+    // Seat enforcement (Feature B). A brand-new invitation consumes a seat; a
+    // re-invite to an address that already has a pending invite does not, so we
+    // only enforce when there is no existing pending invitation for this email.
+    if (existingInvite.rows.length === 0) {
+      const [limit, usage] = await Promise.all([
+        this.getTeamSeatLimit(teamId),
+        this.getTeamSeatUsage(teamId),
+      ]);
+      if (usage >= limit) {
+        throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
+      }
+    }
+
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     let invitation;
@@ -2134,6 +2184,16 @@ export class TeamsService {
     } catch (error) {
       console.error("CREATE TEAM INVITE EVENT ERROR", error);
     }
+
+    // Email the invited address an accept link (Feature A). Best-effort: a mail
+    // failure must NOT fail the invite — it is logged inside the mailer.
+    const acceptUrl = `${this.getFrontendBaseUrl()}/accept-invite?token=${token}`;
+    await this.sendInvitationEmail(
+      normalizedEmail,
+      team.name,
+      normalizedRole,
+      acceptUrl,
+    );
 
     return {
       success: true,
@@ -2339,5 +2399,330 @@ export class TeamsService {
     };
   }
 
-  
+  /* =====================================================
+    SEAT LIMITS BY PLAN (Feature B)
+  ===================================================== */
+
+  /**
+   * Resolve the seat cap for a team from its plan tier. The tier lives on the
+   * team OWNER's `users.plan` (falling back to `selected_plan`): solo=1, team=3,
+   * growth=5. Trial / unpaid / unknown tiers default to the Solo cap (1).
+   */
+  async getTeamSeatLimit(teamId: string): Promise<number> {
+    const { rows } = await this.db.query(
+      `SELECT LOWER(TRIM(COALESCE(u.plan, u.selected_plan, ''))) AS tier
+       FROM teams t
+       JOIN users u ON u.id = t.owner_id
+       WHERE t.id = $1
+       LIMIT 1`,
+      [teamId],
+    );
+    const tier = rows[0]?.tier || "";
+    return TeamsService.PLAN_SEAT_LIMITS[tier] ?? 1;
+  }
+
+  /**
+   * Current seat usage: active team members PLUS pending, not-yet-expired
+   * invitations (so a pending invite holds a seat). `excludeToken` omits one
+   * invitation from the count — used at accept time, where converting a held
+   * pending seat into an active membership must not be double-counted.
+   */
+  async getTeamSeatUsage(
+    teamId: string,
+    excludeToken?: string,
+  ): Promise<number> {
+    const { rows } = await this.db.query(
+      `SELECT
+         (
+           SELECT COUNT(*)
+           FROM team_members
+           WHERE team_id = $1
+             AND status = 'active'
+         )
+         +
+         (
+           SELECT COUNT(*)
+           FROM team_invitations
+           WHERE team_id = $1
+             AND status = 'pending'
+             AND (expires_at IS NULL OR expires_at > NOW())
+             AND ($2::text IS NULL OR token <> $2)
+         ) AS usage`,
+      [teamId, excludeToken ?? null],
+    );
+    return Number(rows[0]?.usage || 0);
+  }
+
+  /** Plan-based seat limit + usage for the current team (used by the invite UI). */
+  async getSeatUsageInfo(
+    teamId: string,
+  ): Promise<{ limit: number; used: number; available: number }> {
+    const [limit, used] = await Promise.all([
+      this.getTeamSeatLimit(teamId),
+      this.getTeamSeatUsage(teamId),
+    ]);
+    return { limit, used, available: Math.max(0, limit - used) };
+  }
+
+  /* =====================================================
+    INVITATION ACCEPT FLOW (Feature A)
+  ===================================================== */
+
+  private getFrontendBaseUrl(): string {
+    return (
+      this.configService.get("FRONTEND_URL") || "https://www.cortexaaicrm.com"
+    )
+      .split(",")[0]
+      .trim();
+  }
+
+  /**
+   * Send the invitation email (accept link). Mirrors auth.service.sendResetEmail:
+   * pulls SMTP config from ConfigService and is strictly best-effort — a missing
+   * or failing SMTP setup is logged and swallowed, never thrown.
+   */
+  private async sendInvitationEmail(
+    to: string,
+    teamName: string,
+    role: string,
+    acceptUrl: string,
+  ): Promise<void> {
+    try {
+      const host = this.configService.get("SMTP_HOST");
+      const user = this.configService.get("SMTP_USER");
+      const pass = this.configService.get("SMTP_PASS");
+      const from = this.configService.get("EMAIL_FROM") || user;
+      const port = Number(this.configService.get("SMTP_PORT")) || 587;
+
+      if (!host || !user || !pass || !from) {
+        this.logger.warn(
+          "Team invitation email not sent: SMTP is not configured (set SMTP_HOST, SMTP_USER, SMTP_PASS, EMAIL_FROM).",
+        );
+        return;
+      }
+
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+      });
+
+      const safeTeam = teamName || "a CORTEXA workspace";
+      const html = `
+        <div style="font-family:Arial,sans-serif;font-size:15px;color:#111">
+          <h2 style="margin:0 0 12px">You've been invited to ${safeTeam}</h2>
+          <p>You've been invited to join <strong>${safeTeam}</strong> on CORTEXA as <strong>${role}</strong>.</p>
+          <p style="margin:20px 0">
+            <a href="${acceptUrl}" style="background:#2563eb;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Accept invitation</a>
+          </p>
+          <p style="color:#64748b;font-size:13px">This invitation expires in 7 days. If you did not expect this, you can safely ignore this email.</p>
+          <p style="color:#94a3b8;font-size:12px;word-break:break-all">${acceptUrl}</p>
+        </div>`;
+
+      await transporter.sendMail({
+        from,
+        to,
+        subject: `You've been invited to join ${safeTeam} on CORTEXA`,
+        text: `You've been invited to join ${safeTeam} as ${role}. Accept your invitation (expires in 7 days): ${acceptUrl}`,
+        html,
+      });
+    } catch (err: any) {
+      this.logger.error(
+        `Failed to send team invitation email: ${err?.message}`,
+      );
+    }
+  }
+
+  /**
+   * Public lookup of a pending invitation by token so the accept page can show
+   * context and prefill the email. Returns { valid: false } for missing /
+   * already-accepted / cancelled tokens (no detail leak); expired tokens get
+   * { valid: false, expired: true }.
+   */
+  async getInvitationByToken(token: string): Promise<{
+    valid: boolean;
+    email?: string;
+    teamName?: string;
+    role?: string;
+    expired?: boolean;
+  }> {
+    if (!token) return { valid: false };
+
+    const { rows } = await this.db.query(
+      `SELECT
+         ti.email,
+         ti.role,
+         ti.status,
+         ti.expires_at AS "expiresAt",
+         t.name AS "teamName"
+       FROM team_invitations ti
+       JOIN teams t ON t.id = ti.team_id
+       WHERE ti.token = $1
+       LIMIT 1`,
+      [token],
+    );
+
+    const inv = rows[0];
+    if (!inv) return { valid: false };
+
+    const expired = inv.expiresAt
+      ? new Date(inv.expiresAt).getTime() < Date.now()
+      : false;
+
+    if (inv.status !== "pending" || expired) {
+      return { valid: false, expired };
+    }
+
+    return {
+      valid: true,
+      email: inv.email,
+      teamName: inv.teamName,
+      role: inv.role,
+      expired: false,
+    };
+  }
+
+  /**
+   * Accept a pending invitation as the authenticated user. Verifies the invite
+   * is pending + unexpired, that the signed-in email matches the invited email,
+   * re-checks the seat cap (seats may have filled since the invite), then adds
+   * the user to team_members (idempotent) and lands brand-new invitees in the
+   * workspace by setting users.team_id when it is null.
+   */
+  async acceptInvitation(
+    token: string,
+    user: { id: string; email: string },
+  ): Promise<{ success: true; teamId: string }> {
+    if (!token) {
+      throw new BadRequestException("Invitation token is required");
+    }
+
+    const { rows } = await this.db.query(
+      `SELECT
+         id,
+         team_id AS "teamId",
+         invited_by AS "invitedBy",
+         email,
+         role,
+         status,
+         expires_at AS "expiresAt"
+       FROM team_invitations
+       WHERE token = $1
+       LIMIT 1`,
+      [token],
+    );
+
+    const invitation = rows[0];
+    const isExpired =
+      invitation?.expiresAt &&
+      new Date(invitation.expiresAt).getTime() < Date.now();
+
+    if (!invitation || invitation.status !== "pending" || isExpired) {
+      throw new NotFoundException("This invitation is invalid or has expired.");
+    }
+
+    // The authenticated user's email must match the invited address.
+    const authEmail = String(user?.email || "")
+      .trim()
+      .toLowerCase();
+    const invitedEmail = String(invitation.email || "")
+      .trim()
+      .toLowerCase();
+    if (!authEmail || authEmail !== invitedEmail) {
+      throw new ForbiddenException(
+        "This invitation was sent to a different email.",
+      );
+    }
+
+    const teamId = invitation.teamId as string;
+
+    // Idempotent: if already an active member, just mark the invite accepted.
+    const existing = await this.db.query(
+      `SELECT id FROM team_members
+       WHERE team_id = $1 AND user_id = $2 AND status = 'active'
+       LIMIT 1`,
+      [teamId, user.id],
+    );
+    const alreadyMember = existing.rows.length > 0;
+
+    if (!alreadyMember) {
+      // Re-check the seat cap. Exclude THIS invitation from usage: accepting it
+      // converts a held pending seat, so it must not count against the cap.
+      const [limit, usage] = await Promise.all([
+        this.getTeamSeatLimit(teamId),
+        this.getTeamSeatUsage(teamId, token),
+      ]);
+      if (usage >= limit) {
+        throw new ForbiddenException(TeamsService.SEAT_LIMIT_MESSAGE);
+      }
+
+      await this.db.query(
+        `INSERT INTO team_members (
+           team_id, user_id, role, status, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, 'active', NOW(), NOW())
+         ON CONFLICT (team_id, user_id)
+         DO UPDATE SET
+           role = EXCLUDED.role,
+           status = 'active',
+           updated_at = NOW()`,
+        [teamId, user.id, invitation.role || "agent"],
+      );
+    }
+
+    // Land a brand-new invitee in this workspace (only when they have none yet).
+    await this.db.query(
+      `UPDATE users SET team_id = $1, updated_at = NOW()
+       WHERE id = $2 AND team_id IS NULL`,
+      [teamId, user.id],
+    );
+
+    // Mark the invitation accepted.
+    await this.db.query(
+      `UPDATE team_invitations
+       SET status = 'accepted', accepted_at = NOW()
+       WHERE id = $1 AND status = 'pending'`,
+      [invitation.id],
+    );
+
+    // Best-effort logging + notification — never block the join on these.
+    try {
+      await this.eventLogger.logTeamMemberAdded(
+        teamId,
+        invitation.invitedBy || user.id,
+        user.id,
+      );
+    } catch (error) {
+      console.error("ACCEPT INVITE EVENT ERROR", error);
+    }
+
+    try {
+      const joined = await this.usersService.findById(user.id);
+      await this.notificationsService.create({
+        teamId,
+        actorUserId: user.id,
+
+        type: "team.member_added",
+        category: "team",
+        priority: "medium",
+
+        title: "Invitation accepted",
+        message: `${joined?.name || joined?.email || "A new member"} joined the team`,
+
+        url: `/dashboard/team/members`,
+
+        entityType: "user",
+        entityId: user.id,
+
+        icon: "user-plus",
+
+        metadata: { userId: user.id, via: "invitation" },
+      });
+    } catch (error) {
+      console.error("ACCEPT INVITE NOTIFICATION ERROR", error);
+    }
+
+    return { success: true, teamId };
+  }
 }

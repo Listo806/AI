@@ -27,6 +27,7 @@ import SignUp from "./pages/auth/SignUp";
 import SignUpDev from "./pages/auth/SignUpDev";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import AcceptInvite from "./pages/team/AcceptInvite";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/leads/LeadsList";
@@ -199,6 +200,9 @@ function AppRoutes() {
       </Route>
 
       <Route path="/sign-up-dev" element={<SignUpDev />} />
+
+      {/* Team invitation accept (public, locale-independent, like /reset-password) */}
+      <Route path="/accept-invite" element={<AcceptInvite />} />
 
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />

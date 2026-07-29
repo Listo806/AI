@@ -224,6 +224,28 @@ export async function getTeamSeats(teamId) {
   return res?.data || res;
 }
 
+// Plan-based seat limit + usage (Feature B). Reflects what actually gates invites.
+export async function getTeamSeatUsage(teamId) {
+  const res = await apiClient.request(`/teams/${teamId}/seat-usage`);
+
+  return res?.data ?? res;
+}
+
+// Public: look up a pending invitation by token (no auth). Used by /accept-invite.
+export async function lookupTeamInvitation(token) {
+  return await apiClient.request(
+    `/teams/invitations/${encodeURIComponent(token)}`,
+  );
+}
+
+// Accept a team invitation as the signed-in user.
+export async function acceptTeamInvitation(token) {
+  return await apiClient.request(
+    `/teams/invitations/${encodeURIComponent(token)}/accept`,
+    { method: "POST" },
+  );
+}
+
 export async function createTeam(payload) {
   const res = await apiClient.request("/teams", {
     method: "POST",

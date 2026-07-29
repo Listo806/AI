@@ -114,11 +114,28 @@ export class TrialService {
 
       console.log('INSERTED USER:', rows);
 
-      const session = await this.authService.loginById(rows[0].id);
+      const newUserId = rows[0].id;
+
+      // Make the trial user the OWNER of their team and an active member. The
+      // raw team INSERT above does not set owner_id (unlike teamsService.create),
+      // and without this the owner could not invite members and plan-based seat
+      // limits (which resolve the tier from the team owner) would not work.
+      await this.db.query(
+        `UPDATE teams SET owner_id = $1, updated_at = NOW() WHERE id = $2`,
+        [newUserId, teamId],
+      );
+      await this.db.query(
+        `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+         VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+         ON CONFLICT (team_id, user_id) DO NOTHING`,
+        [teamId, newUserId],
+      );
+
+      const session = await this.authService.loginById(newUserId);
 
       return {
         success: true,
-        userId: rows[0].id,
+        userId: newUserId,
         teamId,
         ...session,
       };
