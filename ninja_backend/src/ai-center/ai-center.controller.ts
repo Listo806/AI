@@ -22,6 +22,7 @@ import {
 } from "@nestjs/swagger";
 import { AiCenterService } from "./ai-center.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
 import { AiCenterAccessGuard } from "./guards/ai-center-access.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -38,7 +39,7 @@ import { FilesInterceptor } from "@nestjs/platform-express";
 @ApiBearerAuth("JWT-auth")
 @Controller("ai-center")
 //@UseGuards(JwtAuthGuard, CrmAccessGuard, AiCenterAccessGuard)
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 export class AiCenterController {
   constructor(private readonly service: AiCenterService) {}
 

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, Req, Res, HttpCode, HttpStat
 import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
@@ -72,7 +73,7 @@ export class WhatsAppController {
   }
 
   @Post('send')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send WhatsApp message to a lead' })
@@ -90,7 +91,7 @@ export class WhatsAppController {
   }
 
   @Get('conversations')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List WhatsApp conversations for team' })
   @ApiResponse({ status: 200, description: 'List of conversations' })
@@ -105,7 +106,7 @@ export class WhatsAppController {
   }
 
   @Get('conversations/:id/messages')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get messages for a conversation' })
   @ApiParam({ name: 'id', description: 'Conversation ID' })
@@ -122,7 +123,7 @@ export class WhatsAppController {
   }
 
   @Get('messages/:messageId/audio')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Stream original voice message audio (for owner playback)' })
   @ApiParam({ name: 'messageId', description: 'Lead message ID (must be message_type=audio)' })
@@ -162,7 +163,7 @@ export class WhatsAppController {
   }
 
   @Post('conversations/:id/send')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Agent sends message; sets ownership to human' })
@@ -188,7 +189,7 @@ export class WhatsAppController {
   }
 
   @Post('conversations/:id/toggle-ai')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Enable or disable AI for conversation' })
@@ -222,7 +223,7 @@ export class WhatsAppController {
   }
 
   @Post('send/property-card')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send structured property card to conversation' })
@@ -255,7 +256,7 @@ export class WhatsAppController {
   }
 
   @Post('action')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Receive button click payload; log and apply side effects' })
@@ -289,7 +290,7 @@ export class WhatsAppController {
   }
 
   @Get('conversations/:id/intents')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'List intent events for a conversation' })
   @ApiParam({ name: 'id', description: 'Conversation ID' })
@@ -304,7 +305,7 @@ export class WhatsAppController {
   }
 
   @Post('broadcast')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send WhatsApp template broadcast to eligible conversations (AI-owned, not escalated)' })

@@ -9,11 +9,13 @@ import { TriggerEvaluationService } from './services/trigger-evaluation.service'
 import { AgentPriorityFeedService } from './services/agent-priority-feed.service';
 import { EngagementTrackingService } from './services/engagement-tracking.service';
 import { DatabaseModule } from '../database/database.module';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [IntelligenceController, AgentsController],
   providers: [
+    PaymentGuard,
     BuyerEventsService,
     IntentScoringService,
     MarketSignalsService,

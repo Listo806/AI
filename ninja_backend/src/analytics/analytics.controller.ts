@@ -9,13 +9,14 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('analytics')
 @ApiBearerAuth('JWT-auth')
 @Controller('analytics')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 

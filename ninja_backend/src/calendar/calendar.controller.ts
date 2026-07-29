@@ -12,11 +12,12 @@ import {
 } from "@nestjs/common";
 
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CalendarService } from "./calendar.service";
 
 @Controller("calendar")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard)
 export class CalendarController {
   constructor(private readonly calendar: CalendarService) {}
 

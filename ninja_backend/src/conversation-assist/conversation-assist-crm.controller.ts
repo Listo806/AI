@@ -1,5 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AiFeaturesGuard } from '../subscriptions/guards/ai-features.guard';
@@ -8,7 +9,7 @@ import { ConversationAssistTurnDto } from './dto/conversation-assist-turn.dto';
 import { SiteAssistState } from '../site-assist/site-assist.types';
 
 @Controller('integrations/ai')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
 export class ConversationAssistCrmController {
   constructor(private readonly engine: ConversationAssistEngineService) {}
 

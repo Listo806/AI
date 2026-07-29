@@ -5,11 +5,12 @@ import { EventLoggerService } from './events/event-logger.service';
 import { ReportGeneratorService } from './reports/report-generator.service';
 import { ReportsController } from './reports/reports.controller';
 import { DatabaseModule } from '../database/database.module';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
   imports: [DatabaseModule],
   controllers: [AnalyticsController, ReportsController],
-  providers: [AnalyticsService, EventLoggerService, ReportGeneratorService],
+  providers: [AnalyticsService, EventLoggerService, ReportGeneratorService, PaymentGuard],
   exports: [EventLoggerService, AnalyticsService, ReportGeneratorService],
 })
 export class AnalyticsModule {}

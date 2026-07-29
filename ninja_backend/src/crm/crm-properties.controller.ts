@@ -2,6 +2,7 @@ import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/co
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CrmPropertiesService, CrmPropertyStatus } from './crm-properties.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
@@ -9,7 +10,7 @@ import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm/properties')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard, PaymentGuard)
 export class CrmPropertiesController {
   constructor(private readonly service: CrmPropertiesService) {}
 

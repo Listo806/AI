@@ -28,6 +28,7 @@ import { LeadsService } from "./leads.service";
 import { WhatsAppLeadService } from "./services/whatsapp-lead.service";
 import { LeadMessagesService } from "../messaging/lead-messages.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CreateLeadDto } from "./dto/create-lead.dto";
 import { CreateWhatsAppLeadDto } from "./dto/create-whatsapp-lead.dto";
@@ -124,7 +125,7 @@ export class LeadsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Create a new lead" })
   @ApiBody({ type: CreateLeadDto })
@@ -136,7 +137,7 @@ export class LeadsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Get all leads (optionally filtered by status)" })
   @ApiQuery({
@@ -157,7 +158,7 @@ export class LeadsController {
     return this.leadsService.findAll(user.id, user.teamId);
   }
   @Get("dashboard")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   getDashboard(
     @Req() req: any,
@@ -176,7 +177,7 @@ export class LeadsController {
     );
   }
   @Get("stats")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   getLeadStats(@Req() req: any, @Query("range") range = "all") {
     const user = req.user;
@@ -189,7 +190,7 @@ export class LeadsController {
   }
 
   @Get(":id/email-thread")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Get email thread for a lead" })
   @ApiParam({ name: "id", description: "Lead ID" })
@@ -202,7 +203,7 @@ export class LeadsController {
   }
 
   @Get(":id/messages")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({
     summary: "Get all messages (WhatsApp + email) for a lead timeline",
@@ -217,7 +218,7 @@ export class LeadsController {
   }
 
   @Get(":id")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Get a lead by ID" })
   @ApiParam({ name: "id", description: "Lead ID" })
@@ -230,7 +231,7 @@ export class LeadsController {
   }
 
   @Put(":id")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Update a lead" })
   @ApiParam({ name: "id", description: "Lead ID" })
@@ -247,7 +248,7 @@ export class LeadsController {
   }
 
   @Post(":id/convert-to-contact")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Convert a lead to a contact" })
   @ApiParam({
@@ -271,7 +272,7 @@ export class LeadsController {
   }
 
   @Post(":id/contact")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Log a contact action (call, WhatsApp, or email)" })
   @ApiParam({ name: "id", description: "Lead ID" })
@@ -304,7 +305,7 @@ export class LeadsController {
   }
 
   @Delete(":id")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Delete a lead" })
   @ApiParam({ name: "id", description: "Lead ID" })
@@ -325,7 +326,7 @@ export class LeadsController {
   }
 
   @Get(":id/events")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   async getLeadEvents(
     @Param("id") id: string,
@@ -345,7 +346,7 @@ export class LeadsController {
   }
 
   @Post(":id/events")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   createLeadEvent(
     @Param("id") id: string,
@@ -356,7 +357,7 @@ export class LeadsController {
   }
 
   @Post(":id/upload-message-file")
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @UseInterceptors(FileInterceptor("file"))
   async uploadLeadMessageFile(
     @Param("id") id: string,

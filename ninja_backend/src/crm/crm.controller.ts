@@ -11,6 +11,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { CrmService } from './crm.service';
 import { DashboardAggregationService } from './dashboard-aggregation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
@@ -18,7 +19,7 @@ import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
 export class CrmController {
   constructor(
     private readonly crmService: CrmService,

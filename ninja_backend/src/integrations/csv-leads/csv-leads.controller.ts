@@ -10,11 +10,12 @@ import {
 
 import { FileInterceptor } from "@nestjs/platform-express";
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../../auth/guards/payment.guard";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 import { CsvLeadsService } from "./csv-leads.service";
 
 @Controller("imports/csv-leads")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard)
 export class CsvLeadsController {
   constructor(
     private readonly csvLeadsService: CsvLeadsService,

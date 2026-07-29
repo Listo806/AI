@@ -9,9 +9,10 @@ import {
 } from '@nestjs/common';
 import { WhatsAppService, SendMessageDto, SendTemplateDto } from './whatsapp.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../../auth/guards/payment.guard';
 
 @Controller('integrations/whatsapp')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard)
 export class WhatsAppController {
   constructor(private readonly whatsappService: WhatsAppService) {}
 

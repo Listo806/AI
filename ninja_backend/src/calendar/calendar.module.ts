@@ -5,11 +5,12 @@ import { GoogleCalendarModule } from "../integrations/google-calendar/google-cal
 import { SendgridModule } from "../integrations/email/sendgrid.module";
 import { CalendarController } from "./calendar.controller";
 import { CalendarService } from "./calendar.service";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 
 @Module({
   imports: [DatabaseModule, GoogleCalendarModule, SendgridModule],
   controllers: [CalendarController],
-  providers: [CalendarService],
+  providers: [CalendarService, PaymentGuard],
   exports: [CalendarService],
 })
 export class CalendarModule {}

@@ -7,12 +7,13 @@ import {
 } from '@nestjs/common';
 import { AiAssistantService, ChatRequestDto, AnalyzeLeadDto, SuggestPropertiesDto } from './ai-assistant.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AiFeaturesGuard } from '../../subscriptions/guards/ai-features.guard';
 
 @Controller('integrations/ai')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
 export class AiAssistantController {
   constructor(private readonly aiAssistantService: AiAssistantService) {}
 
