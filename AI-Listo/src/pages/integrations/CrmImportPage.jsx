@@ -147,20 +147,35 @@ export default function CrmImportPage() {
               "Zoho",
               "Pipedrive",
               "CSV Upload",
-            ].map((crm) => (
-              <div
-                key={crm}
-                style={{
-                  border:
-                    "1px solid #e5e7eb",
-                  borderRadius: 12,
-                  padding: 16,
-                  textAlign: "center",
-                }}
-              >
-                <strong>{crm}</strong>
-              </div>
-            ))}
+            ].map((crm) => {
+              const available = crm === "CSV Upload";
+              return (
+                <div
+                  key={crm}
+                  style={{
+                    border:
+                      "1px solid #e5e7eb",
+                    borderRadius: 12,
+                    padding: 16,
+                    textAlign: "center",
+                    opacity: available ? 1 : 0.55,
+                  }}
+                >
+                  <strong>{crm}</strong>
+                  {!available && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "#94a3b8",
+                        marginTop: 4,
+                      }}
+                    >
+                      Coming soon
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

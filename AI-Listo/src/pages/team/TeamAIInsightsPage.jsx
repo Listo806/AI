@@ -76,9 +76,8 @@ export default function TeamAIInsightsPage() {
         )}
         <div className="block_performance">
           <div>
-            <strong>AI Status:</strong> Team performance is improving this week.
+            <strong>AI Status:</strong> Live insights for your team are shown below.
           </div>
-          <span className="team-ai-banner-badge">+12% Productivity</span>
         </div>
       </div>
       {insights?.pipelineRisks?.length > 0 && (
