@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Pencil, 
-  Building2, 
-  UserCircle2, 
-  Clock3, 
-  Globe, 
-  CheckCircle2, 
-  LogOut,
-  Info 
+import {
+  Pencil,
+  UserCircle2,
+  Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfile } from '../../api/userApi';
@@ -66,6 +61,11 @@ export default function Profile() {
       .slice(0, 2);
   };
 
+  const formatRole = (role) => {
+    if (!role) return '';
+    return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
   return (
    
     <div className="account-page">
@@ -101,36 +101,18 @@ export default function Profile() {
               </button>
             </div>
             <h2 className="profile-display-name">{name}</h2>
-            <span className="profile-badge-admin">{user?.role || 'admin@cortexaaicrm.com'}</span>
+            <span className="profile-badge-admin">{formatRole(user?.role) || 'Member'}</span>
             <p className="profile-display-email">{user?.email || 'admin@cortexaaicrm.com'}</p>
           </div>
 
           <div className="profile-meta-list">
             <div className="meta-item">
               <div className="meta-icon-wrapper">
-                <Building2 size={16} /> 
-              </div>
-              <div className="meta-content">
-                <label>Workspace</label>
-                <p>Acme Real Estate</p>
-              </div>
-            </div>
-            <div className="meta-item">
-              <div className="meta-icon-wrapper">
                 <UserCircle2 size={16} />
               </div>
               <div className="meta-content">
                 <label>Role</label>
-                <p>Administrator</p>
-              </div>
-            </div>
-            <div className="meta-item">
-              <div className="meta-icon-wrapper">
-                <Clock3 size={16} />
-              </div>
-              <div className="meta-content">
-                <label>Last active</label>
-                <p className="status-active"><span className="dot"></span> Active now</p>
+                <p>{formatRole(user?.role) || 'Member'}</p>
               </div>
             </div>
           </div>
