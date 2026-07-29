@@ -300,6 +300,30 @@ export class AuthService {
     };
   }
 
+  // Change the password for an already-authenticated user. Verifies the current
+  // password, sets the new one, and bumps token_version so any OTHER existing
+  // sessions are invalidated. A fresh session is re-issued for the caller so the
+  // current session stays valid.
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.usersService.findById(userId);
+    if (!user) throw new UnauthorizedException();
+    const ok = await bcrypt.compare(currentPassword, user.password);
+    if (!ok) throw new BadRequestException('Your current password is incorrect.');
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.db.query(
+      `UPDATE users SET password = $1, token_version = COALESCE(token_version, 1) + 1, updated_at = NOW() WHERE id = $2`,
+      [hashed, userId],
+    );
+    // Re-issue a fresh session (new token_version) so THIS session stays valid
+    // while any other existing sessions are invalidated.
+    const tokens = await this.generateTokens(user);
+    return { success: true, message: 'Password updated successfully.', ...tokens };
+  }
+
   // Send the reset email via the platform SMTP sender. Best-effort: a missing or
   // failing SMTP config must not change the generic forgot-password response,
   // but we log it so delivery problems are visible.
