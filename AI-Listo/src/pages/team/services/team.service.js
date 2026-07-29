@@ -18,6 +18,7 @@ import {
   getPendingTeamInvites,
   resendTeamInvite,
   cancelTeamInvite,
+  getTeamSeatUsage,
 } from '../../../api/platformApi';
 
 /* ======================================================
@@ -39,6 +40,11 @@ export async function fetchTeamSeats(
   teamId
 ) {
   return await getTeamSeats(teamId);
+}
+
+// Plan-based seat limit + usage (Feature B): { limit, used, available }
+export async function fetchTeamSeatUsage(teamId) {
+  return await getTeamSeatUsage(teamId);
 }
 
 /* ======================================================

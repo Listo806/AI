@@ -915,12 +915,7 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <TrendingUp size={16} className="text-royal-blue" />
-              <h3>Revenue & Lead Trend</h3>
-            </div>
-            <div className="pill-toggles">
-              <button className="active">Leads</button>
-              <button>Appointments</button>
-              <button>Revenue</button>
+              <h3>Lead Activity Trend</h3>
             </div>
           </div>
           <div className="chart-viewbox">
@@ -1232,28 +1227,8 @@ export default function CortexaDashboard() {
                 </div>
               ))}
             </div>
-            <div className="stage-progress-bar-wrapper">
-              <div
-                className="bar-chunk chunk-new"
-                style={{ width: "25%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-qualified"
-                style={{ width: "20%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-showing"
-                style={{ width: "25%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-offer"
-                style={{ width: "15%" }}
-              ></div>
-              <div
-                className="bar-chunk chunk-closed"
-                style={{ width: "15%" }}
-              ></div>
-            </div>
+            {/* Deal-stage distribution bar removed: no per-stage deal data in
+                the backend yet, so fixed widths would misrepresent the pipeline. */}
             <div className="stage-stats-columns">
               {[
                 { name: "New" },

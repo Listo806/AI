@@ -72,6 +72,9 @@ export class AuthService {
         phone: user.phone ?? null,
         role: user.role,
         teamId: user.teamId,
+        paymentStatus: user.paymentStatus ?? null,
+        plan: user.plan ?? null,
+        selectedPlan: user.selectedPlan ?? null,
       },
       ...tokens,
     };
@@ -107,6 +110,9 @@ export class AuthService {
           phone: user.phone ?? null,
           role: user.role,
           teamId: user.teamId,
+          paymentStatus: user.paymentStatus ?? null,
+          plan: user.plan ?? null,
+          selectedPlan: user.selectedPlan ?? null,
         },
         ...tokens,
       };
@@ -216,6 +222,9 @@ export class AuthService {
         phone: user.phone ?? null,
         role: user.role,
         teamId: user.teamId,
+        paymentStatus: user.paymentStatus ?? null,
+        plan: user.plan ?? null,
+        selectedPlan: user.selectedPlan ?? null,
       },
     };
   }

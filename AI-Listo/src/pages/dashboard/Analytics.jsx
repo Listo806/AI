@@ -900,7 +900,7 @@ export default function CortexaAnalyticsDashboard() {
       </div>
 
       {/* ROW 5: AI INSIGHTS & FORECAST */}
-      <div className="insights-forecast-grid"><span class="dot-bottom"></span>All data is updated in real-time</div>
+      <div className="insights-forecast-grid"><span className="dot-bottom"></span>All data is updated in real-time</div>
     </div>
   );
 }

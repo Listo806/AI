@@ -43,11 +43,6 @@ export class AuthController {
     return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 
-  @Post('login-by-id')
-  async loginById(@Body() body: { userId: string }) {
-    return this.authService.loginById(body.userId);
-  }
-
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request a password reset link by email' })

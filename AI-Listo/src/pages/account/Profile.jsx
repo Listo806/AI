@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Pencil, 
-  Building2, 
-  UserCircle2, 
-  Clock3, 
-  Globe, 
-  CheckCircle2, 
-  LogOut,
-  Info 
+import {
+  Pencil,
+  UserCircle2,
+  Info
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfile } from '../../api/userApi';
@@ -18,9 +13,9 @@ export default function Profile() {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   
-  const [name, setName] = useState(user?.name ?? 'Alex Morgan');
-  const [phone, setPhone] = useState(user?.phone ?? '+1 (555) 123-4567');
-  const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? 'Real Estate Professional');
+  const [name, setName] = useState(user?.name ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [jobTitle, setJobTitle] = useState(user?.jobTitle ?? '');
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -28,8 +23,9 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
-      setName(user.name ?? 'Alex Morgan');
-      // Update other states if data comes from API
+      setName(user.name ?? '');
+      setPhone(user.phone ?? '');
+      setJobTitle(user.jobTitle ?? '');
     }
   }, [user]);
 
@@ -40,10 +36,11 @@ export default function Profile() {
     setIsSaving(true);
     try {
       
-      await updateProfile({ 
+      // Backend UpdateProfileDto whitelists only name + phone (forbidNonWhitelisted
+      // rejects anything else). jobTitle is not persisted server-side yet.
+      await updateProfile({
         name: name.trim() || null,
         phone: phone.trim(),
-        jobTitle: jobTitle.trim(),
       });
       await refreshUser();
       setSuccess(true);
@@ -62,6 +59,11 @@ export default function Profile() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const formatRole = (role) => {
+    if (!role) return '';
+    return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
   return (
@@ -99,36 +101,18 @@ export default function Profile() {
               </button>
             </div>
             <h2 className="profile-display-name">{name}</h2>
-            <span className="profile-badge-admin">{user?.role || 'admin@cortexaaicrm.com'}</span>
+            <span className="profile-badge-admin">{formatRole(user?.role) || 'Member'}</span>
             <p className="profile-display-email">{user?.email || 'admin@cortexaaicrm.com'}</p>
           </div>
 
           <div className="profile-meta-list">
             <div className="meta-item">
               <div className="meta-icon-wrapper">
-                <Building2 size={16} /> 
-              </div>
-              <div className="meta-content">
-                <label>Workspace</label>
-                <p>Acme Real Estate</p>
-              </div>
-            </div>
-            <div className="meta-item">
-              <div className="meta-icon-wrapper">
                 <UserCircle2 size={16} />
               </div>
               <div className="meta-content">
                 <label>Role</label>
-                <p>Administrator</p>
-              </div>
-            </div>
-            <div className="meta-item">
-              <div className="meta-icon-wrapper">
-                <Clock3 size={16} />
-              </div>
-              <div className="meta-content">
-                <label>Last active</label>
-                <p className="status-active"><span className="dot"></span> Active now</p>
+                <p>{formatRole(user?.role) || 'Member'}</p>
               </div>
             </div>
           </div>
@@ -198,7 +182,7 @@ export default function Profile() {
           <div className="form-actions">
             <button 
               type="submit" 
-              className={`btn-save-changes ${name && phone && jobTitle ? 'active' : ''}`}
+              className={`btn-save-changes ${name && phone ? 'active' : ''}`}
               disabled={isSaving}
             >
               {isSaving ? 'Saving...' : 'Save changes'}

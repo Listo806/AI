@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -8,8 +9,6 @@ import {
   Calendar,
   RefreshCw,
   CheckCircle2,
-  Download,
-  UserPlus,
   ChevronRight,
   Info,
 } from "lucide-react";
@@ -19,21 +18,47 @@ import {
   getPlans,
   getTeamSubscription,
   getTeamFeatures,
-  selectPlan,
 } from "../../api/subscriptionApi";
 import { getMyTeams } from "../../api/platformApi";
 import "./account.css";
 
+const ACTIVE_LIKE = ["active", "trialing", "past_due"];
+
+function formatPrice(value) {
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  if (Number.isNaN(num)) return null;
+  return Number.isInteger(num) ? `$${num}` : `$${num.toFixed(2)}`;
+}
+
+function formatStatus(status) {
+  if (!status) return null;
+  return status
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDate(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function Billing() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const { showSuccess, showError } = useNotification();
+  const { showError } = useNotification();
+  const navigate = useNavigate();
 
   const [plans, setPlans] = useState([]);
   const [subscription, setSubscription] = useState(null);
   const [features, setFeatures] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectingPlanId, setSelectingPlanId] = useState(null);
   const [teamId, setTeamId] = useState(null);
   const [teamResolved, setTeamResolved] = useState(false);
 
@@ -97,22 +122,45 @@ export default function Billing() {
     load();
   }, [load]);
 
-  const defaultFeatures = [
-    "Full CRM dashboard",
-    "CORTEXA AI Agent",
-    "WhatsApp integration",
-    "Leads & Pipeline",
-    "Properties & Contacts",
-    "Analytics",
-    "Apps & Integrations",
-    "3 users included",
-  ];
+  // Derive the real current plan from the fetched subscription + plans.
+  const currentPlan = subscription?.planId
+    ? plans.find((p) => p.id === subscription.planId) || null
+    : null;
+  const status = subscription?.status || null;
+  const planName = currentPlan?.name || features?.planName || null;
+  const hasPlan = !!planName && ACTIVE_LIKE.includes(status);
+  const planPrice =
+    currentPlan?.price !== undefined && currentPlan?.price !== null
+      ? formatPrice(currentPlan.price)
+      : null;
+  const seatLimit = subscription?.seatLimit ?? currentPlan?.seatLimit ?? null;
+  const nextBillingDate = formatDate(subscription?.currentPeriodEnd);
 
-  const mockInvoices = [
-    { id: "INV-1042", date: "May 12, 2025", amount: "—", status: "Paid" },
-    { id: "INV-1011", date: "Apr 12, 2025", amount: "—", status: "Paid" },
-    { id: "INV-0980", date: "Mar 12, 2025", amount: "—", status: "Paid" },
-  ];
+  // Build the feature checklist from the REAL features payload (no fabricated
+  // "3 users included" line — seats are shown from the real seat limit only).
+  const planFeatures = [];
+  if (features?.hasActiveSubscription) {
+    if (features.crmAccess) planFeatures.push("Full CRM dashboard");
+    if (features.aiFeatures) planFeatures.push("CORTEXA AI Agent");
+    if (features.aiAutomation) planFeatures.push("AI automation & follow-up");
+    if (features.analyticsLevel && features.analyticsLevel !== "none")
+      planFeatures.push("Analytics");
+    if (features.priorityExposure)
+      planFeatures.push("Priority listing exposure");
+    if (features.listingLimit === null) planFeatures.push("Unlimited listings");
+    else if (
+      typeof features.listingLimit === "number" &&
+      features.listingLimit > 0
+    )
+      planFeatures.push(`${features.listingLimit} listings`);
+    if (seatLimit)
+      planFeatures.push(`${seatLimit} ${seatLimit === 1 ? "seat" : "seats"} included`);
+  }
+
+  const statusBadgeStyle =
+    status && status !== "active"
+      ? { backgroundColor: "#fff7ed", borderColor: "#fed7aa", color: "#c2410c" }
+      : undefined;
 
   return (
     <div className="billing-page">
@@ -131,211 +179,161 @@ export default function Billing() {
         </div>
       ) : (
         <>
-        <div className="billing-dashboard-grid">
-          {/* SECTION 1: CURRENT PLAN */}
-          <div className="billing-card current-plan-card">
-            <div className="card-inner-header">
-              <span className="section-subtitle-label">Current Plan</span>
-            </div>
+          <div className="billing-dashboard-grid">
+            {/* SECTION 1: CURRENT PLAN */}
+            <div className="billing-card current-plan-card">
+              <div className="card-inner-header">
+                <span className="section-subtitle-label">Current Plan</span>
+              </div>
 
-            <div className="plan-main-details">
-              <div className="plan-badge-icon">
-                <ShieldCheck size={28} />
-              </div>
-              <div className="plan-meta-info">
-                <div className="plan-title-row">
-                  <h3 className="plan-name-headline">CORTEXA AI CRM</h3>
-                  <span className="status-badge-active">Active</span>
+              <div className="plan-main-details">
+                <div className="plan-badge-icon">
+                  <ShieldCheck size={28} />
                 </div>
-                <div className="plan-price-large">
-                  $497 <span>/ month</span>
+                <div className="plan-meta-info">
+                  <div className="plan-title-row">
+                    <h3 className="plan-name-headline">
+                      {hasPlan ? planName : "CORTEXA AI CRM"}
+                    </h3>
+                    {hasPlan && status && (
+                      <span className="status-badge-active" style={statusBadgeStyle}>
+                        {formatStatus(status)}
+                      </span>
+                    )}
+                  </div>
+                  {hasPlan && planPrice && (
+                    <div className="plan-price-large">
+                      {planPrice} <span>/ month</span>
+                    </div>
+                  )}
+                  <p className="plan-caption-text">
+                    {hasPlan
+                      ? "The complete real estate CRM workspace powered by CORTEXA — built to manage leads, automate follow-up, organize deals, and help teams close more business."
+                      : "You don't have an active subscription yet. Choose a plan to unlock the full CORTEXA AI CRM workspace."}
+                  </p>
                 </div>
-                <p className="plan-caption-text">
-                  The complete real estate CRM workspace powered by CORTEXA —
-                  built to manage leads, automate follow-up, organize deals, and
-                  help teams close more business.
-                </p>
               </div>
-              <button type="button" className="btn-action-outline">
-                <CreditCard size={14} /> Update Payment Method
-              </button>
-            </div>
 
-            <div className="plan-specs-row">
-              <div className="spec-item">
-                <Users size={20} className="spec-icon" />
-                <div className="spec-data">
-                  <span className="spec-value">3 users</span>
-                  <span className="spec-label">included</span>
-                </div>
-              </div>
-              <div className="spec-item">
-                <Calendar size={20} className="spec-icon" />
-                <div className="spec-data">
-                  <span className="spec-value">June 12, 2025</span>
-                  <span className="spec-label">Next billing date</span>
-                </div>
-              </div>
-              <div className="spec-item">
-                <RefreshCw size={20} className="spec-icon" />
-                <div className="spec-data">
-                  <span className="spec-value">Monthly</span>
-                  <span className="spec-label">Billing cycle</span>
-                </div>
-              </div>
-              <div className="spec-item">
-                <CreditCard size={20} className="spec-icon" />
-                <div className="spec-data">
-                  <span className="spec-value">Payment method</span>
-                  <div className="spec-wrap">
-                    <span className="spec-label">Visa •••• 4242</span>
-                    <button type="button" className="inline-edit-link">
-                      Edit
-                    </button>
+              <div className="plan-specs-row">
+                {seatLimit ? (
+                  <div className="spec-item">
+                    <Users size={20} className="spec-icon" />
+                    <div className="spec-data">
+                      <span className="spec-value">
+                        {seatLimit} {seatLimit === 1 ? "seat" : "seats"}
+                      </span>
+                      <span className="spec-label">included</span>
+                    </div>
+                  </div>
+                ) : null}
+                {nextBillingDate ? (
+                  <div className="spec-item">
+                    <Calendar size={20} className="spec-icon" />
+                    <div className="spec-data">
+                      <span className="spec-value">{nextBillingDate}</span>
+                      <span className="spec-label">Next billing date</span>
+                    </div>
+                  </div>
+                ) : null}
+                {hasPlan ? (
+                  <div className="spec-item">
+                    <RefreshCw size={20} className="spec-icon" />
+                    <div className="spec-data">
+                      <span className="spec-value">Monthly</span>
+                      <span className="spec-label">Billing cycle</span>
+                    </div>
+                  </div>
+                ) : null}
+                <div className="spec-item">
+                  <CreditCard size={20} className="spec-icon" />
+                  <div className="spec-data">
+                    <span className="spec-value">Payment method</span>
+                    <span className="spec-label">Managed securely by Paddle</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* SECTION 2: FEATURES LIST */}
-          <div className="billing-card features-list-card">
-            <h3 className="card-section-title">Features on this plan</h3>
-            <ul className="features-checklist">
-              {defaultFeatures.map((feat, index) => (
-                <li key={index} className="feature-check-item">
-                  <CheckCircle2 size={16} className="checklist-icon-green" />
-                  <span>{feat}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>  
-        <div className="billing-dashboard-grid-2">    
-          {/* SECTION 3: RECENT INVOICES */}
-          <div className="billing-card recent-invoices-card">
-            <div className="invoices-header-row">
-              <h3 className="card-section-title">Recent Invoices</h3>
-              <button type="button" className="btn-text-link">
-                <Download size={14} /> Download Invoices
-              </button>
-            </div>
-
-            <div className="table-responsive-wrapper">
-              <table className="invoices-data-table">
-                <thead>
-                  <tr>
-                    <th>Invoice ID</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th className="text-right-align">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockInvoices.map((inv) => (
-                    <tr key={inv.id}>
-                      <td className="font-medium-dark">{inv.id}</td>
-                      <td>{inv.date}</td>
-                      <td>{inv.amount}</td>
-                      <td>
-                        <span className="invoice-status-paid">
-                          <span className="dot-indicator"></span> {inv.status}
-                        </span>
-                      </td>
-                      <td className="text-right-align">
-                        <button
-                          type="button"
-                          className="btn-table-icon"
-                          title="Download PDF"
-                        >
-                          <Download size={14} />
-                        </button>
-                      </td>
-                    </tr>
+            {/* SECTION 2: FEATURES LIST */}
+            <div className="billing-card features-list-card">
+              <h3 className="card-section-title">Features on this plan</h3>
+              {planFeatures.length ? (
+                <ul className="features-checklist">
+                  {planFeatures.map((feat, index) => (
+                    <li key={index} className="feature-check-item">
+                      <CheckCircle2 size={16} className="checklist-icon-green" />
+                      <span>{feat}</span>
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="view-all-footer-link">
-              <button type="button" className="btn-link-navigation">
-                View all invoices <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* SECTION 4: WORKSPACE ACCESS */}
-          <div className="billing-card workspace-access-card">
-            <h3 className="card-section-title">Workspace Access</h3>
-
-            <div className="access-metrics-list">
-              <div className="metric-row-item">
-                <div className="metric-label-group">
-                  <Users size={14} /> <span>Users included</span>
-                </div>
-                <span className="metric-value-output">3</span>
-              </div>
-              <div className="metric-row-item">
-                <div className="metric-label-group">
-                  <Users size={14} /> <span>Active users</span>
-                </div>
-                <span className="metric-value-output status-green-text">
-                  3 / 3
-                </span>
-              </div>
-              <div className="metric-row-item">
-                <div className="metric-label-group">
-                  <Users size={14} /> <span>Extra users</span>
-                </div>
-                <span className="metric-value-output">0</span>
-              </div>
-              <div className="metric-row-item">
-                <div className="metric-label-group">
-                  <Info size={14} /> <span>Extra user price</span>
-                </div>
-                <span className="metric-value-output font-medium-dark">
-                  $97 / user / month
-                </span>
-              </div>
-              <div className="metric-row-item">
-                <div className="metric-label-group">
-                  <RefreshCw size={15} /> <span>Workspace status</span>
-                </div>
-                <span className="badge-workspace-enabled">Enabled</span>
-              </div>
-            </div>
-
-            <div className="add-user-embedded-box">
-              <div className="add-user-content-text">
-                <h4>Add a user</h4>
-                <p>
-                  Add additional users to your workspace. $97 / user / month
-                  will be added to your billing.
+                </ul>
+              ) : (
+                <p className="plan-caption-text">
+                  Plan features will appear here once your subscription is active.
                 </p>
+              )}
+            </div>
+          </div>
+
+          <div className="billing-dashboard-grid-2">
+            {/* SECTION 3: INVOICES */}
+            <div className="billing-card recent-invoices-card">
+              <div className="invoices-header-row">
+                <h3 className="card-section-title">Recent Invoices</h3>
               </div>
-              <button type="button" className="btn-action-outline-bold">
-                <UserPlus size={14} /> Add User
+
+              <p className="plan-caption-text" style={{ padding: "16px 0" }}>
+                No invoices yet. Invoices will appear here once billing runs.
+              </p>
+            </div>
+
+            {/* SECTION 4: WORKSPACE ACCESS */}
+            <div className="billing-card workspace-access-card">
+              <h3 className="card-section-title">Workspace Access</h3>
+
+              <div className="access-metrics-list">
+                <div className="metric-row-item">
+                  <div className="metric-label-group">
+                    <Users size={14} /> <span>Seats included</span>
+                  </div>
+                  <span className="metric-value-output">
+                    {seatLimit ?? "—"}
+                  </span>
+                </div>
+                <div className="metric-row-item">
+                  <div className="metric-label-group">
+                    <RefreshCw size={15} /> <span>Workspace status</span>
+                  </div>
+                  {hasPlan ? (
+                    <span className="badge-workspace-enabled">
+                      {formatStatus(status)}
+                    </span>
+                  ) : (
+                    <span className="metric-value-output">No active plan</span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="manage-users-footer-menu"
+                onClick={() => navigate("/dashboard/team/members")}
+              >
+                <div className="manage-menu-label">
+                  <Users size={16} /> <span>Manage users</span>
+                </div>
+                <ChevronRight size={16} className="chevron-grey" />
               </button>
             </div>
 
-            <button type="button" className="manage-users-footer-menu">
-              <div className="manage-menu-label">
-                <Users size={16} /> <span>Manage users</span>
-              </div>
-              <ChevronRight size={16} className="chevron-grey" />
-            </button>
+            {/* GLOBAL FOOTER BANNER */}
+            <div className="billing-global-footer-hint">
+              <Info size={16} className="hint-icon" />
+              <p>
+                Additional billing controls will be connected once the payment
+                gateway is live.
+              </p>
+            </div>
           </div>
-
-          {/* GLOBAL FOOTER BANNER */}
-          <div className="billing-global-footer-hint">
-            <Info size={16} className="hint-icon" />
-            <p>
-              Additional billing controls will be connected once the payment
-              gateway is live.
-            </p>
-          </div>
-        </div>
         </>
       )}
     </div>

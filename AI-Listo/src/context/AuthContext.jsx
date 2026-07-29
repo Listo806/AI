@@ -73,7 +73,11 @@ export function AuthProvider({ children }) {
     return paths[role] || '/dashboard';
   };
 
-  const login = async (email, password) => {
+  // `options.redirect` (default true) lets callers authenticate without the
+  // built-in role-based navigation — e.g. the accept-invite flow, which needs to
+  // accept the invitation first and then land the user on /dashboard/team.
+  const login = async (email, password, options = {}) => {
+    const { redirect = true } = options;
     try {
       const response = await apiClient.request('/auth/login', {
         method: 'POST',
@@ -85,18 +89,29 @@ export function AuthProvider({ children }) {
         setUser(response.user);
         localStorage.setItem(STORAGE_PREFIX + 'user', JSON.stringify(response.user));
 
-        // Redirect based on user role
-        const role = response.user?.role;
-        if (role === 'va') {
-          navigate('/dashboard/properties');
-        } else if (role === 'va_uploader') {
-          navigate('/dashboard/va-upload');
-        } else if (role === 'super_admin' || role === 'admin') {
-          navigate('/dashboard/admin/listings');
-        } else if (role === 'user') {
-          navigate(getDashboardPath(role));
-        } else {
-          navigate('/dashboard');
+        if (redirect) {
+          // Resume checkout: an unpaid owner with a selected plan is sent back to
+          // the checkout page instead of the dashboard so they can finish paying.
+          const u = response.user || {};
+          const paid = ['active', 'paid'].includes(String(u.paymentStatus || '').toLowerCase());
+          if (!paid && u.selectedPlan && (u.role === 'owner' || !u.role)) {
+            navigate(`/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
+            return response;
+          }
+
+          // Redirect based on user role
+          const role = response.user?.role;
+          if (role === 'va') {
+            navigate('/dashboard/properties');
+          } else if (role === 'va_uploader') {
+            navigate('/dashboard/va-upload');
+          } else if (role === 'super_admin' || role === 'admin') {
+            navigate('/dashboard/admin/listings');
+          } else if (role === 'user') {
+            navigate(getDashboardPath(role));
+          } else {
+            navigate('/dashboard');
+          }
         }
 
       }

@@ -30,6 +30,9 @@ export class UsersController {
       role: freshUser?.role,
       teamId: freshUser?.teamId,
       isActive: freshUser?.isActive,
+      paymentStatus: freshUser?.paymentStatus ?? null,
+      plan: freshUser?.plan ?? null,
+      selectedPlan: freshUser?.selectedPlan ?? null,
     };
   }
 

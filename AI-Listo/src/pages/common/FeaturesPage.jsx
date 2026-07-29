@@ -494,7 +494,7 @@ export default function FeaturesPage() {
             <a href="/setup-guide">{cur.footer.col2_items[0]}</a>
             <a href="/help">{cur.footer.col2_items[1]}</a>
             <a href="/contact">{cur.footer.col2_items[2]}</a>
-            <a href="/help/api">{cur.footer.col2_items[3]}</a>
+            <a href="/help">{cur.footer.col2_items[3]}</a>
           </div>
 
           <div className={styles.footerColumn}>

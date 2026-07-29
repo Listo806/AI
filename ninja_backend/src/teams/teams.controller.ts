@@ -25,6 +25,7 @@ import { TeamsService } from "./teams.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { VaRestrictionGuard } from "../auth/guards/va-restriction.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
+import { Public } from "../auth/decorators/public.decorator";
 import { CreateTeamDto } from "./dto/create-team.dto";
 import { UpdateTeamDto } from "./dto/update-team.dto";
 import { NotificationsService } from "../notifications/notifications.service";
@@ -56,6 +57,32 @@ export class TeamsController {
     return this.teamsService.findByUserId(user.id);
   }
 
+  // --- Invitation accept flow (Feature A) ---
+  // Declared before :id routes. These are two-/three-segment paths so they do
+  // not collide with @Get(":id"); random hex tokens never equal a literal
+  // second segment ("members", "seats", ...).
+
+  // Public: look up a pending invitation by token so the accept page can show
+  // context and prefill the email. Never leaks details for bad/expired tokens.
+  @Public()
+  @Get("invitations/:token")
+  @ApiOperation({ summary: "Public: look up a pending invitation by token" })
+  @ApiParam({ name: "token", description: "Invitation token" })
+  async lookupInvitation(@Param("token") token: string) {
+    return this.teamsService.getInvitationByToken(token);
+  }
+
+  // Authenticated: the invited user accepts and joins the workspace.
+  @Post("invitations/:token/accept")
+  @ApiOperation({ summary: "Accept a team invitation (must be signed in)" })
+  @ApiParam({ name: "token", description: "Invitation token" })
+  async acceptInvitation(
+    @Param("token") token: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.teamsService.acceptInvitation(token, user);
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Get team by ID (owner or member only)" })
   @ApiParam({ name: "id", description: "Team ID" })
@@ -65,6 +92,16 @@ export class TeamsController {
   async findOne(@Param("id") id: string, @CurrentUser() user: any) {
     await this.teamsService.ensureCanAccessTeam(id, user.id);
     return this.teamsService.findById(id);
+  }
+
+  @Get(":id/seat-usage")
+  @ApiOperation({
+    summary: "Plan-based seat limit + usage (owner or member only)",
+  })
+  @ApiParam({ name: "id", description: "Team ID" })
+  async getSeatUsage(@Param("id") id: string, @CurrentUser() user: any) {
+    await this.teamsService.ensureCanAccessTeam(id, user.id);
+    return this.teamsService.getSeatUsageInfo(id);
   }
 
   @Get(":id/members")

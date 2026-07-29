@@ -36,31 +36,6 @@ export class PaymentsService {
     };
   }
 
-  async paymentSuccess(userId: string) {
-    const { rows } = await this.db.query(
-      `SELECT id FROM users WHERE id = $1`,
-      [userId],
-    );
-
-    const user = rows[0];
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    await this.db.query(
-      `UPDATE users
-       SET payment_status = 'paid',
-           is_active = true,
-           plan = 'pro',
-           updated_at = NOW()
-       WHERE id = $1`,
-      [userId],
-    );
-
-    return { success: true };
-  }
-
   // Activate the account after a PayPal subscription is approved. Stores the
   // PayPal subscription id and the selected plan.
   async activateSubscription(

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import {
   fetchTeams,
@@ -8,6 +9,8 @@ import {
 } from "../services/team.service";
 
 export default function useTeamDashboard() {
+  const [searchParams] = useSearchParams();
+  const urlTeamId = searchParams.get("teamId");
   const [loading, setLoading] = useState(true);
   const [teamsLoading, setTeamsLoading] =
     useState(true);
@@ -57,9 +60,14 @@ export default function useTeamDashboard() {
           teamsData?.length > 0 &&
           !selectedTeamId
         ) {
-          setSelectedTeamId(
-            teamsData[0].id
-          );
+          const fromUrl =
+            urlTeamId &&
+            teamsData.some(
+              (t) => String(t.id) === String(urlTeamId)
+            )
+              ? urlTeamId
+              : teamsData[0].id;
+          setSelectedTeamId(fromUrl);
         }
       } catch (error) {
         console.error(

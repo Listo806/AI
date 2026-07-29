@@ -16,11 +16,6 @@ export class PaymentsController {
     return this.paymentsService.createCheckout(body.userId);
   }
 
-  @Post('payment-success')
-  paymentSuccess(@Body() body: { userId: string }) {
-    return this.paymentsService.paymentSuccess(body.userId);
-  }
-
   // One-time setup: creates the PayPal product + one plan per tier. Call once
   // per environment (sandbox, then live) and store the returned ids as env
   // vars: PAYPAL_PLAN_SOLO / PAYPAL_PLAN_TEAM / PAYPAL_PLAN_GROWTH.

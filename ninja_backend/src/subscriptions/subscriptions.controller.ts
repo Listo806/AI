@@ -8,6 +8,7 @@ import {
   UseGuards,
   Delete,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { SubscriptionsService } from './subscriptions.service';
@@ -34,6 +35,15 @@ export class SubscriptionsController {
     private readonly enforcementService: SubscriptionEnforcementService,
   ) {}
 
+  // Plan CRUD affects platform-wide billing; restrict to admin-tier roles
+  // (same set used by payments/paddle setup-plans).
+  private assertPlanAdmin(user: any) {
+    const role = String(user?.role || '').toLowerCase();
+    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
+      throw new ForbiddenException('Only admins can manage subscription plans');
+    }
+  }
+
   @Get('plans')
   @ApiOperation({ summary: 'Get all subscription plans' })
   @ApiQuery({ name: 'activeOnly', required: false, type: String, description: 'Filter only active plans' })
@@ -55,7 +65,11 @@ export class SubscriptionsController {
   @ApiOperation({ summary: 'Create a new subscription plan' })
   @ApiBody({ type: CreatePlanDto })
   @ApiResponse({ status: 201, description: 'Plan created successfully' })
-  async createPlan(@Body() createPlanDto: CreatePlanDto) {
+  async createPlan(
+    @Body() createPlanDto: CreatePlanDto,
+    @CurrentUser() user: any,
+  ) {
+    this.assertPlanAdmin(user);
     return this.plansService.create(createPlanDto);
   }
 
@@ -64,7 +78,12 @@ export class SubscriptionsController {
   @ApiParam({ name: 'id', description: 'Plan ID' })
   @ApiBody({ type: UpdatePlanDto })
   @ApiResponse({ status: 200, description: 'Plan updated successfully' })
-  async updatePlan(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {
+  async updatePlan(
+    @Param('id') id: string,
+    @Body() updatePlanDto: UpdatePlanDto,
+    @CurrentUser() user: any,
+  ) {
+    this.assertPlanAdmin(user);
     return this.plansService.update(id, updatePlanDto);
   }
 
@@ -72,7 +91,8 @@ export class SubscriptionsController {
   @ApiOperation({ summary: 'Delete subscription plan' })
   @ApiParam({ name: 'id', description: 'Plan ID' })
   @ApiResponse({ status: 200, description: 'Plan deleted successfully' })
-  async deletePlan(@Param('id') id: string) {
+  async deletePlan(@Param('id') id: string, @CurrentUser() user: any) {
+    this.assertPlanAdmin(user);
     await this.plansService.delete(id);
     return { message: 'Plan deleted successfully' };
   }
