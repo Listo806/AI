@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
-import { trackEvent } from '../../utils/track';
+import { trackEvent, trackSignupConversion } from '../../utils/track';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
@@ -34,18 +34,14 @@ export default function SignUp() {
         localStorage.setItem('listo_user', JSON.stringify(res.user));
         // Funnel: account created via the marketplace signup form.
         trackEvent('account_created');
-        // Google Ads sign-up conversion. The default below is the dedicated
-        // "Sign-up" action created in Ads; VITE_ADS_SIGNUP_CONVERSION overrides.
-        if (typeof window.gtag === 'function') {
-          window.gtag('event', 'conversion', {
-            send_to:
-              import.meta.env.VITE_ADS_SIGNUP_CONVERSION ||
-              'AW-17836518151/G2jxCOX7mNccEIfWjrlC',
-            value: 67.0,
-            currency: 'USD',
-          });
-        }
-        window.location.href = '/dashboard';
+        // Google Ads sign-up conversion. Fire it, then hard-navigate only once
+        // the beacon has been sent, so the page unload does not cancel the
+        // request (which is what made Ads report "wasn't detected").
+        trackSignupConversion({
+          onSent: () => {
+            window.location.href = '/dashboard';
+          },
+        });
         return;
       } else {
         setError('Signup completed but no token received. Please sign in.');

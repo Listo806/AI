@@ -44,6 +44,43 @@ export function trackAdsConversion(sendTo, params = {}) {
   }
 }
 
+// Dedicated Sign-up conversion action (Google Ads). Fired on every real
+// account creation (the /trial signup and the marketplace signup) so Ads
+// consistently receives this action. Kept in one place so both paths report
+// the same send_to. VITE_ADS_SIGNUP_CONVERSION overrides it if it changes.
+export const SIGNUP_CONVERSION_SEND_TO =
+  import.meta.env.VITE_ADS_SIGNUP_CONVERSION ||
+  "AW-17836518151/G2jxCOX7mNccEIfWjrlC";
+
+// Fire the sign-up conversion. When the caller is about to hard-navigate
+// (window.location.*), the browser can cancel the tracking request before it
+// reaches Google, which makes Ads report the action as "wasn't detected".
+// Pass onSent and we run it only after the beacon has been sent
+// (event_callback), with a timeout fallback so signup never hangs on the pixel.
+// When the caller stays on the page (SPA navigate), omit onSent — the beacon
+// completes on its own.
+export function trackSignupConversion({ onSent } = {}) {
+  const done = typeof onSent === "function" ? onSent : () => {};
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    let fired = false;
+    const once = () => {
+      if (fired) return;
+      fired = true;
+      done();
+    };
+    window.gtag("event", "conversion", {
+      send_to: SIGNUP_CONVERSION_SEND_TO,
+      value: 67.0,
+      currency: "USD",
+      event_callback: once,
+    });
+    // Fallback: if gtag is blocked/slow and the callback never fires, proceed.
+    setTimeout(once, 1200);
+  } else {
+    done();
+  }
+}
+
 // Provide user-identifying data for Google Ads Enhanced Conversions. gtag hashes
 // it client-side before sending. Has no effect until Enhanced Conversions is
 // turned on in the Google Ads UI.

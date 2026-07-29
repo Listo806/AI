@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { trackEvent } from "../../utils/track";
+import { trackEvent, trackSignupConversion } from "../../utils/track";
 import {
   BarChart3,
   Box,
@@ -180,6 +180,11 @@ export default function StartTrial() {
       localStorage.setItem("trialPlan", form.plan);
       // Retargeting: trial account created (not yet activated/paid).
       trackEvent("account_created", { plan: form.plan });
+      // Google Ads: this is the real sign-up. Fire the Sign-up conversion on
+      // this main path (it was previously only wired to the marketplace signup,
+      // so Ads never saw it). navigate() is client-side, so the page does not
+      // unload and the beacon completes on its own.
+      trackSignupConversion();
       navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
       console.error("SUBMIT ERROR:", error);
