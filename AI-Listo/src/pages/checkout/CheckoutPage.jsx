@@ -173,7 +173,7 @@ const loadPayPalSdk = (clientId) =>
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const { setUser, refreshUser } = useAuth();
+  const { setUser, refreshUser, user } = useAuth();
   const [searchParams] = useSearchParams();
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const tr = t[lang] || t.en;
@@ -189,6 +189,16 @@ export default function CheckoutPage() {
     phone: localStorage.getItem("phone") || "",
     userId: localStorage.getItem("trialUserId") || "",
   }));
+
+  // Resume-checkout robustness: when a signed-in user reaches checkout (e.g. they
+  // logged back in on another device to finish paying), sync their account
+  // id/email into localStorage so the payment links to the correct account.
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem("trialUserId", user.id);
+      if (user.email) localStorage.setItem("email", user.email);
+    }
+  }, [user]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [sdkStatus, setSdkStatus] = useState("loading"); // loading | ready | error
   const [processing, setProcessing] = useState(false);
@@ -235,6 +245,10 @@ export default function CheckoutPage() {
   const finishAndLogin = async (userId) => {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
+    // Payment just completed. Record it so the dashboard paywall gate lets them
+    // straight in while the Paddle webhook catches up and flips payment_status to
+    // active server-side (prevents bouncing a just-paid customer back to checkout).
+    localStorage.setItem("cortexa_paid_at", String(Date.now()));
     try {
       await refreshUser();
     } catch (e) {

@@ -74,7 +74,26 @@ export default function DashboardLayout() {
   });
 
   // Sử dụng useRef để lưu kích thước màn hình trước đó, tránh chạy lại logic khi người dùng bấm nút thủ công
-  const lastLayoutTypeRef = useRef(""); 
+  const lastLayoutTypeRef = useRef("");
+
+  // Paywall gate: a trial owner who has not paid cannot use the CRM — send them
+  // to checkout to finish. Every non-owner role and any paid/active account pass
+  // through. An empty/unknown status is never blocked (avoids locking out a payer
+  // whose status is missing). A recent payment grace flag (set on checkout
+  // completion) also passes, so a just-paid customer is not bounced while the
+  // Paddle webhook catches up and flips payment_status to active server-side.
+  useEffect(() => {
+    if (!user) return;
+    const status = String(user.paymentStatus || "").toLowerCase();
+    const paid = status === "active" || status === "paid";
+    if (paid) return;
+    if (user.role !== "owner" || !user.selectedPlan || !status) return;
+    const paidAt = Number(localStorage.getItem("cortexa_paid_at") || 0);
+    if (paidAt && Date.now() - paidAt < 30 * 60 * 1000) return;
+    navigate(`/checkout?plan=${encodeURIComponent(user.selectedPlan)}`, {
+      replace: true,
+    });
+  }, [user, navigate]);
 
   // Tự động kiểm tra cấu hình theme mặc định dựa trên thiết bị (chỉ kích hoạt khi thay đổi kích thước/thiết bị)
   useEffect(() => {
