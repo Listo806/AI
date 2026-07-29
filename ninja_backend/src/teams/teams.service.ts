@@ -852,6 +852,46 @@ export class TeamsService {
       WHERE tm.team_id = $1
       AND tm.status = 'active'
       AND tm.created_at < NOW() - INTERVAL '30 days'
+    ),
+
+    -- Per active member: real lead/deal aggregates, mirroring getMembers().
+    member_scores AS (
+      SELECT
+        tm.user_id,
+        COUNT(DISTINCT l.id) as total_leads,
+        COUNT(
+          DISTINCT CASE WHEN d.stage = 'won' THEN d.id END
+        ) as deals_won,
+        COALESCE(
+          SUM(CASE WHEN d.stage <> 'won' THEN d.value ELSE 0 END),
+          0
+        ) as pipeline_value
+      FROM team_members tm
+      INNER JOIN users u
+        ON u.id = tm.user_id
+      LEFT JOIN leads l
+        ON l.assigned_to = tm.user_id
+        AND l.team_id = $1
+      LEFT JOIN deals d
+        ON d.assigned_to = tm.user_id
+        AND d.team_id = $1
+      WHERE tm.team_id = $1
+      AND tm.status = 'active'
+      GROUP BY tm.user_id
+    ),
+
+    -- Same derived aiScore formula used in getMembers(), computed in SQL.
+    member_ai AS (
+      SELECT
+        LEAST(
+          100,
+          ROUND(
+            deals_won * 12
+            + total_leads * 2
+            + LEAST(pipeline_value / 2000.0, 30)
+          )
+        ) as ai_score
+      FROM member_scores
     )
 
     SELECT
@@ -867,9 +907,22 @@ export class TeamsService {
 
       cm.revenue as "revenue",
 
-      82 as "avgAIScore",
+      -- Real average of the per-member derived aiScore; NULL when no members.
+      (SELECT ROUND(AVG(ai_score))::int FROM member_ai) as "avgAIScore",
 
-      24 as "conversionRate",
+      -- Real conversion rate: closed-won leads / total leads; NULL when no leads.
+      (
+        SELECT CASE
+          WHEN COUNT(*) > 0
+          THEN ROUND(
+            (COUNT(*) FILTER (WHERE status = 'closed-won')::numeric
+             / COUNT(*)::numeric) * 100
+          )::int
+          ELSE NULL
+        END
+        FROM leads
+        WHERE team_id = $1
+      ) as "conversionRate",
 
       CASE
         WHEN pm.previous_members = 0 THEN '+0%'
@@ -885,15 +938,17 @@ export class TeamsService {
           )
       END as "membersGrowth",
 
-      '+12%' as "activeGrowth",
+      -- No prior-period snapshot exists in this system, so these period-over-period
+      -- deltas cannot be honestly computed. Return NULL (rendered as no delta).
+      NULL as "activeGrowth",
 
-      '+18%' as "pipelineGrowth",
+      NULL as "pipelineGrowth",
 
-      '+9%' as "leadsGrowth",
+      NULL as "leadsGrowth",
 
-      '+6%' as "aiGrowth",
+      NULL as "aiGrowth",
 
-      '+4%' as "conversionGrowth"
+      NULL as "conversionGrowth"
 
     FROM current_month cm
     CROSS JOIN previous_month pm

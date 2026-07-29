@@ -46,12 +46,23 @@ export const TEAM_FILTERS = [
    KPI CARDS
 ========================================================= */
 
+// Render a percentage metric, or an em-dash when the backend has no
+// honest value (null/undefined). Never fabricates a "0%".
+const percentOrDash = (value) =>
+  value === null || value === undefined ? '—' : `${value}%`;
+
+// Period-over-period deltas are only shown when the backend supplies a
+// real value. A null/undefined delta yields no change label (the card's
+// change block is omitted downstream), so we never invent a "+0%".
+const deltaOrNull = (value) =>
+  value === null || value === undefined ? null : value;
+
 export const buildStatsCards = (stats = {}) => [
   {
     key: 'members',
     label: 'Total Members',
     value: stats.totalMembers || 0,
-    change: stats.membersGrowth || '+0%',
+    change: deltaOrNull(stats.membersGrowth),
     changetext: 'Last 30 days',
     icon: Users,
   },
@@ -60,7 +71,7 @@ export const buildStatsCards = (stats = {}) => [
     key: 'active',
     label: 'Active Members',
     value: stats.activeMembers || 0,
-    change: stats.activeGrowth || '+0%',
+    change: deltaOrNull(stats.activeGrowth),
     changetext: 'Last 30 days',
     icon: UserCheck,
   },
@@ -71,7 +82,7 @@ export const buildStatsCards = (stats = {}) => [
     value: `$${Number(
       stats.totalPipeline || 0
     ).toLocaleString()}`,
-    change: stats.pipelineGrowth || '+0%',
+    change: deltaOrNull(stats.pipelineGrowth),
     changetext: 'Last 30 days',
     icon: DollarSign,
   },
@@ -80,7 +91,7 @@ export const buildStatsCards = (stats = {}) => [
     key: 'leads',
     label: 'Total Leads',
     value: stats.totalLeads || 0,
-    change: stats.leadsGrowth || '+0%',
+    change: deltaOrNull(stats.leadsGrowth),
     changetext: 'Last 30 days',
     icon: Target,
   },
@@ -88,8 +99,8 @@ export const buildStatsCards = (stats = {}) => [
   {
     key: 'ai',
     label: 'Avg AI Score',
-    value: `${stats.avgAIScore || 0}%`,
-    change: stats.aiGrowth || '+0%',
+    value: percentOrDash(stats.avgAIScore),
+    change: deltaOrNull(stats.aiGrowth),
     changetext: 'Last 30 days',
     icon: Brain,
   },
@@ -97,8 +108,8 @@ export const buildStatsCards = (stats = {}) => [
   {
     key: 'conversion',
     label: 'Conversion Rate',
-    value: `${stats.conversionRate || 0}%`,
-    change: stats.conversionGrowth || '+0%',
+    value: percentOrDash(stats.conversionRate),
+    change: deltaOrNull(stats.conversionGrowth),
     changetext: 'Last 30 days',
     icon: TrendingUp,
   },
