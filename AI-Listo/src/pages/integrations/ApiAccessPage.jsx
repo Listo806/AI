@@ -182,7 +182,7 @@ export default function ApiAccessPage() {
               <strong>Base URL:</strong>
             </div>
 
-            <code>https://api.yourdomain.com/api</code>
+            <code>https://backend.cortexaaicrm.com/api/external</code>
 
             <div
               style={{
@@ -203,7 +203,7 @@ export default function ApiAccessPage() {
 
               <pre>
                 {`curl --request GET \
-https://api.yourdomain.com/api/leads \
+https://backend.cortexaaicrm.com/api/external/leads \
 --header "x-api-key: YOUR_API_KEY"`}
               </pre>
             </div>

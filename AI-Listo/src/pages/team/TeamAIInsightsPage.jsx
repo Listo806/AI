@@ -389,8 +389,14 @@ export default function TeamAIInsightsPage() {
               Open Team Members
             </button>
 
-            <button type="button" className="team-ai-action-btn">
-              Notifications page coming soon.
+            <button
+              type="button"
+              className="team-ai-action-btn"
+              onClick={() => {
+                navigate("/dashboard/team/notifications");
+              }}
+            >
+              Open Notifications
             </button>
 
             <button

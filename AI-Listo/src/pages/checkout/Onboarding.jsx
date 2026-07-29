@@ -40,7 +40,7 @@ export default function Onboarding() {
         }
 
         if (data?.user?.onboardingCompleted) {
-          navigate("/crm/dashboard");
+          navigate("/dashboard");
         }
       } catch (err) {
         console.error("CHECK USER ERROR:", err);

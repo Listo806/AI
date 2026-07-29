@@ -613,8 +613,7 @@ export default function TeamMembersPage() {
               </h4>
 
               <div className="team-ai-usage">
-                AI Score: $
-                {Number(selectedMember.pipelineValue || 0).toLocaleString()}
+                AI Score: {Number(selectedMember.aiScore || 0)}%
               </div>
             </div>
 
