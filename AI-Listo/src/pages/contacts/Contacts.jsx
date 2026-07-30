@@ -378,6 +378,14 @@ export default function ContactsRelationshipsPage() {
     }
   };
 
+  const callContact = (phone) => {
+    if (!phone) {
+      showToast("No phone number on file for this contact", "error");
+      return;
+    }
+    window.location.href = `tel:${phone}`;
+  };
+
   const deleteContact = async (contactId) => {
     const ok = window.confirm("Delete this contact?");
     if (!ok) return;
@@ -1031,14 +1039,11 @@ export default function ContactsRelationshipsPage() {
                     </span>
                     <span className="badge-dot">•</span>
                     <span className="badge-ai-score">
-                      AI {selectedContact.score || "25"}%
+                      AI {Number(selectedContact.score || 0)}%
                     </span>
                   </div>
                 </div>
               </div>
-              <span className="badge-status active abs-active-badge">
-                Active
-              </span>
             </div>
 
             <div className="contact-info-list no-border-bottom">
@@ -1113,7 +1118,17 @@ export default function ContactsRelationshipsPage() {
                   <Calendar size={16} /> <span>Added:</span>
                 </div>
                 <div className="info-value">
-                  {selectedContact.addedDate || "May 18, 2025"}
+                  {selectedContact.addedDate
+                    ? selectedContact.addedDate
+                    : selectedContact.createdAt
+                      ? new Date(
+                          selectedContact.createdAt,
+                        ).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "—"}
                 </div>
               </div>
 
@@ -1155,7 +1170,6 @@ export default function ContactsRelationshipsPage() {
                 <MessageSquare size={18} />
                 <span>Conversation History</span>
               </div>
-              <button className="section-action-link">View all</button>
             </div>
             {activitiesLoading ? (
               <div className="history-item-clickable">
@@ -1195,7 +1209,10 @@ export default function ContactsRelationshipsPage() {
               <Send size={18} />
               <span>Message</span>
             </button>
-            <button className="action-grid-btn">
+            <button
+              className="action-grid-btn"
+              onClick={() => callContact(selectedContact.phone)}
+            >
               <Phone size={18} />
               <span>Call</span>
             </button>
@@ -1456,7 +1473,10 @@ export default function ContactsRelationshipsPage() {
                       </button>
                       <button
                         className="footer-action-btn"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          callContact(contact.phone);
+                        }}
                       >
                         <Phone size={16} /> <span>Call</span>
                       </button>

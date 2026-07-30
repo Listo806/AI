@@ -12,6 +12,7 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
 import { PipelineService } from "./pipeline.service";
 import { CreateDealDto } from "./dto/create-deal.dto";
@@ -21,7 +22,7 @@ import { MoveDealDto } from "./dto/move-deal.dto";
 @ApiTags("pipeline")
 @ApiBearerAuth("JWT-auth")
 @Controller("pipeline")
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 export class PipelineController {
   constructor(private readonly pipelineService: PipelineService) {}
 

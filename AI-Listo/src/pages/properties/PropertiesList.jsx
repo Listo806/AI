@@ -33,7 +33,6 @@ import {
   BedDouble,
   Bath,
   Maximize,
-  ArrowUpRight,
   Pipette,
   Calendar,
   RotateCcw,
@@ -491,43 +490,6 @@ export default function PropertiesPage() {
     const link = document.createElement("a");
     link.href = url;
     link.download = "properties-report.csv";
-    link.click();
-
-    URL.revokeObjectURL(url);
-  };
-
-  const exportPropertyReport = () => {
-    const report = {
-      generatedAt: new Date().toISOString(),
-      range: dashboard?.rangeLabel || "All time",
-      metrics,
-      inventoryHealth: dashboard?.inventoryHealth || {},
-      matchedLeads: dashboard?.matchedLeads || [],
-      properties: properties.map((p) => ({
-        id: p.id,
-        title: p.title,
-        price: p.price,
-        status: p.status,
-        city: p.city,
-        type: p.type,
-        propertyType: p.propertyType,
-        aiScore: p.aiScore,
-        revenuePotential: p.revenuePotential,
-        matchedLeads: p.matchedLeads,
-        agentName: p.agentName,
-        teamName: p.teamName,
-      })),
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], {
-      type: "application/json",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "property-inventory-report.json";
     link.click();
 
     URL.revokeObjectURL(url);
@@ -1404,11 +1366,6 @@ export default function PropertiesPage() {
                         Matched properties: <strong>{lead.count}</strong>
                       </span>
                     </div>
-
-                    <button className="btn-match-view">
-                      View Matches
-                      <ArrowUpRight size={12} />
-                    </button>
                   </div>
                 ))
               )}
@@ -1500,41 +1457,6 @@ export default function PropertiesPage() {
                         </div>
                       ),
                     )}
-                  </div>
-                </div>
-
-                <div className="drawer-section">
-                  <h3>Activity Feed</h3>
-
-                  <div className="drawer-list">
-                    {[
-                      {
-                        title: "Viewed by agent",
-                        time: "Today",
-                      },
-                      {
-                        title: "AI analysis completed",
-                        time: "Today",
-                      },
-                      {
-                        title: "Lead matching completed",
-                        time: "Today",
-                      },
-                      {
-                        title: "Property synchronized",
-                        time: "Today",
-                      },
-                    ].map((item, index) => (
-                      <div className="drawer-activity" key={index}>
-                        <div className="activity-dot" />
-
-                        <div>
-                          <strong>{item.title}</strong>
-
-                          <span>{item.time}</span>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </div>
 

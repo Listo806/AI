@@ -7,7 +7,6 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
-  MoreHorizontal,
   X,
   Trash2,
   Shield,
@@ -371,7 +370,6 @@ export default function TeamMembersPage() {
         >
           <option value="all">All Members</option>
           <option value="active">Active</option>
-          <option value="pending">Pending</option>
           <option value="manager">Manager</option>
           <option value="agent">Agent</option>
           <option value="viewer">Viewer</option>
@@ -486,17 +484,7 @@ export default function TeamMembersPage() {
                     <td>{formatLastActive(member.lastSeenAt)}</td>
 
                     {/* ACTIONS */}
-                    <td>
-                      <button
-                        type="button"
-                        className="team-icon-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <MoreHorizontal size={18} />
-                      </button>
-                    </td>
+                    <td></td>
                   </tr>
                 ))
               )}

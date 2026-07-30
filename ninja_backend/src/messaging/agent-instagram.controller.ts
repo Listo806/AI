@@ -1,6 +1,7 @@
 import { Controller, Get, Delete, Post, Body, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AgentInstagramConnectionService } from './agent-instagram-connection.service';
@@ -9,7 +10,7 @@ import { DatabaseService } from '../database/database.service';
 
 @ApiTags('agent-instagram')
 @Controller('agent/instagram')
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentInstagramController {
   constructor(

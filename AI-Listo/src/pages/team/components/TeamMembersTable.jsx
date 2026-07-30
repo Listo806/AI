@@ -6,8 +6,6 @@ import {
   Shield,
   Plus,
   Eye,
-  Send,
-  UserPlus,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -125,16 +123,6 @@ export default function TeamMembersTable({
                 >
                   <Shield size={16} />
                   <span>Change Role</span>
-                </button>
-
-                <button type="button" className="m-action-btn">
-                  <Send size={16} />
-                  <span>Message</span>
-                </button>
-
-                <button type="button" className="m-action-btn">
-                  <UserPlus size={18} />
-                  <span>Assign Leads</span>
                 </button>
               </div>
             </div>

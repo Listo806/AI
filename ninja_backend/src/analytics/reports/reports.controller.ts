@@ -9,12 +9,13 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReportGeneratorService } from './report-generator.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @ApiTags('analytics')
 @ApiBearerAuth('JWT-auth')
 @Controller('analytics/reports')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard)
 export class ReportsController {
   constructor(private readonly reportGeneratorService: ReportGeneratorService) {}
 

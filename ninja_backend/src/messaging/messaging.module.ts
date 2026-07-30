@@ -29,6 +29,7 @@ import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
 import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
 import { EntityParsingService } from './entity-parsing.service';
 import { AiPropertyVisibilityService } from './ai-property-visibility.service';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { AiPropertyVisibilityService } from './ai-property-visibility.service';
     AgentInstagramController,
   ],
   providers: [
+    PaymentGuard,
     LeadMessagesService,
     TwilioWhatsAppService,
     EmailService,

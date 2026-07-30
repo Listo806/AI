@@ -27,6 +27,7 @@ import { UpdateContactDto } from "./dto/update-contact.dto";
 import { CreateContactActivityDto } from "./dto/create-contact-activity.dto";
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../../auth/guards/payment.guard";
 import { VaRestrictionGuard } from "../../auth/guards/va-restriction.guard";
 import { CrmAccessGuard } from "../../subscriptions/guards/crm-access.guard";
 
@@ -35,7 +36,7 @@ import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 @ApiTags("contacts")
 @ApiBearerAuth("JWT-auth")
 @Controller("contacts")
-@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard, PaymentGuard)
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 

@@ -87,26 +87,6 @@ export const aiAgentSetupService = {
   },
 
   // ==========================
-  // Knowledge Base
-  // ==========================
-
-  getKnowledgeBase() {
-    return request("/ai-center/agent/knowledge", {
-      method: "GET",
-    });
-  },
-
-  saveKnowledgeBase(payload) {
-    return request("/ai-center/agent/knowledge", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-  },
-
-  // ==========================
   // Test AI
   // ==========================
 

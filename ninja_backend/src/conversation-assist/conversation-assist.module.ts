@@ -6,11 +6,12 @@ import { AuthModule } from '../auth/auth.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 import { ConversationAssistEngineService } from './conversation-assist-engine.service';
 import { ConversationAssistCrmController } from './conversation-assist-crm.controller';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
   imports: [ConfigModule, AiAssistantModule, PropertiesModule, AuthModule, SubscriptionsModule],
   controllers: [ConversationAssistCrmController],
-  providers: [ConversationAssistEngineService],
+  providers: [ConversationAssistEngineService, PaymentGuard],
   exports: [ConversationAssistEngineService],
 })
 export class ConversationAssistModule {}

@@ -14,6 +14,7 @@ import { DealsService } from './deals.service';
 import { CreateDealDto } from './dto/create-deal.dto';
 import { UpdateDealDto } from './dto/update-deal.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../../auth/guards/va-restriction.guard';
 import { CrmAccessGuard } from '../../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
@@ -21,7 +22,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm/deals')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard, PaymentGuard)
 export class DealsController {
   constructor(private readonly dealsService: DealsService) {}
 

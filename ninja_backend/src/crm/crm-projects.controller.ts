@@ -2,6 +2,7 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { CrmProjectsService } from './crm-projects.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
@@ -9,7 +10,7 @@ import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 @ApiTags('crm')
 @ApiBearerAuth('JWT-auth')
 @Controller('crm/projects')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, CrmAccessGuard, PaymentGuard)
 export class CrmProjectsController {
   constructor(private readonly service: CrmProjectsService) {}
 

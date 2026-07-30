@@ -9,13 +9,14 @@ import {
 import { Response } from "express";
 
 import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../../auth/guards/payment.guard";
 import { Public } from "../../auth/decorators/public.decorator";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 import { GoogleCalendarService } from "./google-calendar.service";
 
 @Controller("integrations/google-calendar")
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard)
 export class GoogleCalendarController {
   constructor(
     private readonly googleCalendarService: GoogleCalendarService,

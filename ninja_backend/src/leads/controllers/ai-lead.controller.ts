@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { LeadsService } from '../leads.service';
@@ -18,7 +19,7 @@ import { MessageDraftService, MessageChannel } from '../services/message-draft.s
 
 @ApiTags('leads')
 @Controller('leads')
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 @ApiBearerAuth('JWT-auth')
 export class AILeadController {
   constructor(

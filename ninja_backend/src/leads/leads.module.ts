@@ -17,11 +17,13 @@ import { IntelligenceModule } from '../intelligence/intelligence.module';
 import { MessagingModule } from '../messaging/messaging.module';
 import { WebhooksModule } from '../integrations/webhooks/webhooks.module';
 import { AwsModule } from '../common/aws/aws.module';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
   imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule, AwsModule],
   controllers: [AILeadController, LeadsController],
   providers: [
+    PaymentGuard,
     LeadsService,
     LeadAIService,
     WhatsAppLeadService,

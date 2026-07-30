@@ -1,6 +1,7 @@
 import { Controller, Post, Delete, Get, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AgentWhatsAppConnectionService } from './agent-whatsapp-connection.service';
@@ -8,7 +9,7 @@ import { ConnectWhatsAppDto } from './dto/connect-whatsapp.dto';
 
 @ApiTags('agent-whatsapp')
 @Controller('agent/whatsapp')
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentWhatsAppController {
   constructor(private readonly connections: AgentWhatsAppConnectionService) {}

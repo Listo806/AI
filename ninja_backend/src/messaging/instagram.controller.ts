@@ -2,6 +2,7 @@ import { Controller, Post, Body, Get, Req, Res, HttpCode, HttpStatus, UseGuards,
 import { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { InstagramDmService } from './instagram-dm.service';
@@ -19,7 +20,7 @@ export class InstagramController {
   ) {}
 
   @Post('send')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send Instagram DM to a lead', description: 'Requires agent Instagram connected and lead.instagram_id set. Per-lead, per-action.' })

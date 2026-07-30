@@ -16,6 +16,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiTags, ApiOperation, ApiBearerAuth } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { WhatsAppQrSessionService } from "./whatsapp-qr-session.service";
@@ -32,7 +33,7 @@ import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
 
 @ApiTags("whatsapp-qr")
 @Controller("whatsapp-qr")
-@UseGuards(JwtAuthGuard, CrmAccessGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
 @ApiBearerAuth("JWT-auth")
 export class WhatsAppQrController {
   constructor(

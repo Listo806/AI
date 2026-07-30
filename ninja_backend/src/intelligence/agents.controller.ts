@@ -8,11 +8,12 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { AgentPriorityFeedService } from './services/agent-priority-feed.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 
 @ApiTags('agents')
 @Controller('agents')
-@UseGuards(JwtAuthGuard, VaRestrictionGuard)
+@UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
 @ApiBearerAuth('JWT-auth')
 export class AgentsController {
   constructor(
