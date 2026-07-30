@@ -137,6 +137,92 @@ export class SubscriptionsService {
     return { success: true, addon: addonKey };
   }
 
+  /** Count of paid extra seats (each active 'seat' add-on = +1 seat). */
+  async getTeamExtraSeatCount(teamId: string): Promise<number> {
+    if (!teamId) return 0;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n
+           FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [teamId],
+      );
+      return Number(rows[0]?.n || 0);
+    } catch (_e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Buy one extra $97/month seat: bump the seat add-on quantity on the team's
+   * Paddle subscription (prorated) and record it, so the plan's effective seat
+   * limit rises by one. Requires PADDLE_PRICE_SEAT. Sandbox-verify before go-live.
+   */
+  async addSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+    if (!teamId) throw new BadRequestException('A team is required.');
+    const priceId = process.env.PADDLE_PRICE_SEAT;
+    if (!priceId) {
+      throw new BadRequestException(
+        'PADDLE_PRICE_SEAT is not configured yet. Add the Paddle seat price id to enable adding seats.',
+      );
+    }
+    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
+    if (!subscriptionId) {
+      throw new BadRequestException(
+        'No active Paddle subscription was found for this team.',
+      );
+    }
+
+    const nextCount = (await this.getTeamExtraSeatCount(teamId)) + 1;
+    await this.paddleService.setSubscriptionAddonQuantity(
+      subscriptionId,
+      priceId,
+      nextCount,
+    );
+    await this.db.query(
+      `INSERT INTO team_addon_history (team_id, addon_key, enabled_at, created_at)
+       VALUES ($1, 'seat', NOW(), NOW())`,
+      [teamId],
+    );
+    return { success: true, extraSeats: nextCount };
+  }
+
+  /**
+   * Drop one paid seat: lower the seat add-on quantity on Paddle and close one
+   * seat record. Base plan seats are never billed, so this only removes paid
+   * extra seats.
+   */
+  async removeSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+    if (!teamId) throw new BadRequestException('A team is required.');
+    const current = await this.getTeamExtraSeatCount(teamId);
+    if (current <= 0) {
+      return { success: true, extraSeats: 0 };
+    }
+
+    const nextCount = current - 1;
+    const priceId = process.env.PADDLE_PRICE_SEAT;
+    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
+    if (priceId && subscriptionId) {
+      await this.paddleService.setSubscriptionAddonQuantity(
+        subscriptionId,
+        priceId,
+        nextCount,
+      );
+    }
+    await this.db.query(
+      `UPDATE team_addon_history
+          SET disabled_at = NOW()
+        WHERE id = (
+          SELECT id FROM team_addon_history
+           WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL
+           ORDER BY enabled_at DESC
+           LIMIT 1
+        )`,
+      [teamId],
+    );
+    return { success: true, extraSeats: nextCount };
+  }
+
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {
     const { planId, teamId } = createSubscriptionDto;
 
