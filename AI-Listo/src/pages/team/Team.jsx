@@ -30,7 +30,63 @@ import {
   fetchTeamAIInsights,
   updateTeamMemberRole,
   updateTeamSeatLimit,
+  purchaseSeat,
+  removeSeatBilling,
 } from "./services/team.service";
+
+/* Self-contained styles for the seat workflow modals (kept inline so they do
+   not depend on external CSS). */
+const SEAT_OVERLAY = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(15,17,21,0.5)",
+  zIndex: 9998,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 16,
+};
+const SEAT_CARD = {
+  background: "#ffffff",
+  borderRadius: 14,
+  width: "min(420px, 94vw)",
+  padding: 24,
+  boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+};
+const SEAT_TITLE = {
+  margin: "0 0 10px",
+  fontSize: 18,
+  fontWeight: 700,
+  color: "#111827",
+};
+const SEAT_TEXT = {
+  margin: "0 0 20px",
+  fontSize: 14,
+  lineHeight: 1.55,
+  color: "#4b5563",
+};
+const SEAT_ROW = { display: "flex", justifyContent: "flex-end", gap: 10 };
+const SEAT_BTN_SECONDARY = {
+  padding: "9px 16px",
+  fontSize: 13.5,
+  fontWeight: 600,
+  color: "#374151",
+  background: "#f3f4f6",
+  border: "1px solid #e5e7eb",
+  borderRadius: 9,
+  cursor: "pointer",
+};
+const SEAT_BTN_PRIMARY = {
+  padding: "9px 16px",
+  fontSize: 13.5,
+  fontWeight: 700,
+  color: "#ffffff",
+  background: "#2563eb",
+  border: "none",
+  borderRadius: 9,
+  cursor: "pointer",
+};
+
 export default function TeamWorkspace() {
   /* =====================================================
     DASHBOARD
@@ -107,6 +163,10 @@ export default function TeamWorkspace() {
   const [roleUpdating, setRoleUpdating] = useState(false);
   const [roleMember, setRoleMember] = useState(null);
   const [addingSeat, setAddingSeat] = useState(false);
+  const [addSeatConfirmOpen, setAddSeatConfirmOpen] = useState(false);
+  const [noSeatsOpen, setNoSeatsOpen] = useState(false);
+  const [keepRemoveSeatOpen, setKeepRemoveSeatOpen] = useState(false);
+  const [seatBusy, setSeatBusy] = useState(false);
 
   const [seatToast, setSeatToast] = useState(null);
 
@@ -131,8 +191,11 @@ export default function TeamWorkspace() {
     await removeMember(selectedMember._id || selectedMember.id);
 
     setDeleteModalOpen(false);
-
     setSelectedMember(null);
+
+    // After removing a member, ask whether to keep the freed seat for someone
+    // else or drop it (and its charge) from the subscription.
+    setKeepRemoveSeatOpen(true);
   };
 
   /* =====================================================
@@ -246,22 +309,57 @@ export default function TeamWorkspace() {
     }
   };
 
-  const handleAddSeat = async () => {
-    if (!selectedTeamId || addingSeat) {
-      return;
-    }
-    const currentSeatLimit = Number(seatInfo?.total || team?.seatLimit || 0);
-    const nextSeatLimit = currentSeatLimit + 1;
+  // "Add a seat" opens a confirmation first (each seat is a $97/month charge).
+  const handleAddSeatClick = () => {
+    if (addingSeat) return;
+    setAddSeatConfirmOpen(true);
+  };
+
+  const handleAddSeatConfirmed = async () => {
+    if (!selectedTeamId || addingSeat) return;
     try {
       setAddingSeat(true);
-      await updateTeamSeatLimit(selectedTeamId, nextSeatLimit);
+      await purchaseSeat();
       await reloadDashboard();
-      showSeatToast(`Seat limit increased to ${nextSeatLimit}`, "success");
+      setAddSeatConfirmOpen(false);
+      setNoSeatsOpen(false);
+      showSeatToast(
+        "Your subscription has been updated. You now have 1 available seat.",
+        "success",
+      );
     } catch (error) {
       console.error("ADD TEAM SEAT ERROR", error);
-      showSeatToast(error?.message || "Failed to add seat", "error");
+      showSeatToast(error?.message || "Could not add a seat.", "error");
     } finally {
       setAddingSeat(false);
+    }
+  };
+
+  // Invite only when a seat is free; otherwise prompt to add one first.
+  const handleOpenInvite = () => {
+    const available = Number(seatInfo?.available ?? 0);
+    if (available <= 0) {
+      setNoSeatsOpen(true);
+      return;
+    }
+    setInviteModalOpen(true);
+  };
+
+  const handleKeepSeat = () => setKeepRemoveSeatOpen(false);
+
+  const handleRemoveSeat = async () => {
+    if (seatBusy) return;
+    try {
+      setSeatBusy(true);
+      await removeSeatBilling();
+      await reloadDashboard();
+      setKeepRemoveSeatOpen(false);
+      showSeatToast("Seat removed from your subscription.", "success");
+    } catch (error) {
+      console.error("REMOVE TEAM SEAT ERROR", error);
+      showSeatToast(error?.message || "Could not remove the seat.", "error");
+    } finally {
+      setSeatBusy(false);
     }
   };
   return (
@@ -284,8 +382,8 @@ export default function TeamWorkspace() {
       <TeamStats stats={stats} />
 
       <TeamBillingCard
-        onInvite={() => setInviteModalOpen(true)}
-        onAddSeat={handleAddSeat}
+        onInvite={handleOpenInvite}
+        onAddSeat={handleAddSeatClick}
         addingSeat={addingSeat}
         billing={{
           plan: team?.name || "Team Workspace",
@@ -303,7 +401,7 @@ export default function TeamWorkspace() {
       <TeamToolbar
         search={search}
         onSearch={setSearch}
-        onInvite={() => setInviteModalOpen(true)}
+        onInvite={handleOpenInvite}
         teams={teams}
         selectedTeam={selectedTeamId}
         setSelectedTeam={setSelectedTeamId}
@@ -317,7 +415,7 @@ export default function TeamWorkspace() {
           members={filteredMembers}
           loading={loading}
           onRemove={handleOpenDelete}
-          onInvite={() => setInviteModalOpen(true)}
+          onInvite={handleOpenInvite}
           onChangeRole={handleOpenChangeRole}
         />
         {/*<div className="team-main-grid-right">
@@ -360,6 +458,103 @@ export default function TeamWorkspace() {
         onClose={handleCloseChangeRole}
         onSubmit={handleChangeRole}
       />
+
+      {addSeatConfirmOpen && (
+        <div
+          style={SEAT_OVERLAY}
+          onClick={() => !addingSeat && setAddSeatConfirmOpen(false)}
+        >
+          <div style={SEAT_CARD} onClick={(e) => e.stopPropagation()}>
+            <h3 style={SEAT_TITLE}>Add Team Seat</h3>
+            <p style={SEAT_TEXT}>
+              Each additional team member costs $97/month and will be added to
+              your existing subscription.
+            </p>
+            <div style={SEAT_ROW}>
+              <button
+                type="button"
+                style={SEAT_BTN_SECONDARY}
+                onClick={() => setAddSeatConfirmOpen(false)}
+                disabled={addingSeat}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={SEAT_BTN_PRIMARY}
+                onClick={handleAddSeatConfirmed}
+                disabled={addingSeat}
+              >
+                {addingSeat ? "Adding..." : "Add Seat ($97/month)"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {noSeatsOpen && (
+        <div style={SEAT_OVERLAY} onClick={() => setNoSeatsOpen(false)}>
+          <div style={SEAT_CARD} onClick={(e) => e.stopPropagation()}>
+            <h3 style={SEAT_TITLE}>No seats available</h3>
+            <p style={SEAT_TEXT}>
+              Please add a seat before inviting another team member.
+            </p>
+            <div style={SEAT_ROW}>
+              <button
+                type="button"
+                style={SEAT_BTN_SECONDARY}
+                onClick={() => setNoSeatsOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                style={SEAT_BTN_PRIMARY}
+                onClick={() => {
+                  setNoSeatsOpen(false);
+                  setAddSeatConfirmOpen(true);
+                }}
+              >
+                Add Seat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {keepRemoveSeatOpen && (
+        <div
+          style={SEAT_OVERLAY}
+          onClick={() => !seatBusy && setKeepRemoveSeatOpen(false)}
+        >
+          <div style={SEAT_CARD} onClick={(e) => e.stopPropagation()}>
+            <h3 style={SEAT_TITLE}>Keep or remove this seat?</h3>
+            <p style={SEAT_TEXT}>
+              Keep this seat for another employee, or remove it from your
+              subscription.
+            </p>
+            <div style={SEAT_ROW}>
+              <button
+                type="button"
+                style={SEAT_BTN_SECONDARY}
+                onClick={handleKeepSeat}
+                disabled={seatBusy}
+              >
+                Keep Seat
+              </button>
+              <button
+                type="button"
+                style={SEAT_BTN_PRIMARY}
+                onClick={handleRemoveSeat}
+                disabled={seatBusy}
+              >
+                {seatBusy ? "Removing..." : "Remove Seat"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
         <div
           style={{
