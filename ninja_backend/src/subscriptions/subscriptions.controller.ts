@@ -146,6 +146,16 @@ export class SubscriptionsController {
     return this.subscriptionsService.getTeamAddons(user?.teamId);
   }
 
+  @Post('addons/lead-generator/purchase')
+  @ApiOperation({
+    summary: 'Purchase the Lead Generator add-on for the current team',
+  })
+  @ApiResponse({ status: 201, description: 'Add-on purchased and unlocked' })
+  async purchaseLeadGenerator(@CurrentUser() user: any) {
+    this.assertPlanAdmin(user); // owner/admin/super_admin/developer only
+    return this.subscriptionsService.purchaseAddon(user?.teamId, 'lead_generator');
+  }
+
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel subscription' })
   @ApiParam({ name: 'id', description: 'Subscription ID' })
