@@ -15,12 +15,21 @@ import "./AIAgentWorkspace.css";
    backend agent already answers over (leads / pipeline / properties / etc.). */
 const SUGGESTED_COMMANDS = [
   "Which leads need follow-up today?",
-  "Show me my hottest prospects.",
-  "Summarize my pipeline.",
+  "Summarize my sales pipeline.",
+  "Show me my hottest opportunities.",
   "Draft a WhatsApp follow-up for this lead.",
-  "Which deals have been inactive?",
-  "Find buyers that match this property.",
+  "Which deals have been inactive for 7+ days?",
   "What appointments do I have today?",
+  "Show me properties without recent activity.",
+  "Create tasks for overdue leads.",
+  "Give me today's CRM summary.",
+  "Generate a weekly sales report.",
+  "Help me build an automation workflow.",
+  "Show me my team's performance.",
+  "Which leads haven't replied?",
+  "What tasks are overdue?",
+  "Create a follow-up sequence for these leads.",
+  "Summarize today's conversations.",
 ];
 
 /* The service already unwraps { data } in most cases; stay tolerant either way. */

@@ -14,8 +14,11 @@
   --aiw-radius: 12px;
 
   display: flex;
-  height: 100%;
-  min-height: 78vh;
+  /* Bound to the viewport (minus the dashboard header + content padding) so the
+     chat area scrolls internally and the prompt box stays pinned and visible
+     without scrolling the page. */
+  height: calc(100vh - 120px);
+  min-height: 460px;
   background: var(--aiw-bg);
   color: var(--aiw-text);
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -159,7 +162,7 @@
 /* Empty state */
 .aiw-empty {
   max-width: 760px;
-  margin: 6vh auto 0;
+  margin: 3vh auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -169,38 +172,38 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
+  width: 44px;
+  height: 44px;
   color: #ffffff;
   background: var(--aiw-accent);
-  border-radius: 14px;
-  margin-bottom: 18px;
+  border-radius: 12px;
+  margin-bottom: 12px;
 }
 .aiw-empty-title {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 .aiw-empty-sub {
-  font-size: 14.5px;
+  font-size: 14px;
   color: var(--aiw-text-soft);
-  margin: 0 0 26px;
+  margin: 0 0 18px;
 }
 .aiw-suggestions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 .aiw-suggestion {
   text-align: left;
-  padding: 13px 16px;
-  font-size: 13.5px;
+  padding: 9px 14px;
+  font-size: 13px;
   color: var(--aiw-text);
   background: #ffffff;
   border: 1px solid var(--aiw-border-strong);
-  border-radius: 10px;
+  border-radius: 9px;
   cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
