@@ -6,6 +6,7 @@ import {
   fetchTeamDashboard,
   fetchTeamSeats,
   fetchTeamNotifications,
+  fetchTeamSeatUsage,
 } from "../services/team.service";
 
 export default function useTeamDashboard() {
@@ -37,6 +38,7 @@ export default function useTeamDashboard() {
   const [billing, setBilling] = useState(null);
   const [leaderboard, setLeaderboard] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [seatUsage, setSeatUsage] = useState(null);
 
   /* =====================================================
     LOAD TEAMS
@@ -119,7 +121,16 @@ export default function useTeamDashboard() {
         setNotifications(
           notifications || []
         );
-      
+
+        // Plan-based seat usage (the real enforced cap). Degrade gracefully so
+        // the dashboard still loads for users without seat-usage access.
+        try {
+          const usage = await fetchTeamSeatUsage(teamId);
+          setSeatUsage(usage || null);
+        } catch (_e) {
+          setSeatUsage(null);
+        }
+
     } catch (error) {
       console.error(
         "loadDashboard error",
@@ -145,6 +156,21 @@ export default function useTeamDashboard() {
   ===================================================== */
 
   const seatInfo = useMemo(() => {
+    // Prefer the plan-based seat-usage endpoint (GET /teams/:id/seat-usage) —
+    // the real enforced cap — over the legacy subscription/team seat_limit
+    // columns, which can contradict what actually gates invites.
+    if (seatUsage && seatUsage.limit != null) {
+      const total = Number(seatUsage.limit) || 0;
+      const used = Number(seatUsage.used) || 0;
+      const available =
+        seatUsage.available != null
+          ? Number(seatUsage.available)
+          : Math.max(total - used, 0);
+
+      return { total, used, available };
+    }
+
+    // Fallback to the legacy computation when seat-usage is unavailable.
     const total =
       subscription?.seat_limit ||
       team?.seat_limit ||
@@ -160,7 +186,7 @@ export default function useTeamDashboard() {
         0
       ),
     };
-  }, [subscription, team, members]);
+  }, [seatUsage, subscription, team, members]);
 
   return {
     loading,

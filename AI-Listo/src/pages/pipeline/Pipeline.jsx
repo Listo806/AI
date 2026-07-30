@@ -87,6 +87,12 @@ export default function PipelinePage() {
   const [commandActionLoading, setCommandActionLoading] = useState(null);
   const [commandOutput, setCommandOutput] = useState(null);
   const [aiMetrics, setAiMetrics] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const [activityModalOpen, setActivityModalOpen] = useState(false);
   const [activityModalEvents, setActivityModalEvents] = useState([]);
@@ -317,6 +323,7 @@ export default function PipelinePage() {
       fetchPipelineDashboard();
     } catch (err) {
       console.error("Create deal error:", err);
+      showToast(err?.message || "Failed to create deal. Please try again.");
     }
   };
   const fetchDealEvents = async (dealId) => {
@@ -1167,10 +1174,6 @@ export default function PipelinePage() {
                     <span className={`column-status-dot dot-${col.id}`}></span>
                     <h3 className="column-stage-title-text">{col.title}</h3>
                   </div>
-
-                  <button className="deal-card-context-menu-trigger">
-                    <MoreVertical size={14} />
-                  </button>
                 </div>
               </div>
 
@@ -2120,6 +2123,25 @@ export default function PipelinePage() {
           </div>
         )}
       />
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            top: 30,
+            right: 30,
+            background: toast.type === "success" ? "#16a34a" : "#dc2626",
+            color: "#fff",
+            padding: "14px 18px",
+            borderRadius: 14,
+            fontWeight: 600,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+            zIndex: 9999,
+            minWidth: 280,
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

@@ -61,6 +61,7 @@ import {
   getDashboardSummary,
   getActivityMetrics,
   getOwnerLeads,
+  getCalendarStats,
 } from "../../api/analyticsApi";
 import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
@@ -131,6 +132,7 @@ export default function CortexaAnalyticsDashboard() {
   const [activity, setActivity] = useState(null); // getActivityMetrics(range)
   const [leadsList, setLeadsList] = useState([]); // getOwnerLeads() – for lead-source aggregation
   const [teamStats, setTeamStats] = useState(null); // team dashboard stats – real revenue/pipeline
+  const [calStats, setCalStats] = useState(null); // getCalendarStats() – Appointments KPI
 
   useEffect(() => {
     let cancelled = false;
@@ -166,6 +168,15 @@ export default function CortexaAnalyticsDashboard() {
           if (!cancelled) setTeamStats(teamDash?.stats || null);
         } catch (_e) {
           if (!cancelled) setTeamStats(null);
+        }
+
+        // Calendar stats are team-scoped and 403 for users with no team –
+        // degrade the Appointments Booked KPI to "—", never break the page.
+        try {
+          const stats = await getCalendarStats();
+          if (!cancelled) setCalStats(stats || null);
+        } catch (_e) {
+          if (!cancelled) setCalStats(null);
         }
       } catch (e) {
         if (!cancelled) setError(e?.message || "Failed to load analytics data.");
@@ -217,7 +228,7 @@ export default function CortexaAnalyticsDashboard() {
     },
     {
       title: "Appointments Booked",
-      value: NO_DATA, // no backend source
+      value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
       delta: null,
       subtext: label,
       icon: CalendarCheck,
@@ -472,7 +483,7 @@ export default function CortexaAnalyticsDashboard() {
             </div>
           </div>
           <p className="card-subtitle">
-            Compare lead volume, conversion rate, and revenue
+            Lead volume by source
           </p>
 
           <div className="lead-source-layout">
@@ -609,11 +620,11 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <MessageCircle size={18} className="text-green-strong" />
-              <h3>WhatsApp Analytics</h3>
+              <h3>Activity Over Time</h3>
             </div>
           </div>
           <p className="card-subtitle">
-            Your WhatsApp conversation performance
+            Platform activity over the selected period
           </p>
           <div className="wa-analytics-layout">
             <div className="wa-chart-container">
@@ -900,7 +911,7 @@ export default function CortexaAnalyticsDashboard() {
       </div>
 
       {/* ROW 5: AI INSIGHTS & FORECAST */}
-      <div className="insights-forecast-grid"><span className="dot-bottom"></span>All data is updated in real-time</div>
+      <div className="insights-forecast-grid"><span className="dot-bottom"></span>Data reflects your most recent synced activity</div>
     </div>
   );
 }

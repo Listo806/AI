@@ -234,11 +234,8 @@ export default function CortexaDashboard() {
         ? "0%"
         : NO_DATA;
 
-  // Activity trend feeds the banner sparklines and the trend chart.
+  // Activity trend feeds the Lead Activity Trend chart and the CSV export.
   const eventsByDay = activity?.eventsByDay || dash?.activity?.eventsByDay || [];
-  const sparkData = eventsByDay.map((d) => ({ v: d.count }));
-  const confidenceSparkData = sparkData;
-  const riskSparkData = sparkData;
 
   // PRIMARY KPI CARDS – New Leads / Conversion Rate / AI Conversations are
   // real; Active Deals value, Revenue and Appointments have no backend source.
@@ -590,11 +587,6 @@ export default function CortexaDashboard() {
                 </select>
               </div>
 
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Teams</span>
-                <ChevronDown size={14} />
-              </div>
               <div className="control-btn" onClick={() => setShowFilters(true)}>
                 <SlidersHorizontal size={15} />
                 <span></span>
@@ -620,30 +612,6 @@ export default function CortexaDashboard() {
                   <option value="7d">Last 7 days</option>
                   <option value="30d">Last 30 days</option>
                 </select>
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Teams</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Sources</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Agents</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Stages</span>
-                <ChevronDown size={14} />
               </div>
 
               <div
@@ -689,24 +657,6 @@ export default function CortexaDashboard() {
             </div>
 
             <div className="drawer-body">
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Sources</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Users size={15} />
-                <span>All Agents</span>
-                <ChevronDown size={14} />
-              </div>
-
-              <div className="control-btn">
-                <Layers size={15} />
-                <span>All Stages</span>
-                <ChevronDown size={14} />
-              </div>
               <button
                 className="btn-export"
                 onClick={() => {
@@ -775,44 +725,12 @@ export default function CortexaDashboard() {
               <div className="card-lbl">AI Confidence</div>
               <div className="card-val-group">
                 <h3 className="text-green">{NO_DATA}</h3>
-                <div className="mini-sparkline-container">
-                  <ResponsiveContainer width="100%" height={25}>
-                    <AreaChart
-                      data={confidenceSparkData}
-                      margin={{ top: 2, bottom: 2, left: 2, right: 2 }}
-                    >
-                      <Area
-                        type="monotone"
-                        dataKey="v"
-                        stroke="#22c55e"
-                        strokeWidth={1.5}
-                        fill="none"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
               </div>
             </div>
             <div className="mini-insight-card">
               <div className="card-lbl">Revenue at Risk</div>
               <div className="card-val-group">
                 <h3 className="text-orange">{NO_DATA}</h3>
-                <div className="mini-sparkline-container">
-                  <ResponsiveContainer width="100%" height={25}>
-                    <AreaChart
-                      data={riskSparkData}
-                      margin={{ top: 2, bottom: 2, left: 2, right: 2 }}
-                    >
-                      <Area
-                        type="monotone"
-                        dataKey="v"
-                        stroke="#ea580c"
-                        strokeWidth={1.5}
-                        fill="none"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
               </div>
             </div>
             <div className="mini-insight-card next-action-card">

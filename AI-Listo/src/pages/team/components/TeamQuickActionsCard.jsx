@@ -12,7 +12,7 @@ const actions = [
   {
     icon: ShieldCheck,
     label: "Manage Roles & Permissions",
-    route: "#",
+    route: "/dashboard/team/members",
   },
   {
     icon: Settings,

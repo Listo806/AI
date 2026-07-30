@@ -79,7 +79,6 @@ import {
 } from "./components/WhatsAppRoute";
 import Instagram from "./pages/instagram/Instagram";
 import CalendarPage from "./pages/calendar/CalendarPage";
-import Settings from "./pages/dashboard/Settings";
 import Profile from "./pages/account/Profile";
 import AccountBilling from "./pages/account/Billing";
 import AccountSettings from "./pages/account/Settings";
