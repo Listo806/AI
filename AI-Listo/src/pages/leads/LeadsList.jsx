@@ -160,6 +160,7 @@ export default function LeadsPage() {
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [convertingLead, setConvertingLead] = useState(false);
   const [leadActionMessage, setLeadActionMessage] = useState("");
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   const [leadEvents, setLeadEvents] = useState([]);
   const [leadEventsLoading, setLeadEventsLoading] = useState(false);
@@ -524,13 +525,80 @@ export default function LeadsPage() {
     convertSelectedLeadToContact();
   };
 
+  // Shared guard: every lead action operates on the selected lead. When none is
+  // selected we surface a clear message instead of silently doing nothing.
+  const requireSelectedLead = () => {
+    if (!selectedLead?.id) {
+      setLeadActionMessage("Please select a lead first.");
+      return false;
+    }
+    return true;
+  };
+
   const escalateSelectedLead = async () => {
-    if (!selectedLead?.id) return;
+    if (!requireSelectedLead()) return;
 
     await updateSelectedLead({
       priority: "high",
       status: "qualified",
     });
+    setLeadActionMessage("Lead escalated to high priority.");
+  };
+
+  // Call: open the device dialer where available and log the call to the lead
+  // timeline. (A full integrated dialer would replace the tel: link later.)
+  const callSelectedLead = async () => {
+    if (!requireSelectedLead()) return;
+
+    const phone = selectedLead.phone || selectedLead.contact_phone || "";
+    if (phone) {
+      window.open(`tel:${phone}`, "_self");
+    }
+
+    try {
+      setLeadActionMessage("");
+      await apiClient.request(`/leads/${selectedLead.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          eventType: "lead.call_logged",
+          metadata: {
+            title: "Call logged",
+            sub: phone ? `Called ${phone}` : "Manual call",
+            phone: phone || null,
+          },
+        }),
+      });
+      setLeadActionMessage(
+        phone ? `Call started with ${phone} and logged.` : "Call logged.",
+      );
+      await fetchLeadEvents(selectedLead.id);
+    } catch (err) {
+      console.error("Log call error:", err);
+      setLeadActionMessage(err?.message || "Could not log the call.");
+    }
+  };
+
+  // No Lead: mark the conversation as not a lead (closed-lost) after confirming;
+  // this drops it out of the active priority queue.
+  const markSelectedLeadNoLead = async () => {
+    if (!requireSelectedLead()) return;
+
+    const confirmed = window.confirm(
+      `Mark ${
+        selectedLead.name || "this lead"
+      } as not a lead? It will be removed from the active lead queue.`,
+    );
+    if (!confirmed) return;
+
+    await updateSelectedLead({ status: "closed-lost", priority: "low" });
+    setLeadActionMessage(
+      "Marked as not a lead and removed from the active queue.",
+    );
+  };
+
+  const openScoreDetails = () => {
+    if (!requireSelectedLead()) return;
+    setShowScoreModal(true);
   };
 
   const fetchFullLeadEvents = async (page = 1, append = false) => {
@@ -569,7 +637,7 @@ export default function LeadsPage() {
   };
 
   const openBookShowing = () => {
-    if (!selectedLead?.id) return;
+    if (!requireSelectedLead()) return;
 
     setShowingForm({
       date: "",
@@ -619,7 +687,7 @@ export default function LeadsPage() {
   };
 
   const openSendProperties = () => {
-    if (!selectedLead?.id) return;
+    if (!requireSelectedLead()) return;
     setPropertiesNote("");
     setShowSendPropertiesModal(true);
   };
@@ -652,7 +720,7 @@ export default function LeadsPage() {
   };
 
   const openAiFollowUp = () => {
-    if (!selectedLead?.id) return;
+    if (!requireSelectedLead()) return;
 
     const firstAiReply = Array.isArray(
       conversationIntelligence?.suggestedReplies,
@@ -2262,8 +2330,8 @@ export default function LeadsPage() {
               <button
                 type="button"
                 className="icon-btn"
-                disabled={!selectedLead}
-                title="Call lead"
+                onClick={callSelectedLead}
+                title="Call lead and log it"
               >
                 <Phone size={16} />
               </button>
@@ -2271,8 +2339,8 @@ export default function LeadsPage() {
               <button
                 type="button"
                 className="icon-btn"
-                disabled={!selectedLead}
-                title="Start video call"
+                disabled
+                title="Video calling is not available yet"
               >
                 <Video size={16} />
               </button>
@@ -2308,7 +2376,14 @@ export default function LeadsPage() {
                 )}
               </button>
 
-              <div className="score-badge">
+              <div
+                className="score-badge"
+                role="button"
+                tabIndex={0}
+                onClick={openScoreDetails}
+                title="View AI lead score details"
+                style={{ cursor: "pointer" }}
+              >
                 <span className="score-value">
                   {selectedLead ? `${getLeadScore(selectedLead)}%` : "--"}
                 </span>
@@ -2319,6 +2394,23 @@ export default function LeadsPage() {
                   ? `${getLeadTemperature(selectedLead)} Lead`
                   : "No Lead"}
               </span>
+              <button
+                type="button"
+                onClick={markSelectedLeadNoLead}
+                title="Mark as not a lead"
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#9b2c2c",
+                  background: "#fdf3f3",
+                  border: "1px solid #f0c2c2",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
+              >
+                No Lead
+              </button>
             </div>
           </div>
           <div className="lead-control-row">
@@ -2911,6 +3003,185 @@ export default function LeadsPage() {
           </div>
         </div>
       </div>
+      {showScoreModal && selectedLead && (
+        <div
+          className="lead-modal-overlay"
+          onClick={() => setShowScoreModal(false)}
+        >
+          <div
+            className="lead-score-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: 14,
+              width: "min(460px, 92vw)",
+              maxHeight: "86vh",
+              overflowY: "auto",
+              padding: 24,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
+                AI Lead Score
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowScoreModal(false)}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  fontSize: 22,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                  color: "#6b7280",
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                marginBottom: 20,
+              }}
+            >
+              <div
+                style={{ fontSize: 40, fontWeight: 800, color: "#111827" }}
+              >
+                {getLeadScore(selectedLead)}%
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>
+                  {getLeadTemperature(selectedLead)} lead
+                </div>
+                <div style={{ fontSize: 12.5, color: "#6b7280" }}>
+                  {selectedLead.name || "This lead"}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+                color: "#6b7280",
+                marginBottom: 10,
+              }}
+            >
+              Why this score
+            </div>
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
+              {[
+                {
+                  label: "Priority",
+                  value: selectedLead.priority || "not set",
+                  positive: selectedLead.priority === "high",
+                },
+                {
+                  label: "Stage",
+                  value: selectedLead.status || "new",
+                  positive: ["qualified", "follow-up", "closed-won"].includes(
+                    String(selectedLead.status || ""),
+                  ),
+                },
+                {
+                  label: "Phone on file",
+                  value: selectedLead.phone ? "yes" : "no",
+                  positive: Boolean(selectedLead.phone),
+                },
+                {
+                  label: "Email on file",
+                  value: selectedLead.email ? "yes" : "no",
+                  positive: Boolean(selectedLead.email),
+                },
+                {
+                  label: "Deal value",
+                  value: selectedLead.dealValue
+                    ? `$${Number(selectedLead.dealValue).toLocaleString()}`
+                    : "none",
+                  positive: Boolean(selectedLead.dealValue),
+                },
+                {
+                  label: "Source",
+                  value: selectedLead.source || "unknown",
+                  positive: Boolean(selectedLead.source),
+                },
+                {
+                  label: "Sentiment",
+                  value: leadIntelligence?.sentiment || "unknown",
+                  positive: false,
+                },
+                {
+                  label: "Response likelihood",
+                  value: leadIntelligence?.responseLikelihood || "unknown",
+                  positive: false,
+                },
+              ].map((f) => (
+                <li
+                  key={f.label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "9px 12px",
+                    background: "#f7f8fa",
+                    border: "1px solid #eceef1",
+                    borderRadius: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: "#374151" }}>
+                    {f.label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: f.positive ? "#166534" : "#374151",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {f.value}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p
+              style={{
+                fontSize: 11.5,
+                color: "#9ca3af",
+                marginTop: 14,
+                marginBottom: 0,
+              }}
+            >
+              Score blends engagement, responsiveness, source, and activity. It
+              updates as the lead progresses.
+            </p>
+          </div>
+        </div>
+      )}
       {showTimelineModal && (
         <div className="lead-modal-overlay">
           <div
