@@ -139,6 +139,13 @@ export class SubscriptionsController {
     return this.enforcementService.getTeamFeatures(teamId);
   }
 
+  @Get('my-addons')
+  @ApiOperation({ summary: "Active add-ons for the current user's team" })
+  @ApiResponse({ status: 200, description: 'e.g. { addons: [], leadGenerator: false }' })
+  async getMyAddons(@CurrentUser() user: any) {
+    return this.subscriptionsService.getTeamAddons(user?.teamId);
+  }
+
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel subscription' })
   @ApiParam({ name: 'id', description: 'Subscription ID' })

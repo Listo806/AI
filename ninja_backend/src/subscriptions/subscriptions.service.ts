@@ -19,6 +19,38 @@ export class SubscriptionsService {
     private readonly eventLogger: EventLoggerService,
   ) {}
 
+  /**
+   * Active add-ons for a team, derived from team_addon_history (an add-on is
+   * active when it has a row with no disabled_at). Paddle webhooks insert/close
+   * these rows when an add-on is purchased or removed; until that billing is
+   * wired this correctly reports no add-ons, so add-on features stay locked.
+   */
+  async getTeamAddons(
+    teamId: string,
+  ): Promise<{ addons: string[]; leadGenerator: boolean }> {
+    if (!teamId) {
+      return { addons: [], leadGenerator: false };
+    }
+    let addons: string[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT DISTINCT addon_key
+           FROM team_addon_history
+          WHERE team_id = $1
+            AND disabled_at IS NULL`,
+        [teamId],
+      );
+      addons = rows.map((r: any) => r.addon_key);
+    } catch (_e) {
+      // Fail closed if the table is missing in some environment.
+      addons = [];
+    }
+    return {
+      addons,
+      leadGenerator: addons.includes('lead_generator'),
+    };
+  }
+
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {
     const { planId, teamId } = createSubscriptionDto;
 
