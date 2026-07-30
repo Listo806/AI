@@ -321,9 +321,13 @@ export class AiCenterService {
     controls: AiAgentRuntimeControls,
     options: {
       allowWhenPaused?: boolean;
+      allowBeforeLaunch?: boolean;
     } = {},
   ): void {
-    if (!controls.launched) {
+    // The interactive web chat (the AI Agent workspace) is a user-initiated
+    // assistant and must work without forcing the multi-step setup/launch
+    // wizard. Automated channels still require the agent to be launched.
+    if (!controls.launched && options.allowBeforeLaunch !== true) {
       throw new ForbiddenException({
         code: "AI_AGENT_SETUP_REQUIRED",
 
@@ -391,6 +395,7 @@ export class AiCenterService {
       defaultValue?: boolean;
       checkWorkingHours?: boolean;
       allowWhenPaused?: boolean;
+      allowBeforeLaunch?: boolean;
       channel?: string;
       metadata?: Record<string, any>;
     } = {},
@@ -406,6 +411,7 @@ export class AiCenterService {
 
     this.assertAgentRuntimeAvailable(controls, {
       allowWhenPaused: options.allowWhenPaused,
+      allowBeforeLaunch: options.allowBeforeLaunch,
     });
 
     if (
@@ -2569,6 +2575,7 @@ export class AiCenterService {
         defaultValue: requestedCapability?.defaultValue ?? true,
         checkWorkingHours: false,
         allowWhenPaused: true,
+        allowBeforeLaunch: true,
         channel: "web",
         metadata: {
           userId: user?.id || null,
@@ -5086,6 +5093,7 @@ Always give clear next steps.
 
       checkWorkingHours: false,
       allowWhenPaused: true,
+      allowBeforeLaunch: true,
       channel: "web",
 
       metadata: {
