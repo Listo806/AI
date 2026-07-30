@@ -35,5 +35,17 @@ export default function VaRouteGuard({ children }) {
     // return <Navigate to="/dashboard/admin/listings" replace />;
   // }
 
+  // Admin routes are platform-admin only. Any other role that lands on
+  // /dashboard/admin/* (for example by typing the URL directly) is sent back to
+  // their own dashboard. The backend already blocks the data with a 403; this
+  // stops even the empty admin page shell from rendering for a regular customer.
+  if (path.startsWith('/dashboard/admin')) {
+    const isAdmin =
+      role === 'super_admin' || role === 'admin' || role === 'developer';
+    if (!isAdmin) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
   return children;
 }
