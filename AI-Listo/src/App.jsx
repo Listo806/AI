@@ -116,6 +116,7 @@ import TeamManagePage from "./pages/team/TeamManagePage";
 import TeamPendingInvitesPage from "./pages/team/TeamPendingInvitesPage";
 import WhatsAppPage from "./pages/whatsapp/WhatsAppPage";
 import LeadGeneratorPage from "./pages/generator/LeadGeneratorPage";
+import LeadGeneratorGate from "./pages/generator/LeadGeneratorGate";
 import SetupGuidePage from "./pages/common/SetupGuidePage";
 import IntegrationsPage from "./pages/common/IntegrationsPage";
 import FeaturesPage from "./pages/common/FeaturesPage";
@@ -335,7 +336,7 @@ function AppRoutes() {
         />
         <Route path="whatsapp" element={<WhatsAppPage />} />
         <Route path="calendar" element={<CalendarPage />} />
-        <Route path="generator" element={<LeadGeneratorPage />} />
+        <Route path="generator" element={<LeadGeneratorGate />} />
 
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 
         <Route path="whatsapp" element={<WhatsAppPrimaryRoute />} />*/}
