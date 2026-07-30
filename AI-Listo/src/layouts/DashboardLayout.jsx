@@ -66,6 +66,9 @@ export default function DashboardLayout() {
   const { isDark, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const accountRole = String(user?.role || "").toLowerCase();
+  const isAdmin = ["admin", "super_admin", "developer"].includes(accountRole);
   const navigate = useNavigate();
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -286,6 +289,59 @@ export default function DashboardLayout() {
                       <span className={`crm-theme-option ${isDark ? 'active' : ''}`}>{t('header.dark') || 'Dark'}</span>
                     </button>
                   </div>
+                  {isAdmin && (
+                    <>
+                      <div className="crm-account-menu-divider"></div>
+                      <button
+                        type="button"
+                        className="crm-account-menu-item"
+                        onClick={() => setAdminMenuOpen((o) => !o)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                        }}
+                      >
+                        <span>Admin</span>
+                        <span style={{ fontSize: 11, color: '#9ca3af' }}>
+                          {adminMenuOpen ? '▾' : '▸'}
+                        </span>
+                      </button>
+                      {adminMenuOpen && (
+                        <div style={{ paddingLeft: 14 }}>
+                          <Link
+                            to="/dashboard/admin/listings"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            Listings
+                          </Link>
+                          <Link
+                            to="/dashboard/admin/users"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            Users
+                          </Link>
+                          <Link
+                            to="/dashboard/admin/teams"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            Teams
+                          </Link>
+                          <Link
+                            to="/dashboard/admin/plans"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            Plans
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  )}
                   <div className="crm-account-menu-divider"></div>
                   <button className="crm-account-menu-item" onClick={logout}>
                     {t('header.logout')}
