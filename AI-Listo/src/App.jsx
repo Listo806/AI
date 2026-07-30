@@ -60,6 +60,7 @@ import Onboarding from "./pages/checkout/Onboarding";
 
 import CortexaAISetup from "./pages/ai-center/CortexaAISetup";
 import CortexaAI from "./pages/ai-center/CortexaAI";
+import AIAgentWorkspace from "./pages/ai-center/AIAgentWorkspace";
 import AICenterOverview from "./pages/ai-center/AICenterOverview";
 import AIAutoReply from "./pages/ai-center/AIAutoReply";
 import AIAppointmentSetter from "./pages/ai-center/AIAppointmentSetter";
@@ -285,7 +286,7 @@ function AppRoutes() {
 
         {/* AI Center Routes */}
         <Route path="ai-cortexa-setup" element={<CortexaAI />} />
-        <Route path="ai-cortexa" element={<CortexaAI />} />
+        <Route path="ai-cortexa" element={<AIAgentWorkspace />} />
         <Route path="ai-center" element={<AICenterOverview />} />
         <Route path="ai-assistant" element={<AIAssistant />} />
         <Route path="ai-auto-reply" element={<AIAutoReply />} />

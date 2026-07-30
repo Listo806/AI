@@ -19,19 +19,17 @@ const AI_CENTER_PATHS = [
 
 const AI_CENTER_ITEMS = [
   {
-    path: "/dashboard/ai-cortexa-setup",
-    icon: "Cog",
-    labelKey: "nav.aiCenter.cortexasetup",
-  },
-  {
     path: "/dashboard/calendar",
     icon: "calendar",
     label: "Calendar",
   },
+  // Single, clean AI Agent entry -> opens the one-page ChatGPT-style workspace.
+  // The old multi-tab AI setup page stays reachable by URL (/dashboard/ai-cortexa-setup)
+  // for configuring the agent, but is no longer shown as a separate sidebar item.
   {
     path: "/dashboard/ai-cortexa",
     icon: "bot",
-    labelKey: "nav.aiCenter.cortexa",
+    label: "AI Agent",
   },
   // { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
   // { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },

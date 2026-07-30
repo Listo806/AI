@@ -619,7 +619,7 @@ export class AiCenterController {
   }
 
   @Post("agent/chat/sessions")
-  @UseGuards(AiAgentSetupCompleteGuard)
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Create AI Agent chat session",
   })
@@ -637,7 +637,7 @@ export class AiCenterController {
   }
 
   @Post("agent/chat/messages")
-  @UseGuards(AiAgentSetupCompleteGuard)
+  @AllowBeforeAgentSetup()
   @ApiOperation({
     summary: "Send message to AI Agent",
   })
