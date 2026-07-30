@@ -322,45 +322,11 @@ export function useWhatsAppDashboard() {
     });
   }, [conversations, search, statusFilter, aiFilter]);
 
-  const stats = useMemo(() => {
-    const unread = conversations.reduce(
-      (sum, conv) => sum + Number(conv.unread_count || 0),
-      0,
-    );
-
-    const aiHandled = conversations.filter((conv) => conv.ai_enabled).length;
-
-    return {
-      connectedAccounts: status?.connected ? 1 : 0,
-      activeConversations: conversations.length,
-      unreadConversations: unread,
-      aiRepliesToday: aiHandled,
-      appointmentsBooked: 0,
-      avgResponseTime: status?.connected ? "14s" : "-",
-      closeRate: conversations.length ? "28.6%" : "0%",
-    };
-  }, [conversations, status]);
-
-  const segments = useMemo(() => {
-    const urgent = conversations.filter((conv) => conv.score >= 80).length;
-    const unread = conversations.reduce(
-      (sum, conv) => sum + Number(conv.unread_count || 0),
-      0,
-    );
-    const needFollowUp = conversations.filter(
-      (conv) =>
-        conv.last_message_type === "human" || conv.owner_type === "human",
-    ).length;
-    const aiPending = conversations.filter((conv) => conv.ai_enabled).length;
-
-    return {
-      urgent,
-      unread,
-      needFollowUp,
-      readyToBook: 0,
-      aiPending,
-    };
-  }, [conversations]);
+  // NOTE: the dashboard stats/segments shown in the UI come from the backend
+  // (`data.stats` / `data.segments`, set above via setDashboardStats/
+  // setDashboardSegments), which computes them from real DB queries. The
+  // earlier local placeholder memos here were dead code with invented
+  // constants and have been removed so no fake numbers can ever surface.
 
   const selectedIntelligence = useMemo(() => {
     if (aiIntelligence) {
