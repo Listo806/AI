@@ -44,11 +44,16 @@ export default function LeadGeneratorGate() {
     setPurchasing(true);
     setNotice("");
     try {
-      // TODO(paddle): start the Paddle add-on checkout / subscription update
-      // for the $147/month Lead Generator here. On success the webhook records
-      // the add-on in team_addon_history and this gate unlocks automatically.
+      // Adds the $147/month add-on to the team's Paddle subscription server-side
+      // and records the entitlement, so the gate unlocks immediately on success.
+      await apiClient.request("/subscriptions/addons/lead-generator/purchase", {
+        method: "POST",
+      });
+      setStatus("unlocked");
+    } catch (e) {
       setNotice(
-        "Checkout for this add-on will be available shortly. Your subscription has not been changed.",
+        e?.message ||
+          "We could not complete the purchase right now. Please try again.",
       );
     } finally {
       setPurchasing(false);

@@ -488,6 +488,66 @@ export class PaddleService {
   }
 
   /**
+   * Add, remove, or change the quantity of a recurring add-on price on an
+   * existing subscription (e.g. the $97 seat add-on or the $147 Lead Generator
+   * add-on), billing any proration immediately.
+   *
+   * Paddle's subscription update REPLACES the full item set, so we read the
+   * current items and send them all back with the target price adjusted.
+   * `quantity` is the ABSOLUTE new quantity for that price; 0 removes it.
+   *
+   * NOTE: this must be verified against Paddle sandbox before go-live — it is
+   * written to Paddle's documented API but cannot be run without live keys.
+   */
+  async setSubscriptionAddonQuantity(
+    subscriptionId: string,
+    priceId: string,
+    quantity: number,
+  ): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+    if (!subscriptionId) {
+      throw new BadRequestException('A subscription is required');
+    }
+    if (!priceId || priceId.startsWith('pro_')) {
+      throw new BadRequestException(
+        `A valid add-on Price ID (pri_...) is required, got: ${priceId || 'none'}`,
+      );
+    }
+
+    const sub: any = await this.paddle.subscriptions.get(subscriptionId);
+    const currentItems: any[] = Array.isArray(sub?.items) ? sub.items : [];
+
+    const items: Array<{ priceId: string; quantity: number }> = [];
+    let matched = false;
+    for (const it of currentItems) {
+      const pid = it?.price?.id || it?.priceId;
+      if (!pid) continue;
+      if (pid === priceId) {
+        matched = true;
+        if (quantity > 0) items.push({ priceId: pid, quantity });
+        // quantity <= 0 -> omit this price to remove the add-on
+      } else {
+        items.push({ priceId: pid, quantity: Number(it?.quantity) || 1 });
+      }
+    }
+    if (!matched && quantity > 0) {
+      items.push({ priceId, quantity });
+    }
+
+    const updated = await this.paddle.subscriptions.update(subscriptionId, {
+      items,
+      prorationBillingMode: 'prorated_immediately',
+    } as any);
+
+    this.logger.log(
+      `Set add-on ${priceId} to qty ${quantity} on subscription ${subscriptionId}`,
+    );
+    return updated;
+  }
+
+  /**
    * Verify a Paddle Billing webhook signature.
    * The Paddle-Signature header is "ts=<unix>;h1=<hex>". The signed payload is
    * "<ts>:<raw request body>" hashed with HMAC-SHA256 using the endpoint secret

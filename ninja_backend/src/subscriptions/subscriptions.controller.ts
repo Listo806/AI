@@ -146,6 +146,32 @@ export class SubscriptionsController {
     return this.subscriptionsService.getTeamAddons(user?.teamId);
   }
 
+  @Post('addons/lead-generator/purchase')
+  @ApiOperation({
+    summary: 'Purchase the Lead Generator add-on for the current team',
+  })
+  @ApiResponse({ status: 201, description: 'Add-on purchased and unlocked' })
+  async purchaseLeadGenerator(@CurrentUser() user: any) {
+    this.assertPlanAdmin(user); // owner/admin/super_admin/developer only
+    return this.subscriptionsService.purchaseAddon(user?.teamId, 'lead_generator');
+  }
+
+  @Post('seats/add')
+  @ApiOperation({ summary: 'Buy one extra $97/month team seat' })
+  @ApiResponse({ status: 201, description: 'Seat added; returns extraSeats' })
+  async addSeat(@CurrentUser() user: any) {
+    this.assertPlanAdmin(user);
+    return this.subscriptionsService.addSeat(user?.teamId);
+  }
+
+  @Post('seats/remove')
+  @ApiOperation({ summary: 'Remove one paid team seat' })
+  @ApiResponse({ status: 201, description: 'Seat removed; returns extraSeats' })
+  async removeSeat(@CurrentUser() user: any) {
+    this.assertPlanAdmin(user);
+    return this.subscriptionsService.removeSeat(user?.teamId);
+  }
+
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel subscription' })
   @ApiParam({ name: 'id', description: 'Subscription ID' })

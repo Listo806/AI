@@ -2473,7 +2473,22 @@ export class TeamsService {
       [teamId],
     );
     const tier = rows[0]?.tier || "";
-    return TeamsService.PLAN_SEAT_LIMITS[tier] ?? 1;
+    const base = TeamsService.PLAN_SEAT_LIMITS[tier] ?? 1;
+
+    // Add paid extra seats: each active $97 'seat' add-on raises the limit by 1.
+    let extra = 0;
+    try {
+      const seatRows = await this.db.query(
+        `SELECT COUNT(*)::int AS n
+           FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [teamId],
+      );
+      extra = Number(seatRows.rows[0]?.n || 0);
+    } catch (_e) {
+      extra = 0;
+    }
+    return base + extra;
   }
 
   /**

@@ -51,6 +51,178 @@ export class SubscriptionsService {
     };
   }
 
+  // Add-on key -> the env var holding its Paddle recurring price id.
+  private readonly ADDON_PRICE_ENV: Record<string, string> = {
+    lead_generator: 'PADDLE_PRICE_LEAD_GENERATOR',
+    seat: 'PADDLE_PRICE_SEAT',
+  };
+
+  /** Resolve the team's Paddle subscription id (preferring the owner's row). */
+  async getTeamPaddleSubscriptionId(teamId: string): Promise<string | null> {
+    if (!teamId) return null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT u.paddle_subscription_id AS sid
+           FROM users u
+           LEFT JOIN teams t ON t.id = u.team_id
+          WHERE u.team_id = $1 AND u.paddle_subscription_id IS NOT NULL
+          ORDER BY (t.owner_id = u.id) DESC, u.created_at ASC
+          LIMIT 1`,
+        [teamId],
+      );
+      return rows[0]?.sid || null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  /**
+   * Purchase a single-instance add-on (e.g. Lead Generator) for a team: add the
+   * add-on price to the team's Paddle subscription (prorated immediately) and
+   * record it so the entitlement check unlocks right away. The webhook keeps
+   * team_addon_history in sync afterward.
+   *
+   * NOTE: exercises the live Paddle subscription-update API and must be verified
+   * in sandbox before go-live. Requires PADDLE_PRICE_<ADDON> to be configured.
+   */
+  async purchaseAddon(
+    teamId: string,
+    addonKey: string,
+  ): Promise<{ success: boolean; addon: string; alreadyActive?: boolean }> {
+    const envKey = this.ADDON_PRICE_ENV[addonKey];
+    if (!envKey) {
+      throw new BadRequestException(`Unknown add-on: ${addonKey}`);
+    }
+    if (!teamId) {
+      throw new BadRequestException('A team is required to purchase an add-on.');
+    }
+
+    // Already active? Treat as success (idempotent) so a double-click is safe.
+    const existing = await this.db.query(
+      `SELECT 1 FROM team_addon_history
+        WHERE team_id = $1 AND addon_key = $2 AND disabled_at IS NULL
+        LIMIT 1`,
+      [teamId, addonKey],
+    );
+    if (existing.rows.length > 0) {
+      return { success: true, addon: addonKey, alreadyActive: true };
+    }
+
+    const priceId = process.env[envKey];
+    if (!priceId) {
+      throw new BadRequestException(
+        `${envKey} is not configured yet. Add the Paddle price id for this add-on to enable purchases.`,
+      );
+    }
+
+    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
+    if (!subscriptionId) {
+      throw new BadRequestException(
+        'No active Paddle subscription was found for this team.',
+      );
+    }
+
+    await this.paddleService.setSubscriptionAddonQuantity(
+      subscriptionId,
+      priceId,
+      1,
+    );
+
+    await this.db.query(
+      `INSERT INTO team_addon_history (team_id, addon_key, enabled_at, created_at)
+       VALUES ($1, $2, NOW(), NOW())`,
+      [teamId, addonKey],
+    );
+
+    return { success: true, addon: addonKey };
+  }
+
+  /** Count of paid extra seats (each active 'seat' add-on = +1 seat). */
+  async getTeamExtraSeatCount(teamId: string): Promise<number> {
+    if (!teamId) return 0;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT COUNT(*)::int AS n
+           FROM team_addon_history
+          WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL`,
+        [teamId],
+      );
+      return Number(rows[0]?.n || 0);
+    } catch (_e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Buy one extra $97/month seat: bump the seat add-on quantity on the team's
+   * Paddle subscription (prorated) and record it, so the plan's effective seat
+   * limit rises by one. Requires PADDLE_PRICE_SEAT. Sandbox-verify before go-live.
+   */
+  async addSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+    if (!teamId) throw new BadRequestException('A team is required.');
+    const priceId = process.env.PADDLE_PRICE_SEAT;
+    if (!priceId) {
+      throw new BadRequestException(
+        'PADDLE_PRICE_SEAT is not configured yet. Add the Paddle seat price id to enable adding seats.',
+      );
+    }
+    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
+    if (!subscriptionId) {
+      throw new BadRequestException(
+        'No active Paddle subscription was found for this team.',
+      );
+    }
+
+    const nextCount = (await this.getTeamExtraSeatCount(teamId)) + 1;
+    await this.paddleService.setSubscriptionAddonQuantity(
+      subscriptionId,
+      priceId,
+      nextCount,
+    );
+    await this.db.query(
+      `INSERT INTO team_addon_history (team_id, addon_key, enabled_at, created_at)
+       VALUES ($1, 'seat', NOW(), NOW())`,
+      [teamId],
+    );
+    return { success: true, extraSeats: nextCount };
+  }
+
+  /**
+   * Drop one paid seat: lower the seat add-on quantity on Paddle and close one
+   * seat record. Base plan seats are never billed, so this only removes paid
+   * extra seats.
+   */
+  async removeSeat(teamId: string): Promise<{ success: boolean; extraSeats: number }> {
+    if (!teamId) throw new BadRequestException('A team is required.');
+    const current = await this.getTeamExtraSeatCount(teamId);
+    if (current <= 0) {
+      return { success: true, extraSeats: 0 };
+    }
+
+    const nextCount = current - 1;
+    const priceId = process.env.PADDLE_PRICE_SEAT;
+    const subscriptionId = await this.getTeamPaddleSubscriptionId(teamId);
+    if (priceId && subscriptionId) {
+      await this.paddleService.setSubscriptionAddonQuantity(
+        subscriptionId,
+        priceId,
+        nextCount,
+      );
+    }
+    await this.db.query(
+      `UPDATE team_addon_history
+          SET disabled_at = NOW()
+        WHERE id = (
+          SELECT id FROM team_addon_history
+           WHERE team_id = $1 AND addon_key = 'seat' AND disabled_at IS NULL
+           ORDER BY enabled_at DESC
+           LIMIT 1
+        )`,
+      [teamId],
+    );
+    return { success: true, extraSeats: nextCount };
+  }
+
   async create(createSubscriptionDto: CreateSubscriptionDto, userId: string): Promise<{ subscription: Subscription; checkoutUrl: string; transactionId: string | null }> {
     const { planId, teamId } = createSubscriptionDto;
 
