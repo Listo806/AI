@@ -42,12 +42,23 @@ export class AuthService {
       throw new ConflictException('User already exists');
     }
 
-    // Validate role (super_admin can only be created via env bootstrap)
+    // Validate role.
     if (!Object.values(UserRole).includes(role as UserRole)) {
       throw new UnauthorizedException('Invalid role');
     }
-    if (role === UserRole.SUPER_ADMIN) {
-      throw new UnauthorizedException('Super Admin cannot be created via signup');
+    // SECURITY: public self-signup may never assign a privileged role. These
+    // roles unlock the admin or VA panels and must only be granted by an
+    // existing admin through the role-guarded admin panel. Without this, anyone
+    // could register with role:"admin" (or "developer"/"va") and self-escalate.
+    const PRIVILEGED_ROLES: UserRole[] = [
+      UserRole.SUPER_ADMIN,
+      UserRole.ADMIN,
+      UserRole.DEVELOPER,
+      UserRole.VA,
+      UserRole.VA_UPLOADER,
+    ];
+    if (PRIVILEGED_ROLES.includes(role as UserRole)) {
+      throw new UnauthorizedException('This role cannot be assigned via signup');
     }
 
     // Hash password

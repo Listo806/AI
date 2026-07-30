@@ -14,7 +14,10 @@ export class TrialService {
     try {
       console.log('DTO:', dto);
 
-      const { password, name, phone, role } = dto;
+      // SECURITY: never read `role` from the signup payload. A public trial
+      // signup must always create a plain team OWNER. Trusting a client-supplied
+      // role let anyone POST role:"super_admin" and self-grant platform admin.
+      const { password, name, phone } = dto;
       // Normalize the email so it matches at login regardless of casing/spaces.
       const email = (dto.email || '').trim().toLowerCase();
 
@@ -106,7 +109,7 @@ export class TrialService {
           hashed,
           name || null,
           phone || null,
-          role || 'owner',
+          'owner',
           dto.plan || null,
           teamId,
         ],
