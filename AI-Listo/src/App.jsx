@@ -9,7 +9,7 @@ import {
   useParams,
   useLocation,
 } from "react-router-dom";
-import { trackEvent, initAnalytics } from "./utils/track";
+import { trackEvent, initAnalytics, captureClickIds } from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -401,6 +401,9 @@ function PageViewTracker() {
     // Configure GA4 once (no-op until a Measurement ID is set), then record the
     // page view for both GA4 (funnel analysis) and Google Ads (audiences).
     initAnalytics();
+    // Persist any ad click id present in the URL (gclid/wbraid/gbraid) so a
+    // later Purchase can be attributed to the ad click.
+    captureClickIds();
     trackEvent("page_view", {
       page_path: location.pathname + location.search,
       page_location: window.location.href,

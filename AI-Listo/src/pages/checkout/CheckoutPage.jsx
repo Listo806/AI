@@ -9,6 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import { trackEvent, trackAdsConversion, setUserData } from "../../utils/track";
+import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
 import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
@@ -242,6 +243,33 @@ export default function CheckoutPage() {
 
   // The user is already authenticated (from trial signup), so after payment
   // succeeds we just refresh their status and open the product.
+  // Fire the Google Ads Purchase conversion only once the backend confirms the
+  // Paddle payment activated the account. The webhook lands a few seconds after
+  // the browser's checkout.completed, so poll a one-time server claim: it
+  // returns fire:true a single time for a confirmed, not-yet-reported user, so
+  // the tag fires exactly once and a page refresh can never re-trigger it.
+  const reportPaddlePurchaseWhenConfirmed = async () => {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        const res = await apiClient.request(
+          "/payments/paddle/purchase-conversion/claim",
+          { method: "POST" },
+        );
+        const data = res?.data ?? res;
+        if (data?.fire) {
+          trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+            value: data.value ?? SETUP_FEE,
+            currency: data.currency ?? "USD",
+          });
+          return;
+        }
+      } catch (_e) {
+        // Webhook may not have landed yet; keep polling.
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  };
+
   const finishAndLogin = async (userId) => {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
@@ -284,16 +312,18 @@ export default function CheckoutPage() {
           if (ev?.name === "checkout.completed") {
             const uid = customer.userId || localStorage.getItem("trialUserId");
             setUserData({ email: customer.email, phone: customer.phone });
-            trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
-              value: SETUP_FEE,
-              currency: "USD",
-            });
             trackEvent("trial_activated", {
               plan: selectedPlan,
               value: SETUP_FEE,
               currency: "USD",
             });
             setProcessing(true);
+            // Do NOT fire the Purchase conversion here. checkout.completed is a
+            // browser event that arrives before the payment is confirmed. Poll
+            // the backend, which reports fire:true only after the signature-
+            // verified Paddle webhook activates the account, and only once per
+            // user, so a Thank You page refresh can never re-fire it.
+            reportPaddlePurchaseWhenConfirmed();
             if (uid) finishAndLogin(uid);
           }
         });

@@ -98,4 +98,24 @@ export function setUserData(userData = {}) {
   }
 }
 
+// Capture the Google Ads click identifiers (gclid / wbraid / gbraid) from the
+// ad landing URL and persist them, so a later Purchase can be attributed back
+// to the ad click (for server-side or Enhanced Conversions). Safe no-op when
+// none are present; only writes when an id is actually in the URL.
+export function captureClickIds() {
+  if (typeof window === "undefined") return;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    for (const key of ["gclid", "wbraid", "gbraid"]) {
+      const val = params.get(key);
+      if (val) {
+        localStorage.setItem(`ads_${key}`, val);
+        localStorage.setItem("ads_click_at", String(Date.now()));
+      }
+    }
+  } catch (_e) {
+    /* non-fatal: attribution is best-effort */
+  }
+}
+
 export { GOOGLE_ADS_ID };
