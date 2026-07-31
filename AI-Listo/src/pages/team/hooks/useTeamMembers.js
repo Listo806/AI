@@ -408,6 +408,7 @@ export default function useTeamMembers({
       await inviteMember(teamId, {
         email: email.trim(),
         role,
+        name: payload.name,
       });
 
       showToast(

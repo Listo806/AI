@@ -136,6 +136,7 @@ export class TeamsController {
     body: {
       email: string;
       role?: string;
+      name?: string;
     },
     @CurrentUser() user: any,
   ) {
@@ -144,6 +145,7 @@ export class TeamsController {
       body.email?.trim?.() || "",
       user.id,
       body.role || "agent",
+      body.name?.trim?.() || null,
     );
   }
 

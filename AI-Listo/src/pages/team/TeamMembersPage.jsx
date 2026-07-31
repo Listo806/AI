@@ -118,11 +118,8 @@ export default function TeamMembersPage() {
     setSelectedMember(null);
   };
 
-  const handleInvite = async ({ email, role }) => {
-    const success = await inviteMember({
-      email,
-      role,
-    });
+  const handleInvite = async (payload) => {
+    const success = await inviteMember(payload);
 
     if (success !== false) {
       setShowInviteModal(false);
