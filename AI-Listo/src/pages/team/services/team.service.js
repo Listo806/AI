@@ -20,6 +20,7 @@ import {
   cancelTeamInvite,
   getTeamSeatUsage,
 } from '../../../api/platformApi';
+import apiClient from '../../../api/apiClient';
 
 /* ======================================================
  TEAMS
@@ -45,6 +46,19 @@ export async function fetchTeamSeats(
 // Plan-based seat limit + usage (Feature B): { limit, used, available }
 export async function fetchTeamSeatUsage(teamId) {
   return await getTeamSeatUsage(teamId);
+}
+
+// Seat add-on billing ($97/month/seat). These hit the subscriptions endpoints,
+// which charge/adjust the Paddle add-on and raise or lower the effective seat
+// limit for the current user's team.
+export async function purchaseSeat() {
+  return await apiClient.request('/subscriptions/seats/add', { method: 'POST' });
+}
+
+export async function removeSeatBilling() {
+  return await apiClient.request('/subscriptions/seats/remove', {
+    method: 'POST',
+  });
 }
 
 /* ======================================================
