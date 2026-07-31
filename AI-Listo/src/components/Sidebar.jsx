@@ -18,6 +18,12 @@ const AI_CENTER_PATHS = [
 ];
 
 const AI_CENTER_ITEMS = [
+  // Onboarding Setup (Connect WhatsApp QR + initial config). Sits above Calendar.
+  {
+    path: "/dashboard/ai-cortexa-setup",
+    icon: "settings",
+    label: "Setup",
+  },
   {
     path: "/dashboard/calendar",
     icon: "calendar",
@@ -190,61 +196,29 @@ export default function Sidebar({
   const canSeeAdmin = role === "super_admin" || role === "admin" || isDeveloper;
   const canSeePlatformListings = ["agent", "owner", "user", "developer"].includes(role);
   console.log("USER IN SIDEBAR:", user);
-  let navItems = topNavItems;
+  // One operational sidebar for every non-VA role (admins included). Admin pages
+  // (Listings/Users/Teams/Plans) now live in the profile dropdown, not here.
+  // Order: Dashboard, WhatsApp, Leads, Pipeline, Contacts, Analytics, Properties,
+  // then Setup/Calendar/AI Agent (AI_CENTER_ITEMS), then Team/Integrations/Generator.
+  const operationalNav = [
+    { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
+    ...whatsappNavEntries,
+    { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
+    { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
+    { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
+    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
+    { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
+  ];
+
+  let navItems = operationalNav;
   if (role === "va") {
-    navItems = topNavItems.filter(
-      (item) => item.path === "/dashboard/properties",
-    );
+    navItems = [
+      { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
+    ];
   } else if (role === "va_uploader") {
     navItems = [
-      {
-        path: "/dashboard/va-upload",
-        icon: "upload",
-        labelKey: "nav.vaUpload",
-      },
+      { path: "/dashboard/va-upload", icon: "upload", labelKey: "nav.vaUpload" },
     ];
-  } else if (canSeeAdmin) {
-    navItems = [
-      { path: "/dashboard/home", icon: "home", labelKey: "nav.dashboard" },
-      ...whatsappNavEntries,
-      { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
-      { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
-      { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-      { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
-      {
-        path: "/dashboard/properties",
-        icon: "building",
-        labelKey: "nav.properties",
-      },
-      {
-        path: "/dashboard/admin/listings",
-        icon: "file-check",
-        labelKey: "nav.adminListings",
-      },
-      {
-        path: "/dashboard/admin/users",
-        icon: "shield",
-        labelKey: "nav.adminUsers",
-      },
-      {
-        path: "/dashboard/admin/teams",
-        icon: "users",
-        labelKey: "nav.adminTeams",
-      },
-      {
-        path: "/dashboard/admin/plans",
-        icon: "credit-card",
-        labelKey: "nav.adminPlans",
-      },
-    ];
-  } else {
-    if (canSeePlatformListings) {
-      navItems = [
-        ...topNavItems.slice(0, 6),
-        //{ path: "/dashboard/platform-listings", icon: "store", labelKey: "nav.marketplace" },
-        ...topNavItems.slice(6),
-      ];
-    }
   }
 
   const showAiCenterAndBottom = canSeeAiCenter;
@@ -397,52 +371,6 @@ export default function Sidebar({
               {/*</div>*/}
             </>
           )}
-          {!canSeeAdmin && (
-            <>
-              {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.intelligence")}</div>*/}
-              {analyticsNavItems.map((item, index) => (
-                <NavLink
-                  key={`${item.path}-${index}`}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `crm-nav-link ${isActive ? "active" : ""}`
-                  }
-                  onClick={onClose}
-                  title={isCollapsed ? t(item.labelKey) : undefined}
-                >
-                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
-                  {!isCollapsed && (
-                    <span className="crm-nav-label">{t(item.labelKey)}</span>
-                  )}
-                </NavLink>
-              ))}
-            </>
-          )}
-          {showAiCenterAndBottom && !canSeeAdmin && (
-            <>
-              {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.management")}</div>*/}
-              {/* <div className="crm-nav-spacer" aria-hidden="true" /> */}
-              <div className="crm-nav-group-bottom">
-                {bottomNavItems.map((item, index) => (
-                  <NavLink
-                    key={`${item.path}-${index}`}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `crm-nav-link ${isActive ? "active" : ""}`
-                    }
-                    onClick={onClose}
-                    title={isCollapsed ? t(item.labelKey) : undefined}
-                  >
-                    <i data-lucide={item.icon} className="crm-nav-icon"></i>
-                    {!isCollapsed && (
-                      <span className="crm-nav-label">{t(item.labelKey)}</span>
-                    )}
-                  </NavLink>
-                ))}
-              </div>
-            </>
-          )}
-
           {/*!isCollapsed && <div className="crm-nav-fix-label">{t("nav.system")}</div>*/}
           {systemNavItems.map((item, index) => (
             <NavLink
