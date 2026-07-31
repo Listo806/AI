@@ -564,6 +564,8 @@ export class AiCenterController {
 
   @Put("agent/automations")
   @AllowBeforeAgentSetup()
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.OWNER, UserRole.DEVELOPER)
   async saveAutomations(
     @CurrentUser() user: any,
 
@@ -650,7 +652,7 @@ export class AiCenterController {
       sessionId?: string;
       attachments?: any[];
     },
-  ) { console.log("CHAT CONTROLLER");
+  ) {
     return this.service.sendAgentChatMessage(user.teamId, user.id, body);
   }
 

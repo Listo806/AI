@@ -31,8 +31,6 @@ export class AiAgentSetupCompleteGuard implements CanActivate {
     const user = request.user;
 
     const teamId = user?.teamId || user?.team_id || null;
-    console.log("===== AI SETUP GUARD =====");
-    console.log("teamId:", teamId);
     if (!teamId) {
       throw new ForbiddenException({
         code: "AI_AGENT_TEAM_REQUIRED",
@@ -61,7 +59,6 @@ export class AiAgentSetupCompleteGuard implements CanActivate {
     );
 
     const settings = result.rows[0];
-    console.log("BLOCK:", settings);
     if (!settings) {
       await this.logBlockedAction(request, user, teamId, "settings_not_found");
 
