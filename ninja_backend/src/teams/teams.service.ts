@@ -2050,10 +2050,15 @@ export class TeamsService {
     email: string,
     requestingUserId: string,
     role = "agent",
+    name: string | null = null,
   ) {
     const normalizedEmail = String(email || "")
       .trim()
       .toLowerCase();
+
+    // Optional name the inviter typed; applied to the member's account on accept
+    // if they do not already have a name of their own.
+    const inviteeName = name ? String(name).trim() || null : null;
 
     const normalizedRole = String(role || "agent")
       .trim()
@@ -2139,6 +2144,7 @@ export class TeamsService {
         token = $3,
         invited_by = $4,
         expires_at = $5,
+        invitee_name = COALESCE($6, invitee_name),
         created_at = NOW()
       WHERE id = $1
       RETURNING
@@ -2152,7 +2158,7 @@ export class TeamsService {
         accepted_at as "acceptedAt",
         created_at as "createdAt"
       `,
-        [invitationId, normalizedRole, token, requestingUserId, expiresAt],
+        [invitationId, normalizedRole, token, requestingUserId, expiresAt, inviteeName],
       );
 
       invitation = result.rows[0];
@@ -2167,6 +2173,7 @@ export class TeamsService {
         token,
         status,
         expires_at,
+        invitee_name,
         created_at
       )
       VALUES (
@@ -2177,6 +2184,7 @@ export class TeamsService {
         $5,
         'pending',
         $6,
+        $7,
         NOW()
       )
       RETURNING
@@ -2197,6 +2205,7 @@ export class TeamsService {
           normalizedRole,
           token,
           expiresAt,
+          inviteeName,
         ],
       );
 
@@ -2676,6 +2685,7 @@ export class TeamsService {
          email,
          role,
          status,
+         invitee_name AS "inviteeName",
          expires_at AS "expiresAt"
        FROM team_invitations
        WHERE token = $1
@@ -2747,6 +2757,16 @@ export class TeamsService {
        WHERE id = $2 AND team_id IS NULL`,
       [teamId, user.id],
     );
+
+    // Apply the name the inviter entered, but only if the member has none of
+    // their own yet (never overwrite a name the person set themselves).
+    if (invitation.inviteeName) {
+      await this.db.query(
+        `UPDATE users SET name = $1, updated_at = NOW()
+         WHERE id = $2 AND (name IS NULL OR name = '')`,
+        [invitation.inviteeName, user.id],
+      );
+    }
 
     // Mark the invitation accepted.
     await this.db.query(

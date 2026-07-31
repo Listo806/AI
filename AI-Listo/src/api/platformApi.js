@@ -266,6 +266,7 @@ export async function inviteTeamMemberByEmail(teamId, payload) {
   const body = {
     email: payload?.email?.trim?.() || "",
     role: payload?.role || "agent",
+    name: payload?.name?.trim?.() || undefined,
   };
 
   const res = await apiClient.request(`/teams/${teamId}/members/invite`, {

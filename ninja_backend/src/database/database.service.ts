@@ -61,10 +61,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       console.log('✅ Added plan');
 
       await this.query(`
-        ALTER TABLE users 
+        ALTER TABLE users
         ADD COLUMN IF NOT EXISTS payment_status TEXT;
       `);
       console.log('✅ Added payment_status');
+
+      await this.query(`
+        ALTER TABLE team_invitations
+        ADD COLUMN IF NOT EXISTS invitee_name TEXT;
+      `);
+      console.log('✅ Added team_invitations.invitee_name');
 
     } catch (err) {
       console.error('❌ Migration error FULL:', err);

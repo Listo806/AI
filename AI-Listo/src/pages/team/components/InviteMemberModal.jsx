@@ -12,6 +12,8 @@ export default function InviteMemberModal({
   inviting,
 }) {
   const [role, setRole] = useState("agent");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   /* =====================================================
     RESET WHEN CLOSE
@@ -20,6 +22,8 @@ export default function InviteMemberModal({
   useEffect(() => {
     if (!open) {
       setRole("agent");
+      setFirstName("");
+      setLastName("");
     }
   }, [open]);
 
@@ -28,9 +32,15 @@ export default function InviteMemberModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const name = [firstName, lastName]
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join(" ");
+
     await onInvite({
       email: inviteEmail,
       role,
+      name,
     });
   };
 
@@ -60,6 +70,36 @@ export default function InviteMemberModal({
         ================================================= */}
 
         <form onSubmit={handleSubmit}>
+          {/* NAME */}
+
+          <div className="team-form-group">
+            <label className="team-label">First Name</label>
+
+            <div className="team-input-icon">
+              <input
+                type="text"
+                placeholder="John"
+                className="team-input"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="team-form-group">
+            <label className="team-label">Last Name</label>
+
+            <div className="team-input-icon">
+              <input
+                type="text"
+                placeholder="Doe"
+                className="team-input"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+          </div>
+
           {/* EMAIL */}
 
           <div className="team-form-group">

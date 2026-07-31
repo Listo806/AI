@@ -139,11 +139,8 @@ export default function TeamWorkspace() {
     INVITE MEMBER
   ===================================================== */
 
-  const handleInvite = async ({ email, role }) => {
-    const success = await inviteMember({
-      email,
-      role,
-    });
+  const handleInvite = async (payload) => {
+    const success = await inviteMember(payload);
 
     if (success !== false) {
       setInviteModalOpen(false);
