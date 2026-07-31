@@ -26,6 +26,16 @@ export class PaddleController {
     return this.paddleService.getConfigStatus();
   }
 
+  // Purchase-conversion guard. The frontend polls this after a Paddle checkout;
+  // it returns { fire: true } exactly once, only after the signature-verified
+  // webhook has flipped this user to active, so the Google Ads Purchase tag
+  // fires once on a confirmed payment and never on a Thank You page refresh.
+  @Post('purchase-conversion/claim')
+  @UseGuards(JwtAuthGuard)
+  async claimPurchaseConversion(@CurrentUser() user: any) {
+    return this.paymentsService.claimPurchaseConversion(user?.id);
+  }
+
   // Public: the frontend Paddle.js checkout reads the client-side token, the
   // environment, and the price ids from here (the client token is publishable).
   @Get('config')

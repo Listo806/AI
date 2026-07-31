@@ -107,6 +107,43 @@ export class PaymentsService {
     return { success: true };
   }
 
+  // --- One-time Purchase-conversion guard ---
+  // The Google Ads Purchase conversion must fire exactly once, only after the
+  // signature-verified webhook has activated the account, and never again on a
+  // Thank You page refresh. The frontend polls claimPurchaseConversion after
+  // checkout; the atomic conditional UPDATE below returns fire:true a single
+  // time per user, then false forever after (immune to reloads / concurrency).
+  private purchaseFlagReady = false;
+  private async ensurePurchaseFlagColumn(): Promise<void> {
+    if (this.purchaseFlagReady) return;
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS purchase_conversion_reported BOOLEAN NOT NULL DEFAULT false`,
+    );
+    this.purchaseFlagReady = true;
+  }
+
+  async claimPurchaseConversion(
+    userId: string,
+  ): Promise<{ fire: boolean; value: number; currency: string }> {
+    const result = { fire: false, value: 97, currency: 'USD' };
+    if (!userId) return result;
+    await this.ensurePurchaseFlagColumn();
+    // Only the first call for an active, not-yet-reported user flips the flag
+    // and returns a row; every later call (including a page refresh) gets none.
+    const { rows } = await this.db.query(
+      `UPDATE users
+          SET purchase_conversion_reported = true,
+              updated_at = NOW()
+        WHERE id = $1
+          AND payment_status IN ('active', 'paid')
+          AND purchase_conversion_reported = false
+        RETURNING id`,
+      [userId],
+    );
+    result.fire = rows.length > 0;
+    return result;
+  }
+
   private async setUserStatusByPaddleSub(
     subscriptionId: string | null,
     fields: { payment_status?: string; is_active?: boolean },
