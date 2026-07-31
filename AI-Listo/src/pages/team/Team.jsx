@@ -164,6 +164,7 @@ export default function TeamWorkspace() {
   const [roleMember, setRoleMember] = useState(null);
   const [addingSeat, setAddingSeat] = useState(false);
   const [addSeatConfirmOpen, setAddSeatConfirmOpen] = useState(false);
+  const [addSeatError, setAddSeatError] = useState("");
   const [noSeatsOpen, setNoSeatsOpen] = useState(false);
   const [keepRemoveSeatOpen, setKeepRemoveSeatOpen] = useState(false);
   const [seatBusy, setSeatBusy] = useState(false);
@@ -309,11 +310,20 @@ export default function TeamWorkspace() {
   // "Add a seat" opens a confirmation first (each seat is a $97/month charge).
   const handleAddSeatClick = () => {
     if (addingSeat) return;
+    setAddSeatError("");
     setAddSeatConfirmOpen(true);
   };
 
   const handleAddSeatConfirmed = async () => {
-    if (!selectedTeamId || addingSeat) return;
+    if (addingSeat) return;
+    // An admin/test account that owns no team has no selectedTeamId, so the
+    // button used to dead-click. Explain why, right in the modal, instead of
+    // doing nothing.
+    if (!selectedTeamId) {
+      setAddSeatError("Select or create a team before adding a seat.");
+      return;
+    }
+    setAddSeatError("");
     try {
       setAddingSeat(true);
       await purchaseSeat();
@@ -326,7 +336,10 @@ export default function TeamWorkspace() {
       );
     } catch (error) {
       console.error("ADD TEAM SEAT ERROR", error);
-      showSeatToast(error?.message || "Could not add a seat.", "error");
+      // Keep the modal open and show the reason in place (e.g. the backend's
+      // "No active Paddle subscription was found for this team.") so it never
+      // looks like the button silently failed.
+      setAddSeatError(error?.message || "Could not add a seat.");
     } finally {
       setAddingSeat(false);
     }
@@ -459,7 +472,11 @@ export default function TeamWorkspace() {
       {addSeatConfirmOpen && (
         <div
           style={SEAT_OVERLAY}
-          onClick={() => !addingSeat && setAddSeatConfirmOpen(false)}
+          onClick={() => {
+            if (addingSeat) return;
+            setAddSeatConfirmOpen(false);
+            setAddSeatError("");
+          }}
         >
           <div style={SEAT_CARD} onClick={(e) => e.stopPropagation()}>
             <h3 style={SEAT_TITLE}>Add Team Seat</h3>
@@ -467,11 +484,30 @@ export default function TeamWorkspace() {
               Each additional team member costs $97/month and will be added to
               your existing subscription.
             </p>
+            {addSeatError && (
+              <p
+                style={{
+                  margin: "0 0 14px",
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  color: "#b91c1c",
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                }}
+              >
+                {addSeatError}
+              </p>
+            )}
             <div style={SEAT_ROW}>
               <button
                 type="button"
                 style={SEAT_BTN_SECONDARY}
-                onClick={() => setAddSeatConfirmOpen(false)}
+                onClick={() => {
+                  setAddSeatConfirmOpen(false);
+                  setAddSeatError("");
+                }}
                 disabled={addingSeat}
               >
                 Cancel
@@ -508,6 +544,7 @@ export default function TeamWorkspace() {
                 type="button"
                 style={SEAT_BTN_PRIMARY}
                 onClick={() => {
+                  setAddSeatError("");
                   setNoSeatsOpen(false);
                   setAddSeatConfirmOpen(true);
                 }}
