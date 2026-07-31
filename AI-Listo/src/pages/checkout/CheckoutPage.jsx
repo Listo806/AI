@@ -254,7 +254,9 @@ export default function CheckoutPage() {
     } catch (e) {
       // ignore; webhook + next load will reconcile status
     }
-    navigate("/dashboard", { replace: true });
+    // Onboarding: a brand-new customer lands on Setup first (connect WhatsApp QR
+    // + initial configuration), then moves into the CRM from there.
+    navigate("/dashboard/ai-cortexa-setup", { replace: true });
   };
 
   // Paddle overlay checkout. Active only when paddleReady (client token + a
