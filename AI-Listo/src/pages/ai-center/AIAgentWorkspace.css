@@ -14,11 +14,11 @@
   --aiw-radius: 12px;
 
   display: flex;
-  /* Bound to the viewport (minus the dashboard header + content padding) so the
-     chat area scrolls internally and the prompt box stays pinned and visible
-     without scrolling the page. */
-  height: calc(100vh - 120px);
-  min-height: 460px;
+  /* Flows naturally in the page — no fixed viewport height and no internal
+     scroll container. The panel grows with its content and the normal page
+     scroll takes over when it needs to, so nothing is hidden behind any strip.
+     min-height keeps it filling the screen when the conversation is short. */
+  min-height: calc(100vh - 140px);
   background: var(--aiw-bg);
   color: var(--aiw-text);
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -152,17 +152,19 @@
   color: var(--aiw-text);
 }
 
-/* ---------------- Scroll area ---------------- */
+/* ---------------- Content area ----------------
+   flex: 1 lets it fill the panel when the conversation is short (keeping the
+   composer at the bottom), and grow past that with the page scroll when the
+   conversation is long. No overflow here: the panel never scrolls internally. */
 .aiw-scroll {
   flex: 1;
-  overflow-y: auto;
-  padding: 24px 20px;
+  padding: 28px 20px;
 }
 
 /* Empty state */
 .aiw-empty {
   max-width: 760px;
-  margin: 3vh auto 0;
+  margin: 6vh auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
