@@ -23,6 +23,27 @@
   border-radius: 4px;
 }
 
+/* The app bundle (LandingDesktop.css) defines a global bare
+   `section { text-align:center; padding:0 !important }` that hijacks EVERY
+   <section>, which is what centered the editorial and killed its spacing.
+   A class selector outranks the bare element; match the !important on padding
+   to restore the intended rhythm. Scoped to .ed-page so nothing else changes. */
+.ed-page .ed-hero,
+.ed-page .ed-section {
+  text-align: left;
+}
+.ed-page .ed-hero {
+  padding: 72px 0 56px !important;
+}
+.ed-page .ed-section {
+  padding: 64px 0 !important;
+}
+@media (max-width: 640px) {
+  .ed-page .ed-section {
+    padding: 44px 0 !important;
+  }
+}
+
 .ed-container {
   max-width: 1200px;
   margin: 0 auto;
