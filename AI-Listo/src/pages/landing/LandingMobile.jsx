@@ -85,15 +85,13 @@ function ReportingSection({ tr }) {
               {copy.titleLine1}
               <br />
               {copy.titleLine2}
-              <br />
-              <span>{copy.titleHighlight}</span>
+              {copy.titleHighlight}
             </h2>
 
-            <div className="cx-reporting-line" />
           </div>
-          <div className="cx-reporting-intro-right">
+          {/*<div className="cx-reporting-intro-right">
             <img src={bgreportingImg} alt="CORTEXA" className="background" />
-          </div>
+          </div>*/}
         </div>
 
         <div className="cx-reporting-wrap">
@@ -584,7 +582,7 @@ export default function LandingMobile() {
       ],
       pricing: "Pricing",
       watchDemo: "Watch Demo",
-      trusted: "Built for real estate agents.",
+      trusted: "Built for businesses of all kinds.",
 
       benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
       benefitsTitle1: "Everything You Need.",
@@ -604,7 +602,7 @@ export default function LandingMobile() {
       whatsappTitle: "WhatsApp Integration",
       whatsappDesc: "Chat with leads where they are and close faster.",
 
-      platformSubtitle: "A REAL ESTATE PLATFORM",
+      platformSubtitle: "A POWERFUL PLATFORM",
       platformTitle: "Built for Businesses",
       platformTitle1: "That Are Looking to",
       platformTitle2: "Maximize Their Revenue",
@@ -800,8 +798,8 @@ export default function LandingMobile() {
       reportingSection: {
         eyebrow: "REPORTING & WORKFLOW",
         titleLine1: "Reporting",
-        titleLine2: "turns to",
-        titleHighlight: "revenue.",
+        titleLine2: "Turns to ",
+        titleHighlight: "Revenue.",
         description:
           "Track leads, conversions, response times, and team performance in real time. No more scattered data. Just clarity.",
         features: [
@@ -982,7 +980,7 @@ export default function LandingMobile() {
       ],
       pricing: "Precios",
       watchDemo: "Ver Demo",
-      trusted: "Creado para agentes inmobiliarios.",
+      trusted: "Diseñada para empresas de todo tipo.",
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
@@ -1001,7 +999,7 @@ export default function LandingMobile() {
       whatsappDesc:
         "Chatea con tus leads donde ellos estén y cierra ventas más rápido.",
 
-      platformSubtitle: "UNA PLATAFORMA INMOBILIARIA",
+      platformSubtitle: "UNA PLATAFORMA POTENTE",
       platformTitle: "Diseñado para Empresas",
       platformTitle1: "Que Buscan",
       platformTitle2: "Maximizar sus Ingresos",
@@ -1387,7 +1385,7 @@ export default function LandingMobile() {
       ],
       pricing: "Preços",
       watchDemo: "Ver Demo",
-      trusted: "Feito para agentes imobiliários.",
+      trusted: "Desenvolvida para empresas de todos os tipos.",
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
@@ -1407,7 +1405,7 @@ export default function LandingMobile() {
       whatsappDesc:
         "Converse com os leads onde eles estão e feche negócios mais rápido.",
 
-      platformSubtitle: "UMA PLATAFORMA IMOBILIÁRIA",
+      platformSubtitle: "UMA PLATAFORMA PODEROSA",
       platformTitle: "Desenvolvido para Empresas",
       platformTitle1: "Que Buscam",
       platformTitle2: "Maximizar sua Receita",
