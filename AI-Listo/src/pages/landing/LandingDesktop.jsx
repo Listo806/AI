@@ -428,10 +428,10 @@ export default function Landing() {
       roiStat4Desc:
         "Designed to help you recover your investment quickly by capturing deals that would otherwise be lost.",
 
-      aiosBadgeTitle: "Meet Your",
-      aiosBadgeHighlight: "Agentic AIOS",
+      aiosBadgeTitle: "Agentic AI",
+      aiosBadgeHighlight: "Revenue Operating System",
       aiosSubtitle:
-        "AI system built for real estate teams — captures more leads, follows up automatically, manages deals, and helps your team close more, all in one place.",
+        "All-in-one system to manage conversations, automate follow-ups, track performance, and help your bussiness grow.",
       aiosCards: [
         {
           title: "AI CRM",
@@ -450,7 +450,7 @@ export default function Landing() {
           desc: "Keep every prospect moving without chasing manually.",
         },
         {
-          title: "Real Estate Workflow",
+          title: "Workflow",
           desc: "Built around listings, buyers, sellers, agents, and deals.",
         },
       ],
@@ -501,7 +501,8 @@ export default function Landing() {
 
       heroTitleLine1: "Agentic",
       heroTitleLine2: "AI",
-      heroTitleLine3: "Revenue OS",
+      heroTitleLine3: "Revenue",
+      heroTitleLine31: "Operating System",
       heroTitleLine4: "Built to Turn",
       heroTitleLine5: "Conversations",
       heroTitleLine6: "Into Revenue.",
@@ -526,7 +527,7 @@ export default function Landing() {
       heroTag4: "Pipeline Intelligence That Closes",
       heroTag5: "WhatsApp Integration Built-in",
       heroTag6: "Secure. Reliable. Built for Real Estate.",
-      heroHead: "Real Estate Agents & Teams",
+      heroHead: "Built to Help Businesses Automate, Operate and Grow Revenue",
 
       smartBadge: "FROM LEAD TO REVENUE — AUTOMATICALLY",
 
@@ -973,10 +974,10 @@ export default function Landing() {
       roiStat4Desc:
         "Diseñado para ayudarte a recuperar tu inversión rápidamente al capturar acuerdos que de otro modo se perderían.",
 
-      aiosBadgeTitle: "Conoce Tu",
-      aiosBadgeHighlight: "Agentic AIOS",
+      aiosBadgeTitle: "IA Agéntica",
+      aiosBadgeHighlight: "Sistema Operativo de Ingresos",
       aiosSubtitle:
-        "Sistema de IA diseñado para equipos inmobiliarios: captura más clientes potenciales, realiza seguimientos automáticamente, gestiona operaciones y ayuda a tu equipo a cerrar más negocios, todo en un solo lugar.",
+        "Sistema todo en uno para gestionar conversaciones, automatizar seguimientos, monitorear el rendimiento y ayudar a que tu empresa crezca.",
       aiosCards: [
         {
           title: "CRM IA",
@@ -995,7 +996,7 @@ export default function Landing() {
           desc: "Mantén cada prospecto avanzando sin perseguirlo.",
         },
         {
-          title: "Flujo Inmobiliario",
+          title: "Flujo de trabajo",
           desc: "Diseñado para propiedades, compradores y agentes.",
         },
       ],
@@ -1046,7 +1047,8 @@ export default function Landing() {
 
       heroTitleLine1: "Agentic",
       heroTitleLine2: "IA",
-      heroTitleLine3: "Sistema Operativo de Ingresos",
+      heroTitleLine3: "de Ingresos",
+      heroTitleLine31: "Sistema Operativo",
       heroTitleLine4: "Diseñado para convertir",
       heroTitleLine5: "las conversaciones",
       heroTitleLine6: "en ingresos.",
@@ -1075,7 +1077,7 @@ export default function Landing() {
       heroTag4: "Inteligencia de pipeline que cierra ventas",
       heroTag5: "Integración de WhatsApp incorporada",
       heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
-      heroHead: "Agentes y equipos inmobiliarios",
+      heroHead: "Diseñado para ayudar a las empresas a automatizar, operar y aumentar sus ingresos",
 
       smartBadge: "DEL LEAD A LOS INGRESOS — AUTOMÁTICAMENTE",
 
@@ -1520,10 +1522,10 @@ export default function Landing() {
       roiStat4Desc:
         "Projetado para ajudar você a recuperar seu investimento rapidamente ao capturar negócios que de outra forma seriam perdidos.",
 
-      aiosBadgeTitle: "Conheça Seu",
-      aiosBadgeHighlight: "Agentic AIOS",
+      aiosBadgeTitle: "IA Agêntica",
+      aiosBadgeHighlight: "Sistema Operacional de Receita",
       aiosSubtitle:
-        "Sistema de IA desenvolvido para equipes imobiliárias — captura mais leads, faz acompanhamento automático, gerencia negociações e ajuda sua equipe a fechar mais negócios, tudo em um só lugar.",
+        "Sistema completo para gerenciar conversas, automatizar acompanhamentos, acompanhar o desempenho e ajudar sua empresa a crescer.",
 
       aiosCards: [
         {
@@ -1543,7 +1545,7 @@ export default function Landing() {
           desc: "Mantenha cada prospect avançando sem esforço manual.",
         },
         {
-          title: "Fluxo Imobiliário",
+          title: "Fluxo de trabalho",
           desc: "Criado para imóveis, compradores, vendedores e agentes.",
         },
       ],
@@ -1594,7 +1596,8 @@ export default function Landing() {
 
       heroTitleLine1: "Agentic",
       heroTitleLine2: "IA",
-      heroTitleLine3: "Sistema Operacional de Receita",
+      heroTitleLine3: "de Receita",
+      heroTitleLine31: "Sistema Operacional",
       heroTitleLine4: "Criado para transformar",
       heroTitleLine5: "conversas",
       heroTitleLine6: "em receita.",
@@ -1625,7 +1628,7 @@ export default function Landing() {
       heroTag4: "Inteligência de pipeline que fecha negócios",
       heroTag5: "Integração nativa com WhatsApp",
       heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",
-      heroHead: "Agentes e equipes imobiliárias",
+      heroHead: "Desenvolvido para ajudar empresas a automatizar, operar e aumentar a receita",
 
       smartBadge: "DO LEAD À RECEITA — AUTOMATICAMENTE",
 
@@ -1915,7 +1918,7 @@ export default function Landing() {
             <a className="nav-menu" href="/pricing">
               {tr.pricing}
             </a>
-            <a className="nav-menu" href="/why-legacy-crm">
+             <a className="nav-menu" href="/why-legacy-crm">
               Cost Calculator
             </a>
           </nav>
@@ -2004,6 +2007,7 @@ export default function Landing() {
               <h1 className="hero-title">
                 {tr.heroTitleLine1} <span className="text-os">{tr.heroTitleLine2}</span> {tr.heroTitleLine3}
                 <br />
+                {tr.heroTitleLine31} <br/>
                 {tr.heroTitleLine4} <br/>
                 {tr.heroTitleLine5} <br/>
                 <span> {tr.heroTitleLine6}</span>
@@ -2235,7 +2239,7 @@ export default function Landing() {
         <div className="aios-container">
           <div className="aios-header">
             <h2>
-              {tr.aiosBadgeTitle} <span>{tr.aiosBadgeHighlight}</span>
+              <span>{tr.aiosBadgeTitle} </span>{tr.aiosBadgeHighlight}
             </h2>
 
             <p>{tr.aiosSubtitle}</p>

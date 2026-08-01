@@ -97,7 +97,7 @@ function ReportingSection({ tr }) {
         </div>
 
         <div className="cx-reporting-wrap">
-          <div className="cx-reporting-feature-list">
+          {/*<div className="cx-reporting-feature-list">
             <p>{copy.description}</p>
             {copy.features.map((feature, index) => {
               const icons = [ChartNoAxesCombined, GitFork, Users2, FileText];
@@ -115,7 +115,7 @@ function ReportingSection({ tr }) {
                 </article>
               );
             })}
-          </div>
+          </div>*/}
 
           <div className="cx-reporting-showcase">
             <article className="cx-report-card cx-performance-card">
@@ -562,8 +562,9 @@ export default function LandingMobile() {
 
   const t = {
     en: {
-      badge: "Real Estate Agents & Teams",
-      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle1: "Agentic AI ",
+      heroTitle11: "Revenue Operating ",
+      heroTitle12: "System",
       heroTitle2: "Built to Turn",
       heroTitle3: "Conversations",
       heroTitle4: "Into Revenue.",
@@ -604,7 +605,9 @@ export default function LandingMobile() {
       whatsappDesc: "Chat with leads where they are and close faster.",
 
       platformSubtitle: "A REAL ESTATE PLATFORM",
-      platformTitle: "BUILT FOR REAL ESTATE",
+      platformTitle: "Built for Businesses",
+      platformTitle1: "That Are Looking to",
+      platformTitle2: "Maximize Their Revenue",
       platformDesc:
         "CORTEXA brings your leads, conversations, listings, appointments, and deals together in one smart system — powered by AI.",
       captureTitle: "Capture Leads",
@@ -956,8 +959,9 @@ export default function LandingMobile() {
     },
 
     es: {
-      badge: "Agentes y Equipos Inmobiliarios",
-      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle1: "IA Agéntica ",
+      heroTitle11: "Sistema Operativo de ",
+      heroTitle12: "Ingresos",
       heroTitle2: "Creado para Convertir",
       heroTitle3: "Conversaciones",
       heroTitle4: "en Ingresos.",
@@ -998,7 +1002,9 @@ export default function LandingMobile() {
         "Chatea con tus leads donde ellos estén y cierra ventas más rápido.",
 
       platformSubtitle: "UNA PLATAFORMA INMOBILIARIA",
-      platformTitle: "HECHA PARA BIENES RAÍCES",
+      platformTitle: "Diseñado para Empresas",
+      platformTitle1: "Que Buscan",
+      platformTitle2: "Maximizar sus Ingresos",
       platformDesc:
         "CORTEXA reúne tus leads, conversaciones, propiedades, citas y tratos en un solo sistema inteligente, impulsado por IA.",
       captureTitle: "Captura de Leads",
@@ -1359,8 +1365,9 @@ export default function LandingMobile() {
     },
 
     pt: {
-      badge: "Corretores e Equipes Imobiliárias",
-      heroTitle1: "Agentic AI Revenue OS",
+      heroTitle1: "IA Agêntica ",
+      heroTitle11: "Sistema Operacional de ",
+      heroTitle12: "Receita",
       heroTitle2: "Criado para Transformar",
       heroTitle3: "Conversas",
       heroTitle4: "em Receita.",
@@ -1401,7 +1408,9 @@ export default function LandingMobile() {
         "Converse com os leads onde eles estão e feche negócios mais rápido.",
 
       platformSubtitle: "UMA PLATAFORMA IMOBILIÁRIA",
-      platformTitle: "CONSTRUÍDA PARA O SETOR IMOBILIÁRIO",
+      platformTitle: "Desenvolvido para Empresas",
+      platformTitle1: "Que Buscam",
+      platformTitle2: "Maximizar sua Receita",
       platformDesc:
         "A CORTEXA reúne seus leads, conversas, imóveis, reuniões e negócios em um único sistema inteligente — alimentado por IA.",
       captureTitle: "Capturar Leads",
@@ -1899,23 +1908,25 @@ export default function LandingMobile() {
 
       <section className="m-hero">
         <div className="m-hero-banner">
-          <Zap size={28} />
+          <Zap size={38} />
 
           <p>
-            <span>{tr.heroTopBanner1}</span> {tr.heroTopBanner2}
+            {tr.heroTopBanner1} {tr.heroTopBanner2}
           </p>
         </div>
 
-        <div className="m-badge">{tr.badge}</div>
-
         <h1 className="m-title">
           {tr.heroTitle1}
+          <br />
+          {tr.heroTitle11}
+          <br />
+          {tr.heroTitle12}
           <br />
           {tr.heroTitle2}
           <br />
           {tr.heroTitle3}
           <br />
-          <span>{tr.heroTitle4}</span>
+          {tr.heroTitle4}
         </h1>
 
         <p className="m-description">{tr.heroDesc}</p>
@@ -1938,7 +1949,7 @@ export default function LandingMobile() {
               (item, index) => (
                 <div className="check-item" key={index}>
                   <span className="check">
-                    <CheckCircle size={18} />
+                    <CheckCircle size={28} />
                   </span>
                   <span>{item}</span>
                 </div>
@@ -2016,8 +2027,10 @@ export default function LandingMobile() {
                 <path d="m16 2-4 4-4-4" />
               </svg>
             </div>
-            <h3>{tr.followUpTitle}</h3>
-            <p>{tr.followUpDesc}</p>
+            <div>
+              <h3>{tr.followUpTitle}</h3>
+              <p>{tr.followUpDesc}</p>
+            </div>
           </div>
 
           <div className="m-benefit-card">
@@ -2042,8 +2055,10 @@ export default function LandingMobile() {
                 <path d="M12 14v4" />
               </svg>
             </div>
+            <div>
             <h3>{tr.setterTitle}</h3>
             <p>{tr.setterDesc}</p>
+            </div>
           </div>
 
           <div className="m-benefit-card">
@@ -2064,8 +2079,10 @@ export default function LandingMobile() {
                 <path d="m7 15 5-5 4 4 5-5" />
               </svg>
             </div>
+            <div>
             <h3>{tr.pipelineTitle}</h3>
             <p>{tr.pipelineDesc}</p>
+            </div>
           </div>
 
           <div className="m-benefit-card">
@@ -2086,8 +2103,10 @@ export default function LandingMobile() {
                 <path d="M22 12A10 10 0 0 0 12 2v10z" />
               </svg>
             </div>
+            <div>
             <h3>{tr.analyticsTitle}</h3>
             <p>{tr.analyticsDesc}</p>
+            </div>
           </div>
         </div>
 
@@ -2115,7 +2134,7 @@ export default function LandingMobile() {
       <section className="m-platform">
         <div className="m-platform-header">
           <p className="m-platform-subtitle">{tr.platformSubtitle}</p>
-          <h2 className="m-platform-title">{tr.platformTitle}</h2>
+          <h2 className="m-platform-title">{tr.platformTitle} <br/> {tr.platformTitle1} <br/> {tr.platformTitle2}</h2>
           <p className="m-platform-desc">{tr.platformDesc}</p>
         </div>
         <div className="m-platform-list">

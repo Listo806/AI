@@ -161,21 +161,6 @@ body .m-header {
   margin-top: 100px;
 }
 
-.m-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 20px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .8px;
-  line-height: 1.6;
-  background: linear-gradient(90deg, #0b63ff, #d21fdd);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 .m-hero-banner {
   border: 1px solid #081f47;
   display: flex;
@@ -183,8 +168,8 @@ body .m-header {
   text-align: left;
   padding: 10px 16px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  font-size: 12px;
+  margin-bottom: 20px;
+  font-size: 14px;
   letter-spacing: 1px;
   font-weight: 500;
   color: #e9e3e3;
@@ -200,6 +185,7 @@ body .m-header {
 .m-hero-banner svg {
   fill: #7c4dff;
   color: #7c4dff;
+  width: 58px;
 }
 
 .m-title {
@@ -239,9 +225,7 @@ body .m-header {
   text-decoration: none;
   color: white;
   font-weight: 700;
-  background: linear-gradient(135deg,
-      #7c4dff,
-      #5b3df5);
+  background: #2e0fca;
   box-shadow:
     0 12px 40px rgba(109, 74, 255, .35);
 }
@@ -427,7 +411,6 @@ body .m-header {
 
 .m-benefits-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
 }
@@ -438,11 +421,14 @@ body .m-header {
   border-radius: 16px;
   padding: 16px;
   text-align: left;
+  display: flex;
+  gap: 10px;
 }
 
 .m-benefit-icon-wrapper {
   background-color: #1a1d36;
   width: 44px;
+  min-width: 44px;
   height: 44px;
   border-radius: 10px;
   display: flex;
@@ -2086,12 +2072,6 @@ body #analytics.m-bottom-cta {
   text-align: left;
 }
 
-.cx-reporting-wrap {
-  display: flex;
-  grid-template-columns: 0.4fr 1fr;
-  gap: 10px;
-}
-
 .cx-reporting-intro h2 span {
   background: linear-gradient(90deg, #6d5dfc, #c026d3);
   -webkit-background-clip: text;
@@ -2536,11 +2516,11 @@ body #analytics.m-bottom-cta {
 
 .hero-checks .check-item {
   display: flex;
-  font-size: 14px;
-  gap: 5px;
+  font-size: 17px;
+  gap: 16px;
   line-height: 1.4;
-  align-items: center;
   color: #ffffffb8;
+  margin-bottom: 10px;
 }
 
 .m-powerful {
