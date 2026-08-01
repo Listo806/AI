@@ -1874,6 +1874,7 @@ export default function LandingMobile() {
           })}
 
           <a href="/pricing">{tr.pricing}</a>
+          <a href="/why-legacy-crm">Cost Calculator</a>
           {isAuthenticated() ? (
             <Link to="/dashboard/home" className="m-login-btn">
               <LogIn /> Dashboard
@@ -3366,6 +3367,7 @@ export default function LandingMobile() {
               {tr.fAnalytics}
             </HashLink>
             <a href="/pricing">{tr.fPricing}</a>
+            <a href="/why-legacy-crm">Cost Calculator</a>
           </div>
 
           <div className="m-footer-column">
