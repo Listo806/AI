@@ -8,28 +8,32 @@ import {
   BadgeCheck,
   Zap,
   ShieldCheck,
-  Check,
 } from "lucide-react";
 import { trackEvent } from "../../utils/track";
 import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
-import HiddenCostCalculator from "./HiddenCostCalculator";
+import CostComparison from "./CostComparison";
 import "./Editorial.css";
 
-// "Unified platform vs a stack of tools" comparison. The legacy column is kept
-// defensible (how capabilities are commonly tiered/sold as add-ons), not rigged.
-const COMPARE_ROWS = [
-  { cap: "CRM & contact management", legacy: "Core subscription", cortexa: true },
-  { cap: "AI assistant & agent", legacy: "Add-on or higher tier", cortexa: true },
-  { cap: "Lead qualification & follow-up", legacy: "Higher tier or manual", cortexa: true },
-  { cap: "Appointment booking", legacy: "Add-on or separate tool", cortexa: true },
-  { cap: "WhatsApp messaging", legacy: "Third-party integration", cortexa: true },
-  { cap: "Team workspace", legacy: "Separate tool", cortexa: true },
-  { cap: "Documents", legacy: "Separate tool", cortexa: true },
-  { cap: "Automation & workflows", legacy: "Higher tier or add-on", cortexa: true },
-  { cap: "Setup", legacy: "Implementation project", cortexa: "$97 one-time" },
-  { cap: "Time to value", legacy: "Weeks to months", cortexa: "~48 hours" },
-];
+// A strong inline CTA band dropped between sections, so readers get multiple
+// chances to start a trial as they move through the article. Rendered as a div
+// (not <section>) to sidestep the app's global bare `section` rule.
+function CtaBand({ headline, where }) {
+  return (
+    <div className="ed-cta-band">
+      <div className="ed-container ed-cta-band-inner">
+        <p className="ed-cta-band-text">{headline}</p>
+        <Link
+          to="/trial"
+          className="ed-cta-band-btn"
+          onClick={() => trackEvent("editorial_cta_click", { where })}
+        >
+          Start your free trial <ArrowRight size={18} />
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 // Long-form advertorial that tells the "end of legacy CRM" story and funnels the
 // reader into the existing signup flow. The Hidden Cost Calculator is the
@@ -85,11 +89,11 @@ export default function EditorialFunnel() {
             <div className="ed-hero-actions">
               <HashLink
                 smooth
-                to="#calculator"
+                to="#comparison"
                 className="ed-btn ed-btn-primary"
-                onClick={ctaTrial("hero_calculator")}
+                onClick={ctaTrial("hero_comparison")}
               >
-                <Calculator size={18} /> Calculate your CRM cost
+                <Calculator size={18} /> See the cost comparison
               </HashLink>
               <Link
                 to="/trial"
@@ -164,6 +168,11 @@ export default function EditorialFunnel() {
           </div>
         </section>
 
+        <CtaBand
+          headline="See what your current CRM really costs, then start for $97."
+          where="after_legacy_tax"
+        />
+
         {/* 48 Hours vs 48 Days */}
         <section className="ed-section">
           <div className="ed-container ed-narrow">
@@ -195,6 +204,11 @@ export default function EditorialFunnel() {
           </div>
         </section>
 
+        <CtaBand
+          headline="Get set up in days, not months. Start with Cortexa for $97."
+          where="after_speed"
+        />
+
         {/* Transparent Setup */}
         <section className="ed-section ed-section-alt">
           <div className="ed-container ed-narrow">
@@ -220,52 +234,7 @@ export default function EditorialFunnel() {
           </div>
         </section>
 
-        {/* Unified platform vs a stack of tools */}
-        <section className="ed-section">
-          <div className="ed-container ed-narrow">
-            <h2>One platform vs a stack of tools</h2>
-            <p>
-              Legacy setups often mean paying for several tools and the ongoing
-              work to keep them connected. An AI-native platform brings the
-              pieces together, so more of what you need is included rather than
-              bolted on.
-            </p>
-            <div className="ed-table-wrap">
-              <table className="ed-table">
-                <thead>
-                  <tr>
-                    <th>Capability</th>
-                    <th>Typical legacy stack</th>
-                    <th className="ed-table-cortexa">Cortexa</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {COMPARE_ROWS.map((r) => (
-                    <tr key={r.cap}>
-                      <td>{r.cap}</td>
-                      <td className="ed-td-muted">{r.legacy}</td>
-                      <td className="ed-table-cortexa">
-                        {r.cortexa === true ? (
-                          <span className="ed-td-yes">
-                            <Check size={15} /> Included
-                          </span>
-                        ) : (
-                          r.cortexa
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="ed-muted ed-table-note">
-              Legacy notes reflect how these capabilities are commonly tiered or
-              sold as add-ons. Your actual plan may vary.
-            </p>
-          </div>
-        </section>
-
-        {/* Calculator intro + embed */}
+        {/* What is your CRM really costing you? — intro, comparison, calculator */}
         <section className="ed-section ed-section-alt">
           <div className="ed-container ed-narrow">
             <h2>What Is Your CRM Really Costing You?</h2>
@@ -283,8 +252,9 @@ export default function EditorialFunnel() {
             </p>
           </div>
 
-          <div className="ed-container">
-            <HiddenCostCalculator />
+          {/* Static comparison (client-provided figures, 5-user reference) */}
+          <div className="ed-container" id="comparison">
+            <CostComparison />
           </div>
         </section>
 
@@ -346,6 +316,16 @@ export default function EditorialFunnel() {
           </div>
         </section>
       </main>
+
+      {/* Persistent CTA, bottom-right on desktop; hidden on mobile where the
+          header CTA and inline bands already cover it. */}
+      <Link
+        to="/trial"
+        className="ed-sticky-cta"
+        onClick={ctaTrial("sticky")}
+      >
+        <Zap size={16} fill="currentColor" /> Start for $97
+      </Link>
 
       {/* Footer */}
       <footer className="ed-footer">
