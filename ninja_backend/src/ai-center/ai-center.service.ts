@@ -539,7 +539,8 @@ export class AiCenterService {
            COUNT(DISTINCT t.lead_id) FILTER (WHERE t.to_state = 'booked')::int AS booked
          FROM lead_state_transitions t
          JOIN leads l ON l.id = t.lead_id
-         WHERE l.team_id = $1`,
+         WHERE l.team_id = $1
+           AND COALESCE(l.source, '') <> 'ai_sim'`,
         [teamId],
       );
       qualified = Number(rows[0]?.qualified || 0);
@@ -934,7 +935,10 @@ export class AiCenterService {
          FROM ai_activity
          WHERE team_id = $1
            AND action = 'booked'
-           AND created_at >= CURRENT_DATE`,
+           AND created_at >= CURRENT_DATE
+           AND (lead_id IS NULL OR lead_id NOT IN (
+             SELECT id FROM leads WHERE team_id = $1 AND source = 'ai_sim'
+           ))`,
         [teamId],
       ),
       this.db.query(
@@ -2321,7 +2325,10 @@ export class AiCenterService {
            COUNT(DISTINCT lead_id)::int AS leads_handled
          FROM ai_activity
          WHERE team_id = $1
-           AND created_at >= CURRENT_DATE`,
+           AND created_at >= CURRENT_DATE
+           AND (lead_id IS NULL OR lead_id NOT IN (
+             SELECT id FROM leads WHERE team_id = $1 AND source = 'ai_sim'
+           ))`,
         [teamId],
       ),
     ]);

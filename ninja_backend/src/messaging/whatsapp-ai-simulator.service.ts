@@ -97,9 +97,13 @@ export class WhatsAppAiSimulatorService {
     const leadId = rows[0]?.id;
     if (!leadId) return { ok: true };
 
-    // Best-effort cleanup; each statement is independent.
+    // Best-effort cleanup; each statement is independent. Also purge the
+    // simulator lead's activity + state transitions so a test run never shows up
+    // in the team's real AI metrics.
     for (const q of [
       `DELETE FROM appointments WHERE team_id = $1 AND lead_id = $2`,
+      `DELETE FROM ai_activity WHERE team_id = $1 AND lead_id = $2`,
+      `DELETE FROM lead_state_transitions WHERE lead_id = $2`,
       `DELETE FROM intent_events WHERE lead_id = $2`,
       `DELETE FROM lead_messages WHERE lead_id = $2`,
       `DELETE FROM conversations WHERE lead_id = $2`,
