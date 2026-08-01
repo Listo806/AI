@@ -9,6 +9,7 @@ import { LeadStateService } from '../leads/services/lead-state.service';
 import { PropertyMatchingService } from '../properties/property-matching.service';
 import { AiPropertyVisibilityService } from './ai-property-visibility.service';
 import { DatabaseService } from '../database/database.service';
+import { WhatsAppAiBookingService } from './whatsapp-ai-booking.service';
 
 const CONTEXT_MESSAGE_LIMIT = 30;
 const WHATSAPP_SYSTEM_PROMPT = `You are a helpful real estate assistant replying over WhatsApp. Be concise, friendly, and professional. Answer in the same language the lead uses when possible.`;
@@ -28,6 +29,7 @@ export class WhatsAppAiReplyService {
     private readonly propertyMatching: PropertyMatchingService,
     private readonly aiPropertyVisibility: AiPropertyVisibilityService,
     private readonly db: DatabaseService,
+    private readonly booking: WhatsAppAiBookingService,
   ) {}
 
   private detectSpanish(text: string): boolean {
@@ -190,6 +192,43 @@ export class WhatsAppAiReplyService {
 
     const persisted = await this.entityParsing.getForLead(leadId);
     const history = await this.leadMessages.findByConversation(conversationId, CONTEXT_MESSAGE_LIMIT);
+
+    // AI booking (opt-in per team): if this lead is already mid-booking, handle
+    // the time reply / reschedule directly and skip re-qualification. When the
+    // team flag is off, this whole block is inert and the flow is unchanged.
+    if (
+      teamId &&
+      (leadStateBefore === 'booking_offered' || leadStateBefore === 'booked')
+    ) {
+      const rules = await this.booking.getRules(teamId);
+      if (rules.bookingEnabled) {
+        const bctx = { teamId, leadId, conversationId, rules, history, leadStateBefore };
+        if (leadStateBefore === 'booking_offered') {
+          return this.booking.onBookingReply(bctx);
+        }
+        const followUp = await this.booking.onBookedFollowUp(bctx);
+        if (followUp.handled) {
+          return {
+            reply: followUp.reply || '',
+            messageId: followUp.messageId,
+            logMetadata: followUp.logMetadata,
+          };
+        }
+        // A booked lead said something that isn't a scheduling change — answer
+        // it with the normal assistant, but do NOT re-run qualification/booking
+        // (which would re-offer a viewing to someone already booked).
+        return this.freeformChatReply(
+          conversationId,
+          leadId,
+          teamId,
+          history,
+          leadContext,
+          persisted,
+          leadStateBefore,
+        );
+      }
+    }
+
     const signals = this.extractSignals(history);
     const merged = {
       city: persisted.city || signals.city,
@@ -236,6 +275,28 @@ export class WhatsAppAiReplyService {
       await this.conversations.advanceStage(conversationId, 'qualified');
 
       const { properties, matchCount } = await this.propertyMatching.findEligibleForLead(leadId, teamId ?? null);
+
+      // AI booking path (opt-in per team). When the team has turned booking on,
+      // offer a viewing and drive the scheduling conversation instead of the
+      // legacy "qualified but no calendar -> escalate" hand-off below.
+      if (teamId) {
+        const rules = await this.booking.getRules(teamId);
+        if (rules.bookingEnabled) {
+          for (const p of properties.slice(0, 10)) {
+            await this.aiPropertyVisibility.recordMatched(leadId, p.id);
+          }
+          return this.booking.onQualified({
+            teamId,
+            leadId,
+            conversationId,
+            rules,
+            history,
+            leadStateBefore,
+            propertyId: properties[0]?.id ?? null,
+          });
+        }
+      }
+
       const hasCalendar = false; // TODO: check team integrations for connected calendar
 
       if (!hasCalendar) {
@@ -269,6 +330,31 @@ export class WhatsAppAiReplyService {
       if (teamId) await this.logAiActivity(teamId, leadId, 'auto_reply', 'whatsapp', 'qualified', logMeta);
     }
 
+    return this.freeformChatReply(
+      conversationId,
+      leadId,
+      teamId,
+      history,
+      leadContext,
+      persisted,
+      leadStateBefore,
+    );
+  }
+
+  /**
+   * General assistant reply (no qualification / no booking). Used as the normal
+   * tail of the flow, and for a booked lead whose message is just a question
+   * rather than a scheduling change.
+   */
+  private async freeformChatReply(
+    conversationId: string,
+    leadId: string,
+    teamId: string | undefined,
+    history: LeadMessage[],
+    leadContext: string | undefined,
+    persisted: any,
+    leadStateBefore: string,
+  ): Promise<{ reply: string; messageId?: string; logMetadata?: Record<string, unknown> }> {
     const chatMessages = this.messagesToChatPayload(history, leadContext);
     if (chatMessages.length <= 1) {
       this.logger.warn('replyWithAi: no conversation history to reply to');

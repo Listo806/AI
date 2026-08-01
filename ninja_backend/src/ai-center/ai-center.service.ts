@@ -3456,6 +3456,7 @@ Always give clear next steps.
       allow_weekends,
       auto_confirm,
       require_human_approval,
+      booking_enabled,
       reminder_minutes,
       google_calendar_enabled,
       outlook_calendar_enabled,
@@ -3492,6 +3493,7 @@ Always give clear next steps.
         allowWeekends: false,
         autoConfirm: true,
         requireHumanApproval: false,
+        bookingEnabled: false,
 
         reminderMinutes: 30,
 
@@ -3520,6 +3522,7 @@ Always give clear next steps.
       allowWeekends: Boolean(row.allow_weekends),
       autoConfirm: Boolean(row.auto_confirm),
       requireHumanApproval: Boolean(row.require_human_approval),
+      bookingEnabled: Boolean(row.booking_enabled),
       reminderMinutes: Number(row.reminder_minutes || 30),
       googleCalendarEnabled: Boolean(row.google_calendar_enabled),
       outlookCalendarEnabled: Boolean(row.outlook_calendar_enabled),
@@ -3552,6 +3555,7 @@ Always give clear next steps.
       allowWeekends?: boolean;
       autoConfirm?: boolean;
       requireHumanApproval?: boolean;
+      bookingEnabled?: boolean;
 
       reminderMinutes?: number;
 
@@ -3643,6 +3647,7 @@ Always give clear next steps.
     const allowWeekends = Boolean(body.allowWeekends);
     const autoConfirm = body.autoConfirm !== false;
     const requireHumanApproval = Boolean(body.requireHumanApproval);
+    const bookingEnabled = Boolean(body.bookingEnabled);
     const googleCalendarEnabled = Boolean(body.googleCalendarEnabled);
     const outlookCalendarEnabled = Boolean(body.outlookCalendarEnabled);
 
@@ -3677,6 +3682,8 @@ Always give clear next steps.
 
         intake_questions,
 
+        booking_enabled,
+
         created_at,
         updated_at
       )
@@ -3705,6 +3712,8 @@ Always give clear next steps.
         $15,
 
         $16::jsonb,
+
+        $17,
 
         NOW(),
         NOW()
@@ -3758,6 +3767,9 @@ Always give clear next steps.
         intake_questions =
           EXCLUDED.intake_questions,
 
+        booking_enabled =
+          EXCLUDED.booking_enabled,
+
         updated_at = NOW()
       `,
         [
@@ -3785,6 +3797,8 @@ Always give clear next steps.
           outlookCalendarEnabled,
 
           JSON.stringify(intakeQuestions),
+
+          bookingEnabled,
         ],
       );
 
