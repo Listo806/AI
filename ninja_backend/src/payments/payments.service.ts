@@ -231,10 +231,36 @@ export class PaymentsService {
       case 'transaction.completed':
       case 'transaction.paid':
         handled = true;
-        matched = await this.setUserStatusByPaddleSub(subId, {
-          payment_status: 'active',
-          is_active: true,
-        });
+        // Checkout passes custom_data.userId, so activate our user directly
+        // instead of depending on the subscription id being linked first. This
+        // stops redundant transaction events (e.g. a one-time setup-fee charge
+        // with no subscription_id, or one arriving before subscription.created)
+        // from failing and retrying. Never overwrite the plan (subscription
+        // events own that) or an already-linked subscription id.
+        if (customUserId) {
+          await this.ensurePaddleColumn();
+          const res = await this.db.query(
+            subId
+              ? `UPDATE users
+                    SET payment_status = 'active',
+                        is_active = true,
+                        paddle_subscription_id = COALESCE(paddle_subscription_id, $2),
+                        updated_at = NOW()
+                  WHERE id = $1`
+              : `UPDATE users
+                    SET payment_status = 'active',
+                        is_active = true,
+                        updated_at = NOW()
+                  WHERE id = $1`,
+            subId ? [customUserId, subId] : [customUserId],
+          );
+          matched = (res.rowCount || 0) > 0;
+        } else {
+          matched = await this.setUserStatusByPaddleSub(subId, {
+            payment_status: 'active',
+            is_active: true,
+          });
+        }
         break;
       case 'subscription.updated': {
         const status = data?.status;
