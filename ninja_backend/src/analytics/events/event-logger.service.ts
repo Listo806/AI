@@ -39,6 +39,9 @@ export enum EventType {
   PAYMENT_SUCCEEDED = 'payment.succeeded',
   PAYMENT_FAILED = 'payment.failed',
   PAYMENT_REFUNDED = 'payment.refunded',
+
+  // Appointment events
+  APPOINTMENT_CREATED = 'appointment.created',
 }
 
 export enum EntityType {
@@ -48,6 +51,7 @@ export enum EntityType {
   TEAM = 'team',
   USER = 'user',
   PAYMENT = 'payment',
+  APPOINTMENT = 'appointment',
 }
 
 export interface EventMetadata {
@@ -90,6 +94,26 @@ export class EventLoggerService {
       // Log error but don't throw - event logging should not break core flows
       this.logger.error(`Failed to log event: ${params.eventType}`, error);
     }
+  }
+
+  /**
+   * Log appointment created event (feeds Revenue Intelligence's activity /
+   * journey feed alongside leads and properties).
+   */
+  async logAppointmentCreated(
+    appointmentId: string,
+    userId: string | null,
+    teamId: string | null,
+    metadata?: EventMetadata,
+  ): Promise<void> {
+    await this.logEvent({
+      eventType: EventType.APPOINTMENT_CREATED,
+      entityType: EntityType.APPOINTMENT,
+      entityId: appointmentId,
+      userId: userId || undefined,
+      teamId,
+      metadata,
+    });
   }
 
   /**
