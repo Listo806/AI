@@ -298,23 +298,6 @@ export default function EditorialFunnel() {
           </div>
         </section>
 
-        {/* Roadmap placeholders (future phases) */}
-        <section className="ed-section">
-          <div className="ed-container ed-narrow">
-            <div className="ed-roadmap">
-              <span className="ed-roadmap-tag">Coming next in this editorial</span>
-              <div className="ed-roadmap-grid">
-                <div className="ed-roadmap-item">Lead Leakage Calculator</div>
-                <div className="ed-roadmap-item">
-                  AI-assisted follow-up &amp; WhatsApp workflows
-                </div>
-                <div className="ed-roadmap-item">
-                  Switching &amp; migration, common concerns
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Persistent CTA, bottom-right on desktop; hidden on mobile where the
