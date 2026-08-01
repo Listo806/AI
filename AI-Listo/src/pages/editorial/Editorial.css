@@ -8,6 +8,7 @@
   --ed-muted: #556072;
   --ed-line: #e6e8ee;
   --ed-bg-alt: #f6f8fc;
+  --ed-green: #16a34a;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--ed-ink);
   background: #fff;
@@ -712,5 +713,233 @@
   }
   .ed-pull {
     font-size: 19px !important;
+  }
+}
+
+/* =========================================================
+   Static cost comparison table (client figures)
+   ========================================================= */
+.cmp {
+  margin-top: 24px;
+}
+.cmp-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--ed-line);
+  border-radius: 16px;
+  background: #fff;
+}
+.cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+  font-size: 15px;
+}
+.cmp-table th,
+.cmp-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--ed-line);
+  text-align: center;
+  vertical-align: middle;
+}
+.cmp-table thead th {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ed-ink);
+  background: #fbfcff;
+  border-bottom: 2px solid var(--ed-line);
+}
+.cmp-feature-col {
+  text-align: left !important;
+  position: sticky;
+  left: 0;
+  background: #fff;
+  font-weight: 600;
+  color: var(--ed-ink);
+  min-width: 190px;
+}
+.cmp-table thead .cmp-feature-col {
+  background: #fbfcff;
+}
+.cmp-cx-col {
+  background: #fafffb;
+}
+.cmp-table thead .cmp-cx-col {
+  color: var(--ed-green);
+}
+.cmp-cx-strong {
+  font-weight: 700;
+  color: var(--ed-ink);
+}
+.cmp-plain {
+  color: var(--ed-muted);
+}
+.cmp-yes {
+  display: inline-flex;
+  color: var(--ed-green);
+}
+.cmp-no {
+  display: inline-flex;
+  color: #94a3b8;
+}
+.cmp-win {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ed-green);
+  font-weight: 700;
+}
+.cmp-total-row td {
+  border-top: 2px solid var(--ed-line);
+  border-bottom: none;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.cmp-total {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ed-ink);
+}
+.cmp-total-cx {
+  color: var(--ed-green);
+}
+
+.cmp-diff {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 20px 22px;
+  border: 1px solid var(--ed-line);
+  border-radius: 16px;
+  background: #fbfcff;
+}
+.cmp-diff-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ed-ink);
+}
+.cmp-diff-head {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ed-muted);
+  margin-bottom: 10px;
+}
+.cmp-diff-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 6px 0;
+  border-top: 1px solid var(--ed-line);
+}
+.cmp-diff-vendor {
+  flex: 0 0 96px;
+  font-weight: 700;
+  color: var(--ed-ink);
+}
+.cmp-diff-amount {
+  color: var(--ed-green);
+  font-weight: 800;
+  font-size: 20px;
+}
+.cmp-note {
+  font-size: 13px !important;
+  color: var(--ed-muted) !important;
+  margin-top: 12px !important;
+}
+@media (max-width: 640px) {
+  .cmp-diff {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .cmp-diff-row {
+    flex-wrap: wrap;
+  }
+}
+
+/* =========================================================
+   Inline CTA bands + sticky desktop CTA
+   ========================================================= */
+.ed-cta-band {
+  background: linear-gradient(90deg, #1e40af, var(--ed-blue));
+}
+.ed-cta-band-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 24px;
+  flex-wrap: wrap;
+}
+.ed-cta-band-text {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.ed-cta-band-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  background: #fff;
+  color: var(--ed-blue);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 16px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+.ed-cta-band-btn:hover {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+.ed-cta-band-btn:active {
+  transform: translateY(1px);
+}
+@media (max-width: 560px) {
+  .ed-cta-band-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.ed-sticky-cta {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  background: var(--ed-blue);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 13px 20px;
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(30, 64, 175, 0.4);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.ed-sticky-cta:hover {
+  background: var(--ed-blue-dark);
+}
+.ed-sticky-cta:active {
+  transform: translateY(1px);
+}
+/* Desktop only — mobile already has the header CTA + inline bands. */
+@media (min-width: 1000px) {
+  .ed-sticky-cta {
+    display: inline-flex;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ed-cta-band-btn,
+  .ed-sticky-cta {
+    transition: none;
   }
 }
