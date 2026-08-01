@@ -15,11 +15,15 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CalendarService } from "./calendar.service";
+import { BookingEngineService } from "./booking-engine.service";
 
 @Controller("calendar")
 @UseGuards(JwtAuthGuard, PaymentGuard)
 export class CalendarController {
-  constructor(private readonly calendar: CalendarService) {}
+  constructor(
+    private readonly calendar: CalendarService,
+    private readonly bookingEngine: BookingEngineService,
+  ) {}
 
   private requireTeam(user: any): string {
     if (!user?.teamId) {
@@ -68,6 +72,44 @@ export class CalendarController {
   @Get("crm-search")
   crmSearch(@CurrentUser() user: any, @Query("q") q = "") {
     return this.calendar.crmSearch(this.requireTeam(user), q);
+  }
+
+  // AI booking engine (Phase 1) — deterministic, rules-aware slot validation.
+  // Read-only preview: returns a decision (slot_found / out_of_hours /
+  // conflict / cap_reached / in_past / invalid) without writing anything.
+  @Post("booking-engine/preview")
+  previewSlot(
+    @CurrentUser() user: any,
+    @Body() body: { desiredStartIso: string },
+  ) {
+    return this.bookingEngine.computeSlot(
+      this.requireTeam(user),
+      body?.desiredStartIso,
+    );
+  }
+
+  // Book the slot (re-validates first). Stored status honors auto_confirm /
+  // require_human_approval. This does NOT touch the live WhatsApp path.
+  @Post("booking-engine/book")
+  bookSlot(
+    @CurrentUser() user: any,
+    @Body()
+    body: {
+      desiredStartIso: string;
+      title?: string;
+      leadId?: string;
+      contactId?: string;
+      propertyId?: string;
+      attendeeName?: string;
+      attendeeEmail?: string;
+    },
+  ) {
+    return this.bookingEngine.confirmBooking(
+      this.requireTeam(user),
+      this.userId(user),
+      body?.desiredStartIso,
+      body,
+    );
   }
 
   // Activity log for a single appointment (who did what, and when).

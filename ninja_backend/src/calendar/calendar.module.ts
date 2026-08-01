@@ -6,12 +6,13 @@ import { SendgridModule } from "../integrations/email/sendgrid.module";
 import { AnalyticsModule } from "../analytics/analytics.module";
 import { CalendarController } from "./calendar.controller";
 import { CalendarService } from "./calendar.service";
+import { BookingEngineService } from "./booking-engine.service";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 
 @Module({
   imports: [DatabaseModule, GoogleCalendarModule, SendgridModule, AnalyticsModule],
   controllers: [CalendarController],
-  providers: [CalendarService, PaymentGuard],
-  exports: [CalendarService],
+  providers: [CalendarService, BookingEngineService, PaymentGuard],
+  exports: [CalendarService, BookingEngineService],
 })
 export class CalendarModule {}
