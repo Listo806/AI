@@ -12,7 +12,6 @@ import {
 import { trackEvent } from "../../utils/track";
 import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
-import HiddenCostCalculator from "./HiddenCostCalculator";
 import CostComparison from "./CostComparison";
 import "./Editorial.css";
 
@@ -90,11 +89,11 @@ export default function EditorialFunnel() {
             <div className="ed-hero-actions">
               <HashLink
                 smooth
-                to="#calculator"
+                to="#comparison"
                 className="ed-btn ed-btn-primary"
-                onClick={ctaTrial("hero_calculator")}
+                onClick={ctaTrial("hero_comparison")}
               >
-                <Calculator size={18} /> Calculate your CRM cost
+                <Calculator size={18} /> See the cost comparison
               </HashLink>
               <Link
                 to="/trial"
@@ -256,17 +255,6 @@ export default function EditorialFunnel() {
           {/* Static comparison (client-provided figures, 5-user reference) */}
           <div className="ed-container" id="comparison">
             <CostComparison />
-          </div>
-
-          <div className="ed-container ed-narrow">
-            <p className="ed-muted">
-              Want to run your own numbers? Use the calculator below to estimate
-              your current setup against Cortexa.
-            </p>
-          </div>
-
-          <div className="ed-container">
-            <HiddenCostCalculator />
           </div>
         </section>
 

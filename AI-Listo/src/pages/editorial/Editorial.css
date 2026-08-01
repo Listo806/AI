@@ -943,3 +943,7 @@
     transition: none;
   }
 }
+
+#comparison {
+  scroll-margin-top: 90px;
+}
