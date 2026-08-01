@@ -54,6 +54,7 @@ import CountryPage from "./pages/common/CountryPage";
 import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
+import EditorialFunnel from "./pages/editorial/EditorialFunnel";
 import LocaleLayout from "./components/LocaleLayout";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
@@ -181,6 +182,7 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
+      <Route path={`${p}/why-legacy-crm`} element={<EditorialFunnel />} />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
