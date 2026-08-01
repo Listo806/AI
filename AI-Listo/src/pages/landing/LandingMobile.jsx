@@ -303,14 +303,21 @@ function ReportingSection({ tr }) {
         </div>
 
         <div className="cx-reporting-footer">
-          <Sparkles size={28} />
           <div>
-            <strong>{copy.footerTitle}</strong>
-            <p>{copy.footerDescription}</p>
+            <h2>{copy.footerTitle}<br/>
+            {copy.footerTitle1}<br/>
+            {copy.footerTitle2}</h2>
+            <p className="fdes">{copy.footerDescription}</p>
+            <a href="/trial" className="trial-wrap">
+              <div className="trial-wrap-in">
+                <span>{tr.ctaButtonText}</span>
+                <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
+              </div>
+              <ArrowRight size={18} />
+            </a>
+            <p className="m-under-cta">{tr.underCTA}</p>
           </div>
         </div>
-
-        <i className="cx-reporting-disclaimer">{copy.disclaimer}</i>
       </div>
     </section>
   );
@@ -653,10 +660,19 @@ export default function LandingMobile() {
       selectTimeLabel: "Select Time",
       confirmBtnText: "Confirm Appointment",
 
-      ctaSubtitle: "AI ASSISTANT",
-      ctaTitle1: "Turn your data into",
-      ctaTitle2: "deals — with AI",
-      ctaTitle3: "working for you 24/7.",
+      ctaTitle1: "Built for",
+      ctaTitle2: "businesses",
+      ctaTitle3: "of every size",
+      ctaTitle4: "and industry.",
+      pipelinecta1: "Whether you run a",
+      pipelinecta2: "and more",
+      ctaTitleSub1: "Real Estate Company,",
+      ctaTitleSub2: "E-commerce Store,",
+      ctaTitleSub3: "Agency,",
+      ctaTitleSub4: "Consulting Firm,",
+      ctaTitleSub5: "Insurance,",
+      ctaTitleSub6: "Finalcial Business,",
+      ctaready: "Already using Cortexa?",
       ctaStat1Label: "ROI",
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
@@ -692,7 +708,7 @@ export default function LandingMobile() {
         },
         {
           q: "What kind of businesses is this for?",
-          a: "CORTEXA is built for real estate agents, teams, and any business that relies on lead generation and closing deals.",
+          a: "Cortexa is built for businesses of every size and industry. Whether you run a real estate company, e-commerce store, agency, consulting firm, insurance office, financial services business, contractor business, healthcare practice, or another growing company, Cortexa's Agentic AI Revenue Operating System helps turn conversations into revenue. The platform connects your AI Agent, AI WhatsApp, leads, contacts, pipelines, appointment booking, analytics, dashboards, Revenue Intelligence, automations, and Team Workspace into one connected operating system—helping your business automate customer conversations, respond faster, streamline daily operations, and grow revenue. Industry-specific modules can be added as your business grows, while the core operating system is ready to help your business from day one.",
         },
         {
           q: "What happens after a lead comes in?",
@@ -846,8 +862,10 @@ export default function LandingMobile() {
         dealsClosed: "Deals Closed",
         averageDeal: "Avg. Deal Value",
         downloadReport: "Download Report",
-        footerTitle: "Your data. Your decisions. Your revenue.",
-        footerDescription: "Cortexa AI turns your data into action.",
+        footerTitle: "CONNECT YOUR BUSINESSES.",
+        footerTitle1: "START AUTOMATING",
+        footerTitle2: "IN MINUTES.",
+        footerDescription: "Your AI Agent is ready to work.",
         disclaimer:
           "Product demo — names, numbers, and activity shown are sample data for illustration only, not real customer results.",
       },
@@ -952,6 +970,7 @@ export default function LandingMobile() {
 
         footerTitle: "One platform. Everything included.",
         footerDescription: "No add-ons. No surprises. Just results.",
+        
       },
     },
 
@@ -1050,10 +1069,19 @@ export default function LandingMobile() {
       selectTimeLabel: "Seleccionar Hora",
       confirmBtnText: "Confirmar Cita",
 
-      ctaSubtitle: "ASISTENTE IA",
-      ctaTitle1: "Convierte tus datos en",
-      ctaTitle2: "ventas — con la IA",
-      ctaTitle3: "trabajando para ti 24/7.",
+      ctaTitle1: "Diseñado para",
+      ctaTitle2: "empresas",
+      ctaTitle3: "de todos los tamaños",
+      ctaTitle4: "y sectores.",
+      pipelinecta1: "Ya sea que dirijas una",
+      pipelinecta2: "y mucho más",
+      ctaTitleSub1: "Empresa Inmobiliaria,",
+      ctaTitleSub2: "Tienda de Comercio Electrónico,",
+      ctaTitleSub3: "Agencia,",
+      ctaTitleSub4: "Consultora,",
+      ctaTitleSub5: "Seguros,",
+      ctaTitleSub6: "Empresa de Servicios Financieros,",
+      ctaready: "¿Ya utilizas Cortexa?",
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
@@ -1089,7 +1117,7 @@ export default function LandingMobile() {
         },
         {
           q: "¿Para qué tipo de negocios es esto?",
-          a: "CORTEXA está diseñado para agentes inmobiliarios, equipos y cualquier negocio que dependa de generación de leads y cierre de ventas.",
+          a: "Cortexa está diseñada para empresas de todos los tamaños y sectores. Ya sea que dirijas una empresa inmobiliaria, una tienda de comercio electrónico, una agencia, una consultora, una oficina de seguros, una empresa de servicios financieros, una empresa de servicios para contratistas, un centro de atención médica u otra empresa en crecimiento, el Sistema Operativo de Ingresos con IA Agéntica de Cortexa ayuda a convertir las conversaciones en ingresos. La plataforma conecta tu Agente de IA, IA para WhatsApp, clientes potenciales, contactos, embudos de ventas, reservas de citas, análisis, paneles de control, Inteligencia de Ingresos, automatizaciones y espacio de trabajo para equipos en un único sistema operativo integrado. Esto ayuda a tu empresa a automatizar las conversaciones con los clientes, responder más rápido, optimizar las operaciones diarias y aumentar los ingresos. A medida que tu empresa crece, puedes añadir módulos específicos para tu sector, mientras que el sistema operativo principal está listo para ayudar a tu negocio desde el primer día.",
         },
         {
           q: "¿Qué sucede después de que llega un cliente potencial?",
@@ -1249,8 +1277,10 @@ export default function LandingMobile() {
         dealsClosed: "Negocios cerrados",
         averageDeal: "Valor medio",
         downloadReport: "Descargar informe",
-        footerTitle: "Tus datos. Tus decisiones. Tus ingresos.",
-        footerDescription: "Cortexa AI convierte tus datos en acciones.",
+        footerTitle: "CONECTA TU EMPRESA.",
+        footerTitle1: "COMIENZA A AUTOMATIZAR",
+        footerTitle2: "EN MINUTOS.",
+        footerDescription: "Tu agente de IA está listo para trabajar.",
         disclaimer:
           "Demostración del producto: los nombres, cifras y actividades son datos de ejemplo, no resultados reales de clientes.",
       },
@@ -1454,10 +1484,19 @@ export default function LandingMobile() {
       selectTimeLabel: "Selecionar Horário",
       confirmBtnText: "Confirmar Reunião",
 
-      ctaSubtitle: "ASSISTENTE IA",
-      ctaTitle1: "Transforme seus dados em",
-      ctaTitle2: "negócios — con a IA",
-      ctaTitle3: "trabalhando para você 24/7.",
+      ctaTitle1: "Desenvolvido para",
+      ctaTitle2: "empresas",
+      ctaTitle3: "de todos os tamanhos",
+      ctaTitle4: "e setores.",
+      pipelinecta1: "Seja você proprietário de uma",
+      pipelinecta2: "e muito mais",
+      ctaTitleSub1: "Imobiliária,",
+      ctaTitleSub2: "Loja de E-commerce,",
+      ctaTitleSub3: "Agência,",
+      ctaTitleSub4: "Consultoria,",
+      ctaTitleSub5: "Seguros,",
+      ctaTitleSub6: "Empresa de Serviços Financeiros,",
+      ctaready: "Já utiliza o Cortexa?",
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
@@ -1493,7 +1532,7 @@ export default function LandingMobile() {
         },
         {
           q: "Para que tipo de negócio isso serve?",
-          a: "O CORTEXA é ideal para corretores imobiliários, equipes e qualquer negócio que dependa de geração de leads e fechamento de vendas.",
+          a: "A Cortexa foi desenvolvida para empresas de todos os tamanhos e setores. Seja você proprietário de uma imobiliária, loja de e-commerce, agência, consultoria, corretora de seguros, empresa de serviços financeiros, empresa de serviços para empreiteiros, clínica de saúde ou qualquer outro negócio em crescimento, o Sistema Operacional de Receita com IA Agêntica da Cortexa ajuda a transformar conversas em receita. A plataforma conecta seu Agente de IA, IA para WhatsApp, leads, contatos, pipelines, agendamento de compromissos, análises, dashboards, Inteligência de Receita, automações e Espaço de Trabalho da Equipe em um único sistema operacional integrado. Isso ajuda sua empresa a automatizar conversas com clientes, responder mais rapidamente, otimizar as operações diárias e aumentar a receita. À medida que sua empresa cresce, você pode adicionar módulos específicos para o seu setor, enquanto o sistema operacional principal já está pronto para apoiar o seu negócio desde o primeiro dia.",
         },
         {
           q: "O que acontece depois que um lead chega?",
@@ -1651,8 +1690,10 @@ export default function LandingMobile() {
         dealsClosed: "Negócios fechados",
         averageDeal: "Valor médio",
         downloadReport: "Baixar relatório",
-        footerTitle: "Seus dados. Suas decisões. Sua receita.",
-        footerDescription: "A Cortexa AI transforma seus dados em ação.",
+        footerTitle: "CONECTE SUA EMPRESA.",
+        footerTitle1: "COMECE A AUTOMATIZAR",
+        footerTitle2: "EM MINUTOS.",
+        footerDescription: "Seu agente de IA está pronto para trabalhar.",
         disclaimer:
           "Demonstração do produto: nomes, números e atividades são dados de exemplo, não resultados reais de clientes.",
       },
@@ -2663,14 +2704,30 @@ export default function LandingMobile() {
       {/* FINAL DATA CTA SECTION */}
       <section className="m-final-cta" id="pipeline">
         <div className="m-final-cta-header">
-          <p className="m-final-cta-subtitle">{tr.ctaSubtitle}</p>
           <h2 className="m-final-cta-title">
             {tr.ctaTitle1}
             <br />
             {tr.ctaTitle2}
             <br />
             <span>{tr.ctaTitle3}</span>
+            <br />
+            {tr.ctaTitle4}
           </h2>
+          <h4>{tr.pipelinecta1}</h4>
+          <h3 className="m-final-cta-t2">
+            {tr.ctaTitleSub1}
+            <br />
+            {tr.ctaTitleSub2}
+            <br />
+            {tr.ctaTitleSub3}
+            <br />
+            {tr.ctaTitleSub4}
+            <br />
+            {tr.ctaTitleSub5}
+            <br />
+            {tr.ctaTitleSub6}
+          </h3>
+          <h4>{tr.pipelinecta2}</h4>
         </div>
 
         <div className="m-final-cta-action">
@@ -2685,7 +2742,8 @@ export default function LandingMobile() {
             >
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
-            {tr.ctaButtonText}
+            <p>{tr.ctaButtonText}<br/>
+            <span>{tr.finalCtaSubBtn1}</span></p>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -2702,7 +2760,7 @@ export default function LandingMobile() {
               <path d="m12 5 7 7-7 7" />
             </svg>
           </a>
-          <p className="m-under-cta">{tr.underCTA}</p>
+          <div className="m-final-foot"><p>{tr.ctaready}</p><a href="/sign-in">{tr.fLogin}</a></div>
         </div>
       </section>
       <section className="m-powerful">
