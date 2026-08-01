@@ -252,15 +252,35 @@ export class TwilioWhatsAppService {
    * Note: For proactive/follow-up sends outside 24h, use sendTemplate with contentSid instead.
    */
   async sendAiReply(leadId: string, conversationId: string, message: string): Promise<{ messageId: string; status: string }> {
+    const { rows } = await this.db.query(
+      `SELECT id, phone, source FROM leads WHERE id = $1`,
+      [leadId],
+    );
+    if (!rows.length) throw new BadRequestException('Lead not found');
+
+    // Simulator lead (in-browser "Test AI"): never touch Twilio. Just record the
+    // outbound turn so the conversation history builds across turns, and return a
+    // synthetic id. This lets the REAL bot + booking flow run with no phone and
+    // even when Twilio is disabled/unconfigured. Real leads are unaffected.
+    if (rows[0].source === 'ai_sim') {
+      const simSid = `sim_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+      await this.leadMessages.create({
+        lead_id: leadId,
+        channel: 'whatsapp',
+        direction: 'outbound',
+        external_id: simSid,
+        body: message,
+        status: 'sent',
+        sender_type: 'ai',
+        conversation_id: conversationId,
+      });
+      return { messageId: simSid, status: 'sent' };
+    }
+
     this.assertNotDisabled();
     if (!this.isConfigured || !this.client) {
       throw new BadRequestException('WhatsApp (Twilio) is not configured');
     }
-    const { rows } = await this.db.query(
-      `SELECT id, phone FROM leads WHERE id = $1`,
-      [leadId],
-    );
-    if (!rows.length) throw new BadRequestException('Lead not found');
     const phone = rows[0].phone;
     if (!phone || !/^\+[1-9]\d{1,14}$/.test(phone)) {
       throw new BadRequestException('Lead has no valid phone number for WhatsApp');
