@@ -12,6 +12,15 @@
   color: var(--ed-ink);
   background: #fff;
   line-height: 1.6;
+  /* The app bundle sets a global center-align on an ancestor; long-form reads
+     as amateur centered. Anchor the whole editorial to a left, editorial grid. */
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+.ed-page *:focus-visible {
+  outline: 2px solid var(--ed-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .ed-container {
@@ -72,11 +81,13 @@
   line-height: 1.2;
   margin: 0 0 18px;
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 .ed-section p {
   margin: 0 0 16px;
   font-size: 17px;
   color: #2b3444;
+  text-wrap: pretty;
 }
 .ed-muted {
   color: var(--ed-muted) !important;
@@ -100,6 +111,7 @@
   line-height: 1.12;
   letter-spacing: -0.025em;
   margin: 0 0 22px;
+  text-wrap: balance;
 }
 .ed-lede {
   font-size: 20px !important;
@@ -136,6 +148,22 @@
   border-radius: 12px;
   border: 1.5px solid transparent;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    transform 0.1s ease;
+}
+.ed-btn:active {
+  transform: translateY(1px);
+}
+.ed-header-cta,
+.hcc-cta {
+  transition: background-color 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ed-btn,
+  .ed-header-cta,
+  .hcc-cta {
+    transition: none;
+  }
 }
 .ed-btn-primary {
   background: var(--ed-blue);
@@ -405,6 +433,7 @@
    ========================================================= */
 .hcc {
   margin-top: 28px;
+  scroll-margin-top: 84px; /* clear the sticky header on anchor jump */
   border: 1px solid var(--ed-line);
   border-radius: 20px;
   background: #fff;
