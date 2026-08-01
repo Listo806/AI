@@ -5,6 +5,8 @@ export const LEAD_AI_STATES = [
   'new',
   'collecting_info',
   'qualified',
+  'booking_offered',
+  'booked',
   'booking_blocked',
   'escalated_to_human',
 ] as const;

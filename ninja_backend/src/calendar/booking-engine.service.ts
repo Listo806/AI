@@ -40,7 +40,7 @@ export interface BookingDecision {
   appointmentStatus?: "confirmed" | "pending";
 }
 
-interface AppointmentRules {
+export interface AppointmentRules {
   timezone: string;
   workingDays: string[];
   startTime: string; // "HH:MM"
@@ -52,6 +52,8 @@ interface AppointmentRules {
   allowWeekends: boolean;
   autoConfirm: boolean;
   requireHumanApproval: boolean;
+  bookingEnabled: boolean;
+  reminderMinutes: number;
 }
 
 const DAY_NAMES = [
@@ -132,11 +134,12 @@ export class BookingEngineService {
 
   // --- Rules ---
 
-  private async getRules(teamId: string): Promise<AppointmentRules> {
+  /** Public read of a team's appointment rules (used by the WhatsApp flow). */
+  async getRules(teamId: string): Promise<AppointmentRules> {
     const { rows } = await this.db.query(
       `SELECT timezone, working_days, start_time, end_time, booking_duration,
               buffer_before, buffer_after, max_daily_bookings, allow_weekends,
-              auto_confirm, require_human_approval
+              auto_confirm, require_human_approval, booking_enabled, reminder_minutes
          FROM ai_agent_appointment_rules WHERE team_id = $1 LIMIT 1`,
       [teamId],
     );
@@ -155,7 +158,27 @@ export class BookingEngineService {
       allowWeekends: r ? Boolean(r.allow_weekends) : false,
       autoConfirm: r ? Boolean(r.auto_confirm) : true,
       requireHumanApproval: r ? Boolean(r.require_human_approval) : false,
+      bookingEnabled: r ? Boolean(r.booking_enabled) : false,
+      reminderMinutes: Number(r?.reminder_minutes ?? 0),
     };
+  }
+
+  /**
+   * Turn a local wall-clock string in the team's timezone into a UTC ISO
+   * instant. Accepts "YYYY-MM-DDTHH:mm" (optionally with seconds). Returns null
+   * if it can't be parsed. This is the bridge between the language model's
+   * date/time reading and the deterministic engine, which only trusts UTC.
+   */
+  localToUtcIso(local: string, tz: string): string | null {
+    const m = String(local || "").match(
+      /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/,
+    );
+    if (!m) return null;
+    const [, y, mo, d, h, mi] = m.map(Number) as unknown as number[];
+    if (mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return null;
+    const utc = this.zonedToUtc(y, mo, d, h, mi, tz);
+    if (isNaN(utc.getTime())) return null;
+    return utc.toISOString();
   }
 
   // --- Core ---
@@ -301,10 +324,16 @@ export class BookingEngineService {
       propertyId?: string;
       attendeeName?: string;
       attendeeEmail?: string;
+      assignedTo?: string;
+      notes?: string;
     } = {},
   ): Promise<{ decision: BookingDecision; appointment?: any }> {
     const decision = await this.computeSlot(teamId, desiredStartIso);
     if (decision.status !== "slot_found") return { decision };
+
+    // Carry the team's reminder window onto the row so both the email sweep and
+    // the WhatsApp reminder cron know when to fire.
+    const rules = await this.getRules(teamId);
 
     const appointment = await this.calendar.create(teamId, userId, {
       title: ctx.title || "Property viewing",
@@ -318,6 +347,9 @@ export class BookingEngineService {
       propertyId: ctx.propertyId,
       attendeeName: ctx.attendeeName,
       attendeeEmail: ctx.attendeeEmail,
+      assignedTo: ctx.assignedTo,
+      notes: ctx.notes,
+      reminderMinutesBefore: rules.reminderMinutes,
     });
     return { decision, appointment };
   }

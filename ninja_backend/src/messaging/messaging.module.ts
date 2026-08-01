@@ -29,6 +29,10 @@ import { WhatsAppBroadcastService } from './whatsapp-broadcast.service';
 import { WhatsAppFlowOrchestratorService } from './whatsapp-flow-orchestrator.service';
 import { EntityParsingService } from './entity-parsing.service';
 import { AiPropertyVisibilityService } from './ai-property-visibility.service';
+import { WhatsAppAiBookingService } from './whatsapp-ai-booking.service';
+import { WhatsAppAiBookingReminderService } from './whatsapp-ai-booking-reminder.service';
+import { AiBookingController } from './ai-booking.controller';
+import { CalendarModule } from '../calendar/calendar.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
@@ -39,6 +43,7 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
     IntegrationsModule,
     forwardRef(() => LeadsModule),
     forwardRef(() => PropertiesModule),
+    CalendarModule,
   ],
   controllers: [
     WhatsAppController,
@@ -46,6 +51,7 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
     AgentWhatsAppController,
     InstagramController,
     AgentInstagramController,
+    AiBookingController,
   ],
   providers: [
     PaymentGuard,
@@ -68,6 +74,8 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
     WhatsAppFlowOrchestratorService,
     EntityParsingService,
     AiPropertyVisibilityService,
+    WhatsAppAiBookingService,
+    WhatsAppAiBookingReminderService,
   ],
   exports: [LeadMessagesService, ConversationsService, EntityParsingService],
 })

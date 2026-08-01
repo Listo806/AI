@@ -48,6 +48,7 @@ const DEFAULT_FORM = {
   allowWeekends: false,
   autoConfirm: true,
   requireHumanApproval: false,
+  bookingEnabled: false,
   reminderMinutes: 30,
   googleCalendarEnabled: false,
   outlookCalendarEnabled: false,
@@ -159,6 +160,7 @@ export default function AppointmentRulesModal({
       allowWeekends: Boolean(form.allowWeekends),
       autoConfirm: Boolean(form.autoConfirm),
       requireHumanApproval: Boolean(form.requireHumanApproval),
+      bookingEnabled: Boolean(form.bookingEnabled),
       reminderMinutes: Number(form.reminderMinutes),
       googleCalendarEnabled: Boolean(form.googleCalendarEnabled),
       outlookCalendarEnabled: Boolean(form.outlookCalendarEnabled),
@@ -198,6 +200,21 @@ export default function AppointmentRulesModal({
         ) : (
           <form onSubmit={submit}>
             {error && <div className="cx-appointment-modal-error">{error}</div>}
+
+            <section>
+              <h3>Automatic booking</h3>
+
+              <div className="cx-appointment-toggle-list">
+                <ToggleRow
+                  title="Let the AI book viewings over WhatsApp"
+                  description="When on, the AI offers a time, checks the rules below, and books the appointment automatically. When off, qualified leads are handed to a human to schedule."
+                  active={form.bookingEnabled}
+                  onToggle={() =>
+                    update("bookingEnabled", !form.bookingEnabled)
+                  }
+                />
+              </div>
+            </section>
 
             <section>
               <h3>Availability</h3>
