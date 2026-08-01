@@ -207,7 +207,10 @@ body .m-header {
   line-height: 1.75;
   color: rgba(255, 255, 255, .72);
 }
-
+.m-hero .m-description{
+    font-size: 18px;
+    color: #fff;
+  }
 .m-hero-actions {
   margin-top: 32px;
   display: flex;
@@ -3295,7 +3298,10 @@ body #analytics.m-bottom-cta {
   .m-description {
     font-size: 15px;
   }
-
+  .m-hero .m-description{
+    font-size: 18px;
+    color: #fff;
+  }
   .m-drawer {
     width: 100%;
     max-width: 100%;

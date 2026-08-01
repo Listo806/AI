@@ -560,9 +560,8 @@ export default function LandingMobile() {
 
   const t = {
     en: {
-      heroTitle1: "Agentic AI ",
-      heroTitle11: "Revenue Operating ",
-      heroTitle12: "System",
+      heroTitle1: "Agentic AI Revenue ",
+      heroTitle11: "Operating System ",
       heroTitle2: "Built to Turn",
       heroTitle3: "Conversations",
       heroTitle4: "Into Revenue.",
@@ -957,9 +956,8 @@ export default function LandingMobile() {
     },
 
     es: {
-      heroTitle1: "IA Agéntica ",
-      heroTitle11: "Sistema Operativo de ",
-      heroTitle12: "Ingresos",
+     heroTitle1: "Sistema Operativo de ",
+      heroTitle11: "Ingresos con IA Agéntica",
       heroTitle2: "Creado para Convertir",
       heroTitle3: "Conversaciones",
       heroTitle4: "en Ingresos.",
@@ -1363,9 +1361,8 @@ export default function LandingMobile() {
     },
 
     pt: {
-      heroTitle1: "IA Agêntica ",
-      heroTitle11: "Sistema Operacional de ",
-      heroTitle12: "Receita",
+      heroTitle1: "Sistema Operacional de ",
+      heroTitle11: "Receita com IA Agêntica",
       heroTitle2: "Criado para Transformar",
       heroTitle3: "Conversas",
       heroTitle4: "em Receita.",
@@ -1917,8 +1914,6 @@ export default function LandingMobile() {
           {tr.heroTitle1}
           <br />
           {tr.heroTitle11}
-          <br />
-          {tr.heroTitle12}
           <br />
           {tr.heroTitle2}
           <br />
