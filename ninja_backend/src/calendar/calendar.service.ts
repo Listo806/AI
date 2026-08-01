@@ -8,6 +8,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { DatabaseService } from "../database/database.service";
 import { GoogleCalendarService } from "../integrations/google-calendar/google-calendar.service";
 import { SendgridService } from "../integrations/email/sendgrid.service";
+import { EventLoggerService } from "../analytics/events/event-logger.service";
 
 const TYPES = ["showing", "consultation", "call", "meeting", "other"];
 const STATUSES = ["pending", "confirmed", "completed", "canceled"];
@@ -23,6 +24,7 @@ export class CalendarService {
     private readonly db: DatabaseService,
     private readonly googleCalendar: GoogleCalendarService,
     private readonly sendgrid: SendgridService,
+    private readonly eventLogger: EventLoggerService,
   ) {}
 
   private serialize = (row: any) => ({
@@ -262,6 +264,16 @@ export class CalendarService {
 
     const created = this.serialize(rows[0]);
     await this.logActivity(created.id, teamId, userId, "created");
+    // Feed Revenue Intelligence: record the appointment in the analytics event
+    // stream (activity / journey feed) alongside leads and properties. Safe:
+    // logAppointmentCreated swallows its own errors and never blocks creation.
+    await this.eventLogger.logAppointmentCreated(created.id, userId, teamId, {
+      type,
+      status,
+      leadId,
+      contactId,
+      propertyId,
+    });
     return created;
   }
 
