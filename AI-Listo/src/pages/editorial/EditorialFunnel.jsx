@@ -1,69 +1,70 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
-import {
-  ArrowRight,
-  Calculator,
-  Clock,
-  BadgeCheck,
-  Zap,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Clock, BadgeCheck, ShieldCheck } from "lucide-react";
 import { trackEvent } from "../../utils/track";
 import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 import CostComparison from "./CostComparison";
 import "./Editorial.css";
 
-// A strong inline CTA band dropped between sections, so readers get multiple
-// chances to start a trial as they move through the article. Rendered as a div
-// (not <section>) to sidestep the app's global bare `section` rule.
-function CtaBand({ headline, where }) {
+// The invitation-style CTA card. Lives in the sticky sidebar on desktop and as a
+// single inline block on mobile. Deliberately soft: an invitation to explore,
+// not a promotional banner. No pricing in the buttons.
+function CtaCard({ where }) {
   return (
-    <div className="ed-cta-band">
-      <div className="ed-container ed-cta-band-inner">
-        <p className="ed-cta-band-text">{headline}</p>
-        <Link
-          to="/trial"
-          className="ed-cta-band-btn"
-          onClick={() => trackEvent("editorial_cta_click", { where })}
-        >
-          Start your free trial <ArrowRight size={18} />
-        </Link>
-      </div>
+    <div className="ed-cta-card">
+      <h3>Ready to see Cortexa in action?</h3>
+      <p>
+        See how an Agentic AI Revenue Operating System can help automate
+        conversations, qualify leads, and turn more opportunities into revenue.
+      </p>
+      <Link
+        to="/trial"
+        className="ed-cta-primary"
+        onClick={() => trackEvent("editorial_cta_click", { where, cta: "trial" })}
+      >
+        Start your free trial <ArrowRight size={16} />
+      </Link>
+      <Link
+        to="/pricing"
+        className="ed-cta-secondary"
+        onClick={() => trackEvent("editorial_cta_click", { where, cta: "plans" })}
+      >
+        View plans
+      </Link>
     </div>
   );
 }
 
-// Long-form advertorial that tells the "end of legacy CRM" story and funnels the
-// reader into the existing signup flow. The Hidden Cost Calculator is the
-// centerpiece. Image placeholders mark where the client will drop screenshots.
+// Long-form buyer's guide in a premium editorial layout: a single article column
+// with a quiet, sticky CTA sidebar on the right (desktop). The article is the
+// focus; the sidebar simply offers a next step whenever the reader is ready.
 export default function EditorialFunnel() {
   useEffect(() => {
     trackEvent("editorial_view", { page: "hidden_cost" });
   }, []);
 
-  const ctaTrial = (where) => () =>
-    trackEvent("editorial_cta_click", { where });
-
   return (
     <div className="ed-page">
-      {/* Header */}
       <header className="ed-header">
-        <div className="ed-container ed-header-inner">
-          <Link to="/" className="ed-brand">
+        <div className="ed-header-inner">
+          <Link to="/" className="ed-brand" aria-label="Cortexa home">
             <img src={headlogo} alt="Cortexa" />
           </Link>
-          <Link to="/trial" className="ed-header-cta" onClick={ctaTrial("header")}>
-            Start for $97 <ArrowRight size={16} />
+          <Link
+            to="/trial"
+            className="ed-header-cta"
+            onClick={() => trackEvent("editorial_cta_click", { where: "header", cta: "trial" })}
+          >
+            Start free trial
           </Link>
         </div>
       </header>
 
-      <main className="ed-main">
-        {/* Hero */}
-        <section className="ed-hero">
-          <div className="ed-container ed-narrow">
+      <div className="ed-layout">
+        <article className="ed-article">
+          {/* Opening */}
+          <div className="ed-block ed-block-lead">
             <span className="ed-eyebrow">Editorial</span>
             <h1 className="ed-h1">
               The End of Legacy CRM? Why Businesses Are Re-Evaluating Salesforce,
@@ -86,29 +87,9 @@ export default function EditorialFunnel() {
               Is our CRM helping us grow, or are we spending too much time
               managing it?
             </p>
-            <div className="ed-hero-actions">
-              <HashLink
-                smooth
-                to="#comparison"
-                className="ed-btn ed-btn-primary"
-                onClick={ctaTrial("hero_comparison")}
-              >
-                <Calculator size={18} /> See the cost comparison
-              </HashLink>
-              <Link
-                to="/trial"
-                className="ed-btn ed-btn-ghost"
-                onClick={ctaTrial("hero_trial")}
-              >
-                Start with Cortexa
-              </Link>
-            </div>
           </div>
-        </section>
 
-        {/* From CRM to Revenue Operations */}
-        <section className="ed-section">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>From Customer Relationship Management to Revenue Operations</h2>
             <p>
               Legacy CRM platforms were built to organize information. The next
@@ -129,16 +110,12 @@ export default function EditorialFunnel() {
               The shift isn't from one CRM vendor to another. The shift is from
               managing records to operating revenue.
             </p>
-
             <div className="ed-figure" aria-hidden="true">
               Screenshot / graphic placeholder
             </div>
           </div>
-        </section>
 
-        {/* The Legacy CRM Tax */}
-        <section className="ed-section ed-section-alt">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>The Legacy CRM Tax</h2>
             <p>
               When companies evaluate software, they often compare monthly
@@ -157,7 +134,6 @@ export default function EditorialFunnel() {
               <li>Workflow maintenance</li>
               <li>Opportunity cost of slow, manual processes</li>
             </ul>
-
             <div className="ed-callout">
               Businesses are beginning to ask a different question. Instead of
               paying employees to spend hours maintaining software, can software
@@ -166,16 +142,8 @@ export default function EditorialFunnel() {
               model.
             </div>
           </div>
-        </section>
 
-        <CtaBand
-          headline="See what your current CRM really costs, then start for $97."
-          where="after_legacy_tax"
-        />
-
-        {/* 48 Hours vs 48 Days */}
-        <section className="ed-section">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>48 Hours vs. 48 Days</h2>
             <p>
               Speed has become a competitive advantage. Businesses don't want to
@@ -195,23 +163,15 @@ export default function EditorialFunnel() {
                 <span className="ed-stat-cap">Legacy: plan, configure, wait</span>
               </div>
             </div>
-            <p className="ed-muted">
+            <p>
               The goal isn't simply faster implementation. It's reaching business
               value sooner. Companies invest in technology because they want
               better sales performance. The sooner those improvements begin, the
               sooner the investment starts producing value.
             </p>
           </div>
-        </section>
 
-        <CtaBand
-          headline="Get set up in days, not months. Start with Cortexa for $97."
-          where="after_speed"
-        />
-
-        {/* Transparent Setup */}
-        <section className="ed-section ed-section-alt">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>Transparent Setup</h2>
             <p>
               Traditional enterprise projects can involve significant upfront
@@ -225,18 +185,15 @@ export default function EditorialFunnel() {
                 <span className="ed-price-cap">One-time setup fee</span>
               </div>
             </div>
-            <p className="ed-muted">
+            <p>
               Transparent pricing is only part of the equation. Businesses also
               want predictable deployments, clear expectations, and the ability to
               evaluate a new platform without committing to a large implementation
               project before seeing results.
             </p>
           </div>
-        </section>
 
-        {/* What is your CRM really costing you? — intro, comparison, calculator */}
-        <section className="ed-section ed-section-alt">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>What Is Your CRM Really Costing You?</h2>
             <p>
               Before making any technology decision, it's worth looking beyond
@@ -250,17 +207,12 @@ export default function EditorialFunnel() {
               Sometimes the biggest expense isn't the software itself. It's
               everything required to keep it running.
             </p>
+            <div id="comparison">
+              <CostComparison />
+            </div>
           </div>
 
-          {/* Static comparison (client-provided figures, 5-user reference) */}
-          <div className="ed-container" id="comparison">
-            <CostComparison />
-          </div>
-        </section>
-
-        {/* Closing */}
-        <section className="ed-section ed-section-dark">
-          <div className="ed-container ed-narrow">
+          <div className="ed-block">
             <h2>The Next Generation of Revenue Operations</h2>
             <p>
               Businesses searching for CRM software today aren't simply looking
@@ -275,44 +227,27 @@ export default function EditorialFunnel() {
               appointment booking, streamline follow-up, and operate revenue more
               intelligently.
             </p>
-            <p className="ed-pull ed-pull-light">
+            <p className="ed-pull">
               The future may belong to the platform that helps businesses spend
               less time managing software and more time growing revenue.
             </p>
-            <div className="ed-hero-actions">
-              <Link
-                to="/trial"
-                className="ed-btn ed-btn-primary"
-                onClick={ctaTrial("closing_trial")}
-              >
-                <Zap size={18} fill="currentColor" /> Start with Cortexa for $97
-              </Link>
-              <Link
-                to="/pricing"
-                className="ed-btn ed-btn-ghost ed-btn-ghost-light"
-                onClick={ctaTrial("closing_pricing")}
-              >
-                See plans
-              </Link>
-            </div>
           </div>
-        </section>
 
-      </main>
+          {/* Mobile-only invitation (the sticky sidebar is desktop-only) */}
+          <div className="ed-inline-cta">
+            <CtaCard where="inline_mobile" />
+          </div>
+        </article>
 
-      {/* Persistent CTA, bottom-right on desktop; hidden on mobile where the
-          header CTA and inline bands already cover it. */}
-      <Link
-        to="/trial"
-        className="ed-sticky-cta"
-        onClick={ctaTrial("sticky")}
-      >
-        <Zap size={16} fill="currentColor" /> Start for $97
-      </Link>
+        <aside className="ed-aside">
+          <div className="ed-aside-sticky">
+            <CtaCard where="sidebar" />
+          </div>
+        </aside>
+      </div>
 
-      {/* Footer */}
       <footer className="ed-footer">
-        <div className="ed-container ed-footer-inner">
+        <div className="ed-footer-inner">
           <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
           <div className="ed-footer-links">
             <Link to="/pricing">Pricing</Link>
@@ -321,7 +256,7 @@ export default function EditorialFunnel() {
             <Link to="/privacy-policy">Privacy</Link>
           </div>
           <span className="ed-footer-note">
-            <ShieldCheck size={14} /> Estimates are illustrative and editable.
+            <ShieldCheck size={14} /> Estimates are illustrative.
           </span>
         </div>
       </footer>
