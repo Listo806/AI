@@ -1915,6 +1915,9 @@ export default function Landing() {
             <a className="nav-menu" href="/pricing">
               {tr.pricing}
             </a>
+            <a className="nav-menu" href="/why-legacy-crm">
+              Cost Calculator
+            </a>
           </nav>
 
           <div className="cx-actions">
@@ -2962,6 +2965,9 @@ export default function Landing() {
                   </li>
                   <li>
                     <a href="/pricing">{tr.pricing}</a>
+                  </li>
+                  <li>
+                    <a href="/why-legacy-crm">Cost Calculator</a>
                   </li>
                 </ul>
               </div>

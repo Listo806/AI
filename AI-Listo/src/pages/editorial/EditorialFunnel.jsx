@@ -8,12 +8,28 @@ import {
   BadgeCheck,
   Zap,
   ShieldCheck,
+  Check,
 } from "lucide-react";
 import { trackEvent } from "../../utils/track";
 import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
 import HiddenCostCalculator from "./HiddenCostCalculator";
 import "./Editorial.css";
+
+// "Unified platform vs a stack of tools" comparison. The legacy column is kept
+// defensible (how capabilities are commonly tiered/sold as add-ons), not rigged.
+const COMPARE_ROWS = [
+  { cap: "CRM & contact management", legacy: "Core subscription", cortexa: true },
+  { cap: "AI assistant & agent", legacy: "Add-on or higher tier", cortexa: true },
+  { cap: "Lead qualification & follow-up", legacy: "Higher tier or manual", cortexa: true },
+  { cap: "Appointment booking", legacy: "Add-on or separate tool", cortexa: true },
+  { cap: "WhatsApp messaging", legacy: "Third-party integration", cortexa: true },
+  { cap: "Team workspace", legacy: "Separate tool", cortexa: true },
+  { cap: "Documents", legacy: "Separate tool", cortexa: true },
+  { cap: "Automation & workflows", legacy: "Higher tier or add-on", cortexa: true },
+  { cap: "Setup", legacy: "Implementation project", cortexa: "$97 one-time" },
+  { cap: "Time to value", legacy: "Weeks to months", cortexa: "~48 hours" },
+];
 
 // Long-form advertorial that tells the "end of legacy CRM" story and funnels the
 // reader into the existing signup flow. The Hidden Cost Calculator is the
@@ -204,8 +220,53 @@ export default function EditorialFunnel() {
           </div>
         </section>
 
-        {/* Calculator intro + embed */}
+        {/* Unified platform vs a stack of tools */}
         <section className="ed-section">
+          <div className="ed-container ed-narrow">
+            <h2>One platform vs a stack of tools</h2>
+            <p>
+              Legacy setups often mean paying for several tools and the ongoing
+              work to keep them connected. An AI-native platform brings the
+              pieces together, so more of what you need is included rather than
+              bolted on.
+            </p>
+            <div className="ed-table-wrap">
+              <table className="ed-table">
+                <thead>
+                  <tr>
+                    <th>Capability</th>
+                    <th>Typical legacy stack</th>
+                    <th className="ed-table-cortexa">Cortexa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARE_ROWS.map((r) => (
+                    <tr key={r.cap}>
+                      <td>{r.cap}</td>
+                      <td className="ed-td-muted">{r.legacy}</td>
+                      <td className="ed-table-cortexa">
+                        {r.cortexa === true ? (
+                          <span className="ed-td-yes">
+                            <Check size={15} /> Included
+                          </span>
+                        ) : (
+                          r.cortexa
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="ed-muted ed-table-note">
+              Legacy notes reflect how these capabilities are commonly tiered or
+              sold as add-ons. Your actual plan may vary.
+            </p>
+          </div>
+        </section>
+
+        {/* Calculator intro + embed */}
+        <section className="ed-section ed-section-alt">
           <div className="ed-container ed-narrow">
             <h2>What Is Your CRM Really Costing You?</h2>
             <p>

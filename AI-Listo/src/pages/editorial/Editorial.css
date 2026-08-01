@@ -346,6 +346,60 @@
   font-size: 13px;
 }
 
+/* ---------- Comparison table ---------- */
+.ed-table-wrap {
+  overflow-x: auto;
+  margin: 22px 0 10px;
+  border: 1px solid var(--ed-line);
+  border-radius: 14px;
+}
+.ed-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  min-width: 520px;
+}
+.ed-table th,
+.ed-table td {
+  text-align: left;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--ed-line);
+}
+.ed-table thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ed-muted);
+  background: var(--ed-bg-alt);
+}
+.ed-table thead th.ed-table-cortexa {
+  color: var(--ed-blue);
+}
+.ed-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.ed-table td:first-child {
+  font-weight: 600;
+  color: var(--ed-ink);
+}
+.ed-td-muted {
+  color: var(--ed-muted);
+}
+.ed-table-cortexa {
+  background: #f4f8ff;
+  color: var(--ed-blue);
+  font-weight: 700;
+  border-left: 1px solid #dbe6ff;
+}
+.ed-td-yes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ed-table-note {
+  font-size: 13px !important;
+}
+
 /* =========================================================
    Hidden Cost Calculator
    ========================================================= */
