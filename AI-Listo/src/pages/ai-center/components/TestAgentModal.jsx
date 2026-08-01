@@ -284,8 +284,10 @@ export default function TestAgentModal({
             </div>
 
             <p className="cx-test-agent-disclaimer">
-              Responses use your current business profile, properties,
-              appointment rules, AI behavior, and automation settings.
+              This simulates a real lead chatting on WhatsApp. The AI qualifies
+              using your settings, and if booking is enabled it will offer and
+              book a viewing against your appointment rules. Nothing is sent to a
+              real phone.
             </p>
           </main>
         </div>

@@ -525,12 +525,39 @@ export class AiCenterService {
     const team = await this.getTeamAiSettings(teamId);
     const connectedChannels = await this.getActiveChannels(teamId);
 
+    // Real AI funnel counts from the lead state machine (distinct leads per
+    // outcome). These are written by the WhatsApp AI flow as it qualifies,
+    // books, and escalates; empty until real AI conversations happen.
+    let qualified = 0;
+    let escalated = 0;
+    let booked = 0;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT
+           COUNT(DISTINCT t.lead_id) FILTER (WHERE t.to_state = 'qualified')::int AS qualified,
+           COUNT(DISTINCT t.lead_id) FILTER (WHERE t.to_state = 'escalated_to_human')::int AS escalated,
+           COUNT(DISTINCT t.lead_id) FILTER (WHERE t.to_state = 'booked')::int AS booked
+         FROM lead_state_transitions t
+         JOIN leads l ON l.id = t.lead_id
+         WHERE l.team_id = $1`,
+        [teamId],
+      );
+      qualified = Number(rows[0]?.qualified || 0);
+      escalated = Number(rows[0]?.escalated || 0);
+      booked = Number(rows[0]?.booked || 0);
+    } catch {
+      // Counts are best-effort; fall back to zeros if the query fails.
+    }
+
+    const conversionRate =
+      qualified > 0 ? Math.round((booked / qualified) * 100) : 0;
+
     return {
       enabled: team.ai_appointment_setter_enabled ?? false,
-      appointments_booked_count: 0,
-      conversion_rate: 0,
-      leads_qualified_count: 0,
-      escalated_to_human_count: 0,
+      appointments_booked_count: booked,
+      conversion_rate: conversionRate,
+      leads_qualified_count: qualified,
+      escalated_to_human_count: escalated,
       connected_channels: connectedChannels,
       connected_calendars: [],
     };
@@ -906,7 +933,7 @@ export class AiCenterService {
         `SELECT COUNT(*)::int AS total
          FROM ai_activity
          WHERE team_id = $1
-           AND action IN ('appointment_booked', 'booked_appointment')
+           AND action = 'booked'
            AND created_at >= CURRENT_DATE`,
         [teamId],
       ),
@@ -2289,7 +2316,7 @@ export class AiCenterService {
              WHERE action IN ('cortexa_chat', 'auto_reply', 'follow_up_sent')
            )::int AS responses_today,
            COUNT(*) FILTER (
-             WHERE action IN ('appointment_booked', 'booked_appointment')
+             WHERE action = 'booked'
            )::int AS appointments_booked,
            COUNT(DISTINCT lead_id)::int AS leads_handled
          FROM ai_activity

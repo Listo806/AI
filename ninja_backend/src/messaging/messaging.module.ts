@@ -31,6 +31,7 @@ import { EntityParsingService } from './entity-parsing.service';
 import { AiPropertyVisibilityService } from './ai-property-visibility.service';
 import { WhatsAppAiBookingService } from './whatsapp-ai-booking.service';
 import { WhatsAppAiBookingReminderService } from './whatsapp-ai-booking-reminder.service';
+import { WhatsAppAiSimulatorService } from './whatsapp-ai-simulator.service';
 import { AiBookingController } from './ai-booking.controller';
 import { CalendarModule } from '../calendar/calendar.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
@@ -76,6 +77,7 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
     AiPropertyVisibilityService,
     WhatsAppAiBookingService,
     WhatsAppAiBookingReminderService,
+    WhatsAppAiSimulatorService,
   ],
   exports: [LeadMessagesService, ConversationsService, EntityParsingService],
 })

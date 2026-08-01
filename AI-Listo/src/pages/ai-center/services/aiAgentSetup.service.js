@@ -181,6 +181,41 @@ export const aiAgentSetupService = {
     });
   },
 
+  // Drive the REAL WhatsApp bot (qualification + booking) against a per-team
+  // simulator lead — no phone, nothing sent. Shaped to match runAgentTest so the
+  // Test AI modal renders it unchanged.
+  async simulateAgent(message) {
+    const r = await request("/ai-booking/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: message }),
+    });
+    const content =
+      r?.reply || r?.note || "The AI Agent returned no response.";
+    return {
+      success: true,
+      answer: content,
+      sessionId: "sim",
+      conversationId: "sim",
+      userMessage: {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: message,
+      },
+      assistantMessage: {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content,
+      },
+      bookingEnabled: r?.bookingEnabled,
+      leadState: r?.leadState,
+    };
+  },
+
+  resetAgentSim() {
+    return request("/ai-booking/simulate/reset", { method: "POST" });
+  },
+
   getChatSessions(limit = 20) {
     return request(`/ai-center/agent/chat/sessions?limit=${limit}`, {
       method: "GET",

@@ -468,6 +468,12 @@ export default function CortexaAI() {
 
   const openAgentTest = async () => {
     setTestAgentOpen(true);
+    // Start each test run from a clean simulator conversation.
+    try {
+      await aiAgentSetupService.resetAgentSim();
+    } catch (err) {
+      // Non-fatal: a stale simulator state just continues the prior chat.
+    }
     await loadAgentTest();
   };
 
@@ -476,10 +482,7 @@ export default function CortexaAI() {
     setTestAgentError("");
 
     try {
-      const response = await aiAgentSetupService.runAgentTest(
-        message,
-        testAgentSessionId,
-      );
+      const response = await aiAgentSetupService.simulateAgent(message);
 
       setTestAgentSessionId(response.sessionId);
 

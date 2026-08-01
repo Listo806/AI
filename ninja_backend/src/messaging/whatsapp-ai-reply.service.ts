@@ -56,16 +56,16 @@ export class WhatsAppAiReplyService {
 
     // City (very lightweight): look for "en <word>" / "in <word>" / "ciudad: <...>"
     const cityMatch =
-      text.match(/(?:ciudad\\s*[:\\-]\\s*)([a-z\\s]{2,40})/) ||
-      text.match(/\\b(en|in)\\s+([a-z]{2,25})\\b/);
+      text.match(/(?:ciudad\s*[:\-]\s*)([a-z\s]{2,40})/) ||
+      text.match(/\b(en|in)\s+([a-z]{2,25})\b/);
     if (cityMatch) s.city = (cityMatch[2] || cityMatch[1] || '').trim();
 
     // Property type
     const typeMap: Array<[RegExp, string]> = [
-      [/\\b(apartamento|apartment|depto|departamento|flat|studio)\\b/, 'apartment'],
-      [/\\b(casa|house|home)\\b/, 'house'],
-      [/\\b(condo|condominio)\\b/, 'condo'],
-      [/\\b(terreno|land|lot)\\b/, 'land'],
+      [/\b(apartamento|apartment|depto|departamento|flat|studio)\b/, 'apartment'],
+      [/\b(casa|house|home)\b/, 'house'],
+      [/\b(condo|condominio)\b/, 'condo'],
+      [/\b(terreno|land|lot)\b/, 'land'],
     ];
     for (const [re, val] of typeMap) {
       if (re.test(text)) {
@@ -75,9 +75,9 @@ export class WhatsAppAiReplyService {
     }
 
     // Budget detection
-    const money = text.match(/(\\$|usd|d[oó]lares)?\\s*([0-9]{2,3}(?:[.,][0-9]{3})+|[0-9]{3,7})/);
+    const money = text.match(/(\$|usd|d[oó]lares)?\s*([0-9]{2,3}(?:[.,][0-9]{3})+|[0-9]{3,7})/);
     if (money) {
-      const amount = money[2].replace(/\\./g, '').replace(/,/g, '');
+      const amount = money[2].replace(/\./g, '').replace(/,/g, '');
       const isMonthly = /(mensual|al mes|por mes|\/mes|per month|monthly)/.test(text);
       if (isMonthly) s.monthly_budget = amount;
       else s.budget = amount;
@@ -85,8 +85,8 @@ export class WhatsAppAiReplyService {
 
     // Zone/neighborhood/address (sell)
     const zoneMatch =
-      text.match(/(?:zona|barrio|vecindario|neighborhood)\\s*[:\\-]?\\s*([a-z0-9\\s]{2,60})/) ||
-      text.match(/(?:direcci[oó]n|address)\\s*[:\\-]?\\s*([a-z0-9\\s]{5,80})/);
+      text.match(/(?:zona|barrio|vecindario|neighborhood)\s*[:\-]?\s*([a-z0-9\s]{2,60})/) ||
+      text.match(/(?:direcci[oó]n|address)\s*[:\-]?\s*([a-z0-9\s]{5,80})/);
     if (zoneMatch) s.zone = (zoneMatch[1] || '').trim();
 
     return s;
