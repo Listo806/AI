@@ -694,61 +694,6 @@ body .m-header {
   margin: 0;
 }
 
-.m-flow {
-  background-color: #060814;
-  padding: 40px 20px !important;
-  color: #ffffff;
-  font-family: sans-serif;
-  text-align: center;
-}
-
-.m-flow-header {
-  margin-bottom: 20px;
-}
-
-.m-flow-subtitle {
-  color: #7075f4;
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-}
-
-.m-flow-title {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.3;
-  margin: 0 max(10px, 5%);
-}
-
-.m-flow-container {
-  background: rgba(255, 255, 255, 0.01);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 20px;
-  padding: 32px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.m-flow-steps-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 360px;
-  margin-bottom: 28px;
-}
-
-.m-flow-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
 
 .m-node-circle {
   width: 52px;
@@ -774,28 +719,110 @@ body .m-header {
   background: rgba(168, 85, 247, 0.04);
 }
 
-.m-flow-arrow {
-  color: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 24px;
-}
-
 .m-node-label {
   font-size: 13px;
   font-weight: 500;
   color: #e2e8f0;
 }
 
-.m-flow-text-row {
+.m-flow-new {
+  position: relative;
+  min-height: 430px;
+  padding: 64px 24px !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  overflow: hidden;
+  text-align: center;
+  color: #ffffff;
 }
 
+.m-flow-new-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.m-flow-new-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(42px, 12vw, 35px);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.08),
+    0 5px 18px rgba(0, 0, 0, 0.45);
+}
+
+.m-flow-new-description {
+  max-width: 310px;
+  margin: 28px 34px 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.m-flow-new-button {
+  width: 100%;
+  max-width: 300px;
+  min-height: 54px;
+  margin: 30px auto 0;
+  padding: 0 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.25);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.m-flow-new-button span {
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.m-flow-new-button:hover {
+  color: #ffffff;
+  border-color: #7c4dff;
+  background: rgba(91, 50, 220, 0.16);
+  transform: translateY(-2px);
+}
+
+.m-flow-new-button svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 380px) {
+  .m-flow-new {
+    min-height: 400px;
+    padding: 54px 20px !important;
+  }
+
+  .m-flow-new-title {
+    font-size: 41px;
+  }
+
+  .m-flow-new-description {
+    font-size: 14px;
+  }
+
+  .m-flow-new-button {
+    max-width: 280px;
+  }
+}
 .m-text-phase {
   font-size: 14px;
   color: #94a3b8;
@@ -808,7 +835,7 @@ body .m-header {
 }
 
 .m-appointment-setter {
-  background-color: #060814;
+  background-color: #000;
   padding: 40px 20px !important;
   color: #ffffff;
   font-family: sans-serif;
@@ -829,28 +856,36 @@ body .m-header {
 }
 
 .m-setter-title {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.2;
   margin: 0 0 16px 0;
 }
 
 .m-setter-desc {
-  font-size: 14px;
-  color: #94a3b8;
+  font-size: 15px;
+  color: #fff;
   line-height: 1.5;
   margin: 0 max(10px, 5%);
 }
-
+.aios-container-title{
+  font-size: 38px;
+  text-align: left;
+  padding: 0 24px;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.2;
+}
 /* Calendar Card Styles */
 .m-calendar-card {
-  background-color: #e2e8f0;
+  background-color: #060814;
   border-radius: 24px;
   padding: 24px 16px;
   color: #1e293b;
   max-width: 360px;
   margin: 0 auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 25px -5px rgb(36 35 35 / 31%);
+  border: 1px solid #1f223182;
 }
 
 .m-calendar-card-header {
@@ -864,8 +899,11 @@ body .m-header {
   font-size: 18px;
   font-weight: 700;
   margin: 0;
+  color: #fff;
 }
-
+.m-calendar-card-header svg, .m-day-num, .m-cal-month-year, .m-time-slot {
+  color: #fff;
+}
 .m-sparkle-icon {
   color: #000000;
 }
@@ -882,14 +920,6 @@ body .m-header {
 
 .m-cal-right {
   flex: 0.8;
-}
-
-.m-cal-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-  display: block;
-  margin-bottom: 12px;
 }
 
 .m-cal-month-nav {
@@ -951,8 +981,8 @@ body .m-header {
 }
 
 .m-time-slot {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background-color: #060814;
+  border: 1px solid #3f4041;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
@@ -962,13 +992,12 @@ body .m-header {
 
 .m-time-slot.active {
   background-color: transparent;
-  border: 2px solid #6366f1;
-  color: #4f46e5;
+  border: 1px solid #3a3ef2;
 }
 
 .m-calendar-confirm-btn {
   width: 100%;
-  background-color: #4f46e5;
+  background-color: #1e22ec;
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -1076,7 +1105,7 @@ body .m-header {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background-color: #4f46e5;
+  background-color: #180be9;
   color: #ffffff;
   text-decoration: none;
   border-radius: 9999px;

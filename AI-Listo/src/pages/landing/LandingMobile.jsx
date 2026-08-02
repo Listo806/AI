@@ -87,7 +87,6 @@ function ReportingSection({ tr }) {
               {copy.titleLine2}
               {copy.titleHighlight}
             </h2>
-
           </div>
           {/*<div className="cx-reporting-intro-right">
             <img src={bgreportingImg} alt="CORTEXA" className="background" />
@@ -304,9 +303,13 @@ function ReportingSection({ tr }) {
 
         <div className="cx-reporting-footer">
           <div>
-            <h2>{copy.footerTitle}<br/>
-            {copy.footerTitle1}<br/>
-            {copy.footerTitle2}</h2>
+            <h2>
+              {copy.footerTitle}
+              <br />
+              {copy.footerTitle1}
+              <br />
+              {copy.footerTitle2}
+            </h2>
             <p className="fdes">{copy.footerDescription}</p>
             <a href="/trial" className="trial-wrap">
               <div className="trial-wrap-in">
@@ -639,25 +642,23 @@ export default function LandingMobile() {
       step5Title: "You Close More Deals",
       step5Desc: "AI handles the busy work. You focus on closing.",
 
-      flowSubtitle: "FROM FIRST LEAD TO CLOSING",
-      flowTitle: "Everything is handled inside one system.",
-      flowLabel1: "Ads",
-      flowLabel2: "OS",
-      flowLabel3: "WhatsApp",
-      flowLabel4: "AI",
-      flowText1: "Capture",
-      flowText2: "Engage",
-      flowText3: "Nurture",
-      flowText4: "Close",
+      flowNewTitle1: "DON’T GET",
+      flowNewTitle2: "LEFT BEHIND.",
+      flowNewDescription:
+        "See how our integrated Revenue Operating System helps businesses automate faster, close more opportunities, and increase revenue.",
+      flowNewButton: "Start Your Free Trial",
 
-      setterSectionSubtitle: "AI APPOINTMENT SETTER",
-      setterSectionTitle1: "Close Deals Faster",
-      setterSectionTitle2: "with AI",
+      aiosSectionTitle: "Team ",
+      aiosSectionTitle1: "Revenue ",
+      aiosSectionTitle2: "Workspace",
+
+      setterSectionSubtitle: "AI Appointment Booking",
+      setterSectionTitle1: "AI Appointment",
+      setterSectionTitle2: "Booking That Fills",
+      setterSectionTitle3: "Your Calendar 24/7.",
       setterSectionDesc:
-        "AI qualifies leads, books appointments, and moves opportunities forward while your team focuses on closing.",
+        "AI handles calls, books appointments, and reschedules-all ỉn real time. No missed opportunities. More revenue.",
       bookAppointmentTitle: "Book Appointment",
-      selectDateLabel: "Select Date",
-      selectTimeLabel: "Select Time",
       confirmBtnText: "Confirm Appointment",
 
       ctaTitle1: "Built for",
@@ -970,12 +971,11 @@ export default function LandingMobile() {
 
         footerTitle: "One platform. Everything included.",
         footerDescription: "No add-ons. No surprises. Just results.",
-        
       },
     },
 
     es: {
-     heroTitle1: "Sistema Operativo de ",
+      heroTitle1: "Sistema Operativo de ",
       heroTitle11: "Ingresos con IA Agéntica",
       heroTitle2: "Creado para Convertir",
       heroTitle3: "Conversaciones",
@@ -1048,25 +1048,19 @@ export default function LandingMobile() {
       step5Desc:
         "La IA se encarga del trabajo pesado. Tú te enfocas en cerrar.",
 
-      flowSubtitle: "DESDE EL PRIMER LEAD HASTA EL CIERRE",
-      flowTitle: "Todo se maneja dentro de un solo sistema.",
-      flowLabel1: "Anuncios",
-      flowLabel2: "OS",
-      flowLabel3: "WhatsApp",
-      flowLabel4: "IA",
-      flowText1: "Capturar",
-      flowText2: "Interactuar",
-      flowText3: "Nutrir",
-      flowText4: "Cerrar",
+      flowNewTitle1: "NO TE QUEDES",
+      flowNewTitle2: "ATRÁS.",
+      flowNewDescription:
+        "Descubre cómo nuestro Sistema Operativo de Ingresos integrado ayuda a las empresas a automatizar más rápido, cerrar más oportunidades y aumentar sus ingresos.",
+      flowNewButton: "Comienza Tu Prueba Gratis",
 
       setterSectionSubtitle: "AGENDADOR DE CITAS CON IA",
-      setterSectionTitle1: "Cierra Tratos Más Rápido",
-      setterSectionTitle2: "con IA",
+      setterSectionTitle1: "Reserva de Citas",
+      setterSectionTitle2: "con IA que Llena",
+      setterSectionTitle3: "Tu Agenda las 24 Horas.",
       setterSectionDesc:
-        "La IA califica leads, agenda citas y avanza las oportunidades mientras tu equipo se enfoca en cerrar.",
+        "La IA gestiona las llamadas, agenda citas y las reprograma, todo en tiempo real. Sin oportunidades perdidas. Más ingresos.",
       bookAppointmentTitle: "Agendar Cita",
-      selectDateLabel: "Seleccionar Fecha",
-      selectTimeLabel: "Seleccionar Hora",
       confirmBtnText: "Confirmar Cita",
 
       ctaTitle1: "Diseñado para",
@@ -1463,25 +1457,23 @@ export default function LandingMobile() {
       step5Title: "Você Fecha Mais Negócios",
       step5Desc: "A IA cuida do trabalho repetitivo. Você foca em fechar.",
 
-      flowSubtitle: "DO PRIMEIRO LEAD AO FECHAMENTO",
-      flowTitle: "Tudo é gerenciado dentro de um único sistema.",
-      flowLabel1: "Anúncios",
-      flowLabel2: "OS",
-      flowLabel3: "WhatsApp",
-      flowLabel4: "IA",
-      flowText1: "Capturar",
-      flowText2: "Engajar",
-      flowText3: "Nutrir",
-      flowText4: "Fechar",
+      flowNewTitle1: "NÃO FIQUE",
+      flowNewTitle2: "PARA TRÁS.",
+      flowNewDescription:
+        "Veja como nosso Sistema Operacional de Receita integrado ajuda empresas a automatizar mais rápido, fechar mais oportunidades e aumentar a receita.",
+      flowNewButton: "Comece Seu Teste Grátis",
+
+      aiosSectionTitle: "Espaço de Trabalho",
+      aiosSectionTitle1: "de Receita",
+      aiosSectionTitle2: "para Equipes",
 
       setterSectionSubtitle: "AGENDADOR DE REUNIÕES COM IA",
-      setterSectionTitle1: "Feche Negócios Mais Rápido",
-      setterSectionTitle2: "com IA",
+      setterSectionTitle1: "Agendamento de Compromissos",
+      setterSectionTitle2: "com IA que Preenche",
+      setterSectionTitle3: "Sua Agenda 24/7.",
       setterSectionDesc:
-        "A IA qualifica leads, agenda reuniões e faz as oportunidades avançarem enquanto sua equipe se concentra em fechar.",
+        "A IA atende chamadas, agenda compromissos e faz remarcações, tudo em tempo real. Nenhuma oportunidade perdida. Mais receita.",
       bookAppointmentTitle: "Agendar Reunião",
-      selectDateLabel: "Selecionar Data",
-      selectTimeLabel: "Selecionar Horário",
       confirmBtnText: "Confirmar Reunião",
 
       ctaTitle1: "Desenvolvido para",
@@ -2090,8 +2082,8 @@ export default function LandingMobile() {
               </svg>
             </div>
             <div>
-            <h3>{tr.setterTitle}</h3>
-            <p>{tr.setterDesc}</p>
+              <h3>{tr.setterTitle}</h3>
+              <p>{tr.setterDesc}</p>
             </div>
           </div>
 
@@ -2114,8 +2106,8 @@ export default function LandingMobile() {
               </svg>
             </div>
             <div>
-            <h3>{tr.pipelineTitle}</h3>
-            <p>{tr.pipelineDesc}</p>
+              <h3>{tr.pipelineTitle}</h3>
+              <p>{tr.pipelineDesc}</p>
             </div>
           </div>
 
@@ -2138,8 +2130,8 @@ export default function LandingMobile() {
               </svg>
             </div>
             <div>
-            <h3>{tr.analyticsTitle}</h3>
-            <p>{tr.analyticsDesc}</p>
+              <h3>{tr.analyticsTitle}</h3>
+              <p>{tr.analyticsDesc}</p>
             </div>
           </div>
         </div>
@@ -2168,7 +2160,10 @@ export default function LandingMobile() {
       <section className="m-platform">
         <div className="m-platform-header">
           <p className="m-platform-subtitle">{tr.platformSubtitle}</p>
-          <h2 className="m-platform-title">{tr.platformTitle} <br/> {tr.platformTitle1} <br/> {tr.platformTitle2}</h2>
+          <h2 className="m-platform-title">
+            {tr.platformTitle} <br /> {tr.platformTitle1} <br />{" "}
+            {tr.platformTitle2}
+          </h2>
           <p className="m-platform-desc">{tr.platformDesc}</p>
         </div>
         <div className="m-platform-list">
@@ -2441,158 +2436,33 @@ export default function LandingMobile() {
       </section>
 
       {/* SYSTEM FLOW SECTION */}
-      <section className="m-flow">
-        <div className="m-flow-header">
-          <p className="m-flow-subtitle">{tr.flowSubtitle}</p>
-          <h2 className="m-flow-title">{tr.flowTitle}</h2>
-        </div>
+      <section className="m-flow m-flow-new">
+        <div className="m-flow-new-inner">
+          <h2 className="m-flow-new-title">
+            {tr.flowNewTitle1}
+            <br />
+            {tr.flowNewTitle2}
+          </h2>
 
-        <div className="m-flow-container">
-          <div className="m-flow-steps-row">
-            <div className="m-flow-node">
-              <div className="m-node-circle m-node-ads">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="20" height="14" x="2" y="3" rx="2" />
-                  <line x1="8" x2="16" y1="21" y2="21" />
-                  <line x1="12" x2="12" y1="17" y2="21" />
-                </svg>
-              </div>
-              <span className="m-node-label">{tr.flowLabel1}</span>
-            </div>
+          <p className="m-flow-new-description">{tr.flowNewDescription}</p>
 
-            <div className="m-flow-arrow">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </div>
-
-            <div className="m-flow-node">
-              <div className="m-node-circle m-node-crm">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </div>
-              <span className="m-node-label">{tr.flowLabel2}</span>
-            </div>
-
-            <div className="m-flow-arrow">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </div>
-
-            <div className="m-flow-node">
-              <div className="m-node-circle m-node-whatsapp">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.256 5.261 0 11.725 0c3.132.001 6.077 1.22 8.29 3.433 2.213 2.212 3.43 5.158 3.43 8.29 0 6.465-5.256 11.722-11.714 11.722-2.006-.001-3.974-.515-5.727-1.497L0 24zm6.106-4.66c1.651.98 3.278 1.497 4.904 1.499 5.378 0 9.754-4.374 9.758-9.75.002-2.605-1.01-5.053-2.85-6.895C16.082 2.35 13.64 1.336 11.73 1.336c-5.385 0-9.762 4.376-9.766 9.751-.001 1.706.461 3.376 1.339 4.898L2.308 21.72l6.009-1.577h-.154z" />
-                </svg>
-              </div>
-              <span className="m-node-label">{tr.flowLabel3}</span>
-            </div>
-
-            <div className="m-flow-arrow">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </div>
-
-            <div className="m-flow-node">
-              <div className="m-node-circle m-node-ai">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                </svg>
-              </div>
-              <span className="m-node-label">{tr.flowLabel4}</span>
-            </div>
-          </div>
-
-          <div className="m-flow-text-row">
-            <span className="m-text-phase">{tr.flowText1}</span>
-            <span className="m-text-arrow">→</span>
-            <span className="m-text-phase">{tr.flowText2}</span>
-            <span className="m-text-arrow">→</span>
-            <span className="m-text-phase">{tr.flowText3}</span>
-            <span className="m-text-arrow">→</span>
-            <span className="m-text-phase">{tr.flowText4}</span>
-          </div>
+          <Link to="/trial" className="m-flow-new-button">
+            <span>{tr.flowNewButton}</span>
+            <ArrowRight size={18} />
+          </Link>
         </div>
       </section>
 
       <ReportingSection tr={tr} />
       <section id="m-workspace">
         <div className="aios-container">
+          <div className="aios-container-title">
+            {tr.aiosSectionTitle}
+            <br />
+            {tr.aiosSectionTitle1}
+            <br />
+            {tr.aiosSectionTitle2}
+          </div>
           <img src={workspace} alt="workspace" />
         </div>
       </section>
@@ -2604,6 +2474,8 @@ export default function LandingMobile() {
             {tr.setterSectionTitle1}
             <br />
             <span>{tr.setterSectionTitle2}</span>
+            <br />
+            {tr.setterSectionTitle3}
           </h2>
           <p className="m-setter-desc">{tr.setterSectionDesc}</p>
         </div>
@@ -2611,25 +2483,11 @@ export default function LandingMobile() {
         <div className="m-calendar-card">
           <div className="m-calendar-card-header">
             <h3>{tr.bookAppointmentTitle}</h3>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="m-sparkle-icon"
-            >
-              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-            </svg>
+            <CalendarDays size={15} />
           </div>
 
           <div className="m-calendar-body-layout">
             <div className="m-cal-left">
-              <label className="m-cal-label">{tr.selectDateLabel}</label>
               <div className="m-cal-month-nav">
                 <span className="m-cal-arrow">‹</span>
                 <span className="m-cal-month-year">May 2024</span>
@@ -2684,7 +2542,6 @@ export default function LandingMobile() {
             </div>
 
             <div className="m-cal-right">
-              <label className="m-cal-label">{tr.selectTimeLabel}</label>
               <div className="m-time-slots">
                 <div className="m-time-slot">9:00 AM</div>
                 <div className="m-time-slot active">10:00 AM</div>
@@ -2742,8 +2599,11 @@ export default function LandingMobile() {
             >
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
-            <p>{tr.ctaButtonText}<br/>
-            <span>{tr.finalCtaSubBtn1}</span></p>
+            <p>
+              {tr.ctaButtonText}
+              <br />
+              <span>{tr.finalCtaSubBtn1}</span>
+            </p>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -2760,7 +2620,10 @@ export default function LandingMobile() {
               <path d="m12 5 7 7-7 7" />
             </svg>
           </a>
-          <div className="m-final-foot"><p>{tr.ctaready}</p><a href="/sign-in">{tr.fLogin}</a></div>
+          <div className="m-final-foot">
+            <p>{tr.ctaready}</p>
+            <a href="/sign-in">{tr.fLogin}</a>
+          </div>
         </div>
       </section>
       <section className="m-powerful">
