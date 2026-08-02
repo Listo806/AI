@@ -2360,11 +2360,6 @@
 .trial-v2-hero h1 span {
   display: block;
   margin-top: 8px;
-  color: #173ff2;
-  background: linear-gradient(90deg, #0b55ee 15%, #820ccc 85%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .trial-v2-ai-row {
@@ -2377,11 +2372,11 @@
 }
 
 .trial-v2-ai-row strong { font-style: normal; }
-.trial-v2-ai-row em { color: #4b1bdc; font-style: normal; }
+.trial-v2-ai-row em { font-style: normal; }
 
 .trial-v2-qualifies {
   margin: 10px 0 0;
-  color: #4d21d4;
+  color: #fff;
   font-weight: 750;
 }
 
@@ -2458,8 +2453,8 @@
 }
 
 .trial-v2-plan-icon { color: #4a1bdc; }
-.trial-v2-plan-heading h2 { margin: 0; font-size: 18px; }
-.trial-v2-plan-heading p { color: #373d51; font-size: 13px; }
+.trial-v2-plan-heading h2 { margin: 0; font-size: 22px; }
+.trial-v2-plan-heading p { color: #fff; font-size: 15px; }
 
 .trial-v2-plans {
   display: grid;
@@ -3120,7 +3115,7 @@
     align-items: flex-start;
   }
   .trial-v2-hero h1 {
-    font-size: 19px;
+    font-size: 27px;
     color: #fff;
   }
   .trial-v2-ai-row {
@@ -3155,7 +3150,7 @@
     color: #908e8e;
   }
   .trial-v2-plan-heading h2, .trial-v2-security p{
-    color: #908e8e;
+    color: #fff;
   }
  
   .trial-v2-popular {
