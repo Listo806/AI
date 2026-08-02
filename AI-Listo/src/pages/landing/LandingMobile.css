@@ -561,13 +561,13 @@ body .m-header {
 }
 
 .m-platform-text h3 {
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 600;
   margin: 0 0 4px 0;
 }
 
 .m-platform-text p {
-  font-size: 13px;
+  font-size: 16px;
   color: #94a3b8;
   line-height: 1.4;
   margin: 0;
@@ -610,7 +610,7 @@ body .m-header {
 }
 
 .m-how-title {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   line-height: 1.2;
   margin: 0;
@@ -681,14 +681,14 @@ body .m-header {
 }
 
 .m-step-right h3 {
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 600;
   margin: 0 0 6px 0;
   color: #ffffff;
 }
 
 .m-step-right p {
-  font-size: 14px;
+  font-size: 16px;
   color: #94a3b8;
   line-height: 1.4;
   margin: 0;
@@ -2593,7 +2593,7 @@ body .cx-reporting-footer .fdes{
 
 .hero-checks .check-item {
   display: flex;
-  font-size: 22px;
+  font-size: 24px;
   gap: 21px;
   line-height: 1.4;
   color: #ffffffeb;
@@ -2916,7 +2916,7 @@ body .cx-reporting-footer .fdes{
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) 1px 50px;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   padding: 20px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
@@ -2950,7 +2950,7 @@ body .cx-reporting-footer .fdes{
 
 .m-unlimited-ai-item-content h3 {
   margin: 0 0 5px;
-  font-size: 18px;
+  font-size: 23px;
   line-height: 1.3;
   color: #ffffff;
   font-weight: 750;
@@ -2958,7 +2958,7 @@ body .cx-reporting-footer .fdes{
 
 .m-unlimited-ai-item-content p {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.45;
   color: #aaa6b2;
 }
