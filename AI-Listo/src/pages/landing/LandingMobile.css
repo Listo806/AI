@@ -3085,16 +3085,6 @@ body .cx-reporting-footer .fdes{
   font-weight: 700;
 }
 
-.m-everything-header h2 span {
-  background:
-    linear-gradient(90deg,
-      #744bff,
-      #ad5cff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 .m-everything-header p {
   max-width: 390px;
   margin: 24px auto 0;
