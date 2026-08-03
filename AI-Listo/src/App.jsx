@@ -182,7 +182,7 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
-      <Route path={`${p}/why-legacy-crm`} element={<EditorialFunnel />} />
+      <Route path={`${p}/editorial/the-end-of-legacy-crm`} element={<EditorialFunnel />} />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
