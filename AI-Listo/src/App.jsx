@@ -57,6 +57,7 @@ import CheckoutPage from "./pages/checkout/CheckoutPage";
 import EditorialFunnel from "./pages/editorial/EditorialFunnel";
 import EditorialFunnelEs from "./pages/editorial/EditorialFunnelEs";
 import EditorialFunnelPt from "./pages/editorial/EditorialFunnelPt";
+import EditorialBusinessAI from "./pages/editorial/EditorialBusinessAI";
 import LocaleLayout from "./components/LocaleLayout";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
@@ -201,6 +202,10 @@ function publicRoutes(prefix) {
           element={<EditorialFunnelPt />}
         />
       </Route>
+      <Route
+        path="/editorial/how-ai-is-transforming-every-business"
+        element={<EditorialBusinessAI />}
+      />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
