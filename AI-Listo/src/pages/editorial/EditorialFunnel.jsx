@@ -210,7 +210,7 @@ export default function EditorialFunnel() {
       <header className="ed-header">
         <div className="ed-header-inner">
           <Link to="/" className="ed-brand" aria-label="Cortexa home">
-            <img src={headlogo} alt="Cortexa AI Revenue OS" />
+            
           </Link>
 
           <nav className="ed-main-nav" aria-label="Editorial navigation">

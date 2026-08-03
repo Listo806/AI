@@ -142,7 +142,7 @@
 }
 
 .ed-hero-heading {
-  padding: 0 72px;
+  padding: 0 192px;
 }
 
 .ed-hero-heading h1 {
@@ -154,6 +154,7 @@
   font-weight: 400;
   line-height: 1.02;
   letter-spacing: -0.045em;
+  text-align: left;
 }
 
 .ed-byline {
@@ -174,12 +175,12 @@
 
 .ed-hero-divider {
   height: 1px;
-  margin: 34px 0 42px;
+  margin: 34px 100px 42px;
   background: #232823;
 }
 
 .ed-hero-cover {
-  width: min(1280px, calc(100% - 96px));
+  width: min(1280px, calc(100% - 396px));
   margin: 0 auto;
   padding: 28px;
   background: linear-gradient(135deg, #279d58 0%, #168a48 100%);
@@ -197,7 +198,7 @@
   margin: 0;
   color: #050605;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(52px, 6vw, 92px);
+  font-size: clamp(52px, 5vw, 92px);
   font-style: italic;
   font-weight: 400;
   line-height: 1.03;
