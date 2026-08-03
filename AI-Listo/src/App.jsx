@@ -55,6 +55,8 @@ import Pricing from "./pages/common/Pricing";
 import Trial from "./pages/common/Trial";
 import CheckoutPage from "./pages/checkout/CheckoutPage";
 import EditorialFunnel from "./pages/editorial/EditorialFunnel";
+import EditorialFunnelEs from "./pages/editorial/EditorialFunnelEs";
+import EditorialFunnelPt from "./pages/editorial/EditorialFunnelPt";
 import LocaleLayout from "./components/LocaleLayout";
 import PaymentSuccess from "./pages/checkout/PaymentSuccess";
 import Onboarding from "./pages/checkout/Onboarding";
@@ -182,7 +184,23 @@ function publicRoutes(prefix) {
       <Route path={`${p}/integrations`} element={<IntegrationsPage />} />
       <Route path={`${p}/setup-guide`} element={<SetupGuidePage />} />
       <Route path={`${p}/pricing`} element={<Pricing />} />
-      <Route path={`${p}/editorial/the-end-of-legacy-crm`} element={<EditorialFunnel />} />
+      <Route
+        path={`${p}/editorial/the-end-of-legacy-crm`}
+        element={<EditorialFunnel />}
+      />
+      <Route element={<LocaleLayout code="es" />}>
+        <Route
+          path="/editorial/the-end-of-legacy-crm/es"
+          element={<EditorialFunnelEs />}
+        />
+      </Route>
+
+      <Route element={<LocaleLayout code="pt" />}>
+        <Route
+          path="/editorial/the-end-of-legacy-crm/pt"
+          element={<EditorialFunnelPt />}
+        />
+      </Route>
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />

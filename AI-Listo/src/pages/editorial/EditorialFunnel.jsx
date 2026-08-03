@@ -288,8 +288,8 @@ export default function EditorialFunnel() {
           <div className="ed-hero-cover">
             <div className="ed-hero-cover-frame">
               <p>
-                Why Businesses Are Re-Evaluating Salesforce, HubSpot, and the Rise
-                of Agentic AI Revenue Operating Systems
+                Why Businesses Are <br /> Re-Evaluating Salesforce,<br />  HubSpot, and the Rise<br /> 
+                of Agentic AI Revenue<br />  Operating Systems
               </p>
             </div>
           </div>
