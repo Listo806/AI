@@ -15,6 +15,13 @@ import {
 import { trackEvent } from "../../utils/track";
 import headlogo from "../../assets/cortexa/headlogo.png";
 import footlogo from "../../assets/cortexa/p-flogo.png";
+import whyImg from "../../assets/cortexa/why.jpg";
+import why1Img from "../../assets/cortexa/why1.jpg";
+import why2Img from "../../assets/cortexa/why2.jpg";
+import why3Img from "../../assets/cortexa/why3.jpg";
+import why4Img from "../../assets/cortexa/why4.jpg";
+import why5Img from "../../assets/cortexa/why5.jpg";
+import why6Img from "../../assets/cortexa/why5.jpg";
 import CostComparison from "./CostComparison";
 import "./Editorial.css";
 
@@ -260,13 +267,9 @@ export default function EditorialFunnel() {
         </div>
 
         <section className="ed-hero" id="legacy-crm">
-          <div className="ed-hero-card">
-            <span className="ed-hero-kicker">The End of Legacy CRM?</span>
-            <h1>
-              Why Businesses Are Re-Evaluating Salesforce, HubSpot, and the Rise
-              of Agentic AI Revenue Operating Systems
-            </h1>
-            <div className="ed-hero-rule" />
+          <div className="ed-hero-heading">
+            <h1>The End of Legacy CRM?</h1>
+
             <p className="ed-byline">
               July 24, 2026 by <strong>Julian S.</strong>
               <span>|</span>
@@ -278,6 +281,17 @@ export default function EditorialFunnel() {
               <span>|</span>
               Last reviewed: July 24, 2026
             </p>
+          </div>
+
+          <div className="ed-hero-divider" aria-hidden="true" />
+
+          <div className="ed-hero-cover">
+            <div className="ed-hero-cover-frame">
+              <p>
+                Why Businesses Are Re-Evaluating Salesforce, HubSpot, and the Rise
+                of Agentic AI Revenue Operating Systems
+              </p>
+            </div>
           </div>
         </section>
 
@@ -345,10 +359,8 @@ export default function EditorialFunnel() {
                 The shift is from managing records to operating revenue.
               </blockquote>
 
-              <EditorialVisual
-                label="Cortexa Revenue Intelligence dashboard"
-                variant="dashboard"
-              />
+              <img src={whyImg} alt="CORTEXA" className="background" />
+              <figcaption>Cortexa Revenue Intelligence dashboard</figcaption>
             </section>
 
             <section className="ed-section" id="revenue-operations">
@@ -379,10 +391,8 @@ export default function EditorialFunnel() {
                 operations.
               </p>
 
-              <EditorialVisual
-                label="AI Agent qualification and automated appointment booking"
-                variant="agent"
-              />
+              <img src={why1Img} alt="CORTEXA" className="background" />
+              <figcaption>AI Agent qualification and automated appointment booking</figcaption>
             </section>
 
             <section className="ed-section" id="legacy-crm-tax">
@@ -445,10 +455,8 @@ export default function EditorialFunnel() {
                 for a better operating model.
               </blockquote>
 
-              <EditorialVisual
-                label="AI WhatsApp and automated customer conversations"
-                variant="whatsapp"
-              />
+              <img src={why2Img} alt="CORTEXA" className="background" />
+              <figcaption>AI WhatsApp and automated customer conversations</figcaption>
             </section>
 
             <section className="ed-section" id="transparent-setup">
@@ -460,16 +468,16 @@ export default function EditorialFunnel() {
               </p>
               <p>Cortexa takes a different approach.</p>
 
-              <div className="ed-price-panel">
-                <span>$97</span>
-                <div>
-                  <strong>One-Time Setup Fee</strong>
-                  <p>
-                    A simple, transparent starting point designed to reduce
-                    friction.
-                  </p>
-                </div>
-              </div>
+              <aside className="ed-editorial-callout" aria-label="One-time setup fee">
+                <span className="ed-editorial-callout-label">
+                  One-time setup fee
+                </span>
+                <p>
+                  Cortexa begins with a simple <strong>$97 one-time setup fee</strong>,
+                  giving businesses a transparent starting point without turning
+                  onboarding into a large implementation project.
+                </p>
+              </aside>
 
               <p>
                 A simple, transparent starting point designed to reduce friction
@@ -505,10 +513,8 @@ export default function EditorialFunnel() {
                 starts producing value.
               </p>
 
-              <EditorialVisual
-                label="Fast onboarding and WhatsApp QR connection"
-                variant="onboarding"
-              />
+              <img src={why3Img} alt="CORTEXA" className="background" />
+              <figcaption>Fast onboarding and WhatsApp QR connection</figcaption>
             </section>
 
             <section className="ed-section" id="one-platform">
@@ -552,6 +558,15 @@ export default function EditorialFunnel() {
                     <span>See how Cortexa delivers more — for less.</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="ed-comparison-transition">
+                <span>Cost comparison</span>
+                <h3>The Numbers Tell the Story</h3>
+                <p>
+                  Now let’s compare the estimated Year 1 investment—not only the
+                  monthly subscription.
+                </p>
               </div>
 
               <div className="ed-comparison-wrap">
@@ -615,20 +630,7 @@ export default function EditorialFunnel() {
                 human attention.
               </p>
 
-              <div className="ed-evidence-sequence">
-                {[
-                  ["AI Agent conversation", Bot],
-                  ["WhatsApp automation", MessageSquareText],
-                  ["AI appointment-booking calendar", CalendarDays],
-                  ["Pipeline and lead routing", LineChart],
-                ].map(([label, Icon]) => (
-                  <EditorialVisual key={label} label={label} variant="evidence">
-                    <Icon size={34} />
-                    <strong>{label}</strong>
-                    <span className="ed-visual-note">Supporting editorial evidence</span>
-                  </EditorialVisual>
-                ))}
-              </div>
+              <img src={why4Img} alt="CORTEXA" className="background" />
             </section>
 
             <section className="ed-section" id="team-workspace">
@@ -649,10 +651,8 @@ export default function EditorialFunnel() {
                 visibility across the work that supports revenue.
               </p>
 
-              <EditorialVisual
-                label="Team Revenue Workspace"
-                variant="team"
-              />
+              <img src={why5Img} alt="CORTEXA" className="background" />
+              <figcaption>Team Revenue Workspace</figcaption>
             </section>
 
             <section className="ed-section" id="reporting">
@@ -671,10 +671,8 @@ export default function EditorialFunnel() {
                 performance, and keep revenue moving.
               </p>
 
-              <EditorialVisual
-                label="Reporting Turns to Revenue"
-                variant="reporting"
-              />
+              <img src={why6Img} alt="CORTEXA" className="background" />
+              <figcaption>Reporting Turns to Revenue</figcaption>
             </section>
 
             <section className="ed-section" id="migration">
@@ -722,10 +720,7 @@ export default function EditorialFunnel() {
                 businesses can begin using the core platform immediately.
               </p>
 
-              <EditorialVisual
-                label="Built for businesses of every size and industry"
-                variant="industries"
-              />
+              
             </section>
 
             <section className="ed-section" id="dont-get-left-behind">
@@ -735,10 +730,6 @@ export default function EditorialFunnel() {
                 automate faster, close more opportunities, and increase revenue.
               </p>
 
-              <EditorialVisual
-                label="Do not get left behind"
-                variant="urgency"
-              />
             </section>
 
             <section className="ed-section" id="next-generation">
@@ -780,9 +771,28 @@ export default function EditorialFunnel() {
                 The future may not belong to the CRM with the longest feature
                 list.
               </p>
+              <p>
+                Legacy platforms were built for an era in which teams recorded
+                activity after it happened. Today’s businesses need systems that
+                can participate in the work itself—responding faster, maintaining
+                momentum, connecting teams, and helping leaders act on revenue
+                signals while opportunities are still active.
+              </p>
+              <p>
+                That is why the shift toward an Agentic AI Revenue Operating
+                System is more than a software upgrade. It is a move from passive
+                record keeping to an operating model designed around action,
+                speed, and measurable growth.
+              </p>
+              <p>
+                Businesses making that transition are not abandoning customer
+                relationships. They are giving their teams a more intelligent way
+                to manage and grow them.
+              </p>
               <blockquote className="ed-pull-quote">
-                It may belong to the platform that helps businesses spend less
-                time managing software—and more time growing revenue.
+                The next generation of revenue technology will help businesses
+                spend less time managing software—and more time creating forward
+                momentum.
               </blockquote>
             </section>
 
