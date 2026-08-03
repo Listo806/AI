@@ -46,10 +46,10 @@ const ARTICLE_SECTIONS = [
     id: "crm-cost",
     label: "What Is Your CRM Really Costing You?",
   },
+  { id: "migration", label: "Switching Doesn’t Have to Be Difficult" },
   { id: "forward-momentum", label: "From Follow-Up to Forward Momentum" },
   { id: "team-workspace", label: "Your Team, Connected Around Revenue" },
   { id: "reporting", label: "Reporting That Turns Into Revenue" },
-  { id: "migration", label: "Migrating from Salesforce or HubSpot" },
   {
     id: "businesses",
     label: "Built for Businesses of Every Size and Industry",
@@ -213,12 +213,12 @@ export default function EditorialFunnel() {
             <img src={headlogo} alt="Cortexa AI Revenue OS" />
           </Link>
 
-          <nav className="ed-main-nav" aria-label="Main navigation">
-            <Link to="/#platform">Platform</Link>
-            <Link to="/#solutions">Solutions</Link>
-            <Link to="/#resources">Resources</Link>
-            <Link to="/#company">Company</Link>
-            <Link to="/pricing">Pricing</Link>
+          <nav className="ed-main-nav" aria-label="Editorial navigation">
+            <a href="#one-platform">Platform</a>
+            <a href="#forward-momentum">Solutions</a>
+            <a href="#migration">Resources</a>
+            <a href="#businesses">Company</a>
+            <a href="#crm-cost">Pricing</a>
           </nav>
 
           <Link
@@ -247,11 +247,11 @@ export default function EditorialFunnel() {
 
         {mobileNavOpen && (
           <div className="ed-mobile-nav">
-            <Link to="/#platform" onClick={closeMobileNav}>Platform</Link>
-            <Link to="/#solutions" onClick={closeMobileNav}>Solutions</Link>
-            <Link to="/#resources" onClick={closeMobileNav}>Resources</Link>
-            <Link to="/#company" onClick={closeMobileNav}>Company</Link>
-            <Link to="/pricing" onClick={closeMobileNav}>Pricing</Link>
+            <a href="#one-platform" onClick={closeMobileNav}>Platform</a>
+            <a href="#forward-momentum" onClick={closeMobileNav}>Solutions</a>
+            <a href="#migration" onClick={closeMobileNav}>Resources</a>
+            <a href="#businesses" onClick={closeMobileNav}>Company</a>
+            <a href="#crm-cost" onClick={closeMobileNav}>Pricing</a>
             <Link to="/trial" onClick={closeMobileNav}>Start free trial</Link>
           </div>
         )}
@@ -607,6 +607,26 @@ export default function EditorialFunnel() {
               <blockquote>It’s everything required to keep it running.</blockquote>
             </section>
 
+            <section className="ed-section ed-migration-section" id="migration">
+              <span className="ed-section-kicker">Guided migration</span>
+              <h2>Switching Doesn’t Have to Be Difficult</h2>
+              <p className="ed-section-intro">
+                Move from Salesforce, HubSpot, Jira, or ClickUp without starting
+                over. Cortexa’s guided migration process helps bring your contacts,
+                pipelines, projects, tasks, and workflows into one connected
+                AI-powered platform.
+              </p>
+
+              <ul className="ed-migration-checklist">
+                <li>Import contacts and customer data</li>
+                <li>Import pipelines and opportunities</li>
+                <li>Import projects and tasks</li>
+                <li>Configure AI Agents and workflows</li>
+                <li>Connect your integrations</li>
+                <li>Get your team ready to work</li>
+              </ul>
+            </section>
+
             <section className="ed-section" id="forward-momentum">
               <h2>From Follow-Up to Forward Momentum</h2>
               <p>
@@ -673,33 +693,6 @@ export default function EditorialFunnel() {
 
               <img src={why6Img} alt="CORTEXA" className="background" />
               <figcaption>Reporting Turns to Revenue</figcaption>
-            </section>
-
-            <section className="ed-section" id="migration">
-              <h2>Migrating from Salesforce or HubSpot</h2>
-              <p>
-                Changing systems can feel complicated, especially when contacts,
-                customer history, workflows, and team processes are already tied
-                to an existing CRM.
-              </p>
-              <p>
-                But moving to a new operating model does not have to mean starting
-                over.
-              </p>
-              <p>
-                Cortexa can support businesses transitioning from platforms such
-                as Salesforce or HubSpot by helping organize the move into a more
-                streamlined AI-native environment.
-              </p>
-              <p>
-                The goal is to reduce disruption, preserve the information that
-                matters, and help teams begin operating from the new platform
-                without unnecessary complexity.
-              </p>
-              <blockquote>
-                Already using Salesforce or HubSpot? Your transition can be
-                planned around the way your business already works.
-              </blockquote>
             </section>
 
             <section className="ed-section" id="businesses">

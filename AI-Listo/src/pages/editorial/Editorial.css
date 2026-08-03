@@ -3,6 +3,7 @@
    Brand: primary #2563eb, ink #0f172a, Arial. */
 
    .ed-page {
+  scroll-behavior: smooth;
   --ed-green: #08783f;
   --ed-green-dark: #055c31;
   --ed-ink: #111411;
@@ -278,14 +279,14 @@
 
 /* Contents */
 .ed-contents {
-  padding-top: 10px;
+  padding: 4px 0 3px;
 }
 
 .ed-contents-title {
   display: block;
-  margin-bottom: 14px;
+  margin-bottom: 9px;
   color: var(--ed-green);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -293,7 +294,7 @@
 
 .ed-contents ol {
   margin: 0;
-  padding: 0 0 0 8px;
+  padding: 0 0 0 5px;
   list-style: none;
   border-left: 2px solid #99bca7;
 }
@@ -304,13 +305,13 @@
 
 .ed-contents a {
   display: grid;
-  grid-template-columns: 24px 1fr;
-  gap: 4px;
-  padding: 4px 0 4px 7px;
+  grid-template-columns: 20px 1fr;
+  gap: 2px;
+  padding: 2.5px 0 2.5px 5px;
   color: #222722;
   text-decoration: none;
-  font-size: 11px;
-  line-height: 1.22;
+  font-size: 10px;
+  line-height: 1.16;
   transition: color 0.15s ease, transform 0.15s ease;
 }
 
@@ -323,6 +324,12 @@
   color: var(--ed-green);
   font-weight: 800;
   transform: translateX(2px);
+}
+
+
+.ed-article [id],
+.ed-hero[id] {
+  scroll-margin-top: 92px;
 }
 
 /* Article */
@@ -491,7 +498,7 @@ figcaption {
 
 .ed-evidence-sequence .ed-visual-inner strong {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-style: normal;
   font-weight: 800;
 }
@@ -526,15 +533,15 @@ figcaption {
 .ed-cta-card {
   border: 1px solid #bfc5bf;
   border-radius: 4px;
-  padding: 17px 16px 14px;
+  padding: 13px 14px 11px;
   background: #fff;
 }
 
 .ed-cta-eyebrow {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   color: var(--ed-green);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
   line-height: 1.35;
@@ -554,22 +561,22 @@ figcaption {
 .ed-cta-rule {
   width: 135px;
   height: 2px;
-  margin: 13px 0;
+  margin: 9px 0;
   background: var(--ed-green);
 }
 
 .ed-cta-benefits {
-  margin: 0 0 12px;
-  padding: 0 0 10px;
+  margin: 0 0 9px;
+  padding: 0 0 8px;
   list-style: none;
   border-bottom: 1px solid #dadeda;
 }
 
 .ed-cta-benefits li {
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 9px;
-  margin: 0 0 11px;
+  grid-template-columns: 24px 1fr;
+  gap: 7px;
+  margin: 0 0 7px;
   color: var(--ed-green);
 }
 
@@ -579,21 +586,21 @@ figcaption {
 
 .ed-cta-benefits span {
   color: #606760;
-  font-size: 10px;
-  line-height: 1.3;
+  font-size: 9px;
+  line-height: 1.22;
 }
 
 .ed-cta-benefits strong {
   display: block;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   color: #161916;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .ed-cta-primary,
 .ed-cta-secondary {
   width: 100%;
-  min-height: 38px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -616,9 +623,20 @@ figcaption {
 
 .ed-cta-secondary {
   gap: 14px;
-  margin-top: 10px;
+  margin-top: 6px;
   color: var(--ed-green) !important;
   background: transparent;
+}
+
+
+.ed-cta-benefits svg {
+  width: 17px;
+  height: 17px;
+}
+
+.ed-cta-secondary svg {
+  width: 14px;
+  height: 14px;
 }
 
 .ed-inline-cta {
@@ -754,6 +772,63 @@ figcaption {
   margin: 0 auto !important;
   color: #525b54 !important;
   font-size: 16px !important;
+}
+
+
+/* Guided migration section */
+.ed-section-kicker {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--ed-green);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ed-migration-section {
+  padding-top: 42px;
+}
+
+.ed-migration-section .ed-section-intro {
+  max-width: 700px;
+}
+
+.ed-migration-checklist {
+  margin: 25px 0 4px !important;
+  padding: 0 !important;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  list-style: none;
+}
+
+.ed-migration-checklist li {
+  position: relative;
+  margin: 0 !important;
+  padding: 14px 16px 14px 42px;
+  border: 1px solid #d7e2d9;
+  border-radius: 8px;
+  background: #f7faf8;
+  color: #17231b;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.ed-migration-checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 16px;
+  top: 13px;
+  color: var(--ed-green);
+  font-size: 17px;
+  font-weight: 900;
+}
+
+@media (max-width: 620px) {
+  .ed-migration-checklist {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* More visual variety while retaining one editorial system */
@@ -1450,14 +1525,22 @@ figcaption {
     font-size: 11px;
   }
 
+  .ed-contents {
+    padding-block: 0;
+  }
+
+  .ed-contents-title {
+    margin-bottom: 6px;
+  }
+
   .ed-contents a {
-    padding-block: 3px;
-    font-size: 12px;
-    line-height: 1.26;
+    padding-block: 2px;
+    font-size: 10px;
+    line-height: 1.22;
   }
 
   .ed-cta-card {
-    padding: 13px 13px 11px;
+    padding: 10px 11px 9px;
   }
 
   .ed-cta-eyebrow {
