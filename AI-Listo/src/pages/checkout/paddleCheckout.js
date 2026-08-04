@@ -55,10 +55,12 @@ export function paddleReady(config, plan) {
 
 // Open the Paddle overlay checkout for a plan. Includes the one-time setup fee
 // price (if configured) plus the tier's recurring/trial price, and passes our
-// userId + plan as customData for webhook-based activation.
-export function openPaddleCheckout({ config, plan, userId, email }) {
+// userId + plan as customData for webhook-based activation. When setupPriceId is
+// passed (the exit-intent $7 offer) it replaces the standard setup price.
+export function openPaddleCheckout({ config, plan, userId, email, setupPriceId }) {
   const items = [];
-  if (config?.setupPrice) items.push({ priceId: config.setupPrice, quantity: 1 });
+  const setup = setupPriceId || config?.setupPrice;
+  if (setup) items.push({ priceId: setup, quantity: 1 });
   const tierPrice = config?.prices?.[plan];
   if (tierPrice) items.push({ priceId: tierPrice, quantity: 1 });
   if (!items.length) throw new Error("Paddle prices are not configured");
@@ -66,6 +68,8 @@ export function openPaddleCheckout({ config, plan, userId, email }) {
   window.Paddle.Checkout.open({
     items,
     customer: email ? { email } : undefined,
-    customData: { userId, plan },
+    customData: setupPriceId
+      ? { userId, plan, offer: "exit7" }
+      : { userId, plan },
   });
 }
