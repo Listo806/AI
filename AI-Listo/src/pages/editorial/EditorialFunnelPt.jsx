@@ -124,7 +124,7 @@ function CtaCard({ where }) {
       </ul>
 
       <Link
-        to="/pt-br/trial"
+        to="/pt/trial"
         className="ed-cta-primary"
         onClick={() =>
           trackEvent("editorial_cta_click", { where, cta: "trial" })
@@ -134,7 +134,7 @@ function CtaCard({ where }) {
       </Link>
 
       <Link
-        to="/pt-br/pricing"
+        to="/pt/pricing"
         className="ed-cta-secondary ed-view-plans-btn"
         onClick={() =>
           trackEvent("editorial_cta_click", { where, cta: "plans" })
@@ -226,7 +226,7 @@ export default function EditorialFunnelPt() {
           </nav>
 
           <Link
-            to="/pt-br/trial"
+            to="/pt/trial"
             className="ed-header-cta"
             onClick={() =>
               trackEvent("editorial_cta_click", {
@@ -266,7 +266,7 @@ export default function EditorialFunnelPt() {
             <a href="#crm-cost" onClick={closeMobileNav}>
               Preços
             </a>
-            <Link to="/pt-br/trial" onClick={closeMobileNav}>
+            <Link to="/pt/trial" onClick={closeMobileNav}>
               Começar teste grátis
             </Link>
           </div>
@@ -880,10 +880,10 @@ export default function EditorialFunnelPt() {
         <div className="ed-footer-inner">
           <img src={footlogo} alt="Cortexa" className="ed-footlogo" />
           <div className="ed-footer-links">
-            <Link to="/pt-br/pricing">Preços</Link>
-            <Link to="/pt-br/features">Recursos</Link>
-            <Link to="/pt-br/terms">Termos</Link>
-            <Link to="/pt-br/privacy-policy">Privacidade</Link>
+            <Link to="/pt/pricing">Preços</Link>
+            <Link to="/pt/features">Recursos</Link>
+            <Link to="/pt/terms">Termos</Link>
+            <Link to="/pt/privacy-policy">Privacidade</Link>
           </div>
           <span className="ed-footer-note">
             <ShieldCheck size={14} /> As estimativas são ilustrativas.
