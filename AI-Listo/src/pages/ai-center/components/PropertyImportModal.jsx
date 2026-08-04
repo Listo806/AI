@@ -10,11 +10,16 @@ import {
   Save,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "./PropertyImportModal.css";
 
-const formatPrice = (value, currency = "USD") => {
+const formatPrice = (
+  value,
+  currency = "USD",
+  unavailableLabel = "Price unavailable",
+) => {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return "Price unavailable";
+  if (!Number.isFinite(amount)) return unavailableLabel;
   try {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -37,6 +42,7 @@ export default function PropertyImportModal({
   onPageChange,
   onSave,
 }) {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -93,11 +99,22 @@ export default function PropertyImportModal({
               <Home size={22} />
             </span>
             <div>
-              <h2>Import Properties</h2>
-              <p>Choose which CRM properties your AI Agent may recommend.</p>
+              <h2>
+                {t("aiCenter.propertyImportModal.title", "Import Properties")}
+              </h2>
+              <p>
+                {t(
+                  "aiCenter.propertyImportModal.subtitle",
+                  "Choose which CRM properties your AI Agent may recommend.",
+                )}
+              </p>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.propertyImportModal.close", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
@@ -108,16 +125,21 @@ export default function PropertyImportModal({
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search title, city or address..."
+              placeholder={t(
+                "aiCenter.propertyImportModal.searchPlaceholder",
+                "Search title, city or address...",
+              )}
             />
-            <button type="submit">Search</button>
+            <button type="submit">
+              {t("aiCenter.propertyImportModal.searchButton", "Search")}
+            </button>
           </form>
           <div>
             <button type="button" onClick={selectVisible}>
-              Select visible
+              {t("aiCenter.propertyImportModal.selectVisible", "Select visible")}
             </button>
             <button type="button" onClick={clearVisible}>
-              Clear visible
+              {t("aiCenter.propertyImportModal.clearVisible", "Clear visible")}
             </button>
           </div>
         </div>
@@ -125,22 +147,33 @@ export default function PropertyImportModal({
         {error && <div className="cx-property-import-error">{error}</div>}
 
         <div className="cx-property-import-summary">
-          <strong>{selectedIds.length}</strong> properties selected for AI
-          recommendations.
+          <strong>{selectedIds.length}</strong>{" "}
+          {t(
+            "aiCenter.propertyImportModal.propertiesSelected",
+            "properties selected for AI recommendations.",
+          )}
         </div>
 
         <div className="cx-property-import-content">
           {loading ? (
             <div className="cx-property-import-loading">
               <Loader2 size={24} />
-              Loading properties...
+              {t("aiCenter.propertyImportModal.loading", "Loading properties...")}
             </div>
           ) : items.length === 0 ? (
             <div className="cx-property-import-empty">
               <Home size={34} />
-              <strong>No properties found</strong>
+              <strong>
+                {t(
+                  "aiCenter.propertyImportModal.emptyTitle",
+                  "No properties found",
+                )}
+              </strong>
               <p>
-                Add properties in the Properties module or change your search.
+                {t(
+                  "aiCenter.propertyImportModal.emptyDescription",
+                  "Add properties in the Properties module or change your search.",
+                )}
               </p>
             </div>
           ) : (
@@ -161,30 +194,53 @@ export default function PropertyImportModal({
                       {property.imageUrl ? (
                         <img
                           src={property.imageUrl}
-                          alt={property.title || "Property"}
+                          alt={
+                            property.title ||
+                            t("aiCenter.propertyImportModal.propertyAlt", "Property")
+                          }
                         />
                       ) : (
                         <Home size={26} />
                       )}
                     </div>
                     <div className="cx-property-import-copy">
-                      <strong>{property.title || "Untitled property"}</strong>
+                      <strong>
+                        {property.title ||
+                          t(
+                            "aiCenter.propertyImportModal.untitledProperty",
+                            "Untitled property",
+                          )}
+                      </strong>
                       <p>
                         <MapPin size={14} />
                         {[property.city, property.state]
                           .filter(Boolean)
-                          .join(", ") || "Location unavailable"}
+                          .join(", ") ||
+                          t(
+                            "aiCenter.propertyImportModal.locationUnavailable",
+                            "Location unavailable",
+                          )}
                       </p>
                       <div>
                         <span>
                           {formatPrice(
                             property.price,
                             property.currency || "USD",
+                            t(
+                              "aiCenter.propertyImportModal.priceUnavailable",
+                              "Price unavailable",
+                            ),
                           )}
                         </span>
                         <small>
-                          {property.bedrooms ?? "—"} bd ·{" "}
-                          {property.bathrooms ?? "—"} ba
+                          {t(
+                            "aiCenter.propertyImportModal.bedBath",
+                            "{{beds}} bd · {{baths}} ba",
+                            {
+                              beds: property.bedrooms ?? "—",
+                              baths: property.bathrooms ?? "—",
+                            },
+                          )}
                         </small>
                       </div>
                     </div>
@@ -205,7 +261,11 @@ export default function PropertyImportModal({
               <ChevronLeft size={17} />
             </button>
             <span>
-              Page {page} of {totalPages}
+              {t(
+                "aiCenter.propertyImportModal.pageOf",
+                "Page {{page}} of {{totalPages}}",
+                { page, totalPages },
+              )}
             </span>
             <button
               type="button"
@@ -216,7 +276,7 @@ export default function PropertyImportModal({
             </button>
           </div>
           <button type="button" className="secondary" onClick={onClose}>
-            Cancel
+            {t("aiCenter.propertyImportModal.cancel", "Cancel")}
           </button>
           <button
             type="button"
@@ -229,7 +289,12 @@ export default function PropertyImportModal({
             ) : (
               <Save size={17} />
             )}
-            {saving ? "Saving..." : "Save Property Catalog"}
+            {saving
+              ? t("aiCenter.propertyImportModal.saving", "Saving...")
+              : t(
+                  "aiCenter.propertyImportModal.saveButton",
+                  "Save Property Catalog",
+                )}
           </button>
         </footer>
       </div>

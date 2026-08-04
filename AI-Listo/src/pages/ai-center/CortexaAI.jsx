@@ -54,6 +54,7 @@ import {
   ChevronsLeft
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import CortexaAISetup from "./CortexaAISetup";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
@@ -72,6 +73,7 @@ import KnowledgeImportModal from "./components/KnowledgeImportModal";
 import KnowledgeInsightsModal from "./components/KnowledgeInsightsModal";
 
 export default function CortexaAI() {
+  const { t } = useTranslation();
   const location = useLocation();
   const isSetupRoute = location.pathname === "/dashboard/ai-cortexa-setup";
   const { user } = useAuth();
@@ -183,7 +185,7 @@ export default function CortexaAI() {
       setPageError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load AI Agent setup.",
+          t("aiCenter.cortexaAI.errorLoadSetup", "Unable to load AI Agent setup."),
       );
 
       return null;
@@ -224,7 +226,7 @@ export default function CortexaAI() {
       setPropertyCatalogError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load properties.",
+          t("aiCenter.cortexaAI.errorLoadProperties", "Unable to load properties."),
       );
     } finally {
       setPropertyCatalogLoading(false);
@@ -257,7 +259,7 @@ export default function CortexaAI() {
       setPropertyCatalogError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save property catalog.",
+          t("aiCenter.cortexaAI.errorSaveProperties", "Unable to save property catalog."),
       );
 
       throw error;
@@ -276,7 +278,7 @@ export default function CortexaAI() {
       console.error(error);
 
       setAppointmentRulesError(
-        error?.message || "Unable to load appointment rules.",
+        error?.message || t("aiCenter.cortexaAI.errorLoadAppointmentRules", "Unable to load appointment rules."),
       );
     } finally {
       setAppointmentRulesLoading(false);
@@ -301,7 +303,7 @@ export default function CortexaAI() {
     } catch (error) {
       console.error(error);
       setAppointmentRulesError(
-        error?.message || "Unable to save appointment rules.",
+        error?.message || t("aiCenter.cortexaAI.errorSaveAppointmentRules", "Unable to save appointment rules."),
       );
     } finally {
       setAppointmentRulesSaving(false);
@@ -322,7 +324,7 @@ export default function CortexaAI() {
       setBehaviorError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load AI behavior.",
+          t("aiCenter.cortexaAI.errorLoadBehavior", "Unable to load AI behavior."),
       );
     } finally {
       setBehaviorLoading(false);
@@ -352,7 +354,7 @@ export default function CortexaAI() {
       setBehaviorError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save AI behavior.",
+          t("aiCenter.cortexaAI.errorSaveBehavior", "Unable to save AI behavior."),
       );
 
       throw error;
@@ -375,7 +377,7 @@ export default function CortexaAI() {
       setAutomationsError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load automations.",
+          t("aiCenter.cortexaAI.errorLoadAutomations", "Unable to load automations."),
       );
     } finally {
       setAutomationsLoading(false);
@@ -405,7 +407,7 @@ export default function CortexaAI() {
       setAutomationsError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save automations.",
+          t("aiCenter.cortexaAI.errorSaveAutomations", "Unable to save automations."),
       );
 
       throw error;
@@ -429,7 +431,7 @@ export default function CortexaAI() {
       setTestAgentError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load AI test status.",
+          t("aiCenter.cortexaAI.errorLoadTestStatus", "Unable to load AI test status."),
       );
 
       return null;
@@ -457,7 +459,7 @@ export default function CortexaAI() {
       setTestAgentError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to start a new test.",
+          t("aiCenter.cortexaAI.errorStartTest", "Unable to start a new test."),
       );
 
       throw error;
@@ -522,7 +524,7 @@ export default function CortexaAI() {
       setTestAgentError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to test AI Agent.",
+          t("aiCenter.cortexaAI.errorRunTest", "Unable to test AI Agent."),
       );
 
       throw error;
@@ -555,7 +557,7 @@ export default function CortexaAI() {
       setLaunchError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to launch AI Agent.",
+          t("aiCenter.cortexaAI.errorLaunch", "Unable to launch AI Agent."),
       );
     } finally {
       setLaunchingAgent(false);
@@ -591,7 +593,7 @@ export default function CortexaAI() {
       setChatError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load this AI chat.",
+          t("aiCenter.cortexaAI.errorLoadChat", "Unable to load this AI chat."),
       );
 
       return null;
@@ -631,7 +633,7 @@ export default function CortexaAI() {
         setChatError(
           error?.response?.data?.message ||
             error?.message ||
-            "Unable to load AI chat history.",
+            t("aiCenter.cortexaAI.errorLoadChatHistory", "Unable to load AI chat history."),
         );
 
         return [];
@@ -673,7 +675,7 @@ export default function CortexaAI() {
       setChatError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to create a new chat.",
+          t("aiCenter.cortexaAI.errorCreateChat", "Unable to create a new chat."),
       );
 
       return null;
@@ -698,7 +700,7 @@ export default function CortexaAI() {
         setKnowledgeError(
           error?.response?.data?.message ||
             error?.message ||
-            "Unable to load AI knowledge.",
+            t("aiCenter.cortexaAI.errorLoadKnowledge", "Unable to load AI knowledge."),
         );
 
         return null;
@@ -743,7 +745,7 @@ export default function CortexaAI() {
       setKnowledgeError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load knowledge item.",
+          t("aiCenter.cortexaAI.errorLoadKnowledgeItem", "Unable to load knowledge item."),
       );
     }
   };
@@ -777,7 +779,7 @@ export default function CortexaAI() {
       setKnowledgeError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save knowledge item.",
+          t("aiCenter.cortexaAI.errorSaveKnowledgeItem", "Unable to save knowledge item."),
       );
       throw error;
     } finally {
@@ -786,7 +788,11 @@ export default function CortexaAI() {
   };
 
   const deleteKnowledgeItem = async (item) => {
-    const confirmed = window.confirm(`Delete "${item.title}"?`);
+    const confirmed = window.confirm(
+      t("aiCenter.cortexaAI.confirmDeleteKnowledge", 'Delete "{{title}}"?', {
+        title: item.title,
+      }),
+    );
 
     if (!confirmed) {
       return;
@@ -815,7 +821,7 @@ export default function CortexaAI() {
       setKnowledgeError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to delete knowledge item.",
+          t("aiCenter.cortexaAI.errorDeleteKnowledgeItem", "Unable to delete knowledge item."),
       );
     } finally {
       setKnowledgeDeletingId(null);
@@ -831,7 +837,7 @@ export default function CortexaAI() {
         setKnowledgeImportError(
           result?.rejectedItems
             ?.map((item) => `${item.title}: ${item.reason}`)
-            .join("\n") || "No knowledge items were imported.",
+            .join("\n") || t("aiCenter.cortexaAI.errorNoKnowledgeImported", "No knowledge items were imported."),
         );
         return;
       }
@@ -850,7 +856,7 @@ export default function CortexaAI() {
       setKnowledgeImportError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to import knowledge.",
+          t("aiCenter.cortexaAI.errorImportKnowledge", "Unable to import knowledge."),
       );
 
       throw error;
@@ -898,7 +904,7 @@ export default function CortexaAI() {
         setActivityError(
           error?.response?.data?.message ||
             error?.message ||
-            "Unable to load AI activity.",
+            t("aiCenter.cortexaAI.errorLoadActivity", "Unable to load AI activity."),
         );
         return null;
       } finally {
@@ -926,7 +932,9 @@ export default function CortexaAI() {
       const csv = String(response?.csv || "");
 
       if (!csv) {
-        throw new Error("No activity data available to export.");
+        throw new Error(
+          t("aiCenter.cortexaAI.errorNoActivityToExport", "No activity data available to export."),
+        );
       }
 
       const blob = new Blob(["\uFEFF", csv], {
@@ -947,7 +955,7 @@ export default function CortexaAI() {
       setActivityError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to export AI activity.",
+          t("aiCenter.cortexaAI.errorExportActivity", "Unable to export AI activity."),
       );
     } finally {
       setActivityExporting(false);
@@ -1017,7 +1025,7 @@ export default function CortexaAI() {
           setPageError(
             error?.response?.data?.message ||
               error?.message ||
-              "Unable to load AI Agent data.",
+              t("aiCenter.cortexaAI.errorLoadAgentData", "Unable to load AI Agent data."),
           );
         }
       } finally {
@@ -1117,7 +1125,7 @@ export default function CortexaAI() {
           content:
             error?.response?.data?.message ||
             error?.message ||
-            "AI request failed.",
+            t("aiCenter.cortexaAI.errorAiRequestFailed", "AI request failed."),
           error: true,
         },
       ]);
@@ -1125,7 +1133,7 @@ export default function CortexaAI() {
       setChatError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to send your message.",
+          t("aiCenter.cortexaAI.errorSendMessage", "Unable to send your message."),
       );
       const errorCode =
         error?.code || error?.details?.code || error?.response?.data?.code;
@@ -1135,9 +1143,9 @@ export default function CortexaAI() {
           error?.details?.capability || error?.response?.data?.capability;
 
         setChatError(
-          `This AI capability is disabled: ${
-            capability || "requested action"
-          }. Enable it in Controls to continue.`,
+          t("aiCenter.cortexaAI.errorCapabilityDisabled", "This AI capability is disabled: {{capability}}. Enable it in Controls to continue.", {
+            capability: capability || t("aiCenter.cortexaAI.requestedAction", "requested action"),
+          }),
         );
 
         return;
@@ -1145,14 +1153,16 @@ export default function CortexaAI() {
 
       if (errorCode === "AI_AGENT_PAUSED") {
         setChatError(
-          "The AI Agent is paused. Resume it in Controls before sending messages.",
+          t("aiCenter.cortexaAI.errorAgentPaused", "The AI Agent is paused. Resume it in Controls before sending messages."),
         );
 
         return;
       }
 
       if (errorCode === "AI_AGENT_OUTSIDE_WORKING_HOURS") {
-        setChatError("The AI Agent is currently outside its working hours.");
+        setChatError(
+          t("aiCenter.cortexaAI.errorOutsideWorkingHours", "The AI Agent is currently outside its working hours."),
+        );
 
         return;
       }
@@ -1177,7 +1187,7 @@ export default function CortexaAI() {
       setActivityError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load activity details.",
+          t("aiCenter.cortexaAI.errorLoadActivityDetails", "Unable to load activity details."),
       );
     } finally {
       setActivityDetailLoading(false);
@@ -1196,26 +1206,26 @@ export default function CortexaAI() {
   const agentMenus = [
     {
       key: "chat",
-      title: "AI Chat",
-      desc: "Chat with your AI Agent",
+      title: t("aiCenter.cortexaAI.menuChatTitle", "AI Chat"),
+      desc: t("aiCenter.cortexaAI.menuChatDesc", "Chat with your AI Agent"),
       icon: MessageSquare,
     },
     {
       key: "knowledge",
-      title: "Knowledge",
-      desc: "Manage AI knowledge",
+      title: t("aiCenter.cortexaAI.menuKnowledgeTitle", "Knowledge"),
+      desc: t("aiCenter.cortexaAI.menuKnowledgeDesc", "Manage AI knowledge"),
       icon: BookOpen,
     },
     {
       key: "activity",
-      title: "Activity",
-      desc: "See what your AI is doing",
+      title: t("aiCenter.cortexaAI.menuActivityTitle", "Activity"),
+      desc: t("aiCenter.cortexaAI.menuActivityDesc", "See what your AI is doing"),
       icon: Sparkles,
     },
     {
       key: "controls",
-      title: "Controls",
-      desc: "Behavior & preferences",
+      title: t("aiCenter.cortexaAI.menuControlsTitle", "Controls"),
+      desc: t("aiCenter.cortexaAI.menuControlsDesc", "Behavior & preferences"),
       icon: SlidersHorizontal,
     },
   ];
@@ -1234,7 +1244,7 @@ export default function CortexaAI() {
       setBusinessProfileError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to load Business Profile.",
+          t("aiCenter.cortexaAI.errorLoadBusinessProfile", "Unable to load Business Profile."),
       );
     } finally {
       setBusinessProfileLoading(false);
@@ -1260,7 +1270,7 @@ export default function CortexaAI() {
       setBusinessProfileError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save Business Profile.",
+          t("aiCenter.cortexaAI.errorSaveBusinessProfile", "Unable to save Business Profile."),
       );
 
       throw error;
@@ -1273,7 +1283,7 @@ export default function CortexaAI() {
     return (
       <div className="cx-ai-loading-state">
         <RefreshCw className="cx-ai-loading-spinner" size={22} />
-        Loading AI Agent...
+        {t("aiCenter.cortexaAI.loadingAgent", "Loading AI Agent...")}
       </div>
     );
   }
@@ -1328,11 +1338,13 @@ export default function CortexaAI() {
               onClick={toggleAgentSidebar}
               aria-label={
                 agentSidebarCollapsed
-                  ? "Expand AI Agent sidebar"
-                  : "Collapse AI Agent sidebar"
+                  ? t("aiCenter.cortexaAI.expandSidebarAria", "Expand AI Agent sidebar")
+                  : t("aiCenter.cortexaAI.collapseSidebarAria", "Collapse AI Agent sidebar")
               }
               title={
-                agentSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+                agentSidebarCollapsed
+                  ? t("aiCenter.cortexaAI.expandSidebar", "Expand sidebar")
+                  : t("aiCenter.cortexaAI.collapseSidebar", "Collapse sidebar")
               }
             >
               {agentSidebarCollapsed ? (
@@ -1396,8 +1408,8 @@ export default function CortexaAI() {
                 className="cx-agent-status-collapsed"
                 title={
                   setupData?.isSetupComplete
-                    ? "AI Agent Online"
-                    : "Setup in progress"
+                    ? t("aiCenter.cortexaAI.agentOnline", "AI Agent Online")
+                    : t("aiCenter.cortexaAI.setupInProgress", "Setup in progress")
                 }
                 onClick={() => {
                   setActivePage(
@@ -1425,24 +1437,25 @@ export default function CortexaAI() {
               </button>
             ) : (
               <div className="cx-agent-status-card">
-                <h3>AI Agent Status</h3>
+                <h3>{t("aiCenter.cortexaAI.agentStatusTitle", "AI Agent Status")}</h3>
 
                 <p className={setupData?.isSetupComplete ? "online" : "setup"}>
                   <i />
 
                   {setupData?.agentStatus === "paused"
-                    ? "Paused"
+                    ? t("aiCenter.cortexaAI.statusPaused", "Paused")
                     : setupData?.isSetupComplete
-                      ? "Online"
-                      : "Setup in progress"}
+                      ? t("aiCenter.cortexaAI.statusOnline", "Online")
+                      : t("aiCenter.cortexaAI.setupInProgress", "Setup in progress")}
                 </p>
 
                 <p>
                   {setupData?.isSetupComplete
-                    ? "Your AI Agent is active and ready to help."
-                    : `${Number(setupData?.completedSteps || 0)} of ${Number(
-                        setupData?.totalSteps || 8,
-                      )} setup steps completed.`}
+                    ? t("aiCenter.cortexaAI.agentActiveReady", "Your AI Agent is active and ready to help.")
+                    : t("aiCenter.cortexaAI.setupStepsCompleted", "{{completed}} of {{total}} setup steps completed.", {
+                        completed: Number(setupData?.completedSteps || 0),
+                        total: Number(setupData?.totalSteps || 8),
+                      })}
                 </p>
 
                 <button
@@ -1454,8 +1467,8 @@ export default function CortexaAI() {
                   }}
                 >
                   {setupData?.isSetupComplete
-                    ? "View Activity"
-                    : "Continue Setup"}
+                    ? t("aiCenter.cortexaAI.viewActivity", "View Activity")
+                    : t("aiCenter.cortexaAI.continueSetup", "Continue Setup")}
                 </button>
               </div>
             )}
@@ -1468,15 +1481,14 @@ export default function CortexaAI() {
                 <div>
                   <ShieldCheck size={18} />
                   <div>
-                    <strong>Preview mode</strong>
+                    <strong>{t("aiCenter.cortexaAI.previewMode", "Preview mode")}</strong>
                     <p>
-                      Complete AI Agent setup to enable actions and save
-                      changes.
+                      {t("aiCenter.cortexaAI.previewModeDesc", "Complete AI Agent setup to enable actions and save changes.")}
                     </p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setActivePage("setup")}>
-                  Continue Setup
+                  {t("aiCenter.cortexaAI.continueSetup", "Continue Setup")}
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -1484,7 +1496,7 @@ export default function CortexaAI() {
             {loadingPage && activePage !== "chat" && (
               <div className="cx-ai-inline-loading">
                 <RefreshCw className="cx-ai-loading-spinner" size={18} />
-                Loading data...
+                {t("aiCenter.cortexaAI.loadingData", "Loading data...")}
               </div>
             )}
 
@@ -1667,7 +1679,7 @@ export default function CortexaAI() {
                   onViewActivityTypes={() => {
                     setActivitySummaryModal({
                       type: "activity_types",
-                      title: "Activity by Type",
+                      title: t("aiCenter.cortexaAI.activityByType", "Activity by Type"),
                       items: Array.isArray(activityData?.activityByType)
                         ? activityData.activityByType
                         : [],
@@ -1676,7 +1688,7 @@ export default function CortexaAI() {
                   onViewTopActions={() => {
                     setActivitySummaryModal({
                       type: "top_actions",
-                      title: "Top Actions",
+                      title: t("aiCenter.cortexaAI.topActions", "Top Actions"),
                       items: Array.isArray(activityData?.topActions)
                         ? activityData.topActions
                         : [],
@@ -1685,7 +1697,7 @@ export default function CortexaAI() {
                   onViewRecentRuns={() => {
                     setActivitySummaryModal({
                       type: "recent_runs",
-                      title: "Recent AI Runs",
+                      title: t("aiCenter.cortexaAI.recentAiRuns", "Recent AI Runs"),
                       items: Array.isArray(activityData?.recentRuns)
                         ? activityData.recentRuns
                         : Array.isArray(activityData?.recentAiRuns)
@@ -1895,6 +1907,7 @@ function SetupLayout({
   launchingAgent,
   launchError,
 }) {
+  const { t } = useTranslation();
   const setupSteps = useMemo(() => {
     const data = setupData || {};
 
@@ -1902,20 +1915,20 @@ function SetupLayout({
       {
         id: 1,
         key: "whatsapp",
-        title: "Connect WhatsApp",
-        desc: "Connect the WhatsApp number your AI Agent will use.",
+        title: t("aiCenter.cortexaAI.stepWhatsappTitle", "Connect WhatsApp"),
+        desc: t("aiCenter.cortexaAI.stepWhatsappDesc", "Connect the WhatsApp number your AI Agent will use."),
         icon: MessageSquare,
         status: whatsappSetup?.connected
-          ? "Connected"
-          : data?.whatsapp?.status || "Not connected",
+          ? t("aiCenter.cortexaAI.statusConnected", "Connected")
+          : data?.whatsapp?.status || t("aiCenter.cortexaAI.statusNotConnected", "Not connected"),
         statusType:
           whatsappSetup?.connected || data?.whatsapp?.connected
             ? "success"
             : "danger",
         action:
           whatsappSetup?.connected || data?.whatsapp?.connected
-            ? "Connected"
-            : "Connect WhatsApp",
+            ? t("aiCenter.cortexaAI.statusConnected", "Connected")
+            : t("aiCenter.cortexaAI.stepWhatsappTitle", "Connect WhatsApp"),
         accent: "green",
         complete: Boolean(
           whatsappSetup?.connected || data?.whatsapp?.connected,
@@ -1924,93 +1937,101 @@ function SetupLayout({
       {
         id: 2,
         key: "businessProfile",
-        title: "Business Profile",
-        desc: "Tell your AI Agent about your business.",
+        title: t("aiCenter.cortexaAI.stepBusinessTitle", "Business Profile"),
+        desc: t("aiCenter.cortexaAI.stepBusinessDesc", "Tell your AI Agent about your business."),
         icon: Building2,
-        status: data?.businessProfile?.status || "Incomplete",
+        status: data?.businessProfile?.status || t("aiCenter.cortexaAI.statusIncomplete", "Incomplete"),
         statusType: data?.businessProfile?.completed ? "success" : "warning",
-        action: data?.businessProfile?.completed ? "Edit" : "Set up",
+        action: data?.businessProfile?.completed
+          ? t("aiCenter.cortexaAI.actionEdit", "Edit")
+          : t("aiCenter.cortexaAI.actionSetUp", "Set up"),
         accent: "blue",
         complete: Boolean(data?.businessProfile?.completed),
       },
       {
         id: 3,
         key: "properties",
-        title: "Import Properties",
-        desc: "Add properties your AI can recommend.",
+        title: t("aiCenter.cortexaAI.stepPropertiesTitle", "Import Properties"),
+        desc: t("aiCenter.cortexaAI.stepPropertiesDesc", "Add properties your AI can recommend."),
         icon: Home,
         status:
           data?.properties?.status ||
-          `${Number(data?.properties?.imported || 0)} imported`,
+          t("aiCenter.cortexaAI.statusImported", "{{count}} imported", {
+            count: Number(data?.properties?.imported || 0),
+          }),
         statusType:
           Number(data?.properties?.imported || 0) > 0 ? "success" : "muted",
-        action: "Import",
+        action: t("aiCenter.cortexaAI.actionImport", "Import"),
         accent: "orange",
         complete: Number(data?.properties?.imported || 0) > 0,
       },
       {
         id: 4,
         key: "appointmentRules",
-        title: "Appointment Rules",
-        desc: "Define when and how AI can book appointments.",
+        title: t("aiCenter.cortexaAI.stepAppointmentTitle", "Appointment Rules"),
+        desc: t("aiCenter.cortexaAI.stepAppointmentDesc", "Define when and how AI can book appointments."),
         icon: CalendarDays,
-        status: data?.appointmentRules?.status || "Not configured",
+        status: data?.appointmentRules?.status || t("aiCenter.cortexaAI.statusNotConfigured", "Not configured"),
         statusType: data?.appointmentRules?.configured ? "success" : "muted",
-        action: "Configure",
+        action: t("aiCenter.cortexaAI.actionConfigure", "Configure"),
         accent: "indigo",
         complete: Boolean(data?.appointmentRules?.configured),
       },
       {
         id: 5,
         key: "behavior",
-        title: "AI Behavior",
-        desc: "Define how your AI should talk and what to ask.",
+        title: t("aiCenter.cortexaAI.stepBehaviorTitle", "AI Behavior"),
+        desc: t("aiCenter.cortexaAI.stepBehaviorDesc", "Define how your AI should talk and what to ask."),
         icon: MessageSquare,
-        status: data?.behavior?.status || "Not configured",
+        status: data?.behavior?.status || t("aiCenter.cortexaAI.statusNotConfigured", "Not configured"),
         statusType: data?.behavior?.configured ? "success" : "muted",
-        action: "Configure",
+        action: t("aiCenter.cortexaAI.actionConfigure", "Configure"),
         accent: "green",
         complete: Boolean(data?.behavior?.configured),
       },
       {
         id: 6,
         key: "automations",
-        title: "Automations",
-        desc: "Choose what your AI Agent should do automatically.",
+        title: t("aiCenter.cortexaAI.stepAutomationsTitle", "Automations"),
+        desc: t("aiCenter.cortexaAI.stepAutomationsDesc", "Choose what your AI Agent should do automatically."),
         icon: Zap,
-        status: data?.automations?.status || "Not configured",
+        status: data?.automations?.status || t("aiCenter.cortexaAI.statusNotConfigured", "Not configured"),
         statusType: data?.automations?.configured ? "success" : "muted",
-        action: data?.automations?.configured ? "Edit" : "Set up",
+        action: data?.automations?.configured
+          ? t("aiCenter.cortexaAI.actionEdit", "Edit")
+          : t("aiCenter.cortexaAI.actionSetUp", "Set up"),
         accent: "purple",
         complete: Boolean(data?.automations?.configured),
       },
       {
         id: 7,
         key: "testAi",
-        title: "Test AI",
-        desc: "Test your AI Agent in a safe environment.",
+        title: t("aiCenter.cortexaAI.stepTestTitle", "Test AI"),
+        desc: t("aiCenter.cortexaAI.stepTestDesc", "Test your AI Agent in a safe environment."),
         icon: TestTube2,
-        status: data?.testAi?.status || "Not tested",
+        status: data?.testAi?.status || t("aiCenter.cortexaAI.statusNotTested", "Not tested"),
         statusType: data?.testAi?.tested ? "success" : "muted",
-        action: "Test",
+        action: t("aiCenter.cortexaAI.actionTest", "Test"),
         accent: "pink",
         complete: Boolean(data?.testAi?.tested),
       },
       {
         id: 8,
         key: "launch",
-        title: "Launch AI Agent",
-        desc: "Review and launch your AI Agent.",
+        title: t("aiCenter.cortexaAI.stepLaunchTitle", "Launch AI Agent"),
+        desc: t("aiCenter.cortexaAI.stepLaunchDesc", "Review and launch your AI Agent."),
         icon: Rocket,
-        status: data?.launch?.status || "Locked",
+        status: data?.launch?.status || t("aiCenter.cortexaAI.statusLocked", "Locked"),
         statusType: data?.launch?.unlocked ? "success" : "locked",
-        action: data?.launch?.unlocked ? "Launch" : "Locked",
+        action: data?.launch?.unlocked
+          ? t("aiCenter.cortexaAI.actionLaunch", "Launch")
+          : t("aiCenter.cortexaAI.statusLocked", "Locked"),
         accent: "rose",
         complete: Boolean(data?.launch?.launched),
         locked: !data?.launch?.unlocked,
       },
     ];
-  }, [setupData, whatsappSetup?.connected]);
+  }, [setupData, whatsappSetup?.connected, t]);
 
   const completedSteps = Number(setupData?.completedSteps || 0);
   const totalSteps = Number(setupData?.totalSteps || 8);
@@ -2021,18 +2042,17 @@ function SetupLayout({
       <header className="cx-ai-setup-topbar heading_page">
         <div>
           <h1>
-            <Bot size={24} /> Welcome! Let’s Get Your AI Agent Ready{" "}
+            <Bot size={24} /> {t("aiCenter.cortexaAI.setupWelcome", "Welcome! Let’s Get Your AI Agent Ready")}{" "}
           </h1>
           <p className="sub_head">
-            Complete these 8 quick steps. Most customers finish setup in under 5
-            minutes.
+            {t("aiCenter.cortexaAI.setupWelcomeSub", "Complete these 8 quick steps. Most customers finish setup in under 5 minutes.")}
           </p>
         </div>
       </header>
 
       <main className="cx-ai-setup-layout">
         <section className="cx-ai-setup-main">
-          <h2>Your setup progress</h2>
+          <h2>{t("aiCenter.cortexaAI.yourSetupProgress", "Your setup progress")}</h2>
 
           <div className="cx-setup-list">
             {setupSteps.map((step) => {
@@ -2107,7 +2127,7 @@ function SetupLayout({
                           }}
                         >
                           {step.key === "launch" && launchingAgent
-                            ? "Launching..."
+                            ? t("aiCenter.cortexaAI.launching", "Launching...")
                             : step.action}
                         </button>
                       )}
@@ -2150,7 +2170,7 @@ function SetupLayout({
 
         <aside className="cx-ai-setup-sidebar">
           <div className="cx-side-card cx-progress-card">
-            <h3>Overall Progress</h3>
+            <h3>{t("aiCenter.cortexaAI.overallProgress", "Overall Progress")}</h3>
             <div className="cx-progress-row">
               <div
                 className="cx-progress-circle"
@@ -2160,22 +2180,27 @@ function SetupLayout({
               </div>
               <div>
                 <strong>
-                  {completedSteps} of {totalSteps} steps completed
+                  {t("aiCenter.cortexaAI.stepsCompleted", "{{completed}} of {{total}} steps completed", {
+                    completed: completedSteps,
+                    total: totalSteps,
+                  })}
                 </strong>
                 <p>
-                  {progress === 100 ? "Great work!" : "You’re doing great!"}
+                  {progress === 100
+                    ? t("aiCenter.cortexaAI.greatWork", "Great work!")
+                    : t("aiCenter.cortexaAI.youreDoingGreat", "You’re doing great!")}
                 </p>
                 <p>
                   {progress === 100
-                    ? "Your AI Agent is ready."
-                    : "Let’s finish setting up your AI Agent."}
+                    ? t("aiCenter.cortexaAI.agentIsReady", "Your AI Agent is ready.")
+                    : t("aiCenter.cortexaAI.finishSetup", "Let’s finish setting up your AI Agent.")}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="cx-side-card">
-            <h3>AI Setup Status</h3>
+            <h3>{t("aiCenter.cortexaAI.aiSetupStatus", "AI Setup Status")}</h3>
             {setupSteps.map((row) => {
               const Icon = row.icon;
               return (
@@ -2209,21 +2234,20 @@ function SetupLayout({
 
           <div className="cx-side-card">
             <h3 className="cx-tips-title">
-              <Settings2 size={22} /> Setup Tips
+              <Settings2 size={22} /> {t("aiCenter.cortexaAI.setupTips", "Setup Tips")}
             </h3>
             <div className="cx-tips-list">
               <p>
-                <CheckCircle2 size={18} /> You can edit these settings anytime
+                <CheckCircle2 size={18} /> {t("aiCenter.cortexaAI.tipEditAnytime", "You can edit these settings anytime")}
               </p>
               <p>
-                <CheckCircle2 size={18} /> Your progress is saved automatically
+                <CheckCircle2 size={18} /> {t("aiCenter.cortexaAI.tipProgressSaved", "Your progress is saved automatically")}
               </p>
               <p>
-                <CheckCircle2 size={18} /> Most customers finish in under 5
-                minutes
+                <CheckCircle2 size={18} /> {t("aiCenter.cortexaAI.tipFinishFast", "Most customers finish in under 5 minutes")}
               </p>
               <p>
-                <CheckCircle2 size={18} /> Need help? Contact our support team
+                <CheckCircle2 size={18} /> {t("aiCenter.cortexaAI.tipNeedHelp", "Need help? Contact our support team")}
               </p>
             </div>
           </div>
@@ -2281,46 +2305,45 @@ function ChatLayout({
   onSelectSession,
   onOpenActivity,
 }) {
+  const { t } = useTranslation();
   const chatShortcuts = [
     {
       key: "leads",
-      label: "Leads",
+      label: t("aiCenter.cortexaAI.shortcutLeads", "Leads"),
       icon: Users,
-      prompt:
-        "Give me an overview of my active leads and which ones need attention.",
+      prompt: t("aiCenter.cortexaAI.shortcutLeadsPrompt", "Give me an overview of my active leads and which ones need attention."),
     },
     {
       key: "properties",
-      label: "Properties",
+      label: t("aiCenter.cortexaAI.shortcutProperties", "Properties"),
       icon: Home,
-      prompt:
-        "Give me an overview of available properties and recent buyer matches.",
+      prompt: t("aiCenter.cortexaAI.shortcutPropertiesPrompt", "Give me an overview of available properties and recent buyer matches."),
     },
     {
       key: "appointments",
-      label: "Appointments",
+      label: t("aiCenter.cortexaAI.shortcutAppointments", "Appointments"),
       icon: CalendarDays,
-      prompt: "Show me upcoming, confirmed, and overdue appointments.",
+      prompt: t("aiCenter.cortexaAI.shortcutAppointmentsPrompt", "Show me upcoming, confirmed, and overdue appointments."),
     },
     {
       key: "pipeline",
-      label: "Pipeline",
+      label: t("aiCenter.cortexaAI.shortcutPipeline", "Pipeline"),
       icon: Sparkles,
-      prompt: "Summarize my pipeline and highlight deals at risk.",
+      prompt: t("aiCenter.cortexaAI.shortcutPipelinePrompt", "Summarize my pipeline and highlight deals at risk."),
     },
   ];
   const getGreeting = () => {
     const hour = new Date().getHours();
 
     if (hour < 12) {
-      return "Good morning";
+      return t("aiCenter.cortexaAI.goodMorning", "Good morning");
     }
 
     if (hour < 18) {
-      return "Good afternoon";
+      return t("aiCenter.cortexaAI.goodAfternoon", "Good afternoon");
     }
 
-    return "Good evening";
+    return t("aiCenter.cortexaAI.goodEvening", "Good evening");
   };
 
   const displayName =
@@ -2328,60 +2351,59 @@ function ChatLayout({
     user?.fullName ||
     user?.firstName ||
     user?.email?.split("@")?.[0] ||
-    "there";
+    t("aiCenter.cortexaAI.there", "there");
 
-  const firstName = String(displayName).trim().split(/\s+/)[0] || "there";
+  const firstName =
+    String(displayName).trim().split(/\s+/)[0] ||
+    t("aiCenter.cortexaAI.there", "there");
 
   const fallbackPrompts = [
     {
       key: "leads_attention",
       icon: MessageSquare,
-      title: "What leads need attention today?",
-      prompt:
-        "Show me hot, overdue, and uncontacted leads that need attention today.",
-      desc: "Review hot and overdue leads.",
+      title: t("aiCenter.cortexaAI.promptLeadsAttentionTitle", "What leads need attention today?"),
+      prompt: t("aiCenter.cortexaAI.promptLeadsAttentionPrompt", "Show me hot, overdue, and uncontacted leads that need attention today."),
+      desc: t("aiCenter.cortexaAI.promptLeadsAttentionDesc", "Review hot and overdue leads."),
       accent: "purple",
     },
     {
       key: "likely_buyers",
       icon: Zap,
-      title: "Which buyers are most likely to buy?",
-      prompt: "Show me the buyer leads most likely to convert, with reasons.",
-      desc: "Review your highest-intent buyers.",
+      title: t("aiCenter.cortexaAI.promptLikelyBuyersTitle", "Which buyers are most likely to buy?"),
+      prompt: t("aiCenter.cortexaAI.promptLikelyBuyersPrompt", "Show me the buyer leads most likely to convert, with reasons."),
+      desc: t("aiCenter.cortexaAI.promptLikelyBuyersDesc", "Review your highest-intent buyers."),
       accent: "orange",
     },
     {
       key: "appointments_today",
       icon: CalendarDays,
-      title: "What appointments are booked today?",
-      prompt: "Show me today's booked and confirmed appointments.",
-      desc: "Review today’s appointments.",
+      title: t("aiCenter.cortexaAI.promptAppointmentsTodayTitle", "What appointments are booked today?"),
+      prompt: t("aiCenter.cortexaAI.promptAppointmentsTodayPrompt", "Show me today's booked and confirmed appointments."),
+      desc: t("aiCenter.cortexaAI.promptAppointmentsTodayDesc", "Review today’s appointments."),
       accent: "blue",
     },
     {
       key: "follow_up",
       icon: MessageCircle,
-      title: "Write a follow-up message",
-      prompt:
-        "Help me write a professional follow-up message for a lead who has not replied.",
-      desc: "Create a lead follow-up message.",
+      title: t("aiCenter.cortexaAI.promptFollowUpTitle", "Write a follow-up message"),
+      prompt: t("aiCenter.cortexaAI.promptFollowUpPrompt", "Help me write a professional follow-up message for a lead who has not replied."),
+      desc: t("aiCenter.cortexaAI.promptFollowUpDesc", "Create a lead follow-up message."),
       accent: "green",
     },
     {
       key: "property_match",
       icon: Home,
-      title: "Find matching properties",
-      prompt: "Show me recent property matches for active buyer leads.",
-      desc: "Review matching properties.",
+      title: t("aiCenter.cortexaAI.promptPropertyMatchTitle", "Find matching properties"),
+      prompt: t("aiCenter.cortexaAI.promptPropertyMatchPrompt", "Show me recent property matches for active buyer leads."),
+      desc: t("aiCenter.cortexaAI.promptPropertyMatchDesc", "Review matching properties."),
       accent: "green",
     },
     {
       key: "pipeline_summary",
       icon: FileText,
-      title: "Summarize my pipeline",
-      prompt:
-        "Summarize my current pipeline, including risks, overdue deals, and next actions.",
-      desc: "Get a quick pipeline update.",
+      title: t("aiCenter.cortexaAI.promptPipelineSummaryTitle", "Summarize my pipeline"),
+      prompt: t("aiCenter.cortexaAI.promptPipelineSummaryPrompt", "Summarize my current pipeline, including risks, overdue deals, and next actions."),
+      desc: t("aiCenter.cortexaAI.promptPipelineSummaryDesc", "Get a quick pipeline update."),
       accent: "purple",
     },
   ];
@@ -2395,7 +2417,7 @@ function ChatLayout({
       ? apiPrompts.map((item, index) => ({
           key: item.key || `prompt-${index}`,
 
-          title: item.title || item.prompt || "Ask AI Agent",
+          title: item.title || item.prompt || t("aiCenter.cortexaAI.askAiAgent", "Ask AI Agent"),
 
           prompt: item.prompt || item.title || "",
 
@@ -2421,9 +2443,9 @@ function ChatLayout({
     <div className="cx-ai-page cx-chat-page">
       <div className="cx-ai-page-head">
         <div>
-          <h1>AI Agent Chat</h1>
+          <h1>{t("aiCenter.cortexaAI.chatTitle", "AI Agent Chat")}</h1>
           <p>
-            Ask anything. Your AI Agent is here to help you close more deals.
+            {t("aiCenter.cortexaAI.chatSubtitle", "Ask anything. Your AI Agent is here to help you close more deals.")}
           </p>
         </div>
         <button
@@ -2439,7 +2461,9 @@ function ChatLayout({
             <Plus size={18} />
           )}
 
-          {creatingSession ? "Creating..." : "New Chat"}
+          {creatingSession
+            ? t("aiCenter.cortexaAI.creating", "Creating...")
+            : t("aiCenter.cortexaAI.newChat", "New Chat")}
         </button>
       </div>
 
@@ -2447,15 +2471,15 @@ function ChatLayout({
         <aside className="cx-chat-history">
           <div className="cx-chat-history-head">
             <div>
-              <h3>Chat History</h3>
-              <p>Your recent AI conversations</p>
+              <h3>{t("aiCenter.cortexaAI.chatHistory", "Chat History")}</h3>
+              <p>{t("aiCenter.cortexaAI.recentConversations", "Your recent AI conversations")}</p>
             </div>
 
             <button
               type="button"
               onClick={onNewChat}
               disabled={creatingSession}
-              title="New Chat"
+              title={t("aiCenter.cortexaAI.newChat", "New Chat")}
               data-ai-write-action="true"
             >
               <Plus size={16} />
@@ -2466,7 +2490,7 @@ function ChatLayout({
             {sessionsLoading ? (
               <div className="cx-chat-history-empty">
                 <RefreshCw size={17} className="cx-ai-loading-spinner" />
-                Loading chats...
+                {t("aiCenter.cortexaAI.loadingChats", "Loading chats...")}
               </div>
             ) : sessions?.length ? (
               sessions.map((session) => (
@@ -2478,8 +2502,8 @@ function ChatLayout({
                 >
                   <MessageSquare size={17} />
                   <div>
-                    <strong>{session.title || "New Chat"}</strong>
-                    <p>{session.lastMessage || "No messages yet"}</p>
+                    <strong>{session.title || t("aiCenter.cortexaAI.newChat", "New Chat")}</strong>
+                    <p>{session.lastMessage || t("aiCenter.cortexaAI.noMessagesYet", "No messages yet")}</p>
                   </div>
                   <span>{Number(session.messageCount || 0)}</span>
                 </button>
@@ -2487,13 +2511,13 @@ function ChatLayout({
             ) : (
               <div className="cx-chat-history-empty">
                 <MessageSquare size={22} />
-                <p>No chats yet</p>
+                <p>{t("aiCenter.cortexaAI.noChatsYet", "No chats yet")}</p>
                 <button
                   type="button"
                   onClick={onNewChat}
                   data-ai-write-action="true"
                 >
-                  Start a new chat
+                  {t("aiCenter.cortexaAI.startNewChat", "Start a new chat")}
                 </button>
               </div>
             )}
@@ -2506,26 +2530,28 @@ function ChatLayout({
               <Bot size={44} />
             </div>
             <h2>
-              {getGreeting()}, {firstName}! 👋
+              {t("aiCenter.cortexaAI.greetingLine", "{{greeting}}, {{name}}! 👋", {
+                greeting: getGreeting(),
+                name: firstName,
+              })}
             </h2>
             <p>
-              I’m your AI Agent. I can help you with leads, properties,
-              appointments, follow-ups and more.
+              {t("aiCenter.cortexaAI.heroSubtitle", "I’m your AI Agent. I can help you with leads, properties, appointments, follow-ups and more.")}
             </p>
             <div className="cx-chat-badges">
               <span>
-                <Sparkles size={15} /> Smart
+                <Sparkles size={15} /> {t("aiCenter.cortexaAI.badgeSmart", "Smart")}
               </span>
               <span>
-                <Zap size={15} /> Proactive
+                <Zap size={15} /> {t("aiCenter.cortexaAI.badgeProactive", "Proactive")}
               </span>
               <span>
-                <Heart size={15} /> Always working for you
+                <Heart size={15} /> {t("aiCenter.cortexaAI.badgeAlwaysWorking", "Always working for you")}
               </span>
             </div>
           </div>
 
-          <h3 className="cx-section-label">Try asking me something</h3>
+          <h3 className="cx-section-label">{t("aiCenter.cortexaAI.tryAsking", "Try asking me something")}</h3>
 
           <div className="cx-prompt-grid">
             {prompts.map((item) => {
@@ -2573,12 +2599,12 @@ function ChatLayout({
               disabled={sendingMessage}
               onClick={() =>
                 onSend(
-                  "What other useful insights or actions can you help me with today?",
+                  t("aiCenter.cortexaAI.moreInsightsPrompt", "What other useful insights or actions can you help me with today?"),
                 )
               }
             >
               <ChevronDown size={17} />
-              More
+              {t("aiCenter.cortexaAI.more", "More")}
             </button>
           </div>
 
@@ -2587,7 +2613,7 @@ function ChatLayout({
           {sessionLoading ? (
             <div className="cx-chat-session-loading">
               <RefreshCw className="cx-ai-loading-spinner" size={18} />
-              Loading conversation...
+              {t("aiCenter.cortexaAI.loadingConversation", "Loading conversation...")}
             </div>
           ) : messages?.length > 0 ? (
             <div className="cx-chat-message-list">
@@ -2604,17 +2630,16 @@ function ChatLayout({
 
               {sendingMessage && (
                 <div className="cx-chat-message assistant">
-                  AI Agent is thinking...
+                  {t("aiCenter.cortexaAI.agentThinking", "AI Agent is thinking...")}
                 </div>
               )}
             </div>
           ) : (
             <div className="cx-chat-empty-conversation">
               <Bot size={34} />
-              <strong>Start a conversation</strong>
+              <strong>{t("aiCenter.cortexaAI.startConversation", "Start a conversation")}</strong>
               <p>
-                Ask your AI Agent about leads, properties, pipeline,
-                appointments, or follow-ups.
+                {t("aiCenter.cortexaAI.startConversationDesc", "Ask your AI Agent about leads, properties, pipeline, appointments, or follow-ups.")}
               </p>
             </div>
           )}
@@ -2623,7 +2648,7 @@ function ChatLayout({
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message here..."
+              placeholder={t("aiCenter.cortexaAI.typeMessagePlaceholder", "Type your message here...")}
             />
             <Mic size={24} />
             <button
@@ -2636,7 +2661,7 @@ function ChatLayout({
           </div>
 
           <p className="cx-ai-note">
-            AI can make mistakes. Please verify important information.
+            {t("aiCenter.cortexaAI.aiMistakesNote", "AI can make mistakes. Please verify important information.")}
           </p>
         </main>
 
@@ -2684,6 +2709,7 @@ function KnowledgeLayout({
   onFilterChange,
   onQuickAction,
 }) {
+  const { t } = useTranslation();
   const allCategories = Array.isArray(knowledgeData?.categories)
     ? knowledgeData.categories
     : [];
@@ -2697,8 +2723,8 @@ function KnowledgeLayout({
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
         <div>
-          <h1>AI Knowledge</h1>
-          <p>Manage what your AI Agent knows about your business.</p>
+          <h1>{t("aiCenter.cortexaAI.knowledgeTitle", "AI Knowledge")}</h1>
+          <p>{t("aiCenter.cortexaAI.knowledgeSubtitle", "Manage what your AI Agent knows about your business.")}</p>
         </div>
         <div className="cx-head-buttons">
           <button
@@ -2708,7 +2734,7 @@ function KnowledgeLayout({
             data-ai-write-action="true"
           >
             <Upload size={17} />
-            Import Knowledge
+            {t("aiCenter.cortexaAI.importKnowledge", "Import Knowledge")}
           </button>
           <button
             type="button"
@@ -2717,7 +2743,7 @@ function KnowledgeLayout({
             data-ai-write-action="true"
           >
             <Plus size={17} />
-            Add Knowledge
+            {t("aiCenter.cortexaAI.addKnowledge", "Add Knowledge")}
           </button>
         </div>
       </div>
@@ -2725,38 +2751,38 @@ function KnowledgeLayout({
       <div className="cx-stat-grid four">
         <StatCard
           icon={BookOpen}
-          title="Knowledge Items"
+          title={t("aiCenter.cortexaAI.statKnowledgeItems", "Knowledge Items")}
           value={knowledgeData?.stats?.knowledgeItems ?? 0}
-          desc="Total items"
+          desc={t("aiCenter.cortexaAI.statTotalItems", "Total items")}
           accent="purple"
         />
         <StatCard
           icon={CircleCheck}
-          title="Active Items"
+          title={t("aiCenter.cortexaAI.statActiveItems", "Active Items")}
           value={knowledgeData?.stats?.activeItems ?? 0}
-          desc="Currently in use"
+          desc={t("aiCenter.cortexaAI.statCurrentlyInUse", "Currently in use")}
           accent="green"
         />
         <StatCard
           icon={Database}
-          title="Data Sources"
+          title={t("aiCenter.cortexaAI.statDataSources", "Data Sources")}
           value={knowledgeData?.stats?.dataSources ?? 0}
-          desc="Connected sources"
+          desc={t("aiCenter.cortexaAI.statConnectedSources", "Connected sources")}
           accent="blue"
         />
         <StatCard
           icon={Sparkles}
-          title="Last Updated"
-          value={knowledgeData?.stats?.lastUpdatedLabel || "Never"}
-          desc={knowledgeData?.stats?.lastUpdatedDate || "No updates yet"}
+          title={t("aiCenter.cortexaAI.statLastUpdated", "Last Updated")}
+          value={knowledgeData?.stats?.lastUpdatedLabel || t("aiCenter.cortexaAI.never", "Never")}
+          desc={knowledgeData?.stats?.lastUpdatedDate || t("aiCenter.cortexaAI.noUpdatesYet", "No updates yet")}
           accent="orange"
         />
       </div>
 
       <div className="cx-two-col">
         <main className="cx-white-card">
-          <h2>Knowledge Categories</h2>
-          <p>Organize and manage what your AI knows.</p>
+          <h2>{t("aiCenter.cortexaAI.knowledgeCategories", "Knowledge Categories")}</h2>
+          <p>{t("aiCenter.cortexaAI.knowledgeCategoriesDesc", "Organize and manage what your AI knows.")}</p>
 
           <div className="cx-category-list">
             {(visibleCategories.length
@@ -2764,69 +2790,64 @@ function KnowledgeLayout({
               : [
                   {
                     key: "company_information",
-                    title: "Company Information",
-                    description:
-                      "Your company details, mission, values and offices",
+                    title: t("aiCenter.cortexaAI.catCompanyInfoTitle", "Company Information"),
+                    description: t("aiCenter.cortexaAI.catCompanyInfoDesc", "Your company details, mission, values and offices"),
                     items: 0,
                     status: "Empty",
                     accent: "purple",
                   },
                   {
                     key: "office_hours",
-                    title: "Office Hours & Availability",
-                    description:
-                      "Business hours, holidays and availability rules",
+                    title: t("aiCenter.cortexaAI.catOfficeHoursTitle", "Office Hours & Availability"),
+                    description: t("aiCenter.cortexaAI.catOfficeHoursDesc", "Business hours, holidays and availability rules"),
                     items: 0,
                     status: "Empty",
                     accent: "green",
                   },
                   {
                     key: "service_areas",
-                    title: "Service Areas",
-                    description:
-                      "Areas, neighborhoods and coverage information",
+                    title: t("aiCenter.cortexaAI.catServiceAreasTitle", "Service Areas"),
+                    description: t("aiCenter.cortexaAI.catServiceAreasDesc", "Areas, neighborhoods and coverage information"),
                     items: 0,
                     status: "Empty",
                     accent: "blue",
                   },
                   {
                     key: "property_knowledge",
-                    title: "Property Knowledge",
-                    description:
-                      "Property types, features and market expertise",
+                    title: t("aiCenter.cortexaAI.catPropertyKnowledgeTitle", "Property Knowledge"),
+                    description: t("aiCenter.cortexaAI.catPropertyKnowledgeDesc", "Property types, features and market expertise"),
                     items: 0,
                     status: "Empty",
                     accent: "orange",
                   },
                   {
                     key: "sales_scripts",
-                    title: "Sales Scripts & Templates",
-                    description:
-                      "Scripts, email templates and messaging guides",
+                    title: t("aiCenter.cortexaAI.catSalesScriptsTitle", "Sales Scripts & Templates"),
+                    description: t("aiCenter.cortexaAI.catSalesScriptsDesc", "Scripts, email templates and messaging guides"),
                     items: 0,
                     status: "Empty",
                     accent: "purple",
                   },
                   {
                     key: "financing_partners",
-                    title: "Financing & Partners",
-                    description: "Lenders, partners and financing information",
+                    title: t("aiCenter.cortexaAI.catFinancingTitle", "Financing & Partners"),
+                    description: t("aiCenter.cortexaAI.catFinancingDesc", "Lenders, partners and financing information"),
                     items: 0,
                     status: "Empty",
                     accent: "green",
                   },
                   {
                     key: "faqs",
-                    title: "FAQs",
-                    description: "Frequently asked questions and answers",
+                    title: t("aiCenter.cortexaAI.catFaqsTitle", "FAQs"),
+                    description: t("aiCenter.cortexaAI.catFaqsDesc", "Frequently asked questions and answers"),
                     items: 0,
                     status: "Empty",
                     accent: "blue",
                   },
                   {
                     key: "policies_processes",
-                    title: "Policies & Processes",
-                    description: "Business policies and internal processes",
+                    title: t("aiCenter.cortexaAI.catPoliciesTitle", "Policies & Processes"),
+                    description: t("aiCenter.cortexaAI.catPoliciesDesc", "Business policies and internal processes"),
                     items: 0,
                     status: "Empty",
                     accent: "purple",
@@ -2872,14 +2893,14 @@ function KnowledgeLayout({
                     <p>{item.description}</p>
                   </div>
 
-                  <span>{Number(item.items || 0)} items</span>
+                  <span>{t("aiCenter.cortexaAI.itemsCount", "{{count}} items", { count: Number(item.items || 0) })}</span>
 
                   <em
                     className={String(item.status || "")
                       .toLowerCase()
                       .replace(/\s+/g, "-")}
                   >
-                    {item.status || "Empty"}
+                    {item.status || t("aiCenter.cortexaAI.statusEmpty", "Empty")}
                   </em>
 
                   <ChevronRight size={18} />
@@ -2897,7 +2918,7 @@ function KnowledgeLayout({
                   search: event.target.value,
                 })
               }
-              placeholder="Search knowledge..."
+              placeholder={t("aiCenter.cortexaAI.searchKnowledgePlaceholder", "Search knowledge...")}
             />
 
             <select
@@ -2908,7 +2929,7 @@ function KnowledgeLayout({
                 })
               }
             >
-              <option value="all">All categories</option>
+              <option value="all">{t("aiCenter.cortexaAI.allCategories", "All categories")}</option>
 
               {(knowledgeData?.categories || []).map((category) => (
                 <option key={category.key} value={category.key}>
@@ -2925,10 +2946,10 @@ function KnowledgeLayout({
                 })
               }
             >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="needs_review">Needs Review</option>
+              <option value="all">{t("aiCenter.cortexaAI.allStatuses", "All statuses")}</option>
+              <option value="active">{t("aiCenter.cortexaAI.statusActive", "Active")}</option>
+              <option value="inactive">{t("aiCenter.cortexaAI.statusInactive", "Inactive")}</option>
+              <option value="needs_review">{t("aiCenter.cortexaAI.statusNeedsReview", "Needs Review")}</option>
             </select>
           </div>
 
@@ -2938,7 +2959,7 @@ function KnowledgeLayout({
             {loading ? (
               <div className="cx-knowledge-empty">
                 <RefreshCw className="cx-ai-loading-spinner" size={20} />
-                Loading knowledge...
+                {t("aiCenter.cortexaAI.loadingKnowledge", "Loading knowledge...")}
               </div>
             ) : knowledgeData?.items?.length ? (
               knowledgeData.items.map((item) => (
@@ -2959,13 +2980,13 @@ function KnowledgeLayout({
 
                       <span className={item.status}>
                         {item.status === "needs_review"
-                          ? "Needs Review"
+                          ? t("aiCenter.cortexaAI.statusNeedsReview", "Needs Review")
                           : item.status === "active"
-                            ? "Active"
-                            : "Inactive"}
+                            ? t("aiCenter.cortexaAI.statusActive", "Active")
+                            : t("aiCenter.cortexaAI.statusInactive", "Inactive")}
                       </span>
 
-                      <span>Priority {item.priority}</span>
+                      <span>{t("aiCenter.cortexaAI.priorityLabel", "Priority {{priority}}", { priority: item.priority })}</span>
                     </div>
                   </div>
 
@@ -2973,7 +2994,7 @@ function KnowledgeLayout({
                     <button
                       type="button"
                       onClick={() => onEdit(item)}
-                      title="Edit"
+                      title={t("aiCenter.cortexaAI.actionEdit", "Edit")}
                     >
                       <PenLine size={16} />
                     </button>
@@ -2983,7 +3004,7 @@ function KnowledgeLayout({
                       className="danger"
                       disabled={deletingId === item.id}
                       onClick={() => onDelete(item)}
-                      title="Delete"
+                      title={t("aiCenter.cortexaAI.actionDelete", "Delete")}
                     >
                       {deletingId === item.id ? (
                         <RefreshCw
@@ -3001,10 +3022,10 @@ function KnowledgeLayout({
               <div className="cx-knowledge-empty">
                 <BookOpen size={28} />
 
-                <strong>No knowledge items found</strong>
+                <strong>{t("aiCenter.cortexaAI.noKnowledgeFound", "No knowledge items found")}</strong>
 
                 <p>
-                  Add your first knowledge item so your AI Agent can use it.
+                  {t("aiCenter.cortexaAI.noKnowledgeFoundDesc", "Add your first knowledge item so your AI Agent can use it.")}
                 </p>
 
                 <button
@@ -3020,7 +3041,7 @@ function KnowledgeLayout({
                   }
                 >
                   <Plus size={16} />
-                  Add Knowledge
+                  {t("aiCenter.cortexaAI.addKnowledge", "Add Knowledge")}
                 </button>
               </div>
             )}
@@ -3036,7 +3057,7 @@ function KnowledgeLayout({
                   })
                 }
               >
-                Previous
+                {t("aiCenter.cortexaAI.previous", "Previous")}
               </button>
 
               <button type="button" disabled>
@@ -3055,7 +3076,7 @@ function KnowledgeLayout({
                   })
                 }
               >
-                Next
+                {t("aiCenter.cortexaAI.next", "Next")}
               </button>
             </div>
           )}
@@ -3065,8 +3086,8 @@ function KnowledgeLayout({
             onClick={onToggleInactiveCategories}
           >
             {showInactiveCategories
-              ? "Hide inactive categories"
-              : "Show inactive categories"}
+              ? t("aiCenter.cortexaAI.hideInactiveCategories", "Hide inactive categories")
+              : t("aiCenter.cortexaAI.showInactiveCategories", "Show inactive categories")}
 
             {showInactiveCategories ? (
               <ChevronUp size={16} />
@@ -3078,7 +3099,7 @@ function KnowledgeLayout({
 
         <aside className="cx-right-column">
           <div className="cx-white-card cx-knowledge-health-card">
-            <h2>Knowledge Health</h2>
+            <h2>{t("aiCenter.cortexaAI.knowledgeHealth", "Knowledge Health")}</h2>
             {(() => {
               const score = Math.max(
                 0,
@@ -3105,7 +3126,7 @@ function KnowledgeLayout({
                       <div className="cx-knowledge-score-ring">
                         <svg
                           viewBox="0 0 120 120"
-                          aria-label={`Knowledge score ${score}%`}
+                          aria-label={t("aiCenter.cortexaAI.knowledgeScoreAria", "Knowledge score {{score}}%", { score })}
                         >
                           <circle
                             className="cx-knowledge-score-track"
@@ -3128,7 +3149,7 @@ function KnowledgeLayout({
                       </div>
 
                       <p className="cx-knowledge-score-label">
-                        Knowledge Score
+                        {t("aiCenter.cortexaAI.knowledgeScore", "Knowledge Score")}
                         <HelpCircle size={13} />
                       </p>
                     </div>
@@ -3137,7 +3158,7 @@ function KnowledgeLayout({
                       <div>
                         <CheckCircle2 size={16} />
 
-                        <span>Complete</span>
+                        <span>{t("aiCenter.cortexaAI.healthComplete", "Complete")}</span>
 
                         <strong>
                           {complete} / {total}
@@ -3147,7 +3168,7 @@ function KnowledgeLayout({
                       <div>
                         <CheckCircle2 size={16} />
 
-                        <span>Up to date</span>
+                        <span>{t("aiCenter.cortexaAI.healthUpToDate", "Up to date")}</span>
 
                         <strong>
                           {upToDate} / {total}
@@ -3157,7 +3178,7 @@ function KnowledgeLayout({
                       <div>
                         <CheckCircle2 size={16} />
 
-                        <span>Well structured</span>
+                        <span>{t("aiCenter.cortexaAI.healthWellStructured", "Well structured")}</span>
 
                         <strong>
                           {wellStructured} / {total}
@@ -3167,7 +3188,7 @@ function KnowledgeLayout({
                       <div className="warning">
                         <Clock3 size={16} />
 
-                        <span>Needs review</span>
+                        <span>{t("aiCenter.cortexaAI.healthNeedsReview", "Needs review")}</span>
 
                         <strong>
                           {needsReview} / {total}
@@ -3190,41 +3211,41 @@ function KnowledgeLayout({
           </div>
 
           <div className="cx-white-card">
-            <h2>Quick Actions</h2>
+            <h2>{t("aiCenter.cortexaAI.quickActions", "Quick Actions")}</h2>
 
             {[
               {
                 key: "text",
-                title: "Add Text Knowledge",
-                description: "Add text, notes or business information",
+                title: t("aiCenter.cortexaAI.qaTextTitle", "Add Text Knowledge"),
+                description: t("aiCenter.cortexaAI.qaTextDesc", "Add text, notes or business information"),
                 icon: FileText,
                 accent: "purple",
               },
               {
                 key: "document",
-                title: "Upload Document",
-                description: "Import CSV or JSON knowledge files",
+                title: t("aiCenter.cortexaAI.qaDocumentTitle", "Upload Document"),
+                description: t("aiCenter.cortexaAI.qaDocumentDesc", "Import CSV or JSON knowledge files"),
                 icon: Upload,
                 accent: "blue",
               },
               {
                 key: "website",
-                title: "Add Website URL",
-                description: "Add content and reference a website",
+                title: t("aiCenter.cortexaAI.qaWebsiteTitle", "Add Website URL"),
+                description: t("aiCenter.cortexaAI.qaWebsiteDesc", "Add content and reference a website"),
                 icon: Search,
                 accent: "indigo",
               },
               {
                 key: "data_source",
-                title: "Connect Data Source",
-                description: "Import knowledge from an external source",
+                title: t("aiCenter.cortexaAI.qaDataSourceTitle", "Connect Data Source"),
+                description: t("aiCenter.cortexaAI.qaDataSourceDesc", "Import knowledge from an external source"),
                 icon: Database,
                 accent: "purple",
               },
               {
                 key: "qa",
-                title: "Create Custom Q&A",
-                description: "Add a question and answer pair",
+                title: t("aiCenter.cortexaAI.qaQaTitle", "Create Custom Q&A"),
+                description: t("aiCenter.cortexaAI.qaQaDesc", "Add a question and answer pair"),
                 icon: MessageCircle,
                 accent: "violet",
               },
@@ -3273,6 +3294,7 @@ function ActivityLayout({
   onViewTopActions,
   onViewRecentRuns,
 }) {
+  const { t } = useTranslation();
   const items = Array.isArray(activityData?.items) ? activityData.items : [];
   const activityByType = Array.isArray(activityData?.activityByType)
     ? activityData.activityByType
@@ -3326,7 +3348,7 @@ function ActivityLayout({
   const visiblePages = getVisiblePages();
   const apiRows = (activityData?.items || []).map((item) => [
     item.timeLabel || "",
-    item.title || "AI Activity",
+    item.title || t("aiCenter.cortexaAI.aiActivity", "AI Activity"),
     item.description || "",
     item.iconKey === "appointment"
       ? CalendarDays
@@ -3337,7 +3359,7 @@ function ActivityLayout({
           : item.iconKey === "data"
             ? Database
             : MessageCircle,
-    item.statusLabel || "Completed",
+    item.statusLabel || t("aiCenter.cortexaAI.statusCompleted", "Completed"),
     item.leadName || "",
   ]);
 
@@ -3456,8 +3478,8 @@ function ActivityLayout({
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
         <div>
-          <h1>Activity</h1>
-          <p>See everything your AI Agent has done across your business.</p>
+          <h1>{t("aiCenter.cortexaAI.activityTitle", "Activity")}</h1>
+          <p>{t("aiCenter.cortexaAI.activitySubtitle", "See everything your AI Agent has done across your business.")}</p>
         </div>
         <button
           type="button"
@@ -3472,7 +3494,9 @@ function ActivityLayout({
             <Upload size={17} />
           )}
 
-          {exporting ? "Exporting..." : "Export Activity"}
+          {exporting
+            ? t("aiCenter.cortexaAI.exporting", "Exporting...")
+            : t("aiCenter.cortexaAI.exportActivity", "Export Activity")}
         </button>
       </div>
 
@@ -3487,15 +3511,15 @@ function ActivityLayout({
                 })
               }
             >
-              <option value="all">All Types</option>
-              <option value="messages">Messages</option>
-              <option value="appointments">Appointments</option>
-              <option value="property_updates">Property Updates</option>
-              <option value="lead_updates">Lead Updates</option>
-              <option value="knowledge">Knowledge</option>
-              <option value="automations">Automations</option>
-              <option value="alerts">Alerts</option>
-              <option value="data_updates">Data Updates</option>
+              <option value="all">{t("aiCenter.cortexaAI.allTypes", "All Types")}</option>
+              <option value="messages">{t("aiCenter.cortexaAI.typeMessages", "Messages")}</option>
+              <option value="appointments">{t("aiCenter.cortexaAI.typeAppointments", "Appointments")}</option>
+              <option value="property_updates">{t("aiCenter.cortexaAI.typePropertyUpdates", "Property Updates")}</option>
+              <option value="lead_updates">{t("aiCenter.cortexaAI.typeLeadUpdates", "Lead Updates")}</option>
+              <option value="knowledge">{t("aiCenter.cortexaAI.typeKnowledge", "Knowledge")}</option>
+              <option value="automations">{t("aiCenter.cortexaAI.typeAutomations", "Automations")}</option>
+              <option value="alerts">{t("aiCenter.cortexaAI.typeAlerts", "Alerts")}</option>
+              <option value="data_updates">{t("aiCenter.cortexaAI.typeDataUpdates", "Data Updates")}</option>
             </select>
 
             <select
@@ -3506,18 +3530,18 @@ function ActivityLayout({
                 })
               }
             >
-              <option value="all">All Statuses</option>
-              <option value="success">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="escalated">Escalated</option>
-              <option value="pending">Pending</option>
+              <option value="all">{t("aiCenter.cortexaAI.allStatusesCap", "All Statuses")}</option>
+              <option value="success">{t("aiCenter.cortexaAI.statusCompleted", "Completed")}</option>
+              <option value="failed">{t("aiCenter.cortexaAI.statusFailed", "Failed")}</option>
+              <option value="escalated">{t("aiCenter.cortexaAI.statusEscalated", "Escalated")}</option>
+              <option value="pending">{t("aiCenter.cortexaAI.statusPending", "Pending")}</option>
             </select>
 
             <label className="cx-activity-search">
               <Search size={17} />
               <input
                 value={filters?.search || ""}
-                placeholder="Search activity..."
+                placeholder={t("aiCenter.cortexaAI.searchActivityPlaceholder", "Search activity...")}
                 onChange={(event) =>
                   onFilterChange({
                     search: event.target.value,
@@ -3531,17 +3555,17 @@ function ActivityLayout({
                 size={17}
                 className={loading ? "cx-ai-loading-spinner" : ""}
               />
-              Refresh
+              {t("aiCenter.cortexaAI.refresh", "Refresh")}
             </button>
           </div>
 
           <div className="cx-white-card cx-timeline-card">
-            <h4>Recent AI Activity</h4>
+            <h4>{t("aiCenter.cortexaAI.recentAiActivity", "Recent AI Activity")}</h4>
             {error && <div className="cx-ai-error-banner">{error}</div>}
             {loading && items.length === 0 ? (
               <div className="cx-activity-empty">
                 <RefreshCw className="cx-ai-loading-spinner" size={20} />
-                Loading activity...
+                {t("aiCenter.cortexaAI.loadingActivity", "Loading activity...")}
               </div>
             ) : items.length > 0 ? (
               items.map((item, index) => {
@@ -3577,25 +3601,25 @@ function ActivityLayout({
                     onClick={() => onOpen?.(item)}
                   >
                     <time>
-                      {item.timeLabel || formatRelativeTime(item.createdAt)}
+                      {item.timeLabel || formatRelativeTime(item.createdAt, t)}
                     </time>
                     <div className="cx-line-dot" />
                     <div className={`cx-small-icon ${item.accent || "purple"}`}>
                       <Icon size={18} />
                     </div>
                     <div>
-                      <strong>{item.title || "AI Activity"}</strong>
+                      <strong>{item.title || t("aiCenter.cortexaAI.aiActivity", "AI Activity")}</strong>
                       <p>
                         {item.description ||
                           item.summary ||
-                          "AI Agent activity recorded."}
+                          t("aiCenter.cortexaAI.activityRecorded", "AI Agent activity recorded.")}
                       </p>
                     </div>
                     <span
                       className={`cx-activity-status cx-status-pill ${status}`}
                     >
                       {item.statusLabel ||
-                        (status === "success" ? "Completed" : status)}
+                        (status === "success" ? t("aiCenter.cortexaAI.statusCompleted", "Completed") : status)}
                     </span>
                     <ChevronRight size={17} />
                   </div>
@@ -3604,14 +3628,18 @@ function ActivityLayout({
             ) : (
               <div className="cx-activity-empty">
                 <Activity size={28} />
-                <strong>No activity found</strong>
-                <p>Try changing the filters or search.</p>
+                <strong>{t("aiCenter.cortexaAI.noActivityFound", "No activity found")}</strong>
+                <p>{t("aiCenter.cortexaAI.noActivityFoundDesc", "Try changing the filters or search.")}</p>
               </div>
             )}
             {totalPages > 1 && (
               <div className="cx-activity-pagination cx-pagination">
                 <div className="cx-activity-pagination-info">
-                  Showing {startItem}–{endItem} of {totalItems} activities
+                  {t("aiCenter.cortexaAI.paginationInfo", "Showing {{start}}–{{end}} of {{total}} activities", {
+                    start: startItem,
+                    end: endItem,
+                    total: totalItems,
+                  })}
                 </div>
 
                 <div className="cx-activity-pagination-controls">
@@ -3663,29 +3691,29 @@ function ActivityLayout({
 
         <aside className="cx-right-column">
           <div className="cx-white-card">
-            <h2>Activity Overview</h2>
+            <h2>{t("aiCenter.cortexaAI.activityOverview", "Activity Overview")}</h2>
             <div className="cx-overview-grid">
               <StatMini
                 icon={Activity}
-                title="Total Activities"
+                title={t("aiCenter.cortexaAI.totalActivities", "Total Activities")}
                 value={overview.total ?? activityData?.total ?? 0}
-                desc={overview.trendLabel || "Current period"}
+                desc={overview.trendLabel || t("aiCenter.cortexaAI.currentPeriod", "Current period")}
               />
               <StatMini
                 icon={CircleCheck}
-                title="Completed"
+                title={t("aiCenter.cortexaAI.statusCompleted", "Completed")}
                 value={overview.completed ?? 0}
                 desc={overview.completedPercentLabel || "0%"}
               />
               <StatMini
                 icon={TriangleAlert}
-                title="Escalated"
+                title={t("aiCenter.cortexaAI.statusEscalated", "Escalated")}
                 value={overview.escalated ?? 0}
                 desc={overview.escalatedPercentLabel || "0%"}
               />
               <StatMini
                 icon={CircleX}
-                title="Failed"
+                title={t("aiCenter.cortexaAI.statusFailed", "Failed")}
                 value={overview.failed ?? 0}
                 desc={overview.failedPercentLabel || "0%"}
               />
@@ -3694,9 +3722,9 @@ function ActivityLayout({
 
           <div className="cx-white-card">
             <h2>
-              Activity by Type
+              {t("aiCenter.cortexaAI.activityByType", "Activity by Type")}
               <button type="button" onClick={onViewActivityTypes}>
-                View all
+                {t("aiCenter.cortexaAI.viewAll", "View all")}
               </button>
             </h2>
             {activityTypesData.slice(0, 6).map((item, index) => {
@@ -3739,9 +3767,9 @@ function ActivityLayout({
 
           <div className="cx-white-card">
             <h2>
-              Top Actions
+              {t("aiCenter.cortexaAI.topActions", "Top Actions")}
               <button type="button" onClick={onViewTopActions}>
-                View all
+                {t("aiCenter.cortexaAI.viewAll", "View all")}
               </button>
             </h2>
 
@@ -3769,13 +3797,13 @@ function ActivityLayout({
 
           <div className="cx-white-card">
             <h2>
-              Recent AI Runs
+              {t("aiCenter.cortexaAI.recentAiRuns", "Recent AI Runs")}
               <button
                 type="button"
                 onClick={onViewRecentRuns}
                 disabled={recentRunsData.length === 0}
               >
-                View all
+                {t("aiCenter.cortexaAI.viewAll", "View all")}
               </button>
             </h2>
 
@@ -3798,12 +3826,12 @@ function ActivityLayout({
 
                     <div>
                       <strong>
-                        {item.title || item.actionLabel || "AI Run"}
+                        {item.title || item.actionLabel || t("aiCenter.cortexaAI.aiRun", "AI Run")}
                       </strong>
 
                       <p>
                         {item.timeLabel ||
-                          formatRelativeTime(item.createdAt || item.created_at)}
+                          formatRelativeTime(item.createdAt || item.created_at, t)}
                       </p>
                     </div>
 
@@ -3817,7 +3845,7 @@ function ActivityLayout({
                       }
                     >
                       {item.statusLabel ||
-                        (status === "success" ? "Completed" : status)}
+                        (status === "success" ? t("aiCenter.cortexaAI.statusCompleted", "Completed") : status)}
                     </em>
                   </button>
                 );
@@ -3826,7 +3854,7 @@ function ActivityLayout({
               <div className="cx-mini-empty">
                 <Sparkles size={22} />
 
-                <p>No recent AI runs.</p>
+                <p>{t("aiCenter.cortexaAI.noRecentRuns", "No recent AI runs.")}</p>
               </div>
             )}
           </div>
@@ -3837,6 +3865,7 @@ function ActivityLayout({
 }
 
 function ActivityDetailDrawer({ open, loading, activity, onClose }) {
+  const { t } = useTranslation();
   if (!open) {
     return null;
   }
@@ -3850,7 +3879,7 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
     metadata.title ||
     data.actionLabel ||
     data.action ||
-    "AI Activity";
+    t("aiCenter.cortexaAI.aiActivity", "AI Activity");
 
   const description =
     data.description ||
@@ -3890,37 +3919,37 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
   const detailRows = [
     {
-      label: "Activity ID",
+      label: t("aiCenter.cortexaAI.detailActivityId", "Activity ID"),
       value: data.id,
     },
     {
-      label: "Action",
+      label: t("aiCenter.cortexaAI.detailAction", "Action"),
       value: data.action || metadata.action,
     },
     {
-      label: "Type",
+      label: t("aiCenter.cortexaAI.detailType", "Type"),
       value: data.type || data.iconKey || metadata.type || metadata.category,
     },
     {
-      label: "Channel",
+      label: t("aiCenter.cortexaAI.detailChannel", "Channel"),
       value: data.channel || metadata.channel,
     },
     {
-      label: "Created",
+      label: t("aiCenter.cortexaAI.detailCreated", "Created"),
       value: createdAt ? new Date(createdAt).toLocaleString() : "",
     },
     {
-      label: "Execution time",
+      label: t("aiCenter.cortexaAI.detailExecutionTime", "Execution time"),
       value:
         data.executionTimeMs ?? metadata.executionTimeMs ?? metadata.durationMs,
       suffix: " ms",
     },
     {
-      label: "Tokens",
+      label: t("aiCenter.cortexaAI.detailTokens", "Tokens"),
       value: data.tokens ?? metadata.tokens ?? metadata.totalTokens,
     },
     {
-      label: "Confidence",
+      label: t("aiCenter.cortexaAI.detailConfidence", "Confidence"),
       value: data.confidence ?? metadata.confidence ?? metadata.confidenceScore,
       suffix:
         Number(
@@ -3944,15 +3973,15 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
   const relatedRows = [
     {
-      label: "Lead",
+      label: t("aiCenter.cortexaAI.relatedLead", "Lead"),
       value: data.leadName || metadata.leadName || metadata.lead_name,
     },
     {
-      label: "Contact",
+      label: t("aiCenter.cortexaAI.relatedContact", "Contact"),
       value: data.contactName || metadata.contactName || metadata.contact_name,
     },
     {
-      label: "Property",
+      label: t("aiCenter.cortexaAI.relatedProperty", "Property"),
       value:
         data.propertyTitle ||
         metadata.propertyTitle ||
@@ -3960,14 +3989,14 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
         metadata.propertyAddress,
     },
     {
-      label: "Appointment",
+      label: t("aiCenter.cortexaAI.relatedAppointment", "Appointment"),
       value:
         data.appointmentTitle ||
         metadata.appointmentTitle ||
         metadata.appointment_title,
     },
     {
-      label: "Conversation",
+      label: t("aiCenter.cortexaAI.relatedConversation", "Conversation"),
       value:
         data.conversationId || metadata.conversationId || metadata.sessionId,
     },
@@ -3987,14 +4016,14 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
               <Activity size={21} />
             </span>
             <div>
-              <p>AI Activity</p>
+              <p>{t("aiCenter.cortexaAI.aiActivity", "AI Activity")}</p>
               <h2>{title}</h2>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close activity details"
+            aria-label={t("aiCenter.cortexaAI.closeActivityDetails", "Close activity details")}
           >
             <X size={20} />
           </button>
@@ -4003,14 +4032,14 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
         {loading ? (
           <div className="cx-activity-drawer-loading">
             <RefreshCw className="cx-ai-loading-spinner" size={22} />
-            Loading activity details...
+            {t("aiCenter.cortexaAI.loadingActivityDetails", "Loading activity details...")}
           </div>
         ) : (
           <div className="cx-activity-drawer-body">
             <div className="cx-activity-detail-status">
               <span className={`cx-activity-status ${status}`}>
                 {data.statusLabel ||
-                  (status === "success" ? "Completed" : status)}
+                  (status === "success" ? t("aiCenter.cortexaAI.statusCompleted", "Completed") : status)}
               </span>
 
               {createdAt && <time>{new Date(createdAt).toLocaleString()}</time>}
@@ -4018,7 +4047,7 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
             {description && (
               <section className="cx-activity-detail-section">
-                <h3>Summary</h3>
+                <h3>{t("aiCenter.cortexaAI.summary", "Summary")}</h3>
 
                 <p>{description}</p>
               </section>
@@ -4026,7 +4055,7 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
             {detailRows.length > 0 && (
               <section className="cx-activity-detail-section">
-                <h3>Execution Details</h3>
+                <h3>{t("aiCenter.cortexaAI.executionDetails", "Execution Details")}</h3>
 
                 <div className="cx-activity-detail-grid">
                   {detailRows.map((row) => {
@@ -4052,11 +4081,11 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
             {prompt && (
               <section className="cx-activity-detail-section">
                 <div className="cx-activity-detail-title-row">
-                  <h3>Prompt</h3>
+                  <h3>{t("aiCenter.cortexaAI.prompt", "Prompt")}</h3>
 
                   <button type="button" onClick={() => copyText(prompt)}>
                     <Copy size={15} />
-                    Copy
+                    {t("aiCenter.cortexaAI.copy", "Copy")}
                   </button>
                 </div>
 
@@ -4067,11 +4096,11 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
             {response && (
               <section className="cx-activity-detail-section">
                 <div className="cx-activity-detail-title-row">
-                  <h3>AI Response</h3>
+                  <h3>{t("aiCenter.cortexaAI.aiResponse", "AI Response")}</h3>
 
                   <button type="button" onClick={() => copyText(response)}>
                     <Copy size={15} />
-                    Copy
+                    {t("aiCenter.cortexaAI.copy", "Copy")}
                   </button>
                 </div>
 
@@ -4081,7 +4110,7 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
             {relatedRows.length > 0 && (
               <section className="cx-activity-detail-section">
-                <h3>Related Records</h3>
+                <h3>{t("aiCenter.cortexaAI.relatedRecords", "Related Records")}</h3>
 
                 <div className="cx-activity-related-list">
                   {relatedRows.map((row) => (
@@ -4097,7 +4126,7 @@ function ActivityDetailDrawer({ open, loading, activity, onClose }) {
 
             {Object.keys(metadata).length > 0 && (
               <details className="cx-activity-metadata">
-                <summary>Raw Metadata</summary>
+                <summary>{t("aiCenter.cortexaAI.rawMetadata", "Raw Metadata")}</summary>
 
                 <pre>{JSON.stringify(metadata, null, 2)}</pre>
               </details>
@@ -4116,6 +4145,7 @@ function ActivitySummaryModal({
   onClose,
   onOpenActivity,
 }) {
+  const { t } = useTranslation();
   if (!open) {
     return null;
   }
@@ -4167,11 +4197,12 @@ function ActivitySummaryModal({
             </span>
 
             <div>
-              <h2>{title || "Activity Summary"}</h2>
+              <h2>{title || t("aiCenter.cortexaAI.activitySummary", "Activity Summary")}</h2>
 
               <p>
-                {rows.length} item
-                {rows.length === 1 ? "" : "s"}
+                {rows.length === 1
+                  ? t("aiCenter.cortexaAI.itemCountSingular", "{{count}} item", { count: rows.length })
+                  : t("aiCenter.cortexaAI.itemCountPlural", "{{count}} items", { count: rows.length })}
               </p>
             </div>
           </div>
@@ -4204,15 +4235,16 @@ function ActivitySummaryModal({
                   </div>
 
                   <div>
-                    <strong>{item.title || item.label || "AI Activity"}</strong>
+                    <strong>{item.title || item.label || t("aiCenter.cortexaAI.aiActivity", "AI Activity")}</strong>
 
                     <p>
                       {type === "activity_types"
-                        ? `${Number(item.percent || 0)}% of activity`
+                        ? t("aiCenter.cortexaAI.percentOfActivity", "{{percent}}% of activity", { percent: Number(item.percent || 0) })
                         : item.description ||
                           item.timeLabel ||
                           formatRelativeTime(
                             item.createdAt || item.created_at,
+                            t,
                           ) ||
                           ""}
                     </p>
@@ -4228,7 +4260,7 @@ function ActivitySummaryModal({
             <div className="cx-activity-summary-empty">
               <Activity size={28} />
 
-              <strong>No data available</strong>
+              <strong>{t("aiCenter.cortexaAI.noDataAvailable", "No data available")}</strong>
             </div>
           )}
         </div>
@@ -4244,13 +4276,14 @@ function ControlsLayout({
   onOpenAutomations,
   onEditBehavior,
 }) {
+  const { t } = useTranslation();
   const tabs = [
-    "General",
-    "Lead Handling",
-    "Communication",
-    "Escalation",
-    "Privacy & Safety",
-    "Advanced",
+    { id: "General", label: t("aiCenter.cortexaAI.tabGeneral", "General") },
+    { id: "Lead Handling", label: t("aiCenter.cortexaAI.tabLeadHandling", "Lead Handling") },
+    { id: "Communication", label: t("aiCenter.cortexaAI.tabCommunication", "Communication") },
+    { id: "Escalation", label: t("aiCenter.cortexaAI.tabEscalation", "Escalation") },
+    { id: "Privacy & Safety", label: t("aiCenter.cortexaAI.tabPrivacySafety", "Privacy & Safety") },
+    { id: "Advanced", label: t("aiCenter.cortexaAI.tabAdvanced", "Advanced") },
   ];
 
   const [draft, setDraft] = useState(null);
@@ -4279,99 +4312,98 @@ function ControlsLayout({
   const responseToneOptions = [
     {
       value: "professional",
-      label: "Professional & Friendly",
-      description: "Clear, polished and approachable communication.",
+      label: t("aiCenter.cortexaAI.toneProfessionalLabel", "Professional & Friendly"),
+      description: t("aiCenter.cortexaAI.toneProfessionalDesc", "Clear, polished and approachable communication."),
     },
     {
       value: "friendly",
-      label: "Warm & Conversational",
-      description: "Relaxed, helpful and personable communication.",
+      label: t("aiCenter.cortexaAI.toneFriendlyLabel", "Warm & Conversational"),
+      description: t("aiCenter.cortexaAI.toneFriendlyDesc", "Relaxed, helpful and personable communication."),
     },
     {
       value: "sales",
-      label: "Sales Focused",
-      description: "Confident communication focused on conversion.",
+      label: t("aiCenter.cortexaAI.toneSalesLabel", "Sales Focused"),
+      description: t("aiCenter.cortexaAI.toneSalesDesc", "Confident communication focused on conversion."),
     },
   ];
 
   const generalCapabilities = [
     {
       key: "autoReplyToLeads",
-      title: "Auto Reply to Leads",
-      description:
-        "Automatically respond to new leads via WhatsApp, SMS, and email",
+      title: t("aiCenter.cortexaAI.capAutoReplyTitle", "Auto Reply to Leads"),
+      description: t("aiCenter.cortexaAI.capAutoReplyDesc", "Automatically respond to new leads via WhatsApp, SMS, and email"),
       icon: MessageCircle,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "leadQualification",
-      title: "Lead Qualification",
-      description: "Qualify leads and score their interest automatically",
+      title: t("aiCenter.cortexaAI.capLeadQualificationTitle", "Lead Qualification"),
+      description: t("aiCenter.cortexaAI.capLeadQualificationDesc", "Qualify leads and score their interest automatically"),
       icon: Users,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "appointmentBooking",
-      title: "Appointment Booking",
-      description: "Book and manage appointments automatically",
+      title: t("aiCenter.cortexaAI.capAppointmentBookingTitle", "Appointment Booking"),
+      description: t("aiCenter.cortexaAI.capAppointmentBookingDesc", "Book and manage appointments automatically"),
       icon: CalendarDays,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "propertyRecommendations",
-      title: "Property Recommendations",
-      description: "Suggest properties based on buyer preferences",
+      title: t("aiCenter.cortexaAI.capPropertyRecsTitle", "Property Recommendations"),
+      description: t("aiCenter.cortexaAI.capPropertyRecsDesc", "Suggest properties based on buyer preferences"),
       icon: Home,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "followUpAutomation",
-      title: "Follow-up Automation",
-      description: "Send follow-up messages and reminders",
+      title: t("aiCenter.cortexaAI.capFollowUpTitle", "Follow-up Automation"),
+      description: t("aiCenter.cortexaAI.capFollowUpDesc", "Send follow-up messages and reminders"),
       icon: Send,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "leadScoring",
-      title: "Lead Scoring",
-      description: "Score leads based on engagement and behavior",
+      title: t("aiCenter.cortexaAI.capLeadScoringTitle", "Lead Scoring"),
+      description: t("aiCenter.cortexaAI.capLeadScoringDesc", "Score leads based on engagement and behavior"),
       icon: Star,
       accent: "red",
       defaultValue: true,
     },
     {
       key: "humanApprovalHighValue",
-      title: "Human Approval for High Value",
-      description: "Require approval before sending high-value proposals",
+      title: t("aiCenter.cortexaAI.capHumanApprovalTitle", "Human Approval for High Value"),
+      description: t("aiCenter.cortexaAI.capHumanApprovalDesc", "Require approval before sending high-value proposals"),
       icon: ShieldCheck,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "autoEscalationHotLeads",
-      title: "Auto Escalation for Hot Leads",
-      description: "Automatically escalate hot leads to you or your team",
+      title: t("aiCenter.cortexaAI.capAutoEscalationTitle", "Auto Escalation for Hot Leads"),
+      description: t("aiCenter.cortexaAI.capAutoEscalationDesc", "Automatically escalate hot leads to you or your team"),
       icon: TriangleAlert,
       accent: "red",
       defaultValue: true,
     },
     {
       key: "marketingCampaigns",
-      title: "Marketing Campaigns",
-      description: "Create and send marketing campaigns",
+      title: t("aiCenter.cortexaAI.capMarketingTitle", "Marketing Campaigns"),
+      description: t("aiCenter.cortexaAI.capMarketingDesc", "Create and send marketing campaigns"),
       icon: Bell,
       accent: "blue",
       defaultValue: false,
     },
     {
       key: "smartInsights",
-      title: "Smart Insights & Alerts",
-      description: "Generate insights and important alerts",
+      title: t("aiCenter.cortexaAI.capSmartInsightsTitle", "Smart Insights & Alerts"),
+      description: t("aiCenter.cortexaAI.capSmartInsightsDesc", "Generate insights and important alerts"),
       icon: Bell,
       accent: "blue",
       defaultValue: true,
@@ -4381,48 +4413,48 @@ function ControlsLayout({
   const leadHandlingSettings = [
     {
       key: "autoReplyToLeads",
-      title: "Auto Reply to New Leads",
-      description: "Immediately respond when a new lead contacts your business",
+      title: t("aiCenter.cortexaAI.lhAutoReplyTitle", "Auto Reply to New Leads"),
+      description: t("aiCenter.cortexaAI.lhAutoReplyDesc", "Immediately respond when a new lead contacts your business"),
       icon: MessageCircle,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "leadQualification",
-      title: "Lead Qualification",
-      description: "Ask qualifying questions and identify lead intent",
+      title: t("aiCenter.cortexaAI.lhLeadQualificationTitle", "Lead Qualification"),
+      description: t("aiCenter.cortexaAI.lhLeadQualificationDesc", "Ask qualifying questions and identify lead intent"),
       icon: UserRoundCheck,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "leadScoring",
-      title: "Automatic Lead Scoring",
-      description: "Update scores using engagement and buyer behavior",
+      title: t("aiCenter.cortexaAI.lhLeadScoringTitle", "Automatic Lead Scoring"),
+      description: t("aiCenter.cortexaAI.lhLeadScoringDesc", "Update scores using engagement and buyer behavior"),
       icon: Star,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "propertyRecommendations",
-      title: "Property Recommendations",
-      description: "Recommend relevant properties based on buyer criteria",
+      title: t("aiCenter.cortexaAI.lhPropertyRecsTitle", "Property Recommendations"),
+      description: t("aiCenter.cortexaAI.lhPropertyRecsDesc", "Recommend relevant properties based on buyer criteria"),
       icon: Home,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "appointmentBooking",
-      title: "Appointment Booking",
-      description: "Allow the AI Agent to book appointments automatically",
+      title: t("aiCenter.cortexaAI.lhAppointmentBookingTitle", "Appointment Booking"),
+      description: t("aiCenter.cortexaAI.lhAppointmentBookingDesc", "Allow the AI Agent to book appointments automatically"),
       icon: CalendarDays,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "followUpAutomation",
-      title: "Automatic Follow-up",
-      description: "Send follow-ups when leads have not responded",
+      title: t("aiCenter.cortexaAI.lhFollowUpTitle", "Automatic Follow-up"),
+      description: t("aiCenter.cortexaAI.lhFollowUpDesc", "Send follow-ups when leads have not responded"),
       icon: Send,
       accent: "purple",
       defaultValue: true,
@@ -4432,48 +4464,48 @@ function ControlsLayout({
   const communicationSettings = [
     {
       key: "useBusinessGreeting",
-      title: "Use Business Greeting",
-      description: "Start conversations using the configured business greeting",
+      title: t("aiCenter.cortexaAI.commGreetingTitle", "Use Business Greeting"),
+      description: t("aiCenter.cortexaAI.commGreetingDesc", "Start conversations using the configured business greeting"),
       icon: MessageSquare,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "useConversationClosing",
-      title: "Use Conversation Closing",
-      description: "End completed conversations with a professional closing",
+      title: t("aiCenter.cortexaAI.commClosingTitle", "Use Conversation Closing"),
+      description: t("aiCenter.cortexaAI.commClosingDesc", "End completed conversations with a professional closing"),
       icon: CheckCircle2,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "allowEmoji",
-      title: "Allow Emojis",
-      description: "Use appropriate emojis in friendly conversations",
+      title: t("aiCenter.cortexaAI.commEmojiTitle", "Allow Emojis"),
+      description: t("aiCenter.cortexaAI.commEmojiDesc", "Use appropriate emojis in friendly conversations"),
       icon: Heart,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "conciseResponses",
-      title: "Concise Responses",
-      description: "Prefer shorter replies unless more detail is required",
+      title: t("aiCenter.cortexaAI.commConciseTitle", "Concise Responses"),
+      description: t("aiCenter.cortexaAI.commConciseDesc", "Prefer shorter replies unless more detail is required"),
       icon: FileText,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "whatsappCommunication",
-      title: "WhatsApp Communication",
-      description: "Allow responses through the connected WhatsApp account",
+      title: t("aiCenter.cortexaAI.commWhatsappTitle", "WhatsApp Communication"),
+      description: t("aiCenter.cortexaAI.commWhatsappDesc", "Allow responses through the connected WhatsApp account"),
       icon: MessageCircle,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "emailCommunication",
-      title: "Email Communication",
-      description: "Allow AI-assisted emails and follow-up messages",
+      title: t("aiCenter.cortexaAI.commEmailTitle", "Email Communication"),
+      description: t("aiCenter.cortexaAI.commEmailDesc", "Allow AI-assisted emails and follow-up messages"),
       icon: Mail,
       accent: "purple",
       defaultValue: false,
@@ -4483,48 +4515,48 @@ function ControlsLayout({
   const escalationSettings = [
     {
       key: "autoEscalationHotLeads",
-      title: "Escalate Hot Leads",
-      description: "Notify the team when a lead reaches the hot-lead threshold",
+      title: t("aiCenter.cortexaAI.escHotLeadsTitle", "Escalate Hot Leads"),
+      description: t("aiCenter.cortexaAI.escHotLeadsDesc", "Notify the team when a lead reaches the hot-lead threshold"),
       icon: Zap,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "humanApprovalHighValue",
-      title: "Human Approval for High-value Actions",
-      description: "Require approval before sensitive or high-value actions",
+      title: t("aiCenter.cortexaAI.escHumanApprovalTitle", "Human Approval for High-value Actions"),
+      description: t("aiCenter.cortexaAI.escHumanApprovalDesc", "Require approval before sensitive or high-value actions"),
       icon: ShieldCheck,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "escalateNegativeSentiment",
-      title: "Escalate Negative Sentiment",
-      description: "Hand off angry or dissatisfied customers to a human",
+      title: t("aiCenter.cortexaAI.escNegativeSentimentTitle", "Escalate Negative Sentiment"),
+      description: t("aiCenter.cortexaAI.escNegativeSentimentDesc", "Hand off angry or dissatisfied customers to a human"),
       icon: TriangleAlert,
       accent: "red",
       defaultValue: true,
     },
     {
       key: "escalatePricingRequests",
-      title: "Escalate Pricing Exceptions",
-      description: "Require review for discounts and pricing exceptions",
+      title: t("aiCenter.cortexaAI.escPricingTitle", "Escalate Pricing Exceptions"),
+      description: t("aiCenter.cortexaAI.escPricingDesc", "Require review for discounts and pricing exceptions"),
       icon: BriefcaseBusiness,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "escalateLegalRequests",
-      title: "Escalate Legal Requests",
-      description: "Require human review for legal or compliance questions",
+      title: t("aiCenter.cortexaAI.escLegalTitle", "Escalate Legal Requests"),
+      description: t("aiCenter.cortexaAI.escLegalDesc", "Require human review for legal or compliance questions"),
       icon: ShieldCheck,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "notifyTeamOnEscalation",
-      title: "Notify Team Immediately",
-      description: "Send an alert whenever a conversation is escalated",
+      title: t("aiCenter.cortexaAI.escNotifyTeamTitle", "Notify Team Immediately"),
+      description: t("aiCenter.cortexaAI.escNotifyTeamDesc", "Send an alert whenever a conversation is escalated"),
       icon: Bell,
       accent: "green",
       defaultValue: true,
@@ -4534,50 +4566,48 @@ function ControlsLayout({
   const privacySettings = [
     {
       key: "piiProtection",
-      title: "PII Protection",
-      description: "Protect phone numbers, emails and personal information",
+      title: t("aiCenter.cortexaAI.privPiiTitle", "PII Protection"),
+      description: t("aiCenter.cortexaAI.privPiiDesc", "Protect phone numbers, emails and personal information"),
       icon: ShieldCheck,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "hideSensitiveData",
-      title: "Hide Sensitive CRM Data",
-      description: "Avoid exposing private CRM information in responses",
+      title: t("aiCenter.cortexaAI.privHideDataTitle", "Hide Sensitive CRM Data"),
+      description: t("aiCenter.cortexaAI.privHideDataDesc", "Avoid exposing private CRM information in responses"),
       icon: Lock,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "blockFinancialAdvice",
-      title: "Block Financial Advice",
-      description:
-        "Prevent AI from presenting financial guidance as professional advice",
+      title: t("aiCenter.cortexaAI.privBlockFinancialTitle", "Block Financial Advice"),
+      description: t("aiCenter.cortexaAI.privBlockFinancialDesc", "Prevent AI from presenting financial guidance as professional advice"),
       icon: TriangleAlert,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "blockLegalAdvice",
-      title: "Block Legal Advice",
-      description:
-        "Prevent AI from presenting legal guidance as professional advice",
+      title: t("aiCenter.cortexaAI.privBlockLegalTitle", "Block Legal Advice"),
+      description: t("aiCenter.cortexaAI.privBlockLegalDesc", "Prevent AI from presenting legal guidance as professional advice"),
       icon: ShieldCheck,
       accent: "red",
       defaultValue: true,
     },
     {
       key: "requireApprovalSensitiveActions",
-      title: "Approval for Sensitive Actions",
-      description: "Require human approval before risky CRM changes",
+      title: t("aiCenter.cortexaAI.privApprovalTitle", "Approval for Sensitive Actions"),
+      description: t("aiCenter.cortexaAI.privApprovalDesc", "Require human approval before risky CRM changes"),
       icon: UserRoundCheck,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "storeConversationLogs",
-      title: "Store Conversation Logs",
-      description: "Keep AI conversation logs for audits and quality review",
+      title: t("aiCenter.cortexaAI.privStoreLogsTitle", "Store Conversation Logs"),
+      description: t("aiCenter.cortexaAI.privStoreLogsDesc", "Keep AI conversation logs for audits and quality review"),
       icon: Database,
       accent: "purple",
       defaultValue: true,
@@ -4587,49 +4617,48 @@ function ControlsLayout({
   const advancedSettings = [
     {
       key: "smartInsights",
-      title: "Smart Insights & Alerts",
-      description: "Generate proactive CRM insights and recommendations",
+      title: t("aiCenter.cortexaAI.advInsightsTitle", "Smart Insights & Alerts"),
+      description: t("aiCenter.cortexaAI.advInsightsDesc", "Generate proactive CRM insights and recommendations"),
       icon: Sparkles,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "knowledgeGrounding",
-      title: "Knowledge Grounding",
-      description: "Prioritize verified Knowledge items when responding",
+      title: t("aiCenter.cortexaAI.advGroundingTitle", "Knowledge Grounding"),
+      description: t("aiCenter.cortexaAI.advGroundingDesc", "Prioritize verified Knowledge items when responding"),
       icon: BookOpen,
       accent: "blue",
       defaultValue: true,
     },
     {
       key: "conversationMemory",
-      title: "Conversation Memory",
-      description:
-        "Use previous messages from the same conversation as context",
+      title: t("aiCenter.cortexaAI.advMemoryTitle", "Conversation Memory"),
+      description: t("aiCenter.cortexaAI.advMemoryDesc", "Use previous messages from the same conversation as context"),
       icon: Database,
       accent: "green",
       defaultValue: true,
     },
     {
       key: "automaticRetry",
-      title: "Automatic Retry",
-      description: "Retry failed AI requests when the error is temporary",
+      title: t("aiCenter.cortexaAI.advRetryTitle", "Automatic Retry"),
+      description: t("aiCenter.cortexaAI.advRetryDesc", "Retry failed AI requests when the error is temporary"),
       icon: RefreshCw,
       accent: "orange",
       defaultValue: true,
     },
     {
       key: "activityLogging",
-      title: "Detailed Activity Logging",
-      description: "Record AI activity for auditing and debugging",
+      title: t("aiCenter.cortexaAI.advLoggingTitle", "Detailed Activity Logging"),
+      description: t("aiCenter.cortexaAI.advLoggingDesc", "Record AI activity for auditing and debugging"),
       icon: Activity,
       accent: "purple",
       defaultValue: true,
     },
     {
       key: "marketingCampaigns",
-      title: "Marketing Campaigns",
-      description: "Allow AI to prepare marketing campaign content",
+      title: t("aiCenter.cortexaAI.advMarketingTitle", "Marketing Campaigns"),
+      description: t("aiCenter.cortexaAI.advMarketingDesc", "Allow AI to prepare marketing campaign content"),
       icon: Sparkles,
       accent: "green",
       defaultValue: false,
@@ -4701,7 +4730,7 @@ function ControlsLayout({
       setSaveError(
         error?.response?.data?.message ||
           error?.message ||
-          "Unable to save AI controls.",
+          t("aiCenter.cortexaAI.errorSaveControls", "Unable to save AI controls."),
       );
     } finally {
       setSaving(false);
@@ -4769,11 +4798,10 @@ function ControlsLayout({
     <div className="cx-ai-page">
       <div className="cx-ai-page-head">
         <div>
-          <h1>Controls</h1>
+          <h1>{t("aiCenter.cortexaAI.controlsTitle", "Controls")}</h1>
 
           <p>
-            Manage your AI Agent’s behavior, preferences and automation
-            settings.
+            {t("aiCenter.cortexaAI.controlsSubtitle", "Manage your AI Agent’s behavior, preferences and automation settings.")}
           </p>
         </div>
 
@@ -4790,7 +4818,9 @@ function ControlsLayout({
             <Save size={16} />
           )}
 
-          {saving ? "Saving..." : "Save Changes"}
+          {saving
+            ? t("aiCenter.cortexaAI.saving", "Saving...")
+            : t("aiCenter.cortexaAI.saveChanges", "Save Changes")}
         </button>
       </div>
 
@@ -4798,11 +4828,11 @@ function ControlsLayout({
         {tabs.map((tab) => (
           <button
             type="button"
-            key={tab}
-            className={controlTab === tab ? "active" : ""}
-            onClick={() => setControlTab(tab)}
+            key={tab.id}
+            className={controlTab === tab.id ? "active" : ""}
+            onClick={() => setControlTab(tab.id)}
           >
-            {tab}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -4814,20 +4844,18 @@ function ControlsLayout({
           {controlTab === "General" && (
             <>
               {renderSettingsCard({
-                title: "AI Agent Capabilities",
-                description:
-                  "Enable or disable features your AI Agent can perform.",
+                title: t("aiCenter.cortexaAI.agentCapabilitiesTitle", "AI Agent Capabilities"),
+                description: t("aiCenter.cortexaAI.agentCapabilitiesDesc", "Enable or disable features your AI Agent can perform."),
                 items: generalCapabilities,
               })}
 
               <div className="cx-white-card cx-behavior-summary">
                 <div className="cx-control-card-head">
                   <div>
-                    <h2>AI Behavior Summary</h2>
+                    <h2>{t("aiCenter.cortexaAI.behaviorSummaryTitle", "AI Behavior Summary")}</h2>
 
                     <p>
-                      Your AI Agent is set to be proactive, helpful, and always
-                      put your leads first.
+                      {t("aiCenter.cortexaAI.behaviorSummaryDesc", "Your AI Agent is set to be proactive, helpful, and always put your leads first.")}
                     </p>
                   </div>
 
@@ -4838,21 +4866,21 @@ function ControlsLayout({
                     data-ai-write-action="true"
                   >
                     <PenLine size={16} />
-                    Edit Behavior
+                    {t("aiCenter.cortexaAI.editBehavior", "Edit Behavior")}
                   </button>
                 </div>
 
                 <div className="cx-behavior-tags">
                   {[
-                    "Proactive",
-                    "Helpful",
-                    "Fast Response",
-                    "Human-like",
-                    "Lead-focused",
+                    { id: "proactive", label: t("aiCenter.cortexaAI.tagProactive", "Proactive") },
+                    { id: "helpful", label: t("aiCenter.cortexaAI.tagHelpful", "Helpful") },
+                    { id: "fastResponse", label: t("aiCenter.cortexaAI.tagFastResponse", "Fast Response") },
+                    { id: "humanLike", label: t("aiCenter.cortexaAI.tagHumanLike", "Human-like") },
+                    { id: "leadFocused", label: t("aiCenter.cortexaAI.tagLeadFocused", "Lead-focused") },
                   ].map((tag) => (
-                    <span key={tag}>
+                    <span key={tag.id}>
                       <Check size={14} />
-                      {tag}
+                      {tag.label}
                     </span>
                   ))}
                 </div>
@@ -4862,41 +4890,36 @@ function ControlsLayout({
 
           {controlTab === "Lead Handling" &&
             renderSettingsCard({
-              title: "Lead Handling",
-              description:
-                "Control how your AI Agent qualifies, scores and follows up with leads.",
+              title: t("aiCenter.cortexaAI.tabLeadHandling", "Lead Handling"),
+              description: t("aiCenter.cortexaAI.leadHandlingDesc", "Control how your AI Agent qualifies, scores and follows up with leads."),
               items: leadHandlingSettings,
             })}
 
           {controlTab === "Communication" &&
             renderSettingsCard({
-              title: "Communication",
-              description:
-                "Configure how your AI Agent communicates across channels.",
+              title: t("aiCenter.cortexaAI.tabCommunication", "Communication"),
+              description: t("aiCenter.cortexaAI.communicationDesc", "Configure how your AI Agent communicates across channels."),
               items: communicationSettings,
             })}
 
           {controlTab === "Escalation" &&
             renderSettingsCard({
-              title: "Escalation",
-              description:
-                "Define when your AI Agent should hand conversations to your team.",
+              title: t("aiCenter.cortexaAI.tabEscalation", "Escalation"),
+              description: t("aiCenter.cortexaAI.escalationDesc", "Define when your AI Agent should hand conversations to your team."),
               items: escalationSettings,
             })}
 
           {controlTab === "Privacy & Safety" &&
             renderSettingsCard({
-              title: "Privacy & Safety",
-              description:
-                "Protect sensitive data and restrict risky AI actions.",
+              title: t("aiCenter.cortexaAI.tabPrivacySafety", "Privacy & Safety"),
+              description: t("aiCenter.cortexaAI.privacyDesc", "Protect sensitive data and restrict risky AI actions."),
               items: privacySettings,
             })}
 
           {controlTab === "Advanced" &&
             renderSettingsCard({
-              title: "Advanced",
-              description:
-                "Configure advanced performance and diagnostic behavior.",
+              title: t("aiCenter.cortexaAI.tabAdvanced", "Advanced"),
+              description: t("aiCenter.cortexaAI.advancedDesc", "Configure advanced performance and diagnostic behavior."),
               items: advancedSettings,
             })}
         </main>
@@ -4904,43 +4927,45 @@ function ControlsLayout({
         <aside className="cx-right-column control">
           <div className="cx-white-card">
             <h2>
-              AI Agent Status
+              {t("aiCenter.cortexaAI.agentStatusTitle", "AI Agent Status")}
               <em className={current?.agentStatus === "paused" ? "paused" : ""}>
-                {current?.agentStatus === "paused" ? "Paused" : "Active"}
+                {current?.agentStatus === "paused"
+                  ? t("aiCenter.cortexaAI.statusPaused", "Paused")
+                  : t("aiCenter.cortexaAI.statusActive", "Active")}
               </em>
             </h2>
 
             <div className="cx-overview-grid">
               <StatMini
-                title="Responses Today"
+                title={t("aiCenter.cortexaAI.metricResponsesToday", "Responses Today")}
                 value={current?.metrics?.responsesToday ?? 0}
-                desc="Today"
+                desc={t("aiCenter.cortexaAI.today", "Today")}
               />
 
               <StatMini
-                title="Appointments Booked"
+                title={t("aiCenter.cortexaAI.metricAppointmentsBooked", "Appointments Booked")}
                 value={current?.metrics?.appointmentsBooked ?? 0}
-                desc="Today"
+                desc={t("aiCenter.cortexaAI.today", "Today")}
               />
 
               <StatMini
-                title="Leads Handled"
+                title={t("aiCenter.cortexaAI.metricLeadsHandled", "Leads Handled")}
                 value={current?.metrics?.leadsHandled ?? 0}
-                desc="Today"
+                desc={t("aiCenter.cortexaAI.today", "Today")}
               />
 
               <StatMini
-                title="Avg. Response Time"
+                title={t("aiCenter.cortexaAI.metricAvgResponseTime", "Avg. Response Time")}
                 value={current?.metrics?.avgResponseTime || "—"}
-                desc="Current average"
+                desc={t("aiCenter.cortexaAI.currentAverage", "Current average")}
               />
             </div>
           </div>
 
           <div className="cx-white-card cx-response-tone-card">
-            <h2>Response Tone</h2>
+            <h2>{t("aiCenter.cortexaAI.responseTone", "Response Tone")}</h2>
 
-            <p>How your AI Agent communicates</p>
+            <p>{t("aiCenter.cortexaAI.responseToneDesc", "How your AI Agent communicates")}</p>
 
             <div className="cx-response-tone-select">
               <button
@@ -4989,37 +5014,37 @@ function ControlsLayout({
           </div>
 
           <div className="cx-white-card">
-            <h2>Quick Controls</h2>
+            <h2>{t("aiCenter.cortexaAI.quickControls", "Quick Controls")}</h2>
 
             {[
               {
                 key: "pauseAiAgent",
-                title: "Pause AI Agent",
-                description: "Temporarily pause all AI actions",
+                title: t("aiCenter.cortexaAI.qcPauseTitle", "Pause AI Agent"),
+                description: t("aiCenter.cortexaAI.qcPauseDesc", "Temporarily pause all AI actions"),
                 icon: PauseCircle,
                 accent: "red",
                 defaultValue: false,
               },
               {
                 key: "doNotDisturb",
-                title: "Do Not Disturb",
-                description: "Silence notifications after hours",
+                title: t("aiCenter.cortexaAI.qcDndTitle", "Do Not Disturb"),
+                description: t("aiCenter.cortexaAI.qcDndDesc", "Silence notifications after hours"),
                 icon: Moon,
                 accent: "blue",
                 defaultValue: true,
               },
               {
                 key: "workingHoursOnly",
-                title: "Working Hours Only",
-                description: "9:00 AM - 6:00 PM (Mon - Fri)",
+                title: t("aiCenter.cortexaAI.qcWorkingHoursTitle", "Working Hours Only"),
+                description: t("aiCenter.cortexaAI.qcWorkingHoursDesc", "9:00 AM - 6:00 PM (Mon - Fri)"),
                 icon: Timer,
                 accent: "green",
                 defaultValue: true,
               },
               {
                 key: "weekendsActive",
-                title: "Weekends Active",
-                description: "Allow AI to work on weekends",
+                title: t("aiCenter.cortexaAI.qcWeekendsTitle", "Weekends Active"),
+                description: t("aiCenter.cortexaAI.qcWeekendsDesc", "Allow AI to work on weekends"),
                 icon: CalendarDays,
                 accent: "orange",
                 defaultValue: false,
@@ -5059,13 +5084,13 @@ function ControlsLayout({
 
           <div className="cx-white-card">
             <h2>
-              Automation Rules
+              {t("aiCenter.cortexaAI.automationRules", "Automation Rules")}
               <button
                 type="button"
                 onClick={onOpenAutomations}
                 data-ai-write-action="true"
               >
-                Manage Rules
+                {t("aiCenter.cortexaAI.manageRules", "Manage Rules")}
               </button>
             </h2>
 
@@ -5088,11 +5113,13 @@ function ControlsLayout({
                       {rule.title ||
                         rule.label ||
                         rule.name ||
-                        "Automation rule"}
+                        t("aiCenter.cortexaAI.automationRuleFallback", "Automation rule")}
                     </span>
 
                     <em className={enabled ? "enabled" : "disabled"}>
-                      {enabled ? "Enabled" : "Disabled"}
+                      {enabled
+                        ? t("aiCenter.cortexaAI.enabled", "Enabled")
+                        : t("aiCenter.cortexaAI.disabled", "Disabled")}
                     </em>
                   </div>
                 );
@@ -5101,7 +5128,7 @@ function ControlsLayout({
               <div className="cx-mini-empty">
                 <Zap size={22} />
 
-                <p>No automation rules configured.</p>
+                <p>{t("aiCenter.cortexaAI.noAutomationRules", "No automation rules configured.")}</p>
               </div>
             )}
 
@@ -5111,7 +5138,7 @@ function ControlsLayout({
               onClick={onOpenAutomations}
               data-ai-write-action="true"
             >
-              View All Rules
+              {t("aiCenter.cortexaAI.viewAllRules", "View All Rules")}
               <ChevronRight size={16} />
             </button>
           </div>
@@ -5137,6 +5164,7 @@ function ControlTabCard({ title, description, children }) {
 }
 
 function GlanceCard({ data = {} }) {
+  const { t } = useTranslation();
   const conversations = Number(
     data?.conversations ?? data?.conversationsToday ?? 0,
   );
@@ -5158,79 +5186,83 @@ function GlanceCard({ data = {} }) {
   return (
     <div className="cx-white-card">
       <h2>
-        AI Agent at a glance
+        {t("aiCenter.cortexaAI.agentAtGlance", "AI Agent at a glance")}
         <em className={status === "paused" ? "paused" : ""}>
           <i />
 
-          {status === "paused" ? "Paused" : "Live"}
+          {status === "paused"
+            ? t("aiCenter.cortexaAI.statusPaused", "Paused")
+            : t("aiCenter.cortexaAI.statusLive", "Live")}
         </em>
       </h2>
 
       <div className="cx-glance-grid">
         <StatMini
           icon={MessageSquare}
-          title="Conversations"
+          title={t("aiCenter.cortexaAI.glanceConversations", "Conversations")}
           value={conversations}
-          desc="Today"
+          desc={t("aiCenter.cortexaAI.today", "Today")}
         />
 
         <StatMini
           icon={Users}
-          title="Leads Contacted"
+          title={t("aiCenter.cortexaAI.glanceLeadsContacted", "Leads Contacted")}
           value={leadsContacted}
-          desc="Today"
+          desc={t("aiCenter.cortexaAI.today", "Today")}
         />
 
         <StatMini
           icon={CalendarDays}
-          title="Appointments Booked"
+          title={t("aiCenter.cortexaAI.metricAppointmentsBooked", "Appointments Booked")}
           value={appointmentsBooked}
-          desc="Today"
+          desc={t("aiCenter.cortexaAI.today", "Today")}
         />
 
         <StatMini
           icon={Home}
-          title="Properties Shared"
+          title={t("aiCenter.cortexaAI.glancePropertiesShared", "Properties Shared")}
           value={propertiesShared}
-          desc="Today"
+          desc={t("aiCenter.cortexaAI.today", "Today")}
         />
       </div>
     </div>
   );
 }
 
-const formatRelativeTime = (value) => {
+const formatRelativeTime = (value, t) => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return String(value);
   }
+  const tr = typeof t === "function" ? t : (key, def) => def;
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) {
-    return "Just now";
+    return tr("aiCenter.cortexaAI.timeJustNow", "Just now");
   }
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
-    return `${minutes}m ago`;
+    return tr("aiCenter.cortexaAI.timeMinutesAgo", "{{count}}m ago", { count: minutes });
   }
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
-    return `${hours}h ago`;
+    return tr("aiCenter.cortexaAI.timeHoursAgo", "{{count}}h ago", { count: hours });
   }
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return tr("aiCenter.cortexaAI.timeDaysAgo", "{{count}}d ago", { count: days });
 };
 
 function PriorityTasks({ tasks = [], onViewAll }) {
+  const { t } = useTranslation();
   const rows = Array.isArray(tasks) ? tasks : [];
 
   return (
     <div className="cx-white-card">
       <h2>
-        Priority Tasks
+        {t("aiCenter.cortexaAI.priorityTasks", "Priority Tasks")}
         {rows.length > 0 && (
           <button type="button" onClick={onViewAll}>
-            View all
+            {t("aiCenter.cortexaAI.viewAll", "View all")}
           </button>
         )}
       </h2>
@@ -5262,13 +5294,13 @@ function PriorityTasks({ tasks = [], onViewAll }) {
                 <span className="cx-task-avatar-fallback">{initials}</span>
               )}
               <div>
-                <strong>{task.title || "Priority task"}</strong>
+                <strong>{task.title || t("aiCenter.cortexaAI.priorityTaskFallback", "Priority task")}</strong>
                 <p>
-                  {task.typeLabel || task.type || "Task"}
+                  {task.typeLabel || task.type || t("aiCenter.cortexaAI.taskFallback", "Task")}
                   {task.createdAt || task.dueAt ? (
                     <>
                       {" · "}
-                      {formatRelativeTime(task.createdAt || task.dueAt)}
+                      {formatRelativeTime(task.createdAt || task.dueAt, t)}
                     </>
                   ) : null}
                 </p>
@@ -5283,7 +5315,7 @@ function PriorityTasks({ tasks = [], onViewAll }) {
       ) : (
         <div className="cx-mini-empty">
           <CheckCircle2 size={22} />
-          <p>No priority tasks right now.</p>
+          <p>{t("aiCenter.cortexaAI.noPriorityTasks", "No priority tasks right now.")}</p>
         </div>
       )}
     </div>
@@ -5291,6 +5323,7 @@ function PriorityTasks({ tasks = [], onViewAll }) {
 }
 
 function RecentActivityMini({ items = [], onViewAll }) {
+  const { t } = useTranslation();
   const rows = Array.isArray(items) ? items : [];
   const getActivityIcon = (item) => {
     const value = String(
@@ -5327,10 +5360,10 @@ function RecentActivityMini({ items = [], onViewAll }) {
   return (
     <div className="cx-white-card">
       <h2>
-        Recent Activity
+        {t("aiCenter.cortexaAI.recentActivity", "Recent Activity")}
         {rows.length > 0 && (
           <button type="button" onClick={onViewAll}>
-            View all
+            {t("aiCenter.cortexaAI.viewAll", "View all")}
           </button>
         )}
       </h2>
@@ -5348,8 +5381,8 @@ function RecentActivityMini({ items = [], onViewAll }) {
                 <Icon size={17} />
               </div>
               <div>
-                <strong>{item.title || item.label || "AI activity"}</strong>
-                <p>{item.timeLabel || formatRelativeTime(item.createdAt)}</p>
+                <strong>{item.title || item.label || t("aiCenter.cortexaAI.aiActivityLower", "AI activity")}</strong>
+                <p>{item.timeLabel || formatRelativeTime(item.createdAt, t)}</p>
               </div>
             </div>
           );
@@ -5357,7 +5390,7 @@ function RecentActivityMini({ items = [], onViewAll }) {
       ) : (
         <div className="cx-mini-empty">
           <Activity size={22} />
-          <p>No recent AI activity.</p>
+          <p>{t("aiCenter.cortexaAI.noRecentActivity", "No recent AI activity.")}</p>
         </div>
       )}
     </div>

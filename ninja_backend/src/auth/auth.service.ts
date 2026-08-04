@@ -70,6 +70,7 @@ export class AuthService {
       password: hashedPassword,
       role: role as UserRole,
       teamId: null,
+      preferredLanguage: signupDto.language || null,
     });
 
     // Generate tokens

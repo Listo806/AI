@@ -13,6 +13,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import "./AutomationModal.css";
 
@@ -121,6 +122,7 @@ export default function AutomationModal({
   onClose,
   onSave,
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(DEFAULT_FORM);
 
   useEffect(() => {
@@ -191,20 +193,29 @@ export default function AutomationModal({
               <Zap size={22} />
             </span>
             <div>
-              <h2>Automations</h2>
+              <h2>{t("aiCenter.automationModal.title", "Automations")}</h2>
               <p>
-                Choose which actions your AI Agent can perform automatically.
+                {t(
+                  "aiCenter.automationModal.subtitle",
+                  "Choose which actions your AI Agent can perform automatically.",
+                )}
               </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.automationModal.close", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
 
         {loading ? (
-          <div className="cx-automation-loading">Loading automations...</div>
+          <div className="cx-automation-loading">
+            {t("aiCenter.automationModal.loading", "Loading automations...")}
+          </div>
         ) : (
           <form onSubmit={submit}>
             {error && <div className="cx-automation-error">{error}</div>}
@@ -212,15 +223,23 @@ export default function AutomationModal({
             <section>
               <div className="cx-automation-section-head">
                 <div>
-                  <h3>AI Actions</h3>
+                  <h3>
+                    {t("aiCenter.automationModal.aiActionsHeading", "AI Actions")}
+                  </h3>
                   <p>
-                    {enabledCount} of {AUTOMATIONS.length} automations enabled
+                    {t(
+                      "aiCenter.automationModal.automationsEnabled",
+                      "{{enabled}} of {{total}} automations enabled",
+                      { enabled: enabledCount, total: AUTOMATIONS.length },
+                    )}
                   </p>
                 </div>
 
                 <span>
                   <Zap size={15} />
-                  {enabledCount} active
+                  {t("aiCenter.automationModal.activeCount", "{{enabled}} active", {
+                    enabled: enabledCount,
+                  })}
                 </span>
               </div>
 
@@ -239,8 +258,18 @@ export default function AutomationModal({
                       </div>
 
                       <div className="cx-automation-row-copy">
-                        <strong>{item.title}</strong>
-                        <p>{item.description}</p>
+                        <strong>
+                          {t(
+                            `aiCenter.automationModal.${item.key}Title`,
+                            item.title,
+                          )}
+                        </strong>
+                        <p>
+                          {t(
+                            `aiCenter.automationModal.${item.key}Description`,
+                            item.description,
+                          )}
+                        </p>
                       </div>
 
                       <button
@@ -258,11 +287,19 @@ export default function AutomationModal({
             </section>
 
             <section>
-              <h3>Timing & qualification</h3>
+              <h3>
+                {t(
+                  "aiCenter.automationModal.timingHeading",
+                  "Timing & qualification",
+                )}
+              </h3>
 
               <div className="cx-automation-settings-grid">
                 <label>
-                  Follow-up delay
+                  {t(
+                    "aiCenter.automationModal.followUpDelayLabel",
+                    "Follow-up delay",
+                  )}
                   <select
                     value={form.followUpAfterMinutes}
                     onChange={(event) =>
@@ -272,19 +309,33 @@ export default function AutomationModal({
                     {[5, 10, 15, 30, 60, 120, 360, 720, 1440].map((value) => (
                       <option key={value} value={value}>
                         {value < 60
-                          ? `${value} minutes`
+                          ? t(
+                              "aiCenter.automationModal.minutesOption",
+                              "{{value}} minutes",
+                              { value },
+                            )
                           : value === 60
-                            ? "1 hour"
+                            ? t("aiCenter.automationModal.oneHourOption", "1 hour")
                             : value < 1440
-                              ? `${value / 60} hours`
-                              : "1 day"}
+                              ? t(
+                                  "aiCenter.automationModal.hoursOption",
+                                  "{{value}} hours",
+                                  { value: value / 60 },
+                                )
+                              : t(
+                                  "aiCenter.automationModal.oneDayOption",
+                                  "1 day",
+                                )}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  Reminder delay
+                  {t(
+                    "aiCenter.automationModal.reminderDelayLabel",
+                    "Reminder delay",
+                  )}
                   <select
                     value={form.reminderAfterHours}
                     onChange={(event) =>
@@ -294,19 +345,33 @@ export default function AutomationModal({
                     {[1, 2, 4, 8, 12, 24, 48, 72, 168].map((value) => (
                       <option key={value} value={value}>
                         {value < 24
-                          ? `${value} hours`
+                          ? t(
+                              "aiCenter.automationModal.hoursOption",
+                              "{{value}} hours",
+                              { value },
+                            )
                           : value === 24
-                            ? "1 day"
+                            ? t("aiCenter.automationModal.oneDayOption", "1 day")
                             : value < 168
-                              ? `${value / 24} days`
-                              : "1 week"}
+                              ? t(
+                                  "aiCenter.automationModal.daysOption",
+                                  "{{value}} days",
+                                  { value: value / 24 },
+                                )
+                              : t(
+                                  "aiCenter.automationModal.oneWeekOption",
+                                  "1 week",
+                                )}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  Hot lead score
+                  {t(
+                    "aiCenter.automationModal.hotLeadScoreLabel",
+                    "Hot lead score",
+                  )}
                   <div className="cx-automation-score-input">
                     <input
                       type="number"
@@ -326,10 +391,17 @@ export default function AutomationModal({
             <div className="cx-automation-note">
               <Check size={17} />
               <div>
-                <strong>Human controls remain available</strong>
+                <strong>
+                  {t(
+                    "aiCenter.automationModal.humanControlsTitle",
+                    "Human controls remain available",
+                  )}
+                </strong>
                 <p>
-                  Team members can pause AI, take over a conversation, or
-                  disable individual automations at any time.
+                  {t(
+                    "aiCenter.automationModal.humanControlsDescription",
+                    "Team members can pause AI, take over a conversation, or disable individual automations at any time.",
+                  )}
                 </p>
               </div>
             </div>
@@ -339,11 +411,17 @@ export default function AutomationModal({
                 {canSave ? (
                   <span className="complete">
                     <Check size={16} />
-                    Automation settings are ready
+                    {t(
+                      "aiCenter.automationModal.settingsReady",
+                      "Automation settings are ready",
+                    )}
                   </span>
                 ) : (
                   <span>
-                    Enable at least one automation and check the limits.
+                    {t(
+                      "aiCenter.automationModal.enableAtLeastOne",
+                      "Enable at least one automation and check the limits.",
+                    )}
                   </span>
                 )}
               </div>
@@ -354,7 +432,7 @@ export default function AutomationModal({
                 onClick={onClose}
                 disabled={saving}
               >
-                Cancel
+                {t("aiCenter.automationModal.cancel", "Cancel")}
               </button>
 
               <button
@@ -363,7 +441,9 @@ export default function AutomationModal({
                 disabled={!canSave || saving}
               >
                 <Save size={16} />
-                {saving ? "Saving..." : "Save Automations"}
+                {saving
+                  ? t("aiCenter.automationModal.saving", "Saving...")
+                  : t("aiCenter.automationModal.saveButton", "Save Automations")}
               </button>
             </footer>
           </form>

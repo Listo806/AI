@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
+import { useTranslation } from "react-i18next";
+
 import { BookOpen, Check, Save, X } from "lucide-react";
 
 import "./KnowledgeItemModal.css";
@@ -8,34 +10,42 @@ const CATEGORIES = [
   {
     value: "company_information",
     label: "Company Information",
+    labelKey: "aiCenter.knowledgeItemModal.categoryCompanyInformation",
   },
   {
     value: "office_hours",
     label: "Office Hours & Availability",
+    labelKey: "aiCenter.knowledgeItemModal.categoryOfficeHours",
   },
   {
     value: "service_areas",
     label: "Service Areas",
+    labelKey: "aiCenter.knowledgeItemModal.categoryServiceAreas",
   },
   {
     value: "property_knowledge",
     label: "Property Knowledge",
+    labelKey: "aiCenter.knowledgeItemModal.categoryPropertyKnowledge",
   },
   {
     value: "sales_scripts",
     label: "Sales Scripts & Templates",
+    labelKey: "aiCenter.knowledgeItemModal.categorySalesScripts",
   },
   {
     value: "financing_partners",
     label: "Financing & Partners",
+    labelKey: "aiCenter.knowledgeItemModal.categoryFinancingPartners",
   },
   {
     value: "faqs",
     label: "FAQs",
+    labelKey: "aiCenter.knowledgeItemModal.categoryFaqs",
   },
   {
     value: "policies_processes",
     label: "Policies & Processes",
+    labelKey: "aiCenter.knowledgeItemModal.categoryPoliciesProcesses",
   },
 ];
 
@@ -43,18 +53,22 @@ const SOURCE_TYPES = [
   {
     value: "text",
     label: "Text",
+    labelKey: "aiCenter.knowledgeItemModal.sourceTypeText",
   },
   {
     value: "qa",
     label: "Question & Answer",
+    labelKey: "aiCenter.knowledgeItemModal.sourceTypeQa",
   },
   {
     value: "website",
     label: "Website",
+    labelKey: "aiCenter.knowledgeItemModal.sourceTypeWebsite",
   },
   {
     value: "document",
     label: "Document",
+    labelKey: "aiCenter.knowledgeItemModal.sourceTypeDocument",
   },
 ];
 
@@ -79,6 +93,8 @@ export default function KnowledgeItemModal({
   onClose,
   onSave,
 }) {
+  const { t } = useTranslation();
+
   const [form, setForm] = useState(DEFAULT_FORM);
 
   useEffect(() => {
@@ -159,13 +175,26 @@ export default function KnowledgeItemModal({
             </span>
 
             <div>
-              <h2>{editing ? "Edit Knowledge" : "Add Knowledge"}</h2>
+              <h2>
+                {editing
+                  ? t("aiCenter.knowledgeItemModal.editKnowledge", "Edit Knowledge")
+                  : t("aiCenter.knowledgeItemModal.addKnowledge", "Add Knowledge")}
+              </h2>
 
-              <p>Add information your AI Agent can use when responding.</p>
+              <p>
+                {t(
+                  "aiCenter.knowledgeItemModal.subtitle",
+                  "Add information your AI Agent can use when responding.",
+                )}
+              </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.knowledgeItemModal.closeAria", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
@@ -175,57 +204,73 @@ export default function KnowledgeItemModal({
 
           <div className="cx-knowledge-form-grid">
             <label>
-              Category
+              {t("aiCenter.knowledgeItemModal.categoryLabel", "Category")}
               <select
                 value={form.category}
                 onChange={(event) => update("category", event.target.value)}
               >
                 {CATEGORIES.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey, option.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label>
-              Source type
+              {t("aiCenter.knowledgeItemModal.sourceTypeLabel", "Source type")}
               <select
                 value={form.sourceType}
                 onChange={(event) => update("sourceType", event.target.value)}
               >
                 {SOURCE_TYPES.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey, option.label)}
                   </option>
                 ))}
               </select>
             </label>
 
             <label className="full">
-              {isQuestionAnswer ? "Question" : "Title"}
+              {isQuestionAnswer
+                ? t("aiCenter.knowledgeItemModal.questionLabel", "Question")
+                : t("aiCenter.knowledgeItemModal.titleLabel", "Title")}
               <input
                 value={form.title}
                 onChange={(event) => update("title", event.target.value)}
                 placeholder={
                   isQuestionAnswer
-                    ? "Example: What areas do you serve?"
-                    : "Example: About our company"
+                    ? t(
+                        "aiCenter.knowledgeItemModal.questionPlaceholder",
+                        "Example: What areas do you serve?",
+                      )
+                    : t(
+                        "aiCenter.knowledgeItemModal.titlePlaceholder",
+                        "Example: About our company",
+                      )
                 }
                 maxLength={255}
               />
             </label>
 
             <label className="full">
-              {isQuestionAnswer ? "Answer" : "Content"}
+              {isQuestionAnswer
+                ? t("aiCenter.knowledgeItemModal.answerLabel", "Answer")
+                : t("aiCenter.knowledgeItemModal.contentLabel", "Content")}
               <textarea
                 rows={10}
                 value={form.content}
                 onChange={(event) => update("content", event.target.value)}
                 placeholder={
                   isQuestionAnswer
-                    ? "Enter the answer your AI Agent should provide..."
-                    : "Enter the information your AI Agent should know..."
+                    ? t(
+                        "aiCenter.knowledgeItemModal.answerPlaceholder",
+                        "Enter the answer your AI Agent should provide...",
+                      )
+                    : t(
+                        "aiCenter.knowledgeItemModal.contentPlaceholder",
+                        "Enter the information your AI Agent should know...",
+                      )
                 }
                 maxLength={20000}
               />
@@ -235,7 +280,7 @@ export default function KnowledgeItemModal({
             {(form.sourceType === "website" ||
               form.sourceType === "document") && (
               <label className="full">
-                Source URL
+                {t("aiCenter.knowledgeItemModal.sourceUrlLabel", "Source URL")}
                 <input
                   value={form.sourceUrl}
                   onChange={(event) => update("sourceUrl", event.target.value)}
@@ -245,21 +290,30 @@ export default function KnowledgeItemModal({
             )}
 
             <label>
-              Status
+              {t("aiCenter.knowledgeItemModal.statusLabel", "Status")}
               <select
                 value={form.status}
                 onChange={(event) => update("status", event.target.value)}
               >
-                <option value="active">Active</option>
+                <option value="active">
+                  {t("aiCenter.knowledgeItemModal.statusActive", "Active")}
+                </option>
 
-                <option value="inactive">Inactive</option>
+                <option value="inactive">
+                  {t("aiCenter.knowledgeItemModal.statusInactive", "Inactive")}
+                </option>
 
-                <option value="needs_review">Needs Review</option>
+                <option value="needs_review">
+                  {t(
+                    "aiCenter.knowledgeItemModal.statusNeedsReview",
+                    "Needs Review",
+                  )}
+                </option>
               </select>
             </label>
 
             <label>
-              Priority
+              {t("aiCenter.knowledgeItemModal.priorityLabel", "Priority")}
               <input
                 type="number"
                 min="0"
@@ -275,11 +329,17 @@ export default function KnowledgeItemModal({
               {canSave ? (
                 <span className="ready">
                   <Check size={16} />
-                  Knowledge item is ready
+                  {t(
+                    "aiCenter.knowledgeItemModal.readyMessage",
+                    "Knowledge item is ready",
+                  )}
                 </span>
               ) : (
                 <span>
-                  Title must have 3 characters and content at least 10.
+                  {t(
+                    "aiCenter.knowledgeItemModal.validationMessage",
+                    "Title must have 3 characters and content at least 10.",
+                  )}
                 </span>
               )}
             </div>
@@ -290,7 +350,7 @@ export default function KnowledgeItemModal({
               onClick={onClose}
               disabled={saving}
             >
-              Cancel
+              {t("aiCenter.knowledgeItemModal.cancel", "Cancel")}
             </button>
 
             <button
@@ -301,10 +361,10 @@ export default function KnowledgeItemModal({
               <Save size={16} />
 
               {saving
-                ? "Saving..."
+                ? t("aiCenter.knowledgeItemModal.saving", "Saving...")
                 : editing
-                  ? "Save Changes"
-                  : "Add Knowledge"}
+                  ? t("aiCenter.knowledgeItemModal.saveChanges", "Save Changes")
+                  : t("aiCenter.knowledgeItemModal.addKnowledge", "Add Knowledge")}
             </button>
           </footer>
         </form>

@@ -7,6 +7,7 @@ import {
   stripLocaleFromPath,
   buildLocalizedPath,
 } from "../i18n/locales";
+import { resolveSeo } from "../i18n/seo";
 
 // Create or update a <head> <link> we manage, tagged so we can clean it up.
 function setManagedLink(id, attrs) {
@@ -17,6 +18,19 @@ function setManagedLink(id, attrs) {
     document.head.appendChild(el);
   }
   Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+// Create or update a <meta> tag by name or property (og:*). Managed so it can be
+// updated on every navigation without stacking duplicates.
+function setMetaTag(selector, attr, value, content) {
+  let el = document.head.querySelector(selector);
+  if (!el) {
+    el = document.createElement("meta");
+    el.setAttribute(attr, value);
+    document.head.appendChild(el);
+  }
+  el.setAttribute("content", content);
   return el;
 }
 
@@ -77,6 +91,24 @@ export default function LocaleLayout({ code }) {
 
     return () => created.forEach((el) => el && el.remove());
   }, [location.pathname, code]);
+
+  // Localized document title + meta description (+ Open Graph) per page. Uses the
+  // isolated SEO map, always resolving to a non-empty title so pages never show a
+  // blank or raw value.
+  useEffect(() => {
+    const basePath = stripLocaleFromPath(location.pathname);
+    const seo = resolveSeo(basePath, code);
+    document.title = seo.title;
+    setMetaTag('meta[name="description"]', "name", "description", seo.description);
+    setMetaTag('meta[property="og:title"]', "property", "og:title", seo.title);
+    setMetaTag(
+      'meta[property="og:description"]',
+      "property",
+      "og:description",
+      seo.description,
+    );
+    setMetaTag('meta[property="og:locale"]', "property", "og:locale", locale.htmlLang);
+  }, [location.pathname, code, locale.htmlLang]);
 
   return <Outlet />;
 }

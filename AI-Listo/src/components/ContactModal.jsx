@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../api/apiClient';
 import { normalizePhoneToE164 } from '../utils/whatsapp';
 import '../styles/ContactModal.css';
 
 export default function ContactModal({ property, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -65,7 +67,7 @@ export default function ContactModal({ property, onClose, onSubmit }) {
         onClose();
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to submit contact form');
+      setError(err.message || t('contacts.modal.submitError', 'Failed to submit contact form'));
     } finally {
       setLoading(false);
     }
@@ -76,12 +78,12 @@ export default function ContactModal({ property, onClose, onSubmit }) {
       <div className="crm-modal-overlay" onClick={onClose}>
         <div className="crm-modal" onClick={(e) => e.stopPropagation()}>
           <div className="crm-modal-header">
-            <h3>Success!</h3>
+            <h3>{t('contacts.modal.successTitle', 'Success!')}</h3>
             <button className="crm-modal-close" onClick={onClose}>×</button>
           </div>
           <div className="crm-modal-body">
             <p style={{ textAlign: 'center', padding: '20px', color: '#166534' }}>
-              ✓ Your message has been sent. We'll get back to you soon!
+              ✓ {t('contacts.modal.successMessage', "Your message has been sent. We'll get back to you soon!")}
             </p>
           </div>
         </div>
@@ -93,12 +95,12 @@ export default function ContactModal({ property, onClose, onSubmit }) {
     <div className="crm-modal-overlay" onClick={onClose}>
       <div className="crm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="crm-modal-header">
-          <h3>Contact Agent</h3>
+          <h3>{t('contacts.modal.title', 'Contact Agent')}</h3>
           <button className="crm-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="crm-modal-body">
           <p style={{ marginBottom: '20px', color: '#64748b' }}>
-            Interested in <strong>{property.title}</strong>? Fill out the form below and we'll get back to you.
+            {t('contacts.modal.interestedPrefix', 'Interested in ')}<strong>{property.title}</strong>{t('contacts.modal.interestedSuffix', "? Fill out the form below and we'll get back to you.")}
           </p>
 
           {error && (
@@ -109,7 +111,7 @@ export default function ContactModal({ property, onClose, onSubmit }) {
 
           <form onSubmit={handleSubmit} className="crm-form">
             <div className="crm-form-field">
-              <label htmlFor="contact-name">Name *</label>
+              <label htmlFor="contact-name">{t('contacts.modal.nameLabel', 'Name *')}</label>
               <input
                 id="contact-name"
                 name="name"
@@ -118,12 +120,12 @@ export default function ContactModal({ property, onClose, onSubmit }) {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                placeholder="Your full name"
+                placeholder={t('contacts.modal.namePlaceholder', 'Your full name')}
               />
             </div>
 
             <div className="crm-form-field">
-              <label htmlFor="contact-email">Email</label>
+              <label htmlFor="contact-email">{t('contacts.modal.emailLabel', 'Email')}</label>
               <input
                 id="contact-email"
                 name="email"
@@ -131,12 +133,12 @@ export default function ContactModal({ property, onClose, onSubmit }) {
                 value={formData.email}
                 onChange={handleChange}
                 disabled={loading}
-                placeholder="your.email@example.com"
+                placeholder={t('contacts.modal.emailPlaceholder', 'your.email@example.com')}
               />
             </div>
 
             <div className="crm-form-field">
-              <label htmlFor="contact-phone">Phone</label>
+              <label htmlFor="contact-phone">{t('contacts.modal.phoneLabel', 'Phone')}</label>
               <input
                 id="contact-phone"
                 name="phone"
@@ -158,7 +160,7 @@ export default function ContactModal({ property, onClose, onSubmit }) {
             </div>
 
             <div className="crm-form-field">
-              <label htmlFor="contact-notes">Message</label>
+              <label htmlFor="contact-notes">{t('contacts.modal.messageLabel', 'Message')}</label>
               <textarea
                 id="contact-notes"
                 name="notes"
@@ -166,7 +168,7 @@ export default function ContactModal({ property, onClose, onSubmit }) {
                 onChange={handleChange}
                 rows={4}
                 disabled={loading}
-                placeholder="Tell us about your interest in this property..."
+                placeholder={t('contacts.modal.messagePlaceholder', 'Tell us about your interest in this property...')}
               />
             </div>
 
@@ -177,14 +179,14 @@ export default function ContactModal({ property, onClose, onSubmit }) {
                 className="crm-btn crm-btn-secondary"
                 disabled={loading}
               >
-                Cancel
+                {t('contacts.modal.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
                 className="crm-btn crm-btn-primary"
                 disabled={loading}
               >
-                {loading ? 'Sending...' : 'Send Message'}
+                {loading ? t('contacts.modal.sending', 'Sending...') : t('contacts.modal.sendMessage', 'Send Message')}
               </button>
             </div>
           </form>

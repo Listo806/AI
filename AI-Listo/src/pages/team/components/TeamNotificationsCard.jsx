@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { formatTimeAgo } from "../../../utils/helpers";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 const notificationConfig = {
   team_created: {
     icon: CheckCircle2,
@@ -49,27 +50,34 @@ const notificationConfig = {
 };
 
 export default function TeamNotificationsCard({ notifications = [] }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   return (
     <div className="team-card team-notifications-card">
       <div className="team-card-header">
         <div>
-          <h3 className="team-card-title">Team Notifications</h3>
+          <h3 className="team-card-title">
+            {t("team.notificationsCard.title", "Team Notifications")}
+          </h3>
 
-          <p className="team-card-subtitle">Latest workspace updates</p>
+          <p className="team-card-subtitle">
+            {t("team.notificationsCard.subtitle", "Latest workspace updates")}
+          </p>
         </div>
 
         <button
           className="team-link-btn"
           onClick={() => navigate("/dashboard/team/notifications")}
         >
-          View All
+          {t("team.notificationsCard.viewAll", "View All")}
         </button>
       </div>
 
       <div className="team-notifications-list">
         {notifications.length === 0 ? (
-          <div className="team-empty-state">No notifications yet</div>
+          <div className="team-empty-state">
+            {t("team.notificationsCard.emptyState", "No notifications yet")}
+          </div>
         ) : (
           notifications.map((item) => {
             const config =

@@ -9,38 +9,40 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { useTranslation } from "react-i18next";
 
 export default function TeamAICharts({ insights }) {
+  const { t } = useTranslation();
   const performanceData = [
     {
-      name: "Productivity",
+      name: t("team.aiCharts.productivity", "Productivity"),
       value: insights.productivityScore,
     },
     {
-      name: "Collaboration",
+      name: t("team.aiCharts.collaboration", "Collaboration"),
       value: insights.collaborationScore,
     },
     {
-      name: "Efficiency",
+      name: t("team.aiCharts.efficiency", "Efficiency"),
       value: insights.efficiencyScore,
     },
     {
-      name: "AI Score",
+      name: t("team.aiCharts.aiScore", "AI Score"),
       value: insights.averageAIScore,
     },
   ];
 
   const dealData = [
     {
-      name: "Won",
+      name: t("team.aiCharts.won", "Won"),
       value: insights.wonDeals,
     },
     {
-      name: "Lost",
+      name: t("team.aiCharts.lost", "Lost"),
       value: insights.lostDeals,
     },
     {
-      name: "Open",
+      name: t("team.aiCharts.open", "Open"),
       value: insights.openDeals,
     },
   ];
@@ -48,7 +50,7 @@ export default function TeamAICharts({ insights }) {
   return (
     <div className="team-ai-charts">
       <div className="team-ai-chart-card">
-        <h3>Performance Analytics</h3>
+        <h3>{t("team.aiCharts.performanceAnalytics", "Performance Analytics")}</h3>
 
         <ResponsiveContainer width="100%" height={320}>
           <BarChart data={performanceData}>
@@ -66,7 +68,7 @@ export default function TeamAICharts({ insights }) {
       </div>
 
       <div className="team-ai-chart-card">
-        <h3>Deal Pipeline</h3>
+        <h3>{t("team.aiCharts.dealPipeline", "Deal Pipeline")}</h3>
 
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={dealData}>

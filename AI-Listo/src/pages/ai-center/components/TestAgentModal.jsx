@@ -10,14 +10,15 @@ import {
   TestTube2,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import "./TestAgentModal.css";
 
 const QUICK_PROMPTS = [
-  "Hi, I’m looking for a 3 bedroom home.",
-  "Can you recommend properties under $500,000?",
-  "I want to book a property showing tomorrow.",
-  "What areas do you currently serve?",
+  { id: "bedroom", text: "Hi, I’m looking for a 3 bedroom home." },
+  { id: "budget", text: "Can you recommend properties under $500,000?" },
+  { id: "booking", text: "I want to book a property showing tomorrow." },
+  { id: "areas", text: "What areas do you currently serve?" },
 ];
 
 export default function TestAgentModal({
@@ -31,6 +32,7 @@ export default function TestAgentModal({
   onRefresh,
   onNewSession,
 }) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const listRef = useRef(null);
@@ -65,8 +67,10 @@ export default function TestAgentModal({
         {
           id: "welcome",
           role: "assistant",
-          content:
+          content: t(
+            "aiCenter.testAgentModal.welcomeMessage",
             "Your AI Agent is ready for a safe test. Send a message to verify its behavior before launch.",
+          ),
         },
       ]);
     }
@@ -111,7 +115,10 @@ export default function TestAgentModal({
           content:
             response?.assistantMessage?.content ||
             response?.answer ||
-            "The AI Agent returned no response.",
+            t(
+              "aiCenter.testAgentModal.noResponse",
+              "The AI Agent returned no response.",
+            ),
         },
       ]);
     } catch (requestError) {
@@ -124,7 +131,7 @@ export default function TestAgentModal({
           content:
             requestError?.response?.data?.message ||
             requestError?.message ||
-            "The AI test failed.",
+            t("aiCenter.testAgentModal.testFailed", "The AI test failed."),
         },
       ]);
     }
@@ -145,12 +152,21 @@ export default function TestAgentModal({
             </span>
 
             <div>
-              <h2>Test AI Agent</h2>
-              <p>Test your setup safely before launching.</p>
+              <h2>{t("aiCenter.testAgentModal.title", "Test AI Agent")}</h2>
+              <p>
+                {t(
+                  "aiCenter.testAgentModal.subtitle",
+                  "Test your setup safely before launching.",
+                )}
+              </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.testAgentModal.close", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
@@ -161,20 +177,27 @@ export default function TestAgentModal({
               {status?.tested ? (
                 <>
                   <Check size={15} />
-                  Tested
+                  {t("aiCenter.testAgentModal.tested", "Tested")}
                 </>
               ) : (
                 <>
                   <Sparkles size={15} />
-                  Not tested yet
+                  {t("aiCenter.testAgentModal.notTested", "Not tested yet")}
                 </>
               )}
             </span>
 
             <p>
               {status?.total
-                ? `${status.total} previous test runs`
-                : "No previous test runs"}
+                ? t(
+                    "aiCenter.testAgentModal.previousTestRuns",
+                    "{{total}} previous test runs",
+                    { total: status.total },
+                  )
+                : t(
+                    "aiCenter.testAgentModal.noPreviousTestRuns",
+                    "No previous test runs",
+                  )}
             </p>
           </div>
           <button
@@ -188,19 +211,21 @@ export default function TestAgentModal({
                 {
                   id: "welcome",
                   role: "assistant",
-                  content:
+                  content: t(
+                    "aiCenter.testAgentModal.newSessionMessage",
                     "A new safe test session is ready. Send your first message.",
+                  ),
                 },
               ]);
               setMessage("");
             }}
           >
             <Plus size={16} />
-            New Test
+            {t("aiCenter.testAgentModal.newTest", "New Test")}
           </button>
           <button type="button" onClick={onRefresh} disabled={loading}>
             <RefreshCw size={16} className={loading ? "spin" : ""} />
-            Refresh
+            {t("aiCenter.testAgentModal.refresh", "Refresh")}
           </button>
         </div>
 
@@ -208,25 +233,39 @@ export default function TestAgentModal({
 
         <div className="cx-test-agent-body">
           <aside className="cx-test-agent-prompts">
-            <h3>Try a scenario</h3>
+            <h3>{t("aiCenter.testAgentModal.tryScenario", "Try a scenario")}</h3>
 
-            {QUICK_PROMPTS.map((prompt) => (
-              <button
-                type="button"
-                key={prompt}
-                onClick={() => send(prompt)}
-                disabled={sending}
-              >
-                <MessageSquare size={16} />
-                <span>{prompt}</span>
-              </button>
-            ))}
+            {QUICK_PROMPTS.map(({ id, text }) => {
+              const prompt = t(
+                `aiCenter.testAgentModal.quickPrompt.${id}`,
+                text,
+              );
+
+              return (
+                <button
+                  type="button"
+                  key={id}
+                  onClick={() => send(prompt)}
+                  disabled={sending}
+                >
+                  <MessageSquare size={16} />
+                  <span>{prompt}</span>
+                </button>
+              );
+            })}
 
             <div className="cx-test-agent-note">
               <Bot size={19} />
               <div>
-                <strong>Safe test mode</strong>
-                <p>This test does not send messages to real WhatsApp leads.</p>
+                <strong>
+                  {t("aiCenter.testAgentModal.safeTestMode", "Safe test mode")}
+                </strong>
+                <p>
+                  {t(
+                    "aiCenter.testAgentModal.safeTestNote",
+                    "This test does not send messages to real WhatsApp leads.",
+                  )}
+                </p>
               </div>
             </div>
           </aside>
@@ -257,7 +296,12 @@ export default function TestAgentModal({
                   <span>
                     <Bot size={16} />
                   </span>
-                  <p className="thinking">AI Agent is thinking...</p>
+                  <p className="thinking">
+                    {t(
+                      "aiCenter.testAgentModal.thinking",
+                      "AI Agent is thinking...",
+                    )}
+                  </p>
                 </div>
               )}
             </div>
@@ -273,21 +317,24 @@ export default function TestAgentModal({
                   }
                 }}
                 rows={2}
-                placeholder="Type a test message..."
+                placeholder={t(
+                  "aiCenter.testAgentModal.messagePlaceholder",
+                  "Type a test message...",
+                )}
                 maxLength={2000}
               />
 
               <button type="button" onClick={() => send()} disabled={!canSend}>
                 <Send size={18} />
-                Send Test
+                {t("aiCenter.testAgentModal.sendTest", "Send Test")}
               </button>
             </div>
 
             <p className="cx-test-agent-disclaimer">
-              This simulates a real lead chatting on WhatsApp. The AI qualifies
-              using your settings, and if booking is enabled it will offer and
-              book a viewing against your appointment rules. Nothing is sent to a
-              real phone.
+              {t(
+                "aiCenter.testAgentModal.disclaimer",
+                "This simulates a real lead chatting on WhatsApp. The AI qualifies using your settings, and if booking is enabled it will offer and book a viewing against your appointment rules. Nothing is sent to a real phone.",
+              )}
             </p>
           </main>
         </div>
@@ -297,15 +344,23 @@ export default function TestAgentModal({
             {status?.tested ? (
               <span className="complete">
                 <Check size={16} />
-                AI Agent test completed
+                {t(
+                  "aiCenter.testAgentModal.testCompleted",
+                  "AI Agent test completed",
+                )}
               </span>
             ) : (
-              <span>Send at least one successful test message.</span>
+              <span>
+                {t(
+                  "aiCenter.testAgentModal.sendAtLeastOne",
+                  "Send at least one successful test message.",
+                )}
+              </span>
             )}
           </div>
 
           <button type="button" className="secondary" onClick={onClose}>
-            Close
+            {t("aiCenter.testAgentModal.close", "Close")}
           </button>
         </footer>
       </div>

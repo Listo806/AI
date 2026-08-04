@@ -1,5 +1,6 @@
 import { X, AlertTriangle, Sparkles, Brain, ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 export default function TeamAIInsightsModal({
   open,
   onClose,
@@ -7,6 +8,7 @@ export default function TeamAIInsightsModal({
   error,
   insights,
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   if (!open) return null;
 
@@ -17,11 +19,13 @@ export default function TeamAIInsightsModal({
 
         <div className="team-ai-header">
           <div>
-            <h2>AI Team Insights</h2>
+            <h2>{t("team.aiInsightsModal.title", "AI Team Insights")}</h2>
 
             <p>
-              CORTEXA AI analyzed your team activity, lead ownership, pipeline
-              activity, and performance signals.
+              {t(
+                "team.aiInsightsModal.subtitle",
+                "CORTEXA AI analyzed your team activity, lead ownership, pipeline activity, and performance signals."
+              )}
             </p>
           </div>
 
@@ -35,7 +39,7 @@ export default function TeamAIInsightsModal({
         {loading && (
           <div className="team-ai-loading">
             <Sparkles size={18} />
-            Loading AI insights...
+            {t("team.aiInsightsModal.loading", "Loading AI insights...")}
           </div>
         )}
 
@@ -60,9 +64,14 @@ export default function TeamAIInsightsModal({
               </div>
 
               <div>
-                <h3>Team Health Score</h3>
+                <h3>{t("team.aiInsightsModal.healthScore", "Team Health Score")}</h3>
 
-                <p>AI-generated performance & collaboration rating</p>
+                <p>
+                  {t(
+                    "team.aiInsightsModal.healthScoreDescription",
+                    "AI-generated performance & collaboration rating"
+                  )}
+                </p>
               </div>
             </div>
 
@@ -71,7 +80,7 @@ export default function TeamAIInsightsModal({
             <div className="team-ai-section">
               <div className="team-ai-section-title">
                 <Brain size={16} />
-                Summary
+                {t("team.aiInsightsModal.summary", "Summary")}
               </div>
 
               <p>{insights.summary}</p>
@@ -82,7 +91,7 @@ export default function TeamAIInsightsModal({
             <div className="team-ai-section">
               <div className="team-ai-section-title">
                 <ShieldAlert size={16} />
-                Risks
+                {t("team.aiInsightsModal.risks", "Risks")}
               </div>
 
               <ul>
@@ -97,7 +106,7 @@ export default function TeamAIInsightsModal({
             <div className="team-ai-section">
               <div className="team-ai-section-title">
                 <Sparkles size={16} />
-                Recommendations
+                {t("team.aiInsightsModal.recommendations", "Recommendations")}
               </div>
 
               <ul>
@@ -117,14 +126,14 @@ export default function TeamAIInsightsModal({
                   navigate("/dashboard/team/members");
                 }}
               >
-                Open Team Members
+                {t("team.aiInsightsModal.openTeamMembers", "Open Team Members")}
               </button>
 
               <button
                 type="button"
                 className="team-ai-action-btn"
               >
-                Notifications page coming soon.
+                {t("team.aiInsightsModal.notificationsComingSoon", "Notifications page coming soon.")}
               </button>
 
               <button
@@ -132,7 +141,7 @@ export default function TeamAIInsightsModal({
                 className="team-ai-action-btn"
                 onClick={onClose}
               >
-                Open Team Dashboard
+                {t("team.aiInsightsModal.openTeamDashboard", "Open Team Dashboard")}
               </button>
             </div>
           </div>
