@@ -13,6 +13,12 @@ import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
 import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
+import {
+  setupOfferActive,
+  clearSetupOffer,
+  SETUP_PRICE_7,
+  OFFER_SETUP_FEE,
+} from "../../utils/offer";
 import "./CheckoutPage.css";
 
 // Checkout with PayPal subscriptions. The customer pays a one-time $97 setup fee
@@ -215,6 +221,13 @@ export default function CheckoutPage() {
   const [paddleConfig, setPaddleConfig] = useState(null);
   const paddleInitRef = useRef(false);
 
+  // Paddle is the active path when it has a client token + a price for this plan.
+  // Exit-intent $7 offer: when the visitor claimed it AND Paddle is active AND a
+  // $7 price is configured, the setup fee for this checkout becomes $7, not $97.
+  const usePaddle = paddleReady(paddleConfig, selectedPlan);
+  const offerActive = usePaddle && setupOfferActive();
+  const setupFee = offerActive ? OFFER_SETUP_FEE : SETUP_FEE;
+
   useEffect(() => {
     acceptedTermsRef.current = acceptedTerms;
   }, [acceptedTerms]);
@@ -258,7 +271,7 @@ export default function CheckoutPage() {
         const data = res?.data ?? res;
         if (data?.fire) {
           trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
-            value: data.value ?? SETUP_FEE,
+            value: data.value ?? setupFee,
             currency: data.currency ?? "USD",
           });
           return;
@@ -273,6 +286,8 @@ export default function CheckoutPage() {
   const finishAndLogin = async (userId) => {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
+    // The exit-intent $7 offer is consumed once the purchase completes.
+    clearSetupOffer();
     // Payment just completed. Record it so the dashboard paywall gate lets them
     // straight in while the Paddle webhook catches up and flips payment_status to
     // active server-side (prevents bouncing a just-paid customer back to checkout).
@@ -287,12 +302,10 @@ export default function CheckoutPage() {
     navigate("/dashboard/ai-cortexa-setup", { replace: true });
   };
 
-  // Paddle overlay checkout. Active only when paddleReady (client token + a
-  // price for this plan); otherwise the PayPal path below runs unchanged. On a
+  // Paddle overlay checkout. Active only when usePaddle (client token + a price
+  // for this plan); otherwise the PayPal path below runs unchanged. On a
   // completed checkout the account is activated server-side by the Paddle
   // webhook; here we fire the same conversion/funnel events and log the user in.
-  const usePaddle = paddleReady(paddleConfig, selectedPlan);
-
   const startPaddle = async () => {
     if (!acceptedTermsRef.current) {
       alert(tr.validation.terms);
@@ -314,7 +327,7 @@ export default function CheckoutPage() {
             setUserData({ email: customer.email, phone: customer.phone });
             trackEvent("trial_activated", {
               plan: selectedPlan,
-              value: SETUP_FEE,
+              value: setupFee,
               currency: "USD",
             });
             setProcessing(true);
@@ -334,6 +347,7 @@ export default function CheckoutPage() {
         plan: selectedPlan,
         userId,
         email: customer.email,
+        setupPriceId: offerActive ? SETUP_PRICE_7 : undefined,
       });
     } catch (error) {
       console.error("PADDLE CHECKOUT ERROR:", error);
@@ -413,7 +427,7 @@ export default function CheckoutPage() {
               setUserData({ email: customer.email, phone: customer.phone });
               // Google Ads: count the completed $97 purchase as a conversion.
               trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
-                value: SETUP_FEE,
+                value: setupFee,
                 currency: "USD",
                 transaction_id: data.subscriptionID,
               });
@@ -421,7 +435,7 @@ export default function CheckoutPage() {
               // these customers from acquisition retargeting audiences.
               trackEvent("trial_activated", {
                 plan: selectedPlan,
-                value: SETUP_FEE,
+                value: setupFee,
                 currency: "USD",
               });
               await finishAndLogin(userId);
@@ -508,13 +522,13 @@ export default function CheckoutPage() {
               </div>
               <div className="checkout-summary-line">
                 <span>{tr.setupFee}</span>
-                <strong>${formatMoney(SETUP_FEE)}</strong>
+                <strong>${formatMoney(setupFee)}</strong>
               </div>
               <div className="checkout-summary-total">
                 <strong>{tr.dueToday}</strong>
                 <div>
                   <span>USD</span>
-                  <strong>${formatMoney(SETUP_FEE)}</strong>
+                  <strong>${formatMoney(setupFee)}</strong>
                 </div>
               </div>
             </section>
@@ -566,7 +580,7 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <h2>{tr.checkoutTitle}</h2>
-                  <p>{tr.checkoutDesc}</p>
+                  <p>{tr.checkoutDesc.replace("$97", `$${setupFee}`)}</p>
                 </div>
               </div>
 
@@ -607,7 +621,7 @@ export default function CheckoutPage() {
                         cursor: "pointer",
                       }}
                     >
-                      {`Pay $${SETUP_FEE} and start your trial`}
+                      {`Pay $${setupFee} and start your trial`}
                     </button>
                     {processing && (
                       <p className="checkout-paypal-status">{tr.processing}</p>

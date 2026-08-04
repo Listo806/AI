@@ -1,0 +1,289 @@
+/* Exit-intent "$7 activation fee" offer popup — approved design.
+   Self-contained styling (scoped to .exit-offer-*) so it renders consistently
+   over any marketing page. */
+
+.exit-offer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000; /* above sticky headers, chat widgets, etc. */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: exit-offer-fade 180ms ease-out;
+}
+
+.exit-offer-card {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin-top: min(6vh, 64px);
+  margin-bottom: 24px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 44px 44px 34px;
+  box-shadow:
+    0 30px 70px rgba(15, 23, 42, 0.34),
+    0 4px 12px rgba(15, 23, 42, 0.14);
+  text-align: center;
+  outline: none;
+  animation: exit-offer-drop 340ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.exit-offer-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.exit-offer-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* WAIT! / DON'T LEAVE YET. */
+.exit-offer-head {
+  margin: 4px 0 0;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+.exit-offer-wait {
+  display: block;
+  font-size: clamp(52px, 11vw, 80px);
+  font-weight: 900;
+  background: linear-gradient(180deg, #2f6bff 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #1d4ed8;
+}
+.exit-offer-dont {
+  display: block;
+  margin-top: 2px;
+  font-size: clamp(30px, 6.4vw, 46px);
+  font-weight: 900;
+  color: #0b1220;
+}
+
+.exit-offer-rule {
+  display: block;
+  width: 54px;
+  height: 4px;
+  margin: 16px auto 0;
+  border-radius: 3px;
+  background: #2563eb;
+}
+
+.exit-offer-sub {
+  margin: 16px auto 0;
+  max-width: 30ch;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.exit-offer-accent {
+  color: #2563eb;
+}
+
+/* $97 -> $7 ACTIVATION FEE box */
+.exit-offer-box {
+  margin: 20px 0 4px;
+  padding: 20px 20px 16px;
+  border-radius: 16px;
+  background: #eff4ff;
+  border: 1px solid #dbe6ff;
+}
+.exit-offer-box-lead {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 700;
+}
+.exit-offer-price {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 6px;
+}
+.exit-offer-old {
+  position: relative;
+  color: #94a3b8;
+  font-size: 34px;
+  font-weight: 800;
+}
+.exit-offer-old::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 52%;
+  height: 3px;
+  background: #ef4444;
+  transform: rotate(-10deg);
+}
+.exit-offer-arrow {
+  color: #0f172a;
+  flex: 0 0 auto;
+}
+.exit-offer-new {
+  color: #1d4ed8;
+  font-size: 60px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.exit-offer-fee {
+  color: #1d4ed8;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.exit-offer-box-foot {
+  margin: 0;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Feature row */
+.exit-offer-features {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.exit-offer-features li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  border-right: 1px solid #e8edf5;
+}
+.exit-offer-features li:last-child {
+  border-right: none;
+}
+.exit-offer-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  flex: 0 0 auto;
+}
+.exit-offer-feature-label {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* CTA */
+.exit-offer-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 24px;
+  padding: 18px 22px;
+  border: none;
+  border-radius: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: clamp(16px, 3.4vw, 21px);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 140ms ease, transform 120ms ease, box-shadow 140ms ease;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.34);
+}
+.exit-offer-cta:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.4);
+}
+.exit-offer-cta:active {
+  transform: translateY(0);
+}
+
+@keyframes exit-offer-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes exit-offer-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 560px) {
+  .exit-offer-card {
+    padding: 36px 22px 26px;
+    border-radius: 18px;
+  }
+  .exit-offer-sub {
+    font-size: 16px;
+  }
+  .exit-offer-new {
+    font-size: 48px;
+  }
+  /* 5 across is too tight on phones — wrap to a comfortable grid. */
+  .exit-offer-features {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 10px;
+    text-align: left;
+  }
+  .exit-offer-features li {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    border-right: none;
+    padding: 0;
+  }
+  .exit-offer-feature-label {
+    text-align: left;
+    font-size: 12.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exit-offer-backdrop,
+  .exit-offer-card {
+    animation: none;
+  }
+  .exit-offer-cta:hover {
+    transform: none;
+  }
+}
