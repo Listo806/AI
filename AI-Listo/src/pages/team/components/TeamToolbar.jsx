@@ -1,4 +1,5 @@
 import { Search, Sparkles, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { TEAM_FILTERS } from "../utils/teamConstants";
 
@@ -14,6 +15,17 @@ export default function TeamToolbar({
   selectedTeam,
   setSelectedTeam,
 }) {
+  const { t } = useTranslation();
+
+  const filterLabels = {
+    all: t("team.toolbar.filterAll", "All"),
+    active: t("team.toolbar.filterActive", "Active"),
+    pending: t("team.toolbar.filterPending", "Pending"),
+    manager: t("team.toolbar.filterManagers", "Managers"),
+    agent: t("team.toolbar.filterAgents", "Agents"),
+    "high-performers": t("team.toolbar.filterHighPerformers", "High Performers"),
+  };
+
   return (
     <div className="team-toolbar">
       {/* LEFT */}
@@ -24,7 +36,7 @@ export default function TeamToolbar({
 
           <input
             type="text"
-            placeholder="Search members..."
+            placeholder={t("team.toolbar.searchPlaceholder", "Search members...")}
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             className="team-search-input"
@@ -38,7 +50,7 @@ export default function TeamToolbar({
             className="team-select-input"
           >
             <option value="" disabled>
-              Select Team
+              {t("team.toolbar.selectTeam", "Select Team")}
             </option>
 
             {(teams || []).map((team) => (
@@ -60,7 +72,7 @@ export default function TeamToolbar({
                   : "team-filter-btn"
               }
             >
-              {item.label}
+              {filterLabels[item.key] || item.label}
             </button>
           ))}
         </div>
@@ -71,7 +83,9 @@ export default function TeamToolbar({
         <button onClick={onRunAI} className="team-ai-btn team-secondary-btn">
           <Sparkles size={16} />
 
-          {runningAI ? "Running..." : "AI Insights"}
+          {runningAI
+            ? t("team.toolbar.running", "Running...")
+            : t("team.toolbar.aiInsights", "AI Insights")}
         </button>
 
         {/*<button onClick={onInvite} className="team-primary-btn">

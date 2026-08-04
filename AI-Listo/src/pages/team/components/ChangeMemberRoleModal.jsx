@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Shield, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ChangeMemberRoleModal({
   open,
@@ -8,6 +9,7 @@ export default function ChangeMemberRoleModal({
   onClose,
   onSubmit,
 }) {
+  const { t } = useTranslation();
   const [role, setRole] = useState("agent");
 
   useEffect(() => {
@@ -40,8 +42,12 @@ export default function ChangeMemberRoleModal({
             </div>
 
             <div>
-              <h3>Change Member Role</h3>
-              <p>Update access for {member.name || member.email}</p>
+              <h3>{t("team.changeRoleModal.title", "Change Member Role")}</h3>
+              <p>
+                {t("team.changeRoleModal.subtitle", "Update access for {{name}}", {
+                  name: member.name || member.email,
+                })}
+              </p>
             </div>
           </div>
 
@@ -60,17 +66,19 @@ export default function ChangeMemberRoleModal({
             <div className="team-role-member">
               <img
                 src={member.avatar || "https://i.pravatar.cc/150"}
-                alt={member.name || "Team member"}
+                alt={member.name || t("team.changeRoleModal.memberAvatarAlt", "Team member")}
               />
 
               <div>
-                <strong>{member.name || "Unnamed Member"}</strong>
+                <strong>
+                  {member.name || t("team.changeRoleModal.unnamedMember", "Unnamed Member")}
+                </strong>
                 <span>{member.email}</span>
               </div>
             </div>
 
             <div className="team-role-field">
-              <label htmlFor="member-role">Role</label>
+              <label htmlFor="member-role">{t("team.changeRoleModal.roleLabel", "Role")}</label>
 
               <select
                 id="member-role"
@@ -78,15 +86,15 @@ export default function ChangeMemberRoleModal({
                 onChange={(event) => setRole(event.target.value)}
                 disabled={updating}
               >
-                <option value="agent">Agent</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-                <option value="viewer">Viewer</option>
+                <option value="agent">{t("team.changeRoleModal.roleAgent", "Agent")}</option>
+                <option value="manager">{t("team.changeRoleModal.roleManager", "Manager")}</option>
+                <option value="admin">{t("team.changeRoleModal.roleAdmin", "Admin")}</option>
+                <option value="viewer">{t("team.changeRoleModal.roleViewer", "Viewer")}</option>
               </select>
             </div>
 
             <div className="team-role-summary">
-              <strong>Selected role</strong>
+              <strong>{t("team.changeRoleModal.selectedRole", "Selected role")}</strong>
               <span>{role}</span>
             </div>
           </div>
@@ -98,7 +106,7 @@ export default function ChangeMemberRoleModal({
               onClick={onClose}
               disabled={updating}
             >
-              Cancel
+              {t("team.changeRoleModal.cancel", "Cancel")}
             </button>
 
             <button
@@ -106,7 +114,9 @@ export default function ChangeMemberRoleModal({
               className="team-primary-btn"
               disabled={updating || role === member.role?.toLowerCase()}
             >
-              {updating ? "Updating..." : "Update Role"}
+              {updating
+                ? t("team.changeRoleModal.updating", "Updating...")
+                : t("team.changeRoleModal.updateRole", "Update Role")}
             </button>
           </div>
         </form>

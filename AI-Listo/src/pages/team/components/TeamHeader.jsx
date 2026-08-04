@@ -1,4 +1,5 @@
 import { Bell, Users } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 
 export default function TeamHeader({
   user,
@@ -6,12 +7,13 @@ export default function TeamHeader({
   selectedTeam,
   onChangeTeam,
 }) {
+  const { t } = useTranslation();
   return (
     <>
     <div className="team-header heading_page">
         <Users/>
         <h1 className="team-page-title">
-          Team Workspace
+          {t("team.header.title", "Team Workspace")}
         </h1>
         
       <div className="team-header-right">
@@ -63,7 +65,7 @@ export default function TeamHeader({
           </div>*/}
       </div>
     </div>
-    <p className="sub_head">Manage agents, assign roles, track seats and collaborate with your brokerage in real time.</p>
+    <p className="sub_head">{t("team.header.subheading", "Manage agents, assign roles, track seats and collaborate with your brokerage in real time.")}</p>
     </>
   );
 }

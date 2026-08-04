@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function PipelineListModal({
   open,
@@ -7,12 +8,16 @@ export default function PipelineListModal({
   items = [],
   hasMore = false,
   loading = false,
-  emptyText = "No data available.",
+  emptyText,
   onClose,
   onLoadMore,
   renderItem,
 }) {
+  const { t } = useTranslation();
   if (!open) return null;
+
+  const resolvedEmptyText =
+    emptyText ?? t("pipeline.listModal.emptyText", "No data available.");
 
   return (
     <div className="pipeline-modal-overlay">
@@ -32,7 +37,7 @@ export default function PipelineListModal({
           {items.length ? (
             items.map((item, index) => renderItem(item, index))
           ) : (
-            <div className="activity-modal-empty">{emptyText}</div>
+            <div className="activity-modal-empty">{resolvedEmptyText}</div>
           )}
 
           {hasMore && (
@@ -41,7 +46,9 @@ export default function PipelineListModal({
               onClick={onLoadMore}
               disabled={loading}
             >
-              {loading ? "Loading..." : "Load More"}
+              {loading
+                ? t("pipeline.listModal.loading", "Loading...")
+                : t("pipeline.listModal.loadMore", "Load More")}
             </button>
           )}
         </div>

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { useTranslation } from "react-i18next";
+
 import {
   AlertTriangle,
   Check,
@@ -18,34 +20,42 @@ const CATEGORY_OPTIONS = [
   {
     value: "company_information",
     label: "Company Information",
+    labelKey: "aiCenter.knowledgeImportModal.categoryCompanyInformation",
   },
   {
     value: "office_hours",
     label: "Office Hours & Availability",
+    labelKey: "aiCenter.knowledgeImportModal.categoryOfficeHours",
   },
   {
     value: "service_areas",
     label: "Service Areas",
+    labelKey: "aiCenter.knowledgeImportModal.categoryServiceAreas",
   },
   {
     value: "property_knowledge",
     label: "Property Knowledge",
+    labelKey: "aiCenter.knowledgeImportModal.categoryPropertyKnowledge",
   },
   {
     value: "sales_scripts",
     label: "Sales Scripts & Templates",
+    labelKey: "aiCenter.knowledgeImportModal.categorySalesScripts",
   },
   {
     value: "financing_partners",
     label: "Financing & Partners",
+    labelKey: "aiCenter.knowledgeImportModal.categoryFinancingPartners",
   },
   {
     value: "faqs",
     label: "FAQs",
+    labelKey: "aiCenter.knowledgeImportModal.categoryFaqs",
   },
   {
     value: "policies_processes",
     label: "Policies & Processes",
+    labelKey: "aiCenter.knowledgeImportModal.categoryPoliciesProcesses",
   },
 ];
 
@@ -75,6 +85,8 @@ export default function KnowledgeImportModal({
   onClose,
   onImport,
 }) {
+  const { t } = useTranslation();
+
   const fileInputRef = useRef(null);
 
   const [items, setItems] = useState([]);
@@ -164,7 +176,12 @@ export default function KnowledgeImportModal({
       .filter((line) => line.trim());
 
     if (lines.length < 2) {
-      throw new Error("CSV must contain a header and at least one item.");
+      throw new Error(
+        t(
+          "aiCenter.knowledgeImportModal.errorCsvHeader",
+          "CSV must contain a header and at least one item.",
+        ),
+      );
     }
 
     const headers = parseCsvLine(lines[0]).map((header) =>
@@ -176,7 +193,12 @@ export default function KnowledgeImportModal({
     const contentIndex = headers.indexOf("content");
 
     if (titleIndex < 0 || contentIndex < 0) {
-      throw new Error('CSV requires "title" and "content" columns.');
+      throw new Error(
+        t(
+          "aiCenter.knowledgeImportModal.errorCsvColumns",
+          'CSV requires "title" and "content" columns.',
+        ),
+      );
     }
 
     return lines.slice(1).map((line) => {
@@ -220,7 +242,12 @@ export default function KnowledgeImportModal({
         : [];
 
     if (sourceItems.length === 0) {
-      throw new Error("JSON must contain an array of knowledge items.");
+      throw new Error(
+        t(
+          "aiCenter.knowledgeImportModal.errorJsonArray",
+          "JSON must contain an array of knowledge items.",
+        ),
+      );
     }
 
     return sourceItems.map((item) => ({
@@ -260,18 +287,34 @@ export default function KnowledgeImportModal({
       } else if (lowerName.endsWith(".csv")) {
         parsedItems = parseCsv(text);
       } else {
-        throw new Error("Only JSON and CSV files are supported.");
+        throw new Error(
+          t(
+            "aiCenter.knowledgeImportModal.errorUnsupportedFile",
+            "Only JSON and CSV files are supported.",
+          ),
+        );
       }
 
       if (parsedItems.length > 500) {
-        throw new Error("Maximum 500 items per import.");
+        throw new Error(
+          t(
+            "aiCenter.knowledgeImportModal.errorMaxItems",
+            "Maximum 500 items per import.",
+          ),
+        );
       }
 
       setItems(parsedItems);
     } catch (fileError) {
       console.error("PARSE KNOWLEDGE FILE FAILED:", fileError);
 
-      setParseError(fileError?.message || "Unable to read this file.");
+      setParseError(
+        fileError?.message ||
+          t(
+            "aiCenter.knowledgeImportModal.errorUnableToRead",
+            "Unable to read this file.",
+          ),
+      );
     }
   };
 
@@ -312,15 +355,27 @@ export default function KnowledgeImportModal({
             </span>
 
             <div>
-              <h2>Import Knowledge</h2>
+              <h2>
+                {t(
+                  "aiCenter.knowledgeImportModal.importKnowledgeTitle",
+                  "Import Knowledge",
+                )}
+              </h2>
 
               <p>
-                Import multiple knowledge items from CSV, JSON, or manual entry.
+                {t(
+                  "aiCenter.knowledgeImportModal.importKnowledgeSubtitle",
+                  "Import multiple knowledge items from CSV, JSON, or manual entry.",
+                )}
               </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.knowledgeImportModal.closeAria", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
@@ -353,21 +408,25 @@ export default function KnowledgeImportModal({
 
             <button type="button" onClick={() => fileInputRef.current?.click()}>
               <FileSpreadsheet size={17} />
-              Import CSV
+              {t("aiCenter.knowledgeImportModal.importCsv", "Import CSV")}
             </button>
 
             <button type="button" onClick={() => fileInputRef.current?.click()}>
               <FileJson size={17} />
-              Import JSON
+              {t("aiCenter.knowledgeImportModal.importJson", "Import JSON")}
             </button>
 
             <button type="button" onClick={addItem}>
               <Plus size={17} />
-              Add Item
+              {t("aiCenter.knowledgeImportModal.addItem", "Add Item")}
             </button>
 
             <span>
-              {validItems.length} valid of {items.length}
+              {t(
+                "aiCenter.knowledgeImportModal.validOfTotal",
+                "{{valid}} valid of {{total}}",
+                { valid: validItems.length, total: items.length },
+              )}
             </span>
           </div>
 
@@ -375,13 +434,22 @@ export default function KnowledgeImportModal({
             {items.map((item, index) => (
               <article key={item.id} className="cx-knowledge-import-row">
                 <div className="cx-knowledge-import-row-head">
-                  <strong>Item {index + 1}</strong>
+                  <strong>
+                    {t(
+                      "aiCenter.knowledgeImportModal.itemNumber",
+                      "Item {{number}}",
+                      { number: index + 1 },
+                    )}
+                  </strong>
 
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
                     disabled={items.length === 1}
-                    aria-label="Remove item"
+                    aria-label={t(
+                      "aiCenter.knowledgeImportModal.removeItemAria",
+                      "Remove item",
+                    )}
                   >
                     <Trash2 size={16} />
                   </button>
@@ -389,7 +457,7 @@ export default function KnowledgeImportModal({
 
                 <div className="cx-knowledge-import-grid">
                   <label>
-                    Category
+                    {t("aiCenter.knowledgeImportModal.categoryLabel", "Category")}
                     <select
                       value={item.category}
                       onChange={(event) =>
@@ -398,14 +466,14 @@ export default function KnowledgeImportModal({
                     >
                       {CATEGORY_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
-                          {option.label}
+                          {t(option.labelKey, option.label)}
                         </option>
                       ))}
                     </select>
                   </label>
 
                   <label>
-                    Priority
+                    {t("aiCenter.knowledgeImportModal.priorityLabel", "Priority")}
                     <input
                       type="number"
                       min="0"
@@ -418,26 +486,32 @@ export default function KnowledgeImportModal({
                   </label>
 
                   <label className="full">
-                    Title
+                    {t("aiCenter.knowledgeImportModal.titleLabel", "Title")}
                     <input
                       value={item.title}
                       onChange={(event) =>
                         updateItem(item.id, "title", event.target.value)
                       }
-                      placeholder="Knowledge title"
+                      placeholder={t(
+                        "aiCenter.knowledgeImportModal.titlePlaceholder",
+                        "Knowledge title",
+                      )}
                       maxLength={255}
                     />
                   </label>
 
                   <label className="full">
-                    Content
+                    {t("aiCenter.knowledgeImportModal.contentLabel", "Content")}
                     <textarea
                       rows={5}
                       value={item.content}
                       onChange={(event) =>
                         updateItem(item.id, "content", event.target.value)
                       }
-                      placeholder="Knowledge content..."
+                      placeholder={t(
+                        "aiCenter.knowledgeImportModal.contentPlaceholder",
+                        "Knowledge content...",
+                      )}
                       maxLength={20000}
                     />
                   </label>
@@ -451,10 +525,19 @@ export default function KnowledgeImportModal({
               {validItems.length > 0 ? (
                 <span className="ready">
                   <Check size={16} />
-                  {validItems.length} items ready to import
+                  {t(
+                    "aiCenter.knowledgeImportModal.itemsReadyToImport",
+                    "{{total}} items ready to import",
+                    { total: validItems.length },
+                  )}
                 </span>
               ) : (
-                <span>Add at least one valid knowledge item.</span>
+                <span>
+                  {t(
+                    "aiCenter.knowledgeImportModal.addAtLeastOne",
+                    "Add at least one valid knowledge item.",
+                  )}
+                </span>
               )}
             </div>
 
@@ -464,7 +547,7 @@ export default function KnowledgeImportModal({
               onClick={onClose}
               disabled={saving}
             >
-              Cancel
+              {t("aiCenter.knowledgeImportModal.cancel", "Cancel")}
             </button>
 
             <button
@@ -474,7 +557,13 @@ export default function KnowledgeImportModal({
             >
               <Save size={16} />
 
-              {saving ? "Importing..." : `Import ${validItems.length} Items`}
+              {saving
+                ? t("aiCenter.knowledgeImportModal.importing", "Importing...")
+                : t(
+                    "aiCenter.knowledgeImportModal.importItems",
+                    "Import {{total}} Items",
+                    { total: validItems.length },
+                  )}
             </button>
           </footer>
         </form>

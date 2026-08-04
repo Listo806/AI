@@ -1,4 +1,5 @@
 import { Plus, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function TeamBillingCard({
   billing = {},
@@ -6,6 +7,7 @@ export default function TeamBillingCard({
   onAddSeat,
   addingSeat = false,
 }) {
+  const { t } = useTranslation();
   const totalSeats = Number(
     billing?.includedSeats || 0,
   );
@@ -44,7 +46,7 @@ export default function TeamBillingCard({
       <div className="team-billing-status-card">
         <div className="team-billing-status-label">
           <h3 className="team-billing-modern-title">
-            Team Seats
+            {t("team.billingCard.teamSeats", "Team Seats")}
           </h3>
         </div>
 
@@ -53,7 +55,9 @@ export default function TeamBillingCard({
             isFull ? "full" : "active"
           }`}
         >
-          {isFull ? "Full" : "Active"}
+          {isFull
+            ? t("team.billingCard.full", "Full")
+            : t("team.billingCard.active", "Active")}
         </div>
       </div>
 
@@ -63,7 +67,7 @@ export default function TeamBillingCard({
         <div className="team-billing-stat-row">
           <strong>{availableSeats}</strong>
 
-          <span>Available seats</span>
+          <span>{t("team.billingCard.availableSeats", "Available seats")}</span>
         </div>
 
         <div className="team-billing-stat-row">
@@ -71,7 +75,7 @@ export default function TeamBillingCard({
             {usedSeats} / {totalSeats}
           </strong>
 
-          <span>Seats Used</span>
+          <span>{t("team.billingCard.seatsUsed", "Seats Used")}</span>
         </div>
 
         {additionalSeats > 0 && (
@@ -80,7 +84,7 @@ export default function TeamBillingCard({
               {additionalSeats}
             </strong>
 
-            <span>Additional seats</span>
+            <span>{t("team.billingCard.additionalSeats", "Additional seats")}</span>
           </div>
         )}
 
@@ -112,8 +116,8 @@ export default function TeamBillingCard({
           <Plus size={16} />
 
           {addingSeat
-            ? "Adding..."
-            : "Add a seat"}
+            ? t("team.billingCard.adding", "Adding...")
+            : t("team.billingCard.addSeat", "Add a seat")}
         </button>
 
         <button
@@ -123,7 +127,7 @@ export default function TeamBillingCard({
         >
           <Users size={16} />
 
-          Invite Team Member
+          {t("team.billingCard.inviteMember", "Invite Team Member")}
         </button>
       </div>
     </div>

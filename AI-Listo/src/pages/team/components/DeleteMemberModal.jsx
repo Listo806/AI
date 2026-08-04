@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 
 export default function DeleteMemberModal({
   open,
@@ -7,6 +8,8 @@ export default function DeleteMemberModal({
   onConfirm,
   removing,
 }) {
+  const { t } = useTranslation();
+
   if (!open || !member) return null;
 
   return (
@@ -24,11 +27,11 @@ export default function DeleteMemberModal({
 
           <div>
             <h3 className="team-modal-title">
-              Remove Member
+              {t("team.deleteMemberModal.title", "Remove Member")}
             </h3>
 
             <p className="team-modal-subtitle">
-              This action cannot be undone
+              {t("team.deleteMemberModal.subtitle", "This action cannot be undone")}
             </p>
           </div>
 
@@ -71,8 +74,10 @@ export default function DeleteMemberModal({
           </div>
 
           <p className="team-delete-warning">
-            Are you sure you want to remove this
-            member from the team workspace?
+            {t(
+              "team.deleteMemberModal.warning",
+              "Are you sure you want to remove this member from the team workspace?"
+            )}
           </p>
 
         </div>
@@ -85,7 +90,7 @@ export default function DeleteMemberModal({
             className="team-secondary-btn"
             onClick={onClose}
           >
-            Cancel
+            {t("team.deleteMemberModal.cancel", "Cancel")}
           </button>
 
           <button
@@ -95,8 +100,8 @@ export default function DeleteMemberModal({
             disabled={removing}
           >
             {removing
-              ? 'Removing...'
-              : 'Remove Member'}
+              ? t("team.deleteMemberModal.removing", "Removing...")
+              : t("team.deleteMemberModal.removeMember", "Remove Member")}
           </button>
 
         </div>
