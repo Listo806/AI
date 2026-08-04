@@ -1982,12 +1982,13 @@ figcaption {
 }
 
 .ed-team-workspace-section h2 {
-  color: #10203e;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: clamp(38px, 4.4vw, 48px);
-  font-weight: 800;
+  margin: 0 0 20px;
+  color: #0d100d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(31px, 3vw, 44px);
+  font-weight: 400;
   line-height: 1.08;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.025em;
 }
 
 .ed-team-workspace-rule {
@@ -2087,8 +2088,7 @@ figcaption {
 
 @media (max-width: 620px) {
   .ed-team-workspace-section h2 {
-    font-size: 28px;
-    font-weight: 700
+    font-size: 30px;
   }
 
   .ed-team-workspace-highlight {
