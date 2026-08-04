@@ -6,100 +6,141 @@ import {
   Check,
   CircleDollarSign,
   ContactRound,
+  Info,
   Layers3,
   MessageCircle,
   Settings,
   SlidersHorizontal,
   Sparkles,
   Users,
-  X,
+  Wrench,
 } from "lucide-react";
 
-const COST_ROWS = [
-  { icon: Users, label: "Team Size", sf: "5 Users", hs: "5 Users", cx: "5 Users" },
-  {
-    icon: CircleDollarSign,
-    label: "Estimated Monthly Software",
-    sf: "$1,500/month",
-    hs: "$750/month",
-    cx: "$497/month",
+const COPY = {
+  en: {
+    eyebrow: "CORTEXA VS. LEGACY PLATFORMS",
+    title1: "Powerful infrastructure.",
+    title2: "Built-in AI.",
+    title3: "One connected platform.",
+    feature: "Feature",
+    salesforce: "Salesforce",
+    hubspot: "HubSpot",
+    cortexaSub: "AI REVENUE OS",
+    rows: [
+      ["Team Size", "5 Users", "5 Users", "5 Users"],
+      ["Monthly Software", "$1,500/month", "$750/month", "$497/month"],
+      ["One-Time Setup", "$4,000+", "$1,500+", "$97"],
+      ["Annual Software", "$18,000", "$9,000", "$5,964"],
+      ["Total Annual Platform Cost", "$22,000+", "$10,500+", "$6,061"],
+      ["CRM", true, true, true],
+      ["Agentic AI", "Add-on", "Limited", "Included"],
+      ["AI Usage", "Add-on", "Add-on", "Unlimited"],
+      ["Team Workspace", "Separate Tool", "Limited", "Included"],
+      ["Revenue Intelligence", "Add-on", "Limited", "Included"],
+      ["WhatsApp AI", "Third-Party", "Third-Party", "Native"],
+      ["Industry Customization", "Consulting Project", "Consulting Project", "Custom Configuration"],
+      ["Unified Platform", "No", "Partial", "Yes"],
+    ],
+    note:
+      "Pricing shown is based on publicly available information and Cortexa pricing at the time of publication. Pricing, features, implementation requirements, and licensing may change. Please verify current pricing directly with each vendor.",
   },
-  { icon: Settings, label: "Estimated Setup", sf: "$4,000+", hs: "$1,500+", cx: "$97" },
-  {
-    icon: CalendarDays,
-    label: "Estimated Annual Software",
-    sf: "$18,000",
-    hs: "$9,000",
-    cx: "$5,964",
+  es: {
+    eyebrow: "CORTEXA VS. PLATAFORMAS TRADICIONALES",
+    title1: "Infraestructura potente.",
+    title2: "IA integrada.",
+    title3: "Una plataforma conectada.",
+    feature: "Función",
+    salesforce: "Salesforce",
+    hubspot: "HubSpot",
+    cortexaSub: "SISTEMA DE INGRESOS CON IA",
+    rows: [
+      ["Tamaño del equipo", "5 usuarios", "5 usuarios", "5 usuarios"],
+      ["Software mensual", "$1,500/mes", "$750/mes", "$497/mes"],
+      ["Configuración inicial", "$4,000+", "$1,500+", "$97"],
+      ["Software anual", "$18,000", "$9,000", "$5,964"],
+      ["Costo anual total de la plataforma", "$22,000+", "$10,500+", "$6,061"],
+      ["CRM", true, true, true],
+      ["IA agéntica", "Complemento", "Limitada", "Incluida"],
+      ["Uso de IA", "Complemento", "Complemento", "Ilimitado"],
+      ["Espacio de trabajo del equipo", "Herramienta separada", "Limitado", "Incluido"],
+      ["Inteligencia de ingresos", "Complemento", "Limitada", "Incluida"],
+      ["WhatsApp con IA", "Terceros", "Terceros", "Nativo"],
+      ["Personalización por industria", "Proyecto de consultoría", "Proyecto de consultoría", "Configuración personalizada"],
+      ["Plataforma unificada", "No", "Parcial", "Sí"],
+    ],
+    note:
+      "Los precios mostrados se basan en información pública y en los precios de Cortexa disponibles en la fecha de publicación. Los precios, funciones, requisitos de implementación y licencias pueden cambiar. Verifica los precios actuales directamente con cada proveedor.",
   },
+  pt: {
+    eyebrow: "CORTEXA VS. PLATAFORMAS TRADICIONAIS",
+    title1: "Infraestrutura poderosa.",
+    title2: "IA integrada.",
+    title3: "Uma plataforma conectada.",
+    feature: "Recurso",
+    salesforce: "Salesforce",
+    hubspot: "HubSpot",
+    cortexaSub: "SISTEMA DE RECEITA COM IA",
+    rows: [
+      ["Tamanho da equipe", "5 usuários", "5 usuários", "5 usuários"],
+      ["Software mensal", "$1.500/mês", "$750/mês", "$497/mês"],
+      ["Configuração inicial", "$4.000+", "$1.500+", "$97"],
+      ["Software anual", "$18.000", "$9.000", "$5.964"],
+      ["Custo anual total da plataforma", "$22.000+", "$10.500+", "$6.061"],
+      ["CRM", true, true, true],
+      ["IA agêntica", "Complemento", "Limitada", "Incluída"],
+      ["Uso de IA", "Complemento", "Complemento", "Ilimitado"],
+      ["Espaço de trabalho da equipe", "Ferramenta separada", "Limitado", "Incluído"],
+      ["Inteligência de receita", "Complemento", "Limitada", "Incluída"],
+      ["WhatsApp com IA", "Terceiros", "Terceiros", "Nativo"],
+      ["Personalização por setor", "Projeto de consultoria", "Projeto de consultoria", "Configuração personalizada"],
+      ["Plataforma unificada", "Não", "Parcial", "Sim"],
+    ],
+    note:
+      "Os preços apresentados se baseiam em informações públicas e nos preços da Cortexa disponíveis na data de publicação. Preços, recursos, requisitos de implementação e licenciamento podem mudar. Verifique os preços atuais diretamente com cada fornecedor.",
+  },
+};
+
+const ICONS = [
+  Users,
+  CircleDollarSign,
+  Wrench,
+  CalendarDays,
+  CircleDollarSign,
+  ContactRound,
+  Sparkles,
+  Bot,
+  Users,
+  BarChart3,
+  MessageCircle,
+  SlidersHorizontal,
+  Layers3,
 ];
 
-const FEATURE_ROWS = [
-  { icon: ContactRound, label: "CRM", sf: true, hs: true, cx: true },
-  { icon: Sparkles, label: "Agentic AI", sf: "Add-on", hs: "Limited", cx: "Included" },
-  { icon: Bot, label: "AI Usage", sf: "Add-on", hs: "Add-on", cx: "Unlimited" },
-  {
-    icon: Users,
-    label: "Team Workspace",
-    sf: "Separate Tool",
-    hs: "Limited",
-    cx: "Included",
-  },
-  {
-    icon: BarChart3,
-    label: "Revenue Intelligence",
-    sf: "Add-on",
-    hs: "Limited",
-    cx: "Included",
-  },
-  {
-    icon: MessageCircle,
-    label: "WhatsApp AI",
-    sf: "Third-Party",
-    hs: "Third-Party",
-    cx: "Native",
-  },
-  {
-    icon: SlidersHorizontal,
-    label: "Industry Customization",
-    sf: "Consulting Project",
-    hs: "Consulting Project",
-    cx: "48-Hour Configuration",
-  },
-  { icon: Layers3, label: "One Unified Platform", sf: false, hs: false, cx: true },
-];
-
-function BrandHeader({ type }) {
+function BrandHeader({ type, copy }) {
   if (type === "salesforce") {
     return (
-      <span className="cmp-brand cmp-brand-salesforce">
+      <div className="cmp-brand cmp-brand-salesforce">
         <span className="cmp-brand-mark">salesforce</span>
-        <strong>Salesforce</strong>
-      </span>
+        <strong>{copy.salesforce}</strong>
+      </div>
     );
   }
 
   if (type === "hubspot") {
     return (
-      <span className="cmp-brand cmp-brand-hubspot">
-        <span className="cmp-hubspot-mark" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-        <strong>HubSpot</strong>
-      </span>
+      <div className="cmp-brand cmp-brand-hubspot">
+        <strong className="cmp-hubspot-word">HubSp<span>o</span>t</strong>
+        <small>{copy.hubspot}</small>
+      </div>
     );
   }
 
   return (
-    <span className="cmp-brand cmp-brand-cortexa">
-      <span className="cmp-cortexa-mark">✣</span>
-      <span>
-        <strong>Cortexa</strong>
-        <small>Agentic AI Revenue OS</small>
-      </span>
-    </span>
+    <div className="cmp-brand cmp-brand-cortexa">
+      <span className="cmp-cortexa-mark" aria-hidden="true">C</span>
+      <strong>CORTEXA</strong>
+      <small>{copy.cortexaSub}</small>
+    </div>
   );
 }
 
@@ -107,113 +148,73 @@ function ValueCell({ value, cortexa = false }) {
   if (value === true) {
     return (
       <span className={`cmp-status cmp-status-yes${cortexa ? " is-cortexa" : ""}`}>
-        <Check size={21} strokeWidth={2.1} />
+        <Check size={26} strokeWidth={2.2} />
       </span>
     );
   }
 
-  if (value === false) {
-    return (
-      <span className="cmp-status cmp-status-no">
-        <X size={21} strokeWidth={1.9} />
-      </span>
-    );
-  }
-
-  return <span className={cortexa ? "cmp-value-cortexa" : "cmp-value"}>{value}</span>;
-}
-
-function FeatureLabel({ icon: Icon, children }) {
   return (
-    <span className="cmp-feature-label">
-      <Icon size={21} strokeWidth={1.9} aria-hidden="true" />
-      <span>{children}</span>
+    <span className={cortexa ? "cmp-value-cortexa" : "cmp-value"}>
+      {value}
     </span>
   );
 }
 
-export default function CostComparison() {
+export default function CostComparison({ locale = "en" }) {
+  const copy = COPY[locale] || COPY.en;
+
   return (
-    <section className="cmp" aria-labelledby="comparison-title">
+    <section className="cmp cmp-clean" aria-labelledby={`comparison-title-${locale}`}>
       <div className="cmp-shell">
-        <header className="cmp-heading">
-          <h3 id="comparison-title">Cortexa vs. Legacy Platforms</h3>
-          <p>Powerful infrastructure. Built-in AI. Lower cost. All in one platform.</p>
+        <header className="cmp-heading cmp-clean-heading">
+          <span>{copy.eyebrow}</span>
+          <h3 id={`comparison-title-${locale}`}>
+            {copy.title1}<br />
+            {copy.title2}<br />
+            <em>{copy.title3}</em>
+          </h3>
         </header>
 
-        <div className="cmp-table-card">
+        <div className="cmp-table-card cmp-clean-table-card">
           <div className="cmp-scroll">
-            <table className="cmp-table">
+            <table className="cmp-table cmp-clean-table">
               <thead>
                 <tr>
-                  <th className="cmp-feature-col">Feature</th>
-                  <th><BrandHeader type="salesforce" /></th>
-                  <th><BrandHeader type="hubspot" /></th>
-                  <th className="cmp-cortexa-col"><BrandHeader type="cortexa" /></th>
+                  <th className="cmp-feature-col">{copy.feature}</th>
+                  <th><BrandHeader type="salesforce" copy={copy} /></th>
+                  <th><BrandHeader type="hubspot" copy={copy} /></th>
+                  <th className="cmp-cortexa-col"><BrandHeader type="cortexa" copy={copy} /></th>
                 </tr>
               </thead>
 
               <tbody>
-                {COST_ROWS.map(({ icon, label, sf, hs, cx }) => (
-                  <tr key={label}>
-                    <td className="cmp-feature-col"><FeatureLabel icon={icon}>{label}</FeatureLabel></td>
-                    <td><ValueCell value={sf} /></td>
-                    <td><ValueCell value={hs} /></td>
-                    <td className="cmp-cortexa-col"><ValueCell value={cx} cortexa /></td>
-                  </tr>
-                ))}
+                {copy.rows.map(([label, sf, hs, cx], index) => {
+                  const Icon = ICONS[index] || Settings;
+                  const isTotal = index === 4;
 
-                {FEATURE_ROWS.map(({ icon, label, sf, hs, cx }) => (
-                  <tr key={label}>
-                    <td className="cmp-feature-col"><FeatureLabel icon={icon}>{label}</FeatureLabel></td>
-                    <td><ValueCell value={sf} /></td>
-                    <td><ValueCell value={hs} /></td>
-                    <td className="cmp-cortexa-col"><ValueCell value={cx} cortexa /></td>
-                  </tr>
-                ))}
+                  return (
+                    <tr key={label} className={isTotal ? "cmp-total-row" : ""}>
+                      <td className="cmp-feature-col">
+                        <span className="cmp-feature-label">
+                          <Icon size={23} strokeWidth={1.9} aria-hidden="true" />
+                          <span>{label}</span>
+                        </span>
+                      </td>
+                      <td><ValueCell value={sf} /></td>
+                      <td><ValueCell value={hs} /></td>
+                      <td className="cmp-cortexa-col"><ValueCell value={cx} cortexa /></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
 
-        <div className="cmp-total-card">
-          <span className="cmp-total-label">Estimated Year 1 Total</span>
-
-          <div className="cmp-total-item">
-            <strong>$22,000+</strong>
-            <span>Salesforce</span>
-          </div>
-
-          <div className="cmp-total-item">
-            <strong>$10,500+</strong>
-            <span>HubSpot</span>
-          </div>
-
-          <div className="cmp-total-item is-cortexa">
-            <strong>$6,061</strong>
-            <span>Cortexa Agentic<br />AI Revenue OS</span>
-          </div>
+        <div className="cmp-disclaimer">
+          <Info size={26} strokeWidth={1.9} aria-hidden="true" />
+          <p>{copy.note}</p>
         </div>
-
-        <div className="cmp-difference-card">
-          <h4>Estimated Year 1 Difference</h4>
-
-          <div className="cmp-difference-row">
-            <span className="cmp-difference-brand cmp-difference-salesforce">salesforce</span>
-            <span className="cmp-difference-word">Approximately</span>
-            <strong>$15,939+</strong>
-            <span className="cmp-difference-copy">more in Year 1<br />with Cortexa</span>
-          </div>
-
-          <div className="cmp-difference-row">
-            <span className="cmp-difference-brand cmp-difference-hubspot">◉</span>
-            <span className="cmp-difference-word">Approximately</span>
-            <strong>$4,439+</strong>
-            <span className="cmp-difference-copy">more in Year 1<br />with Cortexa</span>
-          </div>
-        </div>
-
-        <p className="cmp-note">*All numbers are estimates based on typical 5-user teams.</p>
       </div>
     </section>
   );

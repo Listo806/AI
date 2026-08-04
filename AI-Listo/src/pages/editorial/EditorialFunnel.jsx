@@ -44,7 +44,7 @@ const ARTICLE_SECTIONS = [
   },
   {
     id: "crm-cost",
-    label: "What Is Your CRM Really Costing You?",
+    label: "Compare Today’s CRM Platforms",
   },
   { id: "migration", label: "Switching Doesn’t Have to Be Difficult" },
   { id: "forward-momentum", label: "From Follow-Up to Forward Momentum" },
@@ -576,19 +576,21 @@ export default function EditorialFunnel() {
 
             <section className="ed-section ed-cost-section" id="crm-cost">
               <div className="ed-cost-intro">
-                <span className="ed-cost-kicker">[ The Real Cost ]</span>
+                <span className="ed-cost-kicker">[ Platform Comparison ]</span>
 
-                <h2>What Is Your CRM Really Costing You?</h2>
+                <h2>Compare Today’s CRM Platforms</h2>
 
                 <div className="ed-cost-rule" aria-hidden="true" />
 
-                <h3>Monthly subscriptions are just the beginning.</h3>
+                <h3>
+                  Choosing the right CRM involves more than comparing monthly
+                  subscription pricing.
+                </h3>
 
                 <p>
-                  Comparing software subscriptions only tells part of the story.
-                  See how Salesforce, HubSpot, and Cortexa compare across
-                  implementation costs, AI capabilities, team collaboration, and
-                  estimated Year 1 investment.
+                  Compare Salesforce, HubSpot, and Cortexa across AI
+                  capabilities, automation, collaboration, deployment, and
+                  overall platform capabilities.
                 </p>
 
                 <div className="ed-cost-note">
@@ -597,20 +599,23 @@ export default function EditorialFunnel() {
                   </span>
                   <div>
                     <strong>
-                      The numbers below reflect estimated total Year 1
-                      investment for a team of 5 users.
+                      The comparison below highlights platform capabilities for
+                      a typical five-user business.
                     </strong>
-                    <span>See how Cortexa delivers more — for less.</span>
+                    <span>
+                      Compare how each platform approaches AI, automation,
+                      collaboration, and business operations.
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="ed-comparison-transition">
-                <span>Cost comparison</span>
-                <h3>The Numbers Tell the Story</h3>
+                <span>Platform comparison</span>
+                <h3>Compare the Complete Platform Experience</h3>
                 <p>
-                  Now let’s compare the estimated Year 1 investment—not only the
-                  monthly subscription.
+                  Review capabilities, automation, collaboration, deployment,
+                  and operational support across each platform.
                 </p>
               </div>
 
@@ -619,38 +624,41 @@ export default function EditorialFunnel() {
               </div>
 
               <p>
-                Before making any technology decision, it’s worth looking beyond
-                the monthly subscription.
+                When evaluating CRM platforms, compare the complete platform
+                experience instead of monthly subscription pricing alone.
               </p>
               <p>
-                Looking only at monthly subscription pricing rarely tells the
-                whole story.
+                Businesses should compare platform capabilities, automation,
+                integrations, deployment, and collaboration when selecting a CRM.
               </p>
               <p>
-                The real investment often includes implementation, consulting,
-                administration, maintenance, integrations, and the ongoing
-                effort required to keep the system operating efficiently.
+                Every CRM platform requires different levels of implementation,
+                configuration, integrations, administration, and ongoing
+                management.
               </p>
               <p>
-                That’s exactly why businesses need to compare more than software
-                prices.
+                That’s why businesses should compare complete platform
+                capabilities rather than subscription pricing alone.
               </p>
-              <p>Not simply the monthly subscription...</p>
-              <p>But the total cost of operating the CRM.</p>
-              <p>The broader cost can include:</p>
+              <p>Not simply subscription pricing...</p>
+              <p>
+                But the complete platform capabilities, automation, deployment,
+                and operational efficiency.
+              </p>
+              <p>Key capabilities to compare include:</p>
               <ul className="ed-two-column-list">
-                <li>Initial setup</li>
-                <li>Consulting and implementation</li>
-                <li>Training</li>
-                <li>Administration</li>
-                <li>Integrations</li>
-                <li>Ongoing maintenance</li>
-                <li>AI add-ons</li>
-                <li>Operational effort</li>
+                <li>Native AI</li>
+                <li>Automation</li>
+                <li>Lead Management</li>
+                <li>Pipeline Management</li>
+                <li>Team Collaboration</li>
+                <li>Reporting</li>
+                <li>Appointment Booking</li>
+                <li>Business Integrations</li>
               </ul>
-              <p>Sometimes the biggest expense isn’t the software itself.</p>
               <blockquote>
-                It’s everything required to keep it running.
+                The strongest platform is the one that helps the entire business
+                operate more efficiently.
               </blockquote>
             </section>
 
@@ -745,11 +753,20 @@ export default function EditorialFunnel() {
             <section className="ed-section" id="businesses">
               <h2>Built for Businesses of Every Size and Industry</h2>
               <p>
-                Whether you run a real estate company, e-commerce store, agency,
-                consulting firm, insurance business, financial company, or
-                another growing organization, Cortexa’s Agentic AI Revenue
-                Operating System is built to help turn conversations into
-                revenue.
+                Whether you run a real estate company, e-commerce business,
+                agency, consulting firm, insurance agency, financial
+                organization, or another growing business, Cortexa’s Agentic AI
+                Revenue Operating System helps teams organize operations, manage
+                customer relationships, automate communication, and improve
+                business productivity.
+              </p>
+              <p className="ed-legal-note">
+                Cortexa AI CRM is a Software-as-a-Service (SaaS) platform built
+                for organizations across multiple industries. We do not provide
+                insurance products, financial products, lending services,
+                investment advice, or financial advisory services. Cortexa
+                provides CRM, automation, communication, and revenue operations
+                software for businesses.
               </p>
               <p>
                 The core platform is ready to support businesses that depend on

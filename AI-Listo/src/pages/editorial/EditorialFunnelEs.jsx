@@ -45,7 +45,7 @@ const ARTICLE_SECTIONS = [
   },
   {
     id: "crm-cost",
-    label: "¿Cuánto te cuesta realmente tu CRM?",
+    label: "Compara las plataformas CRM actuales",
   },
   { id: "migration", label: "Cambiar no tiene por qué ser difícil" },
   { id: "forward-momentum", label: "Del seguimiento al impulso continuo" },
@@ -614,19 +614,21 @@ export default function EditorialFunnelEs() {
 
             <section className="ed-section ed-cost-section" id="crm-cost">
               <div className="ed-cost-intro">
-                <span className="ed-cost-kicker">[ El costo real ]</span>
+                <span className="ed-cost-kicker">[ Comparación de plataformas ]</span>
 
-                <h2>¿Cuánto te cuesta realmente tu CRM?</h2>
+                <h2>Compara las plataformas CRM actuales</h2>
 
                 <div className="ed-cost-rule" aria-hidden="true" />
 
-                <h3>Las suscripciones mensuales son solo el comienzo.</h3>
+                <h3>
+                  Elegir el CRM adecuado implica mucho más que comparar el precio
+                  de la suscripción mensual.
+                </h3>
 
                 <p>
-                  Comparar únicamente las suscripciones de software solo cuenta una
-                  parte de la historia. Descubre cómo se comparan Salesforce,
-                  HubSpot y Cortexa en costos de implementación, capacidades de
-                  IA, colaboración en equipo e inversión estimada del primer año.
+                  Compara Salesforce, HubSpot y Cortexa en capacidades de IA,
+                  automatización, colaboración, implementación y capacidades
+                  generales de la plataforma.
                 </p>
 
                 <div className="ed-cost-note">
@@ -635,21 +637,24 @@ export default function EditorialFunnelEs() {
                   </span>
                   <div>
                     <strong>
-                      Las cifras a continuación reflejan la inversión total
-                      estimada durante el primer año para un equipo de 5
-                      usuarios.
+                      La comparación siguiente destaca las capacidades de cada
+                      plataforma para una empresa típica de cinco usuarios.
                     </strong>
-                    <span>Descubre cómo Cortexa ofrece más por menos.</span>
+                    <span>
+                      Compara cómo aborda cada plataforma la IA, la
+                      automatización, la colaboración y las operaciones
+                      empresariales.
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="ed-comparison-transition">
-                <span>Comparación de costos</span>
-                <h3>Los números cuentan la historia</h3>
+                <span>Comparación de plataformas</span>
+                <h3>Compara la experiencia completa de cada plataforma</h3>
                 <p>
-                  Ahora comparemos la inversión estimada del primer año, no solo la
-                  suscripción mensual.
+                  Revisa capacidades, automatización, colaboración,
+                  implementación y soporte operativo.
                 </p>
               </div>
 
@@ -658,39 +663,43 @@ export default function EditorialFunnelEs() {
               </div>
 
               <p>
-                Antes de tomar cualquier decisión tecnológica, vale la pena
-                mirar más allá de la suscripción mensual.
+                Al evaluar plataformas CRM, compara la experiencia completa de
+                la plataforma en lugar de limitarte al precio de la suscripción
+                mensual.
               </p>
               <p>
-                Considerar únicamente el precio de la suscripción mensual rara
-                vez cuenta toda la historia.
+                Las empresas deben comparar capacidades, automatización,
+                integraciones, implementación y colaboración al seleccionar un
+                CRM.
               </p>
               <p>
-                La inversión real suele incluir la implementación, la
-                consultoría, la administración, el mantenimiento, las
-                integraciones y el esfuerzo continuo necesario para mantener el
-                sistema funcionando de manera eficiente.
+                Cada plataforma CRM requiere distintos niveles de
+                implementación, configuración, integraciones, administración y
+                gestión continua.
               </p>
               <p>
-                Precisamente por eso las empresas necesitan comparar mucho más
-                que el precio del software.
+                Por eso, las empresas deben comparar las capacidades completas
+                de la plataforma, no solo el precio de la suscripción.
               </p>
-              <p>No solo la suscripción mensual...</p>
-              <p>Sino el costo total de operar el CRM.</p>
-              <p>El costo más amplio puede incluir:</p>
+              <p>No solo el precio de la suscripción...</p>
+              <p>
+                Sino las capacidades completas de la plataforma, la
+                automatización, la implementación y la eficiencia operativa.
+              </p>
+              <p>Las capacidades clave que deben compararse incluyen:</p>
               <ul className="ed-two-column-list">
-                <li>Configuración inicial</li>
-                <li>Consultoría e implementación</li>
-                <li>Capacitación</li>
-                <li>Administración</li>
-                <li>Integraciones</li>
-                <li>Mantenimiento continuo</li>
-                <li>Complementos de IA</li>
-                <li>Esfuerzo operativo</li>
+                <li>IA nativa</li>
+                <li>Automatización</li>
+                <li>Gestión de leads</li>
+                <li>Gestión del pipeline</li>
+                <li>Colaboración en equipo</li>
+                <li>Informes</li>
+                <li>Reserva de citas</li>
+                <li>Integraciones empresariales</li>
               </ul>
-              <p>A veces el mayor gasto no es el software en sí.</p>
               <blockquote>
-                Es todo lo necesario para mantenerlo funcionando.
+                La plataforma más sólida es la que ayuda a toda la empresa a
+                operar con mayor eficiencia.
               </blockquote>
             </section>
 
@@ -791,12 +800,22 @@ export default function EditorialFunnelEs() {
             <section className="ed-section" id="businesses">
               <h2>Diseñado para empresas de todos los tamaños e industrias</h2>
               <p>
-                Ya sea que dirijas una empresa inmobiliaria, una tienda de
-                comercio electrónico, una agencia, una consultora, una empresa
-                de seguros, una empresa de servicios financieros u otra
-                organización en crecimiento, el Sistema Operativo de Ingresos
-                con IA Agéntica de Cortexa está diseñado para ayudar a convertir
-                las conversaciones en ingresos.
+                Ya sea que dirijas una empresa inmobiliaria, un negocio de
+                comercio electrónico, una agencia, una consultora, una agencia
+                de seguros, una organización financiera u otra empresa en
+                crecimiento, el Sistema Operativo de Ingresos con IA Agéntica de
+                Cortexa ayuda a los equipos a organizar operaciones, gestionar
+                relaciones con clientes, automatizar la comunicación y mejorar
+                la productividad empresarial.
+              </p>
+              <p className="ed-legal-note">
+                Cortexa AI CRM es una plataforma de Software como Servicio
+                (SaaS) creada para organizaciones de múltiples industrias. No
+                ofrecemos productos de seguros, productos financieros, servicios
+                de préstamo, asesoramiento de inversión ni servicios de
+                asesoramiento financiero. Cortexa ofrece software de CRM,
+                automatización, comunicación y operaciones de ingresos para
+                empresas.
               </p>
               <p>
                 La plataforma principal está lista para apoyar a las empresas
