@@ -100,7 +100,7 @@ function CtaCard({ where, bottom = false }) {
       </Link>
 
       <Link
-        to="/#pricing"
+        to="/pricing"
         className="ed-cta-secondary ed-view-plans-btn"
         onClick={() =>
           trackEvent("editorial_cta_click", {

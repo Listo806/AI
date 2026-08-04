@@ -448,7 +448,7 @@ function CtaCard({ copy, where, bottom = false }) {
         {copy.cta.primary}
       </Link>
       <a
-        href="/#pricing"
+        href="/pricing"
         className="ed-cta-secondary"
         onClick={() => trackEvent("editorial_cta_click", { page: copy.pageEvent, where, cta: "learn_more" })}
       >
