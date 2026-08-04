@@ -830,8 +830,7 @@ export default function EditorialFunnelPt() {
               <blockquote>“Qual CRM tem mais recursos?”</blockquote>
               <p>Elas perguntam:</p>
               <blockquote>
-                “Qual plataforma nos ajudará a gerar mais receita com menos
-                trabalho manual?”
+                “Qual plataforma nos ajudará a operar com mais eficiência, automatizar mais trabalho e criar mais oportunidades?”
               </blockquote>
               <p>
                 Essa é a conversa que os Sistemas Operacionais de Receita

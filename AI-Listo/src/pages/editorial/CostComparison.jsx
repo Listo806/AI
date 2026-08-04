@@ -15,7 +15,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-
+import headlogo from "../../assets/cortexa/headlogo.png";
 const COPY = {
   en: {
     eyebrow: "CORTEXA VS. LEGACY PLATFORMS",
@@ -137,7 +137,7 @@ function BrandHeader({ type, copy }) {
 
   return (
     <div className="cmp-brand cmp-brand-cortexa">
-      <span className="cmp-cortexa-mark" aria-hidden="true">C</span>
+      <img src={headlogo} className="cx-logo-img" />
       <strong>CORTEXA</strong>
       <small>{copy.cortexaSub}</small>
     </div>

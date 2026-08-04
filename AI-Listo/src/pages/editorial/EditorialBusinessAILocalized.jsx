@@ -3,14 +3,23 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Bot,
+  BriefcaseBusiness,
+  Calculator,
   CalendarDays,
+  Home,
+  Landmark,
   LineChart,
+  Megaphone,
   Menu,
   MessageSquareText,
   ShieldCheck,
+  ShoppingCart,
   Sparkles,
+  Store,
+  Stethoscope,
   Users,
   Workflow,
+  Wrench,
   X,
   Zap,
 } from "lucide-react";
@@ -24,6 +33,19 @@ import why3Img from "../../assets/cortexa/why3.jpg";
 import why4Img from "../../assets/cortexa/why4.jpg";
 import why5Img from "../../assets/cortexa/why5.jpg";
 import "./Editorial.css";
+
+const INDUSTRY_ICONS = [
+  Home,
+  ShieldCheck,
+  Calculator,
+  Landmark,
+  ShoppingCart,
+  Megaphone,
+  Stethoscope,
+  Wrench,
+  BriefcaseBusiness,
+  Store,
+];
 
 const COPY = {
   es: {
@@ -158,13 +180,16 @@ const COPY = {
         "Empresas de casi todas las industrias están adoptando automatización para mejorar la experiencia del cliente y el rendimiento operativo.",
       ],
       industries: [
-        ["Bienes raíces", "Responder consultas al instante."],
-        ["Bufetes jurídicos", "Automatizar la incorporación de clientes."],
-        ["Salud", "Optimizar la programación de citas."],
-        ["Agencias de marketing", "Automatizar la calificación de leads."],
-        ["Servicios para el hogar", "Responder solicitudes las 24 horas."],
-        ["Servicios financieros", "Organizar la comunicación con clientes de forma eficiente."],
-        ["Comercio minorista", "Mejorar el soporte y la interacción con clientes."],
+        ["Agencias inmobiliarias", "Responde consultas al instante y cierra más operaciones."],
+        ["Agencias de seguros", "Nutre leads, automatiza renovaciones y ofrece mejores experiencias."],
+        ["Firmas contables", "Automatiza la comunicación con clientes y simplifica la programación de citas."],
+        ["Organizaciones financieras", "Organiza la comunicación con clientes y mantén el cumplimiento mediante flujos automatizados."],
+        ["Empresas de comercio electrónico", "Recupera más ventas y mejora la experiencia de tus clientes."],
+        ["Agencias de marketing", "Califica leads, automatiza campañas y escala resultados."],
+        ["Proveedores de salud", "Simplifica la reserva de citas y mejora la comunicación con pacientes."],
+        ["Empresas de servicios para el hogar", "Responde más rápido, programa trabajos y mantén lleno tu pipeline."],
+        ["Firmas de consultoría", "Optimiza la incorporación de clientes y gestiona proyectos con mayor visibilidad."],
+        ["Negocios minoristas", "Aumenta la lealtad y genera ventas repetidas con conversaciones personalizadas."],
       ],
       industryBefore: "Sin importar la industria, el desafío principal sigue siendo el mismo:",
       industryQuote:
@@ -354,13 +379,16 @@ const COPY = {
         "Empresas de quase todos os setores estão adotando automação para melhorar a experiência do cliente e o desempenho operacional.",
       ],
       industries: [
-        ["Imobiliário", "Responder consultas instantaneamente."],
-        ["Escritórios de advocacia", "Automatizar a entrada de clientes."],
-        ["Saúde", "Otimizar o agendamento."],
-        ["Agências de marketing", "Automatizar a qualificação de leads."],
-        ["Serviços residenciais", "Responder solicitações 24 horas por dia."],
-        ["Serviços financeiros", "Organizar a comunicação com clientes de forma eficiente."],
-        ["Varejo", "Melhorar o suporte e o engajamento com clientes."],
+        ["Imobiliárias", "Responda a consultas instantaneamente e feche mais negócios."],
+        ["Agências de seguros", "Nutra leads, automatize renovações e ofereça experiências melhores."],
+        ["Escritórios de contabilidade", "Automatize a comunicação com clientes e simplifique o agendamento."],
+        ["Organizações financeiras", "Organize a comunicação com clientes e mantenha a conformidade com fluxos automatizados."],
+        ["Empresas de e-commerce", "Recupere mais vendas e encante seus clientes."],
+        ["Agências de marketing", "Qualifique leads, automatize campanhas e escale resultados."],
+        ["Prestadores de saúde", "Simplifique o agendamento e melhore a comunicação com pacientes."],
+        ["Empresas de serviços residenciais", "Responda mais rápido, agende serviços e mantenha o pipeline cheio."],
+        ["Consultorias", "Otimize o onboarding de clientes e gerencie projetos com mais visibilidade."],
+        ["Empresas de varejo", "Aumente a fidelidade e gere vendas recorrentes com conversas personalizadas."],
       ],
       industryBefore: "Independentemente do setor, o desafio principal continua o mesmo:",
       industryQuote:
@@ -641,13 +669,27 @@ export default function EditorialBusinessAILocalized({ locale }) {
 
             <section className="ed-section" id="every-industry">
               <h2>{copy.sections[5][1]}</h2>
+              <div className="ed-ai-section-rule" aria-hidden="true" />
               {a.industryIntro.map((p) => <p key={p}>{p}</p>)}
-              <div className="ed-ai-industry-grid">
-                {a.industries.map(([title, text]) => <article key={title}><strong>{title}</strong><span>{text}</span></article>)}
+
+              <div className="ed-ai-industry-grid ed-ai-industry-grid-detailed">
+                {a.industries.map(([title, text], index) => {
+                  const Icon = INDUSTRY_ICONS[index] || BriefcaseBusiness;
+
+                  return (
+                    <article key={title}>
+                      <span className="ed-ai-industry-icon" aria-hidden="true">
+                        <Icon size={34} strokeWidth={1.8} />
+                      </span>
+                      <span className="ed-ai-industry-divider" aria-hidden="true" />
+                      <span className="ed-ai-industry-copy">
+                        <strong>{title}</strong>
+                        <span>{text}</span>
+                      </span>
+                    </article>
+                  );
+                })}
               </div>
-              <p>{a.industryBefore}</p>
-              <blockquote>{a.industryQuote}</blockquote>
-              <p>{a.industryAfter}</p>
             </section>
 
             <section className="ed-section" id="competitive-advantage">

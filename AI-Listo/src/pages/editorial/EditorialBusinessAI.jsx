@@ -3,14 +3,23 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Bot,
+  BriefcaseBusiness,
+  Calculator,
   CalendarDays,
+  Home,
+  Landmark,
   LineChart,
+  Megaphone,
   Menu,
   MessageSquareText,
   ShieldCheck,
+  ShoppingCart,
   Sparkles,
+  Store,
+  Stethoscope,
   Users,
   Workflow,
+  Wrench,
   X,
   Zap,
 } from "lucide-react";
@@ -523,6 +532,8 @@ export default function EditorialBusinessAI() {
 
             <section className="ed-section" id="every-industry">
               <h2>Every Industry Can Benefit From AI</h2>
+              <div className="ed-ai-section-rule" aria-hidden="true" />
+
               <p>
                 Artificial intelligence is no longer limited to technology
                 companies.
@@ -532,46 +543,71 @@ export default function EditorialBusinessAI() {
                 to improve customer experience and operational performance.
               </p>
 
-              <div className="ed-ai-industry-grid">
-                <article>
-                  <strong>Real estate</strong>
-                  <span>Respond to inquiries instantly.</span>
-                </article>
-                <article>
-                  <strong>Law firms</strong>
-                  <span>Automate client intake.</span>
-                </article>
-                <article>
-                  <strong>Healthcare</strong>
-                  <span>Streamline appointment scheduling.</span>
-                </article>
-                <article>
-                  <strong>Marketing agencies</strong>
-                  <span>Automate lead qualification.</span>
-                </article>
-                <article>
-                  <strong>Home services</strong>
-                  <span>Respond to service requests around the clock.</span>
-                </article>
-                <article>
-                  <strong>Financial services</strong>
-                  <span>Organize client communication efficiently.</span>
-                </article>
-                <article>
-                  <strong>Retail</strong>
-                  <span>Improve customer support and engagement.</span>
-                </article>
+              <div className="ed-ai-industry-grid ed-ai-industry-grid-detailed">
+                {[
+                  {
+                    icon: Home,
+                    title: "Real Estate Agencies",
+                    text: "Respond to inquiries instantly and close more deals.",
+                  },
+                  {
+                    icon: ShieldCheck,
+                    title: "Insurance Agencies",
+                    text: "Nurture leads, automate renewals, and deliver better experiences.",
+                  },
+                  {
+                    icon: Calculator,
+                    title: "Accounting Firms",
+                    text: "Automate client communication and simplify appointment scheduling.",
+                  },
+                  {
+                    icon: Landmark,
+                    title: "Financial Organizations",
+                    text: "Organize client communication and stay compliant with automated workflows.",
+                  },
+                  {
+                    icon: ShoppingCart,
+                    title: "E-commerce Businesses",
+                    text: "Recover more sales and delight customers.",
+                  },
+                  {
+                    icon: Megaphone,
+                    title: "Marketing Agencies",
+                    text: "Qualify leads, automate campaigns, and scale results.",
+                  },
+                  {
+                    icon: Stethoscope,
+                    title: "Healthcare Providers",
+                    text: "Simplify appointment booking and improve patient communication.",
+                  },
+                  {
+                    icon: Wrench,
+                    title: "Home Service Companies",
+                    text: "Respond faster, schedule jobs, and keep your pipeline full every day.",
+                  },
+                  {
+                    icon: BriefcaseBusiness,
+                    title: "Consulting Firms",
+                    text: "Streamline client onboarding and manage projects with greater visibility.",
+                  },
+                  {
+                    icon: Store,
+                    title: "Retail Businesses",
+                    text: "Increase loyalty and drive repeat sales with personalized conversations.",
+                  },
+                ].map(({ icon: Icon, title, text }) => (
+                  <article key={title}>
+                    <span className="ed-ai-industry-icon" aria-hidden="true">
+                      <Icon size={34} strokeWidth={1.8} />
+                    </span>
+                    <span className="ed-ai-industry-divider" aria-hidden="true" />
+                    <span className="ed-ai-industry-copy">
+                      <strong>{title}</strong>
+                      <span>{text}</span>
+                    </span>
+                  </article>
+                ))}
               </div>
-
-              <p>
-                Regardless of industry, the underlying challenge remains the
-                same:
-              </p>
-              <blockquote>
-                Businesses need to respond faster, operate more efficiently, and
-                create better customer experiences.
-              </blockquote>
-              <p>AI helps accomplish all three.</p>
             </section>
 
             <section className="ed-section" id="competitive-advantage">

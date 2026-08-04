@@ -859,8 +859,7 @@ export default function EditorialFunnelEs() {
               <blockquote>«¿Qué CRM tiene más funciones?»</blockquote>
               <p>Preguntan:</p>
               <blockquote>
-                «¿Qué plataforma nos ayudará a generar más ingresos con menos
-                trabajo manual?»
+                “¿Qué plataforma nos ayudará a operar de forma más eficiente, automatizar más trabajo y crear más oportunidades?”
               </blockquote>
               <p>
                 Esa es la conversación que los Sistemas Operativos de Ingresos

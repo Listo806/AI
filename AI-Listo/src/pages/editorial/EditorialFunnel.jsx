@@ -807,8 +807,7 @@ export default function EditorialFunnel() {
               <blockquote>“Which CRM has the most features?”</blockquote>
               <p>They’re asking:</p>
               <blockquote>
-                “Which platform will help us generate more revenue with less
-                manual work?”
+                “Which platform will help us operate more efficiently, automate more work, and create more opportunities?”
               </blockquote>
               <p>
                 That’s the conversation that AI-native Revenue Operating Systems
