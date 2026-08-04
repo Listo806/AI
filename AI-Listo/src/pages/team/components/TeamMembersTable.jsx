@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import {
   MoreVertical,
@@ -17,6 +18,7 @@ export default function TeamMembersTable({
   onInvite,
   onChangeRole,
 }) {
+  const { t } = useTranslation();
   const [openMenu, setOpenMenu] = useState(null);
   const navigate = useNavigate();
 
@@ -55,7 +57,7 @@ export default function TeamMembersTable({
                     {user.avatar ? (
                       <img
                         src={user.avatar}
-                        alt={user.name || "Team member"}
+                        alt={user.name || t("team.membersTable.teamMemberAlt", "Team member")}
                         className="m-avatar"
                       />
                     ) : (
@@ -80,7 +82,9 @@ export default function TeamMembersTable({
                           user.isActive ? "active" : "inactive"
                         }`}
                       >
-                        {user.isActive ? "Active" : "Inactive"}
+                        {user.isActive
+                          ? t("team.membersTable.statusActive", "Active")
+                          : t("team.membersTable.statusInactive", "Inactive")}
                       </span>
                     </div>
                   </div>
@@ -89,19 +93,25 @@ export default function TeamMembersTable({
                 <div className="m-stats-grid">
                   <div className="m-stat-item">
                     <span className="m-stat-val">{user.totalLeads ?? 0}</span>
-                    <span className="m-stat-lbl">Leads</span>
+                    <span className="m-stat-lbl">
+                      {t("team.membersTable.leadsLabel", "Leads")}
+                    </span>
                   </div>
 
                   <div className="m-stat-item">
                     <span className="m-stat-val">
                       ${Number(user.pipelineValue || 0).toLocaleString()}
                     </span>
-                    <span className="m-stat-lbl">Pipeline</span>
+                    <span className="m-stat-lbl">
+                      {t("team.membersTable.pipelineLabel", "Pipeline")}
+                    </span>
                   </div>
 
                   <div className="m-stat-item">
                     <span className="m-stat-val">{user.aiScore ?? 0}%</span>
-                    <span className="m-stat-lbl">AI Score</span>
+                    <span className="m-stat-lbl">
+                      {t("team.membersTable.aiScoreLabel", "AI Score")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -113,7 +123,7 @@ export default function TeamMembersTable({
                   onClick={() => navigate("/dashboard/team/members")}
                 >
                   <Eye size={18} />
-                  <span>View</span>
+                  <span>{t("team.membersTable.viewButton", "View")}</span>
                 </button>
 
                 <button
@@ -122,7 +132,7 @@ export default function TeamMembersTable({
                   onClick={() => handleOpenRoleModal(user)}
                 >
                   <Shield size={16} />
-                  <span>Change Role</span>
+                  <span>{t("team.membersTable.changeRole", "Change Role")}</span>
                 </button>
               </div>
             </div>
@@ -136,10 +146,14 @@ export default function TeamMembersTable({
     <div className="team-card">
       <div className="team-card-header">
         <div>
-          <h3 className="team-card-title">Team Members</h3>
+          <h3 className="team-card-title">
+            {t("team.membersTable.title", "Team Members")}
+          </h3>
 
           <p className="team-card-description">
-            {members?.length || 0} members shown
+            {t("team.membersTable.membersShown", "{{count}} members shown", {
+              count: members?.length || 0,
+            })}
           </p>
         </div>
 
@@ -148,19 +162,19 @@ export default function TeamMembersTable({
           className="team-ai-review-btn"
           onClick={() => navigate("/dashboard/team/members")}
         >
-          <span>View All</span>
+          <span>{t("team.membersTable.viewAll", "View All")}</span>
         </button>
       </div>
 
       <div className="team-members-modern">
         <div className="team-members-column-header">
-          <div>Member</div>
-          <div>Role</div>
-          <div>Team</div>
-          <div>Status</div>
-          <div>Joined</div>
-          <div>Pipeline Value</div>
-          <div>Actions</div>
+          <div>{t("team.membersTable.columnMember", "Member")}</div>
+          <div>{t("team.membersTable.columnRole", "Role")}</div>
+          <div>{t("team.membersTable.columnTeam", "Team")}</div>
+          <div>{t("team.membersTable.columnStatus", "Status")}</div>
+          <div>{t("team.membersTable.columnJoined", "Joined")}</div>
+          <div>{t("team.membersTable.columnPipelineValue", "Pipeline Value")}</div>
+          <div>{t("team.membersTable.columnActions", "Actions")}</div>
         </div>
 
         {members?.map((member) => {
@@ -174,13 +188,13 @@ export default function TeamMembersTable({
               <div className="team-member-user">
                 <img
                   src={member.avatar || "https://i.pravatar.cc/150"}
-                  alt={member.name || "Team member"}
+                  alt={member.name || t("team.membersTable.teamMemberAlt", "Team member")}
                   className="team-member-avatar"
                 />
 
                 <div className="team-member-user-content">
                   <div className="team-member-email">
-                    {member.name || "Unnamed Member"}
+                    {member.name || t("team.membersTable.unnamedMember", "Unnamed Member")}
                   </div>
 
                   <div className="team-member-subtext">{member.email}</div>
@@ -205,7 +219,9 @@ export default function TeamMembersTable({
                     member.isActive ? "active" : "inactive"
                   }`}
                 >
-                  {member.isActive ? "Active" : "Inactive"}
+                  {member.isActive
+                    ? t("team.membersTable.statusActive", "Active")
+                    : t("team.membersTable.statusInactive", "Inactive")}
                 </span>
               </div>
               <div className="team-member-joined-column">
@@ -248,7 +264,7 @@ export default function TeamMembersTable({
                       }}
                     >
                       <Shield size={16} />
-                      <span>Change Role</span>
+                      <span>{t("team.membersTable.changeRole", "Change Role")}</span>
                     </button>
 
                     <button
@@ -261,7 +277,7 @@ export default function TeamMembersTable({
                       className="team-member-menu-item danger"
                     >
                       <Trash2 size={16} />
-                      <span>Remove Member</span>
+                      <span>{t("team.membersTable.removeMember", "Remove Member")}</span>
                     </button>
                   </div>
                 )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../api/apiClient';
 import { normalizePhoneToE164 } from '../utils/whatsapp';
 import '../styles/ContactModal.css';
@@ -11,6 +12,7 @@ import '../styles/ContactModal.css';
  * @param {function} onClose
  */
 export default function PropertyWhatsAppModal({ property, source, onClose }) {
+  const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
     setError(null);
     const normalized = normalizePhoneToE164(phone.trim());
     if (!normalized) {
-      setError('Please enter a valid phone number.');
+      setError(t('properties.whatsappModal.invalidPhone', 'Please enter a valid phone number.'));
       return;
     }
     setLoading(true);
@@ -45,10 +47,10 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
         window.open(url, '_blank', 'noopener,noreferrer');
         onClose();
       } else {
-        setError('Could not open WhatsApp. Please try again.');
+        setError(t('properties.whatsappModal.couldNotOpen', 'Could not open WhatsApp. Please try again.'));
       }
     } catch (err) {
-      setError(err.message || 'Failed to open WhatsApp. Please try again.');
+      setError(err.message || t('properties.whatsappModal.openError', 'Failed to open WhatsApp. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -58,12 +60,12 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
     <div className="crm-modal-overlay" onClick={onClose}>
       <div className="crm-modal" onClick={(e) => e.stopPropagation()}>
         <div className="crm-modal-header">
-          <h3>Contact via WhatsApp</h3>
+          <h3>{t('properties.whatsappModal.title', 'Contact via WhatsApp')}</h3>
           <button type="button" className="crm-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="crm-modal-body">
           <p style={{ marginBottom: '20px', color: '#64748b' }}>
-            Enter your number to open WhatsApp and message us about <strong>{property.title || 'this property'}</strong>.
+            {t('properties.whatsappModal.messagePrompt', 'Enter your number to open WhatsApp and message us about ')}<strong>{property.title || t('properties.whatsappModal.thisProperty', 'this property')}</strong>.
           </p>
 
           {error && (
@@ -74,7 +76,7 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
 
           <form onSubmit={handleSubmit} className="crm-form">
             <div className="crm-form-field">
-              <label htmlFor="whatsapp-phone">Phone *</label>
+              <label htmlFor="whatsapp-phone">{t('properties.whatsappModal.phoneLabel', 'Phone *')}</label>
               <input
                 id="whatsapp-phone"
                 type="tel"
@@ -93,14 +95,14 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
               />
             </div>
             <div className="crm-form-field">
-              <label htmlFor="whatsapp-name">Name (optional)</label>
+              <label htmlFor="whatsapp-name">{t('properties.whatsappModal.nameLabel', 'Name (optional)')}</label>
               <input
                 id="whatsapp-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
-                placeholder="Your name"
+                placeholder={t('properties.whatsappModal.namePlaceholder', 'Your name')}
               />
             </div>
             <div className="crm-form-actions">
@@ -110,14 +112,14 @@ export default function PropertyWhatsAppModal({ property, source, onClose }) {
                 className="crm-btn crm-btn-secondary"
                 disabled={loading}
               >
-                Cancel
+                {t('properties.whatsappModal.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
                 className="crm-btn crm-btn-primary"
                 disabled={loading}
               >
-                {loading ? 'Opening...' : 'Open WhatsApp'}
+                {loading ? t('properties.whatsappModal.opening', 'Opening...') : t('properties.whatsappModal.openWhatsApp', 'Open WhatsApp')}
               </button>
             </div>
           </form>

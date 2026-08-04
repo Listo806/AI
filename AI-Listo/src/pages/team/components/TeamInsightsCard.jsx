@@ -38,8 +38,10 @@ const getInsightIcon = (type) => {
   }
 };
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const insightItems = [
     ...(insights?.alerts || []),
     ...(insights?.pipelineRisks || []),
@@ -48,7 +50,7 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
     <div className="team-card team-insights-card">
       <div className="team-card-header">
         <Sparkles className="blue" size={16} />
-        <h3 className="team-card-title">AI Team Insights</h3>
+        <h3 className="team-card-title">{t("team.insightsCard.title", "AI Team Insights")}</h3>
 
         {/*<button
           className="team-ai-review-btn"
@@ -79,7 +81,7 @@ export default function TeamInsightsCard({ insights = [], onRunAIReview }) {
           className="team-insights-report-btn"
           onClick={() => navigate("/dashboard/team/ai-insights")}
         >
-          View Full AI Report →
+          {t("team.insightsCard.viewFullReport", "View Full AI Report →")}
         </button>
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   Save,
   X,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "./BusinessProfileModal.css";
 
 const EMPTY_FORM = {
@@ -48,6 +49,7 @@ export default function BusinessProfileModal({
   onClose,
   onSave,
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {
@@ -142,12 +144,21 @@ export default function BusinessProfileModal({
               <Building2 size={22} />
             </span>
             <div>
-              <h2>Business Profile</h2>
-              <p>Teach your AI Agent about your real-estate business.</p>
+              <h2>{t("aiCenter.businessProfileModal.title", "Business Profile")}</h2>
+              <p>
+                {t(
+                  "aiCenter.businessProfileModal.subtitle",
+                  "Teach your AI Agent about your real-estate business.",
+                )}
+              </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.businessProfileModal.closeAria", "Close")}
+          >
             <X size={20} />
           </button>
         </div>
@@ -156,10 +167,21 @@ export default function BusinessProfileModal({
           {error && <div className="cx-business-modal-error">{error}</div>}
 
           <section>
-            <h3>Business details</h3>
+            <h3>
+              {t(
+                "aiCenter.businessProfileModal.businessDetailsHeading",
+                "Business details",
+              )}
+            </h3>
             <div className="cx-business-form-grid">
               <label>
-                <span>Business name <b>*</b></span>
+                <span>
+                  {t(
+                    "aiCenter.businessProfileModal.businessNameLabel",
+                    "Business name",
+                  )}{" "}
+                  <b>*</b>
+                </span>
                 <div className="cx-business-input-wrap">
                   <Building2 size={17} />
                   <input
@@ -172,30 +194,70 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                <span>Business type <b>*</b></span>
+                <span>
+                  {t(
+                    "aiCenter.businessProfileModal.businessTypeLabel",
+                    "Business type",
+                  )}{" "}
+                  <b>*</b>
+                </span>
                 <select
                   value={form.businessType}
                   onChange={update("businessType")}
                 >
-                  <option value="real_estate">Real Estate Agency</option>
-                  <option value="brokerage">Brokerage</option>
-                  <option value="property_management">
-                    Property Management
+                  <option value="real_estate">
+                    {t(
+                      "aiCenter.businessProfileModal.typeRealEstate",
+                      "Real Estate Agency",
+                    )}
                   </option>
-                  <option value="investor">Real Estate Investor</option>
-                  <option value="developer">Property Developer</option>
-                  <option value="other">Other</option>
+                  <option value="brokerage">
+                    {t(
+                      "aiCenter.businessProfileModal.typeBrokerage",
+                      "Brokerage",
+                    )}
+                  </option>
+                  <option value="property_management">
+                    {t(
+                      "aiCenter.businessProfileModal.typePropertyManagement",
+                      "Property Management",
+                    )}
+                  </option>
+                  <option value="investor">
+                    {t(
+                      "aiCenter.businessProfileModal.typeInvestor",
+                      "Real Estate Investor",
+                    )}
+                  </option>
+                  <option value="developer">
+                    {t(
+                      "aiCenter.businessProfileModal.typeDeveloper",
+                      "Property Developer",
+                    )}
+                  </option>
+                  <option value="other">
+                    {t("aiCenter.businessProfileModal.typeOther", "Other")}
+                  </option>
                 </select>
               </label>
 
               <label className="full">
-                <span>Business description <b>*</b></span>
+                <span>
+                  {t(
+                    "aiCenter.businessProfileModal.businessDescriptionLabel",
+                    "Business description",
+                  )}{" "}
+                  <b>*</b>
+                </span>
                 <textarea
                   value={form.description}
                   onChange={update("description")}
                   rows={4}
                   maxLength={2000}
-                  placeholder="Describe your business, ideal clients, markets and services."
+                  placeholder={t(
+                    "aiCenter.businessProfileModal.businessDescriptionPlaceholder",
+                    "Describe your business, ideal clients, markets and services.",
+                  )}
                 />
                 <small>{form.description.length}/2000</small>
               </label>
@@ -203,10 +265,15 @@ export default function BusinessProfileModal({
           </section>
 
           <section>
-            <h3>Contact information</h3>
+            <h3>
+              {t(
+                "aiCenter.businessProfileModal.contactInfoHeading",
+                "Contact information",
+              )}
+            </h3>
             <div className="cx-business-form-grid">
               <label>
-                Website
+                {t("aiCenter.businessProfileModal.websiteLabel", "Website")}
                 <div className="cx-business-input-wrap">
                   <Globe2 size={17} />
                   <input
@@ -219,7 +286,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Email
+                {t("aiCenter.businessProfileModal.emailLabel", "Email")}
                 <div className="cx-business-input-wrap">
                   <Mail size={17} />
                   <input
@@ -232,7 +299,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Phone
+                {t("aiCenter.businessProfileModal.phoneLabel", "Phone")}
                 <div className="cx-business-input-wrap">
                   <Phone size={17} />
                   <input
@@ -244,7 +311,7 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Currency
+                {t("aiCenter.businessProfileModal.currencyLabel", "Currency")}
                 <select value={form.currency} onChange={update("currency")}>
                   <option value="USD">USD</option>
                   <option value="VND">VND</option>
@@ -258,22 +325,33 @@ export default function BusinessProfileModal({
           </section>
 
           <section>
-            <h3>Primary location</h3>
+            <h3>
+              {t(
+                "aiCenter.businessProfileModal.primaryLocationHeading",
+                "Primary location",
+              )}
+            </h3>
             <div className="cx-business-form-grid">
               <label className="full">
-                Address
+                {t("aiCenter.businessProfileModal.addressLabel", "Address")}
                 <div className="cx-business-input-wrap">
                   <MapPin size={17} />
                   <input
                     value={form.addressLine1}
                     onChange={update("addressLine1")}
-                    placeholder="Street address"
+                    placeholder={t(
+                      "aiCenter.businessProfileModal.addressPlaceholder",
+                      "Street address",
+                    )}
                   />
                 </div>
               </label>
 
               <label>
-                <span>City <b>*</b></span>
+                <span>
+                  {t("aiCenter.businessProfileModal.cityLabel", "City")}{" "}
+                  <b>*</b>
+                </span>
                 <input
                   value={form.city}
                   onChange={update("city")}
@@ -282,7 +360,10 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                State / Province
+                {t(
+                  "aiCenter.businessProfileModal.stateLabel",
+                  "State / Province",
+                )}
                 <input
                   value={form.state}
                   onChange={update("state")}
@@ -291,7 +372,10 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                Postal code
+                {t(
+                  "aiCenter.businessProfileModal.postalCodeLabel",
+                  "Postal code",
+                )}
                 <input
                   value={form.postalCode}
                   onChange={update("postalCode")}
@@ -300,49 +384,77 @@ export default function BusinessProfileModal({
               </label>
 
               <label>
-                <span>Country <b>*</b></span>
+                <span>
+                  {t("aiCenter.businessProfileModal.countryLabel", "Country")}{" "}
+                  <b>*</b>
+                </span>
                 <input
                   value={form.country}
                   onChange={update("country")}
-                  placeholder="United States"
+                  placeholder={t(
+                    "aiCenter.businessProfileModal.countryPlaceholder",
+                    "United States",
+                  )}
                 />
               </label>
             </div>
           </section>
 
           <section>
-            <h3>AI knowledge</h3>
+            <h3>
+              {t(
+                "aiCenter.businessProfileModal.aiKnowledgeHeading",
+                "AI knowledge",
+              )}
+            </h3>
             <div className="cx-business-form-grid">
               <label className="full">
-                Service areas
+                {t(
+                  "aiCenter.businessProfileModal.serviceAreasLabel",
+                  "Service areas",
+                )}
                 <input
                   value={form.serviceAreasText}
                   onChange={update("serviceAreasText")}
                   placeholder="Miami, Fort Lauderdale, Palm Beach"
                 />
-                <small>Separate multiple values with commas.</small>
+                <small>
+                  {t(
+                    "aiCenter.businessProfileModal.serviceAreasHint",
+                    "Separate multiple values with commas.",
+                  )}
+                </small>
               </label>
 
               <label className="full">
-                Specialties
+                {t(
+                  "aiCenter.businessProfileModal.specialtiesLabel",
+                  "Specialties",
+                )}
                 <input
                   value={form.specialtiesText}
                   onChange={update("specialtiesText")}
-                  placeholder="Luxury homes, Condos, First-time buyers"
+                  placeholder={t(
+                    "aiCenter.businessProfileModal.specialtiesPlaceholder",
+                    "Luxury homes, Condos, First-time buyers",
+                  )}
                 />
               </label>
 
               <label>
-                Languages
+                {t("aiCenter.businessProfileModal.languagesLabel", "Languages")}
                 <input
                   value={form.languagesText}
                   onChange={update("languagesText")}
-                  placeholder="English, Spanish"
+                  placeholder={t(
+                    "aiCenter.businessProfileModal.languagesPlaceholder",
+                    "English, Spanish",
+                  )}
                 />
               </label>
 
               <label>
-                Timezone
+                {t("aiCenter.businessProfileModal.timezoneLabel", "Timezone")}
                 <input
                   value={form.timezone}
                   onChange={update("timezone")}
@@ -357,15 +469,23 @@ export default function BusinessProfileModal({
               {requiredComplete ? (
                 <span className="complete">
                   <CheckCircle2 size={16} />
-                  Required information completed
+                  {t(
+                    "aiCenter.businessProfileModal.requiredComplete",
+                    "Required information completed",
+                  )}
                 </span>
               ) : (
-                <span>Complete all fields marked with *</span>
+                <span>
+                  {t(
+                    "aiCenter.businessProfileModal.requiredIncomplete",
+                    "Complete all fields marked with *",
+                  )}
+                </span>
               )}
             </div>
 
             <button type="button" className="secondary" onClick={onClose}>
-              Cancel
+              {t("aiCenter.businessProfileModal.cancelButton", "Cancel")}
             </button>
 
             <button
@@ -374,7 +494,12 @@ export default function BusinessProfileModal({
               disabled={!requiredComplete || saving}
             >
               <Save size={16} />
-              {saving ? "Saving..." : "Save Business Profile"}
+              {saving
+                ? t("aiCenter.businessProfileModal.savingButton", "Saving...")
+                : t(
+                    "aiCenter.businessProfileModal.saveButton",
+                    "Save Business Profile",
+                  )}
             </button>
           </div>
         </form>

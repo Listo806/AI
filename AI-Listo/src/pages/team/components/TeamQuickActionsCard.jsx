@@ -8,31 +8,37 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const actions = [
-  {
-    icon: ShieldCheck,
-    label: "Manage Roles & Permissions",
-    route: "/dashboard/team/members",
-  },
-  {
-    icon: Settings,
-    label: "Manage Teams",
-    route: "/dashboard/team/manage",
-  },
-  {
-    icon: Sparkles,
-    label: "View Pending Invites",
-    route: "/dashboard/team/invites",
-  },
-  {
-    icon: BarChart3,
-    label: "Activity Log",
-    route: "/dashboard/team/activity?type=team",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 export default function TeamQuickActionsCard({ selectedTeamId }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const actions = [
+    {
+      icon: ShieldCheck,
+      label: t(
+        "team.quickActionsCard.manageRoles",
+        "Manage Roles & Permissions",
+      ),
+      route: "/dashboard/team/members",
+    },
+    {
+      icon: Settings,
+      label: t("team.quickActionsCard.manageTeams", "Manage Teams"),
+      route: "/dashboard/team/manage",
+    },
+    {
+      icon: Sparkles,
+      label: t("team.quickActionsCard.viewPendingInvites", "View Pending Invites"),
+      route: "/dashboard/team/invites",
+    },
+    {
+      icon: BarChart3,
+      label: t("team.quickActionsCard.activityLog", "Activity Log"),
+      route: "/dashboard/team/activity?type=team",
+    },
+  ];
 
   const handleAction = (item) => {
     if (item.route === "/dashboard/team/invites") {
@@ -50,9 +56,13 @@ export default function TeamQuickActionsCard({ selectedTeamId }) {
     <div className="team-card team-quick-actions-card">
       <div className="team-card-header">
         <div>
-          <h3 className="team-card-title">Quick Actions</h3>
+          <h3 className="team-card-title">
+            {t("team.quickActionsCard.title", "Quick Actions")}
+          </h3>
 
-          <p className="team-card-subtitle">Operational control center</p>
+          <p className="team-card-subtitle">
+            {t("team.quickActionsCard.subtitle", "Operational control center")}
+          </p>
         </div>
       </div>
 

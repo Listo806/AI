@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 export default function TeamActivityCard({ activity }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="team-card">
       <div className="team-card-header">
         <div>
-          <h3 className="team-card-title">Recent Activity</h3>
-          <p className="team-card-description">Latest team updates</p>
+          <h3 className="team-card-title">{t("team.activityCard.title", "Recent Activity")}</h3>
+          <p className="team-card-description">{t("team.activityCard.description", "Latest team updates")}</p>
         </div>
         <button
           type="button"
@@ -15,7 +17,7 @@ export default function TeamActivityCard({ activity }) {
             navigate("/dashboard/team/activity?type=team");
           }}
         >
-          View All
+          {t("team.activityCard.viewAll", "View All")}
         </button>
       </div>
       <div className="team-activity-list">
@@ -40,7 +42,7 @@ export default function TeamActivityCard({ activity }) {
             </div>
           ))
         ) : (
-          <div className="team-empty-state">No recent activity</div>
+          <div className="team-empty-state">{t("team.activityCard.emptyState", "No recent activity")}</div>
         )}
       </div>
     </div>

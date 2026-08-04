@@ -9,6 +9,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "./WhatsAppConnectCard.css";
 
 export default function WhatsAppConnectCard({
@@ -24,11 +25,13 @@ export default function WhatsAppConnectCard({
   onDisconnect,
   onRefreshQr,
 }) {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <div className="cx-wa-connect-state">
         <RefreshCw className="cx-wa-spin" size={20} />
-        Loading WhatsApp status...
+        {t("aiCenter.whatsappConnect.loadingStatus", "Loading WhatsApp status...")}
       </div>
     );
   }
@@ -40,16 +43,29 @@ export default function WhatsAppConnectCard({
           <CheckCircle2 size={26} />
         </div>
         <div className="cx-wa-connected-copy">
-          <h4>WhatsApp Connected</h4>
-          <p>This connection is shared with the WhatsApp Inbox.</p>
+          <h4>
+            {t("aiCenter.whatsappConnect.connectedTitle", "WhatsApp Connected")}
+          </h4>
+          <p>
+            {t(
+              "aiCenter.whatsappConnect.connectedSubtitle",
+              "This connection is shared with the WhatsApp Inbox.",
+            )}
+          </p>
           <div className="cx-wa-connected-meta">
             <span>
               <Smartphone size={15} />
-              {phone || "Connected device"}
+              {phone ||
+                t("aiCenter.whatsappConnect.connectedDevice", "Connected device")}
             </span>
             <span>
               {socketConnected ? <Wifi size={15} /> : <WifiOff size={15} />}
-              {socketConnected ? "Realtime online" : "Realtime reconnecting"}
+              {socketConnected
+                ? t("aiCenter.whatsappConnect.realtimeOnline", "Realtime online")
+                : t(
+                    "aiCenter.whatsappConnect.realtimeReconnecting",
+                    "Realtime reconnecting",
+                  )}
             </span>
           </div>
         </div>
@@ -60,7 +76,9 @@ export default function WhatsAppConnectCard({
           type="button"
         >
           <Unplug size={16} />
-          {disconnecting ? "Disconnecting..." : "Disconnect"}
+          {disconnecting
+            ? t("aiCenter.whatsappConnect.disconnecting", "Disconnecting...")
+            : t("aiCenter.whatsappConnect.disconnect", "Disconnect")}
         </button>
       </div>
     );
@@ -73,20 +91,53 @@ export default function WhatsAppConnectCard({
       <div className="cx-wa-connect-grid">
         <div className="cx-wa-connect-guide">
           <h4>
-            QR Connection <span>(Recommended)</span>
+            {t("aiCenter.whatsappConnect.qrConnection", "QR Connection")}{" "}
+            <span>
+              {t("aiCenter.whatsappConnect.recommended", "(Recommended)")}
+            </span>
           </h4>
-          <p>Connect the WhatsApp account your AI Agent will use.</p>
+          <p>
+            {t(
+              "aiCenter.whatsappConnect.connectDescription",
+              "Connect the WhatsApp account your AI Agent will use.",
+            )}
+          </p>
           <ol className="cx-wa-connect-steps">
-            <li>Open WhatsApp on your phone</li>
-            <li>Go to Settings → Linked Devices</li>
-            <li>Tap “Link a Device”</li>
-            <li>Scan the QR code shown here</li>
+            <li>
+              {t(
+                "aiCenter.whatsappConnect.step1",
+                "Open WhatsApp on your phone",
+              )}
+            </li>
+            <li>
+              {t(
+                "aiCenter.whatsappConnect.step2",
+                "Go to Settings → Linked Devices",
+              )}
+            </li>
+            <li>{t("aiCenter.whatsappConnect.step3", "Tap “Link a Device”")}</li>
+            <li>
+              {t(
+                "aiCenter.whatsappConnect.step4",
+                "Scan the QR code shown here",
+              )}
+            </li>
           </ol>
           <div className="cx-wa-connect-security">
             <MessageSquare size={18} />
             <div>
-              <strong>One shared WhatsApp connection</strong>
-              <p>The same session powers AI Agent and WhatsApp Inbox.</p>
+              <strong>
+                {t(
+                  "aiCenter.whatsappConnect.sharedConnectionTitle",
+                  "One shared WhatsApp connection",
+                )}
+              </strong>
+              <p>
+                {t(
+                  "aiCenter.whatsappConnect.sharedConnectionDesc",
+                  "The same session powers AI Agent and WhatsApp Inbox.",
+                )}
+              </p>
             </div>
           </div>
         </div>
@@ -100,14 +151,34 @@ export default function WhatsAppConnectCard({
                 {connecting ? (
                   <>
                     <RefreshCw className="cx-wa-spin" size={30} />
-                    <strong>Generating QR code...</strong>
-                    <span>This can take a few seconds.</span>
+                    <strong>
+                      {t(
+                        "aiCenter.whatsappConnect.generatingQr",
+                        "Generating QR code...",
+                      )}
+                    </strong>
+                    <span>
+                      {t(
+                        "aiCenter.whatsappConnect.generatingQrHint",
+                        "This can take a few seconds.",
+                      )}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Smartphone size={34} />
-                    <strong>Ready to connect</strong>
-                    <span>Click Connect WhatsApp to generate a QR code.</span>
+                    <strong>
+                      {t(
+                        "aiCenter.whatsappConnect.readyToConnect",
+                        "Ready to connect",
+                      )}
+                    </strong>
+                    <span>
+                      {t(
+                        "aiCenter.whatsappConnect.readyToConnectHint",
+                        "Click Connect WhatsApp to generate a QR code.",
+                      )}
+                    </span>
                   </>
                 )}
               </div>
@@ -121,7 +192,7 @@ export default function WhatsAppConnectCard({
               disabled={!connecting}
               type="button"
             >
-              Refresh QR
+              {t("aiCenter.whatsappConnect.refreshQr", "Refresh QR")}
             </button>
 
             <button
@@ -130,7 +201,9 @@ export default function WhatsAppConnectCard({
               disabled={connecting}
               type="button"
             >
-              {connecting ? "Waiting for scan..." : "Connect WhatsApp"}
+              {connecting
+                ? t("aiCenter.whatsappConnect.waitingForScan", "Waiting for scan...")
+                : t("aiCenter.whatsappConnect.connectWhatsapp", "Connect WhatsApp")}
             </button>
           </div>
         </div>

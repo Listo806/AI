@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Bot, Check, MessageCircle, Plus, Save, Trash2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import "./AIBehaviorModal.css";
 
 const DEFAULT_FORM = {
@@ -35,6 +36,8 @@ export default function AIBehaviorModal({
   onClose,
   onSave,
 }) {
+  const { t } = useTranslation();
+
   const [form, setForm] = useState(DEFAULT_FORM);
   const [question, setQuestion] = useState("");
   const [forbiddenTopic, setForbiddenTopic] = useState("");
@@ -44,10 +47,35 @@ export default function AIBehaviorModal({
 
     setForm({
       ...DEFAULT_FORM,
+      greetingMessage: t(
+        "aiCenter.behaviorModal.defaultGreeting",
+        "Hi! I’m the AI assistant for our real estate team. How can I help you today?",
+      ),
+      fallbackMessage: t(
+        "aiCenter.behaviorModal.defaultFallback",
+        "I’m not fully certain about that. Let me connect you with a team member.",
+      ),
+      escalationMessage: t(
+        "aiCenter.behaviorModal.defaultEscalation",
+        "I’m bringing in a human agent who can help you further.",
+      ),
       ...(behavior || {}),
       qualificationQuestions: Array.isArray(behavior?.qualificationQuestions)
         ? behavior.qualificationQuestions
-        : DEFAULT_FORM.qualificationQuestions,
+        : [
+            t(
+              "aiCenter.behaviorModal.defaultQuestion1",
+              "What type of property are you looking for?",
+            ),
+            t(
+              "aiCenter.behaviorModal.defaultQuestion2",
+              "What is your preferred location?",
+            ),
+            t(
+              "aiCenter.behaviorModal.defaultQuestion3",
+              "What is your budget range?",
+            ),
+          ],
       forbiddenTopics: Array.isArray(behavior?.forbiddenTopics)
         ? behavior.forbiddenTopics
         : [],
@@ -55,7 +83,7 @@ export default function AIBehaviorModal({
 
     setQuestion("");
     setForbiddenTopic("");
-  }, [open, behavior]);
+  }, [open, behavior, t]);
 
   const canSave = useMemo(
     () =>
@@ -131,78 +159,132 @@ export default function AIBehaviorModal({
               <Bot size={22} />
             </span>
             <div>
-              <h2>AI Behavior</h2>
-              <p>Define how your AI Agent speaks, qualifies, and escalates.</p>
+              <h2>{t("aiCenter.behaviorModal.title", "AI Behavior")}</h2>
+              <p>
+                {t(
+                  "aiCenter.behaviorModal.subtitle",
+                  "Define how your AI Agent speaks, qualifies, and escalates.",
+                )}
+              </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.behaviorModal.closeAria", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
 
         {loading ? (
-          <div className="cx-behavior-loading">Loading AI behavior...</div>
+          <div className="cx-behavior-loading">
+            {t("aiCenter.behaviorModal.loading", "Loading AI behavior...")}
+          </div>
         ) : (
           <form onSubmit={submit}>
             {error && <div className="cx-behavior-error">{error}</div>}
 
             <section>
-              <h3>Communication style</h3>
+              <h3>
+                {t(
+                  "aiCenter.behaviorModal.communicationStyle",
+                  "Communication style",
+                )}
+              </h3>
 
               <div className="cx-behavior-grid">
                 <label>
-                  Response tone
+                  {t("aiCenter.behaviorModal.responseTone", "Response tone")}
                   <select
                     value={form.tone}
                     onChange={(event) => update("tone", event.target.value)}
                   >
                     <option value="professional">
-                      Professional & Friendly
+                      {t(
+                        "aiCenter.behaviorModal.toneProfessional",
+                        "Professional & Friendly",
+                      )}
                     </option>
-                    <option value="friendly">Friendly & Conversational</option>
-                    <option value="sales">Sales Focused</option>
+                    <option value="friendly">
+                      {t(
+                        "aiCenter.behaviorModal.toneFriendly",
+                        "Friendly & Conversational",
+                      )}
+                    </option>
+                    <option value="sales">
+                      {t("aiCenter.behaviorModal.toneSales", "Sales Focused")}
+                    </option>
                   </select>
                 </label>
 
                 <label>
-                  Personality
+                  {t("aiCenter.behaviorModal.personality", "Personality")}
                   <select
                     value={form.personality}
                     onChange={(event) =>
                       update("personality", event.target.value)
                     }
                   >
-                    <option value="helpful">Helpful</option>
-                    <option value="consultative">Consultative</option>
-                    <option value="concise">Concise</option>
-                    <option value="luxury">Luxury</option>
-                    <option value="investor_focused">Investor Focused</option>
+                    <option value="helpful">
+                      {t("aiCenter.behaviorModal.personalityHelpful", "Helpful")}
+                    </option>
+                    <option value="consultative">
+                      {t(
+                        "aiCenter.behaviorModal.personalityConsultative",
+                        "Consultative",
+                      )}
+                    </option>
+                    <option value="concise">
+                      {t("aiCenter.behaviorModal.concise", "Concise")}
+                    </option>
+                    <option value="luxury">
+                      {t("aiCenter.behaviorModal.personalityLuxury", "Luxury")}
+                    </option>
+                    <option value="investor_focused">
+                      {t(
+                        "aiCenter.behaviorModal.personalityInvestorFocused",
+                        "Investor Focused",
+                      )}
+                    </option>
                   </select>
                 </label>
 
                 <label>
-                  Response length
+                  {t(
+                    "aiCenter.behaviorModal.responseLength",
+                    "Response length",
+                  )}
                   <select
                     value={form.responseLength}
                     onChange={(event) =>
                       update("responseLength", event.target.value)
                     }
                   >
-                    <option value="concise">Concise</option>
-                    <option value="balanced">Balanced</option>
-                    <option value="detailed">Detailed</option>
+                    <option value="concise">
+                      {t("aiCenter.behaviorModal.concise", "Concise")}
+                    </option>
+                    <option value="balanced">
+                      {t("aiCenter.behaviorModal.lengthBalanced", "Balanced")}
+                    </option>
+                    <option value="detailed">
+                      {t("aiCenter.behaviorModal.lengthDetailed", "Detailed")}
+                    </option>
                   </select>
                 </label>
               </div>
             </section>
 
             <section>
-              <h3>Core messages</h3>
+              <h3>{t("aiCenter.behaviorModal.coreMessages", "Core messages")}</h3>
 
               <div className="cx-behavior-grid">
                 <label className="full">
-                  Greeting message
+                  {t(
+                    "aiCenter.behaviorModal.greetingMessage",
+                    "Greeting message",
+                  )}
                   <textarea
                     rows={3}
                     value={form.greetingMessage}
@@ -214,7 +296,10 @@ export default function AIBehaviorModal({
                 </label>
 
                 <label className="full">
-                  Fallback message
+                  {t(
+                    "aiCenter.behaviorModal.fallbackMessage",
+                    "Fallback message",
+                  )}
                   <textarea
                     rows={3}
                     value={form.fallbackMessage}
@@ -226,7 +311,10 @@ export default function AIBehaviorModal({
                 </label>
 
                 <label className="full">
-                  Escalation message
+                  {t(
+                    "aiCenter.behaviorModal.escalationMessage",
+                    "Escalation message",
+                  )}
                   <textarea
                     rows={3}
                     value={form.escalationMessage}
@@ -240,13 +328,21 @@ export default function AIBehaviorModal({
             </section>
 
             <section>
-              <h3>Lead qualification questions</h3>
+              <h3>
+                {t(
+                  "aiCenter.behaviorModal.leadQualificationQuestions",
+                  "Lead qualification questions",
+                )}
+              </h3>
 
               <ListEditor
                 value={question}
                 setValue={setQuestion}
                 items={form.qualificationQuestions}
-                placeholder="Example: When would you like to move?"
+                placeholder={t(
+                  "aiCenter.behaviorModal.questionPlaceholder",
+                  "Example: When would you like to move?",
+                )}
                 onAdd={() =>
                   addListItem("qualificationQuestions", question, setQuestion)
                 }
@@ -257,13 +353,18 @@ export default function AIBehaviorModal({
             </section>
 
             <section>
-              <h3>Restricted topics</h3>
+              <h3>
+                {t("aiCenter.behaviorModal.restrictedTopics", "Restricted topics")}
+              </h3>
 
               <ListEditor
                 value={forbiddenTopic}
                 setValue={setForbiddenTopic}
                 items={form.forbiddenTopics}
-                placeholder="Example: Legal advice"
+                placeholder={t(
+                  "aiCenter.behaviorModal.topicPlaceholder",
+                  "Example: Legal advice",
+                )}
                 onAdd={() =>
                   addListItem(
                     "forbiddenTopics",
@@ -272,17 +373,26 @@ export default function AIBehaviorModal({
                   )
                 }
                 onRemove={(index) => removeListItem("forbiddenTopics", index)}
-                emptyLabel="No restricted topics added."
+                emptyLabel={t(
+                  "aiCenter.behaviorModal.noRestrictedTopics",
+                  "No restricted topics added.",
+                )}
               />
             </section>
 
             <section>
-              <h3>Behavior rules</h3>
+              <h3>{t("aiCenter.behaviorModal.behaviorRules", "Behavior rules")}</h3>
 
               <div className="cx-behavior-toggle-list">
                 <ToggleRow
-                  title="Ask one question at a time"
-                  description="Keep conversations natural and easy to answer."
+                  title={t(
+                    "aiCenter.behaviorModal.ruleAskOneTitle",
+                    "Ask one question at a time",
+                  )}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleAskOneDesc",
+                    "Keep conversations natural and easy to answer.",
+                  )}
                   active={form.askOneQuestionAtATime}
                   onToggle={() =>
                     update("askOneQuestionAtATime", !form.askOneQuestionAtATime)
@@ -290,8 +400,14 @@ export default function AIBehaviorModal({
                 />
 
                 <ToggleRow
-                  title="Confirm before booking"
-                  description="Ask the lead to confirm date and time before booking."
+                  title={t(
+                    "aiCenter.behaviorModal.ruleConfirmBookingTitle",
+                    "Confirm before booking",
+                  )}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleConfirmBookingDesc",
+                    "Ask the lead to confirm date and time before booking.",
+                  )}
                   active={form.confirmBeforeBooking}
                   onToggle={() =>
                     update("confirmBeforeBooking", !form.confirmBeforeBooking)
@@ -299,8 +415,14 @@ export default function AIBehaviorModal({
                 />
 
                 <ToggleRow
-                  title="Mention AI identity"
-                  description="Tell leads that they are speaking with an AI assistant."
+                  title={t(
+                    "aiCenter.behaviorModal.ruleMentionAiTitle",
+                    "Mention AI identity",
+                  )}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleMentionAiDesc",
+                    "Tell leads that they are speaking with an AI assistant.",
+                  )}
                   active={form.mentionAiIdentity}
                   onToggle={() =>
                     update("mentionAiIdentity", !form.mentionAiIdentity)
@@ -308,15 +430,24 @@ export default function AIBehaviorModal({
                 />
 
                 <ToggleRow
-                  title="Use emojis"
-                  description="Allow light emoji usage in conversational replies."
+                  title={t("aiCenter.behaviorModal.ruleUseEmojisTitle", "Use emojis")}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleUseEmojisDesc",
+                    "Allow light emoji usage in conversational replies.",
+                  )}
                   active={form.useEmojis}
                   onToggle={() => update("useEmojis", !form.useEmojis)}
                 />
 
                 <ToggleRow
-                  title="Proactive follow-up"
-                  description="Allow AI to suggest the next action and follow up."
+                  title={t(
+                    "aiCenter.behaviorModal.ruleProactiveTitle",
+                    "Proactive follow-up",
+                  )}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleProactiveDesc",
+                    "Allow AI to suggest the next action and follow up.",
+                  )}
                   active={form.proactiveFollowUp}
                   onToggle={() =>
                     update("proactiveFollowUp", !form.proactiveFollowUp)
@@ -324,8 +455,14 @@ export default function AIBehaviorModal({
                 />
 
                 <ToggleRow
-                  title="Auto escalate hot leads"
-                  description="Escalate high-intent leads to a human agent."
+                  title={t(
+                    "aiCenter.behaviorModal.ruleAutoEscalateTitle",
+                    "Auto escalate hot leads",
+                  )}
+                  description={t(
+                    "aiCenter.behaviorModal.ruleAutoEscalateDesc",
+                    "Escalate high-intent leads to a human agent.",
+                  )}
                   active={form.autoEscalateHotLeads}
                   onToggle={() =>
                     update("autoEscalateHotLeads", !form.autoEscalateHotLeads)
@@ -335,7 +472,12 @@ export default function AIBehaviorModal({
             </section>
 
             <section>
-              <h3>Custom instructions</h3>
+              <h3>
+                {t(
+                  "aiCenter.behaviorModal.customInstructions",
+                  "Custom instructions",
+                )}
+              </h3>
 
               <textarea
                 className="cx-behavior-custom"
@@ -344,7 +486,10 @@ export default function AIBehaviorModal({
                 onChange={(event) =>
                   update("customInstructions", event.target.value)
                 }
-                placeholder="Add specific rules, brand language, escalation instructions, or other guidance..."
+                placeholder={t(
+                  "aiCenter.behaviorModal.customInstructionsPlaceholder",
+                  "Add specific rules, brand language, escalation instructions, or other guidance...",
+                )}
                 maxLength={5000}
               />
             </section>
@@ -354,10 +499,15 @@ export default function AIBehaviorModal({
                 {canSave ? (
                   <span className="complete">
                     <Check size={16} />
-                    AI behavior is ready
+                    {t("aiCenter.behaviorModal.ready", "AI behavior is ready")}
                   </span>
                 ) : (
-                  <span>Complete the required behavior settings.</span>
+                  <span>
+                    {t(
+                      "aiCenter.behaviorModal.completePrompt",
+                      "Complete the required behavior settings.",
+                    )}
+                  </span>
                 )}
               </div>
 
@@ -367,7 +517,7 @@ export default function AIBehaviorModal({
                 onClick={onClose}
                 disabled={saving}
               >
-                Cancel
+                {t("aiCenter.behaviorModal.cancel", "Cancel")}
               </button>
 
               <button
@@ -376,7 +526,9 @@ export default function AIBehaviorModal({
                 disabled={!canSave || saving}
               >
                 <Save size={16} />
-                {saving ? "Saving..." : "Save AI Behavior"}
+                {saving
+                  ? t("aiCenter.behaviorModal.saving", "Saving...")
+                  : t("aiCenter.behaviorModal.save", "Save AI Behavior")}
               </button>
             </footer>
           </form>
@@ -393,8 +545,13 @@ function ListEditor({
   placeholder,
   onAdd,
   onRemove,
-  emptyLabel = "No items added.",
+  emptyLabel,
 }) {
+  const { t } = useTranslation();
+
+  const resolvedEmptyLabel =
+    emptyLabel ?? t("aiCenter.behaviorModal.noItemsAdded", "No items added.");
+
   return (
     <>
       <div className="cx-behavior-list-add">
@@ -413,13 +570,13 @@ function ListEditor({
 
         <button type="button" onClick={onAdd}>
           <Plus size={16} />
-          Add
+          {t("aiCenter.behaviorModal.add", "Add")}
         </button>
       </div>
 
       <div className="cx-behavior-list">
         {items.length === 0 ? (
-          <p className="cx-behavior-empty">{emptyLabel}</p>
+          <p className="cx-behavior-empty">{resolvedEmptyLabel}</p>
         ) : (
           items.map((item, index) => (
             <div key={`${item}-${index}`}>
@@ -428,7 +585,10 @@ function ListEditor({
               <button
                 type="button"
                 onClick={() => onRemove(index)}
-                aria-label="Remove item"
+                aria-label={t(
+                  "aiCenter.behaviorModal.removeItemAria",
+                  "Remove item",
+                )}
               >
                 <Trash2 size={16} />
               </button>

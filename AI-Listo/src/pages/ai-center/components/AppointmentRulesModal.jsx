@@ -10,16 +10,18 @@ import {
   X,
 } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import "./AppointmentRulesModal.css";
 
 const DAYS = [
-  { key: "monday", label: "Mon" },
-  { key: "tuesday", label: "Tue" },
-  { key: "wednesday", label: "Wed" },
-  { key: "thursday", label: "Thu" },
-  { key: "friday", label: "Fri" },
-  { key: "saturday", label: "Sat" },
-  { key: "sunday", label: "Sun" },
+  { key: "monday", label: "Mon", labelKey: "aiCenter.appointmentRulesModal.dayMonday" },
+  { key: "tuesday", label: "Tue", labelKey: "aiCenter.appointmentRulesModal.dayTuesday" },
+  { key: "wednesday", label: "Wed", labelKey: "aiCenter.appointmentRulesModal.dayWednesday" },
+  { key: "thursday", label: "Thu", labelKey: "aiCenter.appointmentRulesModal.dayThursday" },
+  { key: "friday", label: "Fri", labelKey: "aiCenter.appointmentRulesModal.dayFriday" },
+  { key: "saturday", label: "Sat", labelKey: "aiCenter.appointmentRulesModal.daySaturday" },
+  { key: "sunday", label: "Sun", labelKey: "aiCenter.appointmentRulesModal.daySunday" },
 ];
 
 const TIMEZONES = [
@@ -64,6 +66,7 @@ export default function AppointmentRulesModal({
   onClose,
   onSave,
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [question, setQuestion] = useState("");
 
@@ -183,31 +186,54 @@ export default function AppointmentRulesModal({
             </span>
 
             <div>
-              <h2>Appointment Rules</h2>
-              <p>Define when and how your AI Agent can book appointments.</p>
+              <h2>{t("aiCenter.appointmentRulesModal.title", "Appointment Rules")}</h2>
+              <p>
+                {t(
+                  "aiCenter.appointmentRulesModal.subtitle",
+                  "Define when and how your AI Agent can book appointments.",
+                )}
+              </p>
             </div>
           </div>
 
-          <button type="button" onClick={onClose} aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("aiCenter.appointmentRulesModal.close", "Close")}
+          >
             <X size={20} />
           </button>
         </header>
 
         {loading ? (
           <div className="cx-appointment-loading">
-            Loading appointment rules...
+            {t(
+              "aiCenter.appointmentRulesModal.loading",
+              "Loading appointment rules...",
+            )}
           </div>
         ) : (
           <form onSubmit={submit}>
             {error && <div className="cx-appointment-modal-error">{error}</div>}
 
             <section>
-              <h3>Automatic booking</h3>
+              <h3>
+                {t(
+                  "aiCenter.appointmentRulesModal.automaticBookingHeading",
+                  "Automatic booking",
+                )}
+              </h3>
 
               <div className="cx-appointment-toggle-list">
                 <ToggleRow
-                  title="Let the AI book viewings over WhatsApp"
-                  description="When on, the AI offers a time, checks the rules below, and books the appointment automatically. When off, qualified leads are handed to a human to schedule."
+                  title={t(
+                    "aiCenter.appointmentRulesModal.letAiBookTitle",
+                    "Let the AI book viewings over WhatsApp",
+                  )}
+                  description={t(
+                    "aiCenter.appointmentRulesModal.letAiBookDescription",
+                    "When on, the AI offers a time, checks the rules below, and books the appointment automatically. When off, qualified leads are handed to a human to schedule.",
+                  )}
                   active={form.bookingEnabled}
                   onToggle={() =>
                     update("bookingEnabled", !form.bookingEnabled)
@@ -217,11 +243,19 @@ export default function AppointmentRulesModal({
             </section>
 
             <section>
-              <h3>Availability</h3>
+              <h3>
+                {t(
+                  "aiCenter.appointmentRulesModal.availabilityHeading",
+                  "Availability",
+                )}
+              </h3>
 
               <div className="cx-appointment-form-grid">
                 <label className="full">
-                  Working days
+                  {t(
+                    "aiCenter.appointmentRulesModal.workingDaysLabel",
+                    "Working days",
+                  )}
                   <div className="cx-appointment-days">
                     {DAYS.map((day) => {
                       const active = form.workingDays.includes(day.key);
@@ -234,7 +268,7 @@ export default function AppointmentRulesModal({
                           onClick={() => toggleDay(day.key)}
                         >
                           {active && <Check size={14} />}
-                          {day.label}
+                          {t(day.labelKey, day.label)}
                         </button>
                       );
                     })}
@@ -242,7 +276,10 @@ export default function AppointmentRulesModal({
                 </label>
 
                 <label>
-                  Start time
+                  {t(
+                    "aiCenter.appointmentRulesModal.startTimeLabel",
+                    "Start time",
+                  )}
                   <input
                     type="time"
                     value={form.startTime}
@@ -253,7 +290,7 @@ export default function AppointmentRulesModal({
                 </label>
 
                 <label>
-                  End time
+                  {t("aiCenter.appointmentRulesModal.endTimeLabel", "End time")}
                   <input
                     type="time"
                     value={form.endTime}
@@ -262,7 +299,10 @@ export default function AppointmentRulesModal({
                 </label>
 
                 <label>
-                  Timezone
+                  {t(
+                    "aiCenter.appointmentRulesModal.timezoneLabel",
+                    "Timezone",
+                  )}
                   <div className="cx-appointment-input-icon">
                     <Globe2 size={17} />
                     <select
@@ -281,7 +321,10 @@ export default function AppointmentRulesModal({
                 </label>
 
                 <label>
-                  Maximum bookings per day
+                  {t(
+                    "aiCenter.appointmentRulesModal.maxDailyBookingsLabel",
+                    "Maximum bookings per day",
+                  )}
                   <input
                     type="number"
                     min="1"
@@ -296,11 +339,16 @@ export default function AppointmentRulesModal({
             </section>
 
             <section>
-              <h3>Booking settings</h3>
+              <h3>
+                {t(
+                  "aiCenter.appointmentRulesModal.bookingSettingsHeading",
+                  "Booking settings",
+                )}
+              </h3>
 
               <div className="cx-appointment-form-grid three">
                 <label>
-                  Duration
+                  {t("aiCenter.appointmentRulesModal.durationLabel", "Duration")}
                   <select
                     value={form.bookingDuration}
                     onChange={(event) =>
@@ -309,14 +357,21 @@ export default function AppointmentRulesModal({
                   >
                     {[15, 30, 45, 60, 90, 120].map((value) => (
                       <option key={value} value={value}>
-                        {value} minutes
+                        {t(
+                          "aiCenter.appointmentRulesModal.minutesOption",
+                          "{{minutes}} minutes",
+                          { minutes: value },
+                        )}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  Buffer before
+                  {t(
+                    "aiCenter.appointmentRulesModal.bufferBeforeLabel",
+                    "Buffer before",
+                  )}
                   <select
                     value={form.bufferBefore}
                     onChange={(event) =>
@@ -325,14 +380,21 @@ export default function AppointmentRulesModal({
                   >
                     {[0, 5, 10, 15, 30, 45, 60].map((value) => (
                       <option key={value} value={value}>
-                        {value} minutes
+                        {t(
+                          "aiCenter.appointmentRulesModal.minutesOption",
+                          "{{minutes}} minutes",
+                          { minutes: value },
+                        )}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  Buffer after
+                  {t(
+                    "aiCenter.appointmentRulesModal.bufferAfterLabel",
+                    "Buffer after",
+                  )}
                   <select
                     value={form.bufferAfter}
                     onChange={(event) =>
@@ -341,14 +403,18 @@ export default function AppointmentRulesModal({
                   >
                     {[0, 5, 10, 15, 30, 45, 60].map((value) => (
                       <option key={value} value={value}>
-                        {value} minutes
+                        {t(
+                          "aiCenter.appointmentRulesModal.minutesOption",
+                          "{{minutes}} minutes",
+                          { minutes: value },
+                        )}
                       </option>
                     ))}
                   </select>
                 </label>
 
                 <label>
-                  Reminder
+                  {t("aiCenter.appointmentRulesModal.reminderLabel", "Reminder")}
                   <div className="cx-appointment-input-icon">
                     <Clock3 size={17} />
                     <select
@@ -360,10 +426,20 @@ export default function AppointmentRulesModal({
                       {[0, 15, 30, 60, 120, 1440].map((value) => (
                         <option key={value} value={value}>
                           {value === 0
-                            ? "No reminder"
+                            ? t(
+                                "aiCenter.appointmentRulesModal.noReminder",
+                                "No reminder",
+                              )
                             : value === 1440
-                              ? "1 day before"
-                              : `${value} minutes before`}
+                              ? t(
+                                  "aiCenter.appointmentRulesModal.oneDayBefore",
+                                  "1 day before",
+                                )
+                              : t(
+                                  "aiCenter.appointmentRulesModal.minutesBefore",
+                                  "{{minutes}} minutes before",
+                                  { minutes: value },
+                                )}
                         </option>
                       ))}
                     </select>
@@ -373,19 +449,36 @@ export default function AppointmentRulesModal({
             </section>
 
             <section>
-              <h3>Approval & automation</h3>
+              <h3>
+                {t(
+                  "aiCenter.appointmentRulesModal.approvalHeading",
+                  "Approval & automation",
+                )}
+              </h3>
 
               <div className="cx-appointment-toggle-list">
                 <ToggleRow
-                  title="Auto confirm appointments"
-                  description="Confirm appointments immediately when a valid slot is available."
+                  title={t(
+                    "aiCenter.appointmentRulesModal.autoConfirmTitle",
+                    "Auto confirm appointments",
+                  )}
+                  description={t(
+                    "aiCenter.appointmentRulesModal.autoConfirmDescription",
+                    "Confirm appointments immediately when a valid slot is available.",
+                  )}
                   active={form.autoConfirm}
                   onToggle={() => update("autoConfirm", !form.autoConfirm)}
                 />
 
                 <ToggleRow
-                  title="Require human approval"
-                  description="Keep appointments pending until a team member approves them."
+                  title={t(
+                    "aiCenter.appointmentRulesModal.requireApprovalTitle",
+                    "Require human approval",
+                  )}
+                  description={t(
+                    "aiCenter.appointmentRulesModal.requireApprovalDescription",
+                    "Keep appointments pending until a team member approves them.",
+                  )}
                   active={form.requireHumanApproval}
                   onToggle={() =>
                     update("requireHumanApproval", !form.requireHumanApproval)
@@ -394,7 +487,10 @@ export default function AppointmentRulesModal({
 
                 <ToggleRow
                   title="Google Calendar"
-                  description="Allow AI to use your connected Google Calendar."
+                  description={t(
+                    "aiCenter.appointmentRulesModal.googleCalendarDescription",
+                    "Allow AI to use your connected Google Calendar.",
+                  )}
                   active={form.googleCalendarEnabled}
                   onToggle={() =>
                     update("googleCalendarEnabled", !form.googleCalendarEnabled)
@@ -403,7 +499,10 @@ export default function AppointmentRulesModal({
 
                 <ToggleRow
                   title="Outlook Calendar"
-                  description="Allow AI to use your connected Outlook Calendar."
+                  description={t(
+                    "aiCenter.appointmentRulesModal.outlookCalendarDescription",
+                    "Allow AI to use your connected Outlook Calendar.",
+                  )}
                   active={form.outlookCalendarEnabled}
                   onToggle={() =>
                     update(
@@ -416,7 +515,12 @@ export default function AppointmentRulesModal({
             </section>
 
             <section>
-              <h3>Lead intake questions</h3>
+              <h3>
+                {t(
+                  "aiCenter.appointmentRulesModal.leadIntakeHeading",
+                  "Lead intake questions",
+                )}
+              </h3>
 
               <div className="cx-appointment-question-add">
                 <input
@@ -428,20 +532,26 @@ export default function AppointmentRulesModal({
                       addQuestion();
                     }
                   }}
-                  placeholder="Example: Which property would you like to view?"
+                  placeholder={t(
+                    "aiCenter.appointmentRulesModal.questionPlaceholder",
+                    "Example: Which property would you like to view?",
+                  )}
                   maxLength={250}
                 />
 
                 <button type="button" onClick={addQuestion}>
                   <Plus size={16} />
-                  Add
+                  {t("aiCenter.appointmentRulesModal.addButton", "Add")}
                 </button>
               </div>
 
               <div className="cx-appointment-question-list">
                 {form.intakeQuestions.length === 0 ? (
                   <p className="cx-appointment-empty">
-                    No custom intake questions added.
+                    {t(
+                      "aiCenter.appointmentRulesModal.noQuestions",
+                      "No custom intake questions added.",
+                    )}
                   </p>
                 ) : (
                   form.intakeQuestions.map((item, index) => (
@@ -451,7 +561,10 @@ export default function AppointmentRulesModal({
                       <button
                         type="button"
                         onClick={() => removeQuestion(index)}
-                        aria-label="Remove question"
+                        aria-label={t(
+                          "aiCenter.appointmentRulesModal.removeQuestion",
+                          "Remove question",
+                        )}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -466,11 +579,17 @@ export default function AppointmentRulesModal({
                 {canSave ? (
                   <span className="complete">
                     <Check size={16} />
-                    Appointment rules are ready
+                    {t(
+                      "aiCenter.appointmentRulesModal.rulesReady",
+                      "Appointment rules are ready",
+                    )}
                   </span>
                 ) : (
                   <span>
-                    Select working days and a valid availability range.
+                    {t(
+                      "aiCenter.appointmentRulesModal.selectDaysHint",
+                      "Select working days and a valid availability range.",
+                    )}
                   </span>
                 )}
               </div>
@@ -481,7 +600,7 @@ export default function AppointmentRulesModal({
                 onClick={onClose}
                 disabled={saving}
               >
-                Cancel
+                {t("aiCenter.appointmentRulesModal.cancelButton", "Cancel")}
               </button>
 
               <button
@@ -490,7 +609,12 @@ export default function AppointmentRulesModal({
                 disabled={!canSave || saving}
               >
                 <Save size={16} />
-                {saving ? "Saving..." : "Save Appointment Rules"}
+                {saving
+                  ? t("aiCenter.appointmentRulesModal.saving", "Saving...")
+                  : t(
+                      "aiCenter.appointmentRulesModal.saveButton",
+                      "Save Appointment Rules",
+                    )}
               </button>
             </footer>
           </form>
