@@ -66,8 +66,14 @@ export default function LanguageAutoDetect() {
     // on the English root.
     if (primary === "en" || !SUPPORTED_CODES.includes(primary)) return;
 
-    navigate(buildLocalizedPath("/", primary), { replace: true });
-  }, [location.pathname, navigate]);
+    // Preserve the query string and hash across the redirect so ad-tracking
+    // params (utm_*, gclid) and one-off flags (?exitoffer=...) are not lost when
+    // a Spanish/Portuguese visitor is moved from "/" to "/es" or "/pt".
+    navigate(
+      buildLocalizedPath("/", primary) + location.search + location.hash,
+      { replace: true },
+    );
+  }, [location.pathname, location.search, location.hash, navigate]);
 
   return null;
 }
