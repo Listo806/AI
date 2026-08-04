@@ -51,7 +51,7 @@ export default function PlatformListings() {
       const data = await getMyPlatformListings();
       setListings(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || 'Failed to load listings');
+      setError(err.message || t('platform.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function PlatformListings() {
         yearBuilt: formData.yearBuilt ? parseInt(formData.yearBuilt) : null,
       };
       await createPlatformListing(submitData);
-      showSuccess('Listing submitted! It will be reviewed before publishing.');
+      showSuccess(t('platform.listingSubmitted'));
       setFormData({
         title: '',
         description: '',
@@ -102,14 +102,14 @@ export default function PlatformListings() {
       setShowForm(false);
       loadListings();
     } catch (err) {
-      showError(err.message || 'Failed to submit listing');
+      showError(err.message || t('platform.failedToSubmit'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('platform.na');
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -118,7 +118,7 @@ export default function PlatformListings() {
   };
 
   const formatPrice = (price) => {
-    if (!price) return 'N/A';
+    if (!price) return t('platform.na');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -128,10 +128,10 @@ export default function PlatformListings() {
 
   const getStatusLabel = (status) => {
     const map = {
-      pending_review: 'Pending Review',
-      approved: 'Approved',
-      rejected: 'Rejected',
-      published: 'Published',
+      pending_review: t('platform.statusPendingReview'),
+      approved: t('platform.statusApproved'),
+      rejected: t('platform.statusRejected'),
+      published: t('properties.published'),
     };
     return map[status] || status;
   };
@@ -149,7 +149,7 @@ export default function PlatformListings() {
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
+        <div>{t('common.loading')}</div>
       </div>
     );
   }
@@ -159,25 +159,25 @@ export default function PlatformListings() {
   return (
     <div className="platform-page">
       <div className="platform-header">
-        <h1>Marketplace Listings</h1>
+        <h1>{t('platform.marketplaceListings')}</h1>
         <p className="platform-subtitle">
-          Submit listings to the marketplace. They will be reviewed before appearing on the public site.
+          {t('platform.subtitle')}
         </p>
         <button
           type="button"
           className="crm-btn crm-btn-primary"
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? 'Cancel' : '+ Submit Listing'}
+          {showForm ? t('common.cancel') : t('platform.submitListing')}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={handleSubmit} className="platform-form crm-form">
-          <h3>New Listing</h3>
+          <h3>{t('platform.newListing')}</h3>
           <div className="crm-form-section">
             <div className="crm-form-field">
-              <label htmlFor="title">Title *</label>
+              <label htmlFor="title">{t('properties.titleRequired')}</label>
               <input
                 id="title"
                 name="title"
@@ -189,7 +189,7 @@ export default function PlatformListings() {
               />
             </div>
             <div className="crm-form-field">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="description">{t('properties.description')}</label>
               <textarea
                 id="description"
                 name="description"
@@ -201,7 +201,7 @@ export default function PlatformListings() {
             </div>
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="type">Type *</label>
+                <label htmlFor="type">{t('properties.type')}</label>
                 <select
                   id="type"
                   name="type"
@@ -210,12 +210,12 @@ export default function PlatformListings() {
                   required
                   disabled={submitting}
                 >
-                  <option value="sale">For Sale</option>
-                  <option value="rent">For Rent</option>
+                  <option value="sale">{t('properties.forSale')}</option>
+                  <option value="rent">{t('properties.forRent')}</option>
                 </select>
               </div>
               <div className="crm-form-field">
-                <label htmlFor="price">Price</label>
+                <label htmlFor="price">{t('properties.price')}</label>
                 <input
                   id="price"
                   name="price"
@@ -229,7 +229,7 @@ export default function PlatformListings() {
               </div>
             </div>
             <div className="crm-form-field">
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">{t('properties.address')}</label>
               <input
                 id="address"
                 name="address"
@@ -241,7 +241,7 @@ export default function PlatformListings() {
             </div>
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="city">City</label>
+                <label htmlFor="city">{t('properties.city')}</label>
                 <input
                   id="city"
                   name="city"
@@ -252,7 +252,7 @@ export default function PlatformListings() {
                 />
               </div>
               <div className="crm-form-field">
-                <label htmlFor="state">State</label>
+                <label htmlFor="state">{t('properties.state')}</label>
                 <input
                   id="state"
                   name="state"
@@ -263,7 +263,7 @@ export default function PlatformListings() {
                 />
               </div>
               <div className="crm-form-field">
-                <label htmlFor="zipCode">ZIP</label>
+                <label htmlFor="zipCode">{t('platform.zip')}</label>
                 <input
                   id="zipCode"
                   name="zipCode"
@@ -276,7 +276,7 @@ export default function PlatformListings() {
             </div>
             <div className="crm-form-row">
               <div className="crm-form-field">
-                <label htmlFor="bedrooms">Bedrooms</label>
+                <label htmlFor="bedrooms">{t('properties.bedrooms')}</label>
                 <input
                   id="bedrooms"
                   name="bedrooms"
@@ -288,7 +288,7 @@ export default function PlatformListings() {
                 />
               </div>
               <div className="crm-form-field">
-                <label htmlFor="bathrooms">Bathrooms</label>
+                <label htmlFor="bathrooms">{t('properties.bathrooms')}</label>
                 <input
                   id="bathrooms"
                   name="bathrooms"
@@ -301,7 +301,7 @@ export default function PlatformListings() {
                 />
               </div>
               <div className="crm-form-field">
-                <label htmlFor="squareFeet">Sq Ft</label>
+                <label htmlFor="squareFeet">{t('platform.sqFt')}</label>
                 <input
                   id="squareFeet"
                   name="squareFeet"
@@ -316,10 +316,10 @@ export default function PlatformListings() {
           </div>
           <div className="crm-form-actions">
             <button type="button" className="crm-btn crm-btn-secondary" onClick={() => setShowForm(false)} disabled={submitting}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="crm-btn crm-btn-primary" disabled={submitting}>
-              {submitting ? 'Submitting...' : 'Submit for Review'}
+              {submitting ? t('platform.submitting') : t('platform.submitForReview')}
             </button>
           </div>
         </form>
@@ -327,7 +327,7 @@ export default function PlatformListings() {
 
       {error && <div className="crm-error">{error}</div>}
 
-      <h2 style={{ marginTop: '24px', marginBottom: '16px' }}>My Submissions</h2>
+      <h2 style={{ marginTop: '24px', marginBottom: '16px' }}>{t('platform.mySubmissions')}</h2>
       {loading ? (
         <div className="crm-loading">
           <div className="crm-skeleton"></div>
@@ -336,7 +336,7 @@ export default function PlatformListings() {
         </div>
       ) : listings.length === 0 ? (
         <div className="properties-empty">
-          No listings yet. Submit your first listing above.
+          {t('platform.noListings')}
         </div>
       ) : (
         <div className="properties-grid">
@@ -346,7 +346,7 @@ export default function PlatformListings() {
               <div key={item.id} className={`property-card ${statusClass}`}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '12px' }}>
                   <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, flex: 1 }}>
-                    {item.title || 'Untitled'}
+                    {item.title || t('platform.untitled')}
                   </h3>
                   <span className={`property-status ${statusClass}`}>{getStatusLabel(item.status)}</span>
                 </div>
@@ -357,21 +357,21 @@ export default function PlatformListings() {
                   {item.zipCode && ` ${item.zipCode}`}
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 16px', marginBottom: '10px', fontSize: '12px', color: 'var(--property-text-muted, rgba(255,255,255,0.7))' }}>
-                  {item.price && <span><strong>Price:</strong> {formatPrice(item.price)}</span>}
-                  {item.bedrooms && <span><strong>Beds:</strong> {item.bedrooms}</span>}
-                  {item.bathrooms && <span><strong>Baths:</strong> {item.bathrooms}</span>}
-                  {item.squareFeet && <span><strong>Sq Ft:</strong> {item.squareFeet.toLocaleString()}</span>}
+                  {item.price && <span><strong>{t('properties.price')}:</strong> {formatPrice(item.price)}</span>}
+                  {item.bedrooms && <span><strong>{t('platform.beds')}:</strong> {item.bedrooms}</span>}
+                  {item.bathrooms && <span><strong>{t('platform.baths')}:</strong> {item.bathrooms}</span>}
+                  {item.squareFeet && <span><strong>{t('platform.sqFt')}:</strong> {item.squareFeet.toLocaleString()}</span>}
                 </div>
                 <div className="property-meta" style={{ fontSize: '11px' }}>
-                  Submitted {formatDate(item.createdAt)}
+                  {t('platform.submittedOn', { date: formatDate(item.createdAt) })}
                   {item.rejectionReason && (
                     <div style={{ marginTop: '8px', color: 'var(--status-archived)' }}>
-                      Rejection: {item.rejectionReason}
+                      {t('platform.rejection', { reason: item.rejectionReason })}
                     </div>
                   )}
                 </div>
                 <Link to={`/listings/${item.id}`} className="crm-btn crm-btn-secondary" style={{ marginTop: '12px', display: 'inline-block', width: '100%', textAlign: 'center' }}>
-                  View on Marketplace
+                  {t('platform.viewOnMarketplace')}
                 </Link>
               </div>
             );
