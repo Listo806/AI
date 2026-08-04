@@ -700,9 +700,7 @@ export default function EditorialBusinessAI() {
             <section className="ed-section ed-team-workspace-section" id="team-workspace">
               <span className="ed-section-kicker">Team Workspace</span>
               <h2>
-                One Team. One Workspace.
-                <br />
-                One Connected Business.
+                The Future of Team Collaboration
               </h2>
 
               <div className="ed-team-workspace-rule" aria-hidden="true" />

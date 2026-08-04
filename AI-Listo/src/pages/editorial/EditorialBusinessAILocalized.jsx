@@ -218,7 +218,7 @@ const COPY = {
         "Ya seas una pequeña empresa, una compañía en crecimiento o una organización establecida, la IA puede ayudarte a responder más rápido, operar con mayor eficiencia y crear relaciones más sólidas con tus clientes.",
       ],
       teamKicker: "Espacio de trabajo del equipo",
-      teamTitle: "Un equipo. Un espacio de trabajo. Un negocio conectado.",
+      teamTitle: "El Futuro de la Colaboración en Equipo",
       teamIntro: [
         "Las empresas en crecimiento necesitan más que un CRM.",
         "Necesitan un espacio de trabajo compartido donde cada departamento pueda colaborar sin cambiar entre herramientas desconectadas, hojas de cálculo, correos electrónicos, calendarios y múltiples aplicaciones.",
@@ -450,7 +450,7 @@ const COPY = {
         "Seja você uma pequena empresa, uma companhia em crescimento ou uma organização estabelecida, a IA pode ajudar a responder mais rápido, operar com mais eficiência e criar relacionamentos mais fortes com os clientes.",
       ],
       teamKicker: "Workspace da equipe",
-      teamTitle: "Uma equipe. Um workspace. Um negócio conectado.",
+      teamTitle: "O Futuro da Colaboração em Equipe",
       teamIntro: [
         "Empresas em crescimento precisam de mais do que um CRM.",
         "Elas precisam de um workspace compartilhado onde todos os departamentos possam colaborar sem alternar entre ferramentas desconectadas, planilhas, e-mails, calendários e vários aplicativos.",
