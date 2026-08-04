@@ -1840,7 +1840,10 @@ figcaption {
 .ed-ai-cta-card.is-bottom .ed-cta-benefits li {
   margin: 0;
 }
-
+.cmp-brand.cmp-brand-cortexa img{
+    width: 65%;
+    margin-top: 0px;
+ }
 @media (max-width: 760px) {
 
   .ed-ai-opportunity-list,
@@ -1963,8 +1966,5 @@ figcaption {
  .cmp-value-cortexa {
     font-size: 10px;
  }
- .cmp-brand.cmp-brand-cortexa img{
-    width: 65%;
-    margin-top: 0px;
- }
+ 
 }
