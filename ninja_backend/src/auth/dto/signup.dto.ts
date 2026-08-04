@@ -1,5 +1,12 @@
-import { IsString, IsNotEmpty, IsEmail, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsIn,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class SignupDto {
@@ -17,5 +24,14 @@ export class SignupDto {
   @IsEnum(UserRole)
   @IsNotEmpty()
   role: UserRole;
+
+  @ApiPropertyOptional({
+    example: 'es',
+    description: 'Preferred language for localized emails and UI (en, es, pt)',
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['en', 'es', 'pt'])
+  language?: string;
 }
 

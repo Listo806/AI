@@ -4,19 +4,42 @@ import { User, UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
+  private lifecycleColsReady = false;
+
   constructor(private readonly db: DatabaseService) {}
+
+  // Self-healing: the email/language columns ship in migration 101 but migrations
+  // are not auto-run here, so ensure they exist before we write to them.
+  private async ensureLifecycleColumns(): Promise<void> {
+    if (this.lifecycleColsReady) return;
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(5) DEFAULT 'en'`,
+    );
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS welcome_email_sent_at TIMESTAMPTZ`,
+    );
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS abandoned_email_sent_at TIMESTAMPTZ`,
+    );
+    this.lifecycleColsReady = true;
+  }
 
   async create(data: {
     email: string;
     password: string;
     role: UserRole;
     teamId?: string | null;
+    preferredLanguage?: string | null;
   }): Promise<User> {
+    await this.ensureLifecycleColumns();
+    const lang = ['en', 'es', 'pt'].includes(String(data.preferredLanguage))
+      ? data.preferredLanguage
+      : 'en';
     const { rows } = await this.db.query(
-      `INSERT INTO users (email, password, role, team_id, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, true, NOW(), NOW())
+      `INSERT INTO users (email, password, role, team_id, preferred_language, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
        RETURNING id, email, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"`,
-      [data.email, data.password, data.role, data.teamId || null],
+      [data.email, data.password, data.role, data.teamId || null, lang],
     );
     return rows[0];
   }

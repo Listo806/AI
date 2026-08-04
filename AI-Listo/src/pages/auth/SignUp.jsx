@@ -13,7 +13,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function SignUp() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
@@ -26,9 +26,14 @@ export default function SignUp() {
     setLoading(true);
 
     try {
+      // Send the current UI language so the backend stores it for localized
+      // lifecycle emails (welcome / abandoned-signup). Only en/es/pt are valid;
+      // anything else is dropped and the backend defaults to English.
+      const lang = (i18n.language || 'en').slice(0, 2).toLowerCase();
+      const language = ['en', 'es', 'pt'].includes(lang) ? lang : 'en';
       const res = await apiClient.request('/auth/signup', {
         method: 'POST',
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password, role, language }),
       });
 
       if (res.accessToken) {
