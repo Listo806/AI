@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../context/NotificationContext';
 import webhooksApi from '../../api/webhooksApi';
 
 const SUPPORTED_EVENTS = [
-  { value: 'lead.created', label: 'Lead Created', desc: 'Fires when a new lead is added to the CRM' },
-  { value: 'lead.status.changed', label: 'Lead Status Changed', desc: 'Fires when a lead status is updated' },
-  { value: 'lead.qualified', label: 'Lead Qualified', desc: 'Fires when a lead becomes qualified' },
-  { value: 'property.created', label: 'Property Created', desc: 'Fires when a new property is listed' },
+  { value: 'lead.created', labelKey: 'zapier.eventLeadCreatedLabel', descKey: 'zapier.eventLeadCreatedDesc' },
+  { value: 'lead.status.changed', labelKey: 'zapier.eventLeadStatusChangedLabel', descKey: 'zapier.eventLeadStatusChangedDesc' },
+  { value: 'lead.qualified', labelKey: 'zapier.eventLeadQualifiedLabel', descKey: 'zapier.eventLeadQualifiedDesc' },
+  { value: 'property.created', labelKey: 'zapier.eventPropertyCreatedLabel', descKey: 'zapier.eventPropertyCreatedDesc' },
 ];
 
 export default function ZapierPage() {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
 
   const [zapierHooks, setZapierHooks] = useState([]);
@@ -75,12 +77,12 @@ export default function ZapierPage() {
   };
 
   const handleSave = async () => {
-    if (!formUrl.trim()) { showError('Zapier webhook URL is required'); return; }
+    if (!formUrl.trim()) { showError(t('integrations.zapierPage.urlRequired')); return; }
     if (!formUrl.includes('zapier.com') && !formUrl.includes('hooks.zapier.com')) {
-      showError('Please enter a valid Zapier webhook URL (from "Webhooks by Zapier")');
+      showError(t('integrations.zapierPage.invalidUrl'));
       return;
     }
-    if (formEvents.length === 0) { showError('Select at least one event'); return; }
+    if (formEvents.length === 0) { showError(t('integrations.zapierPage.selectEvent')); return; }
 
     setSaving(true);
     try {
@@ -88,16 +90,16 @@ export default function ZapierPage() {
 
       if (editingHook) {
         await webhooksApi.updateWebhook(editingHook.id, payload);
-        showSuccess('Zapier connection updated');
+        showSuccess(t('integrations.zapierPage.connectionUpdated'));
       } else {
         await webhooksApi.createWebhook(payload);
-        showSuccess('Zapier connected');
+        showSuccess(t('integrations.zapierPage.connected'));
       }
 
       closeForm();
       await fetchHooks();
     } catch (err) {
-      showError(err.message || 'Failed to save Zapier connection');
+      showError(err.message || t('integrations.zapierPage.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -110,18 +112,18 @@ export default function ZapierPage() {
       await webhooksApi.toggleWebhook(id);
       await fetchHooks();
     } catch (err) {
-      showError('Failed to toggle connection');
+      showError(t('integrations.zapierPage.toggleFailed'));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Disconnect this Zapier integration?')) return;
+    if (!confirm(t('integrations.zapierPage.disconnectConfirm'))) return;
     try {
       await webhooksApi.deleteWebhook(id);
-      showSuccess('Zapier disconnected');
+      showSuccess(t('integrations.zapierPage.disconnected'));
       await fetchHooks();
     } catch (err) {
-      showError('Failed to disconnect');
+      showError(t('integrations.zapierPage.disconnectFailed'));
     }
   };
 
@@ -130,12 +132,12 @@ export default function ZapierPage() {
     try {
       const result = await webhooksApi.testWebhook(id);
       if (result.success) {
-        showSuccess('Test event sent to Zapier — check your Zap history');
+        showSuccess(t('integrations.zapierPage.testSent'));
       } else {
-        showError(`Test failed: ${result.errorMessage || 'Unknown error'}`);
+        showError(t('integrations.zapierPage.testFailed', { error: result.errorMessage || t('integrations.zapierPage.unknownError') }));
       }
     } catch (err) {
-      showError('Failed to send test event');
+      showError(t('integrations.zapierPage.testSendFailed'));
     } finally {
       setTestingId(null);
     }
@@ -144,28 +146,27 @@ export default function ZapierPage() {
   // ── Render ─────────────────────────────────────────────────────────
 
   if (loading) {
-    return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading...</div>;
+    return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>{t('integrations.zapierPage.loading')}</div>;
   }
 
   return (
     <div>
       <h1 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '8px' }}>Zapier</h1>
       <p style={{ marginBottom: '32px', fontSize: '14px', color: '#64748b', lineHeight: 1.6 }}>
-        Connect your CRM to 5,000+ apps through Zapier. When events happen in your CRM,
-        Zapier can automatically send data to Gmail, Slack, Google Sheets, and more.
+        {t('integrations.zapierPage.intro')}
       </p>
 
       {/* How It Works */}
       <div className="crm-section" style={{ padding: '24px', marginBottom: '24px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px', color: 'var(--text, #1e293b)' }}>
-          How to Connect
+          {t('integrations.zapierPage.howToConnect')}
         </h3>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {[
-            { step: '1', text: 'Go to zapier.com and create a new Zap' },
-            { step: '2', text: 'Choose "Webhooks by Zapier" as the trigger' },
-            { step: '3', text: 'Select "Catch Hook" and copy the URL' },
-            { step: '4', text: 'Paste the URL below and select your events' },
+            { step: '1', text: t('integrations.zapierPage.step1') },
+            { step: '2', text: t('integrations.zapierPage.step2') },
+            { step: '3', text: t('integrations.zapierPage.step3') },
+            { step: '4', text: t('integrations.zapierPage.step4') },
           ].map((s) => (
             <div key={s.step} style={{
               flex: '1 1 200px', padding: '16px', background: '#f8fafc',
@@ -187,11 +188,11 @@ export default function ZapierPage() {
       {/* Connections */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--text, #1e293b)' }}>
-          Your Connections {zapierHooks.length > 0 && <span style={{ fontWeight: 400, color: '#94a3b8' }}>({zapierHooks.length})</span>}
+          {t('integrations.zapierPage.yourConnections')} {zapierHooks.length > 0 && <span style={{ fontWeight: 400, color: '#94a3b8' }}>({zapierHooks.length})</span>}
         </h3>
         <button className="crm-btn crm-btn-primary" onClick={openAddForm}
           style={{ padding: '10px 20px' }}>
-          + Connect Zapier
+          + {t('integrations.zapierPage.connectZapier')}
         </button>
       </div>
 
@@ -204,8 +205,8 @@ export default function ZapierPage() {
           }}>
             &#x26A1;
           </div>
-          <p style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px', color: '#64748b' }}>No Zapier connections yet</p>
-          <p style={{ fontSize: '14px', marginBottom: '16px' }}>Click "Connect Zapier" to set up your first automation.</p>
+          <p style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px', color: '#64748b' }}>{t('integrations.zapierPage.noConnections')}</p>
+          <p style={{ fontSize: '14px', marginBottom: '16px' }}>{t('integrations.zapierPage.noConnectionsHint')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -219,14 +220,14 @@ export default function ZapierPage() {
                       background: hook.isActive ? '#22c55e' : '#94a3b8', flexShrink: 0,
                     }} />
                     <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text, #1e293b)' }}>
-                      Zapier Webhook
+                      {t('integrations.zapierPage.webhookLabel')}
                     </span>
                     <span style={{
                       padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 600,
                       background: hook.isActive ? '#f0fdf4' : '#f1f5f9',
                       color: hook.isActive ? '#16a34a' : '#94a3b8',
                     }}>
-                      {hook.isActive ? 'Active' : 'Inactive'}
+                      {hook.isActive ? t('integrations.zapierPage.active') : t('integrations.zapierPage.inactive')}
                     </span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px', wordBreak: 'break-all' }}>
@@ -248,19 +249,19 @@ export default function ZapierPage() {
                   <button className="crm-btn crm-btn-secondary" onClick={() => handleTest(hook.id)}
                     disabled={testingId === hook.id}
                     style={{ padding: '6px 12px', fontSize: '13px' }}>
-                    {testingId === hook.id ? 'Sending...' : 'Send Test'}
+                    {testingId === hook.id ? t('integrations.zapierPage.sending') : t('integrations.zapierPage.sendTest')}
                   </button>
                   <button className="crm-btn crm-btn-secondary" onClick={() => handleToggle(hook.id)}
                     style={{ padding: '6px 12px', fontSize: '13px' }}>
-                    {hook.isActive ? 'Pause' : 'Resume'}
+                    {hook.isActive ? t('integrations.zapierPage.pause') : t('integrations.zapierPage.resume')}
                   </button>
                   <button className="crm-btn crm-btn-secondary" onClick={() => openEditForm(hook)}
                     style={{ padding: '6px 12px', fontSize: '13px' }}>
-                    Edit
+                    {t('integrations.zapierPage.edit')}
                   </button>
                   <button className="crm-btn crm-btn-secondary" onClick={() => handleDelete(hook.id)}
                     style={{ padding: '6px 12px', fontSize: '13px', color: '#ef4444' }}>
-                    Disconnect
+                    {t('integrations.zapierPage.disconnect')}
                   </button>
                 </div>
               </div>
@@ -281,16 +282,16 @@ export default function ZapierPage() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h2 style={{ margin: '0 0 8px', fontSize: '20px', fontWeight: 600 }}>
-              {editingHook ? 'Edit Zapier Connection' : 'Connect Zapier'}
+              {editingHook ? t('integrations.zapierPage.editConnectionTitle') : t('integrations.zapierPage.connectZapier')}
             </h2>
             <p style={{ margin: '0 0 24px', fontSize: '13px', color: '#94a3b8' }}>
-              Paste the webhook URL from your Zapier "Catch Hook" trigger.
+              {t('integrations.zapierPage.formSubtitle')}
             </p>
 
             {/* URL */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text, #334155)' }}>
-                Zapier Webhook URL
+                {t('integrations.zapierPage.webhookUrlLabel')}
               </label>
               <input
                 type="url"
@@ -305,7 +306,7 @@ export default function ZapierPage() {
             {/* Events */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '10px', color: 'var(--text, #334155)' }}>
-                Which events should trigger this Zap?
+                {t('integrations.zapierPage.whichEvents')}
               </label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {SUPPORTED_EVENTS.map((ev) => (
@@ -322,8 +323,8 @@ export default function ZapierPage() {
                       style={{ width: '16px', height: '16px', accentColor: '#2563eb', marginTop: '2px' }}
                     />
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text, #334155)' }}>{ev.label}</div>
-                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{ev.desc}</div>
+                      <div style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text, #334155)' }}>{t(`integrations.${ev.labelKey}`)}</div>
+                      <div style={{ fontSize: '12px', color: '#94a3b8' }}>{t(`integrations.${ev.descKey}`)}</div>
                     </div>
                   </label>
                 ))}
@@ -339,18 +340,18 @@ export default function ZapierPage() {
                   onChange={(e) => setFormActive(e.target.checked)}
                   style={{ width: '16px', height: '16px', accentColor: '#22c55e' }}
                 />
-                Active
+                {t('integrations.zapierPage.active')}
               </label>
             </div>
 
             {/* Buttons */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <button className="crm-btn crm-btn-secondary" onClick={closeForm} style={{ padding: '10px 20px' }}>
-                Cancel
+                {t('integrations.zapierPage.cancel')}
               </button>
               <button className="crm-btn crm-btn-primary" onClick={handleSave} disabled={saving}
                 style={{ padding: '10px 24px' }}>
-                {saving ? 'Saving...' : editingHook ? 'Update' : 'Connect'}
+                {saving ? t('integrations.zapierPage.saving') : editingHook ? t('integrations.zapierPage.update') : t('integrations.connect')}
               </button>
             </div>
           </div>

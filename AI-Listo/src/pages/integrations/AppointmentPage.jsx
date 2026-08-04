@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 
 export default function AppointmentIntegrationPage() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
@@ -86,18 +88,18 @@ export default function AppointmentIntegrationPage() {
         },
       );
 
-      showToast("Appointment settings saved");
+      showToast(t("integrations.appointment.settingsSaved"));
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to save appointment settings");
+      showToast(t("integrations.appointment.saveFailed"));
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return <div style={{ padding: 40 }}>Loading...</div>;
+    return <div style={{ padding: 40 }}>{t("integrations.appointment.loading")}</div>;
   }
 
   return (
@@ -125,7 +127,7 @@ export default function AppointmentIntegrationPage() {
             marginBottom: 10,
           }}
         >
-          Appointment Settings
+          {t("integrations.appointment.title")}
         </h1>
 
         <p
@@ -134,7 +136,7 @@ export default function AppointmentIntegrationPage() {
             marginBottom: 30,
           }}
         >
-          Configure how appointments will work for your team. Automated scheduling of calls, meetings, and property tours with qualified leads is coming soon.
+          {t("integrations.appointment.description")}
         </p>
 
         <div
@@ -145,7 +147,7 @@ export default function AppointmentIntegrationPage() {
           }}
         >
           <div>
-            <div style={label}>Calendar Provider</div>
+            <div style={label}>{t("integrations.appointment.calendarProvider")}</div>
 
             <select
               style={input}
@@ -164,7 +166,7 @@ export default function AppointmentIntegrationPage() {
           </div>
 
           <div>
-            <div style={label}>Meeting Duration</div>
+            <div style={label}>{t("integrations.appointment.meetingDuration")}</div>
 
             <input
               type="number"
@@ -180,7 +182,7 @@ export default function AppointmentIntegrationPage() {
           </div>
 
           <div>
-            <div style={label}>Buffer Between Meetings</div>
+            <div style={label}>{t("integrations.appointment.bufferBetweenMeetings")}</div>
 
             <input
               type="number"
@@ -196,7 +198,7 @@ export default function AppointmentIntegrationPage() {
           </div>
 
           <div>
-            <div style={label}>Timezone</div>
+            <div style={label}>{t("integrations.appointment.timezone")}</div>
 
             <input
               style={input}
@@ -215,7 +217,7 @@ export default function AppointmentIntegrationPage() {
               gridColumn: "1 / -1",
             }}
           >
-            <div style={label}>Notification Email</div>
+            <div style={label}>{t("integrations.appointment.notificationEmail")}</div>
 
             <input
               style={input}
@@ -241,7 +243,7 @@ export default function AppointmentIntegrationPage() {
               }
             />
 
-            Enable appointment booking (coming soon)
+            {t("integrations.appointment.enableBooking")}
           </label>
 
           <label style={checkboxRow}>
@@ -257,7 +259,7 @@ export default function AppointmentIntegrationPage() {
               }
             />
 
-            Enable property tours
+            {t("integrations.appointment.enablePropertyTours")}
           </label>
 
           <label style={checkboxRow}>
@@ -272,7 +274,7 @@ export default function AppointmentIntegrationPage() {
               }
             />
 
-            Auto assign available agent
+            {t("integrations.appointment.autoAssignAgent")}
           </label>
         </div>
 
@@ -290,7 +292,7 @@ export default function AppointmentIntegrationPage() {
             cursor: "pointer",
           }}
         >
-          {saving ? "Saving..." : "Save Settings"}
+          {saving ? t("integrations.appointment.saving") : t("integrations.appointment.saveSettings")}
         </button>
       </div>
        {toast && (

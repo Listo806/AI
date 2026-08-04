@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
 export default function ApiAccessPage() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
 
   const [apiKey, setApiKey] = useState(null);
@@ -53,11 +55,11 @@ export default function ApiAccessPage() {
 
       setApiKey(res);
 
-      showToast("API key generated successfully");
+      showToast(t("integrations.apiAccess.keyGenerated"));
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to generate API key", "error");
+      showToast(t("integrations.apiAccess.keyGenerateFailed"), "error");
     }
   };
 
@@ -71,11 +73,11 @@ export default function ApiAccessPage() {
 
       setConfirmOpen(false);
 
-      showToast("API key revoked");
+      showToast(t("integrations.apiAccess.keyRevoked"));
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to revoke API key", "error");
+      showToast(t("integrations.apiAccess.keyRevokeFailed"), "error");
     }
   };
 
@@ -83,14 +85,14 @@ export default function ApiAccessPage() {
     try {
       await navigator.clipboard.writeText(apiKey.api_key);
 
-      showToast("API key copied", "success");
+      showToast(t("integrations.apiAccess.keyCopied"), "success");
     } catch (err) {
-      showToast("Failed to copy API key", "error");
+      showToast(t("integrations.apiAccess.keyCopyFailed"), "error");
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t("common.loading")}</div>;
   }
 
   return (
@@ -108,15 +110,13 @@ export default function ApiAccessPage() {
         }}
       >
         <div style={card}>
-          <h1 style={title}>API Access</h1>
+          <h1 style={title}>{t("integrations.apiAccess.title")}</h1>
 
-          <p style={desc}>
-            Generate API keys and connect external systems securely.
-          </p>
+          <p style={desc}>{t("integrations.apiAccess.description")}</p>
 
           {!apiKey ? (
             <button style={button} onClick={generate}>
-              Generate API Key
+              {t("integrations.apiAccess.generateKey")}
             </button>
           ) : (
             <>
@@ -128,7 +128,7 @@ export default function ApiAccessPage() {
                       color: "#6b7280",
                     }}
                   >
-                    API KEY
+                    {t("integrations.apiAccess.apiKeyLabel")}
                   </div>
 
                   <div
@@ -151,18 +151,18 @@ export default function ApiAccessPage() {
                 }}
               >
                 <button style={button} onClick={copyKey}>
-                  Copy API Key
+                  {t("integrations.apiAccess.copyKey")}
                 </button>
 
                 <button
                   style={dangerButton}
                   onClick={() => setConfirmOpen(true)}
                 >
-                  Revoke Key
+                  {t("integrations.apiAccess.revokeKey")}
                 </button>
 
                 <button style={secondaryButton} onClick={generate}>
-                  Regenerate
+                  {t("integrations.apiAccess.regenerate")}
                 </button>
               </div>
             </>
@@ -175,11 +175,13 @@ export default function ApiAccessPage() {
             marginTop: 30,
           }}
         >
-          <h2 style={sectionTitle}>API Documentation</h2>
+          <h2 style={sectionTitle}>
+            {t("integrations.apiAccess.documentation")}
+          </h2>
 
           <div style={docBox}>
             <div>
-              <strong>Base URL:</strong>
+              <strong>{t("integrations.apiAccess.baseUrl")}</strong>
             </div>
 
             <code>https://backend.cortexaaicrm.com/api/external</code>
@@ -189,7 +191,7 @@ export default function ApiAccessPage() {
                 marginTop: 20,
               }}
             >
-              <strong>Headers</strong>
+              <strong>{t("integrations.apiAccess.headers")}</strong>
 
               <pre>{`x-api-key: YOUR_API_KEY`}</pre>
             </div>
@@ -199,7 +201,7 @@ export default function ApiAccessPage() {
                 marginTop: 20,
               }}
             >
-              <strong>Example Request</strong>
+              <strong>{t("integrations.apiAccess.exampleRequest")}</strong>
 
               <pre>
                 {`curl --request GET \
@@ -216,7 +218,9 @@ https://backend.cortexaaicrm.com/api/external/leads \
             marginTop: 30,
           }}
         >
-          <h2 style={sectionTitle}>Usage Logs</h2>
+          <h2 style={sectionTitle}>
+            {t("integrations.apiAccess.usageLogs")}
+          </h2>
 
           <div
             style={{
@@ -230,7 +234,11 @@ https://backend.cortexaaicrm.com/api/external/leads \
                   <strong>{log.method}</strong> {log.endpoint}
                 </div>
 
-                <div>Status: {log.response_status}</div>
+                <div>
+                  {t("integrations.apiAccess.statusLabel", {
+                    status: log.response_status,
+                  })}
+                </div>
 
                 <div>{new Date(log.created_at).toLocaleString()}</div>
               </div>
@@ -266,7 +274,7 @@ https://backend.cortexaaicrm.com/api/external/leads \
                 marginBottom: 12,
               }}
             >
-              Revoke API Key?
+              {t("integrations.apiAccess.revokeConfirmTitle")}
             </h3>
 
             <p
@@ -275,8 +283,7 @@ https://backend.cortexaaicrm.com/api/external/leads \
                 lineHeight: 1.7,
               }}
             >
-              This will immediately disable all external API access using this
-              key.
+              {t("integrations.apiAccess.revokeConfirmBody")}
             </p>
 
             <div
@@ -298,7 +305,7 @@ https://backend.cortexaaicrm.com/api/external/leads \
                   fontWeight: 600,
                 }}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
 
               <button
@@ -313,7 +320,7 @@ https://backend.cortexaaicrm.com/api/external/leads \
                   fontWeight: 700,
                 }}
               >
-                Revoke Key
+                {t("integrations.apiAccess.revokeKey")}
               </button>
             </div>
           </div>

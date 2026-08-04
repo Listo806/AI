@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 
 export default function InstagramPage() {
+  const { t } = useTranslation();
+
   const [loading, setLoading] = useState(true);
 
   const [status, setStatus] = useState(null);
@@ -69,7 +72,7 @@ export default function InstagramPage() {
   const disconnectInstagram = async () => {
     try {
       const confirmed = window.confirm(
-        "Disconnect Instagram integration?",
+        t("integrations.instagram.disconnectConfirm"),
       );
 
       if (!confirmed) {
@@ -96,7 +99,7 @@ export default function InstagramPage() {
   if (loading) {
     return (
       <div className="page-container">
-        <p>Loading...</p>
+        <p>{t("integrations.instagram.loading")}</p>
       </div>
     );
   }
@@ -104,13 +107,9 @@ export default function InstagramPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Instagram Integration</h1>
+        <h1>{t("integrations.instagram.pageTitle")}</h1>
 
-        <p>
-          Connect Instagram Business accounts
-          to sync messages, leads, and CRM
-          conversations automatically.
-        </p>
+        <p>{t("integrations.instagram.pageSubtitle")}</p>
       </div>
 
       <div
@@ -125,7 +124,7 @@ export default function InstagramPage() {
         {!status?.isConfigured ? (
           <div>
             <h3>
-              Instagram Business not connected
+              {t("integrations.instagram.notConnectedTitle")}
             </h3>
 
             <p
@@ -134,8 +133,7 @@ export default function InstagramPage() {
                 color: "#6b7280",
               }}
             >
-              Connect your Instagram Business
-              account to enable:
+              {t("integrations.instagram.connectPrompt")}
             </p>
 
             <ul
@@ -145,53 +143,52 @@ export default function InstagramPage() {
                 lineHeight: 1.8,
               }}
             >
-              <li>Instagram DM sync</li>
+              <li>{t("integrations.instagram.benefitDmSync")}</li>
 
-              <li>Lead auto-import</li>
+              <li>{t("integrations.instagram.benefitLeadAutoImport")}</li>
 
-              <li>Conversation sync</li>
+              <li>{t("integrations.instagram.benefitConversationSync")}</li>
 
-              <li>AI workflow automation</li>
+              <li>{t("integrations.instagram.benefitAiWorkflow")}</li>
 
-              <li>CRM contact creation</li>
+              <li>{t("integrations.instagram.benefitCrmContact")}</li>
             </ul>
 
             <button
               onClick={connectInstagram}
               style={buttonStyle}
             >
-              Connect Instagram Business
+              {t("integrations.instagram.connectButton")}
             </button>
           </div>
         ) : (
           <>
             <div style={sectionStyle}>
-              <h3>Connected Instagram</h3>
+              <h3>{t("integrations.instagram.connectedTitle")}</h3>
 
               <p>
-                <strong>Username:</strong>{" "}
+                <strong>{t("integrations.instagram.usernameLabel")}</strong>{" "}
                 @
                 {status?.config
                   ?.instagramUsername || "-"}
               </p>
 
               <p style={{ marginTop: 8 }}>
-                <strong>Facebook Page:</strong>{" "}
+                <strong>{t("integrations.instagram.facebookPageLabel")}</strong>{" "}
                 {status?.config?.pageName ||
                   "-"}
               </p>
             </div>
 
             <div style={sectionStyle}>
-              <h3>Sync Status</h3>
+              <h3>{t("integrations.instagram.syncStatusTitle")}</h3>
 
               <p>
-                Auto-import of Instagram
-                conversations and leads is{" "}
+                {t("integrations.instagram.autoImportStatus")}{" "}
                 <strong>
                   {status?.config?.syncEnabled
-                    ? "enabled"
-                    : "disabled"}
+                    ? t("integrations.instagram.enabled")
+                    : t("integrations.instagram.disabled")}
                 </strong>
               </p>
 
@@ -201,16 +198,16 @@ export default function InstagramPage() {
                 style={buttonStyle}
               >
                 {syncLoading
-                  ? "Saving..."
+                  ? t("integrations.instagram.saving")
                   : status?.config
                         ?.syncEnabled
-                    ? "Disable Auto Sync"
-                    : "Enable Auto Sync"}
+                    ? t("integrations.instagram.disableAutoSync")
+                    : t("integrations.instagram.enableAutoSync")}
               </button>
             </div>
 
             <div style={sectionStyle}>
-              <h3>Integration Features</h3>
+              <h3>{t("integrations.instagram.integrationFeaturesTitle")}</h3>
 
               <div
                 style={{
@@ -222,29 +219,29 @@ export default function InstagramPage() {
                 }}
               >
                 <FeatureCard
-                  title="Instagram DMs"
-                  description="Sync Instagram messages into CRM conversations."
+                  title={t("integrations.instagram.featureDmsTitle")}
+                  description={t("integrations.instagram.featureDmsDesc")}
                 />
 
                 <FeatureCard
-                  title="Lead Capture"
-                  description="Automatically create leads from Instagram interactions."
+                  title={t("integrations.instagram.featureLeadCaptureTitle")}
+                  description={t("integrations.instagram.featureLeadCaptureDesc")}
                 />
 
                 <FeatureCard
-                  title="AI Automation"
-                  description="Trigger AI workflows from Instagram messages."
+                  title={t("integrations.instagram.featureAiAutomationTitle")}
+                  description={t("integrations.instagram.featureAiAutomationDesc")}
                 />
 
                 <FeatureCard
-                  title="Unified Inbox"
-                  description="Manage Instagram conversations inside your CRM."
+                  title={t("integrations.instagram.featureUnifiedInboxTitle")}
+                  description={t("integrations.instagram.featureUnifiedInboxDesc")}
                 />
               </div>
             </div>
 
             <div style={sectionStyle}>
-              <h3>Danger Zone</h3>
+              <h3>{t("integrations.instagram.dangerZoneTitle")}</h3>
 
               <p
                 style={{
@@ -252,8 +249,7 @@ export default function InstagramPage() {
                   marginBottom: 16,
                 }}
               >
-                Disconnecting Instagram will
-                stop all syncing and automation.
+                {t("integrations.instagram.dangerZoneDesc")}
               </p>
 
               <button
@@ -266,8 +262,8 @@ export default function InstagramPage() {
                 }}
               >
                 {disconnectLoading
-                  ? "Disconnecting..."
-                  : "Disconnect Instagram"}
+                  ? t("integrations.instagram.disconnecting")
+                  : t("integrations.instagram.disconnectButton")}
               </button>
             </div>
           </>

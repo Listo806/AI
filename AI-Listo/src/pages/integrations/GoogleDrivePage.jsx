@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 
 export default function GoogleDrivePage() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState(null);
 
@@ -26,7 +28,7 @@ export default function GoogleDrivePage() {
       }
 
       if (!status?.integration?.root_folder_id) {
-        alert("Please select a folder first");
+        alert(t("integrations.googleDrive.selectFolderFirst"));
         return;
       }
 
@@ -49,7 +51,7 @@ export default function GoogleDrivePage() {
         },
       );
 
-      alert("File uploaded successfully");
+      alert(t("integrations.googleDrive.fileUploaded"));
     } catch (err) {
       console.error(err);
     } finally {
@@ -145,7 +147,7 @@ export default function GoogleDrivePage() {
   if (loading) {
     return (
       <div className="page-container">
-        <p>Loading...</p>
+        <p>{t("integrations.googleDrive.loading")}</p>
       </div>
     );
   }
@@ -153,9 +155,9 @@ export default function GoogleDrivePage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Google Drive Integration</h1>
+        <h1>{t("integrations.googleDrive.title")}</h1>
 
-        <p>Connect Google Drive and sync files automatically from your CRM.</p>
+        <p>{t("integrations.googleDrive.subtitle")}</p>
       </div>
 
       <div
@@ -169,30 +171,31 @@ export default function GoogleDrivePage() {
       >
         {!status?.isConfigured ? (
           <div>
-            <h3>Google Drive not connected</h3>
+            <h3>{t("integrations.googleDrive.notConnected")}</h3>
 
             <button onClick={connectGoogleDrive} style={buttonStyle}>
-              Connect Google Drive
+              {t("integrations.googleDrive.connect")}
             </button>
           </div>
         ) : (
           <>
             <div style={{ marginBottom: 24 }}>
-              <h3>Connected Account</h3>
+              <h3>{t("integrations.googleDrive.connectedAccount")}</h3>
 
               <p>{status.integration?.google_email || "-"}</p>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <h3>Selected Sync Folder</h3>
+              <h3>{t("integrations.googleDrive.selectedSyncFolder")}</h3>
 
               <p>
-                {status.integration?.root_folder_name || "No folder selected"}
+                {status.integration?.root_folder_name ||
+                  t("integrations.googleDrive.noFolderSelected")}
               </p>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <h3>Auto Sync</h3>
+              <h3>{t("integrations.googleDrive.autoSync")}</h3>
 
               <button
                 onClick={toggleSync}
@@ -200,16 +203,16 @@ export default function GoogleDrivePage() {
                 style={buttonStyle}
               >
                 {status.integration?.sync_enabled
-                  ? "Disable Sync"
-                  : "Enable Sync"}
+                  ? t("integrations.googleDrive.disableSync")
+                  : t("integrations.googleDrive.enableSync")}
               </button>
             </div>
 
             <div>
-              <h3>Select Google Drive Folder</h3>
+              <h3>{t("integrations.googleDrive.selectFolder")}</h3>
 
               {foldersLoading ? (
-                <p>Loading folders...</p>
+                <p>{t("integrations.googleDrive.loadingFolders")}</p>
               ) : (
                 <div
                   style={{
@@ -239,7 +242,7 @@ export default function GoogleDrivePage() {
                         disabled={savingFolder}
                         style={buttonStyle}
                       >
-                        Select
+                        {t("integrations.googleDrive.select")}
                       </button>
                     </div>
                   ))}
@@ -247,7 +250,7 @@ export default function GoogleDrivePage() {
               )}
             </div>
             <div style={{ marginTop: 32 }}>
-              <h3>Upload File</h3>
+              <h3>{t("integrations.googleDrive.uploadFile")}</h3>
 
               <input
                 type="file"
@@ -259,7 +262,9 @@ export default function GoogleDrivePage() {
                 disabled={uploading}
                 style={buttonStyle}
               >
-                {uploading ? "Uploading..." : "Upload To Google Drive"}
+                {uploading
+                  ? t("integrations.googleDrive.uploading")
+                  : t("integrations.googleDrive.uploadToGoogleDrive")}
               </button>
             </div>
           </>

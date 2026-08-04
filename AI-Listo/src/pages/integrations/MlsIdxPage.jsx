@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
@@ -26,6 +27,8 @@ const providerOptions = [
 ];
 
 export default function MlsIdxPage() {
+  const { t } = useTranslation();
+
   const [loading, setLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
@@ -86,13 +89,13 @@ export default function MlsIdxPage() {
        * VALIDATION
        */
       if (!form.providerName) {
-        showToast("Please select MLS provider", "error");
+        showToast(t("integrations.mls.errorSelectProvider"), "error");
 
         return;
       }
 
       if (!form.endpointUrl.trim()) {
-        showToast("Endpoint URL is required", "error");
+        showToast(t("integrations.mls.errorEndpointRequired"), "error");
 
         return;
       }
@@ -100,7 +103,7 @@ export default function MlsIdxPage() {
       try {
         new URL(form.endpointUrl);
       } catch {
-        showToast("Invalid endpoint URL", "error");
+        showToast(t("integrations.mls.errorInvalidEndpoint"), "error");
 
         return;
       }
@@ -113,7 +116,7 @@ export default function MlsIdxPage() {
         body: JSON.stringify(form),
       });
 
-      showToast("MLS integration saved successfully");
+      showToast(t("integrations.mls.savedSuccess"));
       await load();
 
       setForm({
@@ -137,7 +140,7 @@ export default function MlsIdxPage() {
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to save MLS integration", "error");
+      showToast(t("integrations.mls.saveError"), "error");
     } finally {
       setSaving(false);
     }
@@ -151,18 +154,18 @@ export default function MlsIdxPage() {
         method: "POST",
       });
 
-      showToast("MLS sync started");
+      showToast(t("integrations.mls.syncStarted"));
     } catch (err) {
       console.error(err);
 
-      showToast("Failed to sync MLS", "error");
+      showToast(t("integrations.mls.syncError"), "error");
     } finally {
       setSyncing(false);
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t("integrations.mls.loading")}</div>;
   }
 
   return (
@@ -180,16 +183,13 @@ export default function MlsIdxPage() {
         }}
       >
         <div style={card}>
-          <h1 style={title}>MLS / IDX Feed</h1>
+          <h1 style={title}>{t("integrations.mls.title")}</h1>
 
-          <p style={desc}>
-            Connect MLS providers, RETS feeds, RESO APIs, and IDX systems into
-            your CRM.
-          </p>
+          <p style={desc}>{t("integrations.mls.description")}</p>
 
           <div style={grid}>
             <div>
-              <div style={label}>MLS Provider</div>
+              <div style={label}>{t("integrations.mls.providerLabel")}</div>
 
               <select
                 style={input}
@@ -201,7 +201,7 @@ export default function MlsIdxPage() {
                   })
                 }
               >
-                <option value="">Select Provider</option>
+                <option value="">{t("integrations.mls.selectProvider")}</option>
 
                 {providerOptions.map((provider) => (
                   <option key={provider.value} value={provider.value}>
@@ -212,7 +212,7 @@ export default function MlsIdxPage() {
             </div>
 
             <div>
-              <div style={label}>Country</div>
+              <div style={label}>{t("integrations.mls.countryLabel")}</div>
 
               <select
                 style={input}
@@ -224,20 +224,30 @@ export default function MlsIdxPage() {
                   })
                 }
               >
-                <option value="US">United States</option>
+                <option value="US">
+                  {t("integrations.mls.countryUnitedStates")}
+                </option>
 
-                <option value="CA">Canada</option>
+                <option value="CA">{t("integrations.mls.countryCanada")}</option>
 
-                <option value="AU">Australia</option>
+                <option value="AU">
+                  {t("integrations.mls.countryAustralia")}
+                </option>
 
-                <option value="UK">United Kingdom</option>
+                <option value="UK">
+                  {t("integrations.mls.countryUnitedKingdom")}
+                </option>
 
-                <option value="VN">Vietnam</option>
+                <option value="VN">
+                  {t("integrations.mls.countryVietnam")}
+                </option>
               </select>
             </div>
 
             <div>
-              <div style={label}>Integration Type</div>
+              <div style={label}>
+                {t("integrations.mls.integrationTypeLabel")}
+              </div>
 
               <select
                 style={input}
@@ -258,7 +268,7 @@ export default function MlsIdxPage() {
             </div>
 
             <div>
-              <div style={label}>Compatibility</div>
+              <div style={label}>{t("integrations.mls.compatibilityLabel")}</div>
 
               <select
                 style={input}
@@ -270,9 +280,13 @@ export default function MlsIdxPage() {
                   })
                 }
               >
-                <option value="reso">RESO Standard</option>
+                <option value="reso">
+                  {t("integrations.mls.compatibilityResoStandard")}
+                </option>
 
-                <option value="rets">RETS Legacy</option>
+                <option value="rets">
+                  {t("integrations.mls.compatibilityRetsLegacy")}
+                </option>
               </select>
             </div>
 
@@ -281,7 +295,7 @@ export default function MlsIdxPage() {
                 gridColumn: "1 / -1",
               }}
             >
-              <div style={label}>Endpoint URL</div>
+              <div style={label}>{t("integrations.mls.endpointUrlLabel")}</div>
 
               <input
                 style={input}
@@ -297,7 +311,7 @@ export default function MlsIdxPage() {
             </div>
 
             <div>
-              <div style={label}>Username</div>
+              <div style={label}>{t("integrations.mls.usernameLabel")}</div>
 
               <input
                 style={input}
@@ -312,7 +326,7 @@ export default function MlsIdxPage() {
             </div>
 
             <div>
-              <div style={label}>Password</div>
+              <div style={label}>{t("integrations.mls.passwordLabel")}</div>
 
               <input
                 type="password"
@@ -332,7 +346,7 @@ export default function MlsIdxPage() {
                 gridColumn: "1 / -1",
               }}
             >
-              <div style={label}>API Key</div>
+              <div style={label}>{t("integrations.mls.apiKeyLabel")}</div>
 
               <input
                 style={input}
@@ -347,7 +361,7 @@ export default function MlsIdxPage() {
             </div>
 
             <div>
-              <div style={label}>Sync Frequency</div>
+              <div style={label}>{t("integrations.mls.syncFrequencyLabel")}</div>
 
               <input
                 type="number"
@@ -374,7 +388,7 @@ export default function MlsIdxPage() {
                 }
               />
 
-              <span>Enable automatic sync</span>
+              <span>{t("integrations.mls.enableAutomaticSync")}</span>
             </label>
           </div>
 
@@ -386,7 +400,9 @@ export default function MlsIdxPage() {
             }}
           >
             <button style={button} onClick={save} disabled={saving}>
-              {saving ? "Saving..." : "Save Settings"}
+              {saving
+                ? t("integrations.mls.saving")
+                : t("integrations.mls.saveSettings")}
             </button>
 
             <button
@@ -394,7 +410,9 @@ export default function MlsIdxPage() {
               onClick={syncNow}
               disabled={syncing}
             >
-              {syncing ? "Syncing..." : "Sync Now"}
+              {syncing
+                ? t("integrations.mls.syncing")
+                : t("integrations.mls.syncNow")}
             </button>
           </div>
         </div>
@@ -405,7 +423,9 @@ export default function MlsIdxPage() {
             marginTop: 30,
           }}
         >
-          <h2 style={sectionTitle}>Architecture</h2>
+          <h2 style={sectionTitle}>
+            {t("integrations.mls.architectureTitle")}
+          </h2>
 
           <ul
             style={{
@@ -413,19 +433,19 @@ export default function MlsIdxPage() {
               color: "#4b5563",
             }}
           >
-            <li>Multi-country MLS architecture</li>
+            <li>{t("integrations.mls.archMultiCountry")}</li>
 
-            <li>RETS + RESO Web API compatibility</li>
+            <li>{t("integrations.mls.archRetsResoCompat")}</li>
 
-            <li>Incremental sync support</li>
+            <li>{t("integrations.mls.archIncrementalSync")}</li>
 
-            <li>Scheduled IDX imports</li>
+            <li>{t("integrations.mls.archScheduledImports")}</li>
 
-            <li>Future-ready global provider support</li>
+            <li>{t("integrations.mls.archGlobalProvider")}</li>
 
-            <li>Property media & image synchronization</li>
+            <li>{t("integrations.mls.archMediaSync")}</li>
 
-            <li>Agent & broker mapping support</li>
+            <li>{t("integrations.mls.archAgentBrokerMapping")}</li>
           </ul>
         </div>
       </div>

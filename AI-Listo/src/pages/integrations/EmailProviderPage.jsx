@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNotification } from '../../context/NotificationContext';
 import webhooksApi from '../../api/webhooksApi';
 
 export default function EmailProviderPage() {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
 
   const [loading, setLoading] = useState(true);
@@ -39,11 +41,11 @@ export default function EmailProviderPage() {
 
   const handleSave = async () => {
     if (!apiKey.trim() && !hasExisting) {
-      showError('SendGrid API key is required');
+      showError(t('integrations.email.apiKeyRequired'));
       return;
     }
     if (!fromEmail.trim()) {
-      showError('From email is required');
+      showError(t('integrations.email.fromEmailRequired'));
       return;
     }
 
@@ -56,7 +58,7 @@ export default function EmailProviderPage() {
 
       // If updating and no new key provided, we need to send the key
       if (!apiKey.trim() && hasExisting) {
-        showError('Please enter your SendGrid API key to update the configuration');
+        showError(t('integrations.email.enterKeyToUpdate'));
         setSaving(false);
         return;
       }
@@ -65,9 +67,9 @@ export default function EmailProviderPage() {
       setHasExisting(true);
       setMaskedKey(result.apiKeyMasked || '');
       setApiKey(''); // Clear the plaintext key
-      showSuccess('Email configuration saved');
+      showSuccess(t('integrations.email.configSaved'));
     } catch (err) {
-      showError(err.message || 'Failed to save email configuration');
+      showError(err.message || t('integrations.email.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -77,9 +79,9 @@ export default function EmailProviderPage() {
     setTesting(true);
     try {
       await webhooksApi.sendTestEmail();
-      showSuccess('Test email sent! Check your inbox.');
+      showSuccess(t('integrations.email.testSent'));
     } catch (err) {
-      showError(err.message || 'Failed to send test email');
+      showError(err.message || t('integrations.email.testFailed'));
     } finally {
       setTesting(false);
     }
@@ -88,16 +90,16 @@ export default function EmailProviderPage() {
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-        Loading...
+        {t('common.loading')}
       </div>
     );
   }
 
   return (
     <div>
-      <h1 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '8px' }}>Email Provider</h1>
+      <h1 style={{ fontSize: '28px', fontWeight: 600, marginBottom: '8px' }}>{t('integrations.emailProvider')}</h1>
       <p style={{ marginBottom: '32px', fontSize: '14px', color: '#64748b', lineHeight: 1.6 }}>
-        Connect your SendGrid account to send outbound emails from the CRM.
+        {t('integrations.email.subtitle')}
       </p>
 
       <div className="crm-section" style={{ padding: '28px', maxWidth: '560px' }}>
@@ -110,7 +112,7 @@ export default function EmailProviderPage() {
               padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600,
               background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac',
             }}>
-              Configured
+              {t('integrations.email.configured')}
             </span>
           )}
         </div>
@@ -118,7 +120,7 @@ export default function EmailProviderPage() {
         {/* API Key */}
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text, #334155)' }}>
-            SendGrid API Key
+            {t('integrations.email.apiKeyLabel')}
           </label>
           <input
             type="password"
@@ -130,7 +132,7 @@ export default function EmailProviderPage() {
           />
           {hasExisting && (
             <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-              Current key: <code>{maskedKey}</code> — enter a new key to update
+              {t('integrations.email.currentKey')} <code>{maskedKey}</code> {t('integrations.email.enterNewKey')}
             </p>
           )}
         </div>
@@ -138,7 +140,7 @@ export default function EmailProviderPage() {
         {/* From Email */}
         <div style={{ marginBottom: '28px' }}>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text, #334155)' }}>
-            From Email
+            {t('integrations.email.fromEmailLabel')}
           </label>
           <input
             type="email"
@@ -149,7 +151,7 @@ export default function EmailProviderPage() {
             style={{ width: '100%', padding: '10px 14px', fontSize: '14px' }}
           />
           <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-            Must be a verified sender in your SendGrid account
+            {t('integrations.email.verifiedSenderHint')}
           </p>
         </div>
 
@@ -157,12 +159,12 @@ export default function EmailProviderPage() {
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button className="crm-btn crm-btn-primary" onClick={handleSave} disabled={saving}
             style={{ padding: '10px 24px' }}>
-            {saving ? 'Saving...' : 'Save Configuration'}
+            {saving ? t('integrations.email.saving') : t('integrations.email.saveConfiguration')}
           </button>
           {hasExisting && (
             <button className="crm-btn crm-btn-secondary" onClick={handleTestEmail} disabled={testing}
               style={{ padding: '10px 24px' }}>
-              {testing ? 'Sending...' : 'Send Test Email'}
+              {testing ? t('integrations.email.sending') : t('integrations.email.sendTestEmail')}
             </button>
           )}
         </div>
@@ -171,15 +173,15 @@ export default function EmailProviderPage() {
       {/* Help Info */}
       <div className="crm-section" style={{ padding: '20px', maxWidth: '560px', marginTop: '16px' }}>
         <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: 'var(--text, #334155)' }}>
-          Setup Instructions
+          {t('integrations.email.setupInstructions')}
         </h3>
         <ol style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: '#64748b', lineHeight: 1.8 }}>
-          <li>Create a free SendGrid account at <strong>sendgrid.com</strong></li>
-          <li>Go to Settings &rarr; API Keys &rarr; Create API Key</li>
-          <li>Select "Restricted Access" and enable "Mail Send"</li>
-          <li>Copy the API key and paste it above</li>
-          <li>Verify your sender email under Settings &rarr; Sender Authentication</li>
-          <li>Click "Send Test Email" to confirm everything works</li>
+          <li>{t('integrations.email.step1')} <strong>sendgrid.com</strong></li>
+          <li>{t('integrations.email.step2')}</li>
+          <li>{t('integrations.email.step3')}</li>
+          <li>{t('integrations.email.step4')}</li>
+          <li>{t('integrations.email.step5')}</li>
+          <li>{t('integrations.email.step6')}</li>
         </ol>
       </div>
     </div>
