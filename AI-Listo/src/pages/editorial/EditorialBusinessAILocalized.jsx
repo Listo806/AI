@@ -6,6 +6,9 @@ import {
   BriefcaseBusiness,
   Calculator,
   CalendarDays,
+  CircleCheckBig,
+  FileText,
+  FolderKanban,
   Home,
   Landmark,
   LineChart,
@@ -92,6 +95,7 @@ const COPY = {
       ["every-industry", "Todas las industrias pueden beneficiarse de la IA"],
       ["competitive-advantage", "Las empresas que adopten IA crearán ventajas competitivas"],
       ["introducing-cortexa", "Presentamos Cortexa AI CRM"],
+      ["team-workspace", "Un equipo. Un espacio de trabajo. Un negocio conectado."],
       ["move-first", "El futuro pertenece a las empresas que actúan primero"],
       ["transform-business", "¿Listo para transformar tu negocio?"],
     ],
@@ -213,6 +217,38 @@ const COPY = {
         "En lugar de limitarse a registrar la actividad del cliente, la plataforma ayuda a las empresas a interactuar, organizarse y crecer con mayor eficacia.",
         "Ya seas una pequeña empresa, una compañía en crecimiento o una organización establecida, la IA puede ayudarte a responder más rápido, operar con mayor eficiencia y crear relaciones más sólidas con tus clientes.",
       ],
+      teamKicker: "Espacio de trabajo del equipo",
+      teamTitle: "Un equipo. Un espacio de trabajo. Un negocio conectado.",
+      teamIntro: [
+        "Las empresas en crecimiento necesitan más que un CRM.",
+        "Necesitan un espacio de trabajo compartido donde cada departamento pueda colaborar sin cambiar entre herramientas desconectadas, hojas de cálculo, correos electrónicos, calendarios y múltiples aplicaciones.",
+      ],
+      teamNeeds: [
+        ["Los equipos de ventas", "necesitan gestionar oportunidades."],
+        ["Los equipos de marketing", "necesitan visibilidad de las campañas."],
+        ["Los gerentes", "necesitan información empresarial en tiempo real."],
+        ["Los equipos de atención al cliente", "necesitan el historial completo de cada cliente."],
+        ["Los equipos de operaciones", "necesitan flujos de trabajo organizados que mantengan en movimiento los proyectos, las personas y los procesos empresariales."],
+      ],
+      teamHighlight:
+        "Cortexa integra Team Workspace directamente en tu Sistema Operativo de Ingresos con IA, conectando a tus personas, clientes, proyectos, flujos de trabajo y Agente de IA dentro de una plataforma inteligente.",
+      teamBody: [
+        "En lugar de separar la colaboración de la gestión de clientes y las operaciones de ingresos, todas las áreas de tu empresa trabajan juntas desde un espacio conectado.",
+        "Cortexa Team Workspace reúne tu Agente de IA, conversaciones con clientes, leads, pipelines, citas, notas, documentos, tareas, proyectos, flujos de trabajo, analítica y colaboración del equipo en una plataforma conectada.",
+        "En lugar de cambiar entre varias aplicaciones, cada departamento trabaja desde el mismo espacio compartido.",
+      ],
+      teamItems: [
+        ["Las conversaciones", "permanecen conectadas."],
+        ["Los proyectos", "se mantienen organizados."],
+        ["Las tareas", "siguen avanzando."],
+        ["Los documentos", "permanecen vinculados a la oportunidad correcta."],
+      ],
+      teamClosing: [
+        "Tu Agente de IA mantiene a todos informados con actividad en tiempo real, recomendaciones, recordatorios e información empresarial que ayuda al equipo a centrarse en lo más importante.",
+        "Ya sea que tu equipo gestione clientes, proyectos, operaciones internas o crecimiento empresarial, todos trabajan con la misma información, los mismos flujos de trabajo y los mismos objetivos.",
+      ],
+      teamQuote:
+        "Así es como las empresas modernas colaboran más rápido, se mantienen organizadas y crecen juntas.",
       moveBody: [
         "La inteligencia artificial ya no es una tendencia emergente.",
         "Se está convirtiendo en un componente esencial de las operaciones empresariales modernas.",
@@ -291,6 +327,7 @@ const COPY = {
       ["every-industry", "Todos os setores podem se beneficiar da IA"],
       ["competitive-advantage", "Empresas que adotam IA constroem vantagens competitivas"],
       ["introducing-cortexa", "Apresentando o Cortexa AI CRM"],
+      ["team-workspace", "Uma equipe. Um workspace. Um negócio conectado."],
       ["move-first", "O futuro pertence às empresas que agem primeiro"],
       ["transform-business", "Pronto para transformar sua empresa?"],
     ],
@@ -412,6 +449,38 @@ const COPY = {
         "Em vez de apenas registrar a atividade do cliente, a plataforma ajuda as empresas a interagir, se organizar e crescer com mais eficiência.",
         "Seja você uma pequena empresa, uma companhia em crescimento ou uma organização estabelecida, a IA pode ajudar a responder mais rápido, operar com mais eficiência e criar relacionamentos mais fortes com os clientes.",
       ],
+      teamKicker: "Workspace da equipe",
+      teamTitle: "Uma equipe. Um workspace. Um negócio conectado.",
+      teamIntro: [
+        "Empresas em crescimento precisam de mais do que um CRM.",
+        "Elas precisam de um workspace compartilhado onde todos os departamentos possam colaborar sem alternar entre ferramentas desconectadas, planilhas, e-mails, calendários e vários aplicativos.",
+      ],
+      teamNeeds: [
+        ["As equipes de vendas", "precisam gerenciar oportunidades."],
+        ["As equipes de marketing", "precisam de visibilidade das campanhas."],
+        ["Os gestores", "precisam de insights de negócios em tempo real."],
+        ["As equipes de atendimento", "precisam do histórico completo dos clientes."],
+        ["As equipes de operações", "precisam de fluxos organizados que mantenham projetos, pessoas e processos empresariais avançando."],
+      ],
+      teamHighlight:
+        "A Cortexa integra o Team Workspace diretamente ao seu Sistema Operacional de Receita com IA, conectando pessoas, clientes, projetos, fluxos de trabalho e seu Agente de IA em uma plataforma inteligente.",
+      teamBody: [
+        "Em vez de separar a colaboração da gestão de clientes e das operações de receita, todas as áreas da empresa trabalham juntas em um workspace conectado.",
+        "O Cortexa Team Workspace reúne seu Agente de IA, conversas com clientes, leads, pipelines, compromissos, notas, documentos, tarefas, projetos, fluxos de trabalho, analytics e colaboração da equipe em uma plataforma conectada.",
+        "Em vez de alternar entre vários aplicativos, todos os departamentos trabalham no mesmo workspace compartilhado.",
+      ],
+      teamItems: [
+        ["As conversas", "permanecem conectadas."],
+        ["Os projetos", "permanecem organizados."],
+        ["As tarefas", "continuam avançando."],
+        ["Os documentos", "permanecem vinculados à oportunidade correta."],
+      ],
+      teamClosing: [
+        "Seu Agente de IA mantém todos informados com atividades em tempo real, recomendações, lembretes e insights empresariais que ajudam a equipe a se concentrar no que mais importa.",
+        "Seja sua equipe responsável por clientes, projetos, operações internas ou crescimento do negócio, todos trabalham com as mesmas informações, os mesmos fluxos e os mesmos objetivos.",
+      ],
+      teamQuote:
+        "É assim que empresas modernas colaboram mais rápido, permanecem organizadas e crescem juntas.",
       moveBody: [
         "A inteligência artificial não é mais uma tendência emergente.",
         "Ela está se tornando um componente essencial das operações empresariais modernas.",
@@ -714,16 +783,77 @@ export default function EditorialBusinessAILocalized({ locale }) {
               <div className="ed-ai-inline-cta"><CtaCard copy={copy} where="article_middle" /></div>
             </section>
 
+            <section className="ed-section ed-team-workspace-section" id="team-workspace">
+              <span className="ed-section-kicker">{a.teamKicker}</span>
+              <h2>{a.teamTitle}</h2>
+
+              <div className="ed-team-workspace-rule" aria-hidden="true" />
+
+              {a.teamIntro.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+
+              <ul className="ed-team-needs">
+                {a.teamNeeds.map(([title, text]) => (
+                  <li key={title}>
+                    <CircleCheckBig size={20} aria-hidden="true" />
+                    <span>
+                      <strong>{title}</strong> {text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="ed-team-workspace-highlight">
+                <span className="ed-team-workspace-highlight-icon" aria-hidden="true">
+                  <Users size={34} strokeWidth={1.8} />
+                </span>
+                <p>{a.teamHighlight}</p>
+              </div>
+
+              {a.teamBody.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+
+              <ul className="ed-team-workspace-items">
+                {a.teamItems.map(([title, text], index) => {
+                  const TeamIcon = [
+                    MessageSquareText,
+                    FolderKanban,
+                    CircleCheckBig,
+                    FileText,
+                  ][index];
+
+                  return (
+                    <li key={title}>
+                      <TeamIcon size={23} aria-hidden="true" />
+                      <span>
+                        <strong>{title}</strong> {text}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {a.teamClosing.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+
+              <blockquote className="ed-pull-quote">
+                {a.teamQuote}
+              </blockquote>
+            </section>
+
             <section className="ed-section" id="move-first">
-              <h2>{copy.sections[8][1]}</h2>
+              <h2>{copy.sections[9][1]}</h2>
               {a.moveBody.map((p) => <p key={p}>{p}</p>)}
               <blockquote className="ed-pull-quote">{a.moveQuote}</blockquote>
-              <EditorialImage src={why5Img} alt={copy.sections[8][1]} caption={copy.captions.team} variant="is-team" />
+              <EditorialImage src={why5Img} alt={copy.sections[9][1]} caption={copy.captions.team} variant="is-team" />
             </section>
 
             <section className="ed-section ed-ai-final-section" id="transform-business">
               <span className="ed-section-kicker">{a.finalKicker}</span>
-              <h2>{copy.sections[9][1]}</h2>
+              <h2>{copy.sections[10][1]}</h2>
               {a.finalBody.map((p) => <p key={p}>{p}</p>)}
               <div className="ed-ai-final-callout">
                 <Bot size={32} />

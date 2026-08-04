@@ -6,6 +6,9 @@ import {
   BriefcaseBusiness,
   Calculator,
   CalendarDays,
+  CircleCheckBig,
+  FileText,
+  FolderKanban,
   Home,
   Landmark,
   LineChart,
@@ -46,6 +49,10 @@ const ARTICLE_SECTIONS = [
     label: "Businesses That Embrace AI Will Build Competitive Advantages",
   },
   { id: "introducing-cortexa", label: "Introducing Cortexa AI CRM" },
+  {
+    id: "team-workspace",
+    label: "One Team. One Workspace. One Connected Business.",
+  },
   {
     id: "move-first",
     label: "The Future Belongs to Businesses That Move First",
@@ -688,6 +695,129 @@ export default function EditorialBusinessAI() {
               <div className="ed-ai-inline-cta">
                 <CtaCard where="article_middle" />
               </div>
+            </section>
+
+            <section className="ed-section ed-team-workspace-section" id="team-workspace">
+              <span className="ed-section-kicker">Team Workspace</span>
+              <h2>
+                One Team. One Workspace.
+                <br />
+                One Connected Business.
+              </h2>
+
+              <div className="ed-team-workspace-rule" aria-hidden="true" />
+
+              <p>Growing businesses need more than a CRM.</p>
+              <p>
+                They need a shared workspace where every department can
+                collaborate without switching between disconnected tools,
+                spreadsheets, emails, calendars, and multiple applications.
+              </p>
+
+              <ul className="ed-team-needs">
+                <li>
+                  <CircleCheckBig size={20} aria-hidden="true" />
+                  <span>
+                    <strong>Sales teams</strong> need to manage opportunities.
+                  </span>
+                </li>
+                <li>
+                  <CircleCheckBig size={20} aria-hidden="true" />
+                  <span>
+                    <strong>Marketing teams</strong> need campaign visibility.
+                  </span>
+                </li>
+                <li>
+                  <CircleCheckBig size={20} aria-hidden="true" />
+                  <span>
+                    <strong>Managers</strong> need real-time business insights.
+                  </span>
+                </li>
+                <li>
+                  <CircleCheckBig size={20} aria-hidden="true" />
+                  <span>
+                    <strong>Customer support teams</strong> need complete
+                    customer history.
+                  </span>
+                </li>
+                <li>
+                  <CircleCheckBig size={20} aria-hidden="true" />
+                  <span>
+                    <strong>Operations teams</strong> need organized workflows
+                    that keep projects, people, and business processes moving
+                    forward.
+                  </span>
+                </li>
+              </ul>
+
+              <div className="ed-team-workspace-highlight">
+                <span className="ed-team-workspace-highlight-icon" aria-hidden="true">
+                  <Users size={34} strokeWidth={1.8} />
+                </span>
+                <p>
+                  <strong>
+                    Cortexa brings Team Workspace directly into your AI Revenue
+                    Operating System,
+                  </strong>{" "}
+                  connecting your people, customers, projects, workflows, and AI
+                  Agent inside one intelligent platform.
+                </p>
+              </div>
+
+              <p>
+                Instead of separating collaboration from customer management and
+                revenue operations, every part of your business works together
+                from one connected workspace.
+              </p>
+              <p>
+                <strong>Cortexa Team Workspace</strong> brings your AI Agent,
+                customer conversations, leads, pipelines, appointments, notes,
+                documents, tasks, projects, workflows, analytics, and team
+                collaboration together in one connected platform.
+              </p>
+              <p>
+                Instead of switching between multiple applications, every
+                department works from the same shared workspace.
+              </p>
+
+              <ul className="ed-team-workspace-items">
+                <li>
+                  <MessageSquareText size={23} aria-hidden="true" />
+                  <span><strong>Conversations</strong> stay connected.</span>
+                </li>
+                <li>
+                  <FolderKanban size={23} aria-hidden="true" />
+                  <span><strong>Projects</strong> stay organized.</span>
+                </li>
+                <li>
+                  <CircleCheckBig size={23} aria-hidden="true" />
+                  <span><strong>Tasks</strong> move forward.</span>
+                </li>
+                <li>
+                  <FileText size={23} aria-hidden="true" />
+                  <span>
+                    <strong>Documents</strong> stay attached to the right
+                    opportunity.
+                  </span>
+                </li>
+              </ul>
+
+              <p>
+                Your AI Agent keeps everyone informed with real-time activity,
+                recommendations, reminders, and business insights that help your
+                team focus on what matters most.
+              </p>
+              <p>
+                Whether your team is managing customers, projects, internal
+                operations, or business growth, everyone works from the same
+                information, the same workflows, and the same business
+                objectives.
+              </p>
+
+              <blockquote className="ed-pull-quote">
+                That’s how modern businesses collaborate faster, stay organized,
+                and grow together.
+              </blockquote>
             </section>
 
             <section className="ed-section" id="move-first">
