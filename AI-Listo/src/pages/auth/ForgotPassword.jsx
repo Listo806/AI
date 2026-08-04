@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import './Auth.css';
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -21,7 +23,7 @@ export default function ForgotPassword() {
       // Always show the same confirmation, whether or not the email exists.
       setSent(true);
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(err.message || t('auth.genericError'));
     } finally {
       setLoading(false);
     }
@@ -31,9 +33,9 @@ export default function ForgotPassword() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-badge">Cortexa AI OS</div>
-        <h1 className="auth-title">Reset your password</h1>
+        <h1 className="auth-title">{t('auth.resetTitle')}</h1>
         <p className="auth-subtitle">
-          Enter your email and we will send you a link to reset your password.
+          {t('auth.resetSubtitle')}
         </p>
 
         {sent ? (
@@ -42,11 +44,10 @@ export default function ForgotPassword() {
               className="auth-error"
               style={{ background: '#f0fdf4', color: '#16a34a' }}
             >
-              If an account exists for that email, a reset link is on its way.
-              Check your inbox and spam folder.
+              {t('auth.resetSentMessage')}
             </div>
             <p className="auth-footer" style={{ marginTop: '20px' }}>
-              <Link to="/sign-in">Back to sign in</Link>
+              <Link to="/sign-in">{t('auth.backToSignIn')}</Link>
             </p>
           </>
         ) : (
@@ -54,13 +55,13 @@ export default function ForgotPassword() {
             {error && <div className="auth-error">{error}</div>}
             <form onSubmit={handleSubmit} className="auth-form">
               <div className="auth-field">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">{t('common.email')}</label>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                   disabled={loading}
                   autoCapitalize="none"
@@ -69,11 +70,11 @@ export default function ForgotPassword() {
                 />
               </div>
               <button type="submit" className="auth-submit" disabled={loading}>
-                {loading ? 'Sending...' : 'Send reset link'}
+                {loading ? t('auth.sending') : t('auth.sendResetLink')}
               </button>
             </form>
             <p className="auth-footer" style={{ marginTop: '20px' }}>
-              <Link to="/sign-in">Back to sign in</Link>
+              <Link to="/sign-in">{t('auth.backToSignIn')}</Link>
             </p>
           </>
         )}

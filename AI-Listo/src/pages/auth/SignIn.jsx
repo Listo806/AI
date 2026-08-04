@@ -5,75 +5,17 @@ import { Navigate } from "react-router-dom";
 import './Auth.css';
 import { Eye, EyeOff } from 'lucide-react';
 import { trackEvent } from '../../utils/track';
+import { useTranslation } from "react-i18next";
 
-const t = {
-  en: {
-    crmBadge: 'Cortexa AI OS',
-    crmTitle: 'Sign In',
-    crmSubtitle: 'Access your dashboard and manage leads in real time.',
-    internalBadge: 'Internal Access',
-    internalTitle: 'Team Login',
-    internalSubtitle: 'Sign in to access your workspace.',
-    emailLabel: 'Email',
-    emailPlaceholder: 'Enter your email',
-    passwordLabel: 'Password',
-    passwordPlaceholder: 'Enter your password',
-    btnSignIn: 'Sign In',
-    btnSigningIn: 'Signing in...',
-    footerText: 'New user?',
-    footerLink: 'Sign Up',
-    loginFailed: 'Login failed',
-    forgotLink: 'Forgot password?'
-  },
-  es: {
-    crmBadge: 'Cortexa AI OS',
-    crmTitle: 'Iniciar Sesión',
-    crmSubtitle: 'Acceda a su panel y gestione clientes potenciales en tiempo real.',
-    internalBadge: 'Acceso Interno',
-    internalTitle: 'Login de Equipo',
-    internalSubtitle: 'Inicie sesión para acceder a su espacio de trabajo.',
-    emailLabel: 'Correo Electrónico',
-    emailPlaceholder: 'Ingrese su correo',
-    passwordLabel: 'Contraseña',
-    passwordPlaceholder: 'Ingrese su contraseña',
-    btnSignIn: 'Iniciar Sesión',
-    btnSigningIn: 'Iniciando sesión...',
-    footerText: '¿Usuario nuevo?',
-    footerLink: 'Registrarse',
-    loginFailed: 'Error al iniciar sesión',
-    forgotLink: '¿Olvidaste tu contraseña?'
-  },
-  pt: {
-    crmBadge: 'Cortexa AI OS',
-    crmTitle: 'Entrar',
-    crmSubtitle: 'Acesse seu painel e gerencie leads em tempo real.',
-    internalBadge: 'Acesso Interno',
-    internalTitle: 'Login da Equipe',
-    internalSubtitle: 'Faça login para acessar seu espaço de trabalho.',
-    emailLabel: 'E-mail',
-    emailPlaceholder: 'Digite seu e-mail',
-    passwordLabel: 'Senha',
-    passwordPlaceholder: 'Digite sua senha',
-    btnSignIn: 'Entrar',
-    btnSigningIn: 'Entrando...',
-    footerText: 'Novo usuário?',
-    footerLink: 'Cadastre-se',
-    loginFailed: 'Falha no login',
-    forgotLink: 'Esqueceu sua senha?'
-  }
-};
 export default function SignIn({ variant = 'crm' }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
-  
-  const [lang] = useState(() => {
-    return localStorage.getItem("cortexa_lang") || "en";
-  });
-  const tr = t[lang] || t.en;
+
   if (loading) return null;
 
   if (isAuthenticated()) {
@@ -85,14 +27,14 @@ export default function SignIn({ variant = 'crm' }) {
   // Branding configuration based on variant
   const branding = {
     crm: {
-      badge: tr.crmBadge,
-      title: tr.crmTitle,
-      subtitle: tr.crmSubtitle,
+      badge: t('auth.crmBadge'),
+      title: t('auth.crmTitle'),
+      subtitle: t('auth.crmSubtitle'),
     },
     internal: {
-      badge: tr.internalBadge,
-      title: tr.internalTitle,
-      subtitle: tr.internalSubtitle,
+      badge: t('auth.internalBadge'),
+      title: t('auth.internalTitle'),
+      subtitle: t('auth.internalSubtitle'),
     },
   };
 
@@ -114,7 +56,7 @@ export default function SignIn({ variant = 'crm' }) {
       }
       trackEvent('login');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -131,13 +73,13 @@ export default function SignIn({ variant = 'crm' }) {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-field">
-            <label htmlFor="email">{tr.emailLabel}</label>
+            <label htmlFor="email">{t('auth.emailLabel')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={tr.emailPlaceholder}
+              placeholder={t('auth.emailPlaceholder')}
               required
               disabled={loading}
               autoCapitalize="none"
@@ -147,14 +89,14 @@ export default function SignIn({ variant = 'crm' }) {
           </div>
 
           <div className="auth-field">
-            <label htmlFor="password">{tr.passwordLabel}</label>
+            <label htmlFor="password">{t('auth.passwordLabel')}</label>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={tr.passwordPlaceholder}
+                placeholder={t('auth.passwordPlaceholder')}
                 required
                 disabled={loading}
                 style={{ width: '100%', paddingRight: '40px', boxSizing: 'border-box' }}
@@ -181,16 +123,16 @@ export default function SignIn({ variant = 'crm' }) {
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? tr.btnSigningIn : tr.btnSignIn}
+            {loading ? t('auth.btnSigningIn') : t('auth.btnSignIn')}
           </button>
         </form>
 
         <p className="auth-footer" style={{ marginTop: '12px' }}>
-          <Link to="/forgot-password">{tr.forgotLink}</Link>
+          <Link to="/forgot-password">{t('auth.forgotLink')}</Link>
         </p>
 
         <p className="auth-footer" style={{ marginTop: '8px' }}>
-          {tr.footerText} <Link to="/sign-up">{tr.footerLink}</Link>
+          {t('auth.footerText')} <Link to="/sign-up">{t('auth.footerLink')}</Link>
         </p>
       </div>
     </div>
