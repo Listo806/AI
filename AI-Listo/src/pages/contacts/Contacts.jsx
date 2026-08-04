@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./contacts.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import apiClient from "../../api/apiClient";
+import { useTranslation } from "react-i18next";
 
 import {
   Search,
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 
 export default function ContactsRelationshipsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -141,10 +143,10 @@ export default function ContactsRelationshipsPage() {
       });
       fetchContacts();
       fetchStats();
-      showToast("Contact created");
+      showToast(t("contacts.contactCreated"));
     } catch (err) {
       console.error(err);
-      showToast("Failed to create contact", "error");
+      showToast(t("contacts.createFailed"), "error");
     }
   };
   const openEditContact = (contact) => {
@@ -219,10 +221,10 @@ export default function ContactsRelationshipsPage() {
       setShowEditModal(false);
       setEditForm(null);
       fetchStats();
-      showToast("Contact updated");
+      showToast(t("contacts.contactUpdated"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to update contact", "error");
+      showToast(err?.message || t("contacts.updateFailed"), "error");
     }
   };
   const fetchContacts = async (query = "") => {
@@ -251,43 +253,43 @@ export default function ContactsRelationshipsPage() {
       const data = response?.data || response || {};
       setStats([
         {
-          label: "Total Contacts",
+          label: t("contacts.statTotalContacts"),
           value: data.totalContacts || 0,
-          sub: "All relationships",
+          sub: t("contacts.statAllRelationships"),
           icon: Users,
         },
         {
-          label: "Active Buyers",
+          label: t("contacts.statActiveBuyers"),
           value: data.activeBuyers || 0,
-          sub: "Looking now",
+          sub: t("contacts.statLookingNow"),
           icon: UserCheck,
           variant: "buyers",
         },
         {
-          label: "Active Sellers",
+          label: t("contacts.statActiveSellers"),
           value: data.activeSellers || 0,
-          sub: "Selling properties",
+          sub: t("contacts.statSellingProperties"),
           icon: Home,
           variant: "sellers",
         },
         {
-          label: "Active Renters",
+          label: t("contacts.statActiveRenters"),
           value: data.activeRenters || 0,
-          sub: "Rental demand",
+          sub: t("contacts.statRentalDemand"),
           icon: Handshake,
           variant: "renters",
         },
         {
-          label: "Active Developers",
+          label: t("contacts.statActiveDevelopers"),
           value: data.activeDevelopers || 0,
-          sub: "Developer network",
+          sub: t("contacts.statDeveloperNetwork"),
           icon: Building2,
           variant: "developers",
         },
         {
-          label: "AI score",
+          label: t("contacts.statAiScore"),
           value: `${data.aiEngagement || 0}%`,
-          sub: "AI relationship score",
+          sub: t("contacts.statAiRelationshipScore"),
           icon: Bot,
           variant: "ai",
         },
@@ -337,10 +339,10 @@ export default function ContactsRelationshipsPage() {
       await apiClient.request("/contacts/ai-review", { method: "POST" });
       fetchContacts();
       fetchStats();
-      showToast("AI review completed");
+      showToast(t("contacts.aiReviewCompleted"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to load AI review", "error");
+      showToast(err?.message || t("contacts.aiReviewFailed"), "error");
     }
   };
 
@@ -350,15 +352,15 @@ export default function ContactsRelationshipsPage() {
         method: "GET",
       });
       const data = response?.data || response;
-      showToast(data?.summary || "No insights");
+      showToast(data?.summary || t("contacts.noInsights"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to load AI insights", "error");
+      showToast(err?.message || t("contacts.aiInsightsFailed"), "error");
     }
   };
 
   const messageContact = async (contactId) => {
-    const message = window.prompt("Enter WhatsApp message");
+    const message = window.prompt(t("contacts.enterWhatsappMessage"));
     if (!message?.trim()) return;
     try {
       await apiClient.request(`/whatsapp-qr/contacts/${contactId}/send`, {
@@ -367,27 +369,27 @@ export default function ContactsRelationshipsPage() {
           message: message.trim(),
         }),
       });
-      showToast("WhatsApp message sent");
+      showToast(t("contacts.whatsappMessageSent"));
       if (selectedContact?.id === contactId) {
         await fetchContactMessages(contactId);
       }
     } catch (err) {
       console.error("Send WhatsApp message from contact error:", err);
 
-      showToast(err?.message || "Failed to send WhatsApp message", "error");
+      showToast(err?.message || t("contacts.whatsappSendFailed"), "error");
     }
   };
 
   const callContact = (phone) => {
     if (!phone) {
-      showToast("No phone number on file for this contact", "error");
+      showToast(t("contacts.noPhoneNumber"), "error");
       return;
     }
     window.location.href = `tel:${phone}`;
   };
 
   const deleteContact = async (contactId) => {
-    const ok = window.confirm("Delete this contact?");
+    const ok = window.confirm(t("contacts.deleteContactConfirm"));
     if (!ok) return;
 
     try {
@@ -397,10 +399,10 @@ export default function ContactsRelationshipsPage() {
 
       setContacts((prev) => prev.filter((item) => item.id !== contactId));
       fetchStats();
-      showToast("Contact deleted");
+      showToast(t("contacts.contactDeleted"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to delete contact", "error");
+      showToast(err?.message || t("contacts.deleteFailed"), "error");
     }
   };
 
@@ -421,15 +423,15 @@ export default function ContactsRelationshipsPage() {
 
       setOpenMenuId(null);
       fetchStats();
-      showToast(`Status changed to ${status}`);
+      showToast(t("contacts.statusChanged", { status }));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to change status", "error");
+      showToast(err?.message || t("contacts.statusChangeFailed"), "error");
     }
   };
 
   const archiveContact = async (contactId) => {
-    const ok = window.confirm("Archive this contact?");
+    const ok = window.confirm(t("contacts.archiveConfirm"));
     if (!ok) return;
 
     try {
@@ -450,10 +452,10 @@ export default function ContactsRelationshipsPage() {
 
       setOpenMenuId(null);
       fetchStats();
-      showToast("Contact archived");
+      showToast(t("contacts.contactArchived"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to archive contact", "error");
+      showToast(err?.message || t("contacts.archiveFailed"), "error");
     }
   };
 
@@ -468,7 +470,7 @@ export default function ContactsRelationshipsPage() {
       const teamId = teamList?.[0]?.id;
 
       if (!teamId) {
-        showToast("No team found", "error");
+        showToast(t("contacts.noTeamFound"), "error");
         return;
       }
 
@@ -485,7 +487,7 @@ export default function ContactsRelationshipsPage() {
       setShowAssignModal(true);
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to load team members", "error");
+      showToast(err?.message || t("contacts.teamMembersFailed"), "error");
     }
   };
 
@@ -522,10 +524,10 @@ export default function ContactsRelationshipsPage() {
       setShowAssignModal(false);
       setAssignContact(null);
       setAssignTo("");
-      showToast("Agent assigned");
+      showToast(t("contacts.agentAssigned"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to assign agent", "error");
+      showToast(err?.message || t("contacts.assignAgentFailed"), "error");
     }
   };
 
@@ -580,7 +582,7 @@ export default function ContactsRelationshipsPage() {
         leadId = data?.lead?.id || null;
       }
       if (!leadId) {
-        showToast("This contact is not linked to a lead", "error");
+        showToast(t("contacts.noLinkedLead"), "error");
         return;
       }
       setOpenMenuId(null);
@@ -588,7 +590,7 @@ export default function ContactsRelationshipsPage() {
       navigate(`/dashboard/leads?leadId=${leadId}`);
     } catch (err) {
       console.error("Open linked lead error:", err);
-      showToast(err?.message || "Failed to open linked lead", "error");
+      showToast(err?.message || t("contacts.openLinkedLeadFailed"), "error");
     }
   };
 
@@ -610,14 +612,14 @@ export default function ContactsRelationshipsPage() {
       fetchActivities(contact.id);
     } catch (err) {
       console.error("Open contact from URL error:", err);
-      showToast(err?.message || "Failed to open contact", "error");
+      showToast(err?.message || t("contacts.openContactFailed"), "error");
     }
   };
 
   const latestNote =
     activities.find((item) => item.type === "note")?.sub ||
     selectedContact?.notes ||
-    "Add notes...";
+    t("contacts.addNotes");
 
   const openNoteModal = (contact) => {
     setNoteContact(contact);
@@ -629,7 +631,7 @@ export default function ContactsRelationshipsPage() {
     e.preventDefault();
 
     if (!noteText.trim()) {
-      showToast("Please enter a note", "error");
+      showToast(t("contacts.enterNote"), "error");
       return;
     }
 
@@ -653,16 +655,16 @@ export default function ContactsRelationshipsPage() {
       setShowNoteModal(false);
       setNoteContact(null);
       setNoteText("");
-      showToast("Note added");
+      showToast(t("contacts.noteAdded"));
     } catch (err) {
       console.error(err);
-      showToast(err?.message || "Failed to add note", "error");
+      showToast(err?.message || t("contacts.addNoteFailed"), "error");
     }
   };
 
   const getLatestNote = () => {
     const latest = activities.find((item) => item.type === "note");
-    return latest?.sub || selectedContact?.notes || "Add notes...";
+    return latest?.sub || selectedContact?.notes || t("contacts.addNotes");
   };
 
   const closeDetail = () => {
@@ -685,7 +687,7 @@ export default function ContactsRelationshipsPage() {
         <div className="modal-overlay">
           <div className="contact-modal">
             <div className="modal-header">
-              <h2>Edit Contact</h2>
+              <h2>{t("contacts.editContactTitle")}</h2>
               <button
                 className="icon-btn"
                 onClick={() => {
@@ -700,7 +702,7 @@ export default function ContactsRelationshipsPage() {
             <form onSubmit={updateContact}>
               <div className="modal-grid">
                 <div className="form-group">
-                  <label>Name</label>
+                  <label>{t("contacts.contactName")}</label>
                   <input
                     type="text"
                     required
@@ -712,7 +714,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Email</label>
+                  <label>{t("contacts.labelEmail")}</label>
                   <input
                     type="email"
                     value={editForm.email}
@@ -723,7 +725,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Phone</label>
+                  <label>{t("contacts.labelPhone")}</label>
                   <input
                     type="text"
                     value={editForm.phone}
@@ -734,7 +736,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Type</label>
+                  <label>{t("contacts.labelType")}</label>
                   <select
                     value={editForm.type}
                     onChange={(e) =>
@@ -749,7 +751,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Status</label>
+                  <label>{t("contacts.labelStatus")}</label>
                   <select
                     value={editForm.status}
                     onChange={(e) =>
@@ -765,7 +767,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group">
-                  <label>Source</label>
+                  <label>{t("contacts.labelSource")}</label>
                   <input
                     type="text"
                     value={editForm.source}
@@ -776,7 +778,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group full">
-                  <label>Interest</label>
+                  <label>{t("contacts.labelInterest")}</label>
                   <input
                     type="text"
                     value={editForm.interest}
@@ -787,7 +789,7 @@ export default function ContactsRelationshipsPage() {
                 </div>
 
                 <div className="form-group full">
-                  <label>Notes</label>
+                  <label>{t("contacts.notes")}</label>
                   <textarea
                     rows="4"
                     value={editForm.notes}
@@ -807,11 +809,11 @@ export default function ContactsRelationshipsPage() {
                     setEditForm(null);
                   }}
                 >
-                  Cancel
+                  {t("contacts.cancel")}
                 </button>
 
                 <button type="submit" className="primary-action">
-                  Save Changes
+                  {t("contacts.saveChanges")}
                 </button>
               </div>
             </form>
@@ -823,7 +825,7 @@ export default function ContactsRelationshipsPage() {
         <div className="modal-overlay">
           <div className="contact-modal">
             <div className="modal-header">
-              <h2>Assign Agent</h2>
+              <h2>{t("contacts.assignAgentTitle")}</h2>
               <button
                 className="icon-btn"
                 onClick={() => {
@@ -839,23 +841,23 @@ export default function ContactsRelationshipsPage() {
             <form onSubmit={assignAgent}>
               <div className="modal-grid">
                 <div className="form-group full">
-                  <label>Contact</label>
+                  <label>{t("contacts.labelContact")}</label>
                   <input value={assignContact.name || ""} disabled />
                 </div>
 
                 <div className="form-group full">
-                  <label>Agent</label>
+                  <label>{t("contacts.labelAgent")}</label>
                   <select
                     value={assignTo}
                     onChange={(e) => setAssignTo(e.target.value)}
                   >
-                    <option value="">Unassigned</option>
+                    <option value="">{t("contacts.unassigned")}</option>
                     {teamMembers.map((member) => (
                       <option
                         key={member.userId || member.id}
                         value={member.userId || member.id}
                       >
-                        {member.name || member.email || "Team Member"}
+                        {member.name || member.email || t("contacts.teamMember")}
                       </option>
                     ))}
                   </select>
@@ -872,11 +874,11 @@ export default function ContactsRelationshipsPage() {
                     setAssignTo("");
                   }}
                 >
-                  Cancel
+                  {t("contacts.cancel")}
                 </button>
 
                 <button type="submit" className="primary-action">
-                  Assign Agent
+                  {t("contacts.assignAgentTitle")}
                 </button>
               </div>
             </form>
@@ -888,7 +890,7 @@ export default function ContactsRelationshipsPage() {
         <div className="modal-overlay">
           <div className="contact-modal">
             <div className="modal-header">
-              <h2>Add Note</h2>
+              <h2>{t("contacts.addNoteTitle")}</h2>
               <button
                 className="icon-btn"
                 onClick={() => {
@@ -904,17 +906,17 @@ export default function ContactsRelationshipsPage() {
             <form onSubmit={addContactNote}>
               <div className="modal-grid">
                 <div className="form-group full">
-                  <label>Contact</label>
+                  <label>{t("contacts.labelContact")}</label>
                   <input value={noteContact.name || ""} disabled />
                 </div>
 
                 <div className="form-group full">
-                  <label>Note</label>
+                  <label>{t("contacts.labelNote")}</label>
                   <textarea
                     rows="5"
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
-                    placeholder="Write a note about this contact..."
+                    placeholder={t("contacts.notePlaceholder")}
                     required
                   />
                 </div>
@@ -930,11 +932,11 @@ export default function ContactsRelationshipsPage() {
                     setNoteText("");
                   }}
                 >
-                  Cancel
+                  {t("contacts.cancel")}
                 </button>
 
                 <button type="submit" className="primary-action">
-                  Save Note
+                  {t("contacts.saveNote")}
                 </button>
               </div>
             </form>
@@ -950,9 +952,9 @@ export default function ContactsRelationshipsPage() {
         <div className="detail-header">
           <button className="back-btn" onClick={closeDetail}>
             <ChevronLeft size={20} />
-            <span>Back</span>
+            <span>{t("contacts.back")}</span>
           </button>
-          <h2>Contact Details</h2>
+          <h2>{t("contacts.contactDetails")}</h2>
           <button
             className="more-btn"
             onClick={() => setShowDetailMoreMenu((prev) => !prev)}
@@ -968,7 +970,7 @@ export default function ContactsRelationshipsPage() {
                 openEditContact(selectedContact);
               }}
             >
-              <Edit3 size={15} /> Edit Contact
+              <Edit3 size={15} /> {t("contacts.editContactTitle")}
             </button>
 
             <button
@@ -977,12 +979,12 @@ export default function ContactsRelationshipsPage() {
                 openAssignAgent(selectedContact);
               }}
             >
-              <UserCog size={15} /> Assign Agent
+              <UserCog size={15} /> {t("contacts.assignAgentTitle")}
             </button>
             {selectedContact.linkedLeadId && (
               <button onClick={() => openLinkedLead(selectedContact)}>
                 <GitFork size={15} />
-                Open Lead
+                {t("contacts.openLead")}
               </button>
             )}
             <button
@@ -991,7 +993,7 @@ export default function ContactsRelationshipsPage() {
                 openNoteModal(selectedContact);
               }}
             >
-              <StickyNote size={15} /> Add Note
+              <StickyNote size={15} /> {t("contacts.addNoteTitle")}
             </button>
 
             <button
@@ -1001,7 +1003,7 @@ export default function ContactsRelationshipsPage() {
               }}
               className="warning"
             >
-              <Archive size={15} /> Archive Contact
+              <Archive size={15} /> {t("contacts.archiveContact")}
             </button>
 
             <button
@@ -1012,7 +1014,7 @@ export default function ContactsRelationshipsPage() {
               }}
               className="danger"
             >
-              <Trash2 size={15} /> Delete Contact
+              <Trash2 size={15} /> {t("contacts.deleteContactAction")}
             </button>
           </div>
         )}
@@ -1049,7 +1051,7 @@ export default function ContactsRelationshipsPage() {
             <div className="contact-info-list no-border-bottom">
               <div className="info-item">
                 <div className="info-label-group">
-                  <Mail size={16} /> <span>Email:</span>
+                  <Mail size={16} /> <span>{t("contacts.labelEmail")}:</span>
                 </div>
                 <div className="info-value text-link">
                   {selectedContact.email || "-"}
@@ -1058,14 +1060,14 @@ export default function ContactsRelationshipsPage() {
 
               <div className="info-item">
                 <div className="info-label-group">
-                  <Phone size={16} /> <span>Phone:</span>
+                  <Phone size={16} /> <span>{t("contacts.labelPhone")}:</span>
                 </div>
                 <div className="info-value">{selectedContact.phone || "-"}</div>
               </div>
 
               <div className="info-item">
                 <div className="info-label-group">
-                  <UserPlus size={16} /> <span>Source:</span>
+                  <UserPlus size={16} /> <span>{t("contacts.labelSource")}:</span>
                 </div>
                 <div className="info-value">
                   {selectedContact.source || "-"}
@@ -1075,7 +1077,7 @@ export default function ContactsRelationshipsPage() {
               <div className="info-item">
                 <div className="info-label-group">
                   <GitFork size={16} />
-                  <span>Linked Lead:</span>
+                  <span>{t("contacts.labelLinkedLead")}:</span>
                 </div>
                 <div className="info-value">
                   {selectedContact.linkedLeadId ? (
@@ -1084,7 +1086,7 @@ export default function ContactsRelationshipsPage() {
                       className="contact-linked-lead-btn"
                       onClick={() => openLinkedLead(selectedContact)}
                     >
-                      {selectedContact.linkedLead || "Open Lead"}
+                      {selectedContact.linkedLead || t("contacts.openLead")}
                       <ChevronRight size={14} />
                     </button>
                   ) : (
@@ -1095,7 +1097,7 @@ export default function ContactsRelationshipsPage() {
 
               <div className="info-item">
                 <div className="info-label-group">
-                  <Home size={16} /> <span>Interested:</span>
+                  <Home size={16} /> <span>{t("contacts.labelInterested")}:</span>
                 </div>
                 <div className="info-value emphasis">
                   {selectedContact.interest || "-"}
@@ -1104,18 +1106,18 @@ export default function ContactsRelationshipsPage() {
 
               <div className="info-item">
                 <div className="info-label-group">
-                  <UserCog size={16} /> <span>Agent:</span>
+                  <UserCog size={16} /> <span>{t("contacts.labelAgent")}:</span>
                 </div>
                 <div className="info-value">
                   {selectedContact.assignedAgentName ||
                     selectedContact.assignedAgentEmail ||
-                    "Unassigned"}
+                    t("contacts.unassigned")}
                 </div>
               </div>
 
               <div className="info-item">
                 <div className="info-label-group">
-                  <Calendar size={16} /> <span>Added:</span>
+                  <Calendar size={16} /> <span>{t("contacts.labelAdded")}:</span>
                 </div>
                 <div className="info-value">
                   {selectedContact.addedDate
@@ -1134,7 +1136,7 @@ export default function ContactsRelationshipsPage() {
 
               <div className="info-item alignment-top">
                 <div className="info-label-group">
-                  <StickyNote size={16} /> <span>Notes:</span>
+                  <StickyNote size={16} /> <span>{t("contacts.notes")}:</span>
                 </div>
                 <div
                   className="info-value note-placeholder"
@@ -1152,14 +1154,14 @@ export default function ContactsRelationshipsPage() {
             <div className="section-card-header">
               <div className="section-card-title purple-text">
                 <Sparkles size={18} />
-                <span>AI Insights</span>
+                <span>{t("contacts.aiInsights")}</span>
               </div>
               <button className="section-action-link" onClick={loadAiInsights}>
-                View Insights
+                {t("contacts.viewInsights")}
               </button>
             </div>
             <p className="section-card-body">
-              High potential buyer based on engagement and property views.
+              {t("contacts.aiInsightPlaceholder")}
             </p>
           </div>
 
@@ -1168,13 +1170,13 @@ export default function ContactsRelationshipsPage() {
             <div className="section-card-header">
               <div className="section-card-title">
                 <MessageSquare size={18} />
-                <span>Conversation History</span>
+                <span>{t("contacts.conversationHistory")}</span>
               </div>
             </div>
             {activitiesLoading ? (
               <div className="history-item-clickable">
                 <div className="history-brief">
-                  <span>Loading activities...</span>
+                  <span>{t("contacts.loadingActivities")}</span>
                 </div>
               </div>
             ) : activities.length ? (
@@ -1195,7 +1197,7 @@ export default function ContactsRelationshipsPage() {
             ) : (
               <div className="history-item-clickable">
                 <div className="history-brief">
-                  <span>No activity yet.</span>
+                  <span>{t("contacts.noActivity")}</span>
                 </div>
               </div>
             )}
@@ -1207,28 +1209,28 @@ export default function ContactsRelationshipsPage() {
               onClick={() => messageContact(selectedContact.id)}
             >
               <Send size={18} />
-              <span>Message</span>
+              <span>{t("contacts.message")}</span>
             </button>
             <button
               className="action-grid-btn"
               onClick={() => callContact(selectedContact.phone)}
             >
               <Phone size={18} />
-              <span>Call</span>
+              <span>{t("contacts.call")}</span>
             </button>
             <button
               className="action-grid-btn"
               onClick={() => openNoteModal(selectedContact)}
             >
               <StickyNote size={18} />
-              <span>Notes</span>
+              <span>{t("contacts.notes")}</span>
             </button>
             <button
               className="action-grid-btn"
               onClick={() => setShowDetailMoreMenu((prev) => !prev)}
             >
               <MoreVertical size={18} />
-              <span>More</span>
+              <span>{t("contacts.more")}</span>
             </button>
           </div>
         </div>
@@ -1241,12 +1243,9 @@ export default function ContactsRelationshipsPage() {
     <div>
       <div className="heading_page">
         <Users className="header-icon" size={20} />
-        <h1>Contacts & Relationships</h1>
+        <h1>{t("contacts.pageTitle")}</h1>
       </div>
-      <p className="sub_head">
-        Manage buyers, sellers, investors, venters and conversations from one
-        AI-powered workspace.
-      </p>
+      <p className="sub_head">{t("contacts.pageSubtitle")}</p>
       <div className="contacts-page">
         <main className="main-content">
           <div className="content-wrapper">
@@ -1261,7 +1260,7 @@ export default function ContactsRelationshipsPage() {
                     title={stat.label}
                     value={stat.value}
                     sub={stat.sub}
-                    trend={stat.label === "Active Sellers" ? "0%" : "+12%"}
+                    trend={stat.variant === "sellers" ? "0%" : "+12%"}
                     variant={stat.variant}
                   />
                 );
@@ -1274,18 +1273,18 @@ export default function ContactsRelationshipsPage() {
                 <div className="search-box">
                   <Search size={18} />
                   <input
-                    placeholder="Search contacts..."
+                    placeholder={t("contacts.searchPlaceholder")}
                     value={search}
                     onChange={handleSearch}
                   />
                 </div>
 
                 {[
-                  { label: "All", query: "" },
-                  { label: "Buyers", query: "?type=Buyer" },
-                  { label: "Sellers", query: "?type=Seller" },
-                  { label: "Developers", query: "?type=Developer" },
-                  { label: "Renters", query: "?type=Renter" },
+                  { label: t("contacts.filterAll"), query: "" },
+                  { label: t("contacts.filterBuyers"), query: "?type=Buyer" },
+                  { label: t("contacts.filterSellers"), query: "?type=Seller" },
+                  { label: t("contacts.filterDevelopers"), query: "?type=Developer" },
+                  { label: t("contacts.filterRenters"), query: "?type=Renter" },
                 ].map((item) => (
                   <button
                     key={item.label}
@@ -1300,16 +1299,16 @@ export default function ContactsRelationshipsPage() {
                     className="action-btn insights"
                     onClick={loadAiInsights}
                   >
-                    <Sparkles /> AI Insights
+                    <Sparkles /> {t("contacts.aiInsights")}
                   </button>
                   <button className="action-btn runai" onClick={runAiReview}>
-                    <Bot /> Run AI Review
+                    <Bot /> {t("contacts.runAiReview")}
                   </button>
                   <button
                     className="primary-btn"
                     onClick={() => setShowCreateModal(true)}
                   >
-                    <Plus size={18} /> Add Contact
+                    <Plus size={18} /> {t("contacts.addContactTitle")}
                   </button>
                 </div>
               </div>
@@ -1318,7 +1317,7 @@ export default function ContactsRelationshipsPage() {
             {/* CONTACTS GRID */}
             <div className="contacts-grid">
               {loading ? (
-                <div>Loading...</div>
+                <div>{t("contacts.loading")}</div>
               ) : (
                 contacts.map((contact) => (
                   <div
@@ -1368,20 +1367,20 @@ export default function ContactsRelationshipsPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button onClick={() => openEditContact(contact)}>
-                              <Edit3 size={15} /> Edit Contact
+                              <Edit3 size={15} /> {t("contacts.editContactTitle")}
                             </button>
                             <button onClick={() => openAssignAgent(contact)}>
-                              <UserCog size={15} /> Assign Agent
+                              <UserCog size={15} /> {t("contacts.assignAgentTitle")}
                             </button>
                             {contact.linkedLeadId && (
                               <button onClick={() => openLinkedLead(contact)}>
                                 <GitFork size={15} />
-                                Open Lead
+                                {t("contacts.openLead")}
                               </button>
                             )}
                             <div className="status-menu-group">
                               <button>
-                                <StickyNote size={15} /> Change Status
+                                <StickyNote size={15} /> {t("contacts.changeStatus")}
                               </button>
 
                               <div className="status-submenu">
@@ -1400,19 +1399,19 @@ export default function ContactsRelationshipsPage() {
                               </div>
                             </div>
                             <button onClick={runAiReview}>
-                              <Bot size={15} /> Run AI Review
+                              <Bot size={15} /> {t("contacts.runAiReview")}
                             </button>
                             <button
                               className="warning"
                               onClick={() => archiveContact(contact.id)}
                             >
-                              <Archive size={15} /> Archive Contact
+                              <Archive size={15} /> {t("contacts.archiveContact")}
                             </button>
                             <button
                               className="danger"
                               onClick={() => deleteContact(contact.id)}
                             >
-                              <Trash2 size={15} /> Delete Contact
+                              <Trash2 size={15} /> {t("contacts.deleteContactAction")}
                             </button>
                           </div>
                         )}
@@ -1422,7 +1421,7 @@ export default function ContactsRelationshipsPage() {
                     <div className="contact-info-list">
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Mail size={16} /> <span>Email:</span>
+                          <Mail size={16} /> <span>{t("contacts.labelEmail")}:</span>
                         </div>
                         <div className="info-value text-link">
                           {contact.email || "-"}
@@ -1430,13 +1429,13 @@ export default function ContactsRelationshipsPage() {
                       </div>
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Phone size={16} /> <span>Phone:</span>
+                          <Phone size={16} /> <span>{t("contacts.labelPhone")}:</span>
                         </div>
                         <div className="info-value">{contact.phone || "-"}</div>
                       </div>
                       <div className="info-item">
                         <div className="info-label-group">
-                          <UserPlus size={16} /> <span>Source:</span>
+                          <UserPlus size={16} /> <span>{t("contacts.labelSource")}:</span>
                         </div>
                         <div className="info-value">
                           {contact.source || "-"}
@@ -1444,7 +1443,7 @@ export default function ContactsRelationshipsPage() {
                       </div>
                       <div className="info-item">
                         <div className="info-label-group">
-                          <Home size={16} /> <span>Interested:</span>
+                          <Home size={16} /> <span>{t("contacts.labelInterested")}:</span>
                         </div>
                         <div className="info-value emphasis">
                           {contact.interest || "-"}
@@ -1460,7 +1459,7 @@ export default function ContactsRelationshipsPage() {
                           openContactDetail(contact);
                         }}
                       >
-                        <Eye size={16} /> <span>View</span>
+                        <Eye size={16} /> <span>{t("contacts.view")}</span>
                       </button>
                       <button
                         className="footer-action-btn"
@@ -1469,7 +1468,7 @@ export default function ContactsRelationshipsPage() {
                           messageContact(contact.id);
                         }}
                       >
-                        <Send size={16} /> <span>Message</span>
+                        <Send size={16} /> <span>{t("contacts.message")}</span>
                       </button>
                       <button
                         className="footer-action-btn"
@@ -1478,7 +1477,7 @@ export default function ContactsRelationshipsPage() {
                           callContact(contact.phone);
                         }}
                       >
-                        <Phone size={16} /> <span>Call</span>
+                        <Phone size={16} /> <span>{t("contacts.call")}</span>
                       </button>
                       <button
                         className="footer-action-btn"
@@ -1487,7 +1486,7 @@ export default function ContactsRelationshipsPage() {
                           openNoteModal(contact);
                         }}
                       >
-                        <StickyNote size={16} /> <span>Notes</span>
+                        <StickyNote size={16} /> <span>{t("contacts.notes")}</span>
                       </button>
                     </div>
                   </div>
@@ -1501,7 +1500,7 @@ export default function ContactsRelationshipsPage() {
             <div className="modal-overlay">
               <div className="contact-modal">
                 <div className="modal-header">
-                  <h2>Add Contact</h2>
+                  <h2>{t("contacts.addContactTitle")}</h2>
                   <button
                     className="icon-btn"
                     onClick={() => setShowCreateModal(false)}
@@ -1512,7 +1511,7 @@ export default function ContactsRelationshipsPage() {
                 <form onSubmit={createContact}>
                   <div className="modal-grid">
                     <div className="form-group">
-                      <label>Name</label>
+                      <label>{t("contacts.contactName")}</label>
                       <input
                         type="text"
                         required
@@ -1523,7 +1522,7 @@ export default function ContactsRelationshipsPage() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Email</label>
+                      <label>{t("contacts.labelEmail")}</label>
                       <input
                         type="email"
                         required
@@ -1537,7 +1536,7 @@ export default function ContactsRelationshipsPage() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Phone</label>
+                      <label>{t("contacts.labelPhone")}</label>
                       <input
                         type="text"
                         value={createForm.phone}
@@ -1550,7 +1549,7 @@ export default function ContactsRelationshipsPage() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Type</label>
+                      <label>{t("contacts.labelType")}</label>
                       <select
                         value={createForm.type}
                         onChange={(e) =>
@@ -1564,7 +1563,7 @@ export default function ContactsRelationshipsPage() {
                       </select>
                     </div>
                     <div className="form-group full">
-                      <label>Notes</label>
+                      <label>{t("contacts.notes")}</label>
                       <textarea
                         rows="4"
                         value={createForm.notes}
@@ -1583,10 +1582,10 @@ export default function ContactsRelationshipsPage() {
                       className="secondary-action"
                       onClick={() => setShowCreateModal(false)}
                     >
-                      Cancel
+                      {t("contacts.cancel")}
                     </button>
                     <button type="submit" className="primary-action">
-                      Create Contact
+                      {t("contacts.createContactTitle")}
                     </button>
                   </div>
                 </form>
@@ -1621,6 +1620,7 @@ export default function ContactsRelationshipsPage() {
 }
 
 function KPIBox({ icon, title, value, sub, trend, variant }) {
+  const { t } = useTranslation();
   return (
     <div className={`kpi-box ${variant}`}>
       <div className="kpi-top">
@@ -1642,11 +1642,11 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
           <svg viewBox="0 0 180 42" preserveAspectRatio="none">
             <path
               d={
-                title === "Active Sellers"
+                variant === "sellers"
                   ? "M0 24 L20 24 L40 24 L60 24 L80 24 L100 24 L120 24 L140 24 L160 24 L180 24"
-                  : title === "AI score"
+                  : variant === "ai"
                     ? "M0 32 L20 28 L40 26 L60 18 L80 24 L100 16 L120 12 L140 20 L160 10 L180 6"
-                    : title === "Active Buyers"
+                    : variant === "buyers"
                       ? "M0 30 L20 24 L40 26 L60 18 L80 22 L100 16 L120 8 L140 14 L160 10 L180 4"
                       : "M0 34 L20 30 L40 32 L60 24 L80 28 L100 18 L120 8 L140 14 L160 10 L180 4"
               }
@@ -1658,7 +1658,7 @@ function KPIBox({ icon, title, value, sub, trend, variant }) {
           </svg>
         </div>
         <div className="kpi-bottom">
-          <span>Last 30 days</span>
+          <span>{t("contacts.last30Days")}</span>
         </div>
       </div>
     </div>

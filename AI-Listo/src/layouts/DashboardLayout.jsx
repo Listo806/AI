@@ -187,9 +187,9 @@ export default function DashboardLayout() {
   const getToggleButtonLabel = () => {
     const isMobile = window.innerWidth < 1025;
     if (isMobile) {
-      return sidebarOpen ? "Close menu" : "Open menu";
+      return sidebarOpen ? t('nav.closeMenu') : t('nav.openMenu');
     } else {
-      return sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar";
+      return sidebarCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar');
     }
   };
 
@@ -235,7 +235,7 @@ export default function DashboardLayout() {
               <button
                 className="crm-account-trigger"
                 onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                aria-label="Account menu"
+                aria-label={t('nav.accountMenu')}
               >
                 <div className="crm-header-avatar">
                   {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
@@ -248,7 +248,7 @@ export default function DashboardLayout() {
                       {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div className="crm-account-menu-info">
-                      <div className="crm-account-menu-name">{user?.name || user?.email || 'User'}</div>
+                      <div className="crm-account-menu-name">{user?.name || user?.email || t('nav.userFallback')}</div>
                       <div className="crm-account-menu-role">{user?.role || 'user'}</div>
                     </div>
                   </div>
@@ -283,7 +283,7 @@ export default function DashboardLayout() {
                       onClick={toggleTheme}
                       role="switch"
                       aria-checked={isDark}
-                      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                      aria-label={isDark ? t('nav.switchToLight') : t('nav.switchToDark')}
                     >
                       <span className={`crm-theme-option ${!isDark ? 'active' : ''}`}>{t('header.light') || 'Light'}</span>
                       <span className={`crm-theme-option ${isDark ? 'active' : ''}`}>{t('header.dark') || 'Dark'}</span>
@@ -303,7 +303,7 @@ export default function DashboardLayout() {
                           width: '100%',
                         }}
                       >
-                        <span>Admin</span>
+                        <span>{t('nav.admin')}</span>
                         <span style={{ fontSize: 11, color: '#9ca3af' }}>
                           {adminMenuOpen ? '▾' : '▸'}
                         </span>
@@ -315,28 +315,28 @@ export default function DashboardLayout() {
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
-                            Listings
+                            {t('nav.listings')}
                           </Link>
                           <Link
                             to="/dashboard/admin/users"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
-                            Users
+                            {t('nav.users')}
                           </Link>
                           <Link
                             to="/dashboard/admin/teams"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
-                            Teams
+                            {t('nav.teams')}
                           </Link>
                           <Link
                             to="/dashboard/admin/plans"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
-                            Plans
+                            {t('nav.adminPlans')}
                           </Link>
                         </div>
                       )}

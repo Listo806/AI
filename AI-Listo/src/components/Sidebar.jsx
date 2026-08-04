@@ -22,12 +22,12 @@ const AI_CENTER_ITEMS = [
   {
     path: "/dashboard/ai-cortexa-setup",
     icon: "settings",
-    label: "Setup",
+    labelKey: "nav.setup",
   },
   {
     path: "/dashboard/calendar",
     icon: "calendar",
-    label: "Calendar",
+    labelKey: "nav.calendar",
   },
   // Single, clean AI Agent entry -> opens the one-page ChatGPT-style workspace.
   // The old multi-tab AI setup page stays reachable by URL (/dashboard/ai-cortexa-setup)
@@ -35,7 +35,7 @@ const AI_CENTER_ITEMS = [
   {
     path: "/dashboard/ai-cortexa",
     icon: "bot",
-    label: "AI Agent",
+    labelKey: "nav.aiCenter.label",
   },
   // { path: "/dashboard/ai-center", labelKey: "nav.aiCenter.overview" },
   // { path: "/dashboard/ai-assistant", labelKey: "nav.aiCenter.aiAssistant" },
@@ -120,7 +120,7 @@ export default function Sidebar({
           {
             path: "/dashboard/whatsapp-qr",
             icon: "smartphone",
-            label: "WhatsApp QR",
+            labelKey: "nav.whatsappQr",
           },
         ]
       : primaryRouteIsQr
@@ -238,8 +238,12 @@ export default function Sidebar({
           <button
             className="crm-sidebar-toggle-inside"
             onClick={onToggleCollapse}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              isCollapsed ? t("nav.expandSidebar") : t("nav.collapseSidebar")
+            }
+            title={
+              isCollapsed ? t("nav.expandSidebar") : t("nav.collapseSidebar")
+            }
           >
             {isCollapsed ? (
               <ChevronsRight size={18} />
@@ -388,7 +392,7 @@ export default function Sidebar({
                   <span className="crm-nav-label">{t(item.labelKey)}</span>
 
                   {item.labelKey === "nav.generator" && (
-                    <span className="crm-nav-addon">add on</span>
+                    <span className="crm-nav-addon">{t("nav.addOn")}</span>
                   )}
                 </>
               )}

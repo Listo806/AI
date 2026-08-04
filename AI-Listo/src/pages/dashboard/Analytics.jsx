@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -95,10 +96,10 @@ function rangeToDays(range) {
   return 30;
 }
 
-function periodLabel(range) {
-  if (range === "today") return "Today";
-  if (range === "7d") return "Last 7 days";
-  return "Last 30 days";
+function periodLabel(range, t) {
+  if (range === "today") return t("analytics.periodToday");
+  if (range === "7d") return t("analytics.periodLast7Days");
+  return t("analytics.periodLast30Days");
 }
 
 function dateRangeLabel(range) {
@@ -121,6 +122,7 @@ function shortDate(value) {
 
 export default function CortexaAnalyticsDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [range, setRange] = useState("30d");
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = () => setRefreshTick((t) => t + 1);
@@ -179,7 +181,7 @@ export default function CortexaAnalyticsDashboard() {
           if (!cancelled) setCalStats(null);
         }
       } catch (e) {
-        if (!cancelled) setError(e?.message || "Failed to load analytics data.");
+        if (!cancelled) setError(e?.message || t("analytics.loadError"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -196,11 +198,11 @@ export default function CortexaAnalyticsDashboard() {
   const byStatus = leads?.byStatus || null;
   const metrics = summary?.data?.metrics || null; // { leads_total, leads_new, leads_active, leads_closed, conversations_total, conversations_unread, ai_actions_today }
   const totalLeads = leads?.total ?? 0;
-  const label = periodLabel(range);
+  const label = periodLabel(range, t);
 
   const kpisRow1 = [
     {
-      title: "Projected Revenue",
+      title: t("analytics.projectedRevenue"),
       value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
       delta: null,
       subtext: label,
@@ -209,7 +211,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-green-strong",
     },
     {
-      title: "New Leads",
+      title: t("analytics.newLeads"),
       value: leads ? String(leads.created ?? 0) : NO_DATA, // leads.created (in period)
       delta: null,
       subtext: label,
@@ -218,7 +220,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-blue-strong",
     },
     {
-      title: "Conversion Rate",
+      title: t("analytics.conversionRate"),
       value: leads ? `${Number(leads.conversionRate || 0).toFixed(1)}%` : NO_DATA, // leads.conversionRate
       delta: null,
       subtext: label,
@@ -227,7 +229,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-cyan-strong",
     },
     {
-      title: "Appointments Booked",
+      title: t("analytics.appointmentsBooked"),
       value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
       delta: null,
       subtext: label,
@@ -236,7 +238,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-pink-strong",
     },
     {
-      title: "Avg Speed to Lead",
+      title: t("analytics.avgSpeedToLead"),
       value: NO_DATA, // no backend source
       delta: null,
       subtext: label,
@@ -245,7 +247,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-orange-strong",
     },
     {
-      title: "Avg Time to Close",
+      title: t("analytics.avgTimeToClose"),
       value: NO_DATA, // no backend source (averageTimeToConvert not returned)
       delta: null,
       subtext: label,
@@ -254,7 +256,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-red-strong",
     },
     {
-      title: "Pipeline Value",
+      title: t("analytics.pipelineValueKpi"),
       value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
       delta: null,
       subtext: label,
@@ -263,7 +265,7 @@ export default function CortexaAnalyticsDashboard() {
       iconColor: "text-blue-strong",
     },
     {
-      title: "Follow-Up Completion",
+      title: t("analytics.followUpCompletion"),
       value: leads
         ? totalLeads > 0
           ? `${Math.round(((byStatus?.contacted || 0) / totalLeads) * 100)}%`
@@ -390,12 +392,9 @@ export default function CortexaAnalyticsDashboard() {
     <div className="analytics-page">
       <div className="heading_page">
         <BarChart3 className="header-icon" size={20} />
-        <h1>Analytics Overview</h1>
+        <h1>{t("analytics.analyticsOverview")}</h1>
       </div>
-      <p className="sub_head">
-        Monitor revenue, conversation performance, AI effectiveness, ROI and
-        pipeline intelligence in real time.
-      </p>
+      <p className="sub_head">{t("analytics.subheading")}</p>
       <header className="main-header">
         <div className="header-controls">
           <div className="date-picker-wrapper">
@@ -409,25 +408,25 @@ export default function CortexaAnalyticsDashboard() {
               value={range}
               onChange={(e) => setRange(e.target.value)}
             >
-              <option value="today">Today</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
+              <option value="today">{t("analytics.periodToday")}</option>
+              <option value="7d">{t("analytics.periodLast7Days")}</option>
+              <option value="30d">{t("analytics.periodLast30Days")}</option>
             </select>
             <ChevronDown size={14} className="select-arrow" />
           </div>
 
           <button className="btn-secondary" onClick={exportData}>
-            <Download size={15} /> Export
+            <Download size={15} /> {t("analytics.export")}
           </button>
           <button className="btn-primary" onClick={refresh}>
-            <RefreshCw size={15} /> Refresh
+            <RefreshCw size={15} /> {t("analytics.refresh")}
           </button>
         </div>
       </header>
 
       {loading && (
         <div style={infoStyle}>
-          <RefreshCw size={14} /> Loading analytics…
+          <RefreshCw size={14} /> {t("analytics.loadingAnalytics")}
         </div>
       )}
       {error && (
@@ -479,12 +478,10 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <Globe size={18} className="text-royal-blue" />
-              <h3>Lead Source Intelligence</h3>
+              <h3>{t("analytics.leadSourceIntelligence")}</h3>
             </div>
           </div>
-          <p className="card-subtitle">
-            Lead volume by source
-          </p>
+          <p className="card-subtitle">{t("analytics.leadVolumeBySource")}</p>
 
           <div className="lead-source-layout">
             <div className="chart-container-donut">
@@ -510,13 +507,13 @@ export default function CortexaAnalyticsDashboard() {
 
               <div className="donut-center-text">
                 <span className="total-number">{totalSourceLeads}</span>
-                <span className="total-label">Total Leads</span>
+                <span className="total-label">{t("analytics.totalLeads")}</span>
               </div>
             </div>
 
             <div className="lead-source-list-v2">
               {leadSources.length === 0 ? (
-                <span style={emptyStyle}>No lead source data</span>
+                <span style={emptyStyle}>{t("analytics.noLeadSourceData")}</span>
               ) : (
                 leadSources.map((src, i) => (
                   <div key={i} className="list-item-row-v2">
@@ -543,7 +540,7 @@ export default function CortexaAnalyticsDashboard() {
               className="btn-view-all"
               onClick={() => navigate("/dashboard/leads")}
             >
-              View all sources <ArrowRight size={14} />
+              {t("analytics.viewAllSources")} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -553,19 +550,17 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <AlertTriangle size={18} className="text-royal-blue" />
-              <h3>Pipeline Leakage Analysis</h3>
+              <h3>{t("analytics.pipelineLeakageAnalysis")}</h3>
             </div>
           </div>
-          <p className="card-subtitle">
-            Identify where deals are dropping off in the pipeline
-          </p>
+          <p className="card-subtitle">{t("analytics.pipelineLeakageSubtitle")}</p>
 
           <div className="pipeline-funnel-wrapper">
             <div className="funnel-table-header">
-              <span>Stage</span>
-              <span className="text-center">Deals</span>
-              <span className="text-right">Conversion</span>
-              <span className="text-right">vs Prev.</span>
+              <span>{t("analytics.stage")}</span>
+              <span className="text-center">{t("analytics.deals")}</span>
+              <span className="text-right">{t("analytics.conversion")}</span>
+              <span className="text-right">{t("analytics.vsPrev")}</span>
             </div>
             <div className="funnel-bars-container">
               {pipelineStages.map((stage, i) => {
@@ -609,7 +604,7 @@ export default function CortexaAnalyticsDashboard() {
                 className="btn-view-all"
                 onClick={() => navigate("/dashboard/pipeline")}
               >
-                View full pipeline <ArrowRight size={14} />
+                {t("analytics.viewFullPipeline")} <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -620,17 +615,15 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <MessageCircle size={18} className="text-green-strong" />
-              <h3>Activity Over Time</h3>
+              <h3>{t("analytics.activityOverTime")}</h3>
             </div>
           </div>
-          <p className="card-subtitle">
-            Platform activity over the selected period
-          </p>
+          <p className="card-subtitle">{t("analytics.platformActivitySubtitle")}</p>
           <div className="wa-analytics-layout">
             <div className="wa-chart-container">
               {activityData.length === 0 ? (
                 <div style={{ ...emptyStyle, height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  No activity in this period
+                  {t("analytics.noActivityInPeriod")}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={180}>
@@ -692,7 +685,7 @@ export default function CortexaAnalyticsDashboard() {
             <div className="wa-metrics-grid">
               {/* Card 1 – real summary metric: conversations_total */}
               <div className="wa-metric-card">
-                <span className="metric-title">Conversations</span>
+                <span className="metric-title">{t("analytics.conversations")}</span>
                 <span className="metric-value">
                   {metrics ? metrics.conversations_total ?? 0 : NO_DATA}
                 </span>
@@ -701,20 +694,20 @@ export default function CortexaAnalyticsDashboard() {
 
               {/* Card 2 – no backend source */}
               <div className="wa-metric-card">
-                <span className="metric-title">Replies Sent</span>
+                <span className="metric-title">{t("analytics.repliesSent")}</span>
                 <span className="metric-value">{NO_DATA}</span>
                 <span className="metric-badge pos">{NO_DATA}</span>
               </div>
 
               {/* Card 3 – no backend source */}
               <div className="wa-metric-card no-badge">
-                <span className="metric-title">Replies This Period</span>
+                <span className="metric-title">{t("analytics.repliesThisPeriod")}</span>
                 <span className="metric-value">{NO_DATA}</span>
               </div>
 
               {/* Card 4 – no backend source */}
               <div className="wa-metric-card no-badge">
-                <span className="metric-title">Appointments Booked</span>
+                <span className="metric-title">{t("analytics.appointmentsBooked")}</span>
                 <span className="metric-value">{NO_DATA}</span>
               </div>
             </div>
@@ -726,7 +719,7 @@ export default function CortexaAnalyticsDashboard() {
               className="btn-view-all"
               onClick={() => navigate("/dashboard/whatsapp")}
             >
-              Open WhatsApp Workspace <ArrowRight size={14} />
+              {t("analytics.openWhatsappWorkspace")} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -739,19 +732,19 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <AlertTriangle size={18} className="text-red-strong" />
-              <h3>Lost Deal Reasons</h3>
+              <h3>{t("analytics.lostDealReasons")}</h3>
             </div>
           </div>
-          <p className="card-subtitle">Why deals didnot close</p>
+          <p className="card-subtitle">{t("analytics.whyDealsDidntClose")}</p>
           <div className="lost-reasons-list">
             <div className="lost-header-row">
-              <span>Reason</span>
+              <span>{t("analytics.reason")}</span>
               <span></span>
-              <span className="text-right">Last Deals</span>
-              <span className="text-right">% of Total</span>
+              <span className="text-right">{t("analytics.lastDeals")}</span>
+              <span className="text-right">{t("analytics.percentOfTotal")}</span>
             </div>
             {lostReasons.length === 0 ? (
-              <span style={emptyStyle}>No data available</span>
+              <span style={emptyStyle}>{t("analytics.noDataAvailable")}</span>
             ) : (
               lostReasons.map((item, i) => (
                 <div key={i} className="lost-item-row">
@@ -772,7 +765,7 @@ export default function CortexaAnalyticsDashboard() {
               className="btn-view-all"
               onClick={() => navigate("/dashboard/pipeline")}
             >
-              View all reasons <ArrowRight size={14} />
+              {t("analytics.viewAllReasons")} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -782,20 +775,20 @@ export default function CortexaAnalyticsDashboard() {
           <div className="card-header">
             <div className="card-header-left">
               <Users size={18} className="text-royal-blue" />
-              <h3>Team Performance</h3>
+              <h3>{t("analytics.teamPerformance")}</h3>
             </div>
           </div>
-          <p className="card-subtitle">How your team is performance</p>
+          <p className="card-subtitle">{t("analytics.howYourTeamIsPerforming")}</p>
           <div className="team-performance-list">
             <div className="team-header-row">
-              <span>Agent</span>
-              <span>Close Rate</span>
-              <span>Response Time</span>
-              <span>Deals</span>
-              <span className="text-right">Revenue</span>
+              <span>{t("analytics.agent")}</span>
+              <span>{t("analytics.closeRate")}</span>
+              <span>{t("analytics.responseTime")}</span>
+              <span>{t("analytics.deals")}</span>
+              <span className="text-right">{t("analytics.revenue")}</span>
             </div>
             {teamPerformance.length === 0 ? (
-              <span style={emptyStyle}>No data available</span>
+              <span style={emptyStyle}>{t("analytics.noDataAvailable")}</span>
             ) : (
               teamPerformance.map((agent, i) => (
                 <div key={i} className="team-item-row">
@@ -829,7 +822,7 @@ export default function CortexaAnalyticsDashboard() {
               className="btn-view-all"
               onClick={() => navigate("/dashboard/team")}
             >
-              View full team report <ArrowRight size={14} />
+              {t("analytics.viewFullTeamReport")} <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -839,18 +832,16 @@ export default function CortexaAnalyticsDashboard() {
             <div className="card-header">
               <div className="card-header-left">
                 <Sparkles size={18} className="text-royal-blue" />
-                <h3>AI Revenue Insights</h3>
+                <h3>{t("analytics.aiRevenueInsights")}</h3>
               </div>
               <button
                 className="btn-view-all"
                 onClick={() => navigate("/dashboard/leads")}
               >
-                View all insights <ArrowRight size={14} />
+                {t("analytics.viewAllInsights")} <ArrowRight size={14} />
               </button>
             </div>
-            <p className="card-subtitle">
-              Actionable insights generated by Cortesa AI
-            </p>
+            <p className="card-subtitle">{t("analytics.actionableInsights")}</p>
 
             <div className="insights-list-row">
               <div className="insight-item-box">
@@ -860,11 +851,8 @@ export default function CortexaAnalyticsDashboard() {
                       <Sparkles size={16} className="text-royal-blue" />
                     </div>
                     <div className="insight-icon-box-wrap">
-                      <h4>AI insights coming soon</h4>
-                      <p>
-                        Automated revenue insights aren't available yet. This
-                        section will populate once the feature is live.
-                      </p>
+                      <h4>{t("analytics.aiInsightsComingSoon")}</h4>
+                      <p>{t("analytics.aiInsightsComingSoonDesc")}</p>
                     </div>
                   </div>
                 </div>
@@ -877,25 +865,19 @@ export default function CortexaAnalyticsDashboard() {
             <div className="forecast-content">
               <div className="forecast-header">
                 <BarChart3 size={20} className="text-blue-400" />
-                <h3>Predictive Revenue Forecast</h3>
+                <h3>{t("analytics.predictiveRevenueForecast")}</h3>
               </div>
-              <p className="forecast-desc">
-                AI forecasts based on your pipeline and performance
-              </p>
+              <p className="forecast-desc">{t("analytics.aiForecastsSubtitle")}</p>
 
               <div className="forecast-metrics">
                 <div className="m-box">
                   <h3>{NO_DATA}</h3>
                 </div>
-                <p className="forecast-desc">Estimated revenue next 30 days</p>
-                <p className="top-opp">
-                  Top Opportunity: {NO_DATA}
-                </p>
+                <p className="forecast-desc">{t("analytics.estimatedRevenueNext30Days")}</p>
+                <p className="top-opp">{t("analytics.topOpportunity", { value: NO_DATA })}</p>
               </div>
 
-              <p className="forecast-desc">
-                Predictive forecasting is coming soon.
-              </p>
+              <p className="forecast-desc">{t("analytics.predictiveForecastingComingSoon")}</p>
             </div>
 
             <div className="forecast-chart-graphic">
@@ -911,7 +893,7 @@ export default function CortexaAnalyticsDashboard() {
       </div>
 
       {/* ROW 5: AI INSIGHTS & FORECAST */}
-      <div className="insights-forecast-grid"><span className="dot-bottom"></span>Data reflects your most recent synced activity</div>
+      <div className="insights-forecast-grid"><span className="dot-bottom"></span>{t("analytics.dataReflectsSyncedActivity")}</div>
     </div>
   );
 }
