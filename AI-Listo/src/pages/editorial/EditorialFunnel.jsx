@@ -130,13 +130,16 @@ function CtaCard({ where }) {
       </Link>
 
       <Link
-        to="/pricing"
-        className="ed-cta-secondary"
+        to="/#pricing"
+        className="ed-cta-secondary ed-view-plans-btn"
         onClick={() =>
-          trackEvent("editorial_cta_click", { where, cta: "plans" })
+          trackEvent("editorial_cta_click", {
+            where,
+            cta: "plans",
+          })
         }
       >
-        View plans <ArrowRight size={17} />
+        View Plans
       </Link>
     </div>
   );
@@ -169,7 +172,7 @@ export default function EditorialFunnel() {
 
   const sectionIds = useMemo(
     () => ARTICLE_SECTIONS.map((section) => section.id),
-    []
+    [],
   );
 
   useEffect(() => {
@@ -196,7 +199,7 @@ export default function EditorialFunnel() {
       {
         rootMargin: "-18% 0px -68% 0px",
         threshold: [0, 0.15, 0.35, 0.65],
-      }
+      },
     );
 
     nodes.forEach((node) => observer.observe(node));
@@ -209,9 +212,7 @@ export default function EditorialFunnel() {
     <div className="ed-page">
       <header className="ed-header">
         <div className="ed-header-inner">
-          <Link to="/" className="ed-brand" aria-label="Cortexa home">
-            
-          </Link>
+          <Link to="/" className="ed-brand" aria-label="Cortexa home"></Link>
 
           <nav className="ed-main-nav" aria-label="Editorial navigation">
             <a href="#one-platform">Platform</a>
@@ -247,12 +248,24 @@ export default function EditorialFunnel() {
 
         {mobileNavOpen && (
           <div className="ed-mobile-nav">
-            <a href="#one-platform" onClick={closeMobileNav}>Platform</a>
-            <a href="#forward-momentum" onClick={closeMobileNav}>Solutions</a>
-            <a href="#migration" onClick={closeMobileNav}>Resources</a>
-            <a href="#businesses" onClick={closeMobileNav}>Company</a>
-            <a href="#crm-cost" onClick={closeMobileNav}>Pricing</a>
-            <Link to="/trial" onClick={closeMobileNav}>Start free trial</Link>
+            <a href="#one-platform" onClick={closeMobileNav}>
+              Platform
+            </a>
+            <a href="#forward-momentum" onClick={closeMobileNav}>
+              Solutions
+            </a>
+            <a href="#migration" onClick={closeMobileNav}>
+              Resources
+            </a>
+            <a href="#businesses" onClick={closeMobileNav}>
+              Company
+            </a>
+            <a href="#crm-cost" onClick={closeMobileNav}>
+              Pricing
+            </a>
+            <Link to="/trial" onClick={closeMobileNav}>
+              Start free trial
+            </Link>
           </div>
         )}
       </header>
@@ -273,7 +286,9 @@ export default function EditorialFunnel() {
             <p className="ed-byline">
               July 24, 2026 by <strong>Julian S.</strong>
               <span>|</span>
-              <a href="https://x.com" target="_blank" rel="noreferrer">X</a>
+              <a href="https://x.com" target="_blank" rel="noreferrer">
+                X
+              </a>
               <span>,</span>
               <a href="https://linkedin.com" target="_blank" rel="noreferrer">
                 LinkedIn
@@ -288,8 +303,11 @@ export default function EditorialFunnel() {
           <div className="ed-hero-cover">
             <div className="ed-hero-cover-frame">
               <p>
-                Why Businesses Are <br /> Re-Evaluating Salesforce,<br />  HubSpot, and the Rise<br /> 
-                of Agentic AI Revenue<br />  Operating Systems
+                Why Businesses Are <br /> Re-Evaluating Salesforce,
+                <br /> HubSpot, and the Rise
+                <br />
+                of Agentic AI Revenue
+                <br /> Operating Systems
               </p>
             </div>
           </div>
@@ -322,7 +340,9 @@ export default function EditorialFunnel() {
                 rely on systems originally designed to record activity rather
                 than actively help move opportunities forward.
               </p>
-              <p>As a result, more companies are asking a different question:</p>
+              <p>
+                As a result, more companies are asking a different question:
+              </p>
               <blockquote>
                 Is our CRM helping us grow—or are we spending too much time
                 managing it?
@@ -330,29 +350,34 @@ export default function EditorialFunnel() {
               <p>
                 That question has sparked a broader conversation across the
                 industry. Businesses are evaluating whether traditional CRM
-                platforms remain the best fit for an AI-driven sales environment,
-                or whether newer AI-native platforms can simplify operations and
-                accelerate growth.
+                platforms remain the best fit for an AI-driven sales
+                environment, or whether newer AI-native platforms can simplify
+                operations and accelerate growth.
               </p>
               <p>
-                This isn’t about whether Salesforce or HubSpot are “bad” products.
-                They’re mature platforms with broad capabilities and large
-                ecosystems. The question is whether every business needs that
-                level of complexity—or whether a different approach is a better
-                match for today’s pace of business.
+                This isn’t about whether Salesforce or HubSpot are “bad”
+                products. They’re mature platforms with broad capabilities and
+                large ecosystems. The question is whether every business needs
+                that level of complexity—or whether a different approach is a
+                better match for today’s pace of business.
               </p>
-              <p>The next generation isn’t focused solely on storing customer data.</p>
-              <p><strong>It’s focused on helping teams generate revenue.</strong></p>
+              <p>
+                The next generation isn’t focused solely on storing customer
+                data.
+              </p>
+              <p>
+                <strong>It’s focused on helping teams generate revenue.</strong>
+              </p>
               <p>
                 That’s where Agentic AI Revenue Operating Systems enter the
                 conversation.
               </p>
               <p>
-                Instead of requiring sales teams to spend hours updating records,
-                juggling multiple tools, and manually following up with every
-                lead, AI-native systems are designed to automate repetitive work,
-                keep conversations moving, and support sales teams throughout the
-                customer journey.
+                Instead of requiring sales teams to spend hours updating
+                records, juggling multiple tools, and manually following up with
+                every lead, AI-native systems are designed to automate
+                repetitive work, keep conversations moving, and support sales
+                teams throughout the customer journey.
               </p>
               <p>The shift isn’t from one CRM vendor to another.</p>
               <blockquote>
@@ -364,9 +389,14 @@ export default function EditorialFunnel() {
             </section>
 
             <section className="ed-section" id="revenue-operations">
-              <h2>From Customer Relationship Management to Revenue Operations</h2>
+              <h2>
+                From Customer Relationship Management to Revenue Operations
+              </h2>
               <p>Legacy CRM platforms were built to organize information.</p>
-              <p>The next generation is being built to help businesses generate revenue.</p>
+              <p>
+                The next generation is being built to help businesses generate
+                revenue.
+              </p>
               <p>
                 Traditional CRM systems excel at storing contacts, tracking
                 opportunities, and documenting what happened yesterday.
@@ -381,7 +411,9 @@ export default function EditorialFunnel() {
                 <li>Can AI keep conversations moving?</li>
                 <li>Can AI help automate follow-up?</li>
                 <li>Can AI help book appointments?</li>
-                <li>Can AI help teams generate more revenue with less manual work?</li>
+                <li>
+                  Can AI help teams generate more revenue with less manual work?
+                </li>
               </ul>
               <p>
                 The conversation is no longer about adding AI features to a CRM.
@@ -392,7 +424,9 @@ export default function EditorialFunnel() {
               </p>
 
               <img src={why1Img} alt="CORTEXA" className="background" />
-              <figcaption>AI Agent qualification and automated appointment booking</figcaption>
+              <figcaption>
+                AI Agent qualification and automated appointment booking
+              </figcaption>
             </section>
 
             <section className="ed-section" id="legacy-crm-tax">
@@ -408,17 +442,17 @@ export default function EditorialFunnel() {
                 the system over time?
               </blockquote>
               <p>
-                Many businesses discover that the true cost of ownership includes
-                far more than the monthly license. Depending on the platform,
-                deployment and ongoing operations can involve implementation work,
-                consulting, integrations, administrator time, employee training,
-                and continued maintenance.
+                Many businesses discover that the true cost of ownership
+                includes far more than the monthly license. Depending on the
+                platform, deployment and ongoing operations can involve
+                implementation work, consulting, integrations, administrator
+                time, employee training, and continued maintenance.
               </p>
               <p>Think of it as the Legacy CRM Tax.</p>
               <p>
-                Not because every organization experiences every cost, but because
-                the total investment often extends well beyond the software
-                subscription itself.
+                Not because every organization experiences every cost, but
+                because the total investment often extends well beyond the
+                software subscription itself.
               </p>
               <p>The real cost can include:</p>
               <ul className="ed-two-column-list">
@@ -432,8 +466,8 @@ export default function EditorialFunnel() {
                 <li>Opportunity costs created by slow or manual processes</li>
               </ul>
               <p>
-                Every hour spent maintaining software is an hour that isn’t spent
-                serving customers or closing business.
+                Every hour spent maintaining software is an hour that isn’t
+                spent serving customers or closing business.
               </p>
             </section>
 
@@ -441,9 +475,12 @@ export default function EditorialFunnel() {
               <h2>Businesses Are Asking a Different Question</h2>
               <p>Businesses are beginning to ask a different question.</p>
               <p>
-                Instead of paying employees to spend hours maintaining software...
+                Instead of paying employees to spend hours maintaining
+                software...
               </p>
-              <blockquote>Can software help employees generate more revenue?</blockquote>
+              <blockquote>
+                Can software help employees generate more revenue?
+              </blockquote>
               <p>
                 That shift in thinking is one of the biggest reasons AI-native
                 platforms are gaining attention across industries.
@@ -451,12 +488,14 @@ export default function EditorialFunnel() {
               <p>Organizations aren’t simply looking for another CRM.</p>
               <p>They’re looking for a better operating model.</p>
               <blockquote className="ed-pull-quote">
-                Businesses aren’t simply looking for another CRM. They’re looking
-                for a better operating model.
+                Businesses aren’t simply looking for another CRM. They’re
+                looking for a better operating model.
               </blockquote>
 
               <img src={why2Img} alt="CORTEXA" className="background" />
-              <figcaption>AI WhatsApp and automated customer conversations</figcaption>
+              <figcaption>
+                AI WhatsApp and automated customer conversations
+              </figcaption>
             </section>
 
             <section className="ed-section" id="transparent-setup">
@@ -468,14 +507,18 @@ export default function EditorialFunnel() {
               </p>
               <p>Cortexa takes a different approach.</p>
 
-              <aside className="ed-editorial-callout" aria-label="One-time setup fee">
+              <aside
+                className="ed-editorial-callout"
+                aria-label="One-time setup fee"
+              >
                 <span className="ed-editorial-callout-label">
                   One-time setup fee
                 </span>
                 <p>
-                  Cortexa begins with a simple <strong>$97 one-time setup fee</strong>,
-                  giving businesses a transparent starting point without turning
-                  onboarding into a large implementation project.
+                  Cortexa begins with a simple{" "}
+                  <strong>$97 one-time setup fee</strong>, giving businesses a
+                  transparent starting point without turning onboarding into a
+                  large implementation project.
                 </p>
               </aside>
 
@@ -514,7 +557,9 @@ export default function EditorialFunnel() {
               </p>
 
               <img src={why3Img} alt="CORTEXA" className="background" />
-              <figcaption>Fast onboarding and WhatsApp QR connection</figcaption>
+              <figcaption>
+                Fast onboarding and WhatsApp QR connection
+              </figcaption>
             </section>
 
             <section className="ed-section" id="one-platform">
@@ -552,8 +597,8 @@ export default function EditorialFunnel() {
                   </span>
                   <div>
                     <strong>
-                      The numbers below reflect estimated total Year 1 investment
-                      for a team of 5 users.
+                      The numbers below reflect estimated total Year 1
+                      investment for a team of 5 users.
                     </strong>
                     <span>See how Cortexa delivers more — for less.</span>
                   </div>
@@ -583,8 +628,8 @@ export default function EditorialFunnel() {
               </p>
               <p>
                 The real investment often includes implementation, consulting,
-                administration, maintenance, integrations, and the ongoing effort
-                required to keep the system operating efficiently.
+                administration, maintenance, integrations, and the ongoing
+                effort required to keep the system operating efficiently.
               </p>
               <p>
                 That’s exactly why businesses need to compare more than software
@@ -604,7 +649,9 @@ export default function EditorialFunnel() {
                 <li>Operational effort</li>
               </ul>
               <p>Sometimes the biggest expense isn’t the software itself.</p>
-              <blockquote>It’s everything required to keep it running.</blockquote>
+              <blockquote>
+                It’s everything required to keep it running.
+              </blockquote>
             </section>
 
             <section className="ed-section ed-migration-section" id="migration">
@@ -612,9 +659,9 @@ export default function EditorialFunnel() {
               <h2>Switching Doesn’t Have to Be Difficult</h2>
               <p className="ed-section-intro">
                 Move from Salesforce, HubSpot, Jira, or ClickUp without starting
-                over. Cortexa’s guided migration process helps bring your contacts,
-                pipelines, projects, tasks, and workflows into one connected
-                AI-powered platform.
+                over. Cortexa’s guided migration process helps bring your
+                contacts, pipelines, projects, tasks, and workflows into one
+                connected AI-powered platform.
               </p>
 
               <ul className="ed-migration-checklist">
@@ -646,8 +693,8 @@ export default function EditorialFunnel() {
               </p>
               <p>AI handles the repetitive work.</p>
               <p>
-                Your team focuses on the conversations and decisions that require
-                human attention.
+                Your team focuses on the conversations and decisions that
+                require human attention.
               </p>
 
               <img src={why4Img} alt="CORTEXA" className="background" />
@@ -701,7 +748,8 @@ export default function EditorialFunnel() {
                 Whether you run a real estate company, e-commerce store, agency,
                 consulting firm, insurance business, financial company, or
                 another growing organization, Cortexa’s Agentic AI Revenue
-                Operating System is built to help turn conversations into revenue.
+                Operating System is built to help turn conversations into
+                revenue.
               </p>
               <p>
                 The core platform is ready to support businesses that depend on
@@ -712,8 +760,6 @@ export default function EditorialFunnel() {
                 Industry-specific modules can be added where needed, while most
                 businesses can begin using the core platform immediately.
               </p>
-
-              
             </section>
 
             <section className="ed-section" id="dont-get-left-behind">
@@ -722,20 +768,19 @@ export default function EditorialFunnel() {
                 See how our integrated Revenue Operating System helps businesses
                 automate faster, close more opportunities, and increase revenue.
               </p>
-
             </section>
 
             <section className="ed-section" id="next-generation">
               <h2>The Next Generation of Revenue Operations</h2>
               <p>
-                Businesses searching for CRM software today aren’t simply looking
-                for another database.
+                Businesses searching for CRM software today aren’t simply
+                looking for another database.
               </p>
               <p>They’re researching.</p>
               <p>They’re comparing.</p>
               <p>
-                They’re reading editorials, buyer’s guides, and industry analysis
-                before making decisions.
+                They’re reading editorials, buyer’s guides, and industry
+                analysis before making decisions.
               </p>
               <p>
                 More importantly, they’re asking a different question than they
@@ -757,8 +802,8 @@ export default function EditorialFunnel() {
               </p>
               <p>
                 The goal is to help businesses qualify leads, automate
-                conversations, support appointment booking, streamline follow-up,
-                and operate revenue more intelligently.
+                conversations, support appointment booking, streamline
+                follow-up, and operate revenue more intelligently.
               </p>
               <p>
                 The future may not belong to the CRM with the longest feature
@@ -767,20 +812,20 @@ export default function EditorialFunnel() {
               <p>
                 Legacy platforms were built for an era in which teams recorded
                 activity after it happened. Today’s businesses need systems that
-                can participate in the work itself—responding faster, maintaining
-                momentum, connecting teams, and helping leaders act on revenue
-                signals while opportunities are still active.
+                can participate in the work itself—responding faster,
+                maintaining momentum, connecting teams, and helping leaders act
+                on revenue signals while opportunities are still active.
               </p>
               <p>
                 That is why the shift toward an Agentic AI Revenue Operating
-                System is more than a software upgrade. It is a move from passive
-                record keeping to an operating model designed around action,
-                speed, and measurable growth.
+                System is more than a software upgrade. It is a move from
+                passive record keeping to an operating model designed around
+                action, speed, and measurable growth.
               </p>
               <p>
                 Businesses making that transition are not abandoning customer
-                relationships. They are giving their teams a more intelligent way
-                to manage and grow them.
+                relationships. They are giving their teams a more intelligent
+                way to manage and grow them.
               </p>
               <blockquote className="ed-pull-quote">
                 The next generation of revenue technology will help businesses

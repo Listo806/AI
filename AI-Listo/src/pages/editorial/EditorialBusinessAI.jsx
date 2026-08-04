@@ -87,7 +87,7 @@ function CtaCard({ where, bottom = false }) {
 
       <Link
         to="/trial"
-        className="ed-cta-primary"
+        className="ed-cta-primary ed-cta-primary-blue"
         onClick={() =>
           trackEvent("editorial_cta_click", {
             page: "how_ai_is_transforming_every_business",
@@ -99,19 +99,19 @@ function CtaCard({ where, bottom = false }) {
         Start your free trial
       </Link>
 
-      <a
-        href="#introducing-cortexa"
-        className="ed-cta-secondary"
+      <Link
+        to="/#pricing"
+        className="ed-cta-secondary ed-view-plans-btn"
         onClick={() =>
           trackEvent("editorial_cta_click", {
             page: "how_ai_is_transforming_every_business",
             where,
-            cta: "learn_more",
+            cta: "plans",
           })
         }
       >
-        See how it works <ArrowRight size={17} />
-      </a>
+        View Plans
+      </Link>
     </div>
   );
 }
@@ -214,9 +214,7 @@ export default function EditorialBusinessAI() {
     <div className="ed-page ed-ai-page">
       <header className="ed-header">
         <div className="ed-header-inner">
-          <Link to="/" className="ed-brand" aria-label="Cortexa home">
-            
-          </Link>
+          <Link to="/" className="ed-brand" aria-label="Cortexa home"></Link>
 
           <nav className="ed-main-nav" aria-label="Editorial navigation">
             <a href="#revenue-os">Platform</a>
@@ -289,7 +287,9 @@ export default function EditorialBusinessAI() {
             <span className="ed-ai-hero-kicker">
               AI Business Transformation
             </span>
-            <h1>Improve Revenue by Optimizing Your Business Operating System</h1>
+            <h1>
+              Improve Revenue by Optimizing Your Business Operating System
+            </h1>
             <p className="ed-ai-hero-subtitle">
               Why the Future Belongs to AI Revenue Operating Systems
             </p>

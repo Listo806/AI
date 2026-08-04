@@ -141,7 +141,7 @@ function CtaCard({ where }) {
 
       <Link
         to="/es/pricing"
-        className="ed-cta-secondary"
+        className="ed-cta-secondary ed-view-plans-btn"
         onClick={() =>
           trackEvent("editorial_cta_click", { where, cta: "plans" })
         }

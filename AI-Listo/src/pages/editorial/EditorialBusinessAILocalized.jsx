@@ -77,7 +77,7 @@ const COPY = {
       eyebrow: "¿Listo para crecer con IA?",
       heading: "Descubre cómo Cortexa ayuda a tu empresa a operar de forma más inteligente y responder más rápido.",
       primary: "Comienza tu prueba gratuita",
-      secondary: "Descubre cómo funciona",
+      secondary: "Ver planes",
       benefits: [
         ["Interacción instantánea", "Responde a leads y clientes las 24 horas."],
         ["Automatización inteligente", "Mantén el seguimiento y los flujos de trabajo en movimiento automáticamente."],
@@ -273,7 +273,7 @@ const COPY = {
       eyebrow: "Pronto para crescer com IA?",
       heading: "Veja como a Cortexa ajuda sua empresa a operar de forma mais inteligente e responder mais rápido.",
       primary: "Comece seu teste grátis",
-      secondary: "Veja como funciona",
+      secondary: "Ver planos",
       benefits: [
         ["Engajamento instantâneo", "Responda a leads e clientes 24 horas por dia."],
         ["Automação inteligente", "Mantenha acompanhamentos e fluxos de trabalho avançando automaticamente."],
@@ -442,13 +442,13 @@ function CtaCard({ copy, where, bottom = false }) {
       </ul>
       <Link
         to={copy.trial}
-        className="ed-cta-primary"
+        className="ed-cta-primary ed-cta-primary-blue"
         onClick={() => trackEvent("editorial_cta_click", { page: copy.pageEvent, where, cta: "trial" })}
       >
         {copy.cta.primary}
       </Link>
       <a
-        href="#introducing-cortexa"
+        href="/#pricing"
         className="ed-cta-secondary"
         onClick={() => trackEvent("editorial_cta_click", { page: copy.pageEvent, where, cta: "learn_more" })}
       >

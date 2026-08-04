@@ -1969,3 +1969,47 @@ figcaption {
     grid-template-columns: 1fr;
   }
 }
+
+/* ======================================================
+   MOBILE CTA UPDATE
+====================================================== */
+
+@media (max-width:768px) {
+
+  .ed-cta-card {
+    padding: 24px 20px;
+  }
+
+  .ed-cta-primary,
+  .ed-cta-secondary {
+    width: 100%;
+    min-height: 62px;
+    font-size: 18px;
+    font-weight: 800;
+    border-radius: 12px;
+    margin-top: 14px;
+  }
+
+  .ed-cta-primary {
+    letter-spacing: .02em;
+  }
+
+  .ed-view-plans-btn {
+    border: 2px solid #2563eb;
+    color: #2563eb !important;
+    background: #fff;
+  }
+
+  /* ONLY Business Editorial */
+
+  .ed-ai-page .ed-cta-primary-blue {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff !important;
+  }
+
+  .ed-ai-page .ed-cta-primary-blue:hover {
+    background: #1d4ed8;
+  }
+
+}
