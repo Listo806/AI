@@ -1,12 +1,12 @@
 // Locale registry for URL-based language routing.
-// English lives at the root, Spanish under /es, Brazilian Portuguese under /pt-br.
+// English lives at the root, Spanish under /es, Brazilian Portuguese under /pt.
 // `code` is the internal language code used across the app (matches cortexa_lang
 // and the i18next resources). `prefix` is the URL segment. `htmlLang` is the
 // value used for the <html lang> attribute and hreflang tags.
 export const LOCALES = [
   { code: "en", prefix: "", htmlLang: "en" },
   { code: "es", prefix: "es", htmlLang: "es" },
-  { code: "pt", prefix: "pt-br", htmlLang: "pt-BR" },
+  { code: "pt", prefix: "pt", htmlLang: "pt-BR" },
 ];
 
 // The language codes the app supports, derived from the registry so config.js,
@@ -20,7 +20,7 @@ const byPrefix = Object.fromEntries(
 
 export const localeByCode = (code) => byCode[code] || LOCALES[0];
 
-// Remove a leading /es or /pt-br from a path, returning the base path.
+// Remove a leading /es or /pt from a path, returning the base path.
 // "/es/pricing" -> "/pricing", "/es" -> "/", "/pricing" -> "/pricing".
 export function stripLocaleFromPath(pathname) {
   const parts = String(pathname || "/").split("/").filter(Boolean);

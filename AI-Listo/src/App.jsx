@@ -133,6 +133,17 @@ function VacationUploadPublicRedirect() {
   return <Navigate to={`/dashboard/vacation-rentals/upload/${id}`} replace />;
 }
 
+// Portuguese moved from /pt-br to /pt. Permanently forward the whole old prefix,
+// preserving the sub-path, query string, and hash so bookmarks and ad links keep
+// working: /pt-br -> /pt, /pt-br/pricing?x=1 -> /pt/pricing?x=1.
+function PtBrRedirect() {
+  const location = useLocation();
+  const rest = location.pathname.replace(/^\/pt-br/, "");
+  return (
+    <Navigate to={`/pt${rest}${location.search}${location.hash}`} replace />
+  );
+}
+
 // Root route handler - shows sign-in or redirects to dashboard
 function RootRoute() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -166,7 +177,7 @@ function RootRoute() {
 }
 
 // The public marketing + funnel + legal pages, generated once per locale so
-// English lives at the root, Spanish under /es, and Portuguese under /pt-br.
+// English lives at the root, Spanish under /es, and Portuguese under /pt.
 function publicRoutes(prefix) {
   const p = prefix ? `/${prefix}` : "";
   return (
@@ -226,13 +237,20 @@ function publicRoutes(prefix) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public site — English at root, Spanish at /es, Portuguese at /pt-br.
+      {/* Public site — English at root, Spanish at /es, Portuguese at /pt.
           The URL decides the language; LocaleLayout sets it + hreflang/canonical. */}
       <Route element={<LocaleLayout code="en" />}>{publicRoutes("")}</Route>
       <Route element={<LocaleLayout code="es" />}>{publicRoutes("es")}</Route>
-      <Route element={<LocaleLayout code="pt" />}>
-        {publicRoutes("pt-br")}
-      </Route>
+      <Route element={<LocaleLayout code="pt" />}>{publicRoutes("pt")}</Route>
+
+      {/* Old-URL redirects (keep existing links working). Portuguese moved from
+          /pt-br to /pt; the legacy editorial route was renamed. */}
+      <Route path="/pt-br" element={<PtBrRedirect />} />
+      <Route path="/pt-br/*" element={<PtBrRedirect />} />
+      <Route
+        path="/why-legacy-crm"
+        element={<Navigate to="/editorial/the-end-of-legacy-crm" replace />}
+      />
 
       <Route path="/sign-up-dev" element={<SignUpDev />} />
 
