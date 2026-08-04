@@ -9,8 +9,7 @@ import {
   offerIsAvailable,
   setSetupOffer,
   setupOfferActive,
-  exitOfferSeenRecently,
-  markExitOfferSeen,
+  clearSetupOffer,
 } from "../utils/offer";
 import "./ExitIntentOffer.css";
 
@@ -76,11 +75,9 @@ const T = {
   },
 };
 
-// The pages the client approved (locale-stripped): the locale homes, the
-// editorial pages, and the free-trial registration page. Matched by shape rather
-// than an exact list so it stays correct across the editorial URL variants that
-// exist on main (/editorial/the-end-of-legacy-crm, the business editorial, and
-// their localized paths). Nothing else on the site shows the popup.
+// Allowed pages (locale-stripped): the locale homes, the editorial pages, and the
+// free-trial registration page. Matched by shape so it stays correct across the
+// editorial URL variants on main and their localized paths.
 function isAllowedPage(local) {
   return local === "" || local === "trial" || local.startsWith("editorial/");
 }
@@ -89,25 +86,53 @@ function isAllowedPage(local) {
 function localeInfo(pathname) {
   const parts = pathname.split("/").filter(Boolean);
   let prefix = "";
-  if (parts[0] === "es") {
-    prefix = "/es";
-    parts.shift();
-  } else if (parts[0] === "pt-br") {
-    prefix = "/pt-br";
+  if (["es", "pt", "pt-br", "de", "fr", "it"].includes(parts[0])) {
+    prefix = `/${parts[0]}`;
     parts.shift();
   }
   return { prefix, local: parts.join("/") };
 }
 
-// An exit-intent popup that offers the $7 activation fee. Desktop fires when the
+// Shown at most once per page per BROWSER SESSION (sessionStorage). This lets it
+// appear on the home, each editorial, and the trial page, and appear again on a
+// fresh visit / new tab — while never nagging on the same page in one session.
+const SHOWN_PREFIX = "cortexa_exit_shown:";
+function shownThisSession(local) {
+  try {
+    return sessionStorage.getItem(SHOWN_PREFIX + local) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+function markShownThisSession(local) {
+  try {
+    sessionStorage.setItem(SHOWN_PREFIX + local, "1");
+  } catch (_e) {
+    /* private mode — just won't remember */
+  }
+}
+function clearShownThisSession() {
+  try {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i += 1) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith(SHOWN_PREFIX)) keys.push(k);
+    }
+    keys.forEach((k) => sessionStorage.removeItem(k));
+  } catch (_e) {
+    /* no-op */
+  }
+}
+
+// An exit-intent popup offering the $7 activation fee. Desktop fires when the
 // cursor leaves the top of the viewport; touch devices fire on a quick scroll
-// back up toward the address bar after the visitor has scrolled down. Shows at
-// most once per 24h, and only on the approved marketing pages + the trial page.
+// back up after scrolling down. Testing helpers: append ?exitoffer=test to any
+// allowed URL to force it open now, or ?exitoffer=reset to clear the per-session
+// gate so it can trigger again.
 export default function ExitIntentOffer() {
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const triggeredRef = useRef(false);
   const cardRef = useRef(null);
 
   const lang =
@@ -117,21 +142,43 @@ export default function ExitIntentOffer() {
   const tr = T[lang] || T.en;
 
   const { prefix, local } = localeInfo(location.pathname);
+  const mode = new URLSearchParams(location.search).get("exitoffer");
 
-  // Whether the detector should run for the current page.
+  // ?exitoffer=reset — clear the per-session gate + any claimed offer so the
+  // popup can be tested repeatedly.
+  useEffect(() => {
+    if (mode === "reset") {
+      clearShownThisSession();
+      clearSetupOffer();
+      try {
+        localStorage.removeItem("cortexa_exit_offer_seen_at");
+      } catch (_e) {
+        /* no-op */
+      }
+    }
+  }, [mode]);
+
+  // ?exitoffer=test — force it open immediately for QA (bypasses detection).
+  useEffect(() => {
+    if (mode === "test" && offerIsAvailable()) {
+      setOpen(true);
+      trackEvent("exit_offer_shown", { path: location.pathname, test: true });
+    }
+  }, [mode, location.pathname]);
+
   const armed =
+    mode !== "test" &&
     offerIsAvailable() &&
     isAllowedPage(local) &&
-    !exitOfferSeenRecently() &&
-    !setupOfferActive();
+    !setupOfferActive() &&
+    !shownThisSession(local);
 
   const trigger = useCallback(() => {
-    if (triggeredRef.current) return;
-    triggeredRef.current = true;
-    markExitOfferSeen();
+    if (shownThisSession(local)) return;
+    markShownThisSession(local);
     setOpen(true);
     trackEvent("exit_offer_shown", { path: location.pathname });
-  }, [location.pathname]);
+  }, [local, location.pathname]);
 
   const close = useCallback((reason) => {
     setOpen(false);
@@ -143,22 +190,21 @@ export default function ExitIntentOffer() {
     trackEvent("exit_offer_click", { cta: "start_trial" });
     setOpen(false);
     if (local === "trial") {
-      // Already on the registration page — keep them here with the $7 offer now
-      // active, and bring the form back into view.
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       navigate(`${prefix}/trial?offer=${EXIT_OFFER}`);
     }
   }, [navigate, prefix, local]);
 
-  // Detection. Armed a few seconds after mount so it never fires on a fast
-  // bounce / initial layout, and torn down cleanly on route change.
+  // Detection. Re-arms whenever the page (armed) changes, so it can trigger on
+  // the home, each editorial, and the trial page. Armed a couple seconds after
+  // load so it never fires on a fast bounce.
   useEffect(() => {
     if (!armed) return undefined;
     let ready = false;
     const armTimer = setTimeout(() => {
       ready = true;
-    }, 3000);
+    }, 2500);
 
     const onMouseOut = (e) => {
       if (!ready) return;
@@ -171,7 +217,7 @@ export default function ExitIntentOffer() {
       if (!ready) return;
       const y = window.scrollY;
       if (y > lastY) downMax = Math.max(downMax, y);
-      if (downMax > 500 && y < 140 && lastY - y > 14) trigger();
+      if (downMax > 400 && y < 140 && lastY - y > 12) trigger();
       lastY = y;
     };
 
@@ -221,7 +267,7 @@ export default function ExitIntentOffer() {
           aria-label={tr.close}
           onClick={() => close("x")}
         >
-          <X size={22} />
+          <X size={20} />
         </button>
 
         <h2 id="exit-offer-title" className="exit-offer-head">
@@ -238,7 +284,7 @@ export default function ExitIntentOffer() {
           <p className="exit-offer-box-lead">{tr.boxLead}</p>
           <div className="exit-offer-price">
             <span className="exit-offer-old">${REGULAR_SETUP_FEE}</span>
-            <ArrowRight className="exit-offer-arrow" size={30} />
+            <ArrowRight className="exit-offer-arrow" size={26} />
             <span className="exit-offer-new">${OFFER_SETUP_FEE}</span>
             <span className="exit-offer-fee">{tr.fee}</span>
           </div>
@@ -252,7 +298,7 @@ export default function ExitIntentOffer() {
           {tr.features.map((f) => (
             <li key={f}>
               <span className="exit-offer-check">
-                <Check size={15} strokeWidth={3} />
+                <Check size={14} strokeWidth={3} />
               </span>
               <span className="exit-offer-feature-label">{f}</span>
             </li>
@@ -260,7 +306,7 @@ export default function ExitIntentOffer() {
         </ul>
 
         <button type="button" className="exit-offer-cta" onClick={claim}>
-          <ArrowRight size={22} /> {tr.cta}
+          <ArrowRight size={20} /> {tr.cta}
         </button>
       </div>
     </div>
