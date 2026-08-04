@@ -127,10 +127,11 @@ function clearShownThisSession() {
 // On touch devices, reveal the offer after this long on an allowed page if no
 // exit gesture has fired first. Phones give no reliable exit signal (no cursor;
 // the back button / app-switch happen after the page is already gone), so this
-// timed reveal guarantees mobile visitors actually see the offer. Configurable
-// via VITE_EXIT_OFFER_MOBILE_DELAY_MS; defaults to 25s.
+// timed reveal guarantees mobile visitors actually see the offer. Kept short so
+// it fires before a typical mobile bounce (and is easy to verify). Configurable
+// via VITE_EXIT_OFFER_MOBILE_DELAY_MS; defaults to 12s.
 const MOBILE_FALLBACK_MS =
-  Number(import.meta.env.VITE_EXIT_OFFER_MOBILE_DELAY_MS) || 25000;
+  Number(import.meta.env.VITE_EXIT_OFFER_MOBILE_DELAY_MS) || 12000;
 
 // An exit-intent popup offering the $7 activation fee. Desktop fires when the
 // cursor leaves the top of the viewport. Touch devices fire on a quick scroll
