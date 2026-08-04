@@ -31,10 +31,26 @@ export default function SignUp() {
       // anything else is dropped and the backend defaults to English.
       const lang = (i18n.language || 'en').slice(0, 2).toLowerCase();
       const language = ['en', 'es', 'pt'].includes(lang) ? lang : 'en';
-      const res = await apiClient.request('/auth/signup', {
-        method: 'POST',
-        body: JSON.stringify({ email, password, role, language }),
-      });
+      let res;
+      try {
+        res = await apiClient.request('/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify({ email, password, role, language }),
+        });
+      } catch (err) {
+        // Resilience: an older backend that predates the `language` field
+        // rejects unknown properties with a 400. Retry once without it so
+        // signup can never break while the backend is being updated; the
+        // language just isn't captured until then. Any other error is real.
+        if (err && err.status === 400) {
+          res = await apiClient.request('/auth/signup', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, role }),
+          });
+        } else {
+          throw err;
+        }
+      }
 
       if (res.accessToken) {
         apiClient.setTokens(res.accessToken, res.refreshToken);
