@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getAdminTeams,
   getAdminTeamById,
@@ -16,6 +17,7 @@ import '../platform/platform.css';
 import './admin.css';
 
 function CreateTeamModal({ onClose, onSuccess, users }) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: '', seatLimit: 1, ownerId: '' });
@@ -23,11 +25,11 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name?.trim()) {
-      showError('Team name is required');
+      showError(t('admin.teams.teamNameRequired'));
       return;
     }
     if (!form.ownerId) {
-      showError('Please select an owner');
+      showError(t('admin.teams.selectOwner'));
       return;
     }
     setSubmitting(true);
@@ -37,11 +39,11 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
         seatLimit: form.seatLimit >= 1 ? form.seatLimit : 1,
         ownerId: form.ownerId,
       });
-      showSuccess('Team created');
+      showSuccess(t('admin.teams.teamCreated'));
       onSuccess();
       onClose();
     } catch (err) {
-      showError(err.message || 'Failed to create team');
+      showError(err.message || t('admin.teams.createFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -50,10 +52,10 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Create team</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.teams.createTeam')}</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Name *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.plans.name')} *</label>
             <input
               type="text"
               value={form.name}
@@ -63,7 +65,7 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Seat limit</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.plans.seatLimit')}</label>
             <input
               type="number"
               min={1}
@@ -73,23 +75,23 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
             />
           </div>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Owner *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.teams.owner')} *</label>
             <select
               value={form.ownerId}
               onChange={(e) => setForm((f) => ({ ...f, ownerId: e.target.value }))}
               required
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
             >
-              <option value="">Select user</option>
+              <option value="">{t('admin.teams.selectUser')}</option>
               {(users || []).filter((u) => u.isActive).map((u) => (
                 <option key={u.id} value={u.id}>{u.email} ({u.role})</option>
               ))}
             </select>
           </div>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">Cancel</button>
+            <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">{t('admin.teams.cancel')}</button>
             <button type="submit" className="crm-btn crm-btn-primary" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create'}
+              {submitting ? t('admin.teams.creating') : t('admin.teams.create')}
             </button>
           </div>
         </form>
@@ -99,6 +101,7 @@ function CreateTeamModal({ onClose, onSuccess, users }) {
 }
 
 function EditTeamModal({ team, onClose, onSuccess, users }) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -116,11 +119,11 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name?.trim()) {
-      showError('Team name is required');
+      showError(t('admin.teams.teamNameRequired'));
       return;
     }
     if (!form.ownerId) {
-      showError('Please select an owner');
+      showError(t('admin.teams.selectOwner'));
       return;
     }
     setSubmitting(true);
@@ -130,11 +133,11 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
         seatLimit: form.seatLimit >= 1 ? form.seatLimit : 1,
         ownerId: form.ownerId,
       });
-      showSuccess('Team updated');
+      showSuccess(t('admin.teams.teamUpdated'));
       onSuccess();
       onClose();
     } catch (err) {
-      showError(err.message || 'Failed to update team');
+      showError(err.message || t('admin.teams.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -145,10 +148,10 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Edit team</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.teams.editTeam')}</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Name *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.plans.name')} *</label>
             <input
               type="text"
               value={form.name}
@@ -158,7 +161,7 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Seat limit</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.plans.seatLimit')}</label>
             <input
               type="number"
               min={1}
@@ -168,23 +171,23 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
             />
           </div>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Owner *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.teams.owner')} *</label>
             <select
               value={form.ownerId}
               onChange={(e) => setForm((f) => ({ ...f, ownerId: e.target.value }))}
               required
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
             >
-              <option value="">Select user</option>
+              <option value="">{t('admin.teams.selectUser')}</option>
               {(users || []).filter((u) => u.isActive).map((u) => (
                 <option key={u.id} value={u.id}>{u.email} ({u.role})</option>
               ))}
             </select>
           </div>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">Cancel</button>
+            <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">{t('admin.teams.cancel')}</button>
             <button type="submit" className="crm-btn crm-btn-primary" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Save'}
+              {submitting ? t('admin.teams.saving') : t('admin.teams.save')}
             </button>
           </div>
         </form>
@@ -194,6 +197,7 @@ function EditTeamModal({ team, onClose, onSuccess, users }) {
 }
 
 function DeleteTeamModal({ team, onClose, onConfirm }) {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -208,14 +212,14 @@ function DeleteTeamModal({ team, onClose, onConfirm }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Delete team</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.teams.deleteTeam')}</h3>
         <p style={{ color: 'var(--text-muted, #64748b)', marginBottom: '16px' }}>
-          Delete <strong>{team.name}</strong>? All members will be unlinked from this team. This cannot be undone.
+          {t('admin.teams.deleteConfirmPrefix')} <strong>{team.name}</strong>{t('admin.teams.deleteConfirmSuffix')}
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">Cancel</button>
+          <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">{t('admin.teams.cancel')}</button>
           <button type="button" onClick={handleConfirm} className="crm-btn" style={{ background: '#dc2626', color: '#fff' }} disabled={submitting}>
-            {submitting ? 'Deleting…' : 'Delete'}
+            {submitting ? t('admin.teams.deleting') : t('admin.teams.delete')}
           </button>
         </div>
       </div>
@@ -224,6 +228,7 @@ function DeleteTeamModal({ team, onClose, onConfirm }) {
 }
 
 function MembersModal({ teamId, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useNotification();
   const [team, setTeam] = useState(null);
   const [users, setUsers] = useState([]);
@@ -245,7 +250,7 @@ function MembersModal({ teamId, onClose, onSuccess }) {
           setUsers(Array.isArray(usersRes) ? usersRes : []);
         }
       } catch (e) {
-        if (!cancelled) showError(e.message || 'Failed to load');
+        if (!cancelled) showError(e.message || t('admin.teams.loadFailed'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -264,10 +269,10 @@ function MembersModal({ teamId, onClose, onSuccess }) {
       const updated = await getAdminTeamById(teamId);
       setTeam(updated);
       setAddUserId('');
-      showSuccess('Member added');
+      showSuccess(t('admin.teams.memberAdded'));
       onSuccess?.();
     } catch (err) {
-      showError(err.message || 'Failed to add member');
+      showError(err.message || t('admin.teams.addMemberFailed'));
     } finally {
       setAdding(false);
     }
@@ -279,10 +284,10 @@ function MembersModal({ teamId, onClose, onSuccess }) {
       await removeAdminTeamMember(teamId, userId);
       const updated = await getAdminTeamById(teamId);
       setTeam(updated);
-      showSuccess('Member removed');
+      showSuccess(t('admin.teams.memberRemoved'));
       onSuccess?.();
     } catch (err) {
-      showError(err.message || 'Failed to remove member');
+      showError(err.message || t('admin.teams.removeMemberFailed'));
     } finally {
       setRemoving(null);
     }
@@ -292,7 +297,7 @@ function MembersModal({ teamId, onClose, onSuccess }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" style={{ minWidth: '420px', maxWidth: '90vw' }} onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Team members{team ? `: ${team.name}` : ''}</h3>
+        <h3 style={{ marginTop: 0 }}>{team ? t('admin.teams.membersTitleNamed', { name: team.name }) : t('admin.teams.membersTitle')}</h3>
         {loading ? (
           <div className="crm-loading"><div className="crm-skeleton" /></div>
         ) : (
@@ -303,7 +308,7 @@ function MembersModal({ teamId, onClose, onSuccess }) {
                 onChange={(e) => setAddUserId(e.target.value)}
                 style={{ flex: 1, minWidth: '180px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
               >
-                <option value="">Add member…</option>
+                <option value="">{t('admin.teams.addMember')}</option>
                 {availableUsers.map((u) => (
                   <option key={u.id} value={u.id}>{u.email} ({u.role})</option>
                 ))}
@@ -314,16 +319,16 @@ function MembersModal({ teamId, onClose, onSuccess }) {
                 onClick={handleAdd}
                 disabled={!addUserId || adding}
               >
-                {adding ? 'Adding…' : 'Add'}
+                {adding ? t('admin.teams.adding') : t('admin.teams.add')}
               </button>
             </div>
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
+                    <th>{t('admin.teams.email')}</th>
+                    <th>{t('admin.teams.role')}</th>
+                    <th>{t('admin.plans.status')}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -332,10 +337,10 @@ function MembersModal({ teamId, onClose, onSuccess }) {
                     <tr key={m.id}>
                       <td>
                         {m.email}
-                        {m.isOwner && <span className="admin-status-badge approved" style={{ marginLeft: '8px', fontSize: '11px' }}>Owner</span>}
+                        {m.isOwner && <span className="admin-status-badge approved" style={{ marginLeft: '8px', fontSize: '11px' }}>{t('admin.teams.owner')}</span>}
                       </td>
                       <td>{m.role}</td>
-                      <td>{m.isActive ? 'Active' : 'Inactive'}</td>
+                      <td>{m.isActive ? t('admin.plans.active') : t('admin.plans.inactive')}</td>
                       <td>
                         {!m.isOwner && (
                           <button
@@ -344,7 +349,7 @@ function MembersModal({ teamId, onClose, onSuccess }) {
                             onClick={() => handleRemove(m.id)}
                             disabled={removing === m.id}
                           >
-                            {removing === m.id ? '…' : 'Remove'}
+                            {removing === m.id ? '…' : t('admin.teams.remove')}
                           </button>
                         )}
                       </td>
@@ -353,9 +358,9 @@ function MembersModal({ teamId, onClose, onSuccess }) {
                 </tbody>
               </table>
             </div>
-            {(!team?.members?.length) && <p className="admin-table-muted" style={{ marginTop: '8px' }}>No members yet.</p>}
+            {(!team?.members?.length) && <p className="admin-table-muted" style={{ marginTop: '8px' }}>{t('admin.teams.noMembers')}</p>}
             <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">Close</button>
+              <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">{t('admin.teams.close')}</button>
             </div>
           </>
         )}
@@ -365,6 +370,7 @@ function MembersModal({ teamId, onClose, onSuccess }) {
 }
 
 export default function AdminTeams() {
+  const { t } = useTranslation();
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [teams, setTeams] = useState([]);
@@ -385,7 +391,7 @@ export default function AdminTeams() {
       const data = await getAdminTeams();
       setTeams(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || 'Failed to load teams');
+      setError(err.message || t('admin.teams.loadTeamsFailed'));
     } finally {
       setLoading(false);
     }
@@ -410,7 +416,7 @@ export default function AdminTeams() {
   const handleDeleteConfirm = async () => {
     if (!deleteTeam) return;
     await deleteAdminTeam(deleteTeam.id);
-    showSuccess('Team deleted');
+    showSuccess(t('admin.teams.teamDeleted'));
     loadTeams();
     setDeleteTeam(null);
   };
@@ -420,7 +426,7 @@ export default function AdminTeams() {
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
+        <div>{t('admin.teams.loading')}</div>
       </div>
     );
   }
@@ -430,13 +436,13 @@ export default function AdminTeams() {
     <div className="platform-page" style={{ maxWidth: '100%' }}>
       <div className="platform-header" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
         <div>
-          <h1>Admin: Teams</h1>
+          <h1>{t('admin.teams.pageTitle')}</h1>
           <p className="platform-subtitle">
-            Create, edit, and manage teams. Add or remove members.
+            {t('admin.teams.pageSubtitle')}
           </p>
         </div>
         <button type="button" className="crm-btn crm-btn-primary" onClick={() => setShowCreate(true)}>
-          Create team
+          {t('admin.teams.createTeam')}
         </button>
       </div>
 
@@ -449,43 +455,43 @@ export default function AdminTeams() {
           <div className="crm-skeleton" />
         </div>
       ) : teams.length === 0 ? (
-        <div className="properties-empty">No teams yet.</div>
+        <div className="properties-empty">{t('admin.teams.noTeams')}</div>
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Owner</th>
-                <th>Seats</th>
-                <th>Members</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>{t('admin.plans.name')}</th>
+                <th>{t('admin.teams.owner')}</th>
+                <th>{t('admin.plans.seats')}</th>
+                <th>{t('admin.teams.members')}</th>
+                <th>{t('admin.teams.created')}</th>
+                <th>{t('admin.teams.actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedTeams.map((t) => (
-                <tr key={t.id}>
-                  <td><strong>{t.name}</strong></td>
-                  <td className="admin-table-muted">{t.ownerEmail || t.ownerId || '—'}</td>
-                  <td>{t.seatLimit ?? '—'}</td>
-                  <td>{t.memberCount ?? 0}</td>
-                  <td className="admin-table-muted">{formatDate(t.createdAt)}</td>
+              {paginatedTeams.map((team) => (
+                <tr key={team.id}>
+                  <td><strong>{team.name}</strong></td>
+                  <td className="admin-table-muted">{team.ownerEmail || team.ownerId || '—'}</td>
+                  <td>{team.seatLimit ?? '—'}</td>
+                  <td>{team.memberCount ?? 0}</td>
+                  <td className="admin-table-muted">{formatDate(team.createdAt)}</td>
                   <td>
                     <div className="admin-table-actions">
-                      <button type="button" className="crm-btn crm-btn-secondary admin-action-btn" onClick={() => setEditTeam(t)}>
-                        Edit
+                      <button type="button" className="crm-btn crm-btn-secondary admin-action-btn" onClick={() => setEditTeam(team)}>
+                        {t('admin.teams.edit')}
                       </button>
-                      <button type="button" className="crm-btn crm-btn-primary admin-action-btn" onClick={() => setMembersTeamId(t.id)}>
-                        Members
+                      <button type="button" className="crm-btn crm-btn-primary admin-action-btn" onClick={() => setMembersTeamId(team.id)}>
+                        {t('admin.teams.members')}
                       </button>
                       <button
                         type="button"
                         className="crm-btn admin-action-btn"
                         style={{ background: '#dc2626', color: '#fff' }}
-                        onClick={() => setDeleteTeam(t)}
+                        onClick={() => setDeleteTeam(team)}
                       >
-                        Delete
+                        {t('admin.teams.delete')}
                       </button>
                     </div>
                   </td>

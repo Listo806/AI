@@ -71,9 +71,9 @@ export default function Profile() {
     <div className="account-page">
       {/* Header */}
       <div className="account-header">
-        <h1 className="account-title">Profile</h1>
+        <h1 className="account-title">{t('account.profile.title')}</h1>
         <p className="account-description">
-          Manage your personal information and how others see you.
+          {t('account.profile.subtitle')}
         </p>
       </div>
 
@@ -84,7 +84,7 @@ export default function Profile() {
       )}
       {success && (
         <div className="account-message account-message-success" role="status">
-          Changes saved successfully!
+          {t('account.profile.changesSaved')}
         </div>
       )}
 
@@ -96,12 +96,12 @@ export default function Profile() {
             <div className="profile-avatar">
               {getInitials(name)}
               
-              <button type="button" className="edit-avatar-btn" title="Edit avatar">
+              <button type="button" className="edit-avatar-btn" title={t('account.profile.editAvatar')}>
                 <Pencil size={14} /> 
               </button>
             </div>
             <h2 className="profile-display-name">{name}</h2>
-            <span className="profile-badge-admin">{formatRole(user?.role) || 'Member'}</span>
+            <span className="profile-badge-admin">{formatRole(user?.role) || t('account.profile.member')}</span>
             <p className="profile-display-email">{user?.email || 'admin@cortexaaicrm.com'}</p>
           </div>
 
@@ -111,8 +111,8 @@ export default function Profile() {
                 <UserCircle2 size={16} />
               </div>
               <div className="meta-content">
-                <label>Role</label>
-                <p>{formatRole(user?.role) || 'Member'}</p>
+                <label>{t('account.profile.role')}</label>
+                <p>{formatRole(user?.role) || t('account.profile.member')}</p>
               </div>
             </div>
           </div>
@@ -120,25 +120,25 @@ export default function Profile() {
 
         <form onSubmit={handleSave} className="profile-main-form">
           <div className="form-header-row">
-            <h3 className="form-section-title">Personal Information</h3>
+            <h3 className="form-section-title">{t('account.profile.personalInformation')}</h3>
           </div>
           
           <div className="form-grid">
             {/* Full Name */}
             <div className="form-group">
-              <label className="form-label">Full name</label>
+              <label className="form-label">{t('account.profile.fullName')}</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="form-input"
-                placeholder="Enter your full name"
+                placeholder={t('account.profile.enterFullName')}
               />
             </div>
 
             {/* Email Address */}
             <div className="form-group">
-              <label className="form-label">Email address</label>
+              <label className="form-label">{t('account.profile.emailAddress')}</label>
               <div className="input-with-badge">
                 <input
                   type="email"
@@ -148,32 +148,32 @@ export default function Profile() {
                   disabled
                 />
                 <span className="verified-badge">
-                  Verified <span className="checkmark">✓</span>
+                  {t('account.profile.verified')} <span className="checkmark">✓</span>
                 </span>
               </div>
             </div>
 
             {/* Phone Number */}
             <div className="form-group">
-              <label className="form-label">Phone number</label>
+              <label className="form-label">{t('account.profile.phoneNumber')}</label>
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="form-input"
-                placeholder="Enter your phone number"
+                placeholder={t('account.profile.enterPhoneNumber')}
               />
             </div>
 
             {/* Job Title */}
             <div className="form-group">
-              <label className="form-label">Job title</label>
+              <label className="form-label">{t('account.profile.jobTitle')}</label>
               <input
                 type="text"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 className="form-input"
-                placeholder="Enter your job title"
+                placeholder={t('account.profile.enterJobTitle')}
               />
             </div>
 
@@ -185,7 +185,7 @@ export default function Profile() {
               className={`btn-save-changes ${name && phone ? 'active' : ''}`}
               disabled={isSaving}
             >
-              {isSaving ? 'Saving...' : 'Save changes'}
+              {isSaving ? t('account.profile.saving') : t('account.profile.saveChanges')}
             </button>
           </div>
         </form>
@@ -193,7 +193,7 @@ export default function Profile() {
 
       <div className="profile-footer-hint">
         <Info size={16} className="hint-icon" /> 
-        <p>Your profile information is used across CORTEXA AI CRM to personalize your experience.</p>
+        <p>{t('account.profile.footerHint')}</p>
       </div>
     </div>
   );

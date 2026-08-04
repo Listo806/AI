@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { QRCodeCanvas } from "qrcode.react";
 import { useWhatsAppDashboard } from "./hooks/useWhatsAppDashboard";
 import "./WhatsApp.css";
@@ -43,6 +44,7 @@ import {
 } from "lucide-react";
 import qrImg from "../../assets/cortexa/qr.png";
 export default function WhatsAppPage() {
+  const { t } = useTranslation();
   const [showTimelineDrawer, setShowTimelineDrawer] = React.useState(false);
   const [visibleConversations, setVisibleConversations] = React.useState(10);
 
@@ -119,7 +121,7 @@ export default function WhatsAppPage() {
 
     if (isSameDay) return time;
 
-    if (isYesterday) return `Yesterday, ${time}`;
+    if (isYesterday) return t("whatsapp.yesterdayTime", { time });
 
     const dateText = date.toLocaleDateString([], {
       month: "short",
@@ -164,7 +166,7 @@ export default function WhatsAppPage() {
       <div className="heading_page">
         <MessageCircle className="header-icon" size={20} />
         <h1>
-          WhatsApp Inbox{" "}
+          {t("whatsapp.inboxTitle")}{" "}
           <CheckCircle2
             size={16}
             fill="#2563eb"
@@ -174,7 +176,7 @@ export default function WhatsAppPage() {
         </h1>
       </div>
       <p className="sub_head">
-        Manage conversations, assist with AI, close more deals.
+        {t("whatsapp.subHeading")}
       </p>
 
       {/* MAIN THREE-COLUMN WORKSPACE */}
@@ -234,14 +236,14 @@ export default function WhatsAppPage() {
                   className={`tab-item ${statusFilter === "all" ? "active" : ""}`}
                   onClick={() => setStatusFilter("all")}
                 >
-                  All <span className="tab-count">{conversations.length}</span>
+                  {t("whatsapp.tabAll")} <span className="tab-count">{conversations.length}</span>
                 </button>
 
                 <button
                   className={`tab-item ${statusFilter === "unread" ? "active" : ""}`}
                   onClick={() => setStatusFilter("unread")}
                 >
-                  Unread{" "}
+                  {t("whatsapp.tabUnread")}{" "}
                   <span className="tab-count">
                     {
                       conversations.filter(
@@ -255,7 +257,7 @@ export default function WhatsAppPage() {
                   className={`tab-item ${statusFilter === "human" ? "active" : ""}`}
                   onClick={() => setStatusFilter("human")}
                 >
-                  Mine{" "}
+                  {t("whatsapp.tabMine")}{" "}
                   <span className="tab-count">
                     {conversations.filter((i) => !i.ai_enabled).length}
                   </span>
@@ -265,7 +267,7 @@ export default function WhatsAppPage() {
                 <Search size={16} className="search-icon" />
                 <input
                   type="text"
-                  placeholder="Search conversations..."
+                  placeholder={t("whatsapp.searchPlaceholder")}
                   className="inbox-search-input"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -341,7 +343,7 @@ export default function WhatsAppPage() {
                                 return value &&
                                   !invalidValues.includes(value.toLowerCase())
                                   ? value
-                                  : "No messages yet";
+                                  : t("whatsapp.noMessagesYet");
                               })()}
                             </p>
                             <span
@@ -362,7 +364,7 @@ export default function WhatsAppPage() {
                 ) : (
                   <div className="lead-card">
                     <p className="last-message-snippet">
-                      No conversations found.
+                      {t("whatsapp.noConversationsFound")}
                     </p>
                   </div>
                 )}
@@ -378,7 +380,7 @@ export default function WhatsAppPage() {
                           setVisibleConversations((prev) => prev + 10)
                         }
                       >
-                        Load More Conversations
+                        {t("whatsapp.loadMoreConversations")}
                         <span style={{ marginLeft: 6 }}>
                           ({visibleConversations}/{filteredConversations.length}
                           )
@@ -401,7 +403,7 @@ export default function WhatsAppPage() {
                     <div className="d-flex">
                       <h3>
                         {selectedConversation?.displayName ||
-                          "Select Conversation"}
+                          t("whatsapp.selectConversation")}
                       </h3>
                       <span className="hot-tag-pill">
                         {selectedConversation?.tag || "-"}
@@ -438,14 +440,14 @@ export default function WhatsAppPage() {
                   >
                     <Sparkles size={12} />
                     {selectedConversation?.ai_enabled
-                      ? "AI Handling"
-                      : "Human Handling"}
+                      ? t("whatsapp.aiHandling")
+                      : t("whatsapp.humanHandling")}
                   </span>
                   <button className="icon-btn-borderless btn-normal">
                     <BriefcaseBusiness size={16} />
                     {selectedConversation?.ai_enabled
-                      ? "Take Over"
-                      : "Resume AI"}
+                      ? t("whatsapp.takeOver")
+                      : t("whatsapp.resumeAi")}
                   </button>
                   <button className="icon-btn-borderless">
                     <MoreVertical size={16} />
@@ -456,7 +458,7 @@ export default function WhatsAppPage() {
               {/* AI SUMMARY BOX BANNER */}
               <div className="ai-summary horizontal-summary-banner">
                 <div className="summary-banner-content-top">
-                  <h4>AI Summary</h4>
+                  <h4>{t("whatsapp.aiSummary")}</h4>
                   {selectedIntelligence?.property && (
                     <div className="wa-property-summary">
                       <div>🏠 {selectedIntelligence.property.title}</div>
@@ -496,30 +498,30 @@ export default function WhatsAppPage() {
                   </div>
                   <p>
                     {intelligenceLoading
-                      ? "Analyzing conversation..."
+                      ? t("whatsapp.analyzingConversation")
                       : selectedIntelligence.summary ||
-                        "Buyer interested in Downtown Apartment."}
+                        t("whatsapp.defaultSummary")}
                   </p>
                 </div>
 
                 <div className="summary-divider"></div>
                 <div className="summary-metrics-grid">
                   <div className="metric-col">
-                    <span className="metric-col-label">Sentiment</span>
+                    <span className="metric-col-label">{t("whatsapp.sentiment")}</span>
                     <span className="metric-col-value sentiment-positive">
                       {selectedIntelligence.sentiment || "-"}
                     </span>
                   </div>
 
                   <div className="metric-col">
-                    <span className="metric-col-label">Intent</span>
+                    <span className="metric-col-label">{t("whatsapp.intent")}</span>
                     <span className="metric-col-value intent-high">
                       {selectedIntelligence.intent || "-"}
                     </span>
                   </div>
 
                   <div className="metric-col">
-                    <span className="metric-col-label">AI Score</span>
+                    <span className="metric-col-label">{t("whatsapp.aiScore")}</span>
                     <span className="metric-col-value score-blue">
                       {selectedIntelligence.score
                         ? `${selectedIntelligence.score}%`
@@ -528,10 +530,10 @@ export default function WhatsAppPage() {
                   </div>
 
                   <div className="metric-col">
-                    <span className="metric-col-label">Next Action</span>
+                    <span className="metric-col-label">{t("whatsapp.nextAction")}</span>
                     <span className="metric-col-value action-text">
                       {selectedIntelligence.recommendedAction ||
-                        "Send property details"}
+                        t("whatsapp.sendPropertyDetails")}
                     </span>
                   </div>
                 </div>
@@ -543,7 +545,7 @@ export default function WhatsAppPage() {
                 {messagesLoading ? (
                   <div className="chat-message-row user-incoming-msg">
                     <div className="message-bubble-body">
-                      <p>Loading messages...</p>
+                      <p>{t("whatsapp.loadingMessages")}</p>
                     </div>
                   </div>
                 ) : messages.length ? (
@@ -595,14 +597,14 @@ export default function WhatsAppPage() {
                 ) : (
                   <div className="chat-message-row user-incoming-msg">
                     <div className="message-bubble-body">
-                      <p>No messages yet.</p>
+                      <p>{t("whatsapp.emptyMessages")}</p>
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="response-mode-banner">
-                <div className="banner-title">Who is responding?</div>
+                <div className="banner-title">{t("whatsapp.whoIsResponding")}</div>
 
                 <div className="mode-options-group">
                   <button
@@ -613,7 +615,7 @@ export default function WhatsAppPage() {
                     }`}
                   >
                     <Bot size={16} />
-                    <span>AI Active</span>
+                    <span>{t("whatsapp.aiActive")}</span>
                   </button>
 
                   <button
@@ -624,12 +626,12 @@ export default function WhatsAppPage() {
                     }`}
                   >
                     <User size={16} />
-                    <span>Human Active</span>
+                    <span>{t("whatsapp.humanActive")}</span>
                   </button>
 
                   <button className="mode-btn btn-shared">
                     <Users size={16} />
-                    <span>Shared Mode</span>
+                    <span>{t("whatsapp.sharedMode")}</span>
                   </button>
                 </div>
 
@@ -652,16 +654,16 @@ export default function WhatsAppPage() {
                 ) : (
                   <>
                     <button className="utility-chip-action-btn">
-                      <Home size={12} /> Send Property Options
+                      <Home size={12} /> {t("whatsapp.sendPropertyOptions")}
                     </button>
                     <button className="utility-chip-action-btn">
-                      <Calendar size={12} /> Book Appointment
+                      <Calendar size={12} /> {t("whatsapp.bookAppointment")}
                     </button>
                     <button className="utility-chip-action-btn">
-                      <Brain size={12} /> Ask Budget
+                      <Brain size={12} /> {t("whatsapp.askBudget")}
                     </button>
                     <button className="utility-chip-action-btn">
-                      <Share2 size={12} /> Share Location
+                      <Share2 size={12} /> {t("whatsapp.shareLocation")}
                     </button>
                   </>
                 )}
@@ -676,7 +678,7 @@ export default function WhatsAppPage() {
                       <Paperclip size={18} />
                     </button>
                     <input
-                      placeholder="Type a message or use AI Assist..."
+                      placeholder={t("whatsapp.typeMessagePlaceholder")}
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       onKeyDown={(e) => {
@@ -704,7 +706,7 @@ export default function WhatsAppPage() {
                       }
                     >
                       <Sparkles size={16} color="#2563eb" />
-                      {aiAssistLoading ? "Thinking..." : "AI Assist"}
+                      {aiAssistLoading ? t("whatsapp.thinking") : t("whatsapp.aiAssist")}
                     </button>
                     <button
                       className={`send-message-main-submit-btn ${
@@ -718,10 +720,10 @@ export default function WhatsAppPage() {
                       }
                       title={
                         !selectedConversation?.contact_phone
-                          ? "Select a conversation first"
+                          ? t("whatsapp.selectConversationFirst")
                           : !messageText.trim()
-                            ? "Type a message first"
-                            : "Send message"
+                            ? t("whatsapp.typeMessageFirst")
+                            : t("whatsapp.sendMessageTitle")
                       }
                     >
                       {sending ? (
@@ -739,11 +741,11 @@ export default function WhatsAppPage() {
         <div className="main-workspace-2">
           <div className="ai-status-card">
             <div className="card-header">
-              <h3 className="card-title">AI Status</h3>
+              <h3 className="card-title">{t("whatsapp.aiStatus")}</h3>
               <span
                 className={`badge ${status?.connected ? "badge-active" : "badge-off"}`}
               >
-                {status?.connected ? "Active" : "Offline"}
+                {status?.connected ? t("whatsapp.statusActive") : t("whatsapp.statusOffline")}
               </span>
             </div>
 
@@ -753,18 +755,18 @@ export default function WhatsAppPage() {
                 <span
                   className={`badge ${status?.connected ? "badge-active" : "badge-off"}`}
                 >
-                  {status?.connected ? "Active" : "Offline"}
+                  {status?.connected ? t("whatsapp.statusActive") : t("whatsapp.statusOffline")}
                 </span>
               </div>
 
               <div className="metric-row">
-                <span className="metric-label">Human Mode</span>
+                <span className="metric-label">{t("whatsapp.humanMode")}</span>
                 <span
                   className={`badge ${
                     (aiStatus?.human ?? 0) > 0 ? "badge-active" : "badge-off"
                   }`}
                 >
-                  {(aiStatus?.human ?? 0) > 0 ? "On" : "Off"}
+                  {(aiStatus?.human ?? 0) > 0 ? t("whatsapp.on") : t("whatsapp.off")}
                 </span>
               </div>
 
@@ -772,7 +774,7 @@ export default function WhatsAppPage() {
 
               <div className="metric-row font-medium">
                 <span className="metric-label text-dark">
-                  Conversations Managed Today
+                  {t("whatsapp.conversationsManagedToday")}
                 </span>
                 <span className="metric-value text-dark font-bold">
                   {aiStatus?.conversationsToday ?? 0}
@@ -781,7 +783,7 @@ export default function WhatsAppPage() {
 
               <div className="metric-row font-medium">
                 <span className="metric-label text-dark">
-                  Appointments Booked
+                  {t("whatsapp.appointmentsBooked")}
                 </span>
                 <span className="metric-value text-dark font-bold">
                   {aiStatus?.appointmentsToday ?? 0}
@@ -790,7 +792,7 @@ export default function WhatsAppPage() {
 
               <div className="metric-row font-medium">
                 <span className="metric-label text-dark">
-                  Average Response Time
+                  {t("whatsapp.averageResponseTime")}
                 </span>
                 <span className="metric-value text-dark font-bold">
                   {aiStatus?.averageResponseTime ?? "-"}
@@ -804,21 +806,21 @@ export default function WhatsAppPage() {
                 disabled={!selectedConversation}
               >
                 <Pause size={16} fill="currentColor" />
-                {selectedConversation?.ai_enabled ? "Pause AI" : "Resume AI"}
+                {selectedConversation?.ai_enabled ? t("whatsapp.pauseAi") : t("whatsapp.resumeAi")}
               </button>
 
               <button
                 className="btn-action btn-view-activity"
                 onClick={() => setShowAiActivityDrawer(true)}
               >
-                <TrendingUp size={16} /> View AI Activity
+                <TrendingUp size={16} /> {t("whatsapp.viewAiActivity")}
               </button>
             </div>
           </div>
           {/* CONVERSATION INTELLIGENCE */}
           <div className="insight-card metrics-box-panel">
             <div className="panel-header line-header">
-              <h3>Conversation Intelligence</h3>
+              <h3>{t("whatsapp.conversationIntelligence")}</h3>
             </div>
             <div className="intelligence-donut-chart-row">
               <div className="radial-progress-gauge">
@@ -890,30 +892,30 @@ export default function WhatsAppPage() {
 
                 <div className="gauge-internal-text">
                   <h2>{selectedIntelligence.score}%</h2>
-                  <span>AI Score</span>
+                  <span>{t("whatsapp.aiScore")}</span>
                 </div>
               </div>
               <div className="gauge-metrics-list-right">
                 <div className="metric-row-item-flat">
-                  <span className="flat-lbl">Sentiment</span>
+                  <span className="flat-lbl">{t("whatsapp.sentiment")}</span>
                   <span className="flat-val positive-text">
                     {selectedIntelligence.sentiment}
                   </span>
                 </div>
                 <div className="metric-row-item-flat">
-                  <span className="flat-lbl">Intent Level</span>
+                  <span className="flat-lbl">{t("whatsapp.intentLevel")}</span>
                   <span className="flat-val high-intent-badge-pill">
                     {selectedIntelligence.intent}
                   </span>
                 </div>
                 <div className="metric-row-item-flat">
-                  <span className="flat-lbl">Response Likelihood</span>
+                  <span className="flat-lbl">{t("whatsapp.responseLikelihood")}</span>
                   <span className="flat-val positive-text">
                     {selectedIntelligence.responseLikelihood}
                   </span>
                 </div>
                 <div className="metric-row-item-flat">
-                  <span className="flat-lbl">Close Probability</span>
+                  <span className="flat-lbl">{t("whatsapp.closeProbability")}</span>
                   <span className="flat-val positive-text">
                     {selectedIntelligence.closeProbability}
                   </span>
@@ -925,7 +927,7 @@ export default function WhatsAppPage() {
             {/* JOURNEY TIMELINE */}
             <div className="insight-card metrics-box-panel">
               <div className="panel-header line-header">
-                <h3>Journey Timeline</h3>
+                <h3>{t("whatsapp.journeyTimeline")}</h3>
               </div>
               <div className="timeline-container vertical-stepper-axis">
                 <div className="timeline-vertical-line axis-offset"></div>
@@ -960,7 +962,7 @@ export default function WhatsAppPage() {
                     <div className="timeline-dot dot-blue node-dot-style"></div>
                     <div className="timeline-content box-content-layout">
                       <h5 className="timeline-title font-bold">
-                        No activity yet
+                        {t("whatsapp.noActivityYet")}
                       </h5>
                     </div>
                   </div>
@@ -972,7 +974,7 @@ export default function WhatsAppPage() {
                   className="full-timeline-btn centered-link-btn"
                   onClick={() => setShowTimelineDrawer(true)}
                 >
-                  View Full Timeline
+                  {t("whatsapp.viewFullTimeline")}
                 </button>
               </div>
             </div>
@@ -990,8 +992,8 @@ export default function WhatsAppPage() {
           >
             <div className="wa-drawer-header">
               <div>
-                <h3>Conversation Timeline</h3>
-                <p>{selectedConversation?.displayName || "WhatsApp Lead"}</p>
+                <h3>{t("whatsapp.conversationTimeline")}</h3>
+                <p>{selectedConversation?.displayName || t("whatsapp.whatsappLead")}</p>
               </div>
 
               <button
@@ -1036,7 +1038,7 @@ export default function WhatsAppPage() {
                 ))
               ) : (
                 <p className="timeline-desc desc-dim text-small">
-                  No timeline available.
+                  {t("whatsapp.noTimelineAvailable")}
                 </p>
               )}
 
@@ -1046,7 +1048,7 @@ export default function WhatsAppPage() {
                   onClick={loadMoreTimeline}
                   disabled={timelineLoading}
                 >
-                  {timelineLoading ? "Loading..." : "Load more"}
+                  {timelineLoading ? t("whatsapp.loading") : t("whatsapp.loadMore")}
                 </button>
               )}
             </div>
@@ -1064,8 +1066,8 @@ export default function WhatsAppPage() {
           >
             <div className="wa-drawer-header">
               <div>
-                <h3>AI Activity</h3>
-                <p>{selectedConversation?.displayName || "WhatsApp Lead"}</p>
+                <h3>{t("whatsapp.aiActivity")}</h3>
+                <p>{selectedConversation?.displayName || t("whatsapp.whatsappLead")}</p>
               </div>
 
               <button
@@ -1100,7 +1102,7 @@ export default function WhatsAppPage() {
                 ))
               ) : (
                 <p className="timeline-desc desc-dim text-small">
-                  No AI activity yet.
+                  {t("whatsapp.noAiActivityYet")}
                 </p>
               )}
             </div>
@@ -1118,8 +1120,8 @@ export default function WhatsAppPage() {
           >
             <div className="wa-ai-assist-header">
               <div>
-                <h3>AI Assist</h3>
-                <p>Generate a suggested WhatsApp reply.</p>
+                <h3>{t("whatsapp.aiAssist")}</h3>
+                <p>{t("whatsapp.generateSuggestedReply")}</p>
               </div>
 
               <button
@@ -1134,14 +1136,14 @@ export default function WhatsAppPage() {
               {aiAssistLoading ? (
                 <div className="wa-ai-loading-box">
                   <span className="wa-send-spinner" />
-                  <p>CORTEXA AI is writing a reply...</p>
+                  <p>{t("whatsapp.aiWritingReply")}</p>
                 </div>
               ) : (
                 <textarea
                   className="wa-ai-reply-textarea"
                   value={aiAssistReply}
                   onChange={(e) => setAiAssistReply(e.target.value)}
-                  placeholder="AI reply will appear here..."
+                  placeholder={t("whatsapp.aiReplyPlaceholder")}
                 />
               )}
             </div>
@@ -1152,7 +1154,7 @@ export default function WhatsAppPage() {
                 onClick={generateAiAssistReply}
                 disabled={aiAssistLoading}
               >
-                Regenerate
+                {t("whatsapp.regenerate")}
               </button>
 
               <button
@@ -1162,7 +1164,7 @@ export default function WhatsAppPage() {
                 }
                 disabled={!aiAssistReply}
               >
-                Copy
+                {t("whatsapp.copy")}
               </button>
 
               <button
@@ -1173,7 +1175,7 @@ export default function WhatsAppPage() {
                   setShowAiAssist(false);
                 }}
               >
-                Insert Reply
+                {t("whatsapp.insertReply")}
               </button>
             </div>
           </div>

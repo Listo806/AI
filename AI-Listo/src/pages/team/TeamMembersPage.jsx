@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ROLE_STYLES } from "./utils/teamConstants";
 import "./team.css";
 
@@ -23,6 +24,8 @@ import {
   fetchTeamSeatUsage,
 } from "./services/team.service";
 export default function TeamMembersPage() {
+  const { t } = useTranslation();
+
   /* =====================================================
     DASHBOARD
   ===================================================== */
@@ -176,7 +179,7 @@ export default function TeamMembersPage() {
         };
       });
 
-      showToast("Member role updated successfully", "success");
+      showToast(t("team.roleUpdated"), "success");
 
       await Promise.all([reloadMembers(), reloadDashboard()]);
     } catch (error) {
@@ -193,7 +196,7 @@ export default function TeamMembersPage() {
         };
       });
 
-      showToast(error?.message || "Failed to update member role", "error");
+      showToast(error?.message || t("team.roleUpdateFailed"), "error");
     } finally {
       setRoleUpdating(false);
     }
@@ -201,29 +204,29 @@ export default function TeamMembersPage() {
 
   const handleExport = () => {
     const headers = [
-      "Name",
-      "Email",
-      "Role",
-      "Status",
-      "Assigned Leads",
-      "Deals Won",
-      "Pipeline Value",
-      "AI Score",
-      "Last Active",
-      "Seat Usage",
+      t("team.name"),
+      t("team.email"),
+      t("team.role"),
+      t("team.status"),
+      t("team.assignedLeads"),
+      t("team.dealsWon"),
+      t("team.pipelineValue"),
+      t("team.aiScore"),
+      t("team.lastActive"),
+      t("team.seatUsage"),
     ];
 
     const rows = members.map((m) => [
       m.name || "",
       m.email || "",
       m.role || "",
-      m.isActive ? "Active" : "Inactive",
+      m.isActive ? t("team.active") : t("team.inactive"),
       m.totalLeads || 0,
       m.dealsWon || 0,
       m.pipelineValue || 0,
       `${m.aiScore || 0}%`,
-      m.lastSeenAt || "Recently",
-      "1 Seat",
+      m.lastSeenAt || t("team.recently"),
+      t("team.oneSeat"),
     ]);
 
     const csvContent = [
@@ -253,10 +256,10 @@ export default function TeamMembersPage() {
     (_, i) => i + 1,
   );
   const formatLastActive = (value) => {
-    if (!value) return "No recent activity";
+    if (!value) return t("team.noRecentActivity");
 
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "No recent activity";
+    if (Number.isNaN(date.getTime())) return t("team.noRecentActivity");
 
     return date.toLocaleString();
   };
@@ -266,27 +269,39 @@ export default function TeamMembersPage() {
 
     if (role === "owner") {
       return [
-        "Full workspace access",
-        "Manage team",
-        "Billing access",
-        "AI workspace",
+        t("team.permFullWorkspace"),
+        t("team.permManageTeam"),
+        t("team.permBillingAccess"),
+        t("team.permAiWorkspace"),
       ];
     }
 
     if (role === "manager") {
-      return ["Manage leads", "View team activity", "AI workspace"];
+      return [
+        t("team.permManageLeads"),
+        t("team.permViewTeamActivity"),
+        t("team.permAiWorkspace"),
+      ];
     }
 
     if (role === "viewer") {
-      return ["View CRM", "View leads", "Limited workspace access"];
+      return [
+        t("team.permViewCrm"),
+        t("team.permViewLeads"),
+        t("team.permLimitedWorkspace"),
+      ];
     }
 
-    return ["CRM access", "Manage assigned leads", "AI workspace"];
+    return [
+      t("team.permCrmAccess"),
+      t("team.permManageAssignedLeads"),
+      t("team.permAiWorkspace"),
+    ];
   };
 
   const getMemberStatus = (member) => {
-    if (member?.isActive) return "Active";
-    return "Inactive";
+    if (member?.isActive) return t("team.active");
+    return t("team.inactive");
   };
 
   const getRoleStyle = (role) => {
@@ -302,7 +317,7 @@ export default function TeamMembersPage() {
 
       <div className="team-members-header heading_page">
         <Users />
-        <h1 className="team-page-title">Team Members</h1>
+        <h1 className="team-page-title">{t("team.pageTitle")}</h1>
       </div>
       <div className="team-members-header-actions">
         {seatUsage && (
@@ -316,7 +331,10 @@ export default function TeamMembersPage() {
               color: seatsFull ? "#dc2626" : "#475569",
             }}
           >
-            {seatUsage.used} of {seatUsage.limit} seats used
+            {t("team.seatsUsedCount", {
+              used: seatUsage.used,
+              limit: seatUsage.limit,
+            })}
           </span>
         )}
 
@@ -326,7 +344,7 @@ export default function TeamMembersPage() {
           onClick={handleExport}
         >
           <Download size={16} />
-          Export CSV
+          {t("team.exportCsv")}
         </button>
 
         <button
@@ -334,14 +352,10 @@ export default function TeamMembersPage() {
           className="team-primary-btn"
           onClick={() => setShowInviteModal(true)}
           disabled={seatsFull}
-          title={
-            seatsFull
-              ? "Seat limit reached for your plan. Upgrade to add more users."
-              : undefined
-          }
+          title={seatsFull ? t("team.seatLimitReachedTitle") : undefined}
         >
           <Plus size={16} />
-          Invite Member
+          {t("team.inviteMember")}
         </button>
       </div>
 
@@ -356,7 +370,7 @@ export default function TeamMembersPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search members..."
+            placeholder={t("team.searchMembers")}
           />
         </div>
 
@@ -365,22 +379,22 @@ export default function TeamMembersPage() {
           onChange={(e) => setFilter(e.target.value)}
           className="team-filter-select"
         >
-          <option value="all">All Members</option>
-          <option value="active">Active</option>
-          <option value="manager">Manager</option>
-          <option value="agent">Agent</option>
-          <option value="viewer">Viewer</option>
-          <option value="high-performers">High Performers</option>
+          <option value="all">{t("team.filterAllMembers")}</option>
+          <option value="active">{t("team.active")}</option>
+          <option value="manager">{t("team.roleManager")}</option>
+          <option value="agent">{t("team.roleAgent")}</option>
+          <option value="viewer">{t("team.roleViewer")}</option>
+          <option value="high-performers">{t("team.filterHighPerformers")}</option>
         </select>
         <select
           value={limit}
           onChange={(e) => setLimit(Number(e.target.value))}
           className="team-filter-select"
         >
-          <option value={10}>10 / page</option>
-          <option value={20}>20 / page</option>
-          <option value={50}>50 / page</option>
-          <option value={100}>100 / page</option>
+          <option value={10}>{t("team.perPage", { size: 10 })}</option>
+          <option value={20}>{t("team.perPage", { size: 20 })}</option>
+          <option value={50}>{t("team.perPage", { size: 50 })}</option>
+          <option value={100}>{t("team.perPage", { size: 100 })}</option>
         </select>
       </div>
 
@@ -393,14 +407,14 @@ export default function TeamMembersPage() {
           <table className="team-full-table">
             <thead>
               <tr>
-                <th>Member</th>
-                <th>Role</th>
-                <th>Team</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Assigned Leads</th>
-                <th>Pipeline Value</th>
-                <th>Last Active</th>
+                <th>{t("team.member")}</th>
+                <th>{t("team.role")}</th>
+                <th>{t("team.title")}</th>
+                <th>{t("team.status")}</th>
+                <th>{t("team.joined")}</th>
+                <th>{t("team.assignedLeads")}</th>
+                <th>{t("team.pipelineValue")}</th>
+                <th>{t("team.lastActive")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -408,7 +422,7 @@ export default function TeamMembersPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="9">Loading...</td>
+                  <td colSpan="9">{t("team.loading")}</td>
                 </tr>
               ) : (
                 members?.map((member) => (
@@ -457,7 +471,7 @@ export default function TeamMembersPage() {
                           member.isActive ? "active" : "inactive"
                         }`}
                       >
-                        {member.isActive ? "Active" : "Inactive"}
+                        {member.isActive ? t("team.active") : t("team.inactive")}
                       </span>
                     </td>
                     <td>
@@ -529,11 +543,11 @@ export default function TeamMembersPage() {
         </div>
       )}
       <div className="team-table-info">
-        Showing
+        {t("team.showing")}
         <b> {members.length} </b>
-        of
+        {t("team.ofLabel")}
         <b> {pagination.total} </b>
-        members
+        {t("team.membersCountSuffix")}
       </div>
 
       {/* =================================================
@@ -551,7 +565,7 @@ export default function TeamMembersPage() {
           >
             {/* HEADER */}
             <div className="team-member-drawer-header">
-              <h3>Member Details</h3>
+              <h3>{t("team.memberDetails")}</h3>
 
               <button
                 type="button"
@@ -577,11 +591,11 @@ export default function TeamMembersPage() {
             <div className="team-member-section">
               <h4>
                 <Shield size={16} />
-                Member Role
+                {t("team.memberRole")}
               </h4>
 
               <div className="team-drawer-role-field">
-                <label htmlFor="drawer-member-role">Account role</label>
+                <label htmlFor="drawer-member-role">{t("team.accountRole")}</label>
 
                 <select
                   id="drawer-member-role"
@@ -592,15 +606,15 @@ export default function TeamMembersPage() {
                   disabled={roleUpdating}
                   className="team-filter-select"
                 >
-                  <option value="agent">Agent</option>
-                  <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="agent">{t("team.roleAgent")}</option>
+                  <option value="manager">{t("team.roleManager")}</option>
+                  <option value="admin">{t("team.roleAdmin")}</option>
+                  <option value="viewer">{t("team.roleViewer")}</option>
                 </select>
 
                 {roleUpdating && (
                   <span className="team-drawer-role-updating">
-                    Updating role...
+                    {t("team.updatingRole")}
                   </span>
                 )}
               </div>
@@ -610,7 +624,7 @@ export default function TeamMembersPage() {
             <div className="team-member-section">
               <h4>
                 <Shield size={16} />
-                Permissions
+                {t("team.permissions")}
               </h4>
 
               {getMemberPermissions(selectedMember).map((permission) => (
@@ -625,22 +639,26 @@ export default function TeamMembersPage() {
             <div className="team-member-section">
               <h4>
                 <Activity size={16} />
-                Activity Logs
+                {t("team.activityLogs")}
               </h4>
               <div className="team-log-item">
-                Status: {getMemberStatus(selectedMember)}
+                {t("team.logStatus", { status: getMemberStatus(selectedMember) })}
               </div>
 
               <div className="team-log-item">
-                Assigned leads: {selectedMember.totalLeads || 0}
+                {t("team.logAssignedLeads", {
+                  leads: selectedMember.totalLeads || 0,
+                })}
               </div>
 
               <div className="team-log-item">
-                Deals won: {selectedMember.dealsWon || 0}
+                {t("team.logDealsWon", { deals: selectedMember.dealsWon || 0 })}
               </div>
 
               <div className="team-log-item">
-                Last active: {formatLastActive(selectedMember.lastSeenAt)}
+                {t("team.logLastActive", {
+                  value: formatLastActive(selectedMember.lastSeenAt),
+                })}
               </div>
             </div>
 
@@ -648,26 +666,28 @@ export default function TeamMembersPage() {
             <div className="team-member-section">
               <h4>
                 <Brain size={16} />
-                AI Usage
+                {t("team.aiUsage")}
               </h4>
 
               <div className="team-ai-usage">
-                AI Score: {Number(selectedMember.aiScore || 0)}%
+                {t("team.aiScoreValue", {
+                  score: Number(selectedMember.aiScore || 0),
+                })}
               </div>
             </div>
 
             {/* BILLING */}
             <div className="team-member-section">
-              <h4>Billing Seat</h4>
+              <h4>{t("team.billingSeat")}</h4>
 
               <div className="team-log-item">
                 {selectedMember.isActive
-                  ? "1 Active Seat Attached"
-                  : "No active seat"}
+                  ? t("team.oneActiveSeat")
+                  : t("team.noActiveSeat")}
               </div>
 
               <div className="team-log-item">
-                <span>Role: </span>
+                <span>{t("team.roleLabel")} </span>
 
                 <span
                   className="team-role-badge"
@@ -688,7 +708,7 @@ export default function TeamMembersPage() {
               onClick={handleRemoveMember}
             >
               <Trash2 size={16} />
-              Remove Member
+              {t("team.removeMember")}
             </button>
           </div>
         </div>

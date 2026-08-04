@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { fetchTeamActivities } from "./services/team.service";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./activity.css";
 
 import useTeamDashboard from "./hooks/useTeamDashboard";
@@ -46,6 +47,7 @@ const getActivityIcon = (activity) => {
 };
 
 export default function TeamActivityPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     totalActivities: 0,
     messages: 0,
@@ -147,17 +149,17 @@ export default function TeamActivityPage() {
 
   const exportActivitiesCsv = () => {
     const headers = [
-      "User Name",
-      "User Email",
-      "Event Type",
-      "Entity Type",
-      "Activity",
-      "Time",
-      "Created At",
+      t("team.csvUserName"),
+      t("team.csvUserEmail"),
+      t("team.eventType"),
+      t("team.entityType"),
+      t("team.activity"),
+      t("team.time"),
+      t("team.csvCreatedAt"),
     ];
 
     const rows = activities.map((activity) => [
-      activity.userName || "Unknown User",
+      activity.userName || t("team.unknownUser"),
       activity.userEmail || "",
       formatActivityLabel(activity.eventType),
       formatActivityLabel(activity.entityType),
@@ -191,7 +193,7 @@ export default function TeamActivityPage() {
     <div className="team-activity-page">
       <div className="team-performance-header heading_page">
         <Activity />
-        <h1 className="team-page-title">Team Activity</h1>
+        <h1 className="team-page-title">{t("team.activityTitle")}</h1>
       </div>
       <div className="team-members-filters">
         <div className="team-search-box">
@@ -201,7 +203,7 @@ export default function TeamActivityPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search activities..."
+            placeholder={t("team.searchPlaceholder")}
           />
         </div>
         <div className="team-search-box">
@@ -235,11 +237,11 @@ export default function TeamActivityPage() {
           }}
           className="team-filter-select"
         >
-          <option value="createdAt:desc">Newest</option>
-          <option value="createdAt:asc">Oldest</option>
-          <option value="user:asc">User A-Z</option>
-          <option value="user:desc">User Z-A</option>
-          <option value="type:asc">Type</option>
+          <option value="createdAt:desc">{t("team.sortNewest")}</option>
+          <option value="createdAt:asc">{t("team.sortOldest")}</option>
+          <option value="user:asc">{t("team.sortUserAsc")}</option>
+          <option value="user:desc">{t("team.sortUserDesc")}</option>
+          <option value="type:asc">{t("team.sortType")}</option>
         </select>
         <select
           value={type}
@@ -259,11 +261,11 @@ export default function TeamActivityPage() {
           }}
           className="team-filter-select"
         >
-          <option value="all">All Activities</option>
-          <option value="team">Team</option>
-          <option value="lead">Leads</option>
-          <option value="property">Properties</option>
-          <option value="user">Users</option>
+          <option value="all">{t("team.filterAllActivities")}</option>
+          <option value="team">{t("team.title")}</option>
+          <option value="lead">{t("team.filterLeads")}</option>
+          <option value="property">{t("team.filterProperties")}</option>
+          <option value="user">{t("team.filterUsers")}</option>
           <option value="ai">AI</option>
         </select>
 
@@ -275,68 +277,68 @@ export default function TeamActivityPage() {
           }}
           className="team-filter-select"
         >
-          <option value={10}>10 / page</option>
-          <option value={20}>20 / page</option>
-          <option value={50}>50 / page</option>
-          <option value={100}>100 / page</option>
+          <option value={10}>{t("team.perPage", { count: 10 })}</option>
+          <option value={20}>{t("team.perPage", { count: 20 })}</option>
+          <option value={50}>{t("team.perPage", { count: 50 })}</option>
+          <option value={100}>{t("team.perPage", { count: 100 })}</option>
         </select>
         <button className="team-primary-btn" onClick={exportActivitiesCsv}>
           <Download size={16} />
-          Export CSV
+          {t("team.exportCsv")}
         </button>
       </div>
 
       <div className="team-activity-stats">
         <div className="team-activity-stat-card">
-          <span>Total Activities</span>
+          <span>{t("team.statTotalActivities")}</span>
           <h2>{stats.totalActivities}</h2>
-          <p>Latest team activity logs</p>
+          <p>{t("team.statTotalActivitiesSub")}</p>
         </div>
 
         <div className="team-activity-stat-card">
-          <span>Messages Sent</span>
+          <span>{t("team.statMessagesSent")}</span>
           <h2>{stats.messages}</h2>
-          <p>Tracked from team events</p>
+          <p>{t("team.statTrackedFromEvents")}</p>
         </div>
 
         <div className="team-activity-stat-card">
-          <span>Calls Scheduled</span>
+          <span>{t("team.statCallsScheduled")}</span>
           <h2>{stats.calls}</h2>
-          <p>Tracked from team events</p>
+          <p>{t("team.statTrackedFromEvents")}</p>
         </div>
 
         <div className="team-activity-stat-card">
-          <span>AI Actions</span>
+          <span>{t("team.statAiActions")}</span>
           <h2>{stats.aiActions}</h2>
-          <p>Automation activity</p>
+          <p>{t("team.statAutomationActivity")}</p>
         </div>
       </div>
 
       <div className="team-card">
         <div className="team-card-header">
           <div>
-            <h3 className="team-card-title">Recent Team Activities</h3>
+            <h3 className="team-card-title">{t("team.recentTeamActivities")}</h3>
             <p className="team-card-description">
-              Latest updates from your organization
+              {t("team.recentTeamActivitiesSub")}
             </p>
           </div>
         </div>
 
         <div className="team-activity-table">
           <div className="team-activity-table-head">
-            <div>User</div>
-            <div>Activity</div>
-            <div>Time</div>
+            <div>{t("team.user")}</div>
+            <div>{t("team.activity")}</div>
+            <div>{t("team.time")}</div>
           </div>
 
           <div className="team-activity-table-body">
             {loading ? (
               <div className="team-activity-row">
-                <div>Loading activities...</div>
+                <div>{t("team.loadingActivities")}</div>
               </div>
             ) : activities.length === 0 ? (
               <div className="team-activity-row">
-                <div>No activities found.</div>
+                <div>{t("team.noActivitiesFound")}</div>
               </div>
             ) : (
               activities.map((activity, index) => {
@@ -357,7 +359,7 @@ export default function TeamActivityPage() {
                         <div className="team-activity-user-name">
                           {activity.userName ||
                             activity.userEmail ||
-                            "Unknown User"}
+                            t("team.unknownUser")}
                         </div>
 
                         <div className="team-activity-user-role">
@@ -369,7 +371,7 @@ export default function TeamActivityPage() {
                     </div>
 
                     <div className="team-activity-action">
-                      {activity.message || "Team activity updated"}
+                      {activity.message || t("team.teamActivityUpdated")}
                     </div>
 
                     <div className="team-activity-time">
@@ -428,8 +430,8 @@ export default function TeamActivityPage() {
       )}
 
       <div className="team-table-info">
-        Showing <b>{activities.length}</b> of <b>{pagination.total}</b>{" "}
-        activities
+        {t("team.showing")} <b>{activities.length}</b> {t("team.of")}{" "}
+        <b>{pagination.total}</b> {t("team.activitiesCount")}
       </div>
       {selectedActivity && (
         <>
@@ -441,7 +443,7 @@ export default function TeamActivityPage() {
           <aside className="team-activity-drawer">
             <div className="team-drawer-header">
               <div>
-                <h2>Activity Detail</h2>
+                <h2>{t("team.activityDetail")}</h2>
 
                 <p>{selectedActivity.time}</p>
               </div>
@@ -450,48 +452,48 @@ export default function TeamActivityPage() {
             </div>
 
             <div className="team-drawer-section">
-              <label>User</label>
+              <label>{t("team.user")}</label>
 
               <div>
                 {selectedActivity.userName ||
                   selectedActivity.userEmail ||
-                  "Unknown"}
+                  t("team.unknown")}
               </div>
             </div>
 
             <div className="team-drawer-section">
-              <label>Event Type</label>
+              <label>{t("team.eventType")}</label>
 
               <div>{formatActivityLabel(selectedActivity.eventType)}</div>
             </div>
 
             <div className="team-drawer-section">
-              <label>Entity</label>
+              <label>{t("team.entity")}</label>
 
               <div>{formatActivityLabel(selectedActivity.entityType)}</div>
             </div>
 
             <div className="team-drawer-section">
-              <label>Activity</label>
+              <label>{t("team.activity")}</label>
 
               <div>{selectedActivity.message}</div>
             </div>
 
             <div className="team-drawer-section">
-              <label>Created</label>
+              <label>{t("team.createdLabel")}</label>
 
               <div>{new Date(selectedActivity.createdAt).toLocaleString()}</div>
             </div>
 
             <div className="team-drawer-section">
               <div className="team-timeline">
-                <h3>Timeline</h3>
+                <h3>{t("team.timeline")}</h3>
 
                 <div className="timeline-item">
                   <div className="timeline-dot" />
 
                   <div>
-                    <strong>Event</strong>
+                    <strong>{t("team.event")}</strong>
 
                     <p>{formatActivityLabel(selectedActivity.eventType)}</p>
                   </div>
@@ -502,7 +504,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>Old Value</strong>
+                      <strong>{t("team.oldValue")}</strong>
 
                       <pre>
                         {JSON.stringify(selectedActivity.oldValue, null, 2)}
@@ -516,7 +518,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>New Value</strong>
+                      <strong>{t("team.newValue")}</strong>
 
                       <pre>
                         {JSON.stringify(selectedActivity.newValue, null, 2)}
@@ -530,7 +532,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>Entity</strong>
+                      <strong>{t("team.entity")}</strong>
 
                       <p>{selectedActivity.entityId}</p>
                     </div>
@@ -542,7 +544,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>Browser</strong>
+                      <strong>{t("team.browser")}</strong>
 
                       <p>{selectedActivity.browser}</p>
                     </div>
@@ -554,7 +556,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>Device</strong>
+                      <strong>{t("team.device")}</strong>
 
                       <p>{selectedActivity.device}</p>
                     </div>
@@ -566,7 +568,7 @@ export default function TeamActivityPage() {
                     <div className="timeline-dot" />
 
                     <div>
-                      <strong>IP Address</strong>
+                      <strong>{t("team.ipAddress")}</strong>
 
                       <p>{selectedActivity.ip}</p>
                     </div>

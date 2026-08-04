@@ -28,11 +28,11 @@ export default function Settings() {
 
     // Client-side validation
     if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters.');
+      setError(t('account.settings.passwordTooShort'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('New password and confirmation do not match.');
+      setError(t('account.settings.passwordMismatch'));
       return;
     }
 
@@ -48,10 +48,10 @@ export default function Settings() {
         apiClient.setTokens(response.accessToken, response.refreshToken);
       }
 
-      setSuccess((response && response.message) || 'Password updated successfully.');
+      setSuccess((response && response.message) || t('account.settings.passwordUpdated'));
       resetFields();
     } catch (err) {
-      setError(err.message || 'Unable to update your password. Please try again.');
+      setError(err.message || t('account.settings.passwordUpdateError'));
     } finally {
       setSubmitting(false);
     }
@@ -138,8 +138,7 @@ export default function Settings() {
           <div>
             <h2 className="settings-section-title">{t('account.settings.security')}</h2>
             <p style={{ color: '#94A3B8', margin: '0 0 20px 0', fontSize: '14px' }}>
-              Change your account password. For your security, changing your
-              password will sign you out of any other active sessions.
+              {t('account.settings.securityDescription')}
             </p>
 
             <form
@@ -148,7 +147,7 @@ export default function Settings() {
             >
               <div>
                 <label style={labelStyle} htmlFor="currentPassword">
-                  Current password
+                  {t('account.settings.currentPassword')}
                 </label>
                 <input
                   id="currentPassword"
@@ -162,7 +161,7 @@ export default function Settings() {
 
               <div>
                 <label style={labelStyle} htmlFor="newPassword">
-                  New password
+                  {t('account.settings.newPassword')}
                 </label>
                 <input
                   id="newPassword"
@@ -173,13 +172,13 @@ export default function Settings() {
                   style={inputStyle}
                 />
                 <p style={{ color: '#94A3B8', margin: '6px 0 0 0', fontSize: '12px' }}>
-                  Must be at least 8 characters.
+                  {t('account.settings.passwordMinHint')}
                 </p>
               </div>
 
               <div>
                 <label style={labelStyle} htmlFor="confirmPassword">
-                  Confirm new password
+                  {t('account.settings.confirmNewPassword')}
                 </label>
                 <input
                   id="confirmPassword"
@@ -237,7 +236,7 @@ export default function Settings() {
                     transition: 'all 0.2s',
                   }}
                 >
-                  {submitting ? 'Updating…' : 'Update password'}
+                  {submitting ? t('account.settings.updating') : t('account.settings.updatePassword')}
                 </button>
               </div>
             </form>

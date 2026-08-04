@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -24,6 +25,7 @@ import {
 import "./team.css";
 
 export default function TeamManagePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [teams, setTeams] = useState([]);
@@ -65,7 +67,7 @@ export default function TeamManagePage() {
     } catch (error) {
       console.error("LOAD MANAGE TEAMS ERROR", error);
 
-      showToast(error?.message || "Unable to load teams", "error");
+      showToast(error?.message || t("team.unableToLoadTeams"), "error");
     } finally {
       setLoading(false);
     }
@@ -141,12 +143,12 @@ export default function TeamManagePage() {
 
   const handleEditTeam = async (team) => {
     if (team?.isOwner === false) {
-      showToast("Only the team owner can edit this team", "error");
+      showToast(t("team.onlyOwnerEdit"), "error");
 
       return;
     }
 
-    const nextName = window.prompt("Enter the new team name", team?.name || "");
+    const nextName = window.prompt(t("team.enterNewTeamName"), team?.name || "");
 
     if (!nextName?.trim()) {
       return;
@@ -174,11 +176,11 @@ export default function TeamManagePage() {
         ),
       );
 
-      showToast("Team updated successfully");
+      showToast(t("team.updatedSuccess"));
     } catch (error) {
       console.error("UPDATE TEAM ERROR", error);
 
-      showToast(error?.message || "Unable to update team", "error");
+      showToast(error?.message || t("team.unableToUpdateTeam"), "error");
     } finally {
       setActionLoading("");
     }
@@ -186,7 +188,7 @@ export default function TeamManagePage() {
 
   const handleAddSeat = async (team) => {
     if (team?.isOwner === false) {
-      showToast("Only the team owner can add seats", "error");
+      showToast(t("team.onlyOwnerAddSeats"), "error");
 
       return;
     }
@@ -212,11 +214,11 @@ export default function TeamManagePage() {
         ),
       );
 
-      showToast(`Seat limit increased to ${nextLimit}`);
+      showToast(t("team.seatLimitIncreased", { limit: nextLimit }));
     } catch (error) {
       console.error("ADD TEAM SEAT ERROR", error);
 
-      showToast(error?.message || "Unable to add seat", "error");
+      showToast(error?.message || t("team.unableToAddSeat"), "error");
     } finally {
       setActionLoading("");
     }
@@ -224,13 +226,13 @@ export default function TeamManagePage() {
 
   const handleDeleteTeam = async (team) => {
     if (team?.isOwner === false) {
-      showToast("Only the team owner can delete this team", "error");
+      showToast(t("team.onlyOwnerDelete"), "error");
 
       return;
     }
 
     const confirmed = window.confirm(
-      `Delete "${team.name}"? This action cannot be undone.`,
+      t("team.deleteConfirmPrompt", { name: team.name }),
     );
 
     if (!confirmed) {
@@ -244,11 +246,11 @@ export default function TeamManagePage() {
 
       setTeams((current) => current.filter((item) => item.id !== team.id));
 
-      showToast("Team deleted successfully");
+      showToast(t("team.deletedSuccess"));
     } catch (error) {
       console.error("DELETE TEAM ERROR", error);
 
-      showToast(error?.message || "Unable to delete team", "error");
+      showToast(error?.message || t("team.unableToDeleteTeam"), "error");
     } finally {
       setActionLoading("");
     }
@@ -264,12 +266,12 @@ export default function TeamManagePage() {
             onClick={() => navigate("/dashboard/team")}
           >
             <ArrowLeft size={17} />
-            Back to Team Workspace
+            {t("team.backToWorkspace")}
           </button>
 
-          <h1>Manage Teams</h1>
+          <h1>{t("team.manageTeams")}</h1>
 
-          <p>Manage team details, members, seats and invitations.</p>
+          <p>{t("team.managePageDescription")}</p>
         </div>
 
         {/*<button
@@ -285,25 +287,25 @@ export default function TeamManagePage() {
       <div className="team-subpage-stats">
         <TeamManageStat
           icon={Building2}
-          label="Total Teams"
+          label={t("team.totalTeams")}
           value={stats.totalTeams}
         />
 
         <TeamManageStat
           icon={Users}
-          label="Active Members"
+          label={t("team.activeMembers")}
           value={stats.totalMembers}
         />
 
         <TeamManageStat
           icon={Mail}
-          label="Pending Invites"
+          label={t("team.pendingInvites")}
           value={stats.pendingInvites}
         />
 
         <TeamManageStat
           icon={Plus}
-          label="Total Seats"
+          label={t("team.totalSeats")}
           value={stats.totalSeats}
         />
       </div>
@@ -316,7 +318,7 @@ export default function TeamManagePage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search teams..."
+              placeholder={t("team.searchPlaceholder")}
             />
           </div>
 
@@ -325,11 +327,11 @@ export default function TeamManagePage() {
             onChange={(event) => setOwnershipFilter(event.target.value)}
             className="team-subpage-select"
           >
-            <option value="all">All teams</option>
+            <option value="all">{t("team.allTeams")}</option>
 
-            <option value="owned">Teams I own</option>
+            <option value="owned">{t("team.teamsIOwn")}</option>
 
-            <option value="member">Teams I joined</option>
+            <option value="member">{t("team.teamsIJoined")}</option>
           </select>
         </div>
 
@@ -337,13 +339,13 @@ export default function TeamManagePage() {
           <table className="team-subpage-table">
             <thead>
               <tr>
-                <th>Team</th>
-                <th>Owner</th>
-                <th>Members</th>
-                <th>Seats</th>
-                <th>Pending Invites</th>
-                <th>Status</th>
-                <th className="team-actions-column">Actions</th>
+                <th>{t("team.title")}</th>
+                <th>{t("team.owner")}</th>
+                <th>{t("team.members")}</th>
+                <th>{t("team.seats")}</th>
+                <th>{t("team.pendingInvites")}</th>
+                <th>{t("team.status")}</th>
+                <th className="team-actions-column">{t("team.actions")}</th>
               </tr>
             </thead>
 
@@ -351,7 +353,7 @@ export default function TeamManagePage() {
               {loading ? (
                 <tr>
                   <td colSpan="7">
-                    <div className="team-empty-state">Loading teams...</div>
+                    <div className="team-empty-state">{t("team.loadingTeams")}</div>
                   </td>
                 </tr>
               ) : paginatedTeams.length === 0 ? (
@@ -360,9 +362,9 @@ export default function TeamManagePage() {
                     <div className="team-empty-state">
                       <Building2 size={32} />
 
-                      <strong>No teams found</strong>
+                      <strong>{t("team.noTeamsFound")}</strong>
 
-                      <span>Try changing your search or filters.</span>
+                      <span>{t("team.noTeamsHint")}</span>
                     </div>
                   </td>
                 </tr>
@@ -385,10 +387,12 @@ export default function TeamManagePage() {
                           </div>
 
                           <div>
-                            <strong>{team?.name || "Untitled Team"}</strong>
+                            <strong>{team?.name || t("team.untitledTeam")}</strong>
 
                             <span>
-                              {team?.isOwner === false ? "Member" : "Owner"}
+                              {team?.isOwner === false
+                                ? t("team.member")
+                                : t("team.owner")}
                             </span>
                           </div>
                         </div>
@@ -396,7 +400,7 @@ export default function TeamManagePage() {
 
                       <td>
                         <div className="team-owner-cell">
-                          <strong>{team?.ownerName || "Team Owner"}</strong>
+                          <strong>{team?.ownerName || t("team.teamOwner")}</strong>
 
                           <span>{team?.ownerEmail || "—"}</span>
                         </div>
@@ -408,7 +412,7 @@ export default function TeamManagePage() {
                           className="team-table-link"
                           onClick={() => handleViewMembers(team)}
                         >
-                          {memberCount} members
+                          {t("team.membersCount", { count: memberCount })}
                         </button>
                       </td>
 
@@ -419,7 +423,9 @@ export default function TeamManagePage() {
                           </strong>
 
                           <span>
-                            {Math.max(0, seatLimit - memberCount)} available
+                            {t("team.availableCount", {
+                              count: Math.max(0, seatLimit - memberCount),
+                            })}
                           </span>
                         </div>
                       </td>
@@ -430,7 +436,9 @@ export default function TeamManagePage() {
                           className="team-table-link"
                           onClick={() => handleViewInvites(team)}
                         >
-                          {Number(team?.pendingInviteCount || 0)} pending
+                          {t("team.pendingCount", {
+                            count: Number(team?.pendingInviteCount || 0),
+                          })}
                         </button>
                       </td>
 
@@ -440,7 +448,7 @@ export default function TeamManagePage() {
                             isFull ? "is-warning" : "is-active"
                           }`}
                         >
-                          {isFull ? "Full" : "Active"}
+                          {isFull ? t("team.full") : t("team.active")}
                         </span>
                       </td>
 
@@ -448,7 +456,7 @@ export default function TeamManagePage() {
                         <div className="team-table-actions">
                           <button
                             type="button"
-                            title="View team"
+                            title={t("team.viewTeam")}
                             onClick={() => handleViewTeam(team)}
                           >
                             <Eye size={17} />
@@ -456,7 +464,7 @@ export default function TeamManagePage() {
 
                           <button
                             type="button"
-                            title="Edit team"
+                            title={t("team.editTeamTitle")}
                             disabled={
                               team?.isOwner === false ||
                               actionLoading === `edit-${team.id}`
@@ -468,7 +476,7 @@ export default function TeamManagePage() {
 
                           <button
                             type="button"
-                            title="Add seat"
+                            title={t("team.addSeat")}
                             disabled={
                               team?.isOwner === false ||
                               actionLoading === `seat-${team.id}`
@@ -480,7 +488,7 @@ export default function TeamManagePage() {
 
                           <button
                             type="button"
-                            title="Pending invites"
+                            title={t("team.pendingInvitesTitle")}
                             onClick={() => handleViewInvites(team)}
                           >
                             <Mail size={17} />
@@ -488,7 +496,7 @@ export default function TeamManagePage() {
 
                           <button
                             type="button"
-                            title="Delete team"
+                            title={t("team.deleteTeam")}
                             className="is-danger"
                             disabled={
                               team?.isOwner === false ||
@@ -510,9 +518,11 @@ export default function TeamManagePage() {
 
         <div className="team-subpage-pagination">
           <span>
-            Showing {filteredTeams.length ? (page - 1) * limit + 1 : 0}–
-            {Math.min(page * limit, filteredTeams.length)} of{" "}
-            {filteredTeams.length}
+            {t("team.showingRange", {
+              start: filteredTeams.length ? (page - 1) * limit + 1 : 0,
+              end: Math.min(page * limit, filteredTeams.length),
+              total: filteredTeams.length,
+            })}
           </span>
 
           <div>
@@ -524,9 +534,7 @@ export default function TeamManagePage() {
               <ChevronLeft size={17} />
             </button>
 
-            <strong>
-              Page {page} of {totalPages}
-            </strong>
+            <strong>{t("team.pageOf", { page, total: totalPages })}</strong>
 
             <button
               type="button"
