@@ -1,15 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PayPalService } from './paypal.service';
+import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 
 @Injectable()
 export class PaymentsService {
   private webhookTableReady = false;
+  private readonly logger = new Logger(PaymentsService.name);
 
   constructor(
     private readonly db: DatabaseService,
     private readonly paypalService: PayPalService,
+    private readonly mailer: PlatformMailerService,
   ) {}
+
+  // Fire the once-only welcome email after a confirmed payment. Best-effort:
+  // the claim + send are guarded and logged inside the mailer, and any failure
+  // here must never break webhook processing (Paddle would otherwise retry).
+  private async fireWelcomeEmail(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<void> {
+    try {
+      if (opts.userId) {
+        await this.mailer.sendWelcomeOnceByUserId(opts.userId);
+      } else if (opts.subId) {
+        await this.mailer.sendWelcomeOnceBySubscription(opts.subId);
+      }
+    } catch (err: any) {
+      this.logger.error(`welcome email hook failed: ${err?.message}`);
+    }
+  }
 
   async createCheckout(userId: string) {
     const { rows } = await this.db.query(
@@ -209,11 +230,17 @@ export class PaymentsService {
 
     let handled = false;
     let matched = false;
+    // First-payment events only — a subscription.updated->active is a renewal /
+    // plan change and must not trigger a "welcome". The once-only claim in the
+    // mailer is the ultimate guard, but scoping here avoids emailing long-standing
+    // customers who were never marked welcomed.
+    let isActivation = false;
 
     switch (eventType) {
       case 'subscription.activated':
       case 'subscription.created':
         handled = true;
+        isActivation = true;
         if (customUserId && subId) {
           await this.activatePaddleSubscription(
             customUserId,
@@ -231,6 +258,7 @@ export class PaymentsService {
       case 'transaction.completed':
       case 'transaction.paid':
         handled = true;
+        isActivation = true;
         // Checkout passes custom_data.userId, so activate our user directly
         // instead of depending on the subscription id being linked first. This
         // stops redundant transaction events (e.g. a one-time setup-fee charge
@@ -330,6 +358,11 @@ export class PaymentsService {
        ON CONFLICT (provider, event_id) DO NOTHING`,
       [eventId, eventType, JSON.stringify(body)],
     );
+
+    // Once-only localized welcome email on the first confirmed payment.
+    if (isActivation && matched) {
+      await this.fireWelcomeEmail({ userId: customUserId, subId });
+    }
 
     return { status: 'success', matched, eventType };
   }

@@ -28,6 +28,7 @@ import { TrialModule } from './trial/trial.module';
 import { ScheduleModule } from "@nestjs/schedule";
 import { PipelineModule } from "./pipeline/pipeline.module";
 import { CalendarModule } from "./calendar/calendar.module";
+import { PlatformMailModule } from "./platform-mail/platform-mail.module";
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { CalendarModule } from "./calendar/calendar.module";
     ScheduleModule.forRoot(),
     PipelineModule,
     CalendarModule,
+    PlatformMailModule,
   ],
   controllers: [AppController],
 })
