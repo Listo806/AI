@@ -17,6 +17,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import WhatsAppConnectCard from "./components/WhatsAppConnectCard";
 
 export default function CortexaAISetup({
@@ -34,6 +36,8 @@ export default function CortexaAISetup({
   launchingAgent,
   launchError,
 }) {
+  const { t } = useTranslation();
+
   const setupSteps = useMemo(() => {
     const data = setupData || {};
 
@@ -41,20 +45,20 @@ export default function CortexaAISetup({
       {
         id: 1,
         key: "whatsapp",
-        title: "Connect WhatsApp",
-        desc: "Connect the WhatsApp number your AI Agent will use.",
+        title: t("aiCenter.stepWhatsappTitle"),
+        desc: t("aiCenter.stepWhatsappDesc"),
         icon: MessageSquare,
         status: whatsappSetup?.connected
-          ? "Connected"
-          : data?.whatsapp?.status || "Not connected",
+          ? t("aiCenter.statusConnected")
+          : data?.whatsapp?.status || t("aiCenter.statusNotConnected"),
         statusType:
           whatsappSetup?.connected || data?.whatsapp?.connected
             ? "success"
             : "danger",
         action:
           whatsappSetup?.connected || data?.whatsapp?.connected
-            ? "Connected"
-            : "Connect WhatsApp",
+            ? t("aiCenter.statusConnected")
+            : t("aiCenter.stepWhatsappTitle"),
         accent: "green",
         complete: Boolean(
           whatsappSetup?.connected || data?.whatsapp?.connected,
@@ -63,99 +67,108 @@ export default function CortexaAISetup({
       {
         id: 2,
         key: "businessProfile",
-        title: "Business Profile",
-        desc: "Tell your AI Agent about your business.",
+        title: t("aiCenter.stepBusinessTitle"),
+        desc: t("aiCenter.stepBusinessDesc"),
         icon: Building2,
-        status: data?.businessProfile?.status || "Incomplete",
+        status: data?.businessProfile?.status || t("aiCenter.statusIncomplete"),
         statusType: data?.businessProfile?.completed ? "success" : "warning",
-        action: data?.businessProfile?.completed ? "Edit" : "Set up",
+        action: data?.businessProfile?.completed
+          ? t("aiCenter.actionEdit")
+          : t("aiCenter.actionSetUp"),
         accent: "blue",
         complete: Boolean(data?.businessProfile?.completed),
       },
       {
         id: 3,
         key: "properties",
-        title: "Import Properties",
-        desc: "Add properties your AI can recommend.",
+        title: t("aiCenter.stepPropertiesTitle"),
+        desc: t("aiCenter.stepPropertiesDesc"),
         icon: Home,
         status:
           data?.properties?.status ||
-          `${Number(data?.properties?.imported || 0)} imported`,
+          t("aiCenter.statusImported", {
+            count: Number(data?.properties?.imported || 0),
+          }),
         statusType:
           Number(data?.properties?.imported || 0) > 0
             ? "success"
             : "muted",
-        action: "Import",
+        action: t("aiCenter.actionImport"),
         accent: "orange",
         complete: Number(data?.properties?.imported || 0) > 0,
       },
       {
         id: 4,
         key: "appointmentRules",
-        title: "Appointment Rules",
-        desc: "Define when and how AI can book appointments.",
+        title: t("aiCenter.stepAppointmentTitle"),
+        desc: t("aiCenter.stepAppointmentDesc"),
         icon: CalendarDays,
-        status: data?.appointmentRules?.status || "Not configured",
+        status:
+          data?.appointmentRules?.status || t("aiCenter.statusNotConfigured"),
         statusType: data?.appointmentRules?.configured
           ? "success"
           : "muted",
-        action: "Configure",
+        action: t("aiCenter.actionConfigure"),
         accent: "indigo",
         complete: Boolean(data?.appointmentRules?.configured),
       },
       {
         id: 5,
         key: "behavior",
-        title: "AI Behavior",
-        desc: "Define how your AI should talk and what to ask.",
+        title: t("aiCenter.stepBehaviorTitle"),
+        desc: t("aiCenter.stepBehaviorDesc"),
         icon: MessageSquare,
-        status: data?.behavior?.status || "Not configured",
+        status: data?.behavior?.status || t("aiCenter.statusNotConfigured"),
         statusType: data?.behavior?.configured ? "success" : "muted",
-        action: "Configure",
+        action: t("aiCenter.actionConfigure"),
         accent: "green",
         complete: Boolean(data?.behavior?.configured),
       },
       {
         id: 6,
         key: "automations",
-        title: "Automations",
-        desc: "Choose what your AI Agent should do automatically.",
+        title: t("aiCenter.stepAutomationsTitle"),
+        desc: t("aiCenter.stepAutomationsDesc"),
         icon: Zap,
-        status: data?.automations?.status || "Not configured",
+        status: data?.automations?.status || t("aiCenter.statusNotConfigured"),
         statusType: data?.automations?.configured
           ? "success"
           : "muted",
-        action: data?.automations?.configured ? "Edit" : "Set up",
+        action: data?.automations?.configured
+          ? t("aiCenter.actionEdit")
+          : t("aiCenter.actionSetUp"),
         accent: "purple",
         complete: Boolean(data?.automations?.configured),
       },
       {
         id: 7,
         key: "testAi",
-        title: "Test AI",
-        desc: "Test your AI Agent in a safe environment.",
+        title: t("aiCenter.stepTestTitle"),
+        desc: t("aiCenter.stepTestDesc"),
         icon: TestTube2,
-        status: data?.testAi?.status || "Not tested",
+        status: data?.testAi?.status || t("aiCenter.statusNotTested"),
         statusType: data?.testAi?.tested ? "success" : "muted",
-        action: "Test",
+        action: t("aiCenter.actionTest"),
         accent: "pink",
         complete: Boolean(data?.testAi?.tested),
       },
       {
         id: 8,
         key: "launch",
-        title: "Launch AI Agent",
-        desc: "Review and launch your AI Agent.",
+        title: t("aiCenter.stepLaunchTitle"),
+        desc: t("aiCenter.stepLaunchDesc"),
         icon: Rocket,
-        status: data?.launch?.status || "Locked",
+        status: data?.launch?.status || t("aiCenter.statusLocked"),
         statusType: data?.launch?.unlocked ? "success" : "locked",
-        action: data?.launch?.unlocked ? "Launch" : "Locked",
+        action: data?.launch?.unlocked
+          ? t("aiCenter.actionLaunch")
+          : t("aiCenter.statusLocked"),
         accent: "rose",
         complete: Boolean(data?.launch?.launched),
         locked: !data?.launch?.unlocked,
       },
     ];
-  }, [setupData, whatsappSetup]);
+  }, [setupData, whatsappSetup, t]);
 
   const completedSteps = Number(setupData?.completedSteps || 0);
   const totalSteps = Number(setupData?.totalSteps || 8);
@@ -203,19 +216,16 @@ export default function CortexaAISetup({
         <div>
           <h1>
             <Bot size={24} />
-            Welcome! Let’s Get Your AI Agent Ready
+            {t("aiCenter.welcomeTitle")}
           </h1>
 
-          <p className="sub_head">
-            Complete these 8 quick steps. Most customers finish setup in under
-            5 minutes.
-          </p>
+          <p className="sub_head">{t("aiCenter.welcomeSubtitle")}</p>
         </div>
       </header>
 
       <main className="cx-ai-setup-layout">
         <section className="cx-ai-setup-main">
-          <h2>Your setup progress</h2>
+          <h2>{t("aiCenter.setupProgressTitle")}</h2>
 
           <div className="cx-setup-list">
             {setupSteps.map((step) => {
@@ -269,7 +279,7 @@ export default function CortexaAISetup({
                           onClick={() => handleStepAction(step)}
                         >
                           {step.key === "launch" && launchingAgent
-                            ? "Launching..."
+                            ? t("aiCenter.launching")
                             : step.action}
                         </button>
                       )}
@@ -319,7 +329,7 @@ export default function CortexaAISetup({
 
         <aside className="cx-ai-setup-sidebar">
           <div className="cx-side-card cx-progress-card">
-            <h3>Overall Progress</h3>
+            <h3>{t("aiCenter.overallProgress")}</h3>
 
             <div className="cx-progress-row">
               <div
@@ -333,26 +343,29 @@ export default function CortexaAISetup({
 
               <div>
                 <strong>
-                  {completedSteps} of {totalSteps} steps completed
+                  {t("aiCenter.stepsCompleted", {
+                    completed: completedSteps,
+                    total: totalSteps,
+                  })}
                 </strong>
 
                 <p>
                   {progress === 100
-                    ? "Great work!"
-                    : "You’re doing great!"}
+                    ? t("aiCenter.greatWork")
+                    : t("aiCenter.doingGreat")}
                 </p>
 
                 <p>
                   {progress === 100
-                    ? "Your AI Agent is ready."
-                    : "Let’s finish setting up your AI Agent."}
+                    ? t("aiCenter.agentReady")
+                    : t("aiCenter.finishSetup")}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="cx-side-card">
-            <h3>AI Setup Status</h3>
+            <h3>{t("aiCenter.aiSetupStatus")}</h3>
 
             {setupSteps.map((row) => {
               const Icon = row.icon;
@@ -391,28 +404,28 @@ export default function CortexaAISetup({
           <div className="cx-side-card">
             <h3 className="cx-tips-title">
               <Settings2 size={22} />
-              Setup Tips
+              {t("aiCenter.setupTips")}
             </h3>
 
             <div className="cx-tips-list">
               <p>
                 <CheckCircle2 size={18} />
-                You can edit these settings anytime
+                {t("aiCenter.tipEditAnytime")}
               </p>
 
               <p>
                 <CheckCircle2 size={18} />
-                Your progress is saved automatically
+                {t("aiCenter.tipProgressSaved")}
               </p>
 
               <p>
                 <CheckCircle2 size={18} />
-                Most customers finish in under 5 minutes
+                {t("aiCenter.tipFinishFast")}
               </p>
 
               <p>
                 <CheckCircle2 size={18} />
-                Need help? Contact our support team
+                {t("aiCenter.tipNeedHelp")}
               </p>
             </div>
           </div>

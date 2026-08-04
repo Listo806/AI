@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 import "./ai-center.css";
 
 export default function AICenterOverview() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,7 +16,7 @@ export default function AICenterOverview() {
         const res = await apiClient.request("/ai-center/overview");
         if (!cancelled) setData(res);
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load");
+        if (!cancelled) setError(e.message || t("aiCenter.loadFailed"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -29,7 +31,7 @@ export default function AICenterOverview() {
   if (loading) {
     return (
       <div className="ai-center-page">
-        <div className="ai-center-empty">Loading...</div>
+        <div className="ai-center-empty">{t("aiCenter.loading")}</div>
       </div>
     );
   }
@@ -47,18 +49,18 @@ export default function AICenterOverview() {
     <div className="ai-center-page">
       <h1 className="ai-center-page-title">
         <i data-lucide="layout-dashboard" />
-        AI Center — Overview
+        {t("aiCenter.pageTitle")}
       </h1>
       <p className="ai-center-page-subtitle">
-        What is AI doing in your business right now? Read-only status and recent actions.
+        {t("aiCenter.pageSubtitle")}
       </p>
 
       <section className="ai-center-section">
-        <h2>AI Status Summary</h2>
+        <h2>{t("aiCenter.statusSummary")}</h2>
         <div className="ai-center-kpi-row">
           <div className="ai-center-stat-card">
-            <div className="stat-value">{data?.ai_auto_reply?.enabled ? "ON" : "OFF"}</div>
-            <div className="stat-label">AI Auto-Reply</div>
+            <div className="stat-value">{data?.ai_auto_reply?.enabled ? t("aiCenter.on") : t("aiCenter.off")}</div>
+            <div className="stat-label">{t("aiCenter.aiAutoReply")}</div>
             {data?.ai_auto_reply?.tone && (
               <div className="stat-label" style={{ marginTop: "4px", textTransform: "capitalize" }}>
                 {data.ai_auto_reply.tone}
@@ -66,41 +68,41 @@ export default function AICenterOverview() {
             )}
           </div>
           <div className="ai-center-stat-card">
-            <div className="stat-value">{data?.ai_appointment_setter?.enabled ? "ON" : "OFF"}</div>
-            <div className="stat-label">AI Setter</div>
+            <div className="stat-value">{data?.ai_appointment_setter?.enabled ? t("aiCenter.on") : t("aiCenter.off")}</div>
+            <div className="stat-label">{t("aiCenter.aiSetter")}</div>
           </div>
           <div className="ai-center-stat-card">
             <div className="stat-value">{(data?.active_channels?.length ?? 0) > 0 ? data.active_channels.length : "—"}</div>
-            <div className="stat-label">Active Channels</div>
+            <div className="stat-label">{t("aiCenter.activeChannels")}</div>
             {(data?.active_channels?.length ?? 0) > 0 ? (
               <div className="stat-label" style={{ marginTop: "4px" }}>
                 {data.active_channels.join(", ")}
               </div>
             ) : (
-              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>None connected</div>
+              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>{t("aiCenter.noneConnected")}</div>
             )}
           </div>
           <div className="ai-center-stat-card">
             <div className="stat-value">{(data?.connected_calendars?.length ?? 0) > 0 ? data.connected_calendars.length : "—"}</div>
-            <div className="stat-label">Connected Calendars</div>
+            <div className="stat-label">{t("aiCenter.connectedCalendars")}</div>
             {(data?.connected_calendars?.length ?? 0) === 0 && (
-              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>Connect in Integrations</div>
+              <div className="stat-label" style={{ marginTop: "4px", color: "var(--text-muted)" }}>{t("aiCenter.connectInIntegrations")}</div>
             )}
           </div>
         </div>
       </section>
 
       <section className="ai-center-section">
-        <h2>Recent AI Actions (last 5)</h2>
+        <h2>{t("aiCenter.recentActions")}</h2>
         {data?.recent_ai_actions?.length ? (
           <div className="ai-center-table-wrap">
             <table className="ai-center-table">
               <thead>
                 <tr>
-                  <th>Time</th>
-                  <th>Action</th>
-                  <th>Lead</th>
-                  <th>Channel</th>
+                  <th>{t("aiCenter.colTime")}</th>
+                  <th>{t("aiCenter.colAction")}</th>
+                  <th>{t("aiCenter.colLead")}</th>
+                  <th>{t("aiCenter.colChannel")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,7 +118,7 @@ export default function AICenterOverview() {
             </table>
           </div>
         ) : (
-          <div className="ai-center-empty">No recent AI actions.</div>
+          <div className="ai-center-empty">{t("aiCenter.noRecentActions")}</div>
         )}
       </section>
     </div>
