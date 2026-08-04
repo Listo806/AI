@@ -215,7 +215,7 @@ export default function EditorialBusinessAI() {
       <header className="ed-header">
         <div className="ed-header-inner">
           <Link to="/" className="ed-brand" aria-label="Cortexa home">
-            <img src={headlogo} alt="Cortexa AI Revenue OS" />
+            
           </Link>
 
           <nav className="ed-main-nav" aria-label="Editorial navigation">
@@ -289,7 +289,7 @@ export default function EditorialBusinessAI() {
             <span className="ed-ai-hero-kicker">
               AI Business Transformation
             </span>
-            <h1>How AI Is Transforming Every Business</h1>
+            <h1>Improve Revenue by Optimizing Your Business Operating System</h1>
             <p className="ed-ai-hero-subtitle">
               Why the Future Belongs to AI Revenue Operating Systems
             </p>
