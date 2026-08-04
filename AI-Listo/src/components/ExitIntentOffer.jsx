@@ -216,10 +216,19 @@ export default function ExitIntentOffer() {
       ready = true;
     }, 2500);
 
-    // Desktop exit-intent: the cursor leaves the top edge of the viewport.
+    // Desktop exit-intent: the cursor leaves through the top of the window
+    // (toward the tabs / address bar / back button). Two complementary signals
+    // for reliability: a `mouseout` with no relatedTarget near the top edge, and
+    // a `mouseleave` on the document element, which fires once when the pointer
+    // actually leaves the page. A small threshold (<= 8px) instead of exactly 0
+    // catches a fast upward flick, whose last recorded Y is often a few pixels
+    // shy of the edge — the most common reason a real exit gesture "did nothing".
+    const leftViaTop = (e) => !e.relatedTarget && e.clientY <= 8;
     const onMouseOut = (e) => {
-      if (!ready) return;
-      if (e.clientY <= 0 && !e.relatedTarget) trigger();
+      if (ready && leftViaTop(e)) trigger();
+    };
+    const onMouseLeave = (e) => {
+      if (ready && leftViaTop(e)) trigger();
     };
 
     // Touch exit-intent: a quick scroll back up toward the top after scrolling
@@ -249,11 +258,13 @@ export default function ExitIntentOffer() {
     }
 
     document.addEventListener("mouseout", onMouseOut);
+    document.documentElement.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       clearTimeout(armTimer);
       if (mobileTimer) clearTimeout(mobileTimer);
       document.removeEventListener("mouseout", onMouseOut);
+      document.documentElement.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("scroll", onScroll);
     };
   }, [armed, trigger]);
