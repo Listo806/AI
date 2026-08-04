@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ExitIntentOffer from "./components/ExitIntentOffer";
+import LanguageAutoDetect from "./components/LanguageAutoDetect";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -470,6 +471,7 @@ export default function App() {
       <AuthProvider>
         <NotificationProvider>
           <PageViewTracker />
+          <LanguageAutoDetect />
           <AppRoutes />
           <ExitIntentOffer />
           <NotificationToast />
