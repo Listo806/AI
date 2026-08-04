@@ -15,7 +15,7 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import headlogo from "../../assets/cortexa/headlogo.png";
+import headlogo from "../../assets/cortexa/logoicon.png";
 const COPY = {
   en: {
     eyebrow: "CORTEXA VS. LEGACY PLATFORMS",

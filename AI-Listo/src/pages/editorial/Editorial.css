@@ -1937,3 +1937,34 @@ figcaption {
     font-size: 12px;
   }
 }
+@media (max-width: 920px) {
+  .cmp-clean-table thead .cmp-feature-col, .cmp-brand-hubspot small {
+    font-size: 13px;
+  }
+  .cmp-clean-table th, .cmp-clean-table td {
+    padding: 12px 4px;
+  }
+  .cmp-brand-mark {
+    width: auto;
+  }
+  .cmp-brand strong, .cmp-brand-cortexa strong{
+    font-size: 12px;
+  }
+  .cmp-hubspot-word {
+    font-size: 13px !important;
+  }
+  .cmp-feature-label{
+    gap: 6px;
+    font-size: 11px;
+ }
+ .cmp-value {
+    font-size: 11px;
+ }
+ .cmp-value-cortexa {
+    font-size: 10px;
+ }
+ .cmp-brand.cmp-brand-cortexa img{
+    width: 65%;
+    margin-top: 0px;
+ }
+}
