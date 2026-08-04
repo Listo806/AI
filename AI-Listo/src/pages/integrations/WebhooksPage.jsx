@@ -4,10 +4,10 @@ import { useNotification } from '../../context/NotificationContext';
 import webhooksApi from '../../api/webhooksApi';
 
 const SUPPORTED_EVENTS = [
-  { value: 'lead.created', label: 'Lead Created' },
-  { value: 'lead.status.changed', label: 'Lead Status Changed' },
-  { value: 'lead.qualified', label: 'Lead Qualified' },
-  { value: 'property.created', label: 'Property Created' },
+  { value: 'lead.created', labelKey: 'eventLeadCreated' },
+  { value: 'lead.status.changed', labelKey: 'eventLeadStatusChanged' },
+  { value: 'lead.qualified', labelKey: 'eventLeadQualified' },
+  { value: 'property.created', labelKey: 'eventPropertyCreated' },
 ];
 
 export default function WebhooksPage() {
@@ -90,8 +90,8 @@ export default function WebhooksPage() {
   };
 
   const handleSave = async () => {
-    if (!formUrl.trim()) { showError('URL is required'); return; }
-    if (formEvents.length === 0) { showError('Select at least one event'); return; }
+    if (!formUrl.trim()) { showError(t('integrations.webhooksPage.urlRequired')); return; }
+    if (formEvents.length === 0) { showError(t('integrations.webhooksPage.selectEvent')); return; }
 
     setSaving(true);
     try {
@@ -104,16 +104,16 @@ export default function WebhooksPage() {
 
       if (editingWebhook) {
         await webhooksApi.updateWebhook(editingWebhook.id, payload);
-        showSuccess('Webhook updated');
+        showSuccess(t('integrations.webhooksPage.updated'));
       } else {
         await webhooksApi.createWebhook(payload);
-        showSuccess('Webhook created');
+        showSuccess(t('integrations.webhooksPage.created'));
       }
 
       closeModal();
       await fetchWebhooks();
     } catch (err) {
-      showError(err.message || 'Failed to save webhook');
+      showError(err.message || t('integrations.webhooksPage.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -126,18 +126,18 @@ export default function WebhooksPage() {
       await webhooksApi.toggleWebhook(id);
       await fetchWebhooks();
     } catch (err) {
-      showError('Failed to toggle webhook');
+      showError(t('integrations.webhooksPage.toggleFailed'));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this webhook?')) return;
+    if (!confirm(t('integrations.webhooksPage.deleteConfirm'))) return;
     try {
       await webhooksApi.deleteWebhook(id);
-      showSuccess('Webhook deleted');
+      showSuccess(t('integrations.webhooksPage.deleted'));
       await fetchWebhooks();
     } catch (err) {
-      showError('Failed to delete webhook');
+      showError(t('integrations.webhooksPage.deleteFailed'));
     }
   };
 
@@ -146,13 +146,13 @@ export default function WebhooksPage() {
     try {
       const result = await webhooksApi.testWebhook(id);
       if (result.success) {
-        showSuccess(`Test webhook sent successfully (${result.statusCode})`);
+        showSuccess(t('integrations.webhooksPage.testSuccess', { statusCode: result.statusCode }));
       } else {
-        showError(`Test webhook failed: ${result.errorMessage || 'Unknown error'}`);
+        showError(t('integrations.webhooksPage.testFailed', { message: result.errorMessage || t('integrations.webhooksPage.unknownError') }));
       }
       await fetchLogs();
     } catch (err) {
-      showError('Failed to send test webhook');
+      showError(t('integrations.webhooksPage.testSendFailed'));
     } finally {
       setTestingId(null);
     }
@@ -163,7 +163,7 @@ export default function WebhooksPage() {
   if (loading) {
     return (
       <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-        Loading...
+        {t('integrations.webhooksPage.loading')}
       </div>
     );
   }
@@ -172,16 +172,15 @@ export default function WebhooksPage() {
     <div>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 600, margin: 0 }}>Webhooks</h1>
+        <h1 style={{ fontSize: '28px', fontWeight: 600, margin: 0 }}>{t('integrations.webhooks')}</h1>
         <button className="crm-btn crm-btn-primary" onClick={openAddModal}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}>
-          + Add Webhook
+          + {t('integrations.webhooksPage.addWebhook')}
         </button>
       </div>
 
       <p style={{ marginBottom: '24px', fontSize: '14px', color: '#64748b', lineHeight: 1.6 }}>
-        Configure webhook endpoints to receive real-time notifications when events occur in your CRM.
-        You can also paste a Zapier "Catch Hook" URL here to connect Zapier automations.
+        {t('integrations.webhooksPage.pageDescription')}
       </p>
 
       {/* Tabs */}
@@ -195,7 +194,7 @@ export default function WebhooksPage() {
               color: activeTab === tab ? '#2563eb' : '#64748b',
               marginBottom: '-2px',
             }}>
-            {tab === 'endpoints' ? 'Endpoints' : 'Delivery Logs'}
+            {tab === 'endpoints' ? t('integrations.webhooksPage.tabEndpoints') : t('integrations.webhooksPage.tabLogs')}
           </button>
         ))}
       </div>
@@ -212,8 +211,8 @@ export default function WebhooksPage() {
               }}>
                 &#x26A1;
               </div>
-              <p style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px', color: '#64748b' }}>No webhooks configured</p>
-              <p style={{ fontSize: '14px' }}>Add a webhook endpoint to start receiving event notifications.</p>
+              <p style={{ fontSize: '16px', fontWeight: 500, marginBottom: '8px', color: '#64748b' }}>{t('integrations.webhooksPage.noWebhooks')}</p>
+              <p style={{ fontSize: '14px' }}>{t('integrations.webhooksPage.noWebhooksHint')}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -249,19 +248,19 @@ export default function WebhooksPage() {
                       <button className="crm-btn crm-btn-secondary" onClick={() => handleTest(wh.id)}
                         disabled={testingId === wh.id}
                         style={{ padding: '6px 12px', fontSize: '13px' }}>
-                        {testingId === wh.id ? 'Sending...' : 'Test'}
+                        {testingId === wh.id ? t('integrations.webhooksPage.sending') : t('integrations.webhooksPage.test')}
                       </button>
                       <button className="crm-btn crm-btn-secondary" onClick={() => handleToggle(wh.id)}
                         style={{ padding: '6px 12px', fontSize: '13px' }}>
-                        {wh.isActive ? 'Disable' : 'Enable'}
+                        {wh.isActive ? t('integrations.webhooksPage.disable') : t('integrations.webhooksPage.enable')}
                       </button>
                       <button className="crm-btn crm-btn-secondary" onClick={() => openEditModal(wh)}
                         style={{ padding: '6px 12px', fontSize: '13px' }}>
-                        Edit
+                        {t('integrations.webhooksPage.edit')}
                       </button>
                       <button className="crm-btn crm-btn-secondary" onClick={() => handleDelete(wh.id)}
                         style={{ padding: '6px 12px', fontSize: '13px', color: '#ef4444' }}>
-                        Delete
+                        {t('integrations.webhooksPage.delete')}
                       </button>
                     </div>
                   </div>
@@ -277,20 +276,20 @@ export default function WebhooksPage() {
         <div>
           {logs.length === 0 ? (
             <div className="crm-section" style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8' }}>
-              <p style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>No delivery logs yet</p>
-              <p style={{ fontSize: '14px' }}>Logs will appear here after webhooks are triggered.</p>
+              <p style={{ fontSize: '16px', fontWeight: 500, color: '#64748b' }}>{t('integrations.webhooksPage.noLogs')}</p>
+              <p style={{ fontSize: '14px' }}>{t('integrations.webhooksPage.noLogsHint')}</p>
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Timestamp</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Event</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>URL</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Status</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Time</th>
-                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>Error</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colTimestamp')}</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colEvent')}</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colUrl')}</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colStatus')}</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colTime')}</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 600, color: '#475569' }}>{t('integrations.webhooksPage.colError')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -317,7 +316,7 @@ export default function WebhooksPage() {
                           color: log.success ? '#16a34a' : '#dc2626',
                           border: `1px solid ${log.success ? '#86efac' : '#fca5a5'}`,
                         }}>
-                          {log.statusCode || 'ERR'}
+                          {log.statusCode || t('integrations.webhooksPage.statusErr')}
                         </span>
                       </td>
                       <td style={{ padding: '10px 16px', color: '#64748b', whiteSpace: 'nowrap' }}>
@@ -347,13 +346,13 @@ export default function WebhooksPage() {
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h2 style={{ margin: '0 0 24px', fontSize: '20px', fontWeight: 600 }}>
-              {editingWebhook ? 'Edit Webhook' : 'Add Webhook'}
+              {editingWebhook ? t('integrations.webhooksPage.editWebhook') : t('integrations.webhooksPage.addWebhook')}
             </h2>
 
             {/* URL */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text, #334155)' }}>
-                Webhook URL
+                {t('integrations.webhooksPage.webhookUrl')}
               </label>
               <input
                 type="url"
@@ -368,7 +367,7 @@ export default function WebhooksPage() {
             {/* Events */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '10px', color: 'var(--text, #334155)' }}>
-                Events
+                {t('integrations.webhooksPage.events')}
               </label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {SUPPORTED_EVENTS.map((ev) => (
@@ -380,7 +379,7 @@ export default function WebhooksPage() {
                       style={{ width: '16px', height: '16px', accentColor: '#2563eb' }}
                     />
                     <code style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '13px' }}>{ev.value}</code>
-                    <span style={{ color: '#64748b' }}>- {ev.label}</span>
+                    <span style={{ color: '#64748b' }}>- {t(`integrations.webhooksPage.${ev.labelKey}`)}</span>
                   </label>
                 ))}
               </div>
@@ -389,18 +388,18 @@ export default function WebhooksPage() {
             {/* Secret Token */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '6px', color: 'var(--text, #334155)' }}>
-                Secret Token <span style={{ fontWeight: 400, color: '#94a3b8' }}>(optional)</span>
+                {t('integrations.webhooksPage.secretToken')} <span style={{ fontWeight: 400, color: '#94a3b8' }}>{t('integrations.webhooksPage.optional')}</span>
               </label>
               <input
                 type="text"
                 value={formSecret}
                 onChange={(e) => setFormSecret(e.target.value)}
-                placeholder="Optional security token"
+                placeholder={t('integrations.webhooksPage.secretPlaceholder')}
                 className="crm-input"
                 style={{ width: '100%', padding: '10px 14px', fontSize: '14px' }}
               />
               <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                Sent as <code>X-CORTEXA-Webhook-Secret</code> header
+                {t('integrations.webhooksPage.sentAsPrefix')} <code>X-CORTEXA-Webhook-Secret</code> {t('integrations.webhooksPage.sentAsSuffix')}
               </p>
             </div>
 
@@ -413,18 +412,18 @@ export default function WebhooksPage() {
                   onChange={(e) => setFormActive(e.target.checked)}
                   style={{ width: '16px', height: '16px', accentColor: '#22c55e' }}
                 />
-                Active
+                {t('integrations.webhooksPage.active')}
               </label>
             </div>
 
             {/* Buttons */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <button className="crm-btn crm-btn-secondary" onClick={closeModal} style={{ padding: '10px 20px' }}>
-                Cancel
+                {t('integrations.webhooksPage.cancel')}
               </button>
               <button className="crm-btn crm-btn-primary" onClick={handleSave} disabled={saving}
                 style={{ padding: '10px 24px' }}>
-                {saving ? 'Saving...' : editingWebhook ? 'Update' : 'Create'}
+                {saving ? t('integrations.webhooksPage.saving') : editingWebhook ? t('integrations.webhooksPage.update') : t('integrations.webhooksPage.create')}
               </button>
             </div>
           </div>

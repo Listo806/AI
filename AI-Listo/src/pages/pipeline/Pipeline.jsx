@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 import "./pipeline.css";
 import {
@@ -53,6 +54,7 @@ import {
 import PipelineListModal from "./components/PipelineListModal";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
+  const { t } = useTranslation();
   const [pipelineStats, setPipelineStats] = useState([]);
   const [pipelineColumns, setPipelineColumns] = useState([]);
   const [pipelineLoading, setPipelineLoading] = useState(false);
@@ -323,7 +325,9 @@ export default function PipelinePage() {
       fetchPipelineDashboard();
     } catch (err) {
       console.error("Create deal error:", err);
-      showToast(err?.message || "Failed to create deal. Please try again.");
+      showToast(
+        err?.message || t("pipeline.createDealError"),
+      );
     }
   };
   const fetchDealEvents = async (dealId) => {
@@ -396,16 +400,16 @@ export default function PipelinePage() {
     );
 
     const headers = [
-      "Stage",
-      "Deal Name",
-      "Contact",
-      "Amount",
-      "Raw Value",
-      "AI Score",
-      "Tag",
-      "Risk",
-      "Next Action",
-      "Updated",
+      t("pipeline.stage"),
+      t("pipeline.dealName"),
+      t("pipeline.csvContact"),
+      t("pipeline.csvAmount"),
+      t("pipeline.csvRawValue"),
+      t("pipeline.aiScore"),
+      t("pipeline.csvTag"),
+      t("pipeline.risk"),
+      t("pipeline.nextAction"),
+      t("pipeline.csvUpdated"),
     ];
 
     const csv = [
@@ -833,19 +837,16 @@ export default function PipelinePage() {
     <div className="pipeline-container-layout pipeline-page">
       <div className="heading_page">
         <Users className="header-icon" size={20} />
-        <h1>Pipeline & Deals</h1>
+        <h1>{t("pipeline.pageTitle")}</h1>
       </div>
-      <p className="sub_head">
-        Tract opportunities, AI deal flow, revenue risk, and close probability
-        in real time.
-      </p>
+      <p className="sub_head">{t("pipeline.subheading")}</p>
       <header className="pipeline-page-header">
         <div className="header-global-actions">
           <div className="header-search-input-wrapper">
             <Search size={16} className="search-icon-inside" />
             <input
               type="text"
-              placeholder="Search deals..."
+              placeholder={t("pipeline.searchPlaceholder")}
               className="global-search-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -855,7 +856,7 @@ export default function PipelinePage() {
             className={`secondary-btn filter-btn ${showFilters ? "active" : ""}`}
             onClick={() => setShowFilters((prev) => !prev)}
           >
-            <SlidersHorizontal size={15} /> Filters
+            <SlidersHorizontal size={15} /> {t("pipeline.filters")}
           </button>
           <button
             className={`secondary-btn active-view-btn ${
@@ -866,16 +867,18 @@ export default function PipelinePage() {
             }
           >
             <Sparkles size={15} />
-            {pipelineViewMode === "ai" ? "AI Pipeline View" : "Standard View"}
+            {pipelineViewMode === "ai"
+              ? t("pipeline.aiPipelineView")
+              : t("pipeline.standardView")}
           </button>
           <button className="secondary-btn" onClick={exportPipelineCsv}>
-            <Download size={15} /> Export
+            <Download size={15} /> {t("pipeline.export")}
           </button>
           <button
             className="primary-btn"
             onClick={() => setShowCreateDealModal(true)}
           >
-            <Plus size={16} /> Add Deal
+            <Plus size={16} /> {t("pipeline.addDeal")}
           </button>
         </div>
       </header>
@@ -891,11 +894,13 @@ export default function PipelinePage() {
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
               >
-                <option value="today">Today</option>
-                <option value="this_week">This Week</option>
-                <option value="this_month">This Month</option>
-                <option value="this_quarter">This Quarter</option>
-                <option value="all">All Time</option>
+                <option value="today">{t("pipeline.today")}</option>
+                <option value="this_week">{t("pipeline.thisWeek")}</option>
+                <option value="this_month">{t("pipeline.thisMonth")}</option>
+                <option value="this_quarter">
+                  {t("pipeline.thisQuarter")}
+                </option>
+                <option value="all">{t("pipeline.allTime")}</option>
               </select>
             </div>
             <ChevronDown size={14} />
@@ -907,7 +912,7 @@ export default function PipelinePage() {
               <DollarSign size={15} />
               <input
                 type="number"
-                placeholder="Min Value"
+                placeholder={t("pipeline.minValuePlaceholder")}
                 value={pipelineFilters.minValue}
                 onChange={(e) =>
                   setPipelineFilters((prev) => ({
@@ -932,13 +937,15 @@ export default function PipelinePage() {
                   }))
                 }
               >
-                <option value="all">All Stages</option>
-                <option value="new">New</option>
-                <option value="qualified">Qualified</option>
-                <option value="proposal">Proposal</option>
-                <option value="negotiation">Negotiation</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
+                <option value="all">{t("pipeline.allStages")}</option>
+                <option value="new">{t("pipeline.new")}</option>
+                <option value="qualified">{t("pipeline.qualified")}</option>
+                <option value="proposal">{t("pipeline.proposal")}</option>
+                <option value="negotiation">
+                  {t("pipeline.negotiation")}
+                </option>
+                <option value="won">{t("pipeline.won")}</option>
+                <option value="lost">{t("pipeline.lost")}</option>
               </select>
             </div>
             <ChevronDown size={14} />
@@ -957,10 +964,10 @@ export default function PipelinePage() {
                   }))
                 }
               >
-                <option value="all">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="all">{t("pipeline.allPriorities")}</option>
+                <option value="low">{t("pipeline.low")}</option>
+                <option value="medium">{t("pipeline.medium")}</option>
+                <option value="high">{t("pipeline.high")}</option>
               </select>
             </div>
             <ChevronDown size={14} />
@@ -979,12 +986,12 @@ export default function PipelinePage() {
                   }))
                 }
               >
-                <option value="all">All AI Scores</option>
-                <option value="hot">Hot</option>
-                <option value="warm">Warm</option>
-                <option value="cool">Cool</option>
-                <option value="won">Won</option>
-                <option value="lost">Lost</option>
+                <option value="all">{t("pipeline.allAiScores")}</option>
+                <option value="hot">{t("pipeline.hot")}</option>
+                <option value="warm">{t("pipeline.warm")}</option>
+                <option value="cool">{t("pipeline.cool")}</option>
+                <option value="won">{t("pipeline.won")}</option>
+                <option value="lost">{t("pipeline.lost")}</option>
               </select>
             </div>
             <ChevronDown size={14} />
@@ -998,7 +1005,7 @@ export default function PipelinePage() {
                 value={agentFilter}
                 onChange={(e) => setAgentFilter(e.target.value)}
               >
-                <option value="all">All Agents</option>
+                <option value="all">{t("pipeline.allAgents")}</option>
 
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
@@ -1022,7 +1029,7 @@ export default function PipelinePage() {
               });
             }}
           >
-            Reset Filters
+            {t("pipeline.resetFilters")}
           </button>
         </section>
       )}
@@ -1055,13 +1062,14 @@ export default function PipelinePage() {
             <div className="ai-banner-text-details">
               <div className="flex items-center gap-2 mb-1">
                 <h3 className="ai-banner-header-title">
-                  AI Pipeline Intelligence
+                  {t("pipeline.aiPipelineIntelligence")}
                 </h3>
-                <span className="ai-intelligence-active-badge">Active</span>
+                <span className="ai-intelligence-active-badge">
+                  {t("pipeline.active")}
+                </span>
               </div>
               <p className="ai-banner-description">
-                Cortexa analyzes your pipeline, detects revenue risk, and
-                recommends next best actions to accelerate deal velocity.
+                {t("pipeline.aiBannerDescription")}
               </p>
               {pipelineInsight && (
                 <div className="pipeline-ai-analysis-result">
@@ -1071,7 +1079,7 @@ export default function PipelinePage() {
               )}
               {priorityInsight && (
                 <div className="pipeline-ai-analysis-result">
-                  <strong>AI Prioritization Complete</strong>
+                  <strong>{t("pipeline.aiPrioritizationComplete")}</strong>
                   <p>{priorityInsight.summary}</p>
                 </div>
               )}
@@ -1086,7 +1094,7 @@ export default function PipelinePage() {
             ].map((metric, index) => (
               <div className="ai-metric-column-box" key={index}>
                 <span className="ai-metric-box-label">
-                  {metric?.label || "Metric"}
+                  {metric?.label || t("pipeline.metricFallback")}
                 </span>
 
                 <div className="ai-metric-content-wrapper">
@@ -1098,7 +1106,7 @@ export default function PipelinePage() {
                     <span
                       className={metric?.badgeClass || "ai-metric-pill-blue"}
                     >
-                      {metric?.badge || "Pending"}
+                      {metric?.badge || t("pipeline.pending")}
                     </span>
                   </div>
 
@@ -1127,7 +1135,9 @@ export default function PipelinePage() {
               disabled={analyzingPipeline}
             >
               <Sparkles size={14} />
-              {analyzingPipeline ? "Analyzing..." : "Analyze Pipeline"}
+              {analyzingPipeline
+                ? t("pipeline.analyzing")
+                : t("pipeline.analyzePipeline")}
             </button>
             <button
               className="ai-action-secondary-trigger-btn"
@@ -1135,13 +1145,15 @@ export default function PipelinePage() {
               disabled={prioritizingDeals}
             >
               <Bot size={14} />
-              {prioritizingDeals ? "Prioritizing..." : "Auto-Prioritize Deals"}
+              {prioritizingDeals
+                ? t("pipeline.prioritizing")
+                : t("pipeline.autoPrioritizeDeals")}
             </button>
             <button
               className="ai-action-secondary-trigger-btn"
               onClick={exportPipelineReport}
             >
-              <Download size={14} /> Export Report
+              <Download size={14} /> {t("pipeline.exportReport")}
             </button>
           </div>
         </section>
@@ -1152,7 +1164,7 @@ export default function PipelinePage() {
         {pipelineLoading ? (
           <div className="pipeline-loading-state">
             <RefreshCw size={18} className="spin" />
-            Loading pipeline...
+            {t("pipeline.loadingPipeline")}
           </div>
         ) : (
           visibleColumns.map((col) => (
@@ -1179,7 +1191,7 @@ export default function PipelinePage() {
 
               <div className="kanban-sub flex items-center gap-2 text-xs text-slate-500">
                 <span className="column-deals-counter-badge">
-                  {col.count} deals
+                  {t("pipeline.dealsCount", { count: col.count })}
                 </span>
                 <span className="column-header-divider">•</span>
                 <span className="column-aggregate-financial-sum">
@@ -1188,7 +1200,9 @@ export default function PipelinePage() {
               </div>
 
               <div className="kanban-column-ai-insight-strip">
-                <span>AI Insight: {col.insight}</span>
+                <span>
+                  {t("pipeline.aiInsightLabel", { insight: col.insight })}
+                </span>
               </div>
 
               <div className="kanban-cards-vertical-stack">
@@ -1244,7 +1258,9 @@ export default function PipelinePage() {
 
                     <div className="deal-card-ai-score-metric-row">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="ai-score-label-text">AI Score</span>
+                        <span className="ai-score-label-text">
+                          {t("pipeline.aiScore")}
+                        </span>
                         <span className="ai-score-numeric-percentage">
                           {deal.score}
                         </span>
@@ -1260,7 +1276,7 @@ export default function PipelinePage() {
                     <div className="deal-card-recommended-next-action-box">
                       <div className="flex justify-between items-center">
                         <span className="next-action-label-title">
-                          Next Best Action
+                          {t("pipeline.nextBestAction")}
                         </span>
                         <span className="next-action-timestamp-clock">
                           <Clock3 size={11} /> {deal.time}
@@ -1289,7 +1305,9 @@ export default function PipelinePage() {
                         disabled={scoringDealId === deal.id}
                       >
                         <Sparkles size={12} />
-                        {scoringDealId === deal.id ? "Scoring..." : "Score"}
+                        {scoringDealId === deal.id
+                          ? t("pipeline.scoring")
+                          : t("pipeline.score")}
                       </button>
                       <button
                         className="deal-card-footer-action-trigger-btn"
@@ -1300,7 +1318,9 @@ export default function PipelinePage() {
                         disabled={movingDealId === deal.id || col.id === "lost"}
                       >
                         <ArrowUpRight size={12} />
-                        {movingDealId === deal.id ? "Moving..." : "Move"}
+                        {movingDealId === deal.id
+                          ? t("pipeline.moving")
+                          : t("pipeline.move")}
                       </button>
                     </div>
                   </div>
@@ -1316,7 +1336,7 @@ export default function PipelinePage() {
                     setShowCreateDealModal(true);
                   }}
                 >
-                  <Plus size={14} /> Add Deal
+                  <Plus size={14} /> {t("pipeline.addDeal")}
                 </button>
               </div>
             </div>
@@ -1333,10 +1353,12 @@ export default function PipelinePage() {
               <div className="flex items-center gap-2">
                 <AlertTriangle size={18} className="intelligence-header-icon" />
                 <h3 className="intelligence-card-main-title">
-                  AI Deal Risk Queue
+                  {t("pipeline.aiDealRiskQueue")}
                 </h3>
                 <span className="intelligence-card-sub-header-counter">
-                  {riskQueue.length} at-risk deals need attention
+                  {t("pipeline.atRiskDealsAttention", {
+                    count: riskQueue.length,
+                  })}
                 </span>
               </div>
               <button
@@ -1346,7 +1368,7 @@ export default function PipelinePage() {
                   setRiskModalOpen(true);
                 }}
               >
-                View All <ArrowRight size={14} />
+                {t("pipeline.viewAll")} <ArrowRight size={14} />
               </button>
             </div>
 
@@ -1374,21 +1396,21 @@ export default function PipelinePage() {
                       className="risk-table-cell-action-review-trigger-btn"
                       onClick={() => reviewRiskDeal(row.id)}
                     >
-                      Review
+                      {t("pipeline.review")}
                     </button>
                   </div>
                 ))
               ) : (
                 <div className="risk-queue-table-row-item">
                   <span className="risk-table-cell-property-name">
-                    No at-risk deals
+                    {t("pipeline.noAtRiskDeals")}
                   </span>
                   <strong className="risk-table-cell-deal-value">$0</strong>
                   <span className="risk-table-cell-risk-reason-desc">
-                    Pipeline healthy
+                    {t("pipeline.pipelineHealthy")}
                   </span>
                   <span className="risk-table-cell-severity-badge status-medium">
-                    Low
+                    {t("pipeline.low")}
                   </span>
                 </div>
               )}
@@ -1401,7 +1423,7 @@ export default function PipelinePage() {
               <div className="flex items-center gap-2">
                 <LineChartIcon size={18} className="intelligence-header-icon" />
                 <h3 className="intelligence-card-main-title">
-                  Revenue Forecast
+                  {t("pipeline.revenueForecast")}
                 </h3>
               </div>
               <div className="secondary-btn compact-dropdown-trigger">
@@ -1409,10 +1431,10 @@ export default function PipelinePage() {
                   value={forecastRange}
                   onChange={(e) => setForecastRange(e.target.value)}
                 >
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                  <option value="quarter">This Quarter</option>
-                  <option value="year">This Year</option>
+                  <option value="week">{t("pipeline.thisWeek")}</option>
+                  <option value="month">{t("pipeline.thisMonth")}</option>
+                  <option value="quarter">{t("pipeline.thisQuarter")}</option>
+                  <option value="year">{t("pipeline.thisYear")}</option>
                 </select>
               </div>
             </div>
@@ -1420,7 +1442,7 @@ export default function PipelinePage() {
             <div className="revenue-forecast-metrics-grid-quad">
               <div className="revenue-forecast-metric-quad-card">
                 <span className="forecast-quad-card-label">
-                  Forecasted Revenue
+                  {t("pipeline.forecastedRevenue")}
                 </span>
                 <strong className="forecast-quad-card-large-numeric">
                   {forecast?.forecastedRevenue || "$0"}
@@ -1435,7 +1457,7 @@ export default function PipelinePage() {
               </div>
               <div className="revenue-forecast-metric-quad-card">
                 <span className="forecast-quad-card-label">
-                  Forecasted Closings
+                  {t("pipeline.forecastedClosings")}
                 </span>
                 <strong className="forecast-quad-card-large-numeric">
                   {forecast?.forecastedClosings || 0}
@@ -1450,7 +1472,7 @@ export default function PipelinePage() {
               </div>
               <div className="revenue-forecast-metric-quad-card">
                 <span className="forecast-quad-card-label">
-                  Pipeline Velocity
+                  {t("pipeline.pipelineVelocity")}
                 </span>
                 <strong className="forecast-quad-card-large-numeric">
                   {forecast?.pipelineVelocity || "0x"}
@@ -1465,7 +1487,7 @@ export default function PipelinePage() {
               </div>
               <div className="revenue-forecast-metric-quad-card">
                 <span className="forecast-quad-card-label">
-                  Close Confidence
+                  {t("pipeline.closeConfidence")}
                 </span>
                 <strong className="forecast-quad-card-large-numeric">
                   {forecast?.closeConfidence || "0%"}
@@ -1477,14 +1499,14 @@ export default function PipelinePage() {
                 >
                   {renderTrend(
                     forecast?.closeConfidenceTrend,
-                    "→ Medium Confidence",
+                    t("pipeline.mediumConfidence"),
                   )}
                 </span>
               </div>
             </div>
 
             <p className="revenue-forecast-footer-explanatory-text">
-              {forecast?.description || "No forecast available yet."}
+              {forecast?.description || t("pipeline.noForecastAvailable")}
             </p>
           </div>
 
@@ -1494,12 +1516,12 @@ export default function PipelinePage() {
               <div className="flex items-center gap-2">
                 <Settings size={18} className="intelligence-header-icon" />
                 <h3 className="intelligence-card-main-title">
-                  Automation Health
+                  {t("pipeline.automationHealth")}
                 </h3>
               </div>
               <span className="automation-global-status-indicator-pill">
-                <span className="live-status-dot-green"></span> All Systems
-                Operational
+                <span className="live-status-dot-green"></span>{" "}
+                {t("pipeline.allSystemsOperational")}
               </span>
             </div>
 
@@ -1531,7 +1553,7 @@ export default function PipelinePage() {
           <div className="select-deal">
             <div className="inspector-left-identity-column">
               <span className="inspector-section-small-overhead-label">
-                Selected Deal
+                {t("pipeline.selectedDeal")}
               </span>
               <div className="flex items-start gap-3 mt-2">
                 <div
@@ -1541,11 +1563,11 @@ export default function PipelinePage() {
                 </div>
                 <div className="inspector-deal-wrap">
                   <h4 className="inspector-deal-client-name">
-                    {selectedDeal?.name || "Select a deal"}
+                    {selectedDeal?.name || t("pipeline.selectADeal")}
                   </h4>
 
                   <span className="inspector-deal-property-title">
-                    {selectedDeal?.property || "No deal selected"}
+                    {selectedDeal?.property || t("pipeline.noDealSelected")}
                   </span>
                   <div className="flex items-center gap-2 mt-2">
                     <strong className="inspector-deal-financial-value">
@@ -1554,7 +1576,7 @@ export default function PipelinePage() {
                     <span
                       className={`deal-card-temperature-tag tag-${String(selectedDeal?.tag || "warm").toLowerCase()}`}
                     >
-                      {selectedDeal?.tag || "Warm"}
+                      {selectedDeal?.tag || t("pipeline.warm")}
                     </span>
                   </div>
                 </div>
@@ -1563,7 +1585,9 @@ export default function PipelinePage() {
 
             <div className="inspector-center-metrics-column">
               <div className="inspector-metric-box-card">
-                <span className="inspector-metric-card-label">AI Score</span>
+                <span className="inspector-metric-card-label">
+                  {t("pipeline.aiScore")}
+                </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <strong className="inspector-metric-card-large-value">
                     {selectedDeal?.score || "0%"}
@@ -1578,14 +1602,18 @@ export default function PipelinePage() {
               </div>
 
               <div className="inspector-metric-box-card">
-                <span className="inspector-metric-card-label">Risk</span>
+                <span className="inspector-metric-card-label">
+                  {t("pipeline.risk")}
+                </span>
                 <strong className="inspector-metric-card-large-value text-red mt-1 tag-hot">
-                  {selectedDeal?.risk || "Low"}
+                  {selectedDeal?.risk || t("pipeline.low")}
                 </strong>
               </div>
 
               <div className="inspector-metric-box-card">
-                <span className="inspector-metric-card-label">Stage</span>
+                <span className="inspector-metric-card-label">
+                  {t("pipeline.stage")}
+                </span>
                 <div className="flex items-center gap-2 mt-2">
                   <span
                     className={`column-status-dot dot-${selectedDeal?.stage || "new"}`}
@@ -1597,27 +1625,31 @@ export default function PipelinePage() {
               </div>
 
               <div className="ofmobile inspector-metric-box-card">
-                <span className="inspector-metric-card-label">Next Action</span>
+                <span className="inspector-metric-card-label">
+                {t("pipeline.nextAction")}
+              </span>
                 <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
                   <Calendar size={14} />{" "}
-                  <span>{selectedDeal?.action || "No action"}</span>
+                  <span>{selectedDeal?.action || t("pipeline.noAction")}</span>
                 </div>
                 <span className="inspector-metric-card-sub-timestamp">
                   <Clock3 size={11} />{" "}
-                  {selectedDeal?.time || "Recently updated"}
+                  {selectedDeal?.time || t("pipeline.recentlyUpdated")}
                 </span>
               </div>
             </div>
             <div className="mobile inspector-metric-box-card">
-              <span className="inspector-metric-card-label">Next Action</span>
+              <span className="inspector-metric-card-label">
+                {t("pipeline.nextAction")}
+              </span>
               <div className="follow-up-right">
                 <span className="inspector-metric-card-sub-timestamp">
                   <Clock3 size={11} />{" "}
-                  {selectedDeal?.time || "Recently updated"}
+                  {selectedDeal?.time || t("pipeline.recentlyUpdated")}
                 </span>
                 <div className="follow-up flex items-center gap-1 mt-2 text-slate-800 font-semibold">
                   <Calendar size={14} />{" "}
-                  <span>{selectedDeal?.action || "No action"}</span>
+                  <span>{selectedDeal?.action || t("pipeline.noAction")}</span>
                 </div>
               </div>
             </div>
@@ -1625,14 +1657,14 @@ export default function PipelinePage() {
           <div className="inspector-deal-activity-log-column">
             <div className="flex justify-between items-center mb-2">
               <span className="inspector-section-small-overhead-label">
-                Deal Activity
+                {t("pipeline.dealActivity")}
               </span>
               <button
                 className="intelligence-view-all-navigation-link text-xs"
                 onClick={openActivityModal}
                 disabled={!selectedDeal?.id}
               >
-                View All
+                {t("pipeline.viewAll")}
               </button>
             </div>
             <div className="inspector-activity-logs-mini-stack">
@@ -1640,7 +1672,7 @@ export default function PipelinePage() {
                 <div className="inspector-activity-log-row-item">
                   <span className="activity-log-dot-indicator blue-dot"></span>
                   <span className="activity-log-description-text">
-                    Loading activity...
+                    {t("pipeline.loadingActivity")}
                   </span>
                 </div>
               ) : selectedDealEvents.length ? (
@@ -1651,10 +1683,10 @@ export default function PipelinePage() {
                   >
                     <span className="activity-log-dot-indicator blue-dot"></span>
                     <span className="activity-log-description-text">
-                      {event.metadata?.title || "Deal activity"}
+                      {event.metadata?.title || t("pipeline.dealActivityItem")}
                     </span>
                     <span className="activity-log-relative-timestamp">
-                      {event.timeAgo || "Recently updated"}
+                      {event.timeAgo || t("pipeline.recentlyUpdated")}
                     </span>
                   </div>
                 ))
@@ -1662,7 +1694,7 @@ export default function PipelinePage() {
                 <div className="inspector-activity-log-row-item">
                   <span className="activity-log-dot-indicator green-dot"></span>
                   <span className="activity-log-description-text">
-                    No activity yet.
+                    {t("pipeline.noActivityYet")}
                   </span>
                 </div>
               )}
@@ -1671,7 +1703,7 @@ export default function PipelinePage() {
 
           <div className="inspector-ai-next-steps-actions-column">
             <span className="inspector-section-small-overhead-label">
-              AI Suggested Next Steps
+              {t("pipeline.aiSuggestedNextSteps")}
             </span>
             {selectedDeal?.aiReason && (
               <p className="inspector-ai-reason-text">
@@ -1691,17 +1723,17 @@ export default function PipelinePage() {
                         step.impact || "medium",
                       ).toLowerCase()}`}
                     >
-                      {step.impactLabel || "Medium impact"}
+                      {step.impactLabel || t("pipeline.mediumImpact")}
                     </span>
                   </div>
                 ))
               ) : (
                 <div className="inspector-ai-action-step-row-item">
                   <span className="ai-step-title-text">
-                    No AI suggestions yet
+                    {t("pipeline.noAiSuggestions")}
                   </span>
                   <span className="ai-step-impact-badge impact-medium">
-                    Pending
+                    {t("pipeline.pending")}
                   </span>
                 </div>
               )}
@@ -1711,7 +1743,9 @@ export default function PipelinePage() {
               onClick={sendAiSuggestions}
               disabled={sendingSuggestions || !selectedDeal?.id}
             >
-              {sendingSuggestions ? "Sending..." : "Send AI Suggestions"}
+              {sendingSuggestions
+                ? t("pipeline.sending")
+                : t("pipeline.sendAiSuggestions")}
             </button>
           </div>
         </div>
@@ -1726,13 +1760,18 @@ export default function PipelinePage() {
 
           <div className="command-center-wrap">
             <h3 className="command-center-main-title">
-              {selectedDeal?.name || "Revenue Command Center"}
+              {selectedDeal?.name || t("pipeline.revenueCommandCenter")}
             </h3>
 
             <p className="command-center-sub-description">
               {selectedDeal
-                ? `${selectedDeal.amount || "$0"} • ${selectedDeal.stage || "new"} • AI Score ${selectedDeal.score || "0%"} • ${selectedDeal.risk || "Low"} Risk`
-                : "Select a deal to run AI actions, generate follow-ups, move stages, and accelerate closings."}
+                ? t("pipeline.commandCenterDealSummary", {
+                    amount: selectedDeal.amount || "$0",
+                    stage: selectedDeal.stage || "new",
+                    score: selectedDeal.score || "0%",
+                    risk: selectedDeal.risk || t("pipeline.low"),
+                  })
+                : t("pipeline.commandCenterPrompt")}
             </p>
           </div>
         </div>
@@ -1744,7 +1783,9 @@ export default function PipelinePage() {
             onClick={commandScoreDeal}
           >
             <Sparkles size={15} />
-            {commandActionLoading === "score" ? "Scoring..." : "Re-Score AI"}
+            {commandActionLoading === "score"
+              ? t("pipeline.scoring")
+              : t("pipeline.reScoreAi")}
           </button>
 
           <button
@@ -1754,8 +1795,8 @@ export default function PipelinePage() {
           >
             <MessageCircle size={15} />
             {commandActionLoading === "followup"
-              ? "Generating..."
-              : "Generate Follow-up"}
+              ? t("pipeline.generating")
+              : t("pipeline.generateFollowUp")}
           </button>
 
           <button
@@ -1767,8 +1808,8 @@ export default function PipelinePage() {
           >
             <Send size={15} />
             {commandActionLoading === "suggestions"
-              ? "Sending..."
-              : "Send Suggestions"}
+              ? t("pipeline.sending")
+              : t("pipeline.sendSuggestions")}
           </button>
 
           <div className="command-center-select-wrap">
@@ -1777,12 +1818,14 @@ export default function PipelinePage() {
               value={selectedDeal?.stage || "new"}
               onChange={(e) => commandMoveDeal(e.target.value)}
             >
-              <option value="new">Move: New</option>
-              <option value="qualified">Move: Qualified</option>
-              <option value="proposal">Move: Proposal</option>
-              <option value="negotiation">Move: Negotiation</option>
-              <option value="won">Close as Won</option>
-              <option value="lost">Close as Lost</option>
+              <option value="new">{t("pipeline.moveNew")}</option>
+              <option value="qualified">{t("pipeline.moveQualified")}</option>
+              <option value="proposal">{t("pipeline.moveProposal")}</option>
+              <option value="negotiation">
+                {t("pipeline.moveNegotiation")}
+              </option>
+              <option value="won">{t("pipeline.closeAsWon")}</option>
+              <option value="lost">{t("pipeline.closeAsLost")}</option>
             </select>
           </div>
 
@@ -1792,7 +1835,7 @@ export default function PipelinePage() {
             onClick={scrollToSelectedDeal}
           >
             <Clock3 size={15} />
-            Timeline
+            {t("pipeline.timeline")}
           </button>
         </div>
       </section>
@@ -1800,7 +1843,7 @@ export default function PipelinePage() {
         <div className="pipeline-modal-overlay">
           <div className="pipeline-modal">
             <div className="pipeline-modal-header">
-              <h3>Create New Deal</h3>
+              <h3>{t("pipeline.createNewDeal")}</h3>
 
               <button
                 type="button"
@@ -1815,7 +1858,7 @@ export default function PipelinePage() {
               <div className="pipeline-modal-body">
                 <div className="pipeline-form-grid">
                   <div className="pipeline-form-field full">
-                    <label>Deal Name</label>
+                    <label>{t("pipeline.dealName")}</label>
                     <input
                       required
                       value={createDealForm.name}
@@ -1825,12 +1868,12 @@ export default function PipelinePage() {
                           name: e.target.value,
                         })
                       }
-                      placeholder="Example: Luxury villa buyer"
+                      placeholder={t("pipeline.dealNameExample")}
                     />
                   </div>
 
                   <div className="pipeline-form-field">
-                    <label>Value</label>
+                    <label>{t("pipeline.dealValue")}</label>
                     <input
                       type="number"
                       value={createDealForm.value}
@@ -1845,7 +1888,7 @@ export default function PipelinePage() {
                   </div>
 
                   <div className="pipeline-form-field">
-                    <label>Stage</label>
+                    <label>{t("pipeline.stage")}</label>
                     <select
                       value={createDealForm.stage}
                       onChange={(e) =>
@@ -1855,17 +1898,19 @@ export default function PipelinePage() {
                         })
                       }
                     >
-                      <option value="new">New</option>
-                      <option value="qualified">Qualified</option>
-                      <option value="proposal">Proposal</option>
-                      <option value="negotiation">Negotiation</option>
-                      <option value="won">Won</option>
-                      <option value="lost">Lost</option>
+                      <option value="new">{t("pipeline.new")}</option>
+                      <option value="qualified">{t("pipeline.qualified")}</option>
+                      <option value="proposal">{t("pipeline.proposal")}</option>
+                      <option value="negotiation">
+                  {t("pipeline.negotiation")}
+                </option>
+                      <option value="won">{t("pipeline.won")}</option>
+                      <option value="lost">{t("pipeline.lost")}</option>
                     </select>
                   </div>
 
                   <div className="pipeline-form-field full">
-                    <label>Notes</label>
+                    <label>{t("pipeline.notes")}</label>
                     <textarea
                       rows="4"
                       value={createDealForm.notes}
@@ -1875,7 +1920,7 @@ export default function PipelinePage() {
                           notes: e.target.value,
                         })
                       }
-                      placeholder="Add deal notes..."
+                      placeholder={t("pipeline.addDealNotes")}
                     />
                   </div>
                 </div>
@@ -1887,11 +1932,11 @@ export default function PipelinePage() {
                   className="pipeline-btn-cancel"
                   onClick={() => setShowCreateDealModal(false)}
                 >
-                  Cancel
+                  {t("pipeline.cancel")}
                 </button>
 
                 <button type="submit" className="pipeline-btn-save">
-                  Create Deal
+                  {t("pipeline.createDeal")}
                 </button>
               </div>
             </form>
@@ -1902,7 +1947,7 @@ export default function PipelinePage() {
         <div className="pipeline-modal-overlay">
           <div className="pipeline-modal">
             <div className="pipeline-modal-header">
-              <h3>Edit Deal</h3>
+              <h3>{t("pipeline.editDeal")}</h3>
 
               <button
                 type="button"
@@ -1917,7 +1962,7 @@ export default function PipelinePage() {
               <div className="pipeline-modal-body">
                 <div className="pipeline-form-grid">
                   <div className="pipeline-form-field full">
-                    <label>Deal Name</label>
+                    <label>{t("pipeline.dealName")}</label>
                     <input
                       required
                       value={editingDeal.name}
@@ -1931,7 +1976,7 @@ export default function PipelinePage() {
                   </div>
 
                   <div className="pipeline-form-field">
-                    <label>Value</label>
+                    <label>{t("pipeline.dealValue")}</label>
                     <input
                       type="number"
                       value={editingDeal.value}
@@ -1945,7 +1990,7 @@ export default function PipelinePage() {
                   </div>
 
                   <div className="pipeline-form-field">
-                    <label>Stage</label>
+                    <label>{t("pipeline.stage")}</label>
                     <select
                       value={editingDeal.stage}
                       onChange={(e) =>
@@ -1955,17 +2000,19 @@ export default function PipelinePage() {
                         })
                       }
                     >
-                      <option value="new">New</option>
-                      <option value="qualified">Qualified</option>
-                      <option value="proposal">Proposal</option>
-                      <option value="negotiation">Negotiation</option>
-                      <option value="won">Won</option>
-                      <option value="lost">Lost</option>
+                      <option value="new">{t("pipeline.new")}</option>
+                      <option value="qualified">{t("pipeline.qualified")}</option>
+                      <option value="proposal">{t("pipeline.proposal")}</option>
+                      <option value="negotiation">
+                  {t("pipeline.negotiation")}
+                </option>
+                      <option value="won">{t("pipeline.won")}</option>
+                      <option value="lost">{t("pipeline.lost")}</option>
                     </select>
                   </div>
 
                   <div className="pipeline-form-field full">
-                    <label>Notes</label>
+                    <label>{t("pipeline.notes")}</label>
                     <textarea
                       rows="4"
                       value={editingDeal.notes}
@@ -1987,7 +2034,7 @@ export default function PipelinePage() {
                   onClick={deleteDeal}
                   disabled={deletingDeal}
                 >
-                  {deletingDeal ? "Deleting..." : "Delete"}
+                  {deletingDeal ? t("pipeline.deleting") : t("pipeline.delete")}
                 </button>
 
                 <button
@@ -1995,7 +2042,7 @@ export default function PipelinePage() {
                   className="pipeline-btn-cancel"
                   onClick={() => setShowDealModal(false)}
                 >
-                  Cancel
+                  {t("pipeline.cancel")}
                 </button>
 
                 <button
@@ -2003,7 +2050,7 @@ export default function PipelinePage() {
                   className="pipeline-btn-save"
                   disabled={savingDeal}
                 >
-                  {savingDeal ? "Saving..." : "Save Changes"}
+                  {savingDeal ? t("pipeline.saving") : t("pipeline.saveChanges")}
                 </button>
               </div>
             </form>
@@ -2014,7 +2061,7 @@ export default function PipelinePage() {
         <div className="pipeline-modal-overlay">
           <div className="pipeline-modal command-output-modal">
             <div className="pipeline-modal-header">
-              <h3>AI Follow-up Generated</h3>
+              <h3>{t("pipeline.aiFollowUpGenerated")}</h3>
 
               <button
                 type="button"
@@ -2027,36 +2074,42 @@ export default function PipelinePage() {
 
             <div className="pipeline-modal-body">
               <div className="command-output-section">
-                <label>Email Subject</label>
-                <p>{commandOutput.emailSubject || "No subject generated."}</p>
-              </div>
-
-              <div className="command-output-section">
-                <label>Email Body</label>
-                <p>{commandOutput.emailBody || "No email generated."}</p>
-              </div>
-
-              <div className="command-output-section">
-                <label>WhatsApp Message</label>
+                <label>{t("pipeline.emailSubject")}</label>
                 <p>
-                  {commandOutput.whatsappMessage ||
-                    "No WhatsApp message generated."}
+                  {commandOutput.emailSubject ||
+                    t("pipeline.noSubjectGenerated")}
                 </p>
               </div>
 
               <div className="command-output-section">
-                <label>Call Script</label>
-                <p>{commandOutput.callScript || "No call script generated."}</p>
+                <label>{t("pipeline.emailBody")}</label>
+                <p>{commandOutput.emailBody || t("pipeline.noEmailGenerated")}</p>
               </div>
 
               <div className="command-output-section">
-                <label>Recommended Task</label>
-                <p>{commandOutput.recommendedTask || "No task generated."}</p>
+                <label>{t("pipeline.whatsappMessage")}</label>
+                <p>
+                  {commandOutput.whatsappMessage ||
+                    t("pipeline.noWhatsappMessage")}
+                </p>
               </div>
 
               <div className="command-output-section">
-                <label>AI Reason</label>
-                <p>{commandOutput.reason || "No reason provided."}</p>
+                <label>{t("pipeline.callScript")}</label>
+                <p>{commandOutput.callScript || t("pipeline.noCallScript")}</p>
+              </div>
+
+              <div className="command-output-section">
+                <label>{t("pipeline.recommendedTask")}</label>
+                <p>
+                  {commandOutput.recommendedTask ||
+                    t("pipeline.noTaskGenerated")}
+                </p>
+              </div>
+
+              <div className="command-output-section">
+                <label>{t("pipeline.aiReason")}</label>
+                <p>{commandOutput.reason || t("pipeline.noReasonProvided")}</p>
               </div>
             </div>
 
@@ -2066,7 +2119,7 @@ export default function PipelinePage() {
                 className="pipeline-btn-cancel"
                 onClick={() => setCommandOutput(null)}
               >
-                Close
+                {t("pipeline.close")}
               </button>
             </div>
           </div>
@@ -2074,20 +2127,26 @@ export default function PipelinePage() {
       )}
       <PipelineListModal
         open={riskModalOpen}
-        title="AI Deal Risk Queue"
-        subtitle={`${riskQueue.length} at-risk deals need attention`}
+        title={t("pipeline.aiDealRiskQueue")}
+        subtitle={t("pipeline.atRiskDealsAttention", {
+          count: riskQueue.length,
+        })}
         items={visibleRiskItems}
         hasMore={riskHasMore}
         onClose={() => setRiskModalOpen(false)}
         onLoadMore={() => setRiskModalLimit((prev) => prev + 5)}
-        emptyText="No at-risk deals right now."
+        emptyText={t("pipeline.noAtRiskDealsNow")}
         renderItem={(row) => (
           <div className="activity-modal-row" key={row.id}>
             <span className="activity-log-dot-indicator red-dot"></span>
             <div>
               <strong>{row.name}</strong>
               <p>
-                {row.value} • {row.reason} • {row.status} risk
+                {t("pipeline.riskRowSummary", {
+                  value: row.value,
+                  reason: row.reason,
+                  status: row.status,
+                })}
               </p>
             </div>
             <button
@@ -2097,29 +2156,31 @@ export default function PipelinePage() {
                 reviewRiskDeal(row.id);
               }}
             >
-              Review
+              {t("pipeline.review")}
             </button>
           </div>
         )}
       />
       <PipelineListModal
         open={activityModalOpen}
-        title="Deal Activity"
+        title={t("pipeline.dealActivity")}
         subtitle={selectedDeal?.name}
         items={activityModalEvents}
         hasMore={activityModalHasMore}
         loading={activityModalLoading}
         onClose={() => setActivityModalOpen(false)}
         onLoadMore={() => loadMoreActivity(false)}
-        emptyText="No activity yet."
+        emptyText={t("pipeline.noActivityYet")}
         renderItem={(event) => (
           <div className="activity-modal-row" key={event.id}>
             <span className="activity-log-dot-indicator blue-dot"></span>
             <div>
-              <strong>{event.metadata?.title || "Deal activity"}</strong>
+              <strong>
+                {event.metadata?.title || t("pipeline.dealActivityItem")}
+              </strong>
               <p>{event.metadata?.sub || event.eventType}</p>
             </div>
-            <span>{event.timeAgo || "Recently updated"}</span>
+            <span>{event.timeAgo || t("pipeline.recentlyUpdated")}</span>
           </div>
         )}
       />

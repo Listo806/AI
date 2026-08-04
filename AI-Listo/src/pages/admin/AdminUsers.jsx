@@ -8,6 +8,7 @@ import {
 } from '../../api/platformApi';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
+import { useTranslation } from 'react-i18next';
 import AdminPagination from './AdminPagination';
 import '../platform/platform.css';
 import './admin.css';
@@ -29,6 +30,7 @@ const ROLE_OPTIONS_CREATE = ROLE_OPTIONS.filter((r) => r !== 'super_admin');
 
 function CreateUserModal({ onClose, onSuccess }) {
   const { showSuccess, showError } = useNotification();
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: '',
@@ -41,11 +43,11 @@ function CreateUserModal({ onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email?.trim() || !form.password?.trim()) {
-      showError('Email and password are required');
+      showError(t('admin.users.emailPasswordRequired'));
       return;
     }
     if (form.password.length < 6) {
-      showError('Password must be at least 6 characters');
+      showError(t('admin.users.passwordMin6'));
       return;
     }
     setSubmitting(true);
@@ -57,11 +59,11 @@ function CreateUserModal({ onClose, onSuccess }) {
         teamId: form.teamId?.trim() || null,
         isActive: form.isActive,
       });
-      showSuccess('User created');
+      showSuccess(t('admin.users.userCreated'));
       onSuccess();
       onClose();
     } catch (err) {
-      showError(err.message || 'Failed to create user');
+      showError(err.message || t('admin.users.createFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -70,10 +72,10 @@ function CreateUserModal({ onClose, onSuccess }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Create user</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.users.createUser')}</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Email *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.emailLabel')}</label>
             <input
               type="email"
               value={form.email}
@@ -83,7 +85,7 @@ function CreateUserModal({ onClose, onSuccess }) {
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Password * (min 6)</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.passwordLabelCreate')}</label>
             <input
               type="password"
               value={form.password}
@@ -94,7 +96,7 @@ function CreateUserModal({ onClose, onSuccess }) {
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Role</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.role')}</label>
             <select
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
@@ -106,12 +108,12 @@ function CreateUserModal({ onClose, onSuccess }) {
             </select>
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Team ID (optional)</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.teamIdOptional')}</label>
             <input
               type="text"
               value={form.teamId}
               onChange={(e) => setForm((f) => ({ ...f, teamId: e.target.value }))}
-              placeholder="UUID or leave empty"
+              placeholder={t('admin.users.teamIdPlaceholderCreate')}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
             />
           </div>
@@ -122,15 +124,15 @@ function CreateUserModal({ onClose, onSuccess }) {
                 checked={form.isActive}
                 onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
               />
-              Active
+              {t('admin.users.active')}
             </label>
           </div>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">
-              Cancel
+              {t('admin.users.cancel')}
             </button>
             <button type="submit" className="crm-btn crm-btn-primary" disabled={submitting}>
-              {submitting ? 'Creating…' : 'Create'}
+              {submitting ? t('admin.users.creating') : t('admin.users.create')}
             </button>
           </div>
         </form>
@@ -141,6 +143,7 @@ function CreateUserModal({ onClose, onSuccess }) {
 
 function EditUserModal({ user, onClose, onSuccess }) {
   const { showSuccess, showError } = useNotification();
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     email: user?.email ?? '',
@@ -165,11 +168,11 @@ function EditUserModal({ user, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email?.trim()) {
-      showError('Email is required');
+      showError(t('admin.users.emailRequired'));
       return;
     }
     if (form.password && form.password.length < 6) {
-      showError('Password must be at least 6 characters if provided');
+      showError(t('admin.users.passwordMin6IfProvided'));
       return;
     }
     setSubmitting(true);
@@ -182,11 +185,11 @@ function EditUserModal({ user, onClose, onSuccess }) {
       };
       if (form.password) payload.password = form.password;
       await updateAdminUser(user.id, payload);
-      showSuccess('User updated');
+      showSuccess(t('admin.users.userUpdated'));
       onSuccess();
       onClose();
     } catch (err) {
-      showError(err.message || 'Failed to update user');
+      showError(err.message || t('admin.users.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -197,10 +200,10 @@ function EditUserModal({ user, onClose, onSuccess }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Edit user</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.users.editUser')}</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Email *</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.emailLabel')}</label>
             <input
               type="email"
               value={form.email}
@@ -210,18 +213,18 @@ function EditUserModal({ user, onClose, onSuccess }) {
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>New password (leave blank to keep)</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.newPasswordLabel')}</label>
             <input
               type="password"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               minLength={6}
-              placeholder="Optional"
+              placeholder={t('admin.users.optional')}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
             />
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Role</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.role')}</label>
             <select
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
@@ -233,12 +236,12 @@ function EditUserModal({ user, onClose, onSuccess }) {
             </select>
           </div>
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>Team ID</label>
+            <label style={{ display: 'block', marginBottom: '4px', fontWeight: 500 }}>{t('admin.users.teamId')}</label>
             <input
               type="text"
               value={form.teamId}
               onChange={(e) => setForm((f) => ({ ...f, teamId: e.target.value }))}
-              placeholder="UUID or empty"
+              placeholder={t('admin.users.teamIdPlaceholderEdit')}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border, #e5e7eb)' }}
             />
           </div>
@@ -249,15 +252,15 @@ function EditUserModal({ user, onClose, onSuccess }) {
                 checked={form.isActive}
                 onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
               />
-              Active
+              {t('admin.users.active')}
             </label>
           </div>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
             <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">
-              Cancel
+              {t('admin.users.cancel')}
             </button>
             <button type="submit" className="crm-btn crm-btn-primary" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Save'}
+              {submitting ? t('admin.users.saving') : t('admin.users.save')}
             </button>
           </div>
         </form>
@@ -267,6 +270,7 @@ function EditUserModal({ user, onClose, onSuccess }) {
 }
 
 function DeleteConfirmModal({ user, onClose, onConfirm }) {
+  const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -282,16 +286,16 @@ function DeleteConfirmModal({ user, onClose, onConfirm }) {
   return (
     <div className="admin-reject-modal-overlay" onClick={onClose}>
       <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ marginTop: 0 }}>Deactivate user</h3>
+        <h3 style={{ marginTop: 0 }}>{t('admin.users.deactivateUser')}</h3>
         <p style={{ color: 'var(--text-muted, #64748b)', marginBottom: '16px' }}>
-          This will deactivate <strong>{user.email}</strong>. They will not be able to log in until an admin reactivates them.
+          {t('admin.users.deactivateWarningPrefix')} <strong>{user.email}</strong>{t('admin.users.deactivateWarningSuffix')}
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
           <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">
-            Cancel
+            {t('admin.users.cancel')}
           </button>
           <button type="button" onClick={handleConfirm} className="crm-btn" style={{ background: '#dc2626', color: '#fff' }} disabled={submitting}>
-            {submitting ? 'Deactivating…' : 'Deactivate'}
+            {submitting ? t('admin.users.deactivating') : t('admin.users.deactivate')}
           </button>
         </div>
       </div>
@@ -302,6 +306,7 @@ function DeleteConfirmModal({ user, onClose, onConfirm }) {
 export default function AdminUsers() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useNotification();
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -321,7 +326,7 @@ export default function AdminUsers() {
       const data = await getAdminUsers(roleFilter || undefined);
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || 'Failed to load users');
+      setError(err.message || t('admin.users.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -337,10 +342,10 @@ export default function AdminUsers() {
     setUpdating(userId);
     try {
       await updateAdminUserRole(userId, newRole);
-      showSuccess('Role updated');
+      showSuccess(t('admin.users.roleUpdated'));
       loadUsers();
     } catch (err) {
-      showError(err.message || 'Failed to update role');
+      showError(err.message || t('admin.users.roleUpdateFailed'));
     } finally {
       setUpdating(null);
     }
@@ -357,7 +362,7 @@ export default function AdminUsers() {
   const handleDeleteConfirm = async () => {
     if (!deleteUser) return;
     await deleteAdminUser(deleteUser.id);
-    showSuccess('User deactivated');
+    showSuccess(t('admin.users.userDeactivated'));
     loadUsers();
     setDeleteUser(null);
   };
@@ -366,17 +371,17 @@ export default function AdminUsers() {
     setReactivating(u.id);
     try {
       await updateAdminUser(u.id, { isActive: true });
-      showSuccess('User reactivated');
+      showSuccess(t('admin.users.userReactivated'));
       loadUsers();
     } catch (err) {
-      showError(err.message || 'Failed to reactivate');
+      showError(err.message || t('admin.users.reactivateFailed'));
     } finally {
       setReactivating(null);
     }
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('admin.users.notAvailable');
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -390,7 +395,7 @@ export default function AdminUsers() {
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
+        <div>{t('admin.users.loading')}</div>
       </div>
     );
   }
@@ -401,25 +406,25 @@ export default function AdminUsers() {
     <div className="platform-page" style={{ maxWidth: '100%' }}>
       <div className="platform-header" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
         <div>
-          <h1>Admin: Users</h1>
+          <h1>{t('admin.users.title')}</h1>
           <p className="platform-subtitle">
-            Create, edit, and manage users. Role changes take effect on next login.
+            {t('admin.users.subtitle')}
           </p>
         </div>
         <button type="button" className="crm-btn crm-btn-primary" onClick={() => setShowCreate(true)}>
-          Create user
+          {t('admin.users.createUser')}
         </button>
       </div>
 
       <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          Filter by role:
+          {t('admin.users.filterByRole')}
           <select
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
             style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '160px' }}
           >
-            <option value="">All roles</option>
+            <option value="">{t('admin.users.allRoles')}</option>
             {ROLE_OPTIONS.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
@@ -436,18 +441,18 @@ export default function AdminUsers() {
           <div className="crm-skeleton"></div>
         </div>
       ) : users.length === 0 ? (
-        <div className="properties-empty">No users found.</div>
+        <div className="properties-empty">{t('admin.users.noUsersFound')}</div>
       ) : (
         <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Team</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>{t('admin.users.email')}</th>
+                <th>{t('admin.users.role')}</th>
+                <th>{t('admin.users.status')}</th>
+                <th>{t('admin.users.team')}</th>
+                <th>{t('admin.users.created')}</th>
+                <th>{t('admin.users.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -462,7 +467,7 @@ export default function AdminUsers() {
                   <td>{u.role}</td>
                   <td>
                     <span className={`admin-status-badge ${u.isActive ? 'approved' : 'rejected'}`} style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}>
-                      {u.isActive ? 'Active' : 'Inactive'}
+                      {u.isActive ? t('admin.users.active') : t('admin.users.inactive')}
                     </span>
                   </td>
                   <td className="admin-table-muted">{u.teamId || '—'}</td>
@@ -485,7 +490,7 @@ export default function AdminUsers() {
                         className="crm-btn crm-btn-secondary admin-action-btn"
                         onClick={() => handleEdit(u)}
                       >
-                        Edit
+                        {t('admin.users.edit')}
                       </button>
                       {u.isActive ? (
                         <button
@@ -494,9 +499,9 @@ export default function AdminUsers() {
                           style={{ background: '#dc2626', color: '#fff' }}
                           onClick={() => handleDeleteClick(u)}
                           disabled={isSelf(u)}
-                          title={isSelf(u) ? 'You cannot deactivate yourself' : 'Deactivate'}
+                          title={isSelf(u) ? t('admin.users.cannotDeactivateSelf') : t('admin.users.deactivate')}
                         >
-                          Deactivate
+                          {t('admin.users.deactivate')}
                         </button>
                       ) : (
                         <button
@@ -505,13 +510,13 @@ export default function AdminUsers() {
                           style={{ background: '#16a34a', color: '#fff' }}
                           onClick={() => handleReactivate(u)}
                           disabled={reactivating === u.id}
-                          title="Reactivate user"
+                          title={t('admin.users.reactivateUserTitle')}
                         >
-                          {reactivating === u.id ? '…' : 'Reactivate'}
+                          {reactivating === u.id ? '…' : t('admin.users.reactivate')}
                         </button>
                       )}
                     </div>
-                    {updating === u.id && <span className="admin-table-muted" style={{ marginLeft: '8px', fontSize: '12px' }}>Updating...</span>}
+                    {updating === u.id && <span className="admin-table-muted" style={{ marginLeft: '8px', fontSize: '12px' }}>{t('admin.users.updating')}</span>}
                   </td>
                 </tr>
               ))}

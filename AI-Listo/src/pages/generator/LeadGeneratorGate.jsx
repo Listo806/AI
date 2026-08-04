@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Target, MapPin, Search, Send, X } from "lucide-react";
 
 import apiClient from "../../api/apiClient";
@@ -16,6 +17,7 @@ const unwrap = (res) => (res && res.data !== undefined ? res.data : res);
  * rather than pretending the purchase completed.
  */
 export default function LeadGeneratorGate() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading"); // loading | locked | unlocked
   const [purchasing, setPurchasing] = useState(false);
@@ -53,7 +55,7 @@ export default function LeadGeneratorGate() {
     } catch (e) {
       setNotice(
         e?.message ||
-          "We could not complete the purchase right now. Please try again.",
+          t("generator.purchaseError"),
       );
     } finally {
       setPurchasing(false);
@@ -61,7 +63,7 @@ export default function LeadGeneratorGate() {
   };
 
   if (status === "loading") {
-    return <div style={{ padding: 40, color: "#6b7280" }}>Loading...</div>;
+    return <div style={{ padding: 40, color: "#6b7280" }}>{t("common.loading")}</div>;
   }
 
   if (status === "unlocked") {
@@ -69,9 +71,9 @@ export default function LeadGeneratorGate() {
   }
 
   const benefits = [
-    { icon: <MapPin size={18} />, text: "Target any city, ZIP code, or service area." },
-    { icon: <Search size={18} />, text: "Find qualified leads that match your criteria." },
-    { icon: <Send size={18} />, text: "Automatically follow up and move leads into your CRM." },
+    { icon: <MapPin size={18} />, text: t("generator.benefitLocation") },
+    { icon: <Search size={18} />, text: t("generator.benefitQualified") },
+    { icon: <Send size={18} />, text: t("generator.benefitFollowUp") },
   ];
 
   return (
@@ -102,7 +104,7 @@ export default function LeadGeneratorGate() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            title="Close"
+            title={t("common.close")}
             style={{
               position: "absolute",
               top: 14,
@@ -147,7 +149,7 @@ export default function LeadGeneratorGate() {
               fontWeight: 700,
             }}
           >
-            Lead Generator Add-on
+            {t("generator.addOnTitle")}
           </h2>
           <p
             style={{
@@ -158,8 +160,7 @@ export default function LeadGeneratorGate() {
               lineHeight: 1.5,
             }}
           >
-            Find, qualify, and automatically follow up with high-quality leads in
-            the locations you choose.
+            {t("generator.addOnDescription")}
           </p>
 
           <div
@@ -185,7 +186,7 @@ export default function LeadGeneratorGate() {
             <span style={{ fontSize: 30, fontWeight: 800, color: "#111827" }}>
               $147
             </span>
-            <span style={{ fontSize: 14, color: "#6b7280" }}>/month</span>
+            <span style={{ fontSize: 14, color: "#6b7280" }}>{t("generator.perMonth")}</span>
           </div>
 
           {notice && (
@@ -222,7 +223,7 @@ export default function LeadGeneratorGate() {
               opacity: purchasing ? 0.7 : 1,
             }}
           >
-            {purchasing ? "Please wait..." : "Add Lead Generator to my plan"}
+            {purchasing ? t("generator.pleaseWait") : t("generator.addToPlan")}
           </button>
           <p
             style={{
@@ -232,7 +233,7 @@ export default function LeadGeneratorGate() {
               margin: "10px 0 0",
             }}
           >
-            Billed monthly. Cancel anytime.
+            {t("generator.billingNote")}
           </p>
         </div>
       </div>

@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
 export default function CrmImportPage() {
+  const { t } = useTranslation();
+
   const [selectedFile, setSelectedFile] =
     useState(null);
 
@@ -84,7 +87,7 @@ export default function CrmImportPage() {
         },
       );
 
-      alert("Mapping saved");
+      alert(t("integrations.crmImport.mappingSaved"));
     } catch (err) {
       console.error(err);
     }
@@ -101,7 +104,7 @@ export default function CrmImportPage() {
         },
       );
 
-      alert("Import completed");
+      alert(t("integrations.crmImport.importCompleted"));
     } catch (err) {
       console.error(err);
     } finally {
@@ -112,12 +115,9 @@ export default function CrmImportPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>CRM Import Tool</h1>
+        <h1>{t("integrations.crmImport.title")}</h1>
 
-        <p>
-          Import contacts, leads, and CRM
-          data from CSV or external CRMs.
-        </p>
+        <p>{t("integrations.crmImport.description")}</p>
       </div>
 
       <div
@@ -130,7 +130,7 @@ export default function CrmImportPage() {
         }}
       >
         <div style={{ marginBottom: 32 }}>
-          <h3>Import Source</h3>
+          <h3>{t("integrations.crmImport.importSource")}</h3>
 
           <div
             style={{
@@ -170,7 +170,7 @@ export default function CrmImportPage() {
                         marginTop: 4,
                       }}
                     >
-                      Coming soon
+                      {t("integrations.comingSoon")}
                     </div>
                   )}
                 </div>
@@ -180,7 +180,7 @@ export default function CrmImportPage() {
         </div>
 
         <div style={{ marginBottom: 32 }}>
-          <h3>Upload CSV File</h3>
+          <h3>{t("integrations.crmImport.uploadCsvFile")}</h3>
 
           <input
             type="file"
@@ -198,15 +198,15 @@ export default function CrmImportPage() {
             style={buttonStyle}
           >
             {uploading
-              ? "Uploading..."
-              : "Upload CSV"}
+              ? t("integrations.crmImport.uploading")
+              : t("integrations.crmImport.uploadCsv")}
           </button>
         </div>
 
         {importData && (
           <>
             <div style={{ marginBottom: 32 }}>
-              <h3>Column Mapping</h3>
+              <h3>{t("integrations.crmImport.columnMapping")}</h3>
 
               <div
                 style={{
@@ -252,7 +252,7 @@ export default function CrmImportPage() {
                         }}
                       >
                         <option value="">
-                          Ignore
+                          {t("integrations.crmImport.ignore")}
                         </option>
 
                         {crmFields.map(
@@ -274,7 +274,7 @@ export default function CrmImportPage() {
 
             <div style={{ marginBottom: 32 }}>
               <h3>
-                Duplicate Handling
+                {t("integrations.crmImport.duplicateHandling")}
               </h3>
 
               <select
@@ -293,15 +293,15 @@ export default function CrmImportPage() {
                 }}
               >
                 <option value="skip">
-                  Skip duplicates
+                  {t("integrations.crmImport.skipDuplicates")}
                 </option>
 
                 <option value="overwrite">
-                  Overwrite existing
+                  {t("integrations.crmImport.overwriteExisting")}
                 </option>
 
                 <option value="merge">
-                  Merge records
+                  {t("integrations.crmImport.mergeRecords")}
                 </option>
               </select>
             </div>
@@ -316,7 +316,7 @@ export default function CrmImportPage() {
                 onClick={saveMapping}
                 style={buttonStyle}
               >
-                Save Mapping
+                {t("integrations.crmImport.saveMapping")}
               </button>
 
               <button
@@ -325,8 +325,8 @@ export default function CrmImportPage() {
                 style={buttonStyle}
               >
                 {importing
-                  ? "Importing..."
-                  : "Start Import"}
+                  ? t("integrations.crmImport.importing")
+                  : t("integrations.crmImport.startImport")}
               </button>
             </div>
           </>

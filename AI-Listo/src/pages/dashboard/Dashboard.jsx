@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -91,10 +92,10 @@ function avatarColor(seed) {
   return SOURCE_COLORS[hash % SOURCE_COLORS.length];
 }
 
-function periodLabel(range) {
-  if (range === "today") return "Today";
-  if (range === "7d") return "Last 7 days";
-  return "Last 30 days";
+function periodLabel(range, t) {
+  if (range === "today") return t("dashboard.periodToday");
+  if (range === "7d") return t("dashboard.periodLast7Days");
+  return t("dashboard.periodLast30Days");
 }
 
 function shortDate(value) {
@@ -103,21 +104,22 @@ function shortDate(value) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function relativeTime(value) {
+function relativeTime(value, t) {
   const then = new Date(value).getTime();
   if (isNaN(then)) return "";
   const diff = Date.now() - then;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("dashboard.justNow");
+  if (mins < 60) return t("dashboard.minutesAgo", { mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t("dashboard.hoursAgo", { hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return t("dashboard.daysAgo", { days });
 }
 
 export default function CortexaDashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth <= 1024 : false,
   );
@@ -206,7 +208,7 @@ export default function CortexaDashboard() {
           if (!cancelled) setUpcoming([]);
         }
       } catch (e) {
-        if (!cancelled) setError(e?.message || "Failed to load dashboard data.");
+        if (!cancelled) setError(e?.message || t("dashboard.loadError"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -224,7 +226,7 @@ export default function CortexaDashboard() {
   const metrics = summary?.data?.metrics || null;
   const recentActivity = summary?.data?.recent_activity || [];
   const totalLeads = leads?.total ?? 0;
-  const period = periodLabel(range);
+  const period = periodLabel(range, t);
   const hasLeads = (leadsList || []).length > 0;
 
   const followUpPct =
@@ -241,91 +243,91 @@ export default function CortexaDashboard() {
   // real; Active Deals value, Revenue and Appointments have no backend source.
   const miniKpis = [
     {
-      title: "New Leads",
+      title: t("dashboard.newLeads"),
       value: leads ? String(leads.created ?? 0) : NO_DATA, // leads.created (in period)
-      subtext: "Leads created in period",
+      subtext: t("dashboard.leadsCreatedInPeriod"),
       icon: <Users size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
       intime: period,
     },
     {
-      title: "Active Deals",
+      title: t("dashboard.activeDeals"),
       value: teamStats ? money(teamStats.totalPipeline) : NO_DATA, // teamStats.totalPipeline (real pipeline value)
-      subtext: teamStats ? "Active pipeline value" : "No deal-value data available",
+      subtext: teamStats ? t("dashboard.activePipelineValue") : t("dashboard.noDealValueData"),
       icon: <Briefcase size={16} className="text-purple" />,
       iconBg: "bg-light-purple",
       intime: period,
     },
     {
-      title: "Revenue",
+      title: t("dashboard.revenue"),
       value: teamStats ? money(teamStats.revenue) : NO_DATA, // teamStats.revenue (real won-deal value)
-      subtext: teamStats ? "Revenue from won deals" : "No revenue data available",
+      subtext: teamStats ? t("dashboard.revenueFromWonDeals") : t("dashboard.noRevenueData"),
       icon: <DollarSign size={16} className="text-green" />,
       iconBg: "bg-light-green",
       intime: period,
     },
     {
-      title: "Conversion Rate",
+      title: t("dashboard.conversionRate"),
       value: leads ? `${Number(leads.conversionRate || 0).toFixed(1)}%` : NO_DATA, // leads.conversionRate
-      subtext: "Converted vs total leads",
+      subtext: t("dashboard.convertedVsTotalLeads"),
       icon: <Percent size={16} className="text-orange" />,
       iconBg: "bg-light-orange",
       intime: period,
     },
     {
-      title: "AI Conversations",
+      title: t("dashboard.aiConversations"),
       value: metrics ? String(metrics.conversations_total ?? 0) : NO_DATA, // metrics.conversations_total
-      subtext: "Total conversations",
+      subtext: t("dashboard.totalConversations"),
       icon: <MessageCircle size={16} className="text-royal-blue" />,
       iconBg: "bg-light-blue",
-      intime: "All time",
+      intime: t("dashboard.allTime"),
     },
     {
-      title: "Appointments",
+      title: t("dashboard.appointments"),
       value: calStats ? String(calStats.total ?? 0) : NO_DATA, // calStats.total (team calendar)
       subtext: calStats
-        ? `${calStats.confirmed ?? 0} confirmed · ${calStats.pending ?? 0} pending`
-        : "No appointment data available",
+        ? t("dashboard.confirmedPending", { confirmed: calStats.confirmed ?? 0, pending: calStats.pending ?? 0 })
+        : t("dashboard.noAppointmentData"),
       icon: <Calendar size={16} className="text-green" />,
       iconBg: "bg-light-green",
-      intime: "All time",
+      intime: t("dashboard.allTime"),
     },
   ];
 
   // SECONDARY KPI CARDS – only Follow-up Completion has an honest derivation.
   const secondaryKpis = [
     {
-      title: "First Response Time",
+      title: t("dashboard.firstResponseTime"),
       value: NO_DATA, // no source
       icon: <Clock3 size={16} className="text-royal-blue" />,
       intime: period,
     },
     {
-      title: "Follow-up Completion",
+      title: t("dashboard.followUpCompletion"),
       value: followUpPct, // derived: contacted / total leads
       icon: <CheckCircle2 size={16} className="text-green" />,
       intime: period,
     },
     {
-      title: "Lead Quality Score",
+      title: t("dashboard.leadQualityScore"),
       value: NO_DATA, // no source
       icon: <Award size={16} className="text-purple" />,
       intime: period,
     },
     {
-      title: "Pipeline Velocity",
+      title: t("dashboard.pipelineVelocity"),
       value: NO_DATA, // no source
       icon: <Activity size={16} className="text-royal-blue" />,
       intime: period,
     },
     {
-      title: "Revenue at Risk",
+      title: t("dashboard.revenueAtRisk"),
       value: NO_DATA, // no money source
       icon: <AlertTriangle size={16} className="text-orange" />,
       intime: period,
     },
     {
-      title: "WhatsApp Response",
+      title: t("dashboard.whatsappResponse"),
       value: NO_DATA, // no source
       icon: <MessageCircle size={16} className="text-green" />,
       intime: period,
@@ -360,7 +362,7 @@ export default function CortexaDashboard() {
   // AI Priority Queue => real owner leads (already sorted HOT-first by the API),
   // with their real AI score, label and name.
   const priorityQueue = (leadsList || []).slice(0, 5).map((l) => {
-    const name = l?.name || "Unnamed Lead";
+    const name = l?.name || t("dashboard.unnamedLead");
     return {
       name,
       intent: l?.aiScoreLabel || l?.aiTier || l?.status || NO_DATA,
@@ -373,7 +375,7 @@ export default function CortexaDashboard() {
   // Today's Revenue Risk => honest lead-based risk signals from real counts.
   const riskRows = [
     {
-      title: "Unanswered conversations",
+      title: t("dashboard.unansweredConversations"),
       count:
         metrics?.conversations_unread != null
           ? metrics.conversations_unread
@@ -381,19 +383,19 @@ export default function CortexaDashboard() {
       icon: <MessageCircle size={12} className="text-green" />,
     },
     {
-      title: "New leads awaiting first contact",
+      title: t("dashboard.newLeadsAwaitingContact"),
       count: byStatus?.new != null ? byStatus.new : NO_DATA,
       icon: <Clock3 size={12} className="text-muted" />,
     },
     {
-      title: "Leads not yet qualified",
+      title: t("dashboard.leadsNotYetQualified"),
       count: byStatus
         ? (byStatus.new || 0) + (byStatus.contacted || 0)
         : NO_DATA,
       icon: <Layers size={12} className="text-muted" />,
     },
     {
-      title: "Leads marked lost",
+      title: t("dashboard.leadsMarkedLost"),
       count: byStatus?.lost != null ? byStatus.lost : NO_DATA,
       icon: <AlertTriangle size={12} className="text-orange" />,
     },
@@ -401,13 +403,13 @@ export default function CortexaDashboard() {
 
   // Live AI Tracking => real recent activity feed.
   const trackingLogs = (recentActivity || []).slice(0, 6).map((a) => ({
-    text: a?.label || a?.type || "Activity",
-    time: relativeTime(a?.timestamp),
+    text: a?.label || a?.type || t("dashboard.activityDefault"),
+    time: relativeTime(a?.timestamp, t),
   }));
 
   // Upcoming Closings => real future appointments (next 30 days), team-scoped.
   const upcomingList = (upcoming || []).slice(0, 5).map((a) => ({
-    title: a?.title || a?.attendeeName || "Appointment",
+    title: a?.title || a?.attendeeName || t("dashboard.appointmentDefault"),
     when: shortDate(a?.startAt),
     status: a?.status || NO_DATA,
   }));
@@ -415,11 +417,11 @@ export default function CortexaDashboard() {
   // Pipeline Funnel => real lead funnel from leads.byStatus.
   const funnelStages = leads
     ? [
-        { stage: "Leads", count: totalLeads },
-        { stage: "Contacted", count: byStatus?.contacted || 0 },
-        { stage: "Qualified", count: byStatus?.qualified || 0 },
-        { stage: "Converted", count: byStatus?.converted || 0 },
-        { stage: "Lost", count: byStatus?.lost || 0 },
+        { stage: t("dashboard.funnelLeads"), count: totalLeads },
+        { stage: t("dashboard.contactedLabel"), count: byStatus?.contacted || 0 },
+        { stage: t("dashboard.statusQualified"), count: byStatus?.qualified || 0 },
+        { stage: t("dashboard.statusConverted"), count: byStatus?.converted || 0 },
+        { stage: t("dashboard.statusLost"), count: byStatus?.lost || 0 },
       ]
     : [];
   const funnelMax = Math.max(1, ...funnelStages.map((s) => s.count));
@@ -427,7 +429,7 @@ export default function CortexaDashboard() {
   // Automation Health => real metric counts (honest labels).
   const automationHealth = [
     {
-      label: "AI Actions Today",
+      label: t("dashboard.aiActionsToday"),
       status:
         metrics?.ai_actions_today != null
           ? String(metrics.ai_actions_today)
@@ -436,13 +438,13 @@ export default function CortexaDashboard() {
       icon: <Zap size={12} className="text-royal-blue" />,
     },
     {
-      label: "Follow-ups Completed",
+      label: t("dashboard.followUpsCompleted"),
       status: followUpPct,
       color: "green",
       icon: <Activity size={12} className="text-royal-blue" />,
     },
     {
-      label: "Unread Conversations",
+      label: t("dashboard.unreadConversations"),
       status:
         metrics?.conversations_unread != null
           ? String(metrics.conversations_unread)
@@ -451,14 +453,14 @@ export default function CortexaDashboard() {
       icon: <MessageCircle size={12} className="text-orange" />,
     },
     {
-      label: "Total Activities (period)",
+      label: t("dashboard.totalActivitiesPeriod"),
       status:
         activity?.totalEvents != null ? String(activity.totalEvents) : NO_DATA,
       color: "gray",
       icon: <FileText size={12} className="text-muted" />,
     },
     {
-      label: "Active Leads",
+      label: t("dashboard.activeLeads"),
       status:
         metrics?.leads_active != null ? String(metrics.leads_active) : NO_DATA,
       color: "green",
@@ -471,9 +473,9 @@ export default function CortexaDashboard() {
     .filter((l) => l?.recommendedAction)
     .slice(0, 4)
     .map((l) => ({
-      text: `${l.recommendedAction} — ${l.name || "Unnamed Lead"}`,
+      text: `${l.recommendedAction} — ${l.name || t("dashboard.unnamedLead")}`,
       urgent: l?.aiTier === "HOT",
-      time: l?.followUpRecommended ? "Follow-up due" : period,
+      time: l?.followUpRecommended ? t("dashboard.followUpDue") : period,
     }));
 
   // AI Action Center counters (real, only when lead data is available).
@@ -490,37 +492,37 @@ export default function CortexaDashboard() {
   // breakdown, lead sources, activity-by-day). No fabricated values.
   const exportData = () => {
     const rows = [];
-    rows.push(["Cortexa Dashboard Export"]);
-    rows.push(["Period", period]);
-    rows.push(["Generated", new Date().toISOString()]);
+    rows.push([t("dashboard.csvExportTitle")]);
+    rows.push([t("dashboard.csvPeriod"), period]);
+    rows.push([t("dashboard.csvGenerated"), new Date().toISOString()]);
     rows.push([]);
 
-    rows.push(["KPI", "Value", "Window"]);
+    rows.push([t("dashboard.csvKpi"), t("dashboard.csvValue"), t("dashboard.csvWindow")]);
     [...miniKpis, ...secondaryKpis].forEach((k) =>
       rows.push([k.title, k.value, k.intime || ""]),
     );
     rows.push([]);
 
-    rows.push(["Lead Status", "Count"]);
+    rows.push([t("dashboard.csvLeadStatus"), t("dashboard.csvCount")]);
     if (byStatus) {
-      rows.push(["Total", totalLeads]);
-      rows.push(["New", byStatus.new || 0]);
-      rows.push(["Contacted", byStatus.contacted || 0]);
-      rows.push(["Qualified", byStatus.qualified || 0]);
-      rows.push(["Converted", byStatus.converted || 0]);
-      rows.push(["Lost", byStatus.lost || 0]);
+      rows.push([t("dashboard.csvTotal"), totalLeads]);
+      rows.push([t("dashboard.statusNew"), byStatus.new || 0]);
+      rows.push([t("dashboard.contactedLabel"), byStatus.contacted || 0]);
+      rows.push([t("dashboard.statusQualified"), byStatus.qualified || 0]);
+      rows.push([t("dashboard.statusConverted"), byStatus.converted || 0]);
+      rows.push([t("dashboard.statusLost"), byStatus.lost || 0]);
     } else {
-      rows.push(["No lead status data", ""]);
+      rows.push([t("dashboard.csvNoLeadStatusData"), ""]);
     }
     rows.push([]);
 
-    rows.push(["Lead Source", "Leads"]);
-    if (leadSources.length === 0) rows.push(["No lead source data", ""]);
+    rows.push([t("dashboard.csvLeadSource"), t("dashboard.funnelLeads")]);
+    if (leadSources.length === 0) rows.push([t("dashboard.noLeadSourceData"), ""]);
     leadSources.forEach((s) => rows.push([s.source, s.leads]));
     rows.push([]);
 
-    rows.push(["Date", "Activity Events"]);
-    if (eventsByDay.length === 0) rows.push(["No activity in period", ""]);
+    rows.push([t("dashboard.csvDate"), t("dashboard.csvActivityEvents")]);
+    if (eventsByDay.length === 0) rows.push([t("dashboard.csvNoActivityInPeriod"), ""]);
     eventsByDay.forEach((d) => rows.push([d.date, d.count]));
 
     downloadCsv(`cortexa-dashboard-${range}.csv`, rows);
@@ -558,10 +560,10 @@ export default function CortexaDashboard() {
     <div className="dashboard-container dashboard-page">
       <div className="heading_page">
         <Layers className="header-icon" size={20} />
-        <h1>Dashboard Overview</h1>
+        <h1>{t("dashboard.dashboardOverview")}</h1>
       </div>
       <p className="sub_head">
-        Real-time overview of your pipeline, performance, and AI activity.
+        {t("dashboard.subheading")}
       </p>
       <header className="dashboard-header">
         <div className="header-actions">
@@ -581,9 +583,9 @@ export default function CortexaDashboard() {
                     color: "inherit",
                   }}
                 >
-                  <option value="today">Today</option>
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
+                  <option value="today">{t("dashboard.periodToday")}</option>
+                  <option value="7d">{t("dashboard.periodLast7Days")}</option>
+                  <option value="30d">{t("dashboard.periodLast30Days")}</option>
                 </select>
               </div>
 
@@ -608,9 +610,9 @@ export default function CortexaDashboard() {
                     color: "inherit",
                   }}
                 >
-                  <option value="today">Today</option>
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
+                  <option value="today">{t("dashboard.periodToday")}</option>
+                  <option value="7d">{t("dashboard.periodLast7Days")}</option>
+                  <option value="30d">{t("dashboard.periodLast30Days")}</option>
                 </select>
               </div>
 
@@ -620,7 +622,7 @@ export default function CortexaDashboard() {
                 style={{ cursor: "pointer" }}
               >
                 <SlidersHorizontal size={15} />
-                <span>Filters</span>
+                <span>{t("dashboard.filters")}</span>
               </div>
 
               {/*<div className="notification-icon">
@@ -630,7 +632,7 @@ export default function CortexaDashboard() {
 
               <button className="btn-export" onClick={exportData}>
                 <Download size={15} />
-                Export
+                {t("dashboard.export")}
                 <ChevronDown size={14} />
               </button>
             </>
@@ -646,7 +648,7 @@ export default function CortexaDashboard() {
 
           <div className="mobile-filter-drawer">
             <div className="drawer-header">
-              <h3>Filters</h3>
+              <h3>{t("dashboard.filters")}</h3>
 
               <button
                 className="drawer-close"
@@ -665,7 +667,7 @@ export default function CortexaDashboard() {
                 }}
               >
                 <Download size={15} />
-                Export
+                {t("dashboard.export")}
                 <ChevronDown size={14} />
               </button>
             </div>
@@ -675,7 +677,7 @@ export default function CortexaDashboard() {
 
       {loading && (
         <div style={infoStyle}>
-          <RefreshCw size={14} /> Loading dashboard…
+          <RefreshCw size={14} /> {t("dashboard.loadingDashboard")}
         </div>
       )}
       {error && (
@@ -691,30 +693,30 @@ export default function CortexaDashboard() {
             <div className="ai-bot-icon">🤖</div>
           </div>
           <div className="ai-message-ctx">
-            <span>AI Command Center</span>
+            <span>{t("dashboard.aiCommandCenter")}</span>
             <h2>
-              You have{" "}
+              {t("dashboard.bannerYouHave")}{" "}
               <span className="highlight-blue">
                 {bannerNewLeads != null ? bannerNewLeads : NO_DATA}
               </span>{" "}
-              new leads to review.
+              {t("dashboard.bannerNewLeadsToReview")}
             </h2>
             <p>
-              Next best action:{" "}
+              {t("dashboard.nextBestActionLabel")}{" "}
               <span
                 className="clickable-link"
                 style={{ cursor: "pointer" }}
                 onClick={() => navigate("/dashboard/leads")}
               >
-                follow up with your newest leads
+                {t("dashboard.followUpNewestLeads")}
               </span>
             </p>
             <div className="banner-alert-tag">
               {!metrics
-                ? "Live pipeline overview"
+                ? t("dashboard.livePipelineOverview")
                 : metrics.conversations_unread > 0
-                  ? `💬 ${metrics.conversations_unread} unread conversations need a reply`
-                  : "✅ You're all caught up on conversations"}
+                  ? t("dashboard.unreadConversationsNeedReply", { unread: metrics.conversations_unread })
+                  : t("dashboard.allCaughtUp")}
             </div>
           </div>
         </div>
@@ -722,13 +724,13 @@ export default function CortexaDashboard() {
         <div className="banner-right">
           <div className="banner-right-top">
             <div className="mini-insight-card">
-              <div className="card-lbl">AI Confidence</div>
+              <div className="card-lbl">{t("dashboard.aiConfidence")}</div>
               <div className="card-val-group">
                 <h3 className="text-green">{NO_DATA}</h3>
               </div>
             </div>
             <div className="mini-insight-card">
-              <div className="card-lbl">Revenue at Risk</div>
+              <div className="card-lbl">{t("dashboard.revenueAtRisk")}</div>
               <div className="card-val-group">
                 <h3 className="text-orange">{NO_DATA}</h3>
               </div>
@@ -736,8 +738,8 @@ export default function CortexaDashboard() {
             <div className="mini-insight-card next-action-card">
               <Phone size={16} />
               <div>
-                <div className="card-lbl">Next Best Action</div>
-                <h4>Follow up with new leads</h4>
+                <div className="card-lbl">{t("dashboard.nextBestAction")}</div>
+                <h4>{t("dashboard.followUpWithNewLeads")}</h4>
               </div>
             </div>
           </div>
@@ -746,7 +748,7 @@ export default function CortexaDashboard() {
               className="banner-btn text-dark"
               onClick={() => navigate("/dashboard/leads")}
             >
-              <Phone size={16} /> Call
+              <Phone size={16} /> {t("dashboard.call")}
             </button>
             <button
               className="banner-btn btn-whatsapp-color"
@@ -758,13 +760,13 @@ export default function CortexaDashboard() {
               className="banner-btn btn-assign-color"
               onClick={() => navigate("/dashboard/team")}
             >
-              <Users size={16} /> Assign
+              <Users size={16} /> {t("dashboard.assign")}
             </button>
             <button
               className="banner-btn btn-followup-color"
               onClick={() => navigate("/dashboard/leads")}
             >
-              <Calendar size={16} /> Follow-up
+              <Calendar size={16} /> {t("dashboard.followUp")}
             </button>
           </div>
         </div>
@@ -833,7 +835,7 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <TrendingUp size={16} className="text-royal-blue" />
-              <h3>Lead Activity Trend</h3>
+              <h3>{t("dashboard.leadActivityTrend")}</h3>
             </div>
           </div>
           <div className="chart-viewbox">
@@ -847,7 +849,7 @@ export default function CortexaDashboard() {
                   justifyContent: "center",
                 }}
               >
-                No activity in this period
+                {t("dashboard.noActivityInThisPeriod")}
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={180}>
@@ -898,14 +900,14 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <Target size={16} className="text-royal-blue" />
-              <h3>Lead Source Performance</h3>
+              <h3>{t("dashboard.leadSourcePerformance")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/dashboard/leads")}
             >
-              View All Sources →
+              {t("dashboard.viewAllSources")} →
             </a>
           </div>
           <div className="split-layout-grid">
@@ -920,7 +922,7 @@ export default function CortexaDashboard() {
                     justifyContent: "center",
                   }}
                 >
-                  No lead source data
+                  {t("dashboard.noLeadSourceData")}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height={195}>
@@ -957,12 +959,12 @@ export default function CortexaDashboard() {
             </div>
             <div className="table-list-half">
               <div className="list-tbl-header">
-                <span>Source</span>
-                <span className="text-right">Conv.</span>
-                <span className="text-right">Revenue</span>
+                <span>{t("dashboard.sourceHeader")}</span>
+                <span className="text-right">{t("dashboard.convHeader")}</span>
+                <span className="text-right">{t("dashboard.revenue")}</span>
               </div>
               {leadSources.length === 0 ? (
-                <span style={emptyStyle}>No lead source data</span>
+                <span style={emptyStyle}>{t("dashboard.noLeadSourceData")}</span>
               ) : (
                 leadSources.map((item, idx) => (
                   <div key={idx} className="list-tbl-row">
@@ -987,25 +989,25 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <Zap size={16} className="text-orange" />
-              <h3>AI Priority Queue</h3>
+              <h3>{t("dashboard.aiPriorityQueue")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/dashboard/leads")}
             >
-              View All →
+              {t("dashboard.viewAll")} →
             </a>
           </div>
           <div className="queue-list-wrapper">
             <div className="list-tbl-header">
-              <span>Lead</span>
-              <span className="text-left">Intent</span>
-              <span className="text-left">Probability</span>
-              <span>Next Action</span>
+              <span>{t("dashboard.leadHeader")}</span>
+              <span className="text-left">{t("dashboard.intentHeader")}</span>
+              <span className="text-left">{t("dashboard.probabilityHeader")}</span>
+              <span>{t("dashboard.nextActionHeader")}</span>
             </div>
             {priorityQueue.length === 0 ? (
-              <span style={emptyStyle}>No leads available</span>
+              <span style={emptyStyle}>{t("dashboard.noLeadsAvailable")}</span>
             ) : (
               priorityQueue.map((lead, idx) => (
                 <div key={idx} className="queue-item-row">
@@ -1064,14 +1066,14 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <AlertTriangle size={16} className="text-red" />
-              <h3>Today's Revenue Risk</h3>
+              <h3>{t("dashboard.todaysRevenueRisk")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/dashboard/leads")}
             >
-              View All →
+              {t("dashboard.viewAll")} →
             </a>
           </div>
           <div className="risk-alerts-list">
@@ -1091,19 +1093,19 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <ShieldCheck size={16} className="text-royal-blue" />
-              <h3>Live AI Tracking</h3>
+              <h3>{t("dashboard.liveAiTracking")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/dashboard/whatsapp")}
             >
-              View All →
+              {t("dashboard.viewAll")} →
             </a>
           </div>
           <div className="tracking-timeline-list">
             {trackingLogs.length === 0 ? (
-              <span style={emptyStyle}>No recent activity</span>
+              <span style={emptyStyle}>{t("dashboard.noRecentActivity")}</span>
             ) : (
               trackingLogs.map((log, idx) => (
                 <div key={idx} className="timeline-item-row">
@@ -1121,24 +1123,24 @@ export default function CortexaDashboard() {
           <div className="card-top-header">
             <div className="title-left">
               <Briefcase size={16} className="text-royal-blue" />
-              <h3>Active Deals by Stage</h3>
+              <h3>{t("dashboard.activeDealsByStage")}</h3>
             </div>
             <a
               className="card-text-link"
               style={{ cursor: "pointer" }}
               onClick={() => navigate("/dashboard/pipeline")}
             >
-              View Pipeline →
+              {t("dashboard.viewPipeline")} →
             </a>
           </div>
           <div className="deals-by-stage-box">
             <div className="stage-stats-columns">
               {[
-                { name: "New" },
-                { name: "Qualified" },
-                { name: "Showing" },
-                { name: "Offer" },
-                { name: "Closed" },
+                { name: t("dashboard.statusNew") },
+                { name: t("dashboard.statusQualified") },
+                { name: t("dashboard.stageShowing") },
+                { name: t("dashboard.stageOffer") },
+                { name: t("dashboard.stageClosed") },
               ].map((stage, idx) => (
                 <div key={idx} className="stage-column-item">
                   <span className="stage-head-lbl">{stage.name}</span>
@@ -1172,11 +1174,11 @@ export default function CortexaDashboard() {
         <div className="content-card">
           <div className="card-top-header">
             <AlertTriangle size={18} />
-            <h5>Pipeline Funnel</h5>
+            <h5>{t("dashboard.pipelineFunnel")}</h5>
           </div>
           <div className="funnel-vertical-stack">
             {funnelStages.length === 0 ? (
-              <span style={emptyStyle}>No lead data</span>
+              <span style={emptyStyle}>{t("dashboard.noLeadData")}</span>
             ) : (
               funnelStages.map((item, idx) => {
                 const percent =
@@ -1208,7 +1210,7 @@ export default function CortexaDashboard() {
         <div className="content-card">
           <div className="card-top-header">
             <Clock3 size={16} />
-            <h5>Automation Health</h5>
+            <h5>{t("dashboard.automationHealthTitle")}</h5>
           </div>
           <div className="health-status-list">
             {automationHealth.map((health, idx) => (
@@ -1228,11 +1230,11 @@ export default function CortexaDashboard() {
         <div className="content-card">
           <div className="card-top-header">
             <Shuffle size={16} />
-            <h5>Next Actions</h5>
+            <h5>{t("dashboard.nextActionsTitle")}</h5>
           </div>
           <div className="action-todo-list">
             {nextActions.length === 0 ? (
-              <span style={emptyStyle}>No recommended actions</span>
+              <span style={emptyStyle}>{t("dashboard.noRecommendedActions")}</span>
             ) : (
               nextActions.map((action, idx) => (
                 <div key={idx} className="todo-row-item">
@@ -1245,7 +1247,7 @@ export default function CortexaDashboard() {
                       />{" "}
                       {action.text}
                     </span>
-                    {action.urgent && <span className="tag-urgent">Urgent</span>}
+                    {action.urgent && <span className="tag-urgent">{t("dashboard.urgent")}</span>}
                   </div>
                   <span className="todo-time">{action.time}</span>
                 </div>
@@ -1258,11 +1260,11 @@ export default function CortexaDashboard() {
         <div className="content-card">
           <div className="card-top-header ">
             <Calendar size={12} />
-            <h5>Upcoming Closings</h5>
+            <h5>{t("dashboard.upcomingClosings")}</h5>
           </div>
           <div className="closing-list-wrapper">
             {upcomingList.length === 0 ? (
-              <span style={emptyStyle}>No upcoming closings</span>
+              <span style={emptyStyle}>{t("dashboard.noUpcomingClosings")}</span>
             ) : (
               upcomingList.map((item, idx) => (
                 <div key={idx} className="todo-row-item">
@@ -1291,19 +1293,18 @@ export default function CortexaDashboard() {
           <div className="dark-card-body">
             <div className="card-head-title">
               <Zap size={16} className="text-orange" />
-              <h4>AI Action Center</h4>
+              <h4>{t("dashboard.aiActionCenter")}</h4>
             </div>
             <p className="dark-card-desc">
-              Cortexa analyzes your pipeline, detects risks, and recommends
-              actions to close more deals.
+              {t("dashboard.aiActionCenterDesc")}
             </p>
             <div className="dark-card-counter-row">
               <div className="counter-box">
-                <span>Recommends Actions</span>
+                <span>{t("dashboard.recommendsActions")}</span>
                 <h3>{hasLeads ? recommendedCount : NO_DATA}</h3>
               </div>
               <div className="counter-box urgent-border">
-                <span className="text-red">Urgent Tasks</span>
+                <span className="text-red">{t("dashboard.urgentTasks")}</span>
                 <h3 className="text-red">{hasLeads ? urgentCount : NO_DATA}</h3>
               </div>
             </div>
@@ -1312,7 +1313,7 @@ export default function CortexaDashboard() {
               onClick={refresh}
               disabled={loading}
             >
-              Run AI Dashboard Review <Zap size={14} fill="currentColor" />
+              {t("dashboard.runAiDashboardReview")} <Zap size={14} fill="currentColor" />
             </button>
           </div>
         </div>

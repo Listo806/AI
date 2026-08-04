@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Common.css";
 import apiClient from '../../api/apiClient';
 
 const API_BASE = "https://backend.cortexaaicrm.com";
 const STORAGE_PREFIX = 'listo_';
 export default function Onboarding() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +46,7 @@ export default function Onboarding() {
         }
       } catch (err) {
         console.error("CHECK USER ERROR:", err);
-        setError("Unable to load onboarding. Please refresh.");
+        setError(t("onboarding.loadError"));
       }
     };
 
@@ -77,7 +79,7 @@ export default function Onboarding() {
 
   const nextStep = () => {
     if (!canContinue()) {
-      setError("Please make a selection to continue.");
+      setError(t("onboarding.selectToContinue"));
       return;
     }
 
@@ -124,11 +126,11 @@ export default function Onboarding() {
 
           navigate("/dashboard");
       } else {
-        setError(data.message || "Could not save onboarding.");
+        setError(data.message || t("onboarding.saveError"));
       }
     } catch (err) {
       console.error("SAVE ONBOARDING ERROR:", err);
-      setError("Server error. Please try again.");
+      setError(t("onboarding.serverError"));
     } finally {
       setLoading(false);
     }
@@ -142,23 +144,23 @@ export default function Onboarding() {
     <div className="onboarding-page">
       <div className="container">
 
-        <h1>Setup your AI CRM</h1>
+        <h1>{t("onboarding.title")}</h1>
 
         {/* STEP 1 */}
         {step === 1 && (
           <div>
-            <h2>What type of business are you?</h2>
+            <h2>{t("onboarding.step1Question")}</h2>
 
             <button onClick={() => setForm({ ...form, businessType: "real_estate" })}>
-              Real Estate
+              {t("onboarding.businessRealEstate")}
             </button>
 
             <button onClick={() => setForm({ ...form, businessType: "agency" })}>
-              Agency
+              {t("onboarding.businessAgency")}
             </button>
 
             <button onClick={() => setForm({ ...form, businessType: "solo" })}>
-              Solo Agent
+              {t("onboarding.businessSolo")}
             </button>
           </div>
         )}
@@ -166,22 +168,22 @@ export default function Onboarding() {
         {/* STEP 2 */}
         {step === 2 && (
           <div>
-            <h2>Where do your leads come from?</h2>
+            <h2>{t("onboarding.step2Question")}</h2>
 
             <button onClick={() => toggleLeadSource("facebook")}>
-              Facebook
+              {t("onboarding.sourceFacebook")}
             </button>
 
             <button onClick={() => toggleLeadSource("zillow")}>
-              Zillow
+              {t("onboarding.sourceZillow")}
             </button>
 
             <button onClick={() => toggleLeadSource("website")}>
-              Website
+              {t("onboarding.sourceWebsite")}
             </button>
 
             <button onClick={() => toggleLeadSource("referrals")}>
-              Referrals
+              {t("onboarding.sourceReferrals")}
             </button>
           </div>
         )}
@@ -189,11 +191,11 @@ export default function Onboarding() {
         {/* STEP 3 */}
         {step === 3 && (
           <div>
-            <h2>What is your main goal?</h2>
+            <h2>{t("onboarding.step3Question")}</h2>
 
             <input
               type="text"
-              placeholder="e.g. Close more deals"
+              placeholder={t("onboarding.mainGoalPlaceholder")}
               value={form.mainGoal}
               onChange={(e) =>
                 setForm({ ...form, mainGoal: e.target.value })
@@ -205,10 +207,10 @@ export default function Onboarding() {
         {/* STEP 4 */}
         {step === 4 && (
           <div>
-            <h2>Ready to launch 🚀</h2>
+            <h2>{t("onboarding.step4Title")}</h2>
 
             <button onClick={handleFinish} disabled={loading}>
-              {loading ? "Saving..." : "Finish Setup"}
+              {loading ? t("onboarding.saving") : t("onboarding.finishSetup")}
             </button>
           </div>
         )}
@@ -216,7 +218,7 @@ export default function Onboarding() {
         {/* NAVIGATION */}
         {step < 4 && (
           <button onClick={nextStep}>
-            Continue
+            {t("onboarding.continue")}
           </button>
         )}
 

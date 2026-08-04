@@ -2,10 +2,13 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
 export default function TiktokPage() {
+  const { t } = useTranslation();
+
   const [loading, setLoading] =
     useState(true);
 
@@ -74,7 +77,7 @@ export default function TiktokPage() {
     try {
       if (!form.appId) {
         showToast(
-          "App ID required",
+          t("integrations.tiktok.appIdRequired"),
           "error",
         );
 
@@ -93,13 +96,13 @@ export default function TiktokPage() {
       );
 
       showToast(
-        "TikTok integration saved",
+        t("integrations.tiktok.saved"),
       );
     } catch (err) {
       console.error(err);
 
       showToast(
-        "Failed to save integration",
+        t("integrations.tiktok.saveError"),
         "error",
       );
     } finally {
@@ -119,13 +122,13 @@ export default function TiktokPage() {
       );
 
       showToast(
-        "TikTok lead sync started",
+        t("integrations.tiktok.syncStarted"),
       );
     } catch (err) {
       console.error(err);
 
       showToast(
-        "Failed to sync leads",
+        t("integrations.tiktok.syncError"),
         "error",
       );
     } finally {
@@ -134,7 +137,7 @@ export default function TiktokPage() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t("integrations.tiktok.loading")}</div>;
   }
 
   return (
@@ -153,18 +156,17 @@ export default function TiktokPage() {
       >
         <div style={card}>
           <h1 style={title}>
-            TikTok Lead Sync
+            {t("integrations.tiktok.title")}
           </h1>
 
           <p style={desc}>
-            Capture TikTok leads directly
-            into your CRM.
+            {t("integrations.tiktok.subtitle")}
           </p>
 
           <div style={grid}>
             <div>
               <div style={label}>
-                TikTok App ID
+                {t("integrations.tiktok.appId")}
               </div>
 
               <input
@@ -182,7 +184,7 @@ export default function TiktokPage() {
 
             <div>
               <div style={label}>
-                App Secret
+                {t("integrations.tiktok.appSecret")}
               </div>
 
               <input
@@ -206,7 +208,7 @@ export default function TiktokPage() {
               }}
             >
               <div style={label}>
-                Access Token
+                {t("integrations.tiktok.accessToken")}
               </div>
 
               <input
@@ -226,7 +228,7 @@ export default function TiktokPage() {
 
             <div>
               <div style={label}>
-                Advertiser ID
+                {t("integrations.tiktok.advertiserId")}
               </div>
 
               <input
@@ -246,7 +248,7 @@ export default function TiktokPage() {
 
             <div>
               <div style={label}>
-                Sync Frequency
+                {t("integrations.tiktok.syncFrequency")}
               </div>
 
               <input
@@ -281,7 +283,7 @@ export default function TiktokPage() {
               />
 
               <span>
-                Enable Lead Sync
+                {t("integrations.tiktok.enableLeadSync")}
               </span>
             </label>
 
@@ -301,7 +303,7 @@ export default function TiktokPage() {
               />
 
               <span>
-                Automatic Sync
+                {t("integrations.tiktok.automaticSync")}
               </span>
             </label>
           </div>
@@ -318,8 +320,8 @@ export default function TiktokPage() {
               onClick={save}
             >
               {saving
-                ? "Saving..."
-                : "Save Settings"}
+                ? t("integrations.tiktok.saving")
+                : t("integrations.tiktok.saveSettings")}
             </button>
 
             <button
@@ -327,8 +329,8 @@ export default function TiktokPage() {
               onClick={syncNow}
             >
               {syncing
-                ? "Syncing..."
-                : "Sync Leads"}
+                ? t("integrations.tiktok.syncing")
+                : t("integrations.tiktok.syncLeads")}
             </button>
           </div>
         </div>

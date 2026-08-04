@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
 import { trackEvent, trackSignupConversion } from '../../utils/track';
 import './Auth.css';
 
 const ROLE_OPTIONS = [
-  { value: 'user', label: 'User (submit marketplace listings)' },
-  { value: 'agent', label: 'Agent' },
-  { value: 'owner', label: 'Owner' },
-  { value: 'va_uploader', label: 'VA Uploader' },
+  { value: 'user', labelKey: 'auth.roleUser' },
+  { value: 'agent', labelKey: 'auth.roleAgent' },
+  { value: 'owner', labelKey: 'auth.roleOwner' },
+  { value: 'va_uploader', labelKey: 'auth.roleVaUploader' },
 ];
 
 export default function SignUp() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('user');
@@ -44,10 +46,10 @@ export default function SignUp() {
         });
         return;
       } else {
-        setError('Signup completed but no token received. Please sign in.');
+        setError(t('auth.signupNoToken'));
       }
     } catch (err) {
-      setError(err.message || 'Sign up failed');
+      setError(err.message || t('auth.signupFailed'));
     } finally {
       setLoading(false);
     }
@@ -56,34 +58,34 @@ export default function SignUp() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-badge">Marketplace</div>
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Sign up to submit listings to the marketplace.</p>
+        <div className="auth-badge">{t('auth.badge')}</div>
+        <h1 className="auth-title">{t('auth.title')}</h1>
+        <p className="auth-subtitle">{t('auth.subtitle')}</p>
 
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="auth-field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.emailLabel')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder={t('auth.emailPlaceholder')}
               required
               disabled={loading}
             />
           </div>
 
           <div className="auth-field">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.passwordLabel')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 6 characters"
+              placeholder={t('auth.passwordPlaceholder')}
               required
               minLength={6}
               disabled={loading}
@@ -91,7 +93,7 @@ export default function SignUp() {
           </div>
 
           <div className="auth-field">
-            <label htmlFor="role">Role</label>
+            <label htmlFor="role">{t('auth.roleLabel')}</label>
             <select
               id="role"
               value={role}
@@ -99,18 +101,18 @@ export default function SignUp() {
               disabled={loading}
             >
               {ROLE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
               ))}
             </select>
           </div>
 
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? 'Creating account...' : 'Sign Up'}
+            {loading ? t('auth.creatingAccount') : t('auth.signUp')}
           </button>
         </form>
 
         <p className="auth-footer" style={{ marginTop: '20px' }}>
-          Already have an account? <Link to="/sign-in">Sign In</Link>
+          {t('auth.alreadyHaveAccount')} <Link to="/sign-in">{t('auth.signIn')}</Link>
         </p>
       </div>
     </div>

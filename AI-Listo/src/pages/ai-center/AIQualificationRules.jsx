@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 import "./ai-center.css";
 
 export default function AIQualificationRules() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,7 +16,7 @@ export default function AIQualificationRules() {
         const res = await apiClient.request("/ai-center/qualification-rules");
         if (!cancelled) setData(res);
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load");
+        if (!cancelled) setError(e.message || t("aiCenter.failedToLoad"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -29,7 +31,7 @@ export default function AIQualificationRules() {
   if (loading) {
     return (
       <div className="ai-center-page">
-        <div className="ai-center-empty">Loading...</div>
+        <div className="ai-center-empty">{t("aiCenter.loading")}</div>
       </div>
     );
   }
@@ -47,23 +49,23 @@ export default function AIQualificationRules() {
     <div className="ai-center-page">
       <h1 className="ai-center-page-title">
         <i data-lucide="filter" />
-        AI Qualification Rules
+        {t("aiCenter.qualificationRulesTitle")}
       </h1>
       <p className="ai-center-page-subtitle">
-        Lead qualification logic, booking eligibility, and escalation thresholds.
+        {t("aiCenter.qualificationRulesSubtitle")}
       </p>
 
       <section className="ai-center-section">
-        <h2>Active Ruleset</h2>
+        <h2>{t("aiCenter.activeRuleset")}</h2>
         <div className="ai-center-stat-card" style={{ maxWidth: "320px" }}>
-          <div className="stat-value">{data?.name ?? "Default"}</div>
-          <div className="stat-label">Ruleset name</div>
+          <div className="stat-value">{data?.name ?? t("aiCenter.defaultRulesetName")}</div>
+          <div className="stat-label">{t("aiCenter.rulesetName")}</div>
         </div>
         <p style={{ marginTop: "16px", color: "var(--text-muted)" }}>
-          Last updated: {data?.updated_at ? new Date(data.updated_at).toLocaleString() : "—"}
+          {t("aiCenter.lastUpdated", { value: data?.updated_at ? new Date(data.updated_at).toLocaleString() : "—" })}
         </p>
         <p style={{ marginTop: "8px", fontSize: "13px", color: "var(--text-muted)" }}>
-          Used by AI Setter and qualification modules.
+          {t("aiCenter.usedByModules")}
         </p>
       </section>
     </div>

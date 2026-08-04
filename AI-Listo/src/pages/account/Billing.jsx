@@ -136,25 +136,43 @@ export default function Billing() {
   const seatLimit = subscription?.seatLimit ?? currentPlan?.seatLimit ?? null;
   const nextBillingDate = formatDate(subscription?.currentPeriodEnd);
 
+  // Localized status label; falls back to the raw formatter for any status
+  // outside the known active-like set.
+  const statusLabel = (s) => {
+    if (!s) return null;
+    if (s === "active") return t("account.billing.active");
+    if (s === "trialing") return t("account.billing.statusTrialing");
+    if (s === "past_due") return t("account.billing.statusPastDue");
+    return formatStatus(s);
+  };
+
   // Build the feature checklist from the REAL features payload (no fabricated
   // "3 users included" line — seats are shown from the real seat limit only).
   const planFeatures = [];
   if (features?.hasActiveSubscription) {
-    if (features.crmAccess) planFeatures.push("Full CRM dashboard");
-    if (features.aiFeatures) planFeatures.push("CORTEXA AI Agent");
-    if (features.aiAutomation) planFeatures.push("AI automation & follow-up");
+    if (features.crmAccess)
+      planFeatures.push(t("account.billing.featureFullCrm"));
+    if (features.aiFeatures)
+      planFeatures.push(t("account.billing.featureAiAgent"));
+    if (features.aiAutomation)
+      planFeatures.push(t("account.billing.featureAiAutomation"));
     if (features.analyticsLevel && features.analyticsLevel !== "none")
-      planFeatures.push("Analytics");
+      planFeatures.push(t("account.billing.featureAnalytics"));
     if (features.priorityExposure)
-      planFeatures.push("Priority listing exposure");
-    if (features.listingLimit === null) planFeatures.push("Unlimited listings");
+      planFeatures.push(t("account.billing.featurePriorityExposure"));
+    if (features.listingLimit === null)
+      planFeatures.push(t("account.billing.featureUnlimitedListings"));
     else if (
       typeof features.listingLimit === "number" &&
       features.listingLimit > 0
     )
-      planFeatures.push(`${features.listingLimit} listings`);
+      planFeatures.push(
+        t("account.billing.listingsCount", { count: features.listingLimit })
+      );
     if (seatLimit)
-      planFeatures.push(`${seatLimit} ${seatLimit === 1 ? "seat" : "seats"} included`);
+      planFeatures.push(
+        t("account.billing.seatsIncluded", { count: seatLimit })
+      );
   }
 
   const statusBadgeStyle =
@@ -165,9 +183,9 @@ export default function Billing() {
   return (
     <div className="billing-page">
       <div className="account-header">
-        <h1 className="account-title">Billing & Plan</h1>
+        <h1 className="account-title">{t("account.billing.title")}</h1>
         <p className="account-description">
-          Manage your CORTEXA AI CRM subscription and workspace access.
+          {t("account.billing.pageDescription")}
         </p>
       </div>
 
@@ -183,7 +201,9 @@ export default function Billing() {
             {/* SECTION 1: CURRENT PLAN */}
             <div className="billing-card current-plan-card">
               <div className="card-inner-header">
-                <span className="section-subtitle-label">Current Plan</span>
+                <span className="section-subtitle-label">
+                  {t("account.billing.currentPlan")}
+                </span>
               </div>
 
               <div className="plan-main-details">
@@ -197,19 +217,19 @@ export default function Billing() {
                     </h3>
                     {hasPlan && status && (
                       <span className="status-badge-active" style={statusBadgeStyle}>
-                        {formatStatus(status)}
+                        {statusLabel(status)}
                       </span>
                     )}
                   </div>
                   {hasPlan && planPrice && (
                     <div className="plan-price-large">
-                      {planPrice} <span>/ month</span>
+                      {planPrice} <span>/ {t("account.billing.month")}</span>
                     </div>
                   )}
                   <p className="plan-caption-text">
                     {hasPlan
-                      ? "The complete real estate CRM workspace powered by CORTEXA — built to manage leads, automate follow-up, organize deals, and help teams close more business."
-                      : "You don't have an active subscription yet. Choose a plan to unlock the full CORTEXA AI CRM workspace."}
+                      ? t("account.billing.planCaptionActive")
+                      : t("account.billing.planCaptionInactive")}
                   </p>
                 </div>
               </div>
@@ -220,9 +240,11 @@ export default function Billing() {
                     <Users size={20} className="spec-icon" />
                     <div className="spec-data">
                       <span className="spec-value">
-                        {seatLimit} {seatLimit === 1 ? "seat" : "seats"}
+                        {t("account.billing.seatsCount", { count: seatLimit })}
                       </span>
-                      <span className="spec-label">included</span>
+                      <span className="spec-label">
+                        {t("account.billing.included")}
+                      </span>
                     </div>
                   </div>
                 ) : null}
@@ -231,7 +253,9 @@ export default function Billing() {
                     <Calendar size={20} className="spec-icon" />
                     <div className="spec-data">
                       <span className="spec-value">{nextBillingDate}</span>
-                      <span className="spec-label">Next billing date</span>
+                      <span className="spec-label">
+                        {t("account.billing.nextBillingDate")}
+                      </span>
                     </div>
                   </div>
                 ) : null}
@@ -239,16 +263,24 @@ export default function Billing() {
                   <div className="spec-item">
                     <RefreshCw size={20} className="spec-icon" />
                     <div className="spec-data">
-                      <span className="spec-value">Monthly</span>
-                      <span className="spec-label">Billing cycle</span>
+                      <span className="spec-value">
+                        {t("account.billing.monthly")}
+                      </span>
+                      <span className="spec-label">
+                        {t("account.billing.billingCycle")}
+                      </span>
                     </div>
                   </div>
                 ) : null}
                 <div className="spec-item">
                   <CreditCard size={20} className="spec-icon" />
                   <div className="spec-data">
-                    <span className="spec-value">Payment method</span>
-                    <span className="spec-label">Managed securely by Paddle</span>
+                    <span className="spec-value">
+                      {t("account.billing.paymentMethodLabel")}
+                    </span>
+                    <span className="spec-label">
+                      {t("account.billing.managedByPaddle")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -256,7 +288,9 @@ export default function Billing() {
 
             {/* SECTION 2: FEATURES LIST */}
             <div className="billing-card features-list-card">
-              <h3 className="card-section-title">Features on this plan</h3>
+              <h3 className="card-section-title">
+                {t("account.billing.featuresOnPlan")}
+              </h3>
               {planFeatures.length ? (
                 <ul className="features-checklist">
                   {planFeatures.map((feat, index) => (
@@ -268,7 +302,7 @@ export default function Billing() {
                 </ul>
               ) : (
                 <p className="plan-caption-text">
-                  Plan features will appear here once your subscription is active.
+                  {t("account.billing.featuresPlaceholder")}
                 </p>
               )}
             </div>
@@ -278,22 +312,27 @@ export default function Billing() {
             {/* SECTION 3: INVOICES */}
             <div className="billing-card recent-invoices-card">
               <div className="invoices-header-row">
-                <h3 className="card-section-title">Recent Invoices</h3>
+                <h3 className="card-section-title">
+                  {t("account.billing.recentInvoices")}
+                </h3>
               </div>
 
               <p className="plan-caption-text" style={{ padding: "16px 0" }}>
-                No invoices yet. Invoices will appear here once billing runs.
+                {t("account.billing.noInvoices")}
               </p>
             </div>
 
             {/* SECTION 4: WORKSPACE ACCESS */}
             <div className="billing-card workspace-access-card">
-              <h3 className="card-section-title">Workspace Access</h3>
+              <h3 className="card-section-title">
+                {t("account.billing.workspaceAccess")}
+              </h3>
 
               <div className="access-metrics-list">
                 <div className="metric-row-item">
                   <div className="metric-label-group">
-                    <Users size={14} /> <span>Seats included</span>
+                    <Users size={14} />{" "}
+                    <span>{t("account.billing.seatsIncludedLabel")}</span>
                   </div>
                   <span className="metric-value-output">
                     {seatLimit ?? "—"}
@@ -301,14 +340,17 @@ export default function Billing() {
                 </div>
                 <div className="metric-row-item">
                   <div className="metric-label-group">
-                    <RefreshCw size={15} /> <span>Workspace status</span>
+                    <RefreshCw size={15} />{" "}
+                    <span>{t("account.billing.workspaceStatus")}</span>
                   </div>
                   {hasPlan ? (
                     <span className="badge-workspace-enabled">
-                      {formatStatus(status)}
+                      {statusLabel(status)}
                     </span>
                   ) : (
-                    <span className="metric-value-output">No active plan</span>
+                    <span className="metric-value-output">
+                      {t("account.billing.noActivePlan")}
+                    </span>
                   )}
                 </div>
               </div>
@@ -319,7 +361,8 @@ export default function Billing() {
                 onClick={() => navigate("/dashboard/team/members")}
               >
                 <div className="manage-menu-label">
-                  <Users size={16} /> <span>Manage users</span>
+                  <Users size={16} />{" "}
+                  <span>{t("account.billing.manageUsers")}</span>
                 </div>
                 <ChevronRight size={16} className="chevron-grey" />
               </button>
@@ -328,10 +371,7 @@ export default function Billing() {
             {/* GLOBAL FOOTER BANNER */}
             <div className="billing-global-footer-hint">
               <Info size={16} className="hint-icon" />
-              <p>
-                Additional billing controls will be connected once the payment
-                gateway is live.
-              </p>
+              <p>{t("account.billing.footerHint")}</p>
             </div>
           </div>
         </>

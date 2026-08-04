@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import apiClient from "../../api/apiClient";
 import "./ai-center.css";
 
 export default function AIAutoReply() {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,7 +23,7 @@ export default function AIAutoReply() {
           setTone(res?.tone ?? "professional");
         }
       } catch (e) {
-        if (!cancelled) setError(e.message || "Failed to load");
+        if (!cancelled) setError(e.message || t("aiCenter.loadError"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -42,7 +44,7 @@ export default function AIAutoReply() {
       });
       setData(res);
     } catch (e) {
-      setError(e.message || "Failed to save");
+      setError(e.message || t("aiCenter.saveError"));
     } finally {
       setSaving(false);
     }
@@ -51,7 +53,7 @@ export default function AIAutoReply() {
   if (loading) {
     return (
       <div className="ai-center-page">
-        <div className="ai-center-empty">Loading...</div>
+        <div className="ai-center-empty">{t("aiCenter.loading")}</div>
       </div>
     );
   }
@@ -69,14 +71,14 @@ export default function AIAutoReply() {
     <div className="ai-center-page">
       <h1 className="ai-center-page-title">
         <i data-lucide="message-circle" />
-        AI Auto-Reply
+        {t("aiCenter.title")}
       </h1>
       <p className="ai-center-page-subtitle">
-        Zero-config inbound AI responses. When ON, AI responds using CRM context and routes complex cases to a human.
+        {t("aiCenter.subtitle")}
       </p>
 
       <section className="ai-center-section">
-        <h2>Controls</h2>
+        <h2>{t("aiCenter.controls")}</h2>
         <div className="ai-center-toggle-row">
           <input
             type="checkbox"
@@ -85,21 +87,21 @@ export default function AIAutoReply() {
             onChange={(e) => setEnabled(e.target.checked)}
           />
           <label htmlFor="ai-auto-reply-toggle">
-            AI Auto-Reply: {enabled ? "ON" : "OFF"}
+            {t("aiCenter.autoReplyLabel", { status: enabled ? t("aiCenter.on") : t("aiCenter.off") })}
           </label>
         </div>
         <div style={{ marginBottom: "20px" }}>
           <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "var(--text)" }}>
-            Tone
+            {t("aiCenter.toneLabel")}
           </label>
           <select
             className="ai-center-select"
             value={tone}
             onChange={(e) => setTone(e.target.value)}
           >
-            <option value="professional">Professional</option>
-            <option value="friendly">Friendly</option>
-            <option value="sales">Sales</option>
+            <option value="professional">{t("aiCenter.toneProfessional")}</option>
+            <option value="friendly">{t("aiCenter.toneFriendly")}</option>
+            <option value="sales">{t("aiCenter.toneSales")}</option>
           </select>
         </div>
         <div className="ai-center-actions">
@@ -109,7 +111,7 @@ export default function AIAutoReply() {
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? t("aiCenter.saving") : t("aiCenter.save")}
           </button>
         </div>
       </section>

@@ -55,11 +55,11 @@ function fmtDayMonth(iso) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function formatPillDates(checkIn, checkOut) {
-  if (!checkIn && !checkOut) return "Select dates";
+function formatPillDates(checkIn, checkOut, t) {
+  if (!checkIn && !checkOut) return t("vacationRentalsPage.selectDates");
   if (checkIn && checkOut) return `${fmtDayMonth(checkIn)} – ${fmtDayMonth(checkOut)}`;
-  if (checkIn) return `${fmtDayMonth(checkIn)} – Add checkout`;
-  return `Add check-in – ${fmtDayMonth(checkOut)}`;
+  if (checkIn) return `${fmtDayMonth(checkIn)} – ${t("vacationRentalsPage.addCheckout")}`;
+  return `${t("vacationRentalsPage.addCheckIn")} – ${fmtDayMonth(checkOut)}`;
 }
 
 function exploreCardSubtitle(property, t) {
@@ -71,11 +71,11 @@ function exploreCardSubtitle(property, t) {
   if (property.propertyType)
     parts.push(t(`properties.propertyType_${property.propertyType}`));
   if (property.bedrooms != null && property.bedrooms !== "")
-    parts.push(`${property.bedrooms} bd`);
+    parts.push(t("vacationRentalsPage.bedsShort", { n: property.bedrooms }));
   if (property.bathrooms != null && property.bathrooms !== "")
-    parts.push(`${property.bathrooms} ba`);
+    parts.push(t("vacationRentalsPage.bathsShort", { n: property.bathrooms }));
   if (property.maxGuests != null && property.maxGuests !== "")
-    parts.push(`${property.maxGuests} guest${Number(property.maxGuests) === 1 ? "" : "s"}`);
+    parts.push(t("vacationRentalsPage.guest", { count: Number(property.maxGuests) }));
   return parts.join(" · ") || property.address || "";
 }
 
@@ -265,7 +265,7 @@ export default function VacationRentalsSearch() {
       }
     } catch (err) {
       console.error("Failed to load vacation rentals:", err);
-      setError(err.message || "Failed to load vacation rentals");
+      setError(err.message || t("vacationRentalsPage.loadFailed"));
       if (reset) setProperties([]);
     } finally {
       setLoading(false);
@@ -309,7 +309,7 @@ export default function VacationRentalsSearch() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t("vacationRentalsPage.notAvailable");
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -318,7 +318,7 @@ export default function VacationRentalsSearch() {
   };
 
   const formatPrice = (price) => {
-    if (!price) return "N/A";
+    if (!price) return t("vacationRentalsPage.notAvailable");
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -344,9 +344,7 @@ export default function VacationRentalsSearch() {
   };
 
   const dateLine = formatDateRangeLine(urlCheckIn, urlCheckOut);
-  const headerCity = urlCity || "All locations";
-  const resultsTitleCount =
-    loading && properties.length === 0 ? "…" : pagination.total;
+  const headerCity = urlCity || t("vacationRentalsPage.allLocations");
 
   const hasAnyFilters =
     urlSearch ||
@@ -409,7 +407,7 @@ export default function VacationRentalsSearch() {
                 <span className="vacation-sticky-brand-text">Listo</span>
               </Link>
 
-              <div className="vacation-search-pill" role="group" aria-label="Search vacation rentals">
+              <div className="vacation-search-pill" role="group" aria-label={t("vacationRentalsPage.searchAriaLabel")}>
                 <button
                   type="button"
                   className={`vacation-pill-segment ${searchPopover === "where" ? "is-open" : ""}`}
@@ -417,9 +415,9 @@ export default function VacationRentalsSearch() {
                     setSearchPopover((p) => (p === "where" ? null : "where"))
                   }
                 >
-                  <span className="vacation-pill-label">Where</span>
+                  <span className="vacation-pill-label">{t("vacationRentalsPage.where")}</span>
                   <span className="vacation-pill-value">
-                    {draftCity.trim() || "Search destinations"}
+                    {draftCity.trim() || t("vacationRentalsPage.searchDestinations")}
                   </span>
                 </button>
                 <button
@@ -429,9 +427,9 @@ export default function VacationRentalsSearch() {
                     setSearchPopover((p) => (p === "dates" ? null : "dates"))
                   }
                 >
-                  <span className="vacation-pill-label">Check in · Check out</span>
+                  <span className="vacation-pill-label">{t("vacationRentalsPage.checkInCheckOut")}</span>
                   <span className="vacation-pill-value">
-                    {formatPillDates(draftCheckIn, draftCheckOut)}
+                    {formatPillDates(draftCheckIn, draftCheckOut, t)}
                   </span>
                 </button>
                 <button
@@ -441,11 +439,11 @@ export default function VacationRentalsSearch() {
                     setSearchPopover((p) => (p === "guests" ? null : "guests"))
                   }
                 >
-                  <span className="vacation-pill-label">Guests</span>
+                  <span className="vacation-pill-label">{t("vacationRentalsPage.guests")}</span>
                   <span className="vacation-pill-value">
                     {draftGuests && String(draftGuests).trim() !== ""
-                      ? `${draftGuests} guest${Number(draftGuests) === 1 ? "" : "s"}`
-                      : "Add guests"}
+                      ? t("vacationRentalsPage.guest", { count: Number(draftGuests) })
+                      : t("vacationRentalsPage.addGuests")}
                   </span>
                 </button>
               </div>
@@ -453,7 +451,7 @@ export default function VacationRentalsSearch() {
               <button
                 type="submit"
                 className="vacation-pill-search-btn"
-                aria-label="Search"
+                aria-label={t("common.search")}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <circle cx="11" cy="11" r="7" />
@@ -463,19 +461,19 @@ export default function VacationRentalsSearch() {
             </form>
 
             {searchPopover === "where" && (
-              <div className="vacation-search-popover" role="dialog" aria-label="Where">
+              <div className="vacation-search-popover" role="dialog" aria-label={t("vacationRentalsPage.where")}>
                 <p className="vacation-popover-hint">
-                  Search by city or destination.
+                  {t("vacationRentalsPage.whereHint")}
                 </p>
                 <label className="vacation-popover-label" htmlFor="vac-pop-where-input">
-                  Destination
+                  {t("vacationRentalsPage.destination")}
                 </label>
                 <input
                   id="vac-pop-where-input"
                   className="vacation-popover-input"
                   value={draftCity}
                   onChange={(e) => setDraftCity(e.target.value)}
-                  placeholder="Where to?"
+                  placeholder={t("vacationRentalsPage.whereToPlaceholder")}
                   autoComplete="off"
                 />
                 <div className="vacation-popover-actions">
@@ -484,21 +482,21 @@ export default function VacationRentalsSearch() {
                     className="listings-btn listings-btn-secondary"
                     onClick={() => setSearchPopover(null)}
                   >
-                    Done
+                    {t("vacationRentalsPage.done")}
                   </button>
                 </div>
               </div>
             )}
 
             {searchPopover === "dates" && (
-              <div className="vacation-search-popover" role="dialog" aria-label="Dates">
+              <div className="vacation-search-popover" role="dialog" aria-label={t("vacationRentalsPage.dates")}>
                 <p className="vacation-popover-hint">
-                  Select check-in and check-out.
+                  {t("vacationRentalsPage.datesHint")}
                 </p>
                 <div className="vacation-popover-dates">
                   <div>
                     <label className="vacation-popover-label" htmlFor="vac-pop-in">
-                      Check-in
+                      {t("vacationRentalsPage.checkIn")}
                     </label>
                     <input
                       id="vac-pop-in"
@@ -510,7 +508,7 @@ export default function VacationRentalsSearch() {
                   </div>
                   <div>
                     <label className="vacation-popover-label" htmlFor="vac-pop-out">
-                      Check-out
+                      {t("vacationRentalsPage.checkOut")}
                     </label>
                     <input
                       id="vac-pop-out"
@@ -527,26 +525,26 @@ export default function VacationRentalsSearch() {
                     className="listings-btn listings-btn-secondary"
                     onClick={() => setSearchPopover(null)}
                   >
-                    Done
+                    {t("vacationRentalsPage.done")}
                   </button>
                 </div>
               </div>
             )}
 
             {searchPopover === "guests" && (
-              <div className="vacation-search-popover" role="dialog" aria-label="Guests">
+              <div className="vacation-search-popover" role="dialog" aria-label={t("vacationRentalsPage.guests")}>
                 <p className="vacation-popover-hint">
-                  How many guests?
+                  {t("vacationRentalsPage.guestsHint")}
                 </p>
                 <label className="vacation-popover-label" htmlFor="vac-pop-guests">
-                  Guests
+                  {t("vacationRentalsPage.guests")}
                 </label>
                 <input
                   id="vac-pop-guests"
                   className="vacation-popover-input"
                   type="number"
                   min={1}
-                  placeholder="e.g. 2"
+                  placeholder={t("vacationRentalsPage.guestsPlaceholder")}
                   value={draftGuests}
                   onChange={(e) => setDraftGuests(e.target.value)}
                 />
@@ -556,7 +554,7 @@ export default function VacationRentalsSearch() {
                     className="listings-btn listings-btn-secondary"
                     onClick={() => setSearchPopover(null)}
                   >
-                    Done
+                    {t("vacationRentalsPage.done")}
                   </button>
                 </div>
               </div>
@@ -574,11 +572,11 @@ export default function VacationRentalsSearch() {
           <div className="vacation-results-header">
             <h1 className="vacation-results-title">
               {loading && properties.length === 0
-                ? "Searching vacation rentals…"
-                : `${resultsTitleCount} vacation rental${pagination.total === 1 ? "" : "s"} in ${headerCity}`}
+                ? t("vacationRentalsPage.searching")
+                : t("vacationRentalsPage.resultsTitle", { count: pagination.total, city: headerCity })}
             </h1>
             {dateLine && (
-              <p className="vacation-results-dates">Dates: {dateLine}</p>
+              <p className="vacation-results-dates">{t("vacationRentalsPage.datesLabel", { dates: dateLine })}</p>
             )}
             <div className="vacation-results-toolbar">
               <button
@@ -587,16 +585,16 @@ export default function VacationRentalsSearch() {
                 onClick={() => setFiltersOpen((o) => !o)}
                 aria-expanded={filtersOpen}
               >
-                Filters
+                {t("vacationRentalsPage.filters")}
               </button>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="listings-select vacation-sort-select"
               >
-                <option value="newest">Sort: Recommended</option>
-                <option value="price-low">Sort: Price (low to high)</option>
-                <option value="price-high">Sort: Price (high to low)</option>
+                <option value="newest">{t("vacationRentalsPage.sortRecommended")}</option>
+                <option value="price-low">{t("vacationRentalsPage.sortPriceLow")}</option>
+                <option value="price-high">{t("vacationRentalsPage.sortPriceHigh")}</option>
               </select>
             </div>
           </div>
@@ -611,7 +609,7 @@ export default function VacationRentalsSearch() {
                 >
                   <input
                     type="text"
-                    placeholder="Search by keywords, address, description…"
+                    placeholder={t("vacationRentalsPage.searchPlaceholder")}
                     value={filters.search}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -634,7 +632,7 @@ export default function VacationRentalsSearch() {
                   }}
                   className="listings-select"
                 >
-                  <option value="">Property type: Any</option>
+                  <option value="">{t("vacationRentalsPage.propertyTypeAny")}</option>
                   {PROPERTY_TYPE_OPTIONS.map((value) => (
                     <option key={value} value={value}>
                       {t(`properties.propertyType_${value}`)}
@@ -644,20 +642,20 @@ export default function VacationRentalsSearch() {
               </div>
               <div className="listings-filters">
                 <div className="listings-price-range">
-                  <label>Price / night</label>
+                  <label>{t("vacationRentalsPage.pricePerNight")}</label>
                   <input
                     type="number"
-                    placeholder="Min"
+                    placeholder={t("vacationRentalsPage.min")}
                     value={filters.minPrice}
                     onChange={(e) =>
                       setFilters((f) => ({ ...f, minPrice: e.target.value }))
                     }
                     className="listings-input"
                   />
-                  <span>to</span>
+                  <span>{t("vacationRentalsPage.to")}</span>
                   <input
                     type="number"
-                    placeholder="Max"
+                    placeholder={t("vacationRentalsPage.max")}
                     value={filters.maxPrice}
                     onChange={(e) =>
                       setFilters((f) => ({ ...f, maxPrice: e.target.value }))
@@ -672,7 +670,7 @@ export default function VacationRentalsSearch() {
                   }
                   className="listings-select"
                 >
-                  <option value="">Bedrooms: Any</option>
+                  <option value="">{t("vacationRentalsPage.bedroomsAny")}</option>
                   <option value="1">1+</option>
                   <option value="2">2+</option>
                   <option value="3">3+</option>
@@ -686,7 +684,7 @@ export default function VacationRentalsSearch() {
                   }
                   className="listings-select"
                 >
-                  <option value="">Bathrooms: Any</option>
+                  <option value="">{t("vacationRentalsPage.bathroomsAny")}</option>
                   <option value="1">1+</option>
                   <option value="1.5">1.5+</option>
                   <option value="2">2+</option>
@@ -700,14 +698,14 @@ export default function VacationRentalsSearch() {
                     className="listings-btn listings-btn-secondary"
                     onClick={clearAllFilters}
                   >
-                    Clear filters
+                    {t("vacationRentalsPage.clearFilters")}
                   </button>
                 )}
               </div>
 
               {/* Amenities */}
               <div className="vacation-amenities-filter">
-                <p className="vacation-amenities-label">Amenities</p>
+                <p className="vacation-amenities-label">{t("vacationRentalsPage.amenities")}</p>
                 <div className="vacation-amenities-grid">
                   {AMENITIES.map((a) => {
                     const active = filters.amenities.includes(a.slug);
@@ -749,7 +747,7 @@ export default function VacationRentalsSearch() {
               }
               onClick={() => setMobilePanel("list")}
             >
-              List view
+              {t("vacationRentalsPage.listView")}
             </button>
             <button
               type="button"
@@ -758,7 +756,7 @@ export default function VacationRentalsSearch() {
               }
               onClick={() => setMobilePanel("map")}
             >
-              Map view
+              {t("vacationRentalsPage.mapView")}
             </button>
           </div>
 
@@ -782,11 +780,10 @@ export default function VacationRentalsSearch() {
                   <div className="listings-empty-state vacation-empty-state">
                     <div className="listings-empty-icon">🏠</div>
                     <h3 className="listings-empty-title">
-                      No vacation rentals available for these dates.
+                      {t("vacationRentalsPage.emptyTitle")}
                     </h3>
                     <p className="listings-empty-text">
-                      Try different dates or adjust filters. Results are always
-                      vacation stays only.
+                      {t("vacationRentalsPage.emptyText")}
                     </p>
                     <div className="vacation-empty-actions">
                       <button
@@ -794,14 +791,14 @@ export default function VacationRentalsSearch() {
                         className="listings-btn listings-btn-secondary"
                         onClick={modifyDatesOnly}
                       >
-                        Modify dates
+                        {t("vacationRentalsPage.modifyDates")}
                       </button>
                       <button
                         type="button"
                         className="listings-btn listings-btn-secondary"
                         onClick={clearAllFilters}
                       >
-                        Clear filters
+                        {t("vacationRentalsPage.clearFilters")}
                       </button>
                     </div>
                   </div>
@@ -855,11 +852,11 @@ export default function VacationRentalsSearch() {
                                 to={vacationDetailPath(property.id)}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {property.title || "Untitled Property"}
+                                {property.title || t("vacationRentalsPage.untitledProperty")}
                               </Link>
                             </h3>
                             {Number(property.ratingAvg) > 0 && (
-                              <span className="vacation-card-rating" aria-label={`Rating ${Number(property.ratingAvg).toFixed(1)} out of 5`}>
+                              <span className="vacation-card-rating" aria-label={t("vacationRentalsPage.ratingAria", { rating: Number(property.ratingAvg).toFixed(1) })}>
                                 ★ {Number(property.ratingAvg).toFixed(1)}
                                 {Number(property.ratingCount) > 0 && (
                                   <span className="vacation-card-rating-count"> ({property.ratingCount})</span>
@@ -883,7 +880,7 @@ export default function VacationRentalsSearch() {
                               })}
                               {property.amenities.length > 3 && (
                                 <span className="vacation-card-amenity-tag vacation-card-amenity-more">
-                                  +{property.amenities.length - 3} more
+                                  {t("vacationRentalsPage.amenitiesMore", { n: property.amenities.length - 3 })}
                                 </span>
                               )}
                             </div>
@@ -896,12 +893,12 @@ export default function VacationRentalsSearch() {
                                 </span>
                                 <span className="listings-card-price-note">
                                   {" "}
-                                  / night
+                                  {t("vacationRentalsPage.perNight")}
                                 </span>
                               </>
                             ) : (
                               <span className="listings-card-price listings-card-price--muted">
-                                Price on request
+                                {t("vacationRentalsPage.priceOnRequest")}
                               </span>
                             )}
                           </div>
@@ -913,7 +910,7 @@ export default function VacationRentalsSearch() {
                               to={vacationDetailPath(property.id)}
                               className="vacation-card-detail-link"
                             >
-                              View details →
+                              {t("vacationRentalsPage.viewDetails")} →
                             </Link>
                           </div>
                         </div>
@@ -929,7 +926,7 @@ export default function VacationRentalsSearch() {
                         onClick={loadMore}
                         disabled={loadingMore}
                       >
-                        {loadingMore ? "Loading…" : `Load more (${pagination.total - properties.length} more)`}
+                        {loadingMore ? t("common.loading") : t("vacationRentalsPage.loadMoreCount", { n: pagination.total - properties.length })}
                       </button>
                     </div>
                   )}

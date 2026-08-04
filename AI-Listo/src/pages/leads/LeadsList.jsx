@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { io } from "socket.io-client";
 import apiClient from "../../api/apiClient";
 import "./leads.css";
@@ -154,6 +155,7 @@ const normalizeRealtimeMessage = (payload) => {
 export default function LeadsPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [leadsData, setLeadsData] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
@@ -268,42 +270,46 @@ export default function LeadsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const stats = [
     {
-      title: "Total Leads",
+      title: t("leads.statTotalLeads"),
       value: leadStats?.total || 0,
-      change: leadStats?.rangeLabel || "All time",
+      change: leadStats?.rangeLabel || t("leads.allTime"),
       icon: <Users size={20} />,
       className: "blue",
     },
     {
-      title: "AI Qualified",
+      title: t("leads.statAiQualified"),
       value: leadStats?.qualified || 0,
-      change: `${leadStats?.qualifiedRate || 0}% qualified`,
+      change: t("leads.percentQualified", {
+        rate: leadStats?.qualifiedRate || 0,
+      }),
       icon: <Bot size={20} />,
       className: "green",
     },
     {
-      title: "Active Conversations",
+      title: t("leads.statActiveConversations"),
       value: leadStats?.activeConversations || 0,
-      change: `+${leadStats?.conversationToday || 0} today`,
+      change: t("leads.plusToday", { count: leadStats?.conversationToday || 0 }),
       icon: <MessageCircle size={20} />,
       className: "purple",
     },
     {
-      title: "Appointments",
+      title: t("leads.statAppointments"),
       value: leadStats?.appointments || 0,
-      change: `+${leadStats?.appointmentThisWeek || 0} this week`,
+      change: t("leads.plusThisWeek", {
+        count: leadStats?.appointmentThisWeek || 0,
+      }),
       icon: <Calendar size={20} />,
       className: "orange",
     },
     {
-      title: "Conversion Rate",
+      title: t("leads.statConversionRate"),
       value: `${leadStats?.conversionRate || 0}%`,
-      change: "Closed won / total",
+      change: t("leads.closedWonTotal"),
       icon: <TrendingUp size={20} />,
       className: "cyan",
     },
     {
-      title: "Avg Response",
+      title: t("leads.statAvgResponse"),
       value: leadStats?.avgResponse || "0m",
       change: `-${leadStats?.responseImprove || 0}%`,
       icon: <Clock3 size={20} />,
@@ -365,6 +371,16 @@ export default function LeadsPage() {
     if (temp === "hot") return "score-hot";
     if (temp === "warm") return "score-warm";
     return "score-cool";
+  };
+
+  // Localize temperature labels for display only. The raw Hot/Warm/Cool values
+  // stay English because filters and score classes compare them in logic.
+  const translateTemperature = (temp) => {
+    const key = String(temp || "").toLowerCase();
+    if (key === "hot") return t("leads.tempHot");
+    if (key === "warm") return t("leads.tempWarm");
+    if (key === "cool" || key === "cold") return t("leads.tempCool");
+    return temp;
   };
 
   const updateSelectedLead = async (payload) => {
@@ -455,7 +471,9 @@ export default function LeadsPage() {
     if (!selectedLead?.id || convertingLead) return;
 
     const confirmed = window.confirm(
-      `Convert ${selectedLead.name || "this lead"} to a contact?`,
+      t("leads.confirmConvertContact", {
+        name: selectedLead.name || t("leads.thisLead"),
+      }),
     );
 
     if (!confirmed) return;
@@ -495,8 +513,8 @@ export default function LeadsPage() {
 
       setLeadActionMessage(
         data?.alreadyConverted
-          ? "This lead is already linked to a contact."
-          : "Lead converted to contact successfully.",
+          ? t("leads.alreadyLinkedContact")
+          : t("leads.leadConverted"),
       );
 
       await fetchLeadEvents(selectedLead.id);
@@ -504,7 +522,7 @@ export default function LeadsPage() {
       console.error("Convert lead to contact error:", err);
 
       setLeadActionMessage(
-        err?.message || "Failed to convert lead to contact.",
+        err?.message || t("leads.convertFailed"),
       );
     } finally {
       setConvertingLead(false);
@@ -529,7 +547,7 @@ export default function LeadsPage() {
   // selected we surface a clear message instead of silently doing nothing.
   const requireSelectedLead = () => {
     if (!selectedLead?.id) {
-      setLeadActionMessage("Please select a lead first.");
+      setLeadActionMessage(t("leads.selectLeadFirst"));
       return false;
     }
     return true;
@@ -542,7 +560,7 @@ export default function LeadsPage() {
       priority: "high",
       status: "qualified",
     });
-    setLeadActionMessage("Lead escalated to high priority.");
+    setLeadActionMessage(t("leads.leadEscalated"));
   };
 
   // Call: open the device dialer where available and log the call to the lead
@@ -569,12 +587,14 @@ export default function LeadsPage() {
         }),
       });
       setLeadActionMessage(
-        phone ? `Call started with ${phone} and logged.` : "Call logged.",
+        phone
+          ? t("leads.callStartedLogged", { phone })
+          : t("leads.callLoggedToast"),
       );
       await fetchLeadEvents(selectedLead.id);
     } catch (err) {
       console.error("Log call error:", err);
-      setLeadActionMessage(err?.message || "Could not log the call.");
+      setLeadActionMessage(err?.message || t("leads.callLogFailed"));
     }
   };
 
@@ -584,16 +604,14 @@ export default function LeadsPage() {
     if (!requireSelectedLead()) return;
 
     const confirmed = window.confirm(
-      `Mark ${
-        selectedLead.name || "this lead"
-      } as not a lead? It will be removed from the active lead queue.`,
+      t("leads.confirmMarkNoLead", {
+        name: selectedLead.name || t("leads.thisLead"),
+      }),
     );
     if (!confirmed) return;
 
     await updateSelectedLead({ status: "closed-lost", priority: "low" });
-    setLeadActionMessage(
-      "Marked as not a lead and removed from the active queue.",
-    );
+    setLeadActionMessage(t("leads.markedNoLead"));
   };
 
   const openScoreDetails = () => {
@@ -730,9 +748,9 @@ export default function LeadsPage() {
         )
       : null;
 
-    const fallbackMessage = `Hi ${
-      selectedLead.name || "there"
-    }, just following up to see if you're still interested.`;
+    const fallbackMessage = t("leads.followUpFallback", {
+      name: selectedLead.name || t("leads.there"),
+    });
 
     setFollowUpMessage(firstAiReply?.trim() || fallbackMessage);
     setShowFollowUpModal(true);
@@ -767,7 +785,7 @@ export default function LeadsPage() {
     } catch (err) {
       console.error("Send AI WhatsApp follow-up error:", err);
       setLeadActionMessage(
-        err?.message || "Failed to send the WhatsApp follow-up.",
+        err?.message || t("leads.followUpSendFailed"),
       );
     } finally {
       setIsSubmittingFollowUp(false);
@@ -828,12 +846,12 @@ export default function LeadsPage() {
   const applySuggestedReply = (type) => {
     if (!selectedLead) return;
 
-    const name = selectedLead.name || "there";
+    const name = selectedLead.name || t("leads.there");
 
     const replies = {
-      properties: `Hi ${name}, I found a few properties that may match what you're looking for. Would you like me to send them over?`,
-      budget: `Hi ${name}, what budget range are you comfortable with so I can narrow down the best options?`,
-      viewing: `Hi ${name}, would you like to schedule a viewing this week? I can help arrange a convenient time.`,
+      properties: t("leads.replyProperties", { name }),
+      budget: t("leads.replyBudget", { name }),
+      viewing: t("leads.replyViewing", { name }),
     };
 
     setChatMessage(replies[type] || "");
@@ -944,33 +962,33 @@ export default function LeadsPage() {
   };
   const automationItems = [
     {
-      title: "AI Auto Follow-Up",
+      title: t("leads.autoFollowUpTitle"),
       type: "followUp",
-      desc: "Send follow-up when lead needs nurturing",
+      desc: t("leads.autoFollowUpDesc"),
       icon: <Sparkles size={16} />,
     },
     {
-      title: "AI Qualification",
+      title: t("leads.aiQualificationTitle"),
       type: "qualification",
-      desc: "Analyze new leads and qualify intent",
+      desc: t("leads.aiQualificationDesc"),
       icon: <Bot size={16} />,
     },
     {
-      title: "Auto Appointment Booking",
+      title: t("leads.autoAppointmentTitle"),
       type: "appointment",
-      desc: "Suggest appointment actions for qualified leads",
+      desc: t("leads.autoAppointmentDesc"),
       icon: <Calendar size={16} />,
     },
     {
-      title: "Smart Property Matching",
+      title: t("leads.smartPropertyMatchingTitle"),
       type: "propertyMatch",
-      desc: "Recommend matching properties",
+      desc: t("leads.smartPropertyMatchingDesc"),
       icon: <Home size={16} />,
     },
     {
-      title: "Escalate Hot Leads",
+      title: t("leads.escalateHotLeadsTitle"),
       type: "escalation",
-      desc: "Flag urgent or high-value opportunities",
+      desc: t("leads.escalateHotLeadsDesc"),
       icon: <ArrowUpRight size={16} />,
     },
   ];
@@ -1006,26 +1024,26 @@ export default function LeadsPage() {
 
     const sentiment =
       score >= 80 || selectedLead.priority === "high"
-        ? "High Intent"
+        ? t("leads.sentimentHighIntent")
         : score >= 50
-          ? "Interested"
-          : "Low Intent";
+          ? t("leads.sentimentInterested")
+          : t("leads.sentimentLowIntent");
 
     const interestLevel =
       engagementScore >= 80
-        ? "Very High"
+        ? t("leads.levelVeryHigh")
         : engagementScore >= 60
-          ? "High"
+          ? t("leads.levelHigh")
           : engagementScore >= 40
-            ? "Medium"
-            : "Low";
+            ? t("leads.levelMedium")
+            : t("leads.levelLow");
 
     const responseLikelihood =
       messageCount >= 3 || selectedLead.status === "contacted"
-        ? "Very High"
+        ? t("leads.levelVeryHigh")
         : messageCount >= 1
-          ? "High"
-          : "Medium";
+          ? t("leads.levelHigh")
+          : t("leads.levelMedium");
 
     return {
       score,
@@ -1068,34 +1086,35 @@ export default function LeadsPage() {
     sentiment:
       conversationIntelligence?.sentiment ||
       fallbackLeadIntelligence.sentiment ||
-      "Unknown",
+      t("leads.unknown"),
     interestLevel:
       conversationIntelligence?.intent ||
       fallbackLeadIntelligence.interestLevel ||
-      "Unknown",
+      t("leads.unknown"),
     responseLikelihood:
       conversationIntelligence?.responseLikelihood ||
       fallbackLeadIntelligence.responseLikelihood ||
-      "Unknown",
+      t("leads.unknown"),
     closeProbability:
       conversationIntelligence?.closeProbability ||
       `${getCloseProbability(selectedLead?.dealStage)}%`,
     expectedRevenue:
       conversationIntelligence?.expectedRevenue ||
       `$${Number(selectedLead?.dealValue || 0).toLocaleString()}`,
-    budget: conversationIntelligence?.budget || "Unknown",
-    timeline: conversationIntelligence?.timeline || "Unknown",
-    ghostRisk: conversationIntelligence?.ghostRisk || "Unknown",
+    budget: conversationIntelligence?.budget || t("leads.unknown"),
+    timeline: conversationIntelligence?.timeline || t("leads.unknown"),
+    ghostRisk: conversationIntelligence?.ghostRisk || t("leads.unknown"),
     summary:
       conversationIntelligence?.summary ||
       selectedLead?.notes ||
-      `Lead source: ${selectedLead?.source || "CRM"}. Status: ${
-        selectedLead?.status || "new"
-      }.`,
+      t("leads.summaryFallback", {
+        source: selectedLead?.source || "CRM",
+        status: selectedLead?.status || "new",
+      }),
     recommendedAction:
       conversationIntelligence?.recommendedAction ||
       selectedLead?.recommendedActionReason ||
-      "Review the conversation and follow up.",
+      t("leads.recommendedActionFallback"),
   };
 
   useEffect(() => {
@@ -1112,7 +1131,7 @@ export default function LeadsPage() {
       createLeadForm.email &&
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createLeadForm.email)
     ) {
-      alert("Please enter a valid email address.");
+      alert(t("leads.invalidEmail"));
       return;
     }
     try {
@@ -1139,14 +1158,14 @@ export default function LeadsPage() {
   };
   const exportLeadsCsv = () => {
     const headers = [
-      "Name",
-      "Email",
-      "Phone",
-      "Status",
-      "Priority",
-      "Source",
-      "Deal Value",
-      "Deal Stage",
+      t("leads.name"),
+      t("leads.email"),
+      t("leads.phone"),
+      t("leads.status"),
+      t("leads.priority"),
+      t("leads.source"),
+      t("leads.dealValue"),
+      t("leads.dealStageHeader"),
     ];
 
     const rows = visibleLeads.map((lead) => [
@@ -1497,9 +1516,9 @@ export default function LeadsPage() {
     mediaRecorderRef.current?.stop();
   };
   const fallbackSuggestedReplies = [
-    "Send matching properties",
-    "Ask about their budget range",
-    "Suggest a property viewing time",
+    t("leads.suggestReplyProperties"),
+    t("leads.suggestReplyBudget"),
+    t("leads.suggestReplyViewing"),
   ];
 
   const aiSuggestedReplies = (() => {
@@ -1762,11 +1781,9 @@ export default function LeadsPage() {
     <div className="leads-page">
       <div className="heading_page">
         <Users className="header-icon" size={20} />
-        <h1>Leads & Conversations</h1>
+        <h1>{t("leads.pageTitle")}</h1>
       </div>
-      <p className="sub_head">
-        Manage leads, AI conversations, and deal activity in real time.
-      </p>
+      <p className="sub_head">{t("leads.subheading")}</p>
       <div className="leads-header">
         <div className="header-actions">
           {isMobile ? (
@@ -1777,11 +1794,11 @@ export default function LeadsPage() {
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
                 >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                  <option value="month">This Month</option>
+                  <option value="all">{t("leads.dateAllTime")}</option>
+                  <option value="today">{t("leads.dateToday")}</option>
+                  <option value="7days">{t("leads.dateLast7Days")}</option>
+                  <option value="30days">{t("leads.dateLast30Days")}</option>
+                  <option value="month">{t("leads.dateThisMonth")}</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
@@ -1791,7 +1808,7 @@ export default function LeadsPage() {
                 onClick={toggleAiView}
               >
                 <Sparkles size={16} />
-                {aiView ? "AI View On" : "AI View"}
+                {aiView ? t("leads.aiViewOn") : t("leads.aiView")}
               </button>
 
               <button
@@ -1799,7 +1816,7 @@ export default function LeadsPage() {
                 onClick={() => setShowCreateLeadModal(true)}
               >
                 <Plus size={17} />
-                New Lead
+                {t("leads.newLead")}
               </button>
               <div className="control-btn" onClick={() => setShowFilters(true)}>
                 <SlidersHorizontal size={15} />
@@ -1814,18 +1831,18 @@ export default function LeadsPage() {
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
                 >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="7days">Last 7 Days</option>
-                  <option value="30days">Last 30 Days</option>
-                  <option value="month">This Month</option>
+                  <option value="all">{t("leads.dateAllTime")}</option>
+                  <option value="today">{t("leads.dateToday")}</option>
+                  <option value="7days">{t("leads.dateLast7Days")}</option>
+                  <option value="30days">{t("leads.dateLast30Days")}</option>
+                  <option value="month">{t("leads.dateThisMonth")}</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
 
               <button className="secondary-btn" onClick={exportLeadsCsv}>
                 <Download size={16} />
-                Export
+                {t("leads.export")}
               </button>
 
               <button
@@ -1833,7 +1850,7 @@ export default function LeadsPage() {
                 onClick={toggleAiView}
               >
                 <Sparkles size={16} />
-                {aiView ? "AI View On" : "AI View"}
+                {aiView ? t("leads.aiViewOn") : t("leads.aiView")}
               </button>
 
               <button
@@ -1841,7 +1858,7 @@ export default function LeadsPage() {
                 onClick={() => setShowCreateLeadModal(true)}
               >
                 <Plus size={17} />
-                New Lead
+                {t("leads.newLead")}
               </button>
             </>
           )}
@@ -1856,7 +1873,7 @@ export default function LeadsPage() {
 
           <div className="mobile-filter-drawer">
             <div className="drawer-header">
-              <h3>Filters</h3>
+              <h3>{t("leads.filters")}</h3>
 
               <button
                 className="drawer-close"
@@ -1873,9 +1890,9 @@ export default function LeadsPage() {
                   value={leadFilters.source}
                   onChange={(e) => updateLeadFilter("source", e.target.value)}
                 >
-                  <option value="all">All Sources</option>
+                  <option value="all">{t("leads.allSources")}</option>
                   <option value="crm">CRM</option>
-                  <option value="website">Website</option>
+                  <option value="website">{t("leads.website")}</option>
                   <option value="facebook">Facebook</option>
                   <option value="whatsapp">WhatsApp</option>
                   <option value="instagram">Instagram</option>
@@ -1890,10 +1907,10 @@ export default function LeadsPage() {
                     updateLeadFilter("temperature", e.target.value)
                   }
                 >
-                  <option value="all">All Temperatures</option>
-                  <option value="hot">Hot</option>
-                  <option value="warm">Warm</option>
-                  <option value="cool">Cool</option>
+                  <option value="all">{t("leads.allTemperatures")}</option>
+                  <option value="hot">{t("leads.tempHot")}</option>
+                  <option value="warm">{t("leads.tempWarm")}</option>
+                  <option value="cool">{t("leads.tempCool")}</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
@@ -1903,7 +1920,7 @@ export default function LeadsPage() {
                   value={leadFilters.aiScore}
                   onChange={(e) => updateLeadFilter("aiScore", e.target.value)}
                 >
-                  <option value="all">All AI Scores</option>
+                  <option value="all">{t("leads.allAiScores")}</option>
                   <option value="80+">80+</option>
                   <option value="50-79">50 - 79</option>
                   <option value="0-49">0 - 49</option>
@@ -1916,18 +1933,18 @@ export default function LeadsPage() {
                   value={leadFilters.stage}
                   onChange={(e) => updateLeadFilter("stage", e.target.value)}
                 >
-                  <option value="all">All Stages</option>
-                  <option value="new">New</option>
-                  <option value="discovery">Discovery</option>
-                  <option value="qualified">Qualified</option>
-                  <option value="property-match">Property Match</option>
-                  <option value="showing">Showing</option>
-                  <option value="proposal">Proposal</option>
-                  <option value="negotiation">Negotiation</option>
-                  <option value="contract">Contract</option>
-                  <option value="closing">Closing</option>
-                  <option value="won">Won</option>
-                  <option value="lost">Lost</option>
+                  <option value="all">{t("leads.allStages")}</option>
+                  <option value="new">{t("leads.optNew")}</option>
+                  <option value="discovery">{t("leads.optDiscovery")}</option>
+                  <option value="qualified">{t("leads.optQualified")}</option>
+                  <option value="property-match">{t("leads.optPropertyMatch")}</option>
+                  <option value="showing">{t("leads.optShowing")}</option>
+                  <option value="proposal">{t("leads.optProposal")}</option>
+                  <option value="negotiation">{t("leads.optNegotiation")}</option>
+                  <option value="contract">{t("leads.optContract")}</option>
+                  <option value="closing">{t("leads.optClosing")}</option>
+                  <option value="won">{t("leads.optWon")}</option>
+                  <option value="lost">{t("leads.optLost")}</option>
                 </select>
                 <ChevronDown size={15} />
               </div>
@@ -1937,13 +1954,13 @@ export default function LeadsPage() {
                   value={leadFilters.agent}
                   onChange={(e) => updateLeadFilter("agent", e.target.value)}
                 >
-                  <option value="all">All Agents</option>
+                  <option value="all">{t("leads.allAgents")}</option>
                   {teamMembers.map((member) => (
                     <option
                       key={member.userId || member.id}
                       value={member.userId || member.id}
                     >
-                      {member.name || member.email || "Team Member"}
+                      {member.name || member.email || t("leads.teamMember")}
                     </option>
                   ))}
                 </select>
@@ -1951,7 +1968,7 @@ export default function LeadsPage() {
               </div>
               <button className="btn-export" onClick={exportLeadsCsv}>
                 <Download size={15} />
-                Export
+                {t("leads.export")}
                 <ChevronDown size={14} />
               </button>
             </div>
@@ -1966,9 +1983,9 @@ export default function LeadsPage() {
               value={leadFilters.source}
               onChange={(e) => updateLeadFilter("source", e.target.value)}
             >
-              <option value="all">All Sources</option>
+              <option value="all">{t("leads.allSources")}</option>
               <option value="crm">CRM</option>
-              <option value="website">Website</option>
+              <option value="website">{t("leads.website")}</option>
               <option value="facebook">Facebook</option>
               <option value="whatsapp">WhatsApp</option>
               <option value="instagram">Instagram</option>
@@ -1980,10 +1997,10 @@ export default function LeadsPage() {
               value={leadFilters.temperature}
               onChange={(e) => updateLeadFilter("temperature", e.target.value)}
             >
-              <option value="all">All Temperatures</option>
-              <option value="hot">Hot</option>
-              <option value="warm">Warm</option>
-              <option value="cool">Cool</option>
+              <option value="all">{t("leads.allTemperatures")}</option>
+              <option value="hot">{t("leads.tempHot")}</option>
+              <option value="warm">{t("leads.tempWarm")}</option>
+              <option value="cool">{t("leads.tempCool")}</option>
             </select>
             <ChevronDown size={15} />
           </div>
@@ -1992,7 +2009,7 @@ export default function LeadsPage() {
               value={leadFilters.aiScore}
               onChange={(e) => updateLeadFilter("aiScore", e.target.value)}
             >
-              <option value="all">All AI Scores</option>
+              <option value="all">{t("leads.allAiScores")}</option>
               <option value="80+">80+</option>
               <option value="50-79">50 - 79</option>
               <option value="0-49">0 - 49</option>
@@ -2004,18 +2021,18 @@ export default function LeadsPage() {
               value={leadFilters.stage}
               onChange={(e) => updateLeadFilter("stage", e.target.value)}
             >
-              <option value="all">All Stages</option>
-              <option value="new">New</option>
-              <option value="discovery">Discovery</option>
-              <option value="qualified">Qualified</option>
-              <option value="property-match">Property Match</option>
-              <option value="showing">Showing</option>
-              <option value="proposal">Proposal</option>
-              <option value="negotiation">Negotiation</option>
-              <option value="contract">Contract</option>
-              <option value="closing">Closing</option>
-              <option value="won">Won</option>
-              <option value="lost">Lost</option>
+              <option value="all">{t("leads.allStages")}</option>
+              <option value="new">{t("leads.optNew")}</option>
+              <option value="discovery">{t("leads.optDiscovery")}</option>
+              <option value="qualified">{t("leads.optQualified")}</option>
+              <option value="property-match">{t("leads.optPropertyMatch")}</option>
+              <option value="showing">{t("leads.optShowing")}</option>
+              <option value="proposal">{t("leads.optProposal")}</option>
+              <option value="negotiation">{t("leads.optNegotiation")}</option>
+              <option value="contract">{t("leads.optContract")}</option>
+              <option value="closing">{t("leads.optClosing")}</option>
+              <option value="won">{t("leads.optWon")}</option>
+              <option value="lost">{t("leads.optLost")}</option>
             </select>
             <ChevronDown size={15} />
           </div>
@@ -2024,13 +2041,13 @@ export default function LeadsPage() {
               value={leadFilters.agent}
               onChange={(e) => updateLeadFilter("agent", e.target.value)}
             >
-              <option value="all">All Agents</option>
+              <option value="all">{t("leads.allAgents")}</option>
               {teamMembers.map((member) => (
                 <option
                   key={member.userId || member.id}
                   value={member.userId || member.id}
                 >
-                  {member.name || member.email || "Team Member"}
+                  {member.name || member.email || t("leads.teamMember")}
                 </option>
               ))}
             </select>
@@ -2039,7 +2056,7 @@ export default function LeadsPage() {
           <div className="search-box">
             <Search size={16} />
             <input
-              placeholder="Search leads..."
+              placeholder={t("leads.searchPlaceholder")}
               value={leadSearch}
               onChange={(e) => setLeadSearch(e.target.value)}
             />
@@ -2047,7 +2064,7 @@ export default function LeadsPage() {
 
           <button className="filter-btn">
             <SlidersHorizontal size={16} />
-            Filters
+            {t("leads.filters")}
           </button>
           <div className="filter-btn">
             <select
@@ -2057,12 +2074,12 @@ export default function LeadsPage() {
                 e.target.value = "";
               }}
             >
-              <option value="">Bulk Actions</option>
-              <option value="markQualified">Mark Qualified</option>
-              <option value="priorityHigh">Set Priority High</option>
-              <option value="followUp">Mark Follow-Up</option>
-              <option value="export">Export Visible</option>
-              <option value="clear">Clear Filters</option>
+              <option value="">{t("leads.bulkActions")}</option>
+              <option value="markQualified">{t("leads.bulkMarkQualified")}</option>
+              <option value="priorityHigh">{t("leads.bulkPriorityHigh")}</option>
+              <option value="followUp">{t("leads.bulkFollowUp")}</option>
+              <option value="export">{t("leads.bulkExportVisible")}</option>
+              <option value="clear">{t("leads.bulkClearFilters")}</option>
             </select>
             <ChevronDown size={15} />
           </div>
@@ -2090,8 +2107,8 @@ export default function LeadsPage() {
       <div className="priority-bar">
         <div className="item-line">
           <div className="priority-title">
-            <h3>AI Priority Queue</h3>
-            <p>Real-time lead insights</p>
+            <h3>{t("leads.aiPriorityQueue")}</h3>
+            <p>{t("leads.realtimeLeadInsights")}</p>
           </div>
         </div>
         <div className="item-line">
@@ -2102,7 +2119,7 @@ export default function LeadsPage() {
             </div>
             <div className="priority-wrap">
               <strong>{leadStats?.urgentLeads || 0}</strong>
-              <span>Urgent Leads</span>
+              <span>{t("leads.urgentLeads")}</span>
             </div>
           </div>
         </div>
@@ -2113,7 +2130,7 @@ export default function LeadsPage() {
             </div>
             <div className="priority-wrap">
               <strong>{leadStats?.needFollowUp || 0}</strong>
-              <span>Need Follow-Up</span>
+              <span>{t("leads.needFollowUp")}</span>
             </div>
           </div>
         </div>
@@ -2124,7 +2141,7 @@ export default function LeadsPage() {
             </div>
             <div className="priority-wrap">
               <strong>{leadStats?.readyToCall || 0}</strong>
-              <span>Ready To Call</span>
+              <span>{t("leads.readyToCall")}</span>
             </div>
           </div>
         </div>
@@ -2135,7 +2152,7 @@ export default function LeadsPage() {
             </div>
             <div className="priority-wrap">
               <strong>{leadStats?.pendingReplies || 0}</strong>
-              <span>Pending Replies</span>
+              <span>{t("leads.pendingReplies")}</span>
             </div>
           </div>
         </div>
@@ -2146,13 +2163,13 @@ export default function LeadsPage() {
             </div>
             <div className="priority-wrap">
               <strong>{leadStats?.aiQualifiedToday || 0}</strong>
-              <span>AI Qualifield Today</span>
+              <span>{t("leads.aiQualifiedToday")}</span>
             </div>
           </div>
         </div>
         <div className="item-line">
           <button className="queue-btn" onClick={applyPriorityQueue}>
-            View Queue
+            {t("leads.viewQueue")}
             <ArrowRight size={15} />
           </button>
         </div>
@@ -2165,8 +2182,8 @@ export default function LeadsPage() {
         <div className="lead-sidebar">
           <div className="panel-header">
             <div>
-              <h3>AI Lead Inbox</h3>
-              <p>Ranked by urgency & AI score</p>
+              <h3>{t("leads.aiLeadInbox")}</h3>
+              <p>{t("leads.rankedByUrgency")}</p>
             </div>
             <button className="icon-btn">
               <SlidersHorizontal size={16} />
@@ -2187,7 +2204,7 @@ export default function LeadsPage() {
           >
             {leadsLoading ? (
               <div className="lead-card">
-                <p className="lead-message">Loading leads...</p>
+                <p className="lead-message">{t("leads.loadingLeads")}</p>
               </div>
             ) : visibleLeads.length ? (
               <>
@@ -2217,21 +2234,25 @@ export default function LeadsPage() {
                         </div>
 
                         <div className="lead-meta">
-                          <h4>{lead.name || "Unnamed Lead"}</h4>
+                          <h4>{lead.name || t("leads.unnamedLead")}</h4>
                           <span>
-                            {lead.phone || lead.email || "No contact info"}
+                            {lead.phone ||
+                              lead.email ||
+                              t("leads.noContactInfo")}
                           </span>
                         </div>
 
                         <div className="lead-score">
                           <strong>{score}%</strong>
-                          <p className={getScoreClass(lead)}>{temperature}</p>
+                          <p className={getScoreClass(lead)}>
+                            {translateTemperature(temperature)}
+                          </p>
                         </div>
                       </div>
 
                       <div className="lead-message-wrap">
                         <p className="lead-message">
-                          {lead.notes || lead.source || "New CRM lead"}
+                          {lead.notes || lead.source || t("leads.newCrmLead")}
                         </p>
 
                         <div className="lead-card-financials">
@@ -2246,7 +2267,7 @@ export default function LeadsPage() {
 
                       <div className="lead-tags">
                         <span className="tag-property">
-                          {lead.propertyTitle || "No property linked"}
+                          {lead.propertyTitle || t("leads.noPropertyLinked")}
                         </span>
                         <span className="tag-status status-new">
                           {lead.status || "new"}
@@ -2258,7 +2279,7 @@ export default function LeadsPage() {
 
                 {leadLoadingMore && (
                   <div className="lead-card">
-                    <p className="lead-message">Loading more leads...</p>
+                    <p className="lead-message">{t("leads.loadingMoreLeads")}</p>
                   </div>
                 )}
 
@@ -2268,13 +2289,13 @@ export default function LeadsPage() {
                     className="view-all-btn"
                     onClick={loadMoreLeads}
                   >
-                    Load more leads <ArrowRight size={12} />
+                    {t("leads.loadMoreLeads")} <ArrowRight size={12} />
                   </button>
                 )}
               </>
             ) : (
               <div className="lead-card">
-                <p className="lead-message">No leads found.</p>
+                <p className="lead-message">{t("leads.noLeadsFound")}</p>
               </div>
             )}
           </div>
@@ -2314,13 +2335,13 @@ export default function LeadsPage() {
               </div>
               <div>
                 <h3 className="user-status-title">
-                  {selectedLead?.name || "Select a lead"}{" "}
-                  <span className="status-online">● Online</span>
+                  {selectedLead?.name || t("leads.selectALead")}{" "}
+                  <span className="status-online">● {t("leads.online")}</span>
                 </h3>
                 <p className="user-sub-info">
                   {selectedLead?.phone ||
                     selectedLead?.email ||
-                    "No contact info"}{" "}
+                    t("leads.noContactInfo")}{" "}
                   • {selectedLead?.source || "CRM"}
                 </p>
               </div>
@@ -2331,7 +2352,7 @@ export default function LeadsPage() {
                 type="button"
                 className="icon-btn"
                 onClick={callSelectedLead}
-                title="Call lead and log it"
+                title={t("leads.callLeadTitle")}
               >
                 <Phone size={16} />
               </button>
@@ -2340,7 +2361,7 @@ export default function LeadsPage() {
                 type="button"
                 className="icon-btn"
                 disabled
-                title="Video calling is not available yet"
+                title={t("leads.videoUnavailableTitle")}
               >
                 <Video size={16} />
               </button>
@@ -2354,24 +2375,24 @@ export default function LeadsPage() {
                 disabled={!selectedLead || convertingLead}
                 title={
                   selectedLead?.contactId
-                    ? "Open linked contact"
-                    : "Convert this lead to a contact"
+                    ? t("leads.openLinkedContactTitle")
+                    : t("leads.convertToContactTitle")
                 }
               >
                 {convertingLead ? (
                   <>
                     <span className="lead-contact-action-spinner" />
-                    Converting...
+                    {t("leads.converting")}
                   </>
                 ) : selectedLead?.contactId ? (
                   <>
                     <Users size={16} />
-                    Open Contact
+                    {t("leads.openContact")}
                   </>
                 ) : (
                   <>
                     <Users size={16} />
-                    Convert to Contact
+                    {t("leads.convertToContact")}
                   </>
                 )}
               </button>
@@ -2381,23 +2402,27 @@ export default function LeadsPage() {
                 role="button"
                 tabIndex={0}
                 onClick={openScoreDetails}
-                title="View AI lead score details"
+                title={t("leads.viewScoreDetailsTitle")}
                 style={{ cursor: "pointer" }}
               >
                 <span className="score-value">
                   {selectedLead ? `${getLeadScore(selectedLead)}%` : "--"}
                 </span>
-                <span className="score-label">Score</span>
+                <span className="score-label">{t("leads.scoreLabel")}</span>
               </div>
               <span className="hot-tag text-tag-align">
                 {selectedLead
-                  ? `${getLeadTemperature(selectedLead)} Lead`
-                  : "No Lead"}
+                  ? t("leads.temperatureLead", {
+                      temperature: translateTemperature(
+                        getLeadTemperature(selectedLead),
+                      ),
+                    })
+                  : t("leads.noLead")}
               </span>
               <button
                 type="button"
                 onClick={markSelectedLeadNoLead}
-                title="Mark as not a lead"
+                title={t("leads.markNoLeadTitle")}
                 style={{
                   padding: "6px 12px",
                   fontSize: "12px",
@@ -2409,29 +2434,29 @@ export default function LeadsPage() {
                   cursor: "pointer",
                 }}
               >
-                No Lead
+                {t("leads.noLead")}
               </button>
             </div>
           </div>
           <div className="lead-control-row">
             <div className="lead-control-field">
-              <label>Status</label>
+              <label>{t("leads.status")}</label>
               <select
                 value={selectedLead?.status || "new"}
                 onChange={(e) => updateSelectedLead({ status: e.target.value })}
                 disabled={!selectedLead}
               >
-                <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="follow-up">Follow Up</option>
-                <option value="closed-won">Closed Won</option>
-                <option value="closed-lost">Closed Lost</option>
+                <option value="new">{t("leads.optNew")}</option>
+                <option value="contacted">{t("leads.contacted")}</option>
+                <option value="qualified">{t("leads.optQualified")}</option>
+                <option value="follow-up">{t("leads.optFollowUp")}</option>
+                <option value="closed-won">{t("leads.optClosedWon")}</option>
+                <option value="closed-lost">{t("leads.optClosedLost")}</option>
               </select>
             </div>
 
             <div className="lead-control-field">
-              <label>Priority</label>
+              <label>{t("leads.priority")}</label>
               <select
                 value={selectedLead?.priority || "low"}
                 onChange={(e) =>
@@ -2439,9 +2464,9 @@ export default function LeadsPage() {
                 }
                 disabled={!selectedLead}
               >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
+                <option value="low">{t("leads.optLow")}</option>
+                <option value="medium">{t("leads.optMedium")}</option>
+                <option value="high">{t("leads.optHigh")}</option>
               </select>
             </div>
           </div>
@@ -2457,7 +2482,7 @@ export default function LeadsPage() {
               <button
                 type="button"
                 onClick={() => setLeadActionMessage("")}
-                aria-label="Close message"
+                aria-label={t("leads.closeMessage")}
               >
                 ×
               </button>
@@ -2469,10 +2494,10 @@ export default function LeadsPage() {
               <Brain size={18} />
             </div>
             <div className="summary-text-box">
-              <h4>AI Lead Summary</h4>
+              <h4>{t("leads.aiLeadSummary")}</h4>
               <p>
                 {conversationIntelligenceLoading
-                  ? "Analyzing conversation..."
+                  ? t("leads.analyzingConversation")
                   : leadIntelligence.summary}
               </p>
             </div>
@@ -2481,7 +2506,7 @@ export default function LeadsPage() {
               onClick={openLeadProfile}
               disabled={!selectedLead}
             >
-              View Profile
+              {t("leads.viewProfile")}
             </button>
           </div>
 
@@ -2489,7 +2514,7 @@ export default function LeadsPage() {
           <div className="chat-body" ref={chatBodyRef}>
             {leadMessagesLoading ? (
               <div className="message left">
-                <p>Loading messages...</p>
+                <p>{t("leads.loadingMessages")}</p>
               </div>
             ) : leadMessages.length ? (
               leadMessages
@@ -2537,7 +2562,7 @@ export default function LeadsPage() {
                         <a href={mediaUrl} target="_blank" rel="noreferrer">
                           <img
                             src={mediaUrl}
-                            alt="WhatsApp attachment"
+                            alt={t("leads.whatsappAttachment")}
                             className="chat-image-preview"
                           />
                         </a>
@@ -2551,20 +2576,20 @@ export default function LeadsPage() {
                         />
                       ) : messageType === "document" && mediaUrl ? (
                         <a href={mediaUrl} target="_blank" rel="noreferrer">
-                          📎 Download attachment
+                          {t("leads.downloadAttachment")}
                         </a>
                       ) : (
                         <p>
                           {messageText ||
                             (messageType === "image"
-                              ? "📷 Photo"
+                              ? t("leads.photoMessage")
                               : messageType === "audio"
-                                ? "🎤 Voice message"
+                                ? t("leads.voiceMessage")
                                 : messageType === "video"
-                                  ? "🎥 Video"
+                                  ? t("leads.videoMessage")
                                   : messageType === "document"
-                                    ? "📄 Document"
-                                    : "Message")}
+                                    ? t("leads.documentMessage")
+                                    : t("leads.messageFallback"))}
                         </p>
                       )}
 
@@ -2586,8 +2611,8 @@ export default function LeadsPage() {
                 })
             ) : (
               <div className="message left">
-                <p>No messages yet.</p>
-                <span>Start a conversation</span>
+                <p>{t("leads.noMessages")}</p>
+                <span>{t("leads.startConversation")}</span>
               </div>
             )}
           </div>
@@ -2595,7 +2620,7 @@ export default function LeadsPage() {
           {/* AI SUGGESTED REPLIES */}
           <div className="suggested-replies-container">
             <div className="suggested-title">
-              <Sparkles size={12} /> AI Suggested Replies
+              <Sparkles size={12} /> {t("leads.aiSuggestedReplies")}
             </div>
             <div className="suggested-chips-scroll">
               {aiSuggestedReplies.map((reply, index) => (
@@ -2621,26 +2646,26 @@ export default function LeadsPage() {
                     className="voice-cancel-btn"
                     onClick={cancelVoiceRecording}
                   >
-                    Cancel
+                    {t("leads.cancel")}
                   </button>
 
                   <span className="recording-dot"></span>
 
                   <strong>{formatRecordTime(recordSeconds)}</strong>
 
-                  <span>Recording...</span>
+                  <span>{t("leads.recording")}</span>
 
                   <button
                     type="button"
                     className="voice-send-btn"
                     onClick={finishVoiceRecording}
                   >
-                    Send
+                    {t("leads.send")}
                   </button>
                 </div>
               ) : (
                 <input
-                  placeholder="Type a message or let AI assist..."
+                  placeholder={t("leads.chatPlaceholder")}
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
                   onKeyDown={(e) => {
@@ -2738,7 +2763,7 @@ export default function LeadsPage() {
                   disabled={!selectedLead}
                 >
                   <Sparkles size={14} />
-                  AI Assist
+                  {t("leads.aiAssist")}
                 </button>
                 <button
                   className="send-btn fixed-send-btn"
@@ -2763,29 +2788,29 @@ export default function LeadsPage() {
           <div className="quick-actions-grid">
             {[
               {
-                title: "AI Follow-Up",
-                desc: "Send automated follow-up",
+                title: t("leads.aiFollowUp"),
+                desc: t("leads.aiFollowUpDesc"),
                 icon: <Send size={14} color="#22c55e" />,
                 bgClass: "icon-bg-green",
                 onClick: openAiFollowUp,
               },
               {
-                title: "Book Showing",
-                desc: "Schedule appointment",
+                title: t("leads.bookShowing"),
+                desc: t("leads.bookShowingDesc"),
                 icon: <Calendar size={14} color="#2563eb" />,
                 bgClass: "icon-bg-blue",
                 onClick: openBookShowing,
               },
               {
-                title: "Send Properties",
-                desc: "Send matching homes",
+                title: t("leads.sendProperties"),
+                desc: t("leads.sendPropertiesDesc"),
                 icon: <Home size={14} color="#0284c7" />,
                 bgClass: "icon-bg-sky",
                 onClick: openSendProperties,
               },
               {
-                title: "Escalate Lead",
-                desc: "Mark as urgent",
+                title: t("leads.escalateLead"),
+                desc: t("leads.escalateLeadDesc"),
                 icon: <Flame size={14} color="#dc2626" />,
                 bgClass: "icon-bg-red",
                 onClick: escalateSelectedLead,
@@ -2813,48 +2838,54 @@ export default function LeadsPage() {
           {/* BOX 1: LEAD INTELLIGENCE */}
           <div className="insight-card">
             <div className="panel-header">
-              <h3>Lead Intelligence</h3>
+              <h3>{t("leads.leadIntelligenceTitle")}</h3>
               <span className="hot-tag">
-                {leadIntelligence.temperature} Lead
+                {t("leads.temperatureLead", {
+                  temperature: translateTemperature(
+                    leadIntelligence.temperature,
+                  ),
+                })}
               </span>
             </div>
             {conversationIntelligenceLoading && (
-              <p className="panel-header-desc">Analyzing conversation...</p>
+              <p className="panel-header-desc">
+                {t("leads.analyzingConversation")}
+              </p>
             )}
 
             <div className="insight-wrap">
               <div className="score-circle">
                 <div>
                   <h2>{leadIntelligence.score}%</h2>
-                  <span>AI Score</span>
+                  <span>{t("leads.aiScore")}</span>
                 </div>
               </div>
 
               <div className="insight-list">
                 <div className="insight-row">
-                  <span>Sentiment</span>
+                  <span>{t("leads.sentiment")}</span>
                   <strong>{leadIntelligence.sentiment}</strong>
                 </div>
 
                 <div className="insight-row">
-                  <span>Intent</span>
+                  <span>{t("leads.intent")}</span>
                   <strong>{leadIntelligence.interestLevel}</strong>
                 </div>
 
                 <div className="insight-row">
-                  <span>Response Likelihood</span>
+                  <span>{t("leads.responseLikelihood")}</span>
                   <strong>{leadIntelligence.responseLikelihood}</strong>
                 </div>
 
                 <div className="insight-row">
-                  <span>Ghost Risk</span>
+                  <span>{t("leads.ghostRisk")}</span>
                   <strong>{leadIntelligence.ghostRisk}</strong>
                 </div>
               </div>
             </div>
 
             <div className="lead-ai-summary">
-              <strong>Recommended Action</strong>
+              <strong>{t("leads.recommendedAction")}</strong>
               <p>{leadIntelligence.recommendedAction}</p>
             </div>
           </div>
@@ -2862,32 +2893,36 @@ export default function LeadsPage() {
           {/* BOX 2: REVENUE INTELLIGENCE */}
           <div className="insight-card">
             <div className="panel-header header-spacing">
-              <h3>Revenue Intelligence</h3>
+              <h3>{t("leads.revenueIntelligence")}</h3>
             </div>
             <div className="revenue-grid">
               <div className="revenue-box">
-                <span className="revenue-label">Deal Value</span>
+                <span className="revenue-label">{t("leads.dealValue")}</span>
                 <strong className="revenue-val-green">
                   {leadIntelligence.expectedRevenue}
                 </strong>
               </div>
 
               <div className="revenue-box">
-                <span className="revenue-label">Close Probability</span>
+                <span className="revenue-label">
+                  {t("leads.closeProbability")}
+                </span>
                 <strong className="revenue-val-blue">
                   {leadIntelligence.closeProbability}
                 </strong>
               </div>
 
               <div className="revenue-box">
-                <span className="revenue-label">Timeline</span>
+                <span className="revenue-label">{t("leads.timeline")}</span>
                 <strong className="revenue-val-dark">
                   {leadIntelligence.timeline}
                 </strong>
               </div>
 
               <div className="revenue-box">
-                <span className="revenue-label">Pipeline Stage</span>
+                <span className="revenue-label">
+                  {t("leads.pipelineStage")}
+                </span>
                 <strong className="revenue-val-orange">
                   {selectedLead?.dealStage || "new"}
                 </strong>
@@ -2899,16 +2934,16 @@ export default function LeadsPage() {
           <div className="insight-card automation-card-custom">
             <div className="panel-header automation-header">
               <div>
-                <h3>AI Automation Controls</h3>
+                <h3>{t("leads.aiAutomationControls")}</h3>
                 <p className="panel-header-desc">
-                  Manage AI actions for this lead
+                  {t("leads.manageAiActions")}
                 </p>
               </div>
               <button
                 className="manage-all-link"
                 onClick={() => setShowAutomationModal(true)}
               >
-                Manage All
+                {t("leads.manageAll")}
               </button>
             </div>
 
@@ -2931,7 +2966,7 @@ export default function LeadsPage() {
                             : "status-inactive-text"
                         }
                       >
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? t("leads.active") : t("leads.inactive")}
                       </span>
                       <div
                         className={`switch ${isActive ? "active" : ""}`}
@@ -2946,7 +2981,7 @@ export default function LeadsPage() {
           {/* BOX 4: LEAD JOURNEY TIMELINE */}
           <div className="insight-card">
             <div className="panel-header header-spacing">
-              <h3>Lead Journey Timeline</h3>
+              <h3>{t("leads.leadJourneyTimeline")}</h3>
             </div>
 
             <div className="timeline-container">
@@ -2956,7 +2991,9 @@ export default function LeadsPage() {
                 <div className="timeline-item">
                   <div className="timeline-dot dot-blue"></div>
                   <div className="timeline-content">
-                    <p className="timeline-desc">Loading timeline...</p>
+                    <p className="timeline-desc">
+                      {t("leads.loadingTimeline")}
+                    </p>
                   </div>
                 </div>
               ) : leadEvents.length ? (
@@ -2968,7 +3005,7 @@ export default function LeadsPage() {
                         <h5 className="timeline-title">
                           {event.metadata?.title ||
                             event.eventType?.replaceAll("_", " ") ||
-                            "Lead activity"}
+                            t("leads.leadActivity")}
                         </h5>
                         <span className="timeline-time">
                           {formatLeadEventDate(event.createdAt)}
@@ -2977,7 +3014,7 @@ export default function LeadsPage() {
                       <p className="timeline-desc">
                         {event.metadata?.sub ||
                           event.metadata?.description ||
-                          "Lead updated"}
+                          t("leads.leadUpdated")}
                       </p>
                     </div>
                   </div>
@@ -2987,9 +3024,11 @@ export default function LeadsPage() {
                   <div className="timeline-dot dot-green"></div>
                   <div className="timeline-content">
                     <div className="timeline-content-top">
-                      <h5 className="timeline-title">Lead created</h5>
+                      <h5 className="timeline-title">
+                        {t("leads.leadCreated")}
+                      </h5>
                     </div>
-                    <p className="timeline-desc">No event yet.</p>
+                    <p className="timeline-desc">{t("leads.noEventYet")}</p>
                   </div>
                 </div>
               )}
@@ -2997,7 +3036,7 @@ export default function LeadsPage() {
 
             <div className="timeline-footer">
               <button className="full-timeline-btn" onClick={openFullTimeline}>
-                Full Timeline <ArrowRight size={12} />
+                {t("leads.fullTimeline")} <ArrowRight size={12} />
               </button>
             </div>
           </div>
@@ -3030,7 +3069,7 @@ export default function LeadsPage() {
               }}
             >
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>
-                AI Lead Score
+                {t("leads.aiLeadScore")}
               </h3>
               <button
                 type="button"
@@ -3063,10 +3102,14 @@ export default function LeadsPage() {
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>
-                  {getLeadTemperature(selectedLead)} lead
+                  {t("leads.temperatureLeadLower", {
+                    temperature: translateTemperature(
+                      getLeadTemperature(selectedLead),
+                    ),
+                  })}
                 </div>
                 <div style={{ fontSize: 12.5, color: "#6b7280" }}>
-                  {selectedLead.name || "This lead"}
+                  {selectedLead.name || t("leads.thisLeadName")}
                 </div>
               </div>
             </div>
@@ -3081,7 +3124,7 @@ export default function LeadsPage() {
                 marginBottom: 10,
               }}
             >
-              Why this score
+              {t("leads.whyThisScore")}
             </div>
             <ul
               style={{
@@ -3095,47 +3138,48 @@ export default function LeadsPage() {
             >
               {[
                 {
-                  label: "Priority",
-                  value: selectedLead.priority || "not set",
+                  label: t("leads.priority"),
+                  value: selectedLead.priority || t("leads.notSet"),
                   positive: selectedLead.priority === "high",
                 },
                 {
-                  label: "Stage",
+                  label: t("leads.stage"),
                   value: selectedLead.status || "new",
                   positive: ["qualified", "follow-up", "closed-won"].includes(
                     String(selectedLead.status || ""),
                   ),
                 },
                 {
-                  label: "Phone on file",
-                  value: selectedLead.phone ? "yes" : "no",
+                  label: t("leads.phoneOnFile"),
+                  value: selectedLead.phone ? t("leads.yes") : t("leads.no"),
                   positive: Boolean(selectedLead.phone),
                 },
                 {
-                  label: "Email on file",
-                  value: selectedLead.email ? "yes" : "no",
+                  label: t("leads.emailOnFile"),
+                  value: selectedLead.email ? t("leads.yes") : t("leads.no"),
                   positive: Boolean(selectedLead.email),
                 },
                 {
-                  label: "Deal value",
+                  label: t("leads.dealValue"),
                   value: selectedLead.dealValue
                     ? `$${Number(selectedLead.dealValue).toLocaleString()}`
-                    : "none",
+                    : t("leads.none"),
                   positive: Boolean(selectedLead.dealValue),
                 },
                 {
-                  label: "Source",
-                  value: selectedLead.source || "unknown",
+                  label: t("leads.source"),
+                  value: selectedLead.source || t("leads.unknown"),
                   positive: Boolean(selectedLead.source),
                 },
                 {
-                  label: "Sentiment",
-                  value: leadIntelligence?.sentiment || "unknown",
+                  label: t("leads.sentiment"),
+                  value: leadIntelligence?.sentiment || t("leads.unknown"),
                   positive: false,
                 },
                 {
-                  label: "Response likelihood",
-                  value: leadIntelligence?.responseLikelihood || "unknown",
+                  label: t("leads.responseLikelihood"),
+                  value:
+                    leadIntelligence?.responseLikelihood || t("leads.unknown"),
                   positive: false,
                 },
               ].map((f) => (
@@ -3176,8 +3220,7 @@ export default function LeadsPage() {
                 marginBottom: 0,
               }}
             >
-              Score blends engagement, responsiveness, source, and activity. It
-              updates as the lead progresses.
+              {t("leads.scoreExplanation")}
             </p>
           </div>
         </div>
@@ -3197,7 +3240,7 @@ export default function LeadsPage() {
             }}
           >
             <div className="lead-modal-header">
-              <h3>Full Lead Timeline</h3>
+              <h3>{t("leads.fullLeadTimeline")}</h3>
               <button onClick={() => setShowTimelineModal(false)}>✕</button>
             </div>
 
@@ -3211,28 +3254,28 @@ export default function LeadsPage() {
                     <div className="timeline-content">
                       <div className="timeline-content-top">
                         <h5 className="timeline-title">
-                          {event.metadata?.title || "Lead activity"}
+                          {event.metadata?.title || t("leads.leadActivity")}
                         </h5>
                         <span className="timeline-time">
                           {formatLeadEventDate(event.createdAt)}
                         </span>
                       </div>
                       <p className="timeline-desc">
-                        {event.metadata?.sub || "Lead updated"}
+                        {event.metadata?.sub || t("leads.leadUpdated")}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="timeline-desc">No timeline yet.</p>
+                <p className="timeline-desc">{t("leads.noTimeline")}</p>
               )}
 
               {fullTimelineLoading && (
-                <p className="timeline-desc">Loading more...</p>
+                <p className="timeline-desc">{t("leads.loadingMore")}</p>
               )}
 
               {!fullTimelineHasMore && fullLeadEvents.length > 0 && (
-                <p className="timeline-desc">End of timeline.</p>
+                <p className="timeline-desc">{t("leads.endOfTimeline")}</p>
               )}
             </div>
           </div>
@@ -3243,14 +3286,14 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>Book Showing</h3>
+              <h3>{t("leads.bookShowing")}</h3>
               <button onClick={() => setShowBookShowingModal(false)}>✕</button>
             </div>
 
             <form onSubmit={submitBookShowing}>
               <div className="lead-form-grid">
                 <div className="lead-form-field">
-                  <label>Date</label>
+                  <label>{t("leads.date")}</label>
                   <input
                     type="date"
                     required
@@ -3262,7 +3305,7 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="lead-form-field">
-                  <label>Time</label>
+                  <label>{t("leads.time")}</label>
                   <input
                     type="time"
                     required
@@ -3274,14 +3317,14 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="lead-form-field full">
-                  <label>Note</label>
+                  <label>{t("leads.note")}</label>
                   <textarea
                     rows="4"
                     value={showingForm.note}
                     onChange={(e) =>
                       setShowingForm({ ...showingForm, note: e.target.value })
                     }
-                    placeholder="Add showing details..."
+                    placeholder={t("leads.showingNotePlaceholder")}
                   />
                 </div>
               </div>
@@ -3291,10 +3334,10 @@ export default function LeadsPage() {
                   type="button"
                   onClick={() => setShowBookShowingModal(false)}
                 >
-                  Cancel
+                  {t("leads.cancel")}
                 </button>
 
-                <button type="submit">Book Showing</button>
+                <button type="submit">{t("leads.bookShowing")}</button>
               </div>
             </form>
           </div>
@@ -3305,7 +3348,7 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>Send Properties</h3>
+              <h3>{t("leads.sendProperties")}</h3>
               <button onClick={() => setShowSendPropertiesModal(false)}>
                 ✕
               </button>
@@ -3314,12 +3357,12 @@ export default function LeadsPage() {
             <form onSubmit={submitSendProperties}>
               <div className="lead-form-grid">
                 <div className="lead-form-field full">
-                  <label>Note</label>
+                  <label>{t("leads.note")}</label>
                   <textarea
                     rows="4"
                     value={propertiesNote}
                     onChange={(e) => setPropertiesNote(e.target.value)}
-                    placeholder="Example: Sent 3 matching homes in Quito..."
+                    placeholder={t("leads.propertiesNotePlaceholder")}
                   />
                 </div>
               </div>
@@ -3329,10 +3372,10 @@ export default function LeadsPage() {
                   type="button"
                   onClick={() => setShowSendPropertiesModal(false)}
                 >
-                  Cancel
+                  {t("leads.cancel")}
                 </button>
 
-                <button type="submit">Send Properties</button>
+                <button type="submit">{t("leads.sendProperties")}</button>
               </div>
             </form>
           </div>
@@ -3343,14 +3386,14 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>AI Follow-Up</h3>
+              <h3>{t("leads.aiFollowUp")}</h3>
               <button onClick={() => setShowFollowUpModal(false)}>✕</button>
             </div>
 
             <form onSubmit={submitAiFollowUp}>
               <div className="lead-form-grid">
                 <div className="lead-form-field full">
-                  <label>Message</label>
+                  <label>{t("leads.message")}</label>
                   <textarea
                     rows="5"
                     value={followUpMessage}
@@ -3366,7 +3409,7 @@ export default function LeadsPage() {
                   onClick={() => setShowFollowUpModal(false)}
                   disabled={isSubmittingFollowUp}
                 >
-                  Cancel
+                  {t("leads.cancel")}
                 </button>
 
                 <button
@@ -3377,7 +3420,9 @@ export default function LeadsPage() {
                     !selectedLead?.id
                   }
                 >
-                  {isSubmittingFollowUp ? "Sending..." : "Send Follow-Up"}
+                  {isSubmittingFollowUp
+                    ? t("leads.sending")
+                    : t("leads.sendFollowUp")}
                 </button>
               </div>
             </form>
@@ -3388,14 +3433,14 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>Lead Profile</h3>
+              <h3>{t("leads.leadProfile")}</h3>
               <button onClick={() => setShowLeadProfileModal(false)}>✕</button>
             </div>
 
             <form onSubmit={saveLeadProfile}>
               <div className="lead-form-grid">
                 <div className="lead-form-field form-group">
-                  <label>Status</label>
+                  <label>{t("leads.status")}</label>
                   <select
                     value={leadProfileForm.status}
                     onChange={(e) =>
@@ -3405,17 +3450,17 @@ export default function LeadsPage() {
                       })
                     }
                   >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="follow-up">Follow Up</option>
-                    <option value="closed-won">Closed Won</option>
-                    <option value="closed-lost">Closed Lost</option>
+                    <option value="new">{t("leads.optNew")}</option>
+                    <option value="contacted">{t("leads.contacted")}</option>
+                    <option value="qualified">{t("leads.optQualified")}</option>
+                    <option value="follow-up">{t("leads.optFollowUp")}</option>
+                    <option value="closed-won">{t("leads.optClosedWon")}</option>
+                    <option value="closed-lost">{t("leads.optClosedLost")}</option>
                   </select>
                 </div>
 
                 <div className="lead-form-field form-group">
-                  <label>Priority</label>
+                  <label>{t("leads.priority")}</label>
                   <select
                     value={leadProfileForm.priority}
                     onChange={(e) =>
@@ -3425,14 +3470,14 @@ export default function LeadsPage() {
                       })
                     }
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t("leads.optLow")}</option>
+                    <option value="medium">{t("leads.optMedium")}</option>
+                    <option value="high">{t("leads.optHigh")}</option>
                   </select>
                 </div>
 
                 <div className="lead-form-field full">
-                  <label>Notes</label>
+                  <label>{t("leads.notes")}</label>
                   <textarea
                     rows="5"
                     value={leadProfileForm.notes}
@@ -3451,10 +3496,10 @@ export default function LeadsPage() {
                   type="button"
                   onClick={() => setShowLeadProfileModal(false)}
                 >
-                  Cancel
+                  {t("leads.cancel")}
                 </button>
 
-                <button type="submit">Save Profile</button>
+                <button type="submit">{t("leads.saveProfile")}</button>
               </div>
             </form>
           </div>
@@ -3464,7 +3509,7 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>AI Automation Controls</h3>
+              <h3>{t("leads.aiAutomationControls")}</h3>
               <button onClick={() => setShowAutomationModal(false)}>✕</button>
             </div>
 
@@ -3490,7 +3535,7 @@ export default function LeadsPage() {
                             : "status-inactive-text"
                         }
                       >
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? t("leads.active") : t("leads.inactive")}
                       </span>
                       <div
                         className={`switch ${isActive ? "active" : ""}`}
@@ -3507,14 +3552,14 @@ export default function LeadsPage() {
         <div className="lead-modal-overlay">
           <div className="lead-timeline-modal">
             <div className="lead-modal-header">
-              <h3>New Lead</h3>
+              <h3>{t("leads.newLead")}</h3>
               <button onClick={() => setShowCreateLeadModal(false)}>✕</button>
             </div>
 
             <form onSubmit={createLead}>
               <div className="lead-form-grid">
                 <div className="lead-form-field">
-                  <label>Name</label>
+                  <label>{t("leads.name")}</label>
                   <input
                     required
                     value={createLeadForm.name}
@@ -3528,7 +3573,7 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="lead-form-field">
-                  <label>Email</label>
+                  <label>{t("leads.email")}</label>
                   <input
                     type="email"
                     required
@@ -3543,7 +3588,7 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="lead-form-field">
-                  <label>Phone</label>
+                  <label>{t("leads.phone")}</label>
                   <input
                     required
                     value={createLeadForm.phone}
@@ -3557,7 +3602,7 @@ export default function LeadsPage() {
                 </div>
 
                 <div className="lead-form-field">
-                  <label>Source</label>
+                  <label>{t("leads.source")}</label>
                   <input
                     value={createLeadForm.source}
                     onChange={(e) =>
@@ -3566,12 +3611,12 @@ export default function LeadsPage() {
                         source: e.target.value,
                       })
                     }
-                    placeholder="Website, Facebook, WhatsApp..."
+                    placeholder={t("leads.sourcePlaceholder")}
                   />
                 </div>
 
                 <div className="lead-form-field form-group">
-                  <label>Status</label>
+                  <label>{t("leads.status")}</label>
                   <select
                     value={createLeadForm.status}
                     onChange={(e) =>
@@ -3581,17 +3626,17 @@ export default function LeadsPage() {
                       })
                     }
                   >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="follow-up">Follow Up</option>
-                    <option value="closed-won">Closed Won</option>
-                    <option value="closed-lost">Closed Lost</option>
+                    <option value="new">{t("leads.optNew")}</option>
+                    <option value="contacted">{t("leads.contacted")}</option>
+                    <option value="qualified">{t("leads.optQualified")}</option>
+                    <option value="follow-up">{t("leads.optFollowUp")}</option>
+                    <option value="closed-won">{t("leads.optClosedWon")}</option>
+                    <option value="closed-lost">{t("leads.optClosedLost")}</option>
                   </select>
                 </div>
 
                 <div className="lead-form-field form-group">
-                  <label>Priority</label>
+                  <label>{t("leads.priority")}</label>
                   <select
                     value={createLeadForm.priority}
                     onChange={(e) =>
@@ -3601,14 +3646,14 @@ export default function LeadsPage() {
                       })
                     }
                   >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
+                    <option value="low">{t("leads.optLow")}</option>
+                    <option value="medium">{t("leads.optMedium")}</option>
+                    <option value="high">{t("leads.optHigh")}</option>
                   </select>
                 </div>
 
                 <div className="lead-form-field full">
-                  <label>Notes</label>
+                  <label>{t("leads.notes")}</label>
                   <textarea
                     rows="4"
                     value={createLeadForm.notes}
@@ -3627,10 +3672,10 @@ export default function LeadsPage() {
                   type="button"
                   onClick={() => setShowCreateLeadModal(false)}
                 >
-                  Cancel
+                  {t("leads.cancel")}
                 </button>
 
-                <button type="submit">Create Lead</button>
+                <button type="submit">{t("leads.createLead")}</button>
               </div>
             </form>
           </div>

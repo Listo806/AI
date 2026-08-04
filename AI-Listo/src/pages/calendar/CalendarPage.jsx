@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./CalendarPage.css";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -66,15 +67,18 @@ const toLocalInput = (d) => {
 };
 
 // The CRM record an appointment is linked to (lead or contact), for display.
-const crmLabelOf = (a) => {
-  if (a.leadName) return `${a.leadName} (Lead)`;
-  if (a.contactName) return `${a.contactName} (Contact)`;
+const crmLabelOf = (a, t) => {
+  if (a.leadName) return `${a.leadName} (${t("calendar.lead")})`;
+  if (a.contactName) return `${a.contactName} (${t("calendar.contact")})`;
   return "";
 };
 
 export default function CalendarPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const typeLabel = (key) => t(`calendar.type.${typeInfo(key).key}`);
+  const weekdayShort = (i) => t(`calendar.weekdayShort.${i}`);
 
   const [view, setView] = useState("week");
   const [anchor, setAnchor] = useState(() => new Date());
@@ -216,7 +220,7 @@ export default function CalendarPage() {
       propertyId: a.propertyId || "",
       reminderMinutesBefore: a.reminderMinutesBefore ?? 60,
     });
-    setCrmQuery(crmLabelOf(a)); setCrmResults([]); setCrmOpen(false);
+    setCrmQuery(crmLabelOf(a, t)); setCrmResults([]); setCrmOpen(false);
     setError("");
     setMode("form");
   };
@@ -230,7 +234,7 @@ export default function CalendarPage() {
       attendeeName: f.attendeeName || r.name || "",
       attendeeEmail: f.attendeeEmail || r.email || "",
     }));
-    setCrmQuery(`${r.name} (${r.kind === "lead" ? "Lead" : "Contact"})`);
+    setCrmQuery(`${r.name} (${r.kind === "lead" ? t("calendar.lead") : t("calendar.contact")})`);
     setCrmOpen(false);
   };
 
@@ -240,9 +244,9 @@ export default function CalendarPage() {
   };
 
   const save = async () => {
-    if (!form.title.trim()) { setError("Title is required"); return; }
-    if (!form.startAt || !form.endAt) { setError("Start and end times are required"); return; }
-    if (new Date(form.endAt) <= new Date(form.startAt)) { setError("End time must be after the start time"); return; }
+    if (!form.title.trim()) { setError(t("calendar.errTitleRequired")); return; }
+    if (!form.startAt || !form.endAt) { setError(t("calendar.errTimesRequired")); return; }
+    if (new Date(form.endAt) <= new Date(form.startAt)) { setError(t("calendar.errEndAfterStart")); return; }
     setSaving(true); setError("");
     const payload = {
       title: form.title.trim(), type: form.type, status: form.status,
@@ -262,7 +266,7 @@ export default function CalendarPage() {
       setModalOpen(false);
       await load();
     } catch (e) {
-      setError(e.message || "Could not save the appointment");
+      setError(e.message || t("calendar.errSave"));
     } finally {
       setSaving(false);
     }
@@ -270,10 +274,10 @@ export default function CalendarPage() {
 
   const remove = async () => {
     if (!editing) return;
-    if (!confirm("Delete this appointment?")) return;
+    if (!confirm(t("calendar.confirmDelete"))) return;
     setSaving(true);
     try { await deleteAppointment(editing.id); setModalOpen(false); await load(); }
-    catch (e) { setError(e.message || "Could not delete"); }
+    catch (e) { setError(e.message || t("calendar.errDelete")); }
     finally { setSaving(false); }
   };
 
@@ -317,7 +321,7 @@ export default function CalendarPage() {
   const agentOptions = useMemo(() => {
     const list = [...members];
     if (user?.id && !list.some((m) => m.id === user.id)) {
-      list.unshift({ id: user.id, name: user.name || user.email || "Me" });
+      list.unshift({ id: user.id, name: user.name || user.email || t("calendar.me") });
     }
     return list;
   }, [members, user]);
@@ -330,12 +334,12 @@ export default function CalendarPage() {
   return (
     <div className="cal-page">
       <div className="cal-header">
-        <h1>Calendar</h1>
-        <p className="cal-sub">Manage your appointments, showings, and meetings in one place.</p>
+        <h1>{t("calendar.title")}</h1>
+        <p className="cal-sub">{t("calendar.subtitle")}</p>
       </div>
 
       <div className="cal-toolbar">
-        <button className="cal-btn" onClick={() => setAnchor(new Date())}>Today</button>
+        <button className="cal-btn" onClick={() => setAnchor(new Date())}>{t("calendar.today")}</button>
         <button className="cal-btn" onClick={() => move(-1)}>&#8249;</button>
         <button className="cal-btn" onClick={() => move(1)}>&#8250;</button>
         <div className="cal-range">{rangeLabel}</div>
@@ -343,26 +347,26 @@ export default function CalendarPage() {
         <div className="cal-views">
           {VIEWS.map((v) => (
             <button key={v} className={view === v ? "active" : ""} onClick={() => setView(v)}>
-              {v[0].toUpperCase() + v.slice(1)}
+              {t(`calendar.view.${v}`)}
             </button>
           ))}
         </div>
-        <button className="cal-btn cal-btn-primary" onClick={() => openNew()}>+ New Appointment</button>
+        <button className="cal-btn cal-btn-primary" onClick={() => openNew()}>+ {t("calendar.newAppointment")}</button>
       </div>
 
       <div className="cal-kpis">
-        <div className="cal-kpi"><div className="n">{kpi.total}</div><div className="l">Total Appointments</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#16a34a" }}>{kpi.confirmed}</div><div className="l">Confirmed</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#d97706" }}>{kpi.pending}</div><div className="l">Pending</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#2563eb" }}>{kpi.completed}</div><div className="l">Completed</div></div>
-        <div className="cal-kpi"><div className="n" style={{ color: "#dc2626" }}>{kpi.canceled}</div><div className="l">Canceled</div></div>
+        <div className="cal-kpi"><div className="n">{kpi.total}</div><div className="l">{t("calendar.kpiTotal")}</div></div>
+        <div className="cal-kpi"><div className="n" style={{ color: "#16a34a" }}>{kpi.confirmed}</div><div className="l">{t("calendar.status.confirmed")}</div></div>
+        <div className="cal-kpi"><div className="n" style={{ color: "#d97706" }}>{kpi.pending}</div><div className="l">{t("calendar.status.pending")}</div></div>
+        <div className="cal-kpi"><div className="n" style={{ color: "#2563eb" }}>{kpi.completed}</div><div className="l">{t("calendar.status.completed")}</div></div>
+        <div className="cal-kpi"><div className="n" style={{ color: "#dc2626" }}>{kpi.canceled}</div><div className="l">{t("calendar.status.canceled")}</div></div>
       </div>
 
       <div className="cal-body">
         <div>
           {view === "agenda" ? (
             <div className="cal-agenda">
-              {agendaGroups.length === 0 && <div className="cal-empty">No appointments in this range.</div>}
+              {agendaGroups.length === 0 && <div className="cal-empty">{t("calendar.emptyRange")}</div>}
               {agendaGroups.map(([key, evs]) => (
                 <div key={key} className="cal-agenda-day">
                   <h4>{new Date(key).toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</h4>
@@ -377,7 +381,7 @@ export default function CalendarPage() {
             </div>
           ) : view === "month" ? (
             <div className="cal-month">
-              {WEEKDAYS.map((w) => <div key={w} className="mh">{w}</div>)}
+              {WEEKDAYS.map((w, i) => <div key={w} className="mh">{weekdayShort(i)}</div>)}
               {monthCells.map((d, i) => {
                 const dayEvents = items.filter((a) => sameDay(a.start, d));
                 return (
@@ -392,7 +396,7 @@ export default function CalendarPage() {
                       );
                     })}
                     {dayEvents.length > 3 && (
-                      <div className="cal-chip" style={{ background: "#f1f5f9", borderLeftColor: "#94a3b8" }}>+{dayEvents.length - 3} more</div>
+                      <div className="cal-chip" style={{ background: "#f1f5f9", borderLeftColor: "#94a3b8" }}>{t("calendar.moreCount", { count: dayEvents.length - 3 })}</div>
                     )}
                   </div>
                 );
@@ -426,8 +430,8 @@ export default function CalendarPage() {
           )}
 
           <div className="cal-legend">
-            {TYPES.map((t) => (
-              <span key={t.key}><span className="dot" style={{ background: t.color }} />{t.label}</span>
+            {TYPES.map((ty) => (
+              <span key={ty.key}><span className="dot" style={{ background: ty.color }} />{typeLabel(ty.key)}</span>
             ))}
           </div>
         </div>
@@ -436,7 +440,7 @@ export default function CalendarPage() {
           <div className="cal-card">
             <h3>{anchor.toLocaleDateString([], { month: "long", year: "numeric" })}</h3>
             <div className="cal-mini">
-              {WEEKDAYS.map((w) => <div key={w} className="cell head">{w[0]}</div>)}
+              {WEEKDAYS.map((w, i) => <div key={w} className="cell head">{weekdayShort(i)[0]}</div>)}
               {monthCells.map((d, i) => (
                 <div key={i} className={`cell ${d.getMonth() !== anchor.getMonth() ? "muted" : ""} ${isToday(d) ? "today" : ""}`}
                   onClick={() => { setAnchor(new Date(d)); setView("day"); }}>
@@ -447,15 +451,15 @@ export default function CalendarPage() {
           </div>
 
           <div className="cal-card">
-            <h3>Upcoming ({upcoming.length})</h3>
+            <h3>{t("calendar.upcoming", { count: upcoming.length })}</h3>
             <div className="cal-up">
               {upcoming.length === 0 ? (
-                <div className="cal-empty">Nothing upcoming.</div>
+                <div className="cal-empty">{t("calendar.nothingUpcoming")}</div>
               ) : (
                 upcoming.map((a) => (
                   <div key={a.id} className="cal-up-item" style={{ borderLeftColor: typeInfo(a.type).color }} onClick={() => openView(a)}>
                     <div className="t">{a.title}</div>
-                    <div>{fmtTime(a.start)} · {a.attendeeName || typeInfo(a.type).label}</div>
+                    <div>{fmtTime(a.start)} · {a.attendeeName || typeLabel(a.type)}</div>
                   </div>
                 ))
               )}
@@ -463,11 +467,11 @@ export default function CalendarPage() {
           </div>
 
           <div className="cal-card cal-qa">
-            <h3>Quick Actions</h3>
-            <button onClick={() => openNew({ type: "showing" })}>📅 Schedule Showing</button>
-            <button onClick={() => openNew({ type: "consultation" })}>👥 New Buyer Consultation</button>
-            <button onClick={() => openNew({ type: "call" })}>📞 Create Follow-up Call</button>
-            <button onClick={() => openNew({ type: "meeting" })}>🤝 Add Team Meeting</button>
+            <h3>{t("calendar.quickActions")}</h3>
+            <button onClick={() => openNew({ type: "showing" })}>📅 {t("calendar.qaShowing")}</button>
+            <button onClick={() => openNew({ type: "consultation" })}>👥 {t("calendar.qaConsultation")}</button>
+            <button onClick={() => openNew({ type: "call" })}>📞 {t("calendar.qaCall")}</button>
+            <button onClick={() => openNew({ type: "meeting" })}>🤝 {t("calendar.qaMeeting")}</button>
           </div>
         </div>
       </div>
@@ -477,20 +481,20 @@ export default function CalendarPage() {
           <div className="cal-modal">
             <div className="cal-detail-head">
               <span className="cal-type-pill" style={{ background: typeInfo(editing.type).bg, color: typeInfo(editing.type).color }}>
-                {typeInfo(editing.type).label}
+                {typeLabel(editing.type)}
               </span>
-              <span className={`cal-status-pill s-${editing.status}`}>{editing.status[0].toUpperCase() + editing.status.slice(1)}</span>
+              <span className={`cal-status-pill s-${editing.status}`}>{t(`calendar.status.${editing.status}`)}</span>
             </div>
             <h2>{editing.title}</h2>
             {error && <div className="cal-err">{error}</div>}
 
             <div className="cal-detail-rows">
-              <div className="cal-detail-row"><span>When</span><div>{fmtFull(editing.start)} – {fmtTime(editing.end)}</div></div>
-              {editing.location && <div className="cal-detail-row"><span>Location</span><div>{editing.location}</div></div>}
-              <div className="cal-detail-row"><span>Agent</span><div>{editing.assignedToName || memberName(editing.assignedTo) || "Unassigned"}</div></div>
+              <div className="cal-detail-row"><span>{t("calendar.field.when")}</span><div>{fmtFull(editing.start)} – {fmtTime(editing.end)}</div></div>
+              {editing.location && <div className="cal-detail-row"><span>{t("calendar.field.location")}</span><div>{editing.location}</div></div>}
+              <div className="cal-detail-row"><span>{t("calendar.field.agent")}</span><div>{editing.assignedToName || memberName(editing.assignedTo) || t("calendar.unassigned")}</div></div>
               {(editing.leadName || editing.contactName) && (
                 <div className="cal-detail-row">
-                  <span>{editing.leadName ? "Lead" : "Contact"}</span>
+                  <span>{editing.leadName ? t("calendar.lead") : t("calendar.contact")}</span>
                   <div>
                     <button className="cal-link-btn" onClick={openLinkedRecord}>
                       {editing.leadName || editing.contactName} ↗
@@ -499,24 +503,24 @@ export default function CalendarPage() {
                 </div>
               )}
               {(editing.attendeeName || editing.attendeeEmail) && (
-                <div className="cal-detail-row"><span>Attendee</span><div>{editing.attendeeName}{editing.attendeeEmail ? ` · ${editing.attendeeEmail}` : ""}</div></div>
+                <div className="cal-detail-row"><span>{t("calendar.field.attendee")}</span><div>{editing.attendeeName}{editing.attendeeEmail ? ` · ${editing.attendeeEmail}` : ""}</div></div>
               )}
-              {editing.propertyTitle && <div className="cal-detail-row"><span>Property</span><div>{editing.propertyTitle}</div></div>}
-              <div className="cal-detail-row"><span>Reminder</span><div>{(REMINDERS.find((r) => r.v === editing.reminderMinutesBefore) || { l: "No reminder" }).l}{editing.reminderSentAt ? " (sent)" : ""}</div></div>
-              {editing.notes && <div className="cal-detail-row"><span>Notes</span><div style={{ whiteSpace: "pre-wrap" }}>{editing.notes}</div></div>}
+              {editing.propertyTitle && <div className="cal-detail-row"><span>{t("calendar.field.property")}</span><div>{editing.propertyTitle}</div></div>}
+              <div className="cal-detail-row"><span>{t("calendar.field.reminder")}</span><div>{t(`calendar.reminder.${(REMINDERS.find((r) => r.v === editing.reminderMinutesBefore) || { v: 0 }).v}`)}{editing.reminderSentAt ? t("calendar.reminderSentSuffix") : ""}</div></div>
+              {editing.notes && <div className="cal-detail-row"><span>{t("calendar.field.notes")}</span><div style={{ whiteSpace: "pre-wrap" }}>{editing.notes}</div></div>}
             </div>
 
             <div className="cal-activity">
-              <h4>Activity</h4>
+              <h4>{t("calendar.activity")}</h4>
               {activity.length === 0 ? (
-                <div className="cal-empty">No activity recorded yet.</div>
+                <div className="cal-empty">{t("calendar.noActivity")}</div>
               ) : (
                 <div className="cal-activity-list">
                   {activity.map((ev) => (
                     <div key={ev.id} className="cal-activity-item">
                       <span className="dot" />
                       <div>
-                        <div className="a"><strong>{ev.actorName}</strong> {ACTION_VERB[ev.action] || ev.action}{ev.detail ? ` · ${ev.detail}` : ""}</div>
+                        <div className="a"><strong>{ev.actorName}</strong> {ACTION_VERB[ev.action] ? t(`calendar.actionVerb.${ev.action}`) : ev.action}{ev.detail ? ` · ${ev.detail}` : ""}</div>
                         <div className="ts">{new Date(ev.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</div>
                       </div>
                     </div>
@@ -527,14 +531,14 @@ export default function CalendarPage() {
 
             <div className="cal-modal-actions">
               <div>
-                <button className="cal-btn" style={{ color: "#dc2626" }} onClick={remove} disabled={saving}>Delete</button>
+                <button className="cal-btn" style={{ color: "#dc2626" }} onClick={remove} disabled={saving}>{t("calendar.delete")}</button>
               </div>
               <div className="right">
                 {(editing.leadId || editing.contactId) && (
-                  <button className="cal-btn" onClick={openLinkedRecord}>Open Contact</button>
+                  <button className="cal-btn" onClick={openLinkedRecord}>{t("calendar.openContact")}</button>
                 )}
-                <button className="cal-btn" onClick={() => setModalOpen(false)}>Close</button>
-                <button className="cal-btn cal-btn-primary" onClick={openEditFromView}>Edit</button>
+                <button className="cal-btn" onClick={() => setModalOpen(false)}>{t("calendar.close")}</button>
+                <button className="cal-btn cal-btn-primary" onClick={openEditFromView}>{t("calendar.edit")}</button>
               </div>
             </div>
           </div>
@@ -544,76 +548,76 @@ export default function CalendarPage() {
       {modalOpen && mode === "form" && form && (
         <div className="cal-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}>
           <div className="cal-modal">
-            <h2>{editing ? "Edit Appointment" : "New Appointment"}</h2>
+            <h2>{editing ? t("calendar.editAppointment") : t("calendar.newAppointment")}</h2>
             {error && <div className="cal-err">{error}</div>}
             <div className="cal-field">
-              <label>Title</label>
-              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Property Showing" />
+              <label>{t("calendar.field.title")}</label>
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("calendar.placeholderTitle")} />
             </div>
             <div className="cal-row2">
               <div className="cal-field">
-                <label>Meeting Type</label>
+                <label>{t("calendar.field.meetingType")}</label>
                 <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                  {TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+                  {TYPES.map((ty) => <option key={ty.key} value={ty.key}>{typeLabel(ty.key)}</option>)}
                 </select>
               </div>
               <div className="cal-field">
-                <label>Status</label>
+                <label>{t("calendar.field.status")}</label>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                  {STATUSES.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+                  {STATUSES.map((s) => <option key={s} value={s}>{t(`calendar.status.${s}`)}</option>)}
                 </select>
               </div>
             </div>
             <div className="cal-row2">
               <div className="cal-field">
-                <label>Start</label>
+                <label>{t("calendar.field.start")}</label>
                 <input type="datetime-local" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} />
               </div>
               <div className="cal-field">
-                <label>End</label>
+                <label>{t("calendar.field.end")}</label>
                 <input type="datetime-local" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} />
               </div>
             </div>
 
             <div className="cal-row2">
               <div className="cal-field">
-                <label>Assigned Agent</label>
+                <label>{t("calendar.field.assignedAgent")}</label>
                 <select value={form.assignedTo || ""} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}>
-                  <option value="">Unassigned</option>
+                  <option value="">{t("calendar.unassigned")}</option>
                   {agentOptions.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.name}{m.id === user?.id ? " (Me)" : ""}
+                      {m.name}{m.id === user?.id ? ` (${t("calendar.me")})` : ""}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="cal-field">
-                <label>Reminder</label>
+                <label>{t("calendar.field.reminder")}</label>
                 <select value={form.reminderMinutesBefore} onChange={(e) => setForm({ ...form, reminderMinutesBefore: Number(e.target.value) })}>
-                  {REMINDERS.map((r) => <option key={r.v} value={r.v}>{r.l}</option>)}
+                  {REMINDERS.map((r) => <option key={r.v} value={r.v}>{t(`calendar.reminder.${r.v}`)}</option>)}
                 </select>
               </div>
             </div>
 
             <div className="cal-field cal-crm">
-              <label>Contact / Lead</label>
+              <label>{t("calendar.field.contactLead")}</label>
               <div className="cal-crm-input">
                 <input
                   value={crmQuery}
-                  placeholder="Search leads and contacts"
+                  placeholder={t("calendar.placeholderCrm")}
                   onChange={(e) => { setCrmQuery(e.target.value); setCrmOpen(true); if (form.leadId || form.contactId) setForm((f) => ({ ...f, leadId: "", contactId: "" })); }}
                   onFocus={() => setCrmOpen(true)}
                   onBlur={() => setTimeout(() => setCrmOpen(false), 150)}
                 />
                 {(form.leadId || form.contactId) && (
-                  <button type="button" className="cal-crm-clear" onClick={clearCrm} title="Unlink">×</button>
+                  <button type="button" className="cal-crm-clear" onClick={clearCrm} title={t("calendar.unlink")}>×</button>
                 )}
                 {crmOpen && crmResults.length > 0 && (
                   <div className="cal-crm-results">
                     {crmResults.map((r) => (
                       <div key={`${r.kind}-${r.id}`} className="cal-crm-item" onClick={() => pickCrm(r)}>
                         <strong>{r.name}</strong>
-                        <span className="k">{r.kind === "lead" ? "Lead" : "Contact"}</span>
+                        <span className="k">{r.kind === "lead" ? t("calendar.lead") : t("calendar.contact")}</span>
                         {r.email && <span className="e">{r.email}</span>}
                       </div>
                     ))}
@@ -623,41 +627,41 @@ export default function CalendarPage() {
             </div>
 
             <div className="cal-field">
-              <label>Property (optional)</label>
+              <label>{t("calendar.field.propertyOptional")}</label>
               <select value={form.propertyId || ""} onChange={(e) => setForm({ ...form, propertyId: e.target.value })}>
-                <option value="">No property</option>
+                <option value="">{t("calendar.noProperty")}</option>
                 {properties.map((p) => (
-                  <option key={p.id} value={p.id}>{p.title || p.address || "Untitled property"}</option>
+                  <option key={p.id} value={p.id}>{p.title || p.address || t("calendar.untitledProperty")}</option>
                 ))}
               </select>
             </div>
 
             <div className="cal-field">
-              <label>Location</label>
-              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="123 Ocean Drive" />
+              <label>{t("calendar.field.location")}</label>
+              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder={t("calendar.placeholderLocation")} />
             </div>
             <div className="cal-row2">
               <div className="cal-field">
-                <label>Attendee name</label>
+                <label>{t("calendar.field.attendeeName")}</label>
                 <input value={form.attendeeName} onChange={(e) => setForm({ ...form, attendeeName: e.target.value })} />
               </div>
               <div className="cal-field">
-                <label>Attendee email</label>
+                <label>{t("calendar.field.attendeeEmail")}</label>
                 <input value={form.attendeeEmail} onChange={(e) => setForm({ ...form, attendeeEmail: e.target.value })} />
               </div>
             </div>
             <div className="cal-field">
-              <label>Notes</label>
+              <label>{t("calendar.field.notes")}</label>
               <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
             <div className="cal-modal-actions">
               <div>
-                {editing && <button className="cal-btn" style={{ color: "#dc2626" }} onClick={remove} disabled={saving}>Delete</button>}
+                {editing && <button className="cal-btn" style={{ color: "#dc2626" }} onClick={remove} disabled={saving}>{t("calendar.delete")}</button>}
               </div>
               <div className="right">
-                <button className="cal-btn" onClick={() => (editing ? setMode("view") : setModalOpen(false))} disabled={saving}>Cancel</button>
+                <button className="cal-btn" onClick={() => (editing ? setMode("view") : setModalOpen(false))} disabled={saving}>{t("calendar.cancel")}</button>
                 <button className="cal-btn cal-btn-primary" onClick={save} disabled={saving}>
-                  {saving ? "Saving..." : editing ? "Save" : "Create"}
+                  {saving ? t("calendar.saving") : editing ? t("calendar.save") : t("calendar.create")}
                 </button>
               </div>
             </div>

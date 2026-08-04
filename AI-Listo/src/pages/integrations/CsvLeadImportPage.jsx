@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
 export default function CsvLeadImportPage() {
+  const { t } = useTranslation();
+
   const [file, setFile] =
     useState(null);
 
@@ -83,7 +86,7 @@ export default function CsvLeadImportPage() {
       );
 
       alert(
-        "CSV leads imported successfully",
+        t("integrations.csvImport.importSuccess"),
       );
     } catch (err) {
       console.error(err);
@@ -95,11 +98,10 @@ export default function CsvLeadImportPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>CSV Lead Import</h1>
+        <h1>{t("integrations.csvImport.title")}</h1>
 
         <p>
-          Upload and import lead lists
-          into your CRM.
+          {t("integrations.csvImport.description")}
         </p>
       </div>
 
@@ -113,7 +115,7 @@ export default function CsvLeadImportPage() {
         }}
       >
         <div>
-          <h3>Upload CSV</h3>
+          <h3>{t("integrations.csvImport.uploadCsv")}</h3>
 
           <input
             type="file"
@@ -131,8 +133,8 @@ export default function CsvLeadImportPage() {
             style={buttonStyle}
           >
             {uploading
-              ? "Uploading..."
-              : "Upload CSV"}
+              ? t("integrations.csvImport.uploading")
+              : t("integrations.csvImport.uploadCsv")}
           </button>
         </div>
 
@@ -143,7 +145,7 @@ export default function CsvLeadImportPage() {
                 marginTop: 32,
               }}
             >
-              <h3>Column Mapping</h3>
+              <h3>{t("integrations.csvImport.columnMapping")}</h3>
 
               <div
                 style={{
@@ -181,7 +183,7 @@ export default function CsvLeadImportPage() {
                         }
                       >
                         <option value="">
-                          Ignore
+                          {t("integrations.csvImport.ignore")}
                         </option>
 
                         {crmFields.map(
@@ -206,7 +208,7 @@ export default function CsvLeadImportPage() {
                 marginTop: 32,
               }}
             >
-              <h3>CSV Preview</h3>
+              <h3>{t("integrations.csvImport.csvPreview")}</h3>
 
               <pre
                 style={{
@@ -231,8 +233,8 @@ export default function CsvLeadImportPage() {
               style={buttonStyle}
             >
               {importing
-                ? "Importing..."
-                : "Confirm Import"}
+                ? t("integrations.csvImport.importing")
+                : t("integrations.csvImport.confirmImport")}
             </button>
           </>
         )}

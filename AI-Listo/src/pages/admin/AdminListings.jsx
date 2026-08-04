@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import {
   getAdminListings,
@@ -15,21 +16,22 @@ import '../platform/platform.css';
 import './admin.css';
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  { value: 'pending_review', label: 'Pending Review' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'published', label: 'Published' },
+  { value: '', labelKey: 'admin.statusAll' },
+  { value: 'pending_review', labelKey: 'admin.statusPendingReview' },
+  { value: 'approved', labelKey: 'admin.statusApproved' },
+  { value: 'rejected', labelKey: 'admin.statusRejected' },
+  { value: 'published', labelKey: 'admin.statusPublished' },
 ];
 
 const ORIGIN_OPTIONS = [
-  { value: '', label: 'All origins' },
-  { value: 'platform', label: 'Platform' },
-  { value: 'va', label: 'VA' },
-  { value: 'crm', label: 'CRM' },
+  { value: '', labelKey: 'admin.originAll' },
+  { value: 'platform', labelKey: 'admin.originPlatform' },
+  { value: 'va', labelKey: 'admin.originVA' },
+  { value: 'crm', labelKey: 'admin.originCRM' },
 ];
 
 export default function AdminListings() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useNotification();
   const [listings, setListings] = useState([]);
@@ -60,7 +62,7 @@ export default function AdminListings() {
       const data = await getAdminListings(opts);
       setListings(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || 'Failed to load listings');
+      setError(err.message || t('admin.loadListingsError'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,7 @@ export default function AdminListings() {
       setDetail(data);
       setMedia(Array.isArray(mediaList) ? mediaList.filter((m) => m.type === 'image') : []);
     } catch (err) {
-      showError(err.message || 'Failed to load listing');
+      showError(err.message || t('admin.loadListingError'));
     }
   };
 
@@ -101,11 +103,11 @@ export default function AdminListings() {
     setUpdatingTeam(true);
     try {
       await updateAdminListing(id, { teamId: teamId || null });
-      showSuccess('Team assigned');
+      showSuccess(t('admin.teamAssigned'));
       if (detail?.id === id) setDetail((d) => (d ? { ...d, teamId: teamId || null } : d));
       loadListings();
     } catch (err) {
-      showError(err.message || 'Failed to assign team');
+      showError(err.message || t('admin.assignTeamError'));
     } finally {
       setUpdatingTeam(false);
     }
@@ -119,14 +121,14 @@ export default function AdminListings() {
         status,
         status === 'rejected' ? (reason ?? rejectionReason) : null
       );
-      showSuccess('Listing updated');
+      showSuccess(t('admin.listingUpdated'));
       setDetail(null);
       setSelectedId(null);
       setRejectionReason('');
       setRejectModalId(null);
       loadListings();
     } catch (err) {
-      showError(err.message || 'Failed to update status');
+      showError(err.message || t('admin.updateStatusError'));
     } finally {
       setUpdating(null);
     }
@@ -138,7 +140,7 @@ export default function AdminListings() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('admin.notAvailable');
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -147,7 +149,7 @@ export default function AdminListings() {
   };
 
   const formatPrice = (price) => {
-    if (!price) return 'N/A';
+    if (!price) return t('admin.notAvailable');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -158,7 +160,7 @@ export default function AdminListings() {
   if (authLoading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div>Loading...</div>
+        <div>{t('admin.loading')}</div>
       </div>
     );
   }
@@ -168,9 +170,9 @@ export default function AdminListings() {
   return (
     <div className="platform-page" style={{ maxWidth: '1100px' }}>
       <div className="platform-header">
-        <h1>Admin: Listings</h1>
+        <h1>{t('admin.pageTitle')}</h1>
         <p className="platform-subtitle">
-          Review, approve, reject, or publish listings. Public marketplace shows only published listings.
+          {t('admin.pageSubtitle')}
         </p>
       </div>
 
@@ -181,7 +183,7 @@ export default function AdminListings() {
           style={{ padding: '8px 12px', borderRadius: '8px' }}
         >
           {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
           ))}
         </select>
         <select
@@ -190,26 +192,26 @@ export default function AdminListings() {
           style={{ padding: '8px 12px', borderRadius: '8px' }}
         >
           {ORIGIN_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{t(o.labelKey)}</option>
           ))}
         </select>
         <input
           type="text"
-          placeholder="Title (search)"
+          placeholder={t('admin.filterTitlePlaceholder')}
           value={filters.title}
           onChange={(e) => { setFilters((f) => ({ ...f, title: e.target.value })); resetPage(); }}
           style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '160px' }}
         />
         <input
           type="text"
-          placeholder="Uploader (email)"
+          placeholder={t('admin.filterUploaderPlaceholder')}
           value={filters.uploaderEmail}
           onChange={(e) => { setFilters((f) => ({ ...f, uploaderEmail: e.target.value })); resetPage(); }}
           style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '180px' }}
         />
         <input
           type="text"
-          placeholder="Created by (user ID)"
+          placeholder={t('admin.filterCreatedByPlaceholder')}
           value={filters.createdBy}
           onChange={(e) => { setFilters((f) => ({ ...f, createdBy: e.target.value })); resetPage(); }}
           style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '160px' }}
@@ -227,22 +229,22 @@ export default function AdminListings() {
               <div className="crm-skeleton"></div>
             </div>
           ) : listings.length === 0 ? (
-            <div className="properties-empty">No listings match the filters.</div>
+            <div className="properties-empty">{t('admin.noListingsMatch')}</div>
           ) : (
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
                   <tr>
                     <th style={{ width: 48 }}></th>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Origin</th>
-                    <th>Team</th>
-                    <th>Uploader</th>
-                    <th>Location</th>
-                    <th>Price</th>
-                    <th>Created</th>
-                    <th>Actions</th>
+                    <th>{t('admin.colTitle')}</th>
+                    <th>{t('admin.colStatus')}</th>
+                    <th>{t('admin.colOrigin')}</th>
+                    <th>{t('admin.colTeam')}</th>
+                    <th>{t('admin.colUploader')}</th>
+                    <th>{t('admin.colLocation')}</th>
+                    <th>{t('admin.colPrice')}</th>
+                    <th>{t('admin.colCreated')}</th>
+                    <th>{t('admin.colActions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,7 +263,7 @@ export default function AdminListings() {
                           />
                         )}
                       </td>
-                      <td><strong>{item.title || 'Untitled'}</strong></td>
+                      <td><strong>{item.title || t('admin.untitled')}</strong></td>
                       <td>
                         <span className={`admin-status-badge ${item.status || 'pending_review'}`}>
                           {item.status || 'pending_review'}
@@ -286,27 +288,27 @@ export default function AdminListings() {
                                 className="crm-btn crm-btn-primary admin-action-btn"
                                 disabled={updating !== null}
                                 onClick={() => handleStatusChange(item.id, 'approved')}
-                                title="Approve"
+                                title={t('admin.approve')}
                               >
-                                Approve
+                                {t('admin.approve')}
                               </button>
                               <button
                                 type="button"
                                 className="crm-btn crm-btn-danger admin-action-btn"
                                 disabled={updating !== null}
                                 onClick={() => openRejectModal(item.id)}
-                                title="Reject"
+                                title={t('admin.reject')}
                               >
-                                Reject
+                                {t('admin.reject')}
                               </button>
                               <button
                                 type="button"
                                 className="crm-btn crm-btn-secondary admin-action-btn"
                                 disabled={updating !== null}
                                 onClick={() => handleStatusChange(item.id, 'published')}
-                                title="Publish"
+                                title={t('admin.publish')}
                               >
-                                Publish
+                                {t('admin.publish')}
                               </button>
                             </>
                           )}
@@ -316,9 +318,9 @@ export default function AdminListings() {
                               className="crm-btn crm-btn-primary admin-action-btn"
                               disabled={updating !== null}
                               onClick={() => handleStatusChange(item.id, 'published')}
-                              title="Publish"
+                              title={t('admin.publish')}
                             >
-                              Publish
+                              {t('admin.publish')}
                             </button>
                           )}
                           {item.status === 'published' && (
@@ -328,23 +330,23 @@ export default function AdminListings() {
                                 className="crm-btn crm-btn-secondary admin-action-btn"
                                 disabled={updating !== null}
                                 onClick={() => handleStatusChange(item.id, 'approved')}
-                                title="Change to Approved"
+                                title={t('admin.changeToApproved')}
                               >
-                                Approved
+                                {t('admin.statusApproved')}
                               </button>
                               <button
                                 type="button"
                                 className="crm-btn crm-btn-danger admin-action-btn"
                                 disabled={updating !== null}
                                 onClick={() => openRejectModal(item.id)}
-                                title="Reject (unpublish)"
+                                title={t('admin.rejectUnpublish')}
                               >
-                                Reject
+                                {t('admin.reject')}
                               </button>
                             </>
                           )}
                           {updating === item.id && (
-                            <span className="admin-table-muted" style={{ fontSize: '12px', marginLeft: '4px' }}>Updating...</span>
+                            <span className="admin-table-muted" style={{ fontSize: '12px', marginLeft: '4px' }}>{t('admin.updating')}</span>
                           )}
                         </div>
                       </td>
@@ -377,24 +379,24 @@ export default function AdminListings() {
                 />
               </div>
             )}
-            <h3>{detail.title || 'Untitled'}</h3>
+            <h3>{detail.title || t('admin.untitled')}</h3>
             <div className="property-meta" style={{ marginBottom: '12px' }}>
-              Status: <strong>{detail.status}</strong> · Origin: {detail.origin}
+              {t('admin.colStatus')}: <strong>{detail.status}</strong> · {t('admin.colOrigin')}: {detail.origin}
             </div>
             {detail.uploaderEmail && (
-              <div style={{ marginBottom: '12px', fontSize: '13px' }}>Uploaded by: {detail.uploaderEmail}</div>
+              <div style={{ marginBottom: '12px', fontSize: '13px' }}>{t('admin.uploadedBy', { email: detail.uploaderEmail })}</div>
             )}
 
             {/* Team assignment */}
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'block', marginBottom: 4, fontSize: 12, fontWeight: 600 }}>Assign to Team</label>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 12, fontWeight: 600 }}>{t('admin.assignToTeam')}</label>
               <select
                 value={detail.teamId || ''}
                 onChange={(e) => handleTeamChange(detail.id, e.target.value || null)}
                 disabled={updatingTeam}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 8 }}
               >
-                <option value="">— No team —</option>
+                <option value="">{t('admin.noTeamOption')}</option>
                 {teams.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -413,7 +415,7 @@ export default function AdminListings() {
             {/* Image gallery */}
             {media.length > 0 && (
               <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Images ({media.length})</div>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{t('admin.imagesCount', { count: media.length })}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {media.map((m) => (
                     <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
@@ -437,7 +439,7 @@ export default function AdminListings() {
                     disabled={updating !== null}
                     onClick={() => handleStatusChange(detail.id, 'approved')}
                   >
-                    Approve
+                    {t('admin.approve')}
                   </button>
                   <button
                     type="button"
@@ -445,15 +447,15 @@ export default function AdminListings() {
                     disabled={updating !== null}
                     onClick={() => handleStatusChange(detail.id, 'published')}
                   >
-                    Publish
+                    {t('admin.publish')}
                   </button>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>Rejection reason (if rejecting)</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>{t('admin.rejectionReasonLabel')}</label>
                   <textarea
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Optional"
+                    placeholder={t('admin.optional')}
                     rows={2}
                     style={{ width: '100%', padding: '8px', borderRadius: '8px' }}
                   />
@@ -464,7 +466,7 @@ export default function AdminListings() {
                   disabled={updating}
                   onClick={() => handleStatusChange(detail.id, 'rejected')}
                 >
-                  Reject
+                  {t('admin.reject')}
                 </button>
               </>
             )}
@@ -476,7 +478,7 @@ export default function AdminListings() {
                 disabled={updating !== null}
                 onClick={() => handleStatusChange(detail.id, 'published')}
               >
-                Publish
+                {t('admin.publish')}
               </button>
             )}
 
@@ -489,7 +491,7 @@ export default function AdminListings() {
                     disabled={updating !== null}
                     onClick={() => handleStatusChange(detail.id, 'approved')}
                   >
-                    Change to Approved
+                    {t('admin.changeToApproved')}
                   </button>
                   <button
                     type="button"
@@ -497,7 +499,7 @@ export default function AdminListings() {
                     disabled={updating !== null}
                     onClick={() => openRejectModal(detail.id)}
                   >
-                    Reject (unpublish)
+                    {t('admin.rejectUnpublish')}
                   </button>
                 </div>
               </>
@@ -505,7 +507,7 @@ export default function AdminListings() {
 
             <div style={{ marginTop: '16px' }}>
               <Link to={`/listings/${detail.id}`} className="crm-btn crm-btn-secondary" style={{ display: 'inline-block' }}>
-                View on Marketplace
+                {t('admin.viewOnMarketplace')}
               </Link>
             </div>
           </div>
@@ -516,14 +518,14 @@ export default function AdminListings() {
       {rejectModalId && (
         <div className="admin-reject-modal-overlay" onClick={() => setRejectModalId(null)}>
           <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Reject Listing</h3>
+            <h3>{t('admin.rejectListingTitle')}</h3>
             <p className="admin-table-muted" style={{ marginBottom: '12px' }}>
-              Provide a reason for rejection (optional):
+              {t('admin.rejectReasonPrompt')}
             </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="e.g. Incomplete information, duplicate listing..."
+              placeholder={t('admin.rejectReasonPlaceholder')}
               rows={3}
               style={{ width: '100%', padding: '10px', borderRadius: '8px', marginBottom: '16px', resize: 'vertical' }}
             />
@@ -533,7 +535,7 @@ export default function AdminListings() {
                 className="crm-btn crm-btn-secondary"
                 onClick={() => setRejectModalId(null)}
               >
-                Cancel
+                {t('admin.cancel')}
               </button>
               <button
                 type="button"
@@ -541,7 +543,7 @@ export default function AdminListings() {
                 disabled={updating !== null}
                 onClick={() => handleStatusChange(rejectModalId, 'rejected', rejectionReason)}
               >
-                Reject
+                {t('admin.reject')}
               </button>
             </div>
           </div>

@@ -6,30 +6,34 @@ import {
   useState,
 } from "react";
 
+import { useTranslation } from "react-i18next";
+
 import { useAuth } from "../../context/AuthContext";
 import apiClient from "../../api/apiClient";
 import aiAgentSetupService from "./services/aiAgentSetup.service";
 import "./AIAgentWorkspace.css";
 
 /* Suggested CRM commands shown on the empty state. These map to what the
-   backend agent already answers over (leads / pipeline / properties / etc.). */
+   backend agent already answers over (leads / pipeline / properties / etc.).
+   Each entry is an i18n key suffix under the "aiCenter" namespace; the visible
+   (translated) text is also what gets sent when a suggestion is clicked. */
 const SUGGESTED_COMMANDS = [
-  "Which leads need follow-up today?",
-  "Summarize my sales pipeline.",
-  "Show me my hottest opportunities.",
-  "Draft a WhatsApp follow-up for this lead.",
-  "Which deals have been inactive for 7+ days?",
-  "What appointments do I have today?",
-  "Show me properties without recent activity.",
-  "Create tasks for overdue leads.",
-  "Give me today's CRM summary.",
-  "Generate a weekly sales report.",
-  "Help me build an automation workflow.",
-  "Show me my team's performance.",
-  "Which leads haven't replied?",
-  "What tasks are overdue?",
-  "Create a follow-up sequence for these leads.",
-  "Summarize today's conversations.",
+  "suggestLeadsFollowUpToday",
+  "suggestSummarizePipeline",
+  "suggestHottestOpportunities",
+  "suggestDraftWhatsappFollowUp",
+  "suggestInactiveDeals",
+  "suggestAppointmentsToday",
+  "suggestPropertiesNoActivity",
+  "suggestCreateTasksOverdue",
+  "suggestCrmSummaryToday",
+  "suggestWeeklySalesReport",
+  "suggestBuildAutomation",
+  "suggestTeamPerformance",
+  "suggestLeadsNoReply",
+  "suggestOverdueTasks",
+  "suggestFollowUpSequence",
+  "suggestSummarizeConversations",
 ];
 
 /* The service already unwraps { data } in most cases; stay tolerant either way. */
@@ -69,6 +73,7 @@ const IconSpark = () => (
 );
 
 export default function AIAgentWorkspace() {
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [sessions, setSessions] = useState([]);
@@ -91,8 +96,8 @@ export default function AIAgentWorkspace() {
 
   const firstName = useMemo(() => {
     const name = user?.name || user?.email || "";
-    return String(name).trim().split(" ")[0] || "there";
-  }, [user]);
+    return String(name).trim().split(" ")[0] || t("aiCenter.defaultName");
+  }, [user, t]);
 
   /* ---------------- Conversation history ---------------- */
   const loadSessions = useCallback(async () => {
@@ -129,12 +134,12 @@ export default function AIAgentWorkspace() {
         })),
       );
     } catch (_e) {
-      setError("Could not load this conversation.");
+      setError(t("aiCenter.errorLoadConversation"));
       setMessages([]);
     } finally {
       setLoadingMessages(false);
     }
-  }, []);
+  }, [t]);
 
   const startNewChat = useCallback(() => {
     setActiveSessionId(null);
@@ -187,7 +192,7 @@ export default function AIAgentWorkspace() {
         const answer =
           data?.assistantMessage?.content ||
           data?.answer ||
-          "No response returned.";
+          t("aiCenter.noResponseReturned");
         const nextSessionId =
           data?.sessionId || data?.conversationId || activeSessionId;
 
@@ -208,14 +213,13 @@ export default function AIAgentWorkspace() {
 
         loadSessions();
       } catch (e) {
-        setError(e?.message || "Something went wrong. Please try again.");
+        setError(e?.message || t("aiCenter.errorGeneric"));
         setMessages((prev) => [
           ...prev,
           {
             id: `error-${Date.now()}`,
             role: "assistant",
-            content:
-              "I could not complete that request right now. Please try again in a moment.",
+            content: t("aiCenter.errorCouldNotComplete"),
             error: true,
             createdAt: new Date().toISOString(),
           },
@@ -224,7 +228,7 @@ export default function AIAgentWorkspace() {
         setSending(false);
       }
     },
-    [input, attachments, sending, activeSessionId, loadSessions],
+    [input, attachments, sending, activeSessionId, loadSessions, t],
   );
 
   /* ---------------- File attachment ---------------- */
@@ -274,7 +278,7 @@ export default function AIAgentWorkspace() {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setError("Voice input is not supported in this browser.");
+      setError(t("aiCenter.errorVoiceUnsupported"));
       return;
     }
     if (listening) {
@@ -298,7 +302,7 @@ export default function AIAgentWorkspace() {
     recognitionRef.current = recognition;
     recognition.start();
     setListening(true);
-  }, [listening]);
+  }, [listening, t]);
 
   const onKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -316,23 +320,25 @@ export default function AIAgentWorkspace() {
         className={`aiw-history ${historyOpen ? "" : "aiw-history-collapsed"}`}
       >
         <div className="aiw-history-head">
-          <span className="aiw-history-title">Conversations</span>
+          <span className="aiw-history-title">{t("aiCenter.conversations")}</span>
           <button
             type="button"
             className="aiw-newchat"
             onClick={startNewChat}
-            title="Start a new conversation"
+            title={t("aiCenter.newConversationTitle")}
           >
             <IconPlus />
-            <span>New</span>
+            <span>{t("aiCenter.new")}</span>
           </button>
         </div>
         <div className="aiw-history-list">
           {loadingSessions && (
-            <div className="aiw-history-empty">Loading...</div>
+            <div className="aiw-history-empty">{t("aiCenter.loading")}</div>
           )}
           {!loadingSessions && sessions.length === 0 && (
-            <div className="aiw-history-empty">No conversations yet.</div>
+            <div className="aiw-history-empty">
+              {t("aiCenter.noConversationsYet")}
+            </div>
           )}
           {sessions.map((s) => (
             <button
@@ -342,9 +348,9 @@ export default function AIAgentWorkspace() {
                 s.id === activeSessionId ? "active" : ""
               }`}
               onClick={() => openSession(s.id)}
-              title={s.title || "Conversation"}
+              title={s.title || t("aiCenter.conversationFallback")}
             >
-              {s.title || "New conversation"}
+              {s.title || t("aiCenter.newConversation")}
             </button>
           ))}
         </div>
@@ -356,15 +362,13 @@ export default function AIAgentWorkspace() {
             type="button"
             className="aiw-icon-btn"
             onClick={() => setHistoryOpen((o) => !o)}
-            title="Toggle conversation history"
+            title={t("aiCenter.toggleHistoryTitle")}
           >
             <IconMenu />
           </button>
           <div className="aiw-topbar-titles">
-            <div className="aiw-title">AI Agent</div>
-            <div className="aiw-subtitle">
-              Your AI copilot for the leads, pipeline, and properties in Cortexa.
-            </div>
+            <div className="aiw-title">{t("aiCenter.aiAgent")}</div>
+            <div className="aiw-subtitle">{t("aiCenter.subtitle")}</div>
           </div>
         </header>
 
@@ -375,34 +379,36 @@ export default function AIAgentWorkspace() {
                 <IconSpark />
               </div>
               <h1 className="aiw-empty-title">
-                How can I help you today, {firstName}?
+                {t("aiCenter.greeting", { name: firstName })}
               </h1>
-              <p className="aiw-empty-sub">
-                Ask anything about your leads, pipeline, appointments, or
-                properties.
-              </p>
+              <p className="aiw-empty-sub">{t("aiCenter.emptySubtitle")}</p>
               <div className="aiw-suggestions">
-                {SUGGESTED_COMMANDS.map((cmd) => (
-                  <button
-                    type="button"
-                    key={cmd}
-                    className="aiw-suggestion"
-                    onClick={() => handleSend(cmd)}
-                  >
-                    {cmd}
-                  </button>
-                ))}
+                {SUGGESTED_COMMANDS.map((key) => {
+                  const cmd = t(`aiCenter.${key}`);
+                  return (
+                    <button
+                      type="button"
+                      key={key}
+                      className="aiw-suggestion"
+                      onClick={() => handleSend(cmd)}
+                    >
+                      {cmd}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : (
             <div className="aiw-messages">
               {loadingMessages && (
-                <div className="aiw-loading">Loading conversation...</div>
+                <div className="aiw-loading">
+                  {t("aiCenter.loadingConversation")}
+                </div>
               )}
               {messages.map((m) => (
                 <div key={m.id} className={`aiw-msg aiw-msg-${m.role}`}>
                   <div className="aiw-msg-avatar">
-                    {m.role === "user" ? "You" : "AI"}
+                    {m.role === "user" ? t("aiCenter.avatarYou") : "AI"}
                   </div>
                   <div
                     className={`aiw-bubble ${
@@ -448,7 +454,7 @@ export default function AIAgentWorkspace() {
                     type="button"
                     className="aiw-attach-remove"
                     onClick={() => removeAttachment(i)}
-                    title="Remove attachment"
+                    title={t("aiCenter.removeAttachmentTitle")}
                   >
                     ×
                   </button>
@@ -460,7 +466,7 @@ export default function AIAgentWorkspace() {
             <textarea
               ref={textareaRef}
               className="aiw-textarea"
-              placeholder="Ask Cortexa AI anything..."
+              placeholder={t("aiCenter.composerPlaceholder")}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
@@ -479,34 +485,36 @@ export default function AIAgentWorkspace() {
                 className="aiw-tool-btn"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                title="Attach a file"
+                title={t("aiCenter.attachFileTitle")}
               >
                 <IconPaperclip />
-                <span>{uploading ? "Uploading..." : "Attach"}</span>
+                <span>
+                  {uploading ? t("aiCenter.uploading") : t("aiCenter.attach")}
+                </span>
               </button>
               <button
                 type="button"
                 className={`aiw-tool-btn ${listening ? "aiw-listening" : ""}`}
                 onClick={toggleVoice}
-                title="Voice input"
+                title={t("aiCenter.voiceInputTitle")}
               >
                 <IconMic />
-                <span>{listening ? "Listening..." : "Voice"}</span>
+                <span>
+                  {listening ? t("aiCenter.listening") : t("aiCenter.voice")}
+                </span>
               </button>
               <button
                 type="button"
                 className="aiw-send"
                 onClick={() => handleSend()}
                 disabled={!canSend}
-                title="Send"
+                title={t("aiCenter.sendTitle")}
               >
                 <IconSend />
               </button>
             </div>
           </div>
-          <div className="aiw-disclaimer">
-            AI can make mistakes. Please verify important information.
-          </div>
+          <div className="aiw-disclaimer">{t("aiCenter.disclaimer")}</div>
         </div>
       </div>
     </div>

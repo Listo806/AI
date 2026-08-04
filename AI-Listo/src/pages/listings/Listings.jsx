@@ -16,8 +16,8 @@ function marketExploreSubtitle(property, t) {
   if (property.city) parts.push(property.city);
   if (property.state) parts.push(property.state);
   if (property.propertyType) parts.push(t(`properties.propertyType_${property.propertyType}`));
-  if (property.bedrooms != null && property.bedrooms !== '') parts.push(`${property.bedrooms} bd`);
-  if (property.bathrooms != null && property.bathrooms !== '') parts.push(`${property.bathrooms} ba`);
+  if (property.bedrooms != null && property.bedrooms !== '') parts.push(t('listings.bedShort', { n: property.bedrooms }));
+  if (property.bathrooms != null && property.bathrooms !== '') parts.push(t('listings.bathShort', { n: property.bathrooms }));
   return parts.join(' · ') || property.address || '';
 }
 
@@ -168,7 +168,7 @@ export default function Listings() {
       }
     } catch (err) {
       console.error('Failed to load properties:', err);
-      setError(err.message || 'Failed to load properties');
+      setError(err.message || t('listings.loadError'));
     } finally {
       setLoading(false);
     }
@@ -288,7 +288,7 @@ export default function Listings() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('listings.notAvailable');
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -297,7 +297,7 @@ export default function Listings() {
   };
 
   const formatPrice = (price) => {
-    if (!price) return 'N/A';
+    if (!price) return t('listings.notAvailable');
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -312,13 +312,13 @@ export default function Listings() {
     <div className="listings-page">
       <header className="listings-header">
         <div className="listings-header-content">
-          <h1 className="listings-title">Marketplace Listings</h1>
+          <h1 className="listings-title">{t('listings.title')}</h1>
           <div className="listings-header-actions">
             <Link to="/vacation-rentals/search" className="listings-btn listings-btn-secondary">
-              Vacation rentals
+              {t('listings.vacationRentals')}
             </Link>
             <Link to="/sign-in" className="listings-btn listings-btn-secondary">
-              Sign In
+              {t('listings.signIn')}
             </Link>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function Listings() {
             <div className="listings-search-container">
               <input
                 type="text"
-                placeholder="Search properties by location, address, or keywords..."
+                placeholder={t('listings.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => {
                   const newSearch = e.target.value;
@@ -378,9 +378,9 @@ export default function Listings() {
                 }}
                 className="listings-select"
               >
-                <option value="">All (Buy / Rent)</option>
-                <option value="sale">Buy</option>
-                <option value="rent">Rent</option>
+                <option value="">{t('listings.allBuyRent')}</option>
+                <option value="sale">{t('properties.buy')}</option>
+                <option value="rent">{t('properties.rent')}</option>
               </select>
               <select
                 value={filters.propertyType}
@@ -394,7 +394,7 @@ export default function Listings() {
                 }}
                 className="listings-select"
               >
-                <option value="">Property type: Any</option>
+                <option value="">{t('listings.propertyTypeAny')}</option>
                 {PROPERTY_TYPE_OPTIONS.map((value) => (
                   <option key={value} value={value}>{t(`properties.propertyType_${value}`)}</option>
                 ))}
@@ -404,10 +404,10 @@ export default function Listings() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="listings-select"
               >
-                <option value="newest">Sort: Newest</option>
-                <option value="price-low">Sort: Price (Low → High)</option>
-                <option value="price-high">Sort: Price (High → Low)</option>
-                <option value="distance">Sort: Distance</option>
+                <option value="newest">{t('listings.sortNewest')}</option>
+                <option value="price-low">{t('listings.sortPriceLow')}</option>
+                <option value="price-high">{t('listings.sortPriceHigh')}</option>
+                <option value="distance">{t('listings.sortDistance')}</option>
               </select>
             </div>
 
@@ -432,18 +432,18 @@ export default function Listings() {
                 />
               </div>
               <div className="listings-price-range">
-                <label>Price Range:</label>
+                <label>{t('listings.priceRange')}</label>
                 <input
                   type="number"
-                  placeholder="Min"
+                  placeholder={t('listings.minPlaceholder')}
                   value={filters.minPrice}
                   onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
                   className="listings-input"
                 />
-                <span>to</span>
+                <span>{t('listings.toSeparator')}</span>
                 <input
                   type="number"
-                  placeholder="Max"
+                  placeholder={t('listings.maxPlaceholder')}
                   value={filters.maxPrice}
                   onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
                   className="listings-input"
@@ -454,32 +454,32 @@ export default function Listings() {
                 onChange={(e) => setFilters({ ...filters, bedrooms: e.target.value })}
                 className="listings-select"
               >
-                <option value="">Bedrooms: Any</option>
-                <option value="1">1+ Bedrooms</option>
-                <option value="2">2+ Bedrooms</option>
-                <option value="3">3+ Bedrooms</option>
-                <option value="4">4+ Bedrooms</option>
-                <option value="5">5+ Bedrooms</option>
+                <option value="">{t('listings.bedroomsAny')}</option>
+                <option value="1">{t('listings.bedrooms1')}</option>
+                <option value="2">{t('listings.bedrooms2')}</option>
+                <option value="3">{t('listings.bedrooms3')}</option>
+                <option value="4">{t('listings.bedrooms4')}</option>
+                <option value="5">{t('listings.bedrooms5')}</option>
               </select>
               <select
                 value={filters.bathrooms}
                 onChange={(e) => setFilters({ ...filters, bathrooms: e.target.value })}
                 className="listings-select"
               >
-                <option value="">Bathrooms: Any</option>
-                <option value="1">1+ Bathrooms</option>
-                <option value="1.5">1.5+ Bathrooms</option>
-                <option value="2">2+ Bathrooms</option>
-                <option value="2.5">2.5+ Bathrooms</option>
-                <option value="3">3+ Bathrooms</option>
-                <option value="4">4+ Bathrooms</option>
+                <option value="">{t('listings.bathroomsAny')}</option>
+                <option value="1">{t('listings.bathrooms1')}</option>
+                <option value="1.5">{t('listings.bathrooms1_5')}</option>
+                <option value="2">{t('listings.bathrooms2')}</option>
+                <option value="2.5">{t('listings.bathrooms2_5')}</option>
+                <option value="3">{t('listings.bathrooms3')}</option>
+                <option value="4">{t('listings.bathrooms4')}</option>
               </select>
               {(filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms || filters.propertyType || filters.city) && (
                 <button
                   onClick={() => setFilters({ ...filters, minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', propertyType: '', city: '' })}
                   className="listings-btn listings-btn-secondary"
                 >
-                  Clear Filters
+                  {t('listings.clearFilters')}
                 </button>
               )}
             </div>
@@ -495,17 +495,17 @@ export default function Listings() {
           ) : properties.length === 0 ? (
             <div className="listings-empty-state">
               <div className="listings-empty-icon">🏠</div>
-              <h3 className="listings-empty-title">No properties found</h3>
+              <h3 className="listings-empty-title">{t('listings.noPropertiesFound')}</h3>
               <p className="listings-empty-text">
                 {filters.search || filters.type || filters.propertyType || filters.city || filters.minPrice || filters.maxPrice || filters.bedrooms || filters.bathrooms
-                  ? 'Try adjusting your filters'
-                  : 'No properties available at the moment'}
+                  ? t('listings.tryAdjustingFilters')
+                  : t('listings.noPropertiesAvailable')}
               </p>
             </div>
           ) : (
             <>
               {mapProperties.length > 0 && (
-                <div className="listings-mobile-toggle" role="tablist" aria-label="List or map view">
+                <div className="listings-mobile-toggle" role="tablist" aria-label={t('listings.listOrMapView')}>
                   <button
                     type="button"
                     role="tab"
@@ -513,7 +513,7 @@ export default function Listings() {
                     className={mobilePanel === 'list' ? 'listings-mobile-toggle-active' : ''}
                     onClick={() => setMobilePanel('list')}
                   >
-                    List view
+                    {t('listings.listView')}
                   </button>
                   <button
                     type="button"
@@ -522,7 +522,7 @@ export default function Listings() {
                     className={mobilePanel === 'map' ? 'listings-mobile-toggle-active' : ''}
                     onClick={() => setMobilePanel('map')}
                   >
-                    Map view
+                    {t('listings.mapView')}
                   </button>
                 </div>
               )}
@@ -538,7 +538,7 @@ export default function Listings() {
                         ? `/listings/${property.id}?type=${effectiveMode}`
                         : `/listings/${property.id}`;
                       const typeLabel =
-                        property.type === 'sale' ? 'Buy' : property.type === 'rent' ? 'Rent' : '';
+                        property.type === 'sale' ? t('properties.buy') : property.type === 'rent' ? t('properties.rent') : '';
                       return (
                         <article key={property.id} className="listings-card listings-card--explore">
                           <div className="listings-card-media">
@@ -558,7 +558,7 @@ export default function Listings() {
                           <div className="listings-card-body">
                             <div className="listings-card-topline">
                               <h3 className="listings-card-title">
-                                <Link to={detailPath}>{property.title || 'Untitled Property'}</Link>
+                                <Link to={detailPath}>{property.title || t('listings.untitledProperty')}</Link>
                               </h3>
                             </div>
                             <p className="listings-card-subtitle">{marketExploreSubtitle(property, t)}</p>
@@ -570,11 +570,11 @@ export default function Listings() {
                                 <>
                                   <span className="listings-card-price">{formatPrice(property.price)}</span>
                                   {property.type === 'rent' && (
-                                    <span className="listings-card-price-note"> / month</span>
+                                    <span className="listings-card-price-note">{t('listings.perMonth')}</span>
                                   )}
                                 </>
                               ) : (
-                                <span className="listings-card-price listings-card-price--muted">Price on request</span>
+                                <span className="listings-card-price listings-card-price--muted">{t('listings.priceOnRequest')}</span>
                               )}
                             </div>
                             <div className="listings-card-actions listings-card-actions--compact">
@@ -591,14 +591,14 @@ export default function Listings() {
                                   onClick={() => handleContactAgent(property)}
                                   className="listings-btn listings-btn-contact listings-btn--sm"
                                 >
-                                  Contact
+                                  {t('listings.contact')}
                                 </button>
                               </div>
                               <Link to={detailPath} className="listings-card-detail-link">
-                                View details
+                                {t('listings.viewDetails')}
                               </Link>
                             </div>
-                            <p className="listings-card-footnote">Listed {formatDate(property.createdAt)}</p>
+                            <p className="listings-card-footnote">{t('listings.listedDate', { date: formatDate(property.createdAt) })}</p>
                           </div>
                         </article>
                       );
@@ -612,21 +612,21 @@ export default function Listings() {
                         className="listings-pagination-btn"
                         onClick={() => goToPage(currentPage - 1)}
                         disabled={currentPage <= 1}
-                        aria-label="Previous page"
+                        aria-label={t('listings.previousPageAria')}
                       >
-                        ‹ Previous
+                        {t('listings.prevPage')}
                       </button>
                       <span className="listings-pagination-info">
-                        Page {currentPage} of {totalPages} ({pagination.total} properties)
+                        {t('listings.pageInfo', { current: currentPage, total: totalPages, results: pagination.total })}
                       </span>
                       <button
                         type="button"
                         className="listings-pagination-btn"
                         onClick={() => goToPage(currentPage + 1)}
                         disabled={currentPage >= totalPages}
-                        aria-label="Next page"
+                        aria-label={t('listings.nextPageAria')}
                       >
-                        Next ›
+                        {t('listings.nextPage')}
                       </button>
                     </div>
                   )}

@@ -3,9 +3,13 @@ import React, {
   useState,
 } from "react";
 
+import { useTranslation } from "react-i18next";
+
 import apiClient from "../../api/apiClient";
 
 export default function GoogleAdsPage() {
+  const { t } = useTranslation();
+
   const [loading, setLoading] =
     useState(true);
 
@@ -120,7 +124,7 @@ export default function GoogleAdsPage() {
       );
 
       alert(
-        "Google Ads settings saved",
+        t("integrations.googleAds.settingsSaved"),
       );
     } catch (err) {
       console.error(err);
@@ -130,7 +134,7 @@ export default function GoogleAdsPage() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t("integrations.googleAds.loading")}</div>;
   }
 
   return (
@@ -149,14 +153,11 @@ export default function GoogleAdsPage() {
       >
         <div style={card}>
           <h1 style={title}>
-            Google Ads Integration
+            {t("integrations.googleAds.title")}
           </h1>
 
           <p style={desc}>
-            Connect your Google Ads
-            account and track campaign
-            performance, CPL, ROAS,
-            and conversions.
+            {t("integrations.googleAds.description")}
           </p>
 
           {!config ? (
@@ -166,7 +167,7 @@ export default function GoogleAdsPage() {
                 connectGoogleAds
               }
             >
-              Connect Google Ads
+              {t("integrations.googleAds.connect")}
             </button>
           ) : (
             <>
@@ -175,7 +176,7 @@ export default function GoogleAdsPage() {
               >
                 <div>
                   <strong>
-                    Connected Account:
+                    {t("integrations.googleAds.connectedAccountLabel")}
                   </strong>{" "}
                   {
                     config.google_ads_account_id
@@ -189,7 +190,7 @@ export default function GoogleAdsPage() {
                 }}
               >
                 <div style={label}>
-                  Campaign Selection
+                  {t("integrations.googleAds.campaignSelection")}
                 </div>
 
                 <div
@@ -249,12 +250,15 @@ export default function GoogleAdsPage() {
                                 "#6b7280",
                             }}
                           >
-                            Status:{" "}
-                            {
-                              campaign
-                                .campaign
-                                .status
-                            }
+                            {t(
+                              "integrations.googleAds.campaignStatus",
+                              {
+                                status:
+                                  campaign
+                                    .campaign
+                                    .status,
+                              },
+                            )}
                           </div>
                         </div>
                       </label>
@@ -291,8 +295,7 @@ export default function GoogleAdsPage() {
                         fontWeight: 700,
                       }}
                     >
-                      Enable Conversion
-                      Tracking
+                      {t("integrations.googleAds.enableConversionTracking")}
                     </div>
 
                     <div
@@ -302,10 +305,7 @@ export default function GoogleAdsPage() {
                           "#6b7280",
                       }}
                     >
-                      Track leads,
-                      ROAS, CPL and
-                      campaign
-                      conversions.
+                      {t("integrations.googleAds.conversionTrackingDesc")}
                     </div>
                   </div>
                 </label>
@@ -320,8 +320,8 @@ export default function GoogleAdsPage() {
                 disabled={saving}
               >
                 {saving
-                  ? "Saving..."
-                  : "Save Settings"}
+                  ? t("integrations.googleAds.saving")
+                  : t("integrations.googleAds.saveSettings")}
               </button>
             </>
           )}
@@ -339,7 +339,7 @@ export default function GoogleAdsPage() {
               marginBottom: 20,
             }}
           >
-            Google Setup
+            {t("integrations.googleAds.setupTitle")}
           </h2>
 
           <ol
@@ -349,31 +349,27 @@ export default function GoogleAdsPage() {
             }}
           >
             <li>
-              Create a Google Cloud
-              Project
+              {t("integrations.googleAds.setupStep1")}
             </li>
 
             <li>
-              Enable Google Ads API
+              {t("integrations.googleAds.setupStep2")}
             </li>
 
             <li>
-              Configure OAuth
-              consent screen
+              {t("integrations.googleAds.setupStep3")}
             </li>
 
             <li>
-              Add redirect URI
+              {t("integrations.googleAds.setupStep4")}
             </li>
 
             <li>
-              Generate OAuth
-              credentials
+              {t("integrations.googleAds.setupStep5")}
             </li>
 
             <li>
-              Request Google Ads
-              Developer Token
+              {t("integrations.googleAds.setupStep6")}
             </li>
           </ol>
         </div>

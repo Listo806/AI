@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./generator.css";
 import {
   Download,
@@ -33,56 +34,57 @@ import {
 } from "lucide-react";
 
 export default function LeadGeneratorPage() {
+  const { t } = useTranslation();
   const [saveSearchActive, setSaveSearchActive] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState([1, 2]);
 
   const topMetrics = [
     {
-      title: "Generated Leads",
+      title: t("generator.metricGeneratedLeads"),
       value: "1,342",
-      sub: "↑ 28% this month",
+      sub: t("generator.metricGeneratedLeadsSub"),
       type: "blue",
       icon: <Users size={20} />,
     },
     {
-      title: "AI Qualified",
+      title: t("generator.metricAiQualified"),
       value: "687",
-      sub: "↑ 51% of total",
+      sub: t("generator.metricAiQualifiedSub"),
       type: "green",
       icon: <Bot size={20} />,
     },
     {
-      title: "Hot Opportunities",
+      title: t("generator.metricHotOpportunities"),
       value: "213",
-      sub: "↓ 16% this month",
+      sub: t("generator.metricHotOpportunitiesSub"),
       type: "red",
       icon: <Flame size={20} />,
     },
     {
-      title: "Enriched Leads",
+      title: t("generator.metricEnrichedLeads"),
       value: "1,089",
-      sub: "81% enriched",
+      sub: t("generator.metricEnrichedLeadsSub"),
       type: "purple",
       icon: <Layers size={20} />,
     },
     {
-      title: "Campaign Ready",
+      title: t("generator.metricCampaignReady"),
       value: "356",
-      sub: "↑ 22% this month",
+      sub: t("generator.metricCampaignReadySub"),
       type: "orange",
       icon: <TrendingUp size={20} />,
     },
     {
-      title: "Moved to CRM",
+      title: t("generator.metricMovedToCrm"),
       value: "124",
-      sub: "↑ 18% this month",
+      sub: t("generator.metricMovedToCrmSub"),
       type: "cyan",
       icon: <CheckCircle2 size={20} />,
     },
     {
-      title: "Avg AI Score",
+      title: t("generator.metricAvgAiScore"),
       value: "78%",
-      sub: "↑ 6 pts this month",
+      sub: t("generator.metricAvgAiScoreSub"),
       type: "star",
       icon: <Sparkles size={20} />,
     },
@@ -161,24 +163,24 @@ export default function LeadGeneratorPage() {
     <div className="generator-page">
       <div className="heading_page">
         <Sparkles className="header-icon" size={20} />
-        <h1>New Lead Generator Pro</h1>
+        <h1>{t("generator.pageTitle")}</h1>
       </div>
       <p className="sub_head">
-        Discover, score, and organize fresh opportunities outside your CRM.
+        {t("generator.subheading")}
       </p>
       <div className="page-header">
         <div className="header-actions">
           <button className="btn-icon-text">
-            <Download size={15} /> Export
+            <Download size={15} /> {t("generator.export")}
           </button>
           <button className="btn-icon-text">
-            <Eye size={15} /> Saved Searches
+            <Eye size={15} /> {t("generator.savedSearches")}
           </button>
           <button className="btn-icon-text">
-            <Activity size={15} /> Campaign Drafts
+            <Activity size={15} /> {t("generator.campaignDrafts")}
           </button>
           <button className="btn-primary">
-            <Sparkles size={15} fill="white" /> Generate New Leads
+            <Sparkles size={15} fill="white" /> {t("generator.generateNewLeads")}
           </button>
         </div>
       </div>
@@ -212,21 +214,21 @@ export default function LeadGeneratorPage() {
       {/* 1. CONFIGURATION BLOCK */}
       <div className="config-section-container">
         <h3 className="section-block-title">
-          1. Tell Cortexa What You're Looking For
+          {t("generator.configTitle")}
         </h3>
         <div className="inputs-form-grid">
           <div className="form-field-group">
-            <label>Product / Offer</label>
+            <label>{t("generator.labelProductOffer")}</label>
             <div className="input-select-wrapper">
-              <select defaultValue="Real Estate Investment Pack">
-                <option>Real Estate Investment Pack</option>
+              <select defaultValue={t("generator.optRealEstateInvestmentPack")}>
+                <option>{t("generator.optRealEstateInvestmentPack")}</option>
               </select>
               <ChevronDown size={14} className="select-chevron-icon" />
             </div>
           </div>
 
           <div className="form-field-group">
-            <label>Country</label>
+            <label>{t("generator.labelCountry")}</label>
             <div className="input-select-wrapper">
               <select defaultValue="Ecuador">
                 <option>Ecuador</option>
@@ -236,7 +238,7 @@ export default function LeadGeneratorPage() {
           </div>
 
           <div className="form-field-group">
-            <label>City</label>
+            <label>{t("generator.labelCity")}</label>
             <div className="input-select-wrapper">
               <select defaultValue="Quito">
                 <option>Quito</option>
@@ -247,7 +249,7 @@ export default function LeadGeneratorPage() {
 
           <div className="form-field-group">
             <label>
-              Area <span>(Optional)</span>
+              {t("generator.labelArea")} <span>{t("generator.optional")}</span>
             </label>
             <div className="input-select-wrapper">
               <select defaultValue="Cumbayá, Tumbaco">
@@ -258,20 +260,20 @@ export default function LeadGeneratorPage() {
           </div>
 
           <div className="form-field-group">
-            <label>Industry</label>
+            <label>{t("generator.labelIndustry")}</label>
             <div className="input-select-wrapper">
-              <select defaultValue="Real Estate">
-                <option>Real Estate</option>
+              <select defaultValue={t("generator.optRealEstate")}>
+                <option>{t("generator.optRealEstate")}</option>
               </select>
               <ChevronDown size={14} className="select-chevron-icon" />
             </div>
           </div>
 
           <div className="form-field-group">
-            <label>Business Type</label>
+            <label>{t("generator.labelBusinessType")}</label>
             <div className="input-select-wrapper">
-              <select defaultValue="Real Estate Agencies">
-                <option>Real Estate Agencies</option>
+              <select defaultValue={t("generator.optRealEstateAgencies")}>
+                <option>{t("generator.optRealEstateAgencies")}</option>
               </select>
               <ChevronDown size={14} className="select-chevron-icon" />
             </div>
@@ -279,21 +281,21 @@ export default function LeadGeneratorPage() {
         </div>
         <div className="inputs-form-grid-1">
           <div className="form-field-group">
-            <label>Goal</label>
+            <label>{t("generator.labelGoal")}</label>
             <div className="input-select-wrapper">
-              <select defaultValue="Find investment-focused agencies">
-                <option>Find investment-focused agencies</option>
+              <select defaultValue={t("generator.optFindInvestmentAgencies")}>
+                <option>{t("generator.optFindInvestmentAgencies")}</option>
               </select>
               <ChevronDown size={14} className="select-chevron-icon" />
             </div>
           </div>
 
           <div className="form-field-group">
-            <label>Contact Channels</label>
+            <label>{t("generator.labelContactChannels")}</label>
             <div className="channels-chips-group">
               <span className="channel-chip active-blue">WhatsApp</span>
-              <span className="channel-chip active-blue">Email</span>
-              <span className="channel-chip active-blue">Phone</span>
+              <span className="channel-chip active-blue">{t("common.email")}</span>
+              <span className="channel-chip active-blue">{t("common.phone")}</span>
               <span className="channel-chip active-blue">Instagram</span>
               <ChevronDown
                 size={13}
@@ -303,7 +305,7 @@ export default function LeadGeneratorPage() {
           </div>
 
           <div className="form-field-group">
-            <label>Number of Leads</label>
+            <label>{t("generator.labelNumberOfLeads")}</label>
             <div className="input-select-wrapper">
               <select defaultValue="50">
                 <option>50</option>
@@ -314,7 +316,7 @@ export default function LeadGeneratorPage() {
           </div>
 
           <div className="form-field-group">
-            <label>Minimum AI Score</label>
+            <label>{t("generator.labelMinimumAiScore")}</label>
             <div className="input-select-wrapper">
               <select defaultValue="70%">
                 <option>70%</option>
@@ -326,10 +328,10 @@ export default function LeadGeneratorPage() {
 
           <div className="form-field-group">
             <label>
-              AI Search Instructions <span>(Optional)</span>
+              {t("generator.labelAiSearchInstructions")} <span>{t("generator.optional")}</span>
             </label>
             <div className="input-select-wrapper">
-              <input placeholder="E.g., focus on agencies with 5+ agents, active on social media..." />
+              <input placeholder={t("generator.aiInstructionsPlaceholder")} />
               <Pencil size={14} className="input-right-icon" />
             </div>
           </div>
@@ -337,20 +339,20 @@ export default function LeadGeneratorPage() {
 
         <div className="config-action-bottom-row">
           <button className="advanced-options-trigger">
-            Advanced Options <ChevronDown size={14} />
+            {t("generator.advancedOptions")} <ChevronDown size={14} />
           </button>
           <button className="btn-primary" style={{ padding: "0 24px" }}>
-            <ToolCase size={14} /> Generate New Leads
+            <ToolCase size={14} /> {t("generator.generateNewLeads")}
           </button>
           <div className="right-action-cluster">
             <div className="toggle-control-label">
-              <span>Save this Search</span>
+              <span>{t("generator.saveThisSearch")}</span>
               <div
                 className={`switch-toggle-component ${saveSearchActive ? "active-green" : ""}`}
                 onClick={() => setSaveSearchActive(!saveSearchActive)}
               ></div>
             </div>
-            <button className="btn-clear-form">Clear</button>
+            <button className="btn-clear-form">{t("generator.clear")}</button>
           </div>
         </div>
       </div>
@@ -364,18 +366,18 @@ export default function LeadGeneratorPage() {
             {/* 2. SOURCE FOCUS */}
             <div className="inner-process-card">
               <h3 className="section-block-title green-theme">
-                2. Source Focus (Where Cortexa will look)
+                {t("generator.sourceFocusTitle")}
               </h3>
               <div className="sources-selection-flex-list">
                 {[
-                  { label: "Public Web Search", icon: <Globe size={18} /> },
+                  { label: t("generator.sourcePublicWebSearch"), icon: <Globe size={18} /> },
                   {
-                    label: "Business / Places Search",
+                    label: t("generator.sourceBusinessPlaces"),
                     icon: <Building2 size={18} />,
                   },
-                  { label: "Real Estate Pages", icon: <MapPin size={18} /> },
-                  { label: "Developer Websites", icon: <Layers size={18} /> },
-                  { label: "Public Listings", icon: <List size={18} /> },
+                  { label: t("generator.sourceRealEstatePages"), icon: <MapPin size={18} /> },
+                  { label: t("generator.sourceDeveloperWebsites"), icon: <Layers size={18} /> },
+                  { label: t("generator.sourcePublicListings"), icon: <List size={18} /> },
                 ].map((s, i) => (
                   <div className="source-checkbox-item-box" key={i}>
                     <CheckCircle2
@@ -390,13 +392,13 @@ export default function LeadGeneratorPage() {
                 ))}
               </div>
               <p className="sources-disclaimer-notice-text">
-                CORTEXA will investigate these public and approved sources.
+                {t("generator.sourcesDisclaimer")}
               </p>
             </div>
 
             {/* 3. SEARCH PROGRESS */}
             <div className="inner-process-card">
-              <h3 className="section-block-title">3. Search Progress</h3>
+              <h3 className="section-block-title">{t("generator.searchProgressTitle")}</h3>
               <div className="pipeline-progress-steps-line">
                 <div className="pipeline-line-connector-back"></div>
 
@@ -405,7 +407,7 @@ export default function LeadGeneratorPage() {
                     <CheckCircle2 size={15} />
                   </div>
                   <span className="pipeline-step-caption-text">
-                    Searching public sources...
+                    {t("generator.progressSearching")}
                   </span>
                 </div>
 
@@ -414,7 +416,7 @@ export default function LeadGeneratorPage() {
                     <Search size={15} />
                   </div>
                   <span className="pipeline-step-caption-text">
-                    Analyzing results...
+                    {t("generator.progressAnalyzing")}
                   </span>
                 </div>
 
@@ -423,7 +425,7 @@ export default function LeadGeneratorPage() {
                     <Filter size={15} />
                   </div>
                   <span className="pipeline-step-caption-text">
-                    Removing duplicates...
+                    {t("generator.progressRemovingDuplicates")}
                   </span>
                 </div>
 
@@ -432,7 +434,7 @@ export default function LeadGeneratorPage() {
                     <Sparkles size={15} />
                   </div>
                   <span className="pipeline-step-caption-text">
-                    Scoring leads...
+                    {t("generator.progressScoring")}
                   </span>
                 </div>
 
@@ -441,7 +443,7 @@ export default function LeadGeneratorPage() {
                     5
                   </div>
                   <span className="pipeline-step-caption-text">
-                    Ready to review
+                    {t("generator.progressReady")}
                   </span>
                 </div>
               </div>
@@ -453,10 +455,10 @@ export default function LeadGeneratorPage() {
         <div className="right-analytics-sidebar-panel">
           {/* Live Summary Stats Card */}
           <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">Live Summary</h3>
+            <h3 className="sidebar-card-headline-title">{t("generator.liveSummary")}</h3>
             <div className="analytics-color-legend-list">
               <div className="legend-row-item-align">
-                <span className="legend-label-left-side">Sources Checked</span>
+                <span className="legend-label-left-side">{t("generator.sourcesChecked")}</span>
                 <span
                   className="legend-count-value-number"
                   style={{ color: "#16a34a" }}
@@ -465,7 +467,7 @@ export default function LeadGeneratorPage() {
                 </span>
               </div>
               <div className="legend-row-item-align">
-                <span className="legend-label-left-side">Results Found</span>
+                <span className="legend-label-left-side">{t("generator.resultsFound")}</span>
                 <span
                   className="legend-count-value-number"
                   style={{ color: "#16a34a" }}
@@ -474,7 +476,7 @@ export default function LeadGeneratorPage() {
                 </span>
               </div>
               <div className="legend-row-item-align">
-                <span className="legend-label-left-side">Qualified Leads</span>
+                <span className="legend-label-left-side">{t("generator.qualifiedLeads")}</span>
                 <span
                   className="legend-count-value-number"
                   style={{ color: "#ea580c" }}
@@ -484,7 +486,7 @@ export default function LeadGeneratorPage() {
               </div>
               <div className="legend-row-item-align">
                 <span className="legend-label-left-side">
-                  Duplicates Removed
+                  {t("generator.duplicatesRemoved")}
                 </span>
                 <span
                   className="legend-count-value-number"
@@ -504,7 +506,7 @@ export default function LeadGeneratorPage() {
                 gap: "6px",
               }}
             >
-              <span style={{ color: "#16a34a" }}>●</span> Job ID: #LG-2024-0587
+              <span style={{ color: "#16a34a" }}>●</span> {t("generator.jobId", { id: "#LG-2024-0587" })}
             </div>
           </div>
         </div>
@@ -515,20 +517,20 @@ export default function LeadGeneratorPage() {
           <div className="results-table-container-card">
             <div className="table-top-controls-bar">
               <h3 className="table-main-headline-title">
-                4. Leads Found (32 Qualified){" "}
+                {t("generator.leadsFound", { count: 32 })}{" "}
                 <Sparkles size={16} color="#ea580c" fill="#ea580c" />
               </h3>
 
               <div className="table-right-utilities-cluster">
                 <div className="dropdown-filter-select-inline">
-                  <span>Sort by:</span>
-                  <select defaultValue="AI Score (High to Low)">
-                    <option>AI Score (High to Low)</option>
+                  <span>{t("generator.sortBy")}</span>
+                  <select defaultValue={t("generator.sortAiScoreHighLow")}>
+                    <option>{t("generator.sortAiScoreHighLow")}</option>
                   </select>
                 </div>
 
                 <button className="btn-table-util-filter">
-                  <Filter size={14} /> Filters
+                  <Filter size={14} /> {t("generator.filters")}
                 </button>
 
                 <div className="layout-view-toggle-buttons-group">
@@ -596,7 +598,7 @@ export default function LeadGeneratorPage() {
                         </span>
                       </div>
                       <div className="ai-score-percentage-capsule">
-                        <span>AI Score</span>
+                        <span>{t("generator.aiScore")}</span>
                         <div className="ai-score-ring-mini mid-green">
                           {lead.aiScore}
                         </div>
@@ -606,17 +608,17 @@ export default function LeadGeneratorPage() {
                   {/* Column 5: Interests & Budget */}
                   <div className="lead-intent-interests-paragraph">
                     <span style={{ color: "#64748b", fontSize: "11px" }}>
-                      Interested In
+                      {t("generator.interestedIn")}
                     </span>
                     {lead.interest}
-                    <span>Budget: {lead.budget}</span>
+                    <span>{t("generator.budget", { value: lead.budget })}</span>
                   </div>
 
                   {/* Column 6: Routing Source & Action Elements */}
                   <div>
                     <div className="lead-origin-source-routing-block">
                       <span style={{ color: "#64748b", fontSize: "11px" }}>
-                        Source
+                        {t("generator.source")}
                       </span>
                       <div>{lead.source}</div>
                       <a href="#link" className="source-external-link-anchor">
@@ -629,7 +631,7 @@ export default function LeadGeneratorPage() {
                   <div>
                     <div className="suggested-action-next-step-block">
                       <span style={{ color: "#64748b", fontSize: "11px" }}>
-                        Suggested Action
+                        {t("generator.suggestedAction")}
                       </span>
                       <div style={{ fontSize: "11px", marginBottom: "4px" }}>
                         {lead.action}
@@ -638,7 +640,7 @@ export default function LeadGeneratorPage() {
                     <div className="table-row-actions-group">
                       <button className="btn-save-row-lead">
                         <Toolbox size={12} />
-                        Save
+                        {t("common.save")}
                       </button>
                       <button className="btn-row-more-options">
                         <MoreVertical size={16} />
@@ -652,21 +654,21 @@ export default function LeadGeneratorPage() {
             {/* Bulk Processing Action Footer Bar */}
             <div className="bulk-processing-footer-bar">
               <div className="bulk-selection-count-indicator-text">
-                {selectedLeads.length} Selected{" "}
+                {t("generator.selectedCount", { count: selectedLeads.length })}{" "}
                 <button onClick={() => setSelectedLeads([])}>
-                  Clear Selection
+                  {t("generator.clearSelection")}
                 </button>
               </div>
 
               <div className="bulk-action-buttons-cluster">
                 <button className="btn-footer-secondary-util">
-                  <Trash2 size={14} /> Ignore Duplicates
+                  <Trash2 size={14} /> {t("generator.ignoreDuplicates")}
                 </button>
                 <button className="btn-footer-action-blue-submit">
-                  <Save size={14} /> Save Selected ({selectedLeads.length})
+                  <Save size={14} /> {t("generator.saveSelected", { count: selectedLeads.length })}
                 </button>
                 <button className="btn-footer-action-green-submit">
-                  <NotepadTextDashed size={14} /> Save All Qualified (32)
+                  <NotepadTextDashed size={14} /> {t("generator.saveAllQualified", { count: 32 })}
                 </button>
               </div>
             </div>
@@ -675,7 +677,7 @@ export default function LeadGeneratorPage() {
         <div className="right-analytics-sidebar-panel lower-split-dashboard-grid-1-right">
           {/* AI Score Insights Card */}
           <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">AI Score Insights</h3>
+            <h3 className="sidebar-card-headline-title">{t("generator.aiScoreInsights")}</h3>
             <div className="ai-score-donut-chart-wrap">
               <div className="ai-score-donut-chart-graphic-box">
                 <svg
@@ -719,10 +721,7 @@ export default function LeadGeneratorPage() {
                 </svg>
                 <div className="donut-center-absolute-labels-stack">
                   <h3>32</h3>
-                  <p>
-                    Qualified
-                    <br /> Leads
-                  </p>
+                  <p>{t("generator.qualifiedLeads")}</p>
                 </div>
               </div>
 
@@ -730,7 +729,7 @@ export default function LeadGeneratorPage() {
                 <div className="legend-row-item-align">
                   <div className="legend-label-left-side">
                     <div className="legend-color-dot-indicator hot-red"></div>
-                    <span>Hot (70-100)</span>
+                    <span>{t("generator.rangeHot")}</span>
                   </div>
                   <span className="legend-count-value-number">10</span>
                 </div>
@@ -738,7 +737,7 @@ export default function LeadGeneratorPage() {
                 <div className="legend-row-item-align">
                   <div className="legend-label-left-side">
                     <div className="legend-color-dot-indicator warm-orange"></div>
-                    <span>Warm (40-69)</span>
+                    <span>{t("generator.rangeWarm")}</span>
                   </div>
                   <span className="legend-count-value-number">17</span>
                 </div>
@@ -746,7 +745,7 @@ export default function LeadGeneratorPage() {
                 <div className="legend-row-item-align">
                   <div className="legend-label-left-side">
                     <div className="legend-color-dot-indicator cold-blue"></div>
-                    <span>Cold (0-39)</span>
+                    <span>{t("generator.rangeCold")}</span>
                   </div>
                   <span className="legend-count-value-number">5</span>
                 </div>
@@ -756,7 +755,7 @@ export default function LeadGeneratorPage() {
 
           {/* Top Cities Found Distribution Card */}
           <div className="sidebar-analytics-card">
-            <h3 className="sidebar-card-headline-title">Top Cities Found</h3>
+            <h3 className="sidebar-card-headline-title">{t("generator.topCitiesFound")}</h3>
             <div className="cities-distribution-ranking-list">
               {cityRankings.map((city, cIdx) => (
                 <div className="city-ranking-row-item" key={cIdx}>
@@ -772,7 +771,7 @@ export default function LeadGeneratorPage() {
             </div>
 
             <button className="sidebar-action-view-all-link-btn">
-              View All Cities <ArrowRight size={13} />
+              {t("generator.viewAllCities")} <ArrowRight size={13} />
             </button>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   setPropertyThumbnail,
 } from "../../api/propertiesApi";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   ChevronDown,
@@ -45,6 +46,7 @@ import {
 } from "lucide-react";
 
 export default function PropertiesPage() {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState("grid");
   const [loading, setLoading] = useState(false);
   const [properties, setProperties] = useState([]);
@@ -220,7 +222,7 @@ export default function PropertiesPage() {
   const handleDeleteExistingMedia = async (media) => {
     if (!editingProperty?.id || !media?.id) return;
 
-    if (!window.confirm("Delete this image?")) return;
+    if (!window.confirm(t("properties.confirmDeleteImage"))) return;
 
     try {
       await deletePropertyMedia(editingProperty.id, media.id);
@@ -369,49 +371,49 @@ export default function PropertiesPage() {
 
   const metrics = [
     {
-      title: "Total Properties",
+      title: t("properties.totalProperties"),
       value: dashboard?.totalProperties?.value ?? 0,
-      trend: dashboard?.totalProperties?.trend?.text || "→ 0% all time",
+      trend: dashboard?.totalProperties?.trend?.text || t("properties.trendAllTime"),
       trendType: dashboard?.totalProperties?.trend?.direction || "flat",
       icon: <Home size={20} />,
       className: "blue",
     },
     {
-      title: "Active Listings",
+      title: t("properties.activeListings"),
       value: dashboard?.activeListings?.value ?? 0,
-      trend: dashboard?.activeListings?.trend?.text || "→ 0% all time",
+      trend: dashboard?.activeListings?.trend?.text || t("properties.trendAllTime"),
       trendType: dashboard?.activeListings?.trend?.direction || "flat",
       icon: <CheckCircle2 size={20} />,
       className: "green",
     },
     {
-      title: "Total Value",
+      title: t("properties.totalValue"),
       value: `$${Number(dashboard?.totalValue?.value || 0).toLocaleString()}`,
-      trend: dashboard?.totalValue?.trend?.text || "→ 0% all time",
+      trend: dashboard?.totalValue?.trend?.text || t("properties.trendAllTime"),
       trendType: dashboard?.totalValue?.trend?.direction || "flat",
       icon: <DollarSign size={20} />,
       className: "purple",
     },
     {
-      title: "Hot Properties",
+      title: t("properties.hotProperties"),
       value: dashboard?.hotProperties?.value ?? 0,
-      trend: dashboard?.hotProperties?.trend?.text || "→ 0% coming soon",
+      trend: dashboard?.hotProperties?.trend?.text || t("properties.trendComingSoon"),
       trendType: dashboard?.hotProperties?.trend?.direction || "flat",
       icon: <Flame size={20} />,
       className: "orange",
     },
     {
-      title: "AI Optimized",
+      title: t("properties.aiOptimized"),
       value: dashboard?.aiOptimized?.value ?? 0,
-      trend: dashboard?.aiOptimized?.trend?.text || "→ 0% coming soon",
+      trend: dashboard?.aiOptimized?.trend?.text || t("properties.trendComingSoon"),
       trendType: dashboard?.aiOptimized?.trend?.direction || "flat",
       icon: <Bot size={20} />,
       className: "cyan",
     },
     {
-      title: "Conversion Rate",
+      title: t("properties.conversionRate"),
       value: `${dashboard?.conversionRate?.value ?? 0}%`,
-      trend: dashboard?.conversionRate?.trend?.text || "→ 0% all time",
+      trend: dashboard?.conversionRate?.trend?.text || t("properties.trendAllTime"),
       trendType: dashboard?.conversionRate?.trend?.direction || "flat",
       icon: <Percent size={20} />,
       className: "green",
@@ -433,10 +435,10 @@ export default function PropertiesPage() {
   const inventoryScore = Number(inventoryHealth.inventoryScore || 0);
 
   const getInventoryStatus = (score) => {
-    if (score >= 80) return "Excellent";
-    if (score >= 60) return "Good";
-    if (score >= 40) return "Needs Work";
-    return "Poor";
+    if (score >= 80) return t("properties.statusExcellent");
+    if (score >= 60) return t("properties.statusGood");
+    if (score >= 40) return t("properties.statusNeedsWork");
+    return t("properties.statusPoor");
   };
 
   const exportPropertiesCsv = () => {
@@ -505,34 +507,34 @@ export default function PropertiesPage() {
 
   const reportMetrics = [
     {
-      title: "Total Properties",
+      title: t("properties.totalProperties"),
       value: dashboard?.totalProperties?.value ?? 0,
-      trend: dashboard?.totalProperties?.trend?.text || "→ 0% all time",
+      trend: dashboard?.totalProperties?.trend?.text || t("properties.trendAllTime"),
     },
     {
-      title: "Active Listings",
+      title: t("properties.activeListings"),
       value: dashboard?.activeListings?.value ?? 0,
-      trend: dashboard?.activeListings?.trend?.text || "→ 0% all time",
+      trend: dashboard?.activeListings?.trend?.text || t("properties.trendAllTime"),
     },
     {
-      title: "Total Value",
+      title: t("properties.totalValue"),
       value: `$${Number(dashboard?.totalValue?.value || 0).toLocaleString()}`,
-      trend: dashboard?.totalValue?.trend?.text || "→ 0% all time",
+      trend: dashboard?.totalValue?.trend?.text || t("properties.trendAllTime"),
     },
     {
-      title: "Hot Properties",
+      title: t("properties.hotProperties"),
       value: dashboard?.hotProperties?.value ?? 0,
-      trend: dashboard?.hotProperties?.trend?.text || "→ 0% coming soon",
+      trend: dashboard?.hotProperties?.trend?.text || t("properties.trendComingSoon"),
     },
     {
-      title: "AI Optimized",
+      title: t("properties.aiOptimized"),
       value: dashboard?.aiOptimized?.value ?? 0,
-      trend: dashboard?.aiOptimized?.trend?.text || "→ 0% coming soon",
+      trend: dashboard?.aiOptimized?.trend?.text || t("properties.trendComingSoon"),
     },
     {
-      title: "Conversion Rate",
+      title: t("properties.conversionRate"),
       value: `${dashboard?.conversionRate?.value ?? 0}%`,
-      trend: dashboard?.conversionRate?.trend?.text || "→ 0% all time",
+      trend: dashboard?.conversionRate?.trend?.text || t("properties.trendAllTime"),
     },
   ];
 
@@ -597,22 +599,22 @@ export default function PropertiesPage() {
     return issues.map((issue) => {
       switch (issue) {
         case "Missing property images":
-          return "Upload high-quality images";
+          return t("properties.recUploadImages");
 
         case "Description is too short":
-          return "Generate AI description";
+          return t("properties.recGenerateDescription");
 
         case "Address incomplete":
-          return "Complete address";
+          return t("properties.recCompleteAddress");
 
         case "Price missing":
-          return "Set listing price";
+          return t("properties.recSetPrice");
 
         case "Missing property specifications":
-          return "Add bedrooms, bathrooms and square feet";
+          return t("properties.recAddSpecs");
 
         case "Property not published":
-          return "Publish listing";
+          return t("properties.recPublishListing");
 
         default:
           return issue;
@@ -625,33 +627,35 @@ export default function PropertiesPage() {
 
     return [
       {
-        title: "Property Created",
+        title: t("properties.timelinePropertyCreated"),
         time: property.createdAt,
-        description: "Listing created",
+        description: t("properties.timelineListingCreated"),
       },
 
       property.updatedAt && {
-        title: "Last Updated",
+        title: t("properties.timelineLastUpdated"),
         time: property.updatedAt,
-        description: "Listing updated",
+        description: t("properties.timelineListingUpdated"),
       },
 
       property.publishedAt && {
-        title: "Published",
+        title: t("properties.published"),
         time: property.publishedAt,
-        description: "Published successfully",
+        description: t("properties.timelinePublishedSuccessfully"),
       },
 
       {
-        title: "AI Analysis",
+        title: t("properties.timelineAiAnalysis"),
         time: new Date().toISOString(),
-        description: `AI Score ${property.aiScore || 0}/100`,
+        description: t("properties.aiScoreValue", { score: property.aiScore || 0 }),
       },
 
       {
-        title: "Lead Matching",
+        title: t("properties.timelineLeadMatching"),
         time: new Date().toISOString(),
-        description: `${property.matchedLeads || 0} matched leads`,
+        description: t("properties.matchedLeadsCount", {
+          count: property.matchedLeads || 0,
+        }),
       },
     ].filter(Boolean);
   };
@@ -666,20 +670,18 @@ export default function PropertiesPage() {
     <div className="properties-page">
       <div className="heading_page">
         <Home className="header-icon" size={20} />
-        <h1>AI Property Inventory</h1>
-        <p className="next_head">Command Center</p>
+        <h1>{t("properties.pageTitle")}</h1>
+        <p className="next_head">{t("properties.commandCenter")}</p>
         <Sparkles size={16} color="#2563eb" />
       </div>
-      <p className="sub_head">
-        Manage, analyze and optimize your property listing with AI intelligence
-      </p>
+      <p className="sub_head">{t("properties.subheading")}</p>
       <div className="page-header">
         <div className="header-actions">
           <button
             className="btn btn-secondary"
             onClick={() => setAnalysisOpen(true)}
           >
-            <Sparkles size={16} color="#2563eb" /> Analyze Properties
+            <Sparkles size={16} color="#2563eb" /> {t("properties.analyzeProperties")}
           </button>
           <button
             className="btn btn-primary"
@@ -689,14 +691,14 @@ export default function PropertiesPage() {
             }}
           >
             <Pipette size={16} />
-            Auto-Optimize Listings
+            {t("properties.autoOptimizeListings")}
           </button>
           <button className="btn btn-secondary" onClick={printPropertyReport}>
-            <Download size={16} className="blue" /> Export Property Report
+            <Download size={16} className="blue" /> {t("properties.exportPropertyReport")}
           </button>
           <button className="btn btn-primary" onClick={openAddPropertyModal}>
             <Plus size={16} />
-            Add Property
+            {t("properties.addProperty")}
           </button>
         </div>
       </div>
@@ -724,7 +726,7 @@ export default function PropertiesPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search properties, addresses, MLS ID..."
+            placeholder={t("properties.searchPlaceholder")}
           />
         </div>
 
@@ -734,11 +736,11 @@ export default function PropertiesPage() {
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
           >
-            <option value="all">All time</option>
-            <option value="today">Today</option>
-            <option value="last_7_days">Last 7 days</option>
-            <option value="last_30_days">Last 30 days</option>
-            <option value="this_month">This month</option>
+            <option value="all">{t("properties.dateAll")}</option>
+            <option value="today">{t("properties.dateToday")}</option>
+            <option value="last_7_days">{t("properties.dateLast7Days")}</option>
+            <option value="last_30_days">{t("properties.dateLast30Days")}</option>
+            <option value="this_month">{t("properties.dateThisMonth")}</option>
           </select>
           <Calendar size={14} className="select-icon" />
         </div>
@@ -749,7 +751,7 @@ export default function PropertiesPage() {
             value={city}
             onChange={(e) => setCity(e.target.value)}
           >
-            <option value="">All Cities</option>
+            <option value="">{t("properties.allCities")}</option>
             {cityOptions.map((item) => (
               <option key={item} value={item}>
                 {item}
@@ -765,9 +767,9 @@ export default function PropertiesPage() {
             value={type}
             onChange={(e) => setType(e.target.value)}
           >
-            <option value="">All Listing Types</option>
-            <option value="sale">For Sale</option>
-            <option value="rent">For Rent</option>
+            <option value="">{t("properties.allListingTypes")}</option>
+            <option value="sale">{t("properties.forSale")}</option>
+            <option value="rent">{t("properties.forRent")}</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -778,13 +780,13 @@ export default function PropertiesPage() {
             value={propertyType}
             onChange={(e) => setPropertyType(e.target.value)}
           >
-            <option value="">All Property Types</option>
-            <option value="house">House</option>
-            <option value="apartment">Apartment</option>
-            <option value="land">Land</option>
-            <option value="commercial">Commercial</option>
-            <option value="villa">Villa</option>
-            <option value="office">Office</option>
+            <option value="">{t("properties.allPropertyTypes")}</option>
+            <option value="house">{t("properties.propertyType_house")}</option>
+            <option value="apartment">{t("properties.propertyType_apartment")}</option>
+            <option value="land">{t("properties.propertyType_land")}</option>
+            <option value="commercial">{t("properties.propertyType_commercial")}</option>
+            <option value="villa">{t("properties.propertyType_villa")}</option>
+            <option value="office">{t("properties.propertyType_office")}</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -795,16 +797,16 @@ export default function PropertiesPage() {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
-            <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="pending_review">Pending Review</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="published">Published</option>
-            <option value="reserved">Reserved</option>
-            <option value="sold">Sold</option>
-            <option value="rented">Rented</option>
-            <option value="archived">Archived</option>
+            <option value="">{t("properties.allStatus")}</option>
+            <option value="draft">{t("properties.draft")}</option>
+            <option value="pending_review">{t("properties.pendingReview")}</option>
+            <option value="approved">{t("properties.approved")}</option>
+            <option value="rejected">{t("properties.rejected")}</option>
+            <option value="published">{t("properties.published")}</option>
+            <option value="reserved">{t("properties.reserved")}</option>
+            <option value="sold">{t("properties.sold")}</option>
+            <option value="rented">{t("properties.rented")}</option>
+            <option value="archived">{t("properties.archived")}</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -812,7 +814,7 @@ export default function PropertiesPage() {
         <div className="search-box price" style={{ maxWidth: "120px" }}>
           <input
             type="number"
-            placeholder="Min Price"
+            placeholder={t("properties.minPrice")}
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
           />
@@ -821,7 +823,7 @@ export default function PropertiesPage() {
         <div className="search-box price" style={{ maxWidth: "120px" }}>
           <input
             type="number"
-            placeholder="Max Price"
+            placeholder={t("properties.maxPrice")}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
           />
@@ -832,10 +834,10 @@ export default function PropertiesPage() {
             value={aiScore}
             onChange={(e) => setAiScore(e.target.value)}
           >
-            <option value="">All AI Scores</option>
-            <option value="high">High 80+</option>
-            <option value="medium">Medium 50-79</option>
-            <option value="low">Low under 50</option>
+            <option value="">{t("properties.allAiScores")}</option>
+            <option value="high">{t("properties.aiScoreHigh")}</option>
+            <option value="medium">{t("properties.aiScoreMedium")}</option>
+            <option value="low">{t("properties.aiScoreLow")}</option>
           </select>
           <ChevronDown size={14} className="select-icon" />
         </div>
@@ -845,7 +847,7 @@ export default function PropertiesPage() {
             value={agentId}
             onChange={(e) => setAgentId(e.target.value)}
           >
-            <option value="">All Agents</option>
+            <option value="">{t("properties.allAgents")}</option>
             {agentOptions.map((agent) => (
               <option key={agent.id} value={agent.id}>
                 {agent.name}
@@ -861,7 +863,7 @@ export default function PropertiesPage() {
             value={teamId}
             onChange={(e) => setTeamId(e.target.value)}
           >
-            <option value="">All Teams</option>
+            <option value="">{t("properties.allTeams")}</option>
             {teamOptions.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
@@ -907,7 +909,7 @@ export default function PropertiesPage() {
           }}
         >
           <RotateCcw size={14} />
-          Clear Filters
+          {t("properties.clearFilters")}
         </button>
         <button
           className="btn btn-primary"
@@ -919,14 +921,14 @@ export default function PropertiesPage() {
           }}
         >
           <Search size={14} />
-          Search
+          {t("common.search")}
         </button>
         <button
           className="btn btn-secondary export"
           style={{ height: "38px" }}
           onClick={exportPropertiesCsv}
         >
-          <Download size={15} className="blue" /> Export
+          <Download size={15} className="blue" /> {t("properties.export")}
         </button>
 
         <div className="view-toggle-group">
@@ -957,11 +959,11 @@ export default function PropertiesPage() {
         >
           {loading ? (
             <div className="property-card">
-              <div className="card-body">Loading properties...</div>
+              <div className="card-body">{t("properties.loadingProperties")}</div>
             </div>
           ) : properties.length === 0 ? (
             <div className="property-card">
-              <div className="card-body">No properties found.</div>
+              <div className="card-body">{t("properties.noPropertiesFound")}</div>
             </div>
           ) : (
             properties.map((property, idx) => (
@@ -994,7 +996,7 @@ export default function PropertiesPage() {
                         color: "#94a3b8",
                       }}
                     >
-                      Property Image Layout
+                      {t("properties.propertyImagePlaceholder")}
                     </div>
                   )}
                   <span
@@ -1027,7 +1029,7 @@ export default function PropertiesPage() {
                             setOpenActionId(null);
                           }}
                         >
-                          View Analysis
+                          {t("properties.viewAnalysis")}
                         </button>
 
                         <button
@@ -1039,7 +1041,7 @@ export default function PropertiesPage() {
                             await loadDashboard();
                           }}
                         >
-                          Publish
+                          {t("properties.publish")}
                         </button>
                         <button
                           onClick={(e) => {
@@ -1048,13 +1050,13 @@ export default function PropertiesPage() {
                             setOpenActionId(null);
                           }}
                         >
-                          Edit
+                          {t("properties.edit")}
                         </button>
                         <button
                           className="danger"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            if (!window.confirm("Delete this property?"))
+                            if (!window.confirm(t("properties.confirmDeleteProperty")))
                               return;
                             await deleteProperty(property.id);
                             setOpenActionId(null);
@@ -1062,7 +1064,7 @@ export default function PropertiesPage() {
                             await loadDashboard();
                           }}
                         >
-                          Delete
+                          {t("common.delete")}
                         </button>
                       </div>
                     )}
@@ -1074,7 +1076,7 @@ export default function PropertiesPage() {
                     <h3>
                       {property.price
                         ? `$${Number(property.price).toLocaleString()}`
-                        : "No price"}
+                        : t("properties.noPrice")}
                     </h3>
                     <div className="ai-score-badge">
                       <strong
@@ -1088,7 +1090,7 @@ export default function PropertiesPage() {
                       >
                         {Number(property.aiScore || 0)}
                       </strong>
-                      <span>AI Score</span>
+                      <span>{t("properties.aiScore")}</span>
                     </div>
                   </div>
 
@@ -1100,7 +1102,7 @@ export default function PropertiesPage() {
                       property.zipCode,
                     ]
                       .filter(Boolean)
-                      .join(", ") || "No address"}
+                      .join(", ") || t("properties.noAddress")}
                   </p>
 
                   <div className="property-specs">
@@ -1113,14 +1115,14 @@ export default function PropertiesPage() {
                     <div className="spec-item">
                       <Maximize size={14} />{" "}
                       {property.squareFeet
-                        ? `${property.squareFeet} sqft`
+                        ? t("properties.sqftValue", { value: property.squareFeet })
                         : "—"}
                     </div>
                   </div>
 
                   <div className="financials-row">
                     <div className="financial-item">
-                      <span>Revenue Potential</span>
+                      <span>{t("properties.revenuePotential")}</span>
                       <strong className="green-text">
                         $
                         {Number(
@@ -1132,7 +1134,7 @@ export default function PropertiesPage() {
                       className="financial-item"
                       style={{ textAlign: "right" }}
                     >
-                      <span>Matched Leads</span>
+                      <span>{t("properties.matchedLeads")}</span>
                       <strong className="text-align-right">
                         {Number(property.matchedLeads || 0)} ↗
                       </strong>
@@ -1151,9 +1153,9 @@ export default function PropertiesPage() {
                         <h5>
                           {property.agentName ||
                             property.createdByName ||
-                            "Unassigned"}
+                            t("properties.unassigned")}
                         </h5>
-                        <p>{property.teamName || "No team"}</p>
+                        <p>{property.teamName || t("properties.noTeam")}</p>
                       </div>
                     </div>
 
@@ -1172,7 +1174,10 @@ export default function PropertiesPage() {
         </div>
         <div className="properties-pagination">
           <div className="pagination-info">
-            Showing {properties.length} of {total} properties
+            {t("properties.showingCount", {
+              shown: properties.length,
+              total: total,
+            })}
           </div>
 
           <div className="pagination-controls">
@@ -1183,9 +1188,9 @@ export default function PropertiesPage() {
                 setPage(1);
               }}
             >
-              <option value={8}>8 / page</option>
-              <option value={12}>12 / page</option>
-              <option value={24}>24 / page</option>
+              <option value={8}>{t("properties.perPageOption", { count: 8 })}</option>
+              <option value={12}>{t("properties.perPageOption", { count: 12 })}</option>
+              <option value={24}>{t("properties.perPageOption", { count: 24 })}</option>
             </select>
 
             <button
@@ -1193,11 +1198,11 @@ export default function PropertiesPage() {
               disabled={page <= 1}
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             >
-              Previous
+              {t("common.previous")}
             </button>
 
             <span>
-              Page {page} / {totalPages}
+              {t("properties.pageOf", { page: page, total: totalPages })}
             </span>
 
             <button
@@ -1205,7 +1210,7 @@ export default function PropertiesPage() {
               disabled={page >= totalPages}
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             >
-              Next
+              {t("common.next")}
             </button>
           </div>
         </div>
@@ -1216,7 +1221,7 @@ export default function PropertiesPage() {
             <div className="section-header">
               <h3>
                 <ShieldCheck size={18} className="blue" />
-                Inventory Health
+                {t("properties.inventoryHealth")}
               </h3>
             </div>
 
@@ -1249,7 +1254,7 @@ export default function PropertiesPage() {
                 >
                   <div className="chart-center">
                     <h4>{healthTotal}</h4>
-                    <span>Total</span>
+                    <span>{t("properties.total")}</span>
                   </div>
                 </div>
 
@@ -1257,7 +1262,7 @@ export default function PropertiesPage() {
                   <div className="legend-item">
                     <div className="legend-label">
                       <CheckCircle2 size={14} color="#16a34a" />
-                      <span>Active</span>
+                      <span>{t("common.active")}</span>
                     </div>
                     <span className="legend-value">
                       {healthActive} ({getPercent(healthActive, healthTotal)}%)
@@ -1266,7 +1271,7 @@ export default function PropertiesPage() {
                   <div className="legend-item">
                     <div className="legend-label">
                       <Clock3 size={14} color="#ea580c" />
-                      <span>Under Review</span>
+                      <span>{t("properties.underReview")}</span>
                     </div>
                     {healthUnderReview} (
                     {getPercent(healthUnderReview, healthTotal)}%)
@@ -1274,14 +1279,14 @@ export default function PropertiesPage() {
                   <div className="legend-item">
                     <div className="legend-label">
                       <FileText size={14} color="#64748b" />
-                      <span>Draft</span>
+                      <span>{t("properties.draft")}</span>
                     </div>
                     {healthDraft} ({getPercent(healthDraft, healthTotal)}%)
                   </div>
                   <div className="legend-item">
                     <div className="legend-label">
                       <AlertCircle size={14} color="#dc2626" />
-                      <span>Inactive</span>
+                      <span>{t("common.inactive")}</span>
                     </div>
                     {healthInactive} ({getPercent(healthInactive, healthTotal)}
                     %)
@@ -1290,7 +1295,7 @@ export default function PropertiesPage() {
               </div>
               <div className="inventory-score-box">
                 <div className="score-info">
-                  <h5>Inventory Score</h5>
+                  <h5>{t("properties.inventoryScore")}</h5>
                   <div className="score-display">
                     {inventoryScore} <span className="score-max">/100</span>
                   </div>
@@ -1312,7 +1317,7 @@ export default function PropertiesPage() {
                 className="section-link"
                 onClick={() => setAnalysisOpen(true)}
               >
-                View Full Analysis <ArrowRight size={13} />
+                {t("properties.viewFullAnalysis")} <ArrowRight size={13} />
               </a>
             </div>
           </div>
@@ -1322,14 +1327,14 @@ export default function PropertiesPage() {
             <div className="section-header">
               <h3>
                 <Users size={18} className="blue" />
-                Matched Leads
+                {t("properties.matchedLeads")}
               </h3>
               <a
                 href="#view-all-leads"
                 className="section-link"
                 onClick={() => navigate("/dashboard/leads")}
               >
-                View All Leads
+                {t("properties.viewAllLeads")}
                 <ArrowRight size={13} />
               </a>
             </div>
@@ -1338,11 +1343,8 @@ export default function PropertiesPage() {
               {matchedLeads.length === 0 ? (
                 <div className="matched-lead-item">
                   <div className="lead-details">
-                    <h4>No matched leads yet</h4>
-                    <p>
-                      Matching will appear when leads have city, budget, or
-                      property interest.
-                    </p>
+                    <h4>{t("properties.noMatchedLeads")}</h4>
+                    <p>{t("properties.matchingHint")}</p>
                   </div>
                 </div>
               ) : (
@@ -1361,9 +1363,12 @@ export default function PropertiesPage() {
                     </div>
 
                     <div className="lead-right-meta">
-                      <span className="budget">Budget: {lead.budget}</span>
+                      <span className="budget">
+                        {t("properties.budgetLabel", { budget: lead.budget })}
+                      </span>
                       <span className="matches-count">
-                        Matched properties: <strong>{lead.count}</strong>
+                        {t("properties.matchedPropertiesLabel")}{" "}
+                        <strong>{lead.count}</strong>
                       </span>
                     </div>
                   </div>
@@ -1381,7 +1386,7 @@ export default function PropertiesPage() {
           >
             <div className="drawer-header">
               <div>
-                <div className="drawer-label">Property Detail</div>
+                <div className="drawer-label">{t("properties.propertyDetail")}</div>
 
                 <h2>{selectedProperty?.title}</h2>
 
@@ -1400,20 +1405,20 @@ export default function PropertiesPage() {
             </div>
 
             {drawerLoading ? (
-              <div className="drawer-loading">Loading...</div>
+              <div className="drawer-loading">{t("common.loading")}</div>
             ) : (
               <>
                 <div className="drawer-image">
                   {selectedProperty?.thumbnailUrl ? (
                     <img src={selectedProperty.thumbnailUrl} alt="" />
                   ) : (
-                    <div className="drawer-placeholder">No Image</div>
+                    <div className="drawer-placeholder">{t("properties.noImage")}</div>
                   )}
                 </div>
 
                 <div className="drawer-kpis">
                   <div>
-                    <span>Price</span>
+                    <span>{t("properties.price")}</span>
 
                     <strong>
                       ${Number(selectedProperty?.price || 0).toLocaleString()}
@@ -1421,13 +1426,13 @@ export default function PropertiesPage() {
                   </div>
 
                   <div>
-                    <span>AI Score</span>
+                    <span>{t("properties.aiScore")}</span>
 
                     <strong>{selectedProperty?.aiScore || 0}/100</strong>
                   </div>
 
                   <div>
-                    <span>Revenue Potential</span>
+                    <span>{t("properties.revenuePotential")}</span>
 
                     <strong>
                       $
@@ -1438,14 +1443,14 @@ export default function PropertiesPage() {
                   </div>
 
                   <div>
-                    <span>Matched Leads</span>
+                    <span>{t("properties.matchedLeads")}</span>
 
                     <strong>{selectedProperty?.matchedLeads || 0}</strong>
                   </div>
                 </div>
 
                 <div className="drawer-section">
-                  <h3>AI Suggestions</h3>
+                  <h3>{t("properties.aiSuggestions")}</h3>
 
                   <div className="drawer-list">
                     {getPropertyRecommendations(selectedProperty).map(
@@ -1461,7 +1466,7 @@ export default function PropertiesPage() {
                 </div>
 
                 <div className="drawer-section">
-                  <h3>Timeline</h3>
+                  <h3>{t("properties.timeline")}</h3>
 
                   <div className="timeline">
                     {getPropertyTimeline(selectedProperty).map(
@@ -1490,14 +1495,14 @@ export default function PropertiesPage() {
         <div className="modal-overlay">
           <div className="property-modal">
             <div className="modal-header">
-              <h3>{editingProperty ? "Edit Property" : "Add Property"}</h3>
+              <h3>{editingProperty ? t("properties.editProperty") : t("properties.addProperty")}</h3>
               <button onClick={closePropertyModal}>×</button>
             </div>
 
             <form onSubmit={handleSubmitProperty} className="property-form">
               <input
                 required
-                placeholder="Property title"
+                placeholder={t("properties.propertyTitlePlaceholder")}
                 value={propertyForm.title}
                 onChange={(e) =>
                   setPropertyForm((prev) => ({
@@ -1508,7 +1513,7 @@ export default function PropertiesPage() {
               />
 
               <input
-                placeholder="Address"
+                placeholder={t("properties.address")}
                 value={propertyForm.address}
                 onChange={(e) =>
                   setPropertyForm((prev) => ({
@@ -1520,7 +1525,7 @@ export default function PropertiesPage() {
 
               <div className="form-grid-2">
                 <input
-                  placeholder="City"
+                  placeholder={t("properties.city")}
                   value={propertyForm.city}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1531,7 +1536,7 @@ export default function PropertiesPage() {
                 />
 
                 <input
-                  placeholder="State"
+                  placeholder={t("properties.state")}
                   value={propertyForm.state}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1545,7 +1550,7 @@ export default function PropertiesPage() {
               <div className="form-grid-2">
                 <input
                   type="number"
-                  placeholder="Price"
+                  placeholder={t("properties.price")}
                   value={propertyForm.price}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1556,7 +1561,7 @@ export default function PropertiesPage() {
                 />
 
                 <input
-                  placeholder="Zip code"
+                  placeholder={t("properties.zipCodePlaceholder")}
                   value={propertyForm.zipCode}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1577,8 +1582,8 @@ export default function PropertiesPage() {
                     }))
                   }
                 >
-                  <option value="sale">For Sale</option>
-                  <option value="rent">For Rent</option>
+                  <option value="sale">{t("properties.forSale")}</option>
+                  <option value="rent">{t("properties.forRent")}</option>
                 </select>
 
                 <select
@@ -1590,12 +1595,12 @@ export default function PropertiesPage() {
                     }))
                   }
                 >
-                  <option value="house">House</option>
-                  <option value="apartment">Apartment</option>
-                  <option value="land">Land</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="villa">Villa</option>
-                  <option value="office">Office</option>
+                  <option value="house">{t("properties.propertyType_house")}</option>
+                  <option value="apartment">{t("properties.propertyType_apartment")}</option>
+                  <option value="land">{t("properties.propertyType_land")}</option>
+                  <option value="commercial">{t("properties.propertyType_commercial")}</option>
+                  <option value="villa">{t("properties.propertyType_villa")}</option>
+                  <option value="office">{t("properties.propertyType_office")}</option>
                 </select>
               </div>
 
@@ -1609,19 +1614,19 @@ export default function PropertiesPage() {
                     }))
                   }
                 >
-                  <option value="draft">Draft</option>
-                  <option value="pending_review">Pending Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="published">Published</option>
-                  <option value="reserved">Reserved</option>
-                  <option value="sold">Sold</option>
-                  <option value="rented">Rented</option>
-                  <option value="archived">Archived</option>
+                  <option value="draft">{t("properties.draft")}</option>
+                  <option value="pending_review">{t("properties.pendingReview")}</option>
+                  <option value="approved">{t("properties.approved")}</option>
+                  <option value="published">{t("properties.published")}</option>
+                  <option value="reserved">{t("properties.reserved")}</option>
+                  <option value="sold">{t("properties.sold")}</option>
+                  <option value="rented">{t("properties.rented")}</option>
+                  <option value="archived">{t("properties.archived")}</option>
                 </select>
 
                 <input
                   type="number"
-                  placeholder="Sqft"
+                  placeholder={t("properties.sqft")}
                   value={propertyForm.squareFeet}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1635,7 +1640,7 @@ export default function PropertiesPage() {
               <div className="form-grid-2">
                 <input
                   type="number"
-                  placeholder="Beds"
+                  placeholder={t("properties.beds")}
                   value={propertyForm.bedrooms}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1647,7 +1652,7 @@ export default function PropertiesPage() {
 
                 <input
                   type="number"
-                  placeholder="Baths"
+                  placeholder={t("properties.baths")}
                   value={propertyForm.bathrooms}
                   onChange={(e) =>
                     setPropertyForm((prev) => ({
@@ -1659,7 +1664,7 @@ export default function PropertiesPage() {
               </div>
 
               <textarea
-                placeholder="Description"
+                placeholder={t("properties.description")}
                 value={propertyForm.description}
                 onChange={(e) =>
                   setPropertyForm((prev) => ({
@@ -1671,13 +1676,13 @@ export default function PropertiesPage() {
               <div className="property-image-uploader">
                 <div className="image-uploader-header">
                   <div>
-                    <h4>Property Images</h4>
-                    <p>Upload JPG, PNG, or WebP images. Max 20 images.</p>
+                    <h4>{t("properties.propertyImages")}</h4>
+                    <p>{t("properties.uploadImagesHint")}</p>
                   </div>
 
                   <label className="btn btn-secondary image-upload-btn">
                     <Plus size={14} />
-                    Add Images
+                    {t("properties.addImages")}
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -1692,14 +1697,14 @@ export default function PropertiesPage() {
                   <div className="image-preview-grid">
                     {existingMedia.map((media) => (
                       <div className="image-preview-item" key={media.id}>
-                        <img src={media.url} alt="Property media" />
+                        <img src={media.url} alt={t("properties.propertyMediaAlt")} />
 
                         <div className="image-preview-actions">
                           <button
                             type="button"
                             onClick={() => handleSetThumbnail(media)}
                           >
-                            Set Cover
+                            {t("properties.setCover")}
                           </button>
 
                           <button
@@ -1707,12 +1712,12 @@ export default function PropertiesPage() {
                             className="danger"
                             onClick={() => handleDeleteExistingMedia(media)}
                           >
-                            Delete
+                            {t("common.delete")}
                           </button>
                         </div>
 
                         {editingProperty?.thumbnailUrl === media.url && (
-                          <span className="cover-badge">Cover</span>
+                          <span className="cover-badge">{t("properties.cover")}</span>
                         )}
                       </div>
                     ))}
@@ -1734,11 +1739,11 @@ export default function PropertiesPage() {
                             className="danger"
                             onClick={() => removeSelectedImage(index)}
                           >
-                            Remove
+                            {t("properties.remove")}
                           </button>
                         </div>
 
-                        <span className="new-badge">New</span>
+                        <span className="new-badge">{t("properties.newBadge")}</span>
                       </div>
                     ))}
                   </div>
@@ -1750,7 +1755,7 @@ export default function PropertiesPage() {
                   className="btn btn-secondary"
                   onClick={closePropertyModal}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
 
                 <button
@@ -1759,10 +1764,10 @@ export default function PropertiesPage() {
                   disabled={savingProperty || uploadingImages}
                 >
                   {savingProperty || uploadingImages
-                    ? "Saving..."
+                    ? t("properties.saving")
                     : editingProperty
-                      ? "Save Changes"
-                      : "Create Property"}
+                      ? t("properties.saveChanges")
+                      : t("properties.createProperty")}
                 </button>
               </div>
             </form>
@@ -1776,7 +1781,7 @@ export default function PropertiesPage() {
               <h3>
                 {selectedAnalysisProperty
                   ? selectedAnalysisProperty.title
-                  : "Inventory Analysis"}
+                  : t("properties.inventoryAnalysis")}
               </h3>
               <button
                 onClick={() => {
@@ -1789,21 +1794,21 @@ export default function PropertiesPage() {
             </div>
             {weakProperties.length > 0 && (
               <div className="analysis-section">
-                <h4>Listings to optimize</h4>
+                <h4>{t("properties.listingsToOptimize")}</h4>
 
                 {weakProperties.slice(0, 8).map((item) => (
                   <div className="analysis-row" key={item.id}>
                     <div>
-                      <strong>{item.title || "Untitled property"}</strong>
+                      <strong>{item.title || t("properties.untitledProperty")}</strong>
                       <p>
-                        {item.city || "No city"} • AI Score {item.aiScore || 0}
-                        /100
+                        {item.city || t("properties.noCity")} •{" "}
+                        {t("properties.aiScoreValue", { score: item.aiScore || 0 })}
                       </p>
                     </div>
                     <span>
                       {Number(item.aiScore || 0) < 50
-                        ? "Needs content + media"
-                        : "Can be improved"}
+                        ? t("properties.needsContentMedia")
+                        : t("properties.canBeImproved")}
                     </span>
                   </div>
                 ))}
@@ -1812,11 +1817,11 @@ export default function PropertiesPage() {
             {selectedAnalysisProperty ? (
               <div className="analysis-grid">
                 <div>
-                  <span>AI Score</span>
+                  <span>{t("properties.aiScore")}</span>
                   <strong>{selectedAnalysisProperty.aiScore || 0}/100</strong>
                 </div>
                 <div>
-                  <span>Revenue Potential</span>
+                  <span>{t("properties.revenuePotential")}</span>
                   <strong>
                     $
                     {Number(
@@ -1825,30 +1830,30 @@ export default function PropertiesPage() {
                   </strong>
                 </div>
                 <div>
-                  <span>Matched Leads</span>
+                  <span>{t("properties.matchedLeads")}</span>
                   <strong>{selectedAnalysisProperty.matchedLeads || 0}</strong>
                 </div>
                 <div>
-                  <span>Status</span>
+                  <span>{t("properties.status")}</span>
                   <strong>{selectedAnalysisProperty.status}</strong>
                 </div>
               </div>
             ) : (
               <div className="analysis-grid">
                 <div>
-                  <span>Total Properties</span>
+                  <span>{t("properties.totalProperties")}</span>
                   <strong>{healthTotal}</strong>
                 </div>
                 <div>
-                  <span>Active</span>
+                  <span>{t("common.active")}</span>
                   <strong>{healthActive}</strong>
                 </div>
                 <div>
-                  <span>Under Review</span>
+                  <span>{t("properties.underReview")}</span>
                   <strong>{healthUnderReview}</strong>
                 </div>
                 <div>
-                  <span>Inventory Score</span>
+                  <span>{t("properties.inventoryScore")}</span>
                   <strong>{inventoryScore}/100</strong>
                 </div>
               </div>
@@ -1861,17 +1866,17 @@ export default function PropertiesPage() {
           <div className="report-header">
             <div>
               <h1>Cortex AI CRM</h1>
-              <p>Property Inventory Report</p>
+              <p>{t("properties.propertyInventoryReport")}</p>
             </div>
 
             <div className="report-meta">
-              <strong>{dashboard?.rangeLabel || "All time"}</strong>
+              <strong>{dashboard?.rangeLabel || t("properties.dateAll")}</strong>
               <span>{new Date().toLocaleString()}</span>
             </div>
           </div>
 
           <div className="report-section">
-            <h2>Summary Metrics</h2>
+            <h2>{t("properties.summaryMetrics")}</h2>
 
             <div className="report-metrics-grid">
               {reportMetrics.map((item) => (
@@ -1885,56 +1890,56 @@ export default function PropertiesPage() {
           </div>
 
           <div className="report-section">
-            <h2>Inventory Health</h2>
+            <h2>{t("properties.inventoryHealth")}</h2>
 
             <div className="report-health-grid">
               <div>
-                <span>Total</span>
+                <span>{t("properties.total")}</span>
                 <strong>{healthTotal}</strong>
               </div>
               <div>
-                <span>Active</span>
+                <span>{t("common.active")}</span>
                 <strong>{healthActive}</strong>
               </div>
               <div>
-                <span>Under Review</span>
+                <span>{t("properties.underReview")}</span>
                 <strong>{healthUnderReview}</strong>
               </div>
               <div>
-                <span>Draft</span>
+                <span>{t("properties.draft")}</span>
                 <strong>{healthDraft}</strong>
               </div>
               <div>
-                <span>Inactive</span>
+                <span>{t("common.inactive")}</span>
                 <strong>{healthInactive}</strong>
               </div>
               <div>
-                <span>Inventory Score</span>
+                <span>{t("properties.inventoryScore")}</span>
                 <strong>{inventoryScore}/100</strong>
               </div>
             </div>
           </div>
 
           <div className="report-section">
-            <h2>Top Properties</h2>
+            <h2>{t("properties.topProperties")}</h2>
 
             <table className="report-table">
               <thead>
                 <tr>
-                  <th>Property</th>
-                  <th>City</th>
-                  <th>Status</th>
-                  <th>Price</th>
-                  <th>AI Score</th>
-                  <th>Revenue Potential</th>
-                  <th>Matched Leads</th>
+                  <th>{t("properties.propertyColumn")}</th>
+                  <th>{t("properties.city")}</th>
+                  <th>{t("properties.status")}</th>
+                  <th>{t("properties.price")}</th>
+                  <th>{t("properties.aiScore")}</th>
+                  <th>{t("properties.revenuePotential")}</th>
+                  <th>{t("properties.matchedLeads")}</th>
                 </tr>
               </thead>
 
               <tbody>
                 {properties.slice(0, 20).map((property) => (
                   <tr key={property.id}>
-                    <td>{property.title || "Untitled"}</td>
+                    <td>{property.title || t("properties.untitled")}</td>
                     <td>{property.city || "—"}</td>
                     <td>{(property.status || "draft").replace("_", " ")}</td>
                     <td>
@@ -1954,22 +1959,22 @@ export default function PropertiesPage() {
           </div>
 
           <div className="report-section">
-            <h2>Matched Leads</h2>
+            <h2>{t("properties.matchedLeads")}</h2>
 
             <table className="report-table">
               <thead>
                 <tr>
-                  <th>Lead</th>
-                  <th>Location</th>
-                  <th>Budget</th>
-                  <th>Matched Properties</th>
+                  <th>{t("properties.leadColumn")}</th>
+                  <th>{t("properties.location")}</th>
+                  <th>{t("properties.budget")}</th>
+                  <th>{t("properties.matchedProperties")}</th>
                 </tr>
               </thead>
 
               <tbody>
                 {(dashboard?.matchedLeads || []).length === 0 ? (
                   <tr>
-                    <td colSpan="4">No matched leads yet.</td>
+                    <td colSpan="4">{t("properties.noMatchedLeadsTable")}</td>
                   </tr>
                 ) : (
                   dashboard.matchedLeads.map((lead) => (
@@ -1986,7 +1991,7 @@ export default function PropertiesPage() {
           </div>
 
           <div className="report-footer">
-            Generated by Cortex AI CRM Property Intelligence
+            {t("properties.reportFooter")}
           </div>
         </div>
       )}

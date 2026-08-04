@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import apiClient from "../../api/apiClient";
 
 export default function PropertyFeedPage() {
+  const { t } = useTranslation();
+
   const [feeds, setFeeds] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -53,13 +56,13 @@ export default function PropertyFeedPage() {
        * VALIDATION
        */
       if (!form.providerName.trim()) {
-        showToast("Provider name is required", "error");
+        showToast(t("integrations.propertyFeed.providerNameRequired"), "error");
 
         return;
       }
 
       if (!form.feedUrl.trim()) {
-        showToast("Feed URL is required", "error");
+        showToast(t("integrations.propertyFeed.feedUrlRequired"), "error");
 
         return;
       }
@@ -72,7 +75,7 @@ export default function PropertyFeedPage() {
       try {
         parsedUrl = new URL(form.feedUrl);
       } catch {
-        showToast("Invalid feed URL", "error");
+        showToast(t("integrations.propertyFeed.invalidFeedUrl"), "error");
 
         return;
       }
@@ -81,7 +84,7 @@ export default function PropertyFeedPage() {
        * HTTPS ONLY
        */
       if (parsedUrl.protocol !== "https:") {
-        showToast("Feed URL must use HTTPS", "error");
+        showToast(t("integrations.propertyFeed.httpsRequired"), "error");
 
         return;
       }
@@ -92,7 +95,7 @@ export default function PropertyFeedPage() {
       const frequency = Number(form.syncFrequencyMinutes);
 
       if (Number.isNaN(frequency) || frequency < 5) {
-        showToast("Sync frequency must be at least 5 minutes", "error");
+        showToast(t("integrations.propertyFeed.syncFrequencyMin"), "error");
 
         return;
       }
@@ -108,7 +111,7 @@ export default function PropertyFeedPage() {
         }),
       });
 
-      showToast("Property feed added successfully");
+      showToast(t("integrations.propertyFeed.feedAddedSuccess"));
 
       await loadFeeds();
 
@@ -121,7 +124,7 @@ export default function PropertyFeedPage() {
     } catch (err) {
       console.error(err);
 
-      showToast(err.message || "Failed to create feed", "error");
+      showToast(err.message || t("integrations.propertyFeed.createFailed"), "error");
     } finally {
       setSaving(false);
     }
@@ -137,7 +140,7 @@ export default function PropertyFeedPage() {
 
       await loadFeeds();
 
-      alert("Feed synced successfully");
+      alert(t("integrations.propertyFeed.syncedSuccess"));
     } catch (err) {
       console.error(err);
     } finally {
@@ -199,7 +202,7 @@ export default function PropertyFeedPage() {
             marginBottom: 10,
           }}
         >
-          Property Feed Sync
+          {t("integrations.propertyFeed.title")}
         </h1>
 
         <p
@@ -210,8 +213,7 @@ export default function PropertyFeedPage() {
             lineHeight: 1.7,
           }}
         >
-          Connect XML and JSON property feeds into your CRM and automatically
-          sync listings.
+          {t("integrations.propertyFeed.subtitle")}
         </p>
       </div>
 
@@ -223,7 +225,7 @@ export default function PropertyFeedPage() {
             fontWeight: 700,
           }}
         >
-          Add Property Feed
+          {t("integrations.propertyFeed.addTitle")}
         </h2>
 
         <div
@@ -233,11 +235,13 @@ export default function PropertyFeedPage() {
           }}
         >
           <div>
-            <div style={labelStyle}>Provider Name</div>
+            <div style={labelStyle}>
+              {t("integrations.propertyFeed.providerNameLabel")}
+            </div>
 
             <input
               style={inputStyle}
-              placeholder="Example: Zillow Feed"
+              placeholder={t("integrations.propertyFeed.providerNamePlaceholder")}
               value={form.providerName}
               onChange={(e) =>
                 setForm({
@@ -249,7 +253,9 @@ export default function PropertyFeedPage() {
           </div>
 
           <div>
-            <div style={labelStyle}>Feed URL</div>
+            <div style={labelStyle}>
+              {t("integrations.propertyFeed.feedUrlLabel")}
+            </div>
 
             <input
               style={inputStyle}
@@ -265,7 +271,9 @@ export default function PropertyFeedPage() {
           </div>
 
           <div>
-            <div style={labelStyle}>Feed Type</div>
+            <div style={labelStyle}>
+              {t("integrations.propertyFeed.feedTypeLabel")}
+            </div>
 
             <select
               style={inputStyle}
@@ -277,14 +285,20 @@ export default function PropertyFeedPage() {
                 })
               }
             >
-              <option value="xml">XML Feed</option>
+              <option value="xml">
+                {t("integrations.propertyFeed.feedTypeXml")}
+              </option>
 
-              <option value="json">JSON Feed</option>
+              <option value="json">
+                {t("integrations.propertyFeed.feedTypeJson")}
+              </option>
             </select>
           </div>
 
           <div>
-            <div style={labelStyle}>Sync Frequency</div>
+            <div style={labelStyle}>
+              {t("integrations.propertyFeed.syncFrequencyLabel")}
+            </div>
 
             <input
               style={inputStyle}
@@ -308,7 +322,9 @@ export default function PropertyFeedPage() {
               height: 50,
             }}
           >
-            {saving ? "Saving..." : "Add Feed"}
+            {saving
+              ? t("integrations.propertyFeed.saving")
+              : t("integrations.propertyFeed.addFeed")}
           </button>
         </div>
       </div>
@@ -326,13 +342,15 @@ export default function PropertyFeedPage() {
             color: "#111827",
           }}
         >
-          Connected Feeds
+          {t("integrations.propertyFeed.connectedFeeds")}
         </h2>
 
         {loading ? (
-          <p>Loading...</p>
+          <p>{t("integrations.propertyFeed.loading")}</p>
         ) : feeds.length === 0 ? (
-          <div style={emptyStyle}>No property feeds connected yet.</div>
+          <div style={emptyStyle}>
+            {t("integrations.propertyFeed.noFeeds")}
+          </div>
         ) : (
           <div
             style={{
@@ -378,7 +396,9 @@ export default function PropertyFeedPage() {
                       fontWeight: 600,
                     }}
                   >
-                    {feed.syncEnabled ? "Enabled" : "Disabled"}
+                    {feed.syncEnabled
+                      ? t("integrations.propertyFeed.enabled")
+                      : t("integrations.propertyFeed.disabled")}
                   </div>
                 </div>
 
@@ -391,20 +411,29 @@ export default function PropertyFeedPage() {
                   }}
                 >
                   <div>
-                    <strong>URL:</strong> {feed.feedUrl}
+                    <strong>{t("integrations.propertyFeed.urlLabel")}</strong>{" "}
+                    {feed.feedUrl}
                   </div>
 
                   <div>
-                    <strong>Type:</strong> {feed.feedType.toUpperCase()}
+                    <strong>{t("integrations.propertyFeed.typeLabel")}</strong>{" "}
+                    {feed.feedType.toUpperCase()}
                   </div>
 
                   <div>
-                    <strong>Properties:</strong> {feed.totalProperties}
+                    <strong>
+                      {t("integrations.propertyFeed.propertiesLabel")}
+                    </strong>{" "}
+                    {feed.totalProperties}
                   </div>
 
                   <div>
-                    <strong>Frequency:</strong> Every{" "}
-                    {feed.syncFrequencyMinutes} minutes
+                    <strong>
+                      {t("integrations.propertyFeed.frequencyLabel")}
+                    </strong>{" "}
+                    {t("integrations.propertyFeed.everyMinutes", {
+                      minutes: feed.syncFrequencyMinutes,
+                    })}
                   </div>
                 </div>
 
@@ -432,21 +461,25 @@ export default function PropertyFeedPage() {
                   }}
                 >
                   <button onClick={() => syncFeed(feed.id)} style={buttonStyle}>
-                    {syncingId === feed.id ? "Syncing..." : "Sync Now"}
+                    {syncingId === feed.id
+                      ? t("integrations.propertyFeed.syncing")
+                      : t("integrations.propertyFeed.syncNow")}
                   </button>
 
                   <button
                     onClick={() => toggleSync(feed)}
                     style={secondaryButton}
                   >
-                    {feed.syncEnabled ? "Disable" : "Enable"}
+                    {feed.syncEnabled
+                      ? t("integrations.propertyFeed.disable")
+                      : t("integrations.propertyFeed.enable")}
                   </button>
 
                   <button
                     onClick={() => deleteFeed(feed.id)}
                     style={dangerButton}
                   >
-                    Delete
+                    {t("integrations.propertyFeed.delete")}
                   </button>
                 </div>
               </div>

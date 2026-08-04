@@ -2,6 +2,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import "./AppsIntegrationsHub.css";
 import apiClient from "../../api/apiClient";
 
@@ -12,7 +13,16 @@ const availableTriggers = [
   "deal_moved",
 ];
 
+const triggerLabelKeys = {
+  new_lead: "integrations.make.triggerNewLead",
+  contact_updated: "integrations.make.triggerContactUpdated",
+  appointment_booked: "integrations.make.triggerAppointmentBooked",
+  deal_moved: "integrations.make.triggerDealMoved",
+};
+
 export default function MakePage() {
+  const { t } = useTranslation();
+
   const [loading, setLoading] =
     useState(true);
 
@@ -103,7 +113,7 @@ export default function MakePage() {
 
         if (!form.webhookUrl.trim()) {
           showToast(
-            "Please enter your Make.com webhook URL",
+            t("integrations.make.enterWebhookUrl"),
             "error",
           );
 
@@ -117,7 +127,7 @@ export default function MakePage() {
 
         if (!isValidUrl) {
           showToast(
-            "Invalid Make.com webhook URL",
+            t("integrations.make.invalidWebhookUrl"),
             "error",
           );
 
@@ -138,7 +148,7 @@ export default function MakePage() {
         );
 
         showToast(
-          "Make.com integration saved successfully",
+          t("integrations.make.saveSuccess"),
           "success",
         );
       } catch (err) {
@@ -146,7 +156,7 @@ export default function MakePage() {
 
         showToast(
           err.message ||
-            "Failed to save integration",
+            t("integrations.make.saveFailed"),
           "error",
         );
       } finally {
@@ -155,7 +165,7 @@ export default function MakePage() {
     };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>{t("common.loading")}</div>;
   }
 
   return (
@@ -174,18 +184,16 @@ export default function MakePage() {
       >
         <div style={card}>
           <h1 style={title}>
-            Make.com Integration
+            {t("integrations.make.title")}
           </h1>
 
           <p style={desc}>
-            Connect your CRM with
-            Make.com automations
-            using webhook triggers.
+            {t("integrations.make.description")}
           </p>
 
           <div style={{ marginTop: 30 }}>
             <div style={label}>
-              Make.com Webhook URL
+              {t("integrations.make.webhookUrlLabel")}
             </div>
 
             <input
@@ -210,7 +218,7 @@ export default function MakePage() {
             }}
           >
             <div style={label}>
-              Trigger Events
+              {t("integrations.make.triggerEvents")}
             </div>
 
             <div
@@ -241,7 +249,7 @@ export default function MakePage() {
                     />
 
                     <span>
-                      {trigger}
+                      {t(triggerLabelKeys[trigger])}
                     </span>
                   </label>
                 ),
@@ -258,8 +266,8 @@ export default function MakePage() {
               disabled={saving}
             >
             {saving
-              ? "Saving..."
-              : "Save Integration"}
+              ? t("integrations.make.saving")
+              : t("integrations.make.saveIntegration")}
           </button>
         </div>
 
@@ -275,7 +283,7 @@ export default function MakePage() {
               marginBottom: 20,
             }}
           >
-            Setup Instructions
+            {t("integrations.make.setupInstructions")}
           </h2>
 
           <ol
@@ -285,34 +293,31 @@ export default function MakePage() {
             }}
           >
             <li>
-              Login to Make.com
+              {t("integrations.make.step1")}
             </li>
 
             <li>
-              Create a new Scenario
+              {t("integrations.make.step2")}
             </li>
 
             <li>
-              Add a Custom Webhook
-              module
+              {t("integrations.make.step3")}
             </li>
 
             <li>
-              Copy the webhook URL
+              {t("integrations.make.step4")}
             </li>
 
             <li>
-              Paste it into this
-              page
+              {t("integrations.make.step5")}
             </li>
 
             <li>
-              Select the events you
-              want to trigger
+              {t("integrations.make.step6")}
             </li>
 
             <li>
-              Save integration
+              {t("integrations.make.step7")}
             </li>
           </ol>
         </div>
