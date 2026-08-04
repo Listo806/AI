@@ -9,6 +9,10 @@ export const LOCALES = [
   { code: "pt", prefix: "pt-br", htmlLang: "pt-BR" },
 ];
 
+// The language codes the app supports, derived from the registry so config.js,
+// the switchers, and detection all read one source of truth.
+export const SUPPORTED_CODES = LOCALES.map((l) => l.code);
+
 const byCode = Object.fromEntries(LOCALES.map((l) => [l.code, l]));
 const byPrefix = Object.fromEntries(
   LOCALES.filter((l) => l.prefix).map((l) => [l.prefix, l]),
