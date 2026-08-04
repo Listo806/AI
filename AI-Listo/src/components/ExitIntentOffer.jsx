@@ -124,11 +124,20 @@ function clearShownThisSession() {
   }
 }
 
+// On touch devices, reveal the offer after this long on an allowed page if no
+// exit gesture has fired first. Phones give no reliable exit signal (no cursor;
+// the back button / app-switch happen after the page is already gone), so this
+// timed reveal guarantees mobile visitors actually see the offer. Configurable
+// via VITE_EXIT_OFFER_MOBILE_DELAY_MS; defaults to 25s.
+const MOBILE_FALLBACK_MS =
+  Number(import.meta.env.VITE_EXIT_OFFER_MOBILE_DELAY_MS) || 25000;
+
 // An exit-intent popup offering the $7 activation fee. Desktop fires when the
-// cursor leaves the top of the viewport; touch devices fire on a quick scroll
-// back up after scrolling down. Testing helpers: append ?exitoffer=test to any
-// allowed URL to force it open now, or ?exitoffer=reset to clear the per-session
-// gate so it can trigger again.
+// cursor leaves the top of the viewport. Touch devices fire on a quick scroll
+// back up after scrolling down, and — since that gesture is unreliable — also on
+// a one-time timed reveal (MOBILE_FALLBACK_MS). Testing helpers: append
+// ?exitoffer=test to any allowed URL to force it open now, or ?exitoffer=reset to
+// clear the per-session gate so it can trigger again.
 export default function ExitIntentOffer() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -206,11 +215,14 @@ export default function ExitIntentOffer() {
       ready = true;
     }, 2500);
 
+    // Desktop exit-intent: the cursor leaves the top edge of the viewport.
     const onMouseOut = (e) => {
       if (!ready) return;
       if (e.clientY <= 0 && !e.relatedTarget) trigger();
     };
 
+    // Touch exit-intent: a quick scroll back up toward the top after scrolling
+    // down (reaching for the address bar / back gesture).
     let lastY = window.scrollY;
     let downMax = 0;
     const onScroll = () => {
@@ -221,10 +233,25 @@ export default function ExitIntentOffer() {
       lastY = y;
     };
 
+    // Touch fallback: guarantee the offer is seen on phones/tablets with a
+    // one-time timed reveal, since the scroll gesture above misses most exits
+    // (back button, app switch). trigger() is itself once-per-session guarded.
+    const isTouch =
+      (typeof window !== "undefined" &&
+        ((window.matchMedia &&
+          window.matchMedia("(pointer: coarse)").matches) ||
+          "ontouchstart" in window)) ||
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
+    let mobileTimer;
+    if (isTouch) {
+      mobileTimer = setTimeout(() => trigger(), MOBILE_FALLBACK_MS);
+    }
+
     document.addEventListener("mouseout", onMouseOut);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       clearTimeout(armTimer);
+      if (mobileTimer) clearTimeout(mobileTimer);
       document.removeEventListener("mouseout", onMouseOut);
       window.removeEventListener("scroll", onScroll);
     };
