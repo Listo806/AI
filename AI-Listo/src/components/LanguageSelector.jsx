@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { LANG_CHOICE_KEY } from './LanguageAutoDetect';
 import '../styles/language-selector.css';
 
 const languages = [
@@ -17,6 +18,13 @@ export default function LanguageSelector() {
 
   const handleLanguageChange = (langCode) => {
     i18n.changeLanguage(langCode);
+    // Record it as an explicit choice so first-visit auto-detection never
+    // overrides a language the visitor picked on purpose.
+    try {
+      localStorage.setItem(LANG_CHOICE_KEY, langCode);
+    } catch (_e) {
+      /* storage blocked — choice just won't persist */
+    }
     setIsOpen(false);
   };
 
