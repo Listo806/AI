@@ -8,7 +8,6 @@ import {
   REGULAR_SETUP_FEE,
   offerIsAvailable,
   setSetupOffer,
-  setupOfferActive,
   clearSetupOffer,
 } from "../utils/offer";
 import "./ExitIntentOffer.css";
@@ -110,6 +109,34 @@ function clearShownThisSession() {
   shownThisLoad.clear();
 }
 
+// Clicking the popup CTA suppresses it for the rest of the browser SESSION only
+// (sessionStorage), not forever. This stops re-showing it while the visitor is in
+// the funnel (e.g. on /trial) but lets it re-engage them on a later visit if they
+// did not buy. The persistent $7 pricing flag (cortexa_setup_offer in
+// localStorage) is separate and still carries the offer into checkout.
+const CLAIMED_KEY = "cortexa_exit_claimed";
+function claimedThisSession() {
+  try {
+    return sessionStorage.getItem(CLAIMED_KEY) === "1";
+  } catch (_e) {
+    return false;
+  }
+}
+function markClaimedThisSession() {
+  try {
+    sessionStorage.setItem(CLAIMED_KEY, "1");
+  } catch (_e) {
+    /* private mode — just won't remember */
+  }
+}
+function clearClaimedThisSession() {
+  try {
+    sessionStorage.removeItem(CLAIMED_KEY);
+  } catch (_e) {
+    /* no-op */
+  }
+}
+
 // On touch devices, reveal the offer after this long on an allowed page if no
 // exit gesture has fired first. Phones give no reliable exit signal (no cursor;
 // the back button / app-switch happen after the page is already gone), so this
@@ -156,6 +183,7 @@ export default function ExitIntentOffer() {
   useEffect(() => {
     if (mode === "reset") {
       clearShownThisSession();
+      clearClaimedThisSession();
       clearSetupOffer();
       try {
         localStorage.removeItem("cortexa_exit_offer_seen_at");
@@ -178,7 +206,7 @@ export default function ExitIntentOffer() {
     notTestMode: mode !== "test",
     offerAvailable: offerIsAvailable(),
     allowedPage: isAllowedPage(local),
-    notClaimed: !setupOfferActive(),
+    notClaimed: !claimedThisSession(),
     notShownYet: !shownThisSession(local),
   };
   const armed =
@@ -207,6 +235,7 @@ export default function ExitIntentOffer() {
 
   const claim = useCallback(() => {
     setSetupOffer(EXIT_OFFER);
+    markClaimedThisSession();
     trackEvent("exit_offer_click", { cta: "start_trial" });
     setOpen(false);
     if (local === "trial") {
@@ -349,7 +378,7 @@ export default function ExitIntentOffer() {
         `path: ${location.pathname || "/"}  local:"${local}"`,
         `offerAvailable: ${eligible.offerAvailable}`,
         `allowedPage: ${eligible.allowedPage}`,
-        `notClaimed(no flag): ${eligible.notClaimed}`,
+        `notClaimedThisSession: ${eligible.notClaimed}`,
         `notShownYet: ${eligible.notShownYet}`,
         `ELIGIBLE: ${armed ? "YES ✓" : "NO ✗"}`,
         `listeners attached: ${dbgRef.current.listeners}`,
