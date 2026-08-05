@@ -93,35 +93,21 @@ function localeInfo(pathname) {
   return { prefix, local: parts.join("/") };
 }
 
-// Shown at most once per page per BROWSER SESSION (sessionStorage). This lets it
-// appear on the home, each editorial, and the trial page, and appear again on a
-// fresh visit / new tab — while never nagging on the same page in one session.
-const SHOWN_PREFIX = "cortexa_exit_shown:";
+// Shown at most once per page per PAGE LOAD, tracked in memory. It still never
+// nags twice on the same page within one view (including SPA navigation, since
+// this Set lives for the tab's JS lifetime), but a full page reload starts fresh
+// and re-arms it. That makes the offer show again on each fresh visit and makes
+// it trivial to re-test by simply refreshing — no new window required.
+// (Previously sessionStorage, which persisted across reloads in the same tab.)
+const shownThisLoad = new Set();
 function shownThisSession(local) {
-  try {
-    return sessionStorage.getItem(SHOWN_PREFIX + local) === "1";
-  } catch (_e) {
-    return false;
-  }
+  return shownThisLoad.has(local);
 }
 function markShownThisSession(local) {
-  try {
-    sessionStorage.setItem(SHOWN_PREFIX + local, "1");
-  } catch (_e) {
-    /* private mode — just won't remember */
-  }
+  shownThisLoad.add(local);
 }
 function clearShownThisSession() {
-  try {
-    const keys = [];
-    for (let i = 0; i < sessionStorage.length; i += 1) {
-      const k = sessionStorage.key(i);
-      if (k && k.startsWith(SHOWN_PREFIX)) keys.push(k);
-    }
-    keys.forEach((k) => sessionStorage.removeItem(k));
-  } catch (_e) {
-    /* no-op */
-  }
+  shownThisLoad.clear();
 }
 
 // On touch devices, reveal the offer after this long on an allowed page if no
