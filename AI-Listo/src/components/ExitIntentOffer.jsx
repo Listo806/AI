@@ -130,6 +130,16 @@ export default function ExitIntentOffer() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const cardRef = useRef(null);
+  // Live diagnostics, surfaced only with ?exitoffer=debug (no effect otherwise).
+  const dbgRef = useRef({
+    ready: false,
+    isTouch: null,
+    mobileMs: null,
+    listeners: false,
+    lastEvent: "-",
+    triggers: 0,
+  });
+  const [, dbgTick] = useState(0);
 
   const lang =
     (typeof localStorage !== "undefined" &&
@@ -139,6 +149,7 @@ export default function ExitIntentOffer() {
 
   const { prefix, local } = localeInfo(location.pathname);
   const mode = new URLSearchParams(location.search).get("exitoffer");
+  const debug = mode === "debug";
 
   // ?exitoffer=reset — clear the per-session gate + any claimed offer so the
   // popup can be tested repeatedly.
@@ -162,16 +173,29 @@ export default function ExitIntentOffer() {
     }
   }, [mode, location.pathname]);
 
+  // Eligibility broken out so the debug panel can show which condition blocks it.
+  const eligible = {
+    notTestMode: mode !== "test",
+    offerAvailable: offerIsAvailable(),
+    allowedPage: isAllowedPage(local),
+    notClaimed: !setupOfferActive(),
+    notShownYet: !shownThisSession(local),
+  };
   const armed =
-    mode !== "test" &&
-    offerIsAvailable() &&
-    isAllowedPage(local) &&
-    !setupOfferActive() &&
-    !shownThisSession(local);
+    eligible.notTestMode &&
+    eligible.offerAvailable &&
+    eligible.allowedPage &&
+    eligible.notClaimed &&
+    eligible.notShownYet;
 
   const trigger = useCallback(() => {
-    if (shownThisSession(local)) return;
+    if (shownThisSession(local)) {
+      dbgRef.current.lastEvent = "blocked: already shown this load";
+      return;
+    }
     markShownThisSession(local);
+    dbgRef.current.triggers += 1;
+    dbgRef.current.lastEvent = "OPENED";
     setOpen(true);
     trackEvent("exit_offer_shown", { path: location.pathname });
   }, [local, location.pathname]);
@@ -198,8 +222,11 @@ export default function ExitIntentOffer() {
   useEffect(() => {
     if (!armed) return undefined;
     let ready = false;
+    dbgRef.current.lastEvent = "armed: waiting 2.5s";
     const armTimer = setTimeout(() => {
       ready = true;
+      dbgRef.current.ready = true;
+      dbgRef.current.lastEvent = "ready (listening)";
     }, 2500);
 
     // Desktop exit-intent: the cursor leaves through the top of the window
@@ -211,10 +238,16 @@ export default function ExitIntentOffer() {
     // shy of the edge — the most common reason a real exit gesture "did nothing".
     const leftViaTop = (e) => !e.relatedTarget && e.clientY <= 8;
     const onMouseOut = (e) => {
-      if (ready && leftViaTop(e)) trigger();
+      if (ready && leftViaTop(e)) {
+        dbgRef.current.lastEvent = "mouseout → top edge";
+        trigger();
+      }
     };
     const onMouseLeave = (e) => {
-      if (ready && leftViaTop(e)) trigger();
+      if (ready && leftViaTop(e)) {
+        dbgRef.current.lastEvent = "mouseleave → top edge";
+        trigger();
+      }
     };
 
     // Touch exit-intent: a quick scroll back up toward the top after scrolling
@@ -239,14 +272,21 @@ export default function ExitIntentOffer() {
           "ontouchstart" in window)) ||
       (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
     let mobileTimer;
+    dbgRef.current.isTouch = isTouch;
     if (isTouch) {
-      mobileTimer = setTimeout(() => trigger(), MOBILE_FALLBACK_MS);
+      dbgRef.current.mobileMs = MOBILE_FALLBACK_MS;
+      mobileTimer = setTimeout(() => {
+        dbgRef.current.lastEvent = "mobile timer fired";
+        trigger();
+      }, MOBILE_FALLBACK_MS);
     }
 
     document.addEventListener("mouseout", onMouseOut);
     document.documentElement.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("scroll", onScroll, { passive: true });
+    dbgRef.current.listeners = true;
     return () => {
+      dbgRef.current.listeners = false;
       clearTimeout(armTimer);
       if (mobileTimer) clearTimeout(mobileTimer);
       document.removeEventListener("mouseout", onMouseOut);
@@ -269,14 +309,71 @@ export default function ExitIntentOffer() {
     };
   }, [open, close]);
 
-  if (!open) return null;
+  // ?exitoffer=debug — keep the live status panel fresh and log eligibility once.
+  useEffect(() => {
+    if (!debug) return undefined;
+    // eslint-disable-next-line no-console
+    console.log("[exit-offer] eligibility", {
+      path: location.pathname,
+      local,
+      armed,
+      ...eligible,
+    });
+    const id = setInterval(() => dbgTick((t) => t + 1), 500);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debug, armed, location.pathname]);
+
+  const debugPanel = debug ? (
+    <div
+      role="status"
+      style={{
+        position: "fixed",
+        bottom: 8,
+        left: 8,
+        zIndex: 2147483647,
+        background: "rgba(15,23,42,0.94)",
+        color: "#e2e8f0",
+        font: "12px/1.5 ui-monospace, monospace",
+        padding: "10px 12px",
+        borderRadius: 8,
+        maxWidth: 320,
+        pointerEvents: "none",
+        whiteSpace: "pre-wrap",
+        border: "1px solid #334155",
+      }}
+    >
+      {[
+        "▛ exit-offer debug",
+        "script loaded: yes",
+        `path: ${location.pathname || "/"}  local:"${local}"`,
+        `offerAvailable: ${eligible.offerAvailable}`,
+        `allowedPage: ${eligible.allowedPage}`,
+        `notClaimed(no flag): ${eligible.notClaimed}`,
+        `notShownYet: ${eligible.notShownYet}`,
+        `ELIGIBLE: ${armed ? "YES ✓" : "NO ✗"}`,
+        `listeners attached: ${dbgRef.current.listeners}`,
+        `ready (after 2.5s): ${dbgRef.current.ready}`,
+        `touch device: ${dbgRef.current.isTouch}${
+          dbgRef.current.mobileMs ? `  timer ${dbgRef.current.mobileMs}ms` : ""
+        }`,
+        `times opened: ${dbgRef.current.triggers}`,
+        `last event: ${dbgRef.current.lastEvent}`,
+        `popup open now: ${open}`,
+      ].join("\n")}
+    </div>
+  ) : null;
+
+  if (!open) return debugPanel;
 
   return (
-    <div
-      className="exit-offer-backdrop"
-      onClick={() => close("backdrop")}
-      role="presentation"
-    >
+    <>
+      {debugPanel}
+      <div
+        className="exit-offer-backdrop"
+        onClick={() => close("backdrop")}
+        role="presentation"
+      >
       <div
         className="exit-offer-card"
         role="dialog"
@@ -334,6 +431,7 @@ export default function ExitIntentOffer() {
           <ArrowRight size={20} /> {tr.cta}
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
