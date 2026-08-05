@@ -42,9 +42,25 @@ export default function LanguageAutoDetect() {
       /* storage blocked — treat as first visit, no explicit choice */
     }
 
-    // An explicit choice always wins: never auto-redirect over it.
-    if (explicitChoice) return;
-    // First visit only.
+    // An explicit choice always wins over browser detection. Honor it on every
+    // homepage visit: a returning visitor who picked Spanish/Portuguese lands on
+    // that language; one who picked English stays on the root. This is the
+    // "remember their choice for future visits" behavior.
+    if (explicitChoice) {
+      if (
+        explicitChoice !== "en" &&
+        SUPPORTED_CODES.includes(explicitChoice)
+      ) {
+        navigate(
+          buildLocalizedPath("/", explicitChoice) +
+            location.search +
+            location.hash,
+          { replace: true },
+        );
+      }
+      return;
+    }
+    // Otherwise, browser detection runs once per browser on the first visit.
     if (alreadyDetected) return;
     try {
       localStorage.setItem(AUTODETECT_KEY, "1");
