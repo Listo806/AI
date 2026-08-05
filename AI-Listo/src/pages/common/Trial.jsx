@@ -26,24 +26,36 @@ const t = {
     aiQualifies: "Qualifies.",
     aiCloses: "Closes.",
     qualifies: "AI Qualifies in 60 Seconds!",
+    mobileTitle: "Create your account",
+    mobileSubtitle: "Get started with your free trial.",
     placeholders: {
       name: "Full Name",
       email: "Email Address",
       phone: "Phone Number (Required)",
       password: "Password",
     },
+    required: "Required",
     choosePlan: "Choose your trial plan",
+    mobileChoosePlan: "Choose your plan",
     choosePlanNote: "You can change or upgrade anytime.",
+    mobileChoosePlanNote: "You can change or upgrade your plan at any time.",
     mostPopular: "MOST POPULAR",
     users: {
       one: "1 user",
       three: "3 users",
       five: "5 users",
     },
+    planDescriptions: {
+      solo: "Perfect for individuals",
+      team: "Up to 3 users",
+      growth: "Up to 5 users",
+    },
     btnNormal: "Continue",
+    mobileBtnNormal: "Start Your Free Trial",
     btnLoading: "Creating Account...",
     footerNote:
       "No payment required today. You'll review your plan and start your free trial.",
+    mobileFooterNote: "Cancel or change anytime.",
     errors: {
       server: "Server error. Please try again.",
       generic: "Unable to create your trial account.",
@@ -56,24 +68,36 @@ const t = {
     aiQualifies: "Califica.",
     aiCloses: "Cierra.",
     qualifies: "¡La IA califica en 60 segundos!",
+    mobileTitle: "Crea tu cuenta",
+    mobileSubtitle: "Comienza tu prueba gratuita.",
     placeholders: {
       name: "Nombre completo",
       email: "Correo electrónico",
-      phone: "Número de teléfono (obligatorio)",
+      phone: "Número de teléfono",
       password: "Contraseña",
     },
+    required: "Obligatorio",
     choosePlan: "Elige tu plan de prueba",
+    mobileChoosePlan: "Elige tu plan",
     choosePlanNote: "Puedes cambiarlo o mejorarlo en cualquier momento.",
+    mobileChoosePlanNote: "Puedes cambiar o mejorar tu plan en cualquier momento.",
     mostPopular: "MÁS POPULAR",
     users: {
       one: "1 usuario",
       three: "3 usuarios",
       five: "5 usuarios",
     },
+    planDescriptions: {
+      solo: "Perfecto para individuos",
+      team: "Hasta 3 usuarios",
+      growth: "Hasta 5 usuarios",
+    },
     btnNormal: "Continuar",
+    mobileBtnNormal: "Iniciar prueba gratuita",
     btnLoading: "Creando cuenta...",
     footerNote:
       "No se requiere pago hoy. Revisarás tu plan y comenzarás tu prueba gratuita.",
+    mobileFooterNote: "Cancela o cambia cuando quieras.",
     errors: {
       server: "Error del servidor. Inténtalo de nuevo.",
       generic: "No se pudo crear tu cuenta de prueba.",
@@ -86,24 +110,36 @@ const t = {
     aiQualifies: "Qualifica.",
     aiCloses: "Fecha.",
     qualifies: "A IA qualifica em 60 segundos!",
+    mobileTitle: "Crie sua conta",
+    mobileSubtitle: "Comece seu teste gratuito.",
     placeholders: {
       name: "Nome completo",
       email: "Endereço de e-mail",
-      phone: "Número de telefone (obrigatório)",
+      phone: "Número de telefone",
       password: "Senha",
     },
+    required: "Obrigatório",
     choosePlan: "Escolha seu plano de teste",
+    mobileChoosePlan: "Escolha seu plano",
     choosePlanNote: "Você pode alterar ou fazer upgrade a qualquer momento.",
+    mobileChoosePlanNote: "Você pode alterar ou fazer upgrade do plano a qualquer momento.",
     mostPopular: "MAIS POPULAR",
     users: {
       one: "1 usuário",
       three: "3 usuários",
       five: "5 usuários",
     },
+    planDescriptions: {
+      solo: "Perfeito para indivíduos",
+      team: "Até 3 usuários",
+      growth: "Até 5 usuários",
+    },
     btnNormal: "Continuar",
+    mobileBtnNormal: "Iniciar teste gratuito",
     btnLoading: "Criando conta...",
     footerNote:
       "Nenhum pagamento hoje. Você revisará seu plano e começará seu teste gratuito.",
+    mobileFooterNote: "Cancele ou altere quando quiser.",
     errors: {
       server: "Erro no servidor. Tente novamente.",
       generic: "Não foi possível criar sua conta de teste.",
@@ -128,6 +164,7 @@ export default function StartTrial() {
     const plan = ["solo", "team", "growth"].includes(planParam)
       ? planParam
       : "team";
+
     return {
       name: "",
       email: "",
@@ -149,6 +186,7 @@ export default function StartTrial() {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
   };
+
   const selectPlan = (plan) => {
     setForm((current) => ({ ...current, plan }));
   };
@@ -158,7 +196,6 @@ export default function StartTrial() {
     if (loading) return;
 
     setLoading(true);
-    // Retargeting: visitor began the trial signup.
     trackEvent("signup_started", { plan: form.plan });
 
     try {
@@ -170,6 +207,7 @@ export default function StartTrial() {
           body: JSON.stringify(form),
         },
       );
+
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) {
         throw new Error(data.message || tr.errors.generic);
@@ -179,21 +217,16 @@ export default function StartTrial() {
       localStorage.setItem("email", form.email);
       localStorage.setItem("name", form.name);
       localStorage.setItem("phone", form.phone);
-      localStorage.removeItem("password"); // never persist the raw password client-side
+      localStorage.removeItem("password");
       localStorage.setItem("trialPlan", form.plan);
-      // Log the user in immediately so they stay authenticated through checkout
-      // and can resume checkout later after signing back in.
+
       if (data.accessToken) {
         apiClient.setTokens(data.accessToken, data.refreshToken);
         localStorage.setItem("listo_user", JSON.stringify(data.user));
         setUser(data.user);
       }
-      // Retargeting: trial account created (not yet activated/paid).
+
       trackEvent("account_created", { plan: form.plan });
-      // Google Ads: this is the real sign-up. Fire the Sign-up conversion on
-      // this main path (it was previously only wired to the marketplace signup,
-      // so Ads never saw it). navigate() is client-side, so the page does not
-      // unload and the beacon completes on its own.
       trackSignupConversion();
       navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
@@ -204,9 +237,115 @@ export default function StartTrial() {
     }
   };
 
+  const renderFields = (mobile = false) => (
+    <div className="trial-v2-fields">
+      <label className="trial-v2-field">
+        <User size={mobile ? 25 : 20} aria-hidden="true" />
+        <input
+          type="text"
+          name="name"
+          placeholder={tr.placeholders.name}
+          autoComplete="name"
+          required
+          value={form.name}
+          onChange={handleChange}
+        />
+      </label>
+
+      <label className="trial-v2-field">
+        <Mail size={mobile ? 25 : 20} aria-hidden="true" />
+        <input
+          type="email"
+          name="email"
+          placeholder={tr.placeholders.email}
+          autoComplete="email"
+          required
+          value={form.email}
+          onChange={handleChange}
+        />
+      </label>
+
+      <label className="trial-v2-field trial-v2-phone-field">
+        <Phone size={mobile ? 25 : 20} aria-hidden="true" />
+        <input
+          type="tel"
+          name="phone"
+          placeholder={tr.placeholders.phone}
+          autoComplete="tel"
+          required
+          value={form.phone}
+          onChange={handleChange}
+        />
+        {mobile && <span className="trial-mobile-required">{tr.required}</span>}
+      </label>
+
+      <label className="trial-v2-field">
+        <LockKeyhole size={mobile ? 25 : 20} aria-hidden="true" />
+        <input
+          type={showPassword ? "text" : "password"}
+          name="password"
+          placeholder={tr.placeholders.password}
+          autoComplete="new-password"
+          minLength={6}
+          required
+          value={form.password}
+          onChange={handleChange}
+        />
+        <button
+          type="button"
+          className="trial-v2-password-toggle"
+          onClick={() => setShowPassword((visible) => !visible)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? <EyeOff size={mobile ? 26 : 20} /> : <Eye size={mobile ? 26 : 20} />}
+        </button>
+      </label>
+    </div>
+  );
+
+  const renderPlans = (mobile = false) => (
+    <div className="trial-v2-plans">
+      {plans.map(({ id, name, usersKey, Icon, popular }) => {
+        const selected = form.plan === id;
+
+        return (
+          <button
+            key={id}
+            type="button"
+            className={`trial-v2-plan ${selected ? "selected" : ""}`}
+            onClick={() => selectPlan(id)}
+            aria-pressed={selected}
+          >
+            {popular && (
+              <span className="trial-v2-popular">{tr.mostPopular}</span>
+            )}
+
+            <span className="trial-v2-radio" aria-hidden="true">
+              <span />
+            </span>
+
+            <Icon
+              className="trial-v2-plan-symbol"
+              size={mobile ? 42 : 36}
+              strokeWidth={1.8}
+            />
+
+            <span className="trial-v2-plan-copy">
+              <strong>{name}</strong>
+              <small>
+                {mobile ? tr.planDescriptions[id] : tr.users[usersKey]}
+              </small>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <main className="trial-v2-page">
-      <section className="trial-v2-shell">
+      {/* Desktop/tablet layout: giữ nguyên layout hiện tại */}
+      <section className="trial-v2-shell trial-v2-desktop-layout">
         <header className="trial-v2-hero">
           <h1>
             {tr.title}
@@ -214,15 +353,9 @@ export default function StartTrial() {
           </h1>
 
           <div className="trial-v2-ai-row" aria-label="AI capabilities">
-            <strong>
-              <em>AI</em> {tr.aiLeads}
-            </strong>
-            <strong>
-              <em>AI</em> {tr.aiQualifies}
-            </strong>
-            <strong>
-              <em>AI</em> {tr.aiCloses}
-            </strong>
+            <strong><em>AI</em> {tr.aiLeads}</strong>
+            <strong><em>AI</em> {tr.aiQualifies}</strong>
+            <strong><em>AI</em> {tr.aiCloses}</strong>
           </div>
 
           <p className="trial-v2-qualifies">{tr.qualifies}</p>
@@ -230,68 +363,7 @@ export default function StartTrial() {
 
         <div className="trial-v2-card">
           <form onSubmit={handleSubmit}>
-            <div className="trial-v2-fields">
-              <label className="trial-v2-field">
-                <User size={20} aria-hidden="true" />
-                <input
-                  type="text"
-                  name="name"
-                  placeholder={tr.placeholders.name}
-                  autoComplete="name"
-                  required
-                  value={form.name}
-                  onChange={handleChange}
-                />
-              </label>
-
-              <label className="trial-v2-field">
-                <Mail size={20} aria-hidden="true" />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder={tr.placeholders.email}
-                  autoComplete="email"
-                  required
-                  value={form.email}
-                  onChange={handleChange}
-                />
-              </label>
-
-              <label className="trial-v2-field">
-                <Phone size={20} aria-hidden="true" />
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder={tr.placeholders.phone}
-                  autoComplete="tel"
-                  required
-                  value={form.phone}
-                  onChange={handleChange}
-                />
-              </label>
-
-              <label className="trial-v2-field">
-                <LockKeyhole size={20} aria-hidden="true" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder={tr.placeholders.password}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                  value={form.password}
-                  onChange={handleChange}
-                />
-                <button
-                  type="button"
-                  className="trial-v2-password-toggle"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </label>
-            </div>
+            {renderFields(false)}
 
             <div className="trial-v2-plan-heading">
               <div className="trial-v2-plan-icon">
@@ -303,45 +375,11 @@ export default function StartTrial() {
               </div>
             </div>
 
-            <div className="trial-v2-plans">
-              {plans.map(({ id, name, usersKey, Icon, popular }) => {
-                const selected = form.plan === id;
+            {renderPlans(false)}
 
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`trial-v2-plan ${selected ? "selected" : ""}`}
-                    onClick={() => selectPlan(id)}
-                    aria-pressed={selected}
-                  >
-                    {popular && (
-                      <span className="trial-v2-popular">{tr.mostPopular}</span>
-                    )}
-                    <span className="trial-v2-radio" aria-hidden="true">
-                      <span />
-                    </span>
-                    <Icon
-                      className="trial-v2-plan-symbol"
-                      size={36}
-                      strokeWidth={1.8}
-                    />
-                    <span className="trial-v2-plan-copy">
-                      <strong>{name}</strong>
-                      <small>{tr.users[usersKey]}</small>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              type="submit"
-              className="trial-v2-submit"
-              disabled={loading}
-            >
+            <button type="submit" className="trial-v2-submit" disabled={loading}>
               <span>
-                <LockKeyhole size={22} />{" "}
+                <LockKeyhole size={22} />
                 {loading ? tr.btnLoading : tr.btnNormal}
               </span>
               <ChevronRight size={22} />
@@ -350,6 +388,46 @@ export default function StartTrial() {
             <div className="trial-v2-security">
               <ShieldCheck size={22} />
               <p>{tr.footerNote}</p>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      {/* Mobile-only layout */}
+      <section className="trial-mobile-layout">
+        <div className="trial-mobile-card">
+          <div className="trial-mobile-brand" aria-hidden="true">
+            <Box size={48} strokeWidth={1.8} />
+          </div>
+
+          <header className="trial-mobile-header">
+            <h1>{tr.mobileTitle}</h1>
+            <p>{tr.mobileSubtitle}</p>
+          </header>
+
+          <form onSubmit={handleSubmit}>
+            {renderFields(true)}
+
+            <div className="trial-mobile-divider" />
+
+            <div className="trial-mobile-plan-heading">
+              <div className="trial-mobile-plan-title">
+                <ShieldCheck size={32} />
+                <h2>{tr.mobileChoosePlan}</h2>
+              </div>
+              <p>{tr.mobileChoosePlanNote}</p>
+            </div>
+
+            {renderPlans(true)}
+
+            <button type="submit" className="trial-v2-submit trial-mobile-submit" disabled={loading}>
+              <span>{loading ? tr.btnLoading : tr.mobileBtnNormal}</span>
+              <ChevronRight size={25} />
+            </button>
+
+            <div className="trial-v2-security trial-mobile-security">
+              <LockKeyhole size={18} />
+              <p>{tr.mobileFooterNote}</p>
             </div>
           </form>
         </div>
