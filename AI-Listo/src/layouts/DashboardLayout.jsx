@@ -325,6 +325,20 @@ export default function DashboardLayout() {
                             {t('nav.users')}
                           </Link>
                           <Link
+                            to="/dashboard/admin/signups"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            {t('nav.adminSignups')}
+                          </Link>
+                          <Link
+                            to="/dashboard/admin/customers"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            {t('nav.adminCustomers')}
+                          </Link>
+                          <Link
                             to="/dashboard/admin/teams"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}

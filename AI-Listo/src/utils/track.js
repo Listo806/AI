@@ -113,8 +113,50 @@ export function captureClickIds() {
         localStorage.setItem("ads_click_at", String(Date.now()));
       }
     }
+    // First-touch UTM + landing page: record once so the original source
+    // survives later internal navigation and reaches the sign-up record.
+    if (!localStorage.getItem("attr_landing_page")) {
+      localStorage.setItem(
+        "attr_landing_page",
+        window.location.pathname + window.location.search,
+      );
+    }
+    for (const key of [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_term",
+      "utm_content",
+    ]) {
+      const val = params.get(key);
+      if (val && !localStorage.getItem(`attr_${key}`)) {
+        localStorage.setItem(`attr_${key}`, val);
+      }
+    }
   } catch (_e) {
     /* non-fatal: attribution is best-effort */
+  }
+}
+
+// Attribution snapshot passed to the sign-up API: landing page, UTM params, and
+// the Google Click ID. All best-effort (null when not captured).
+export function getAttribution() {
+  if (typeof window === "undefined") return {};
+  try {
+    const g = (k) => localStorage.getItem(k) || null;
+    return {
+      landingPage: g("attr_landing_page"),
+      gclid: g("ads_gclid"),
+      utm: {
+        source: g("attr_utm_source"),
+        medium: g("attr_utm_medium"),
+        campaign: g("attr_utm_campaign"),
+        term: g("attr_utm_term"),
+        content: g("attr_utm_content"),
+      },
+    };
+  } catch (_e) {
+    return {};
   }
 }
 
