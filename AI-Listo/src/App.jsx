@@ -228,6 +228,16 @@ function publicRoutes(prefix) {
         path="/editorial/business/pt"
         element={<EditorialBusinessAIPt />}
       />
+      {/* Prefix-form URLs used by the localized abandoned-signup email #2
+          (client spec: /es/editorial/business, /pt/editorial/business). */}
+      <Route
+        path="/es/editorial/business"
+        element={<EditorialBusinessAIEs />}
+      />
+      <Route
+        path="/pt/editorial/business"
+        element={<EditorialBusinessAIPt />}
+      />
       <Route path={`${p}/trial`} element={<Trial />} />
       <Route path={`${p}/checkout`} element={<CheckoutPage />} />
       <Route path={`${p}/payment-success`} element={<PaymentSuccess />} />
