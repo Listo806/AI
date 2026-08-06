@@ -32,6 +32,43 @@ export class PaymentsService {
     }
   }
 
+  // Fire the once-only getting-started email, right after the welcome. Same
+  // best-effort contract: never break webhook processing.
+  private async fireGettingStartedEmail(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<void> {
+    try {
+      await this.mailer.sendGettingStartedOnce(opts);
+    } catch (err: any) {
+      this.logger.error(`getting-started email hook failed: ${err?.message}`);
+    }
+  }
+
+  // Fire the payment-failed email when a charge or renewal fails. Best-effort.
+  private async firePaymentFailedEmail(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<void> {
+    try {
+      await this.mailer.sendPaymentFailed(opts);
+    } catch (err: any) {
+      this.logger.error(`payment-failed email hook failed: ${err?.message}`);
+    }
+  }
+
+  // Fire the subscription-canceled email once a cancellation is confirmed.
+  private async fireSubscriptionCanceledEmail(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<void> {
+    try {
+      await this.mailer.sendSubscriptionCanceled(opts);
+    } catch (err: any) {
+      this.logger.error(`cancellation email hook failed: ${err?.message}`);
+    }
+  }
+
   // Move the existing sign-up record to checkout_status='paid' on the confirmed
   // payment. Best-effort + self-healing; never creates a new record.
   private async markCheckoutPaid(opts: {
@@ -386,10 +423,20 @@ export class PaymentsService {
     );
 
     // First confirmed payment: move the SAME sign-up record to paid (never a new
-    // account) and fire the once-only localized welcome email.
+    // account) and fire the once-only welcome + getting-started emails.
     if (isActivation && matched) {
       await this.markCheckoutPaid({ userId: customUserId, subId });
       await this.fireWelcomeEmail({ userId: customUserId, subId });
+      await this.fireGettingStartedEmail({ userId: customUserId, subId });
+    }
+
+    // Billing-lifecycle emails. These are event-driven (each Paddle event id is
+    // recorded above, so a duplicate delivery never re-sends) and best-effort.
+    if (eventType === 'transaction.payment_failed') {
+      await this.firePaymentFailedEmail({ userId: customUserId, subId });
+    }
+    if (eventType === 'subscription.canceled' && matched) {
+      await this.fireSubscriptionCanceledEmail({ subId });
     }
 
     return { status: 'success', matched, eventType };

@@ -37,6 +37,7 @@ export class PlatformMailerService {
       const userCols = [
         `preferred_language VARCHAR(5) DEFAULT 'en'`,
         `welcome_email_sent_at TIMESTAMPTZ`,
+        `getting_started_email_sent_at TIMESTAMPTZ`,
         `abandoned_email_sent_at TIMESTAMPTZ`,
         `abandoned_stage SMALLINT NOT NULL DEFAULT 0`,
         `checkout_status VARCHAR(24) DEFAULT 'registered'`,
@@ -125,6 +126,18 @@ export class PlatformMailerService {
   private editorialUrl(lang: string): string {
     const prefix = lang === 'es' ? '/es' : lang === 'pt' ? '/pt' : '';
     return `${this.appUrl()}${prefix}/editorial/business`;
+  }
+  // Onboarding / account-setup page for the getting-started email (never the
+  // plain homepage).
+  private onboardingUrl(): string {
+    return (
+      this.config.get('ONBOARDING_URL') ||
+      `${this.appUrl()}/dashboard/ai-cortexa-setup`
+    );
+  }
+  // Billing page for retry-payment and reactivate links.
+  private billingUrl(): string {
+    return this.config.get('BILLING_URL') || `${this.appUrl()}/account/billing`;
   }
 
   private sendgridConfig(): { key: string; from: string } | null {
@@ -446,6 +459,49 @@ export class PlatformMailerService {
       supportEmail: this.supportEmail(),
     };
   }
+  private gettingStartedVars(name?: string | null): TemplateVars {
+    return {
+      name,
+      ctaUrl: this.onboardingUrl(),
+      supportEmail: this.supportEmail(),
+    };
+  }
+  private billingEmailVars(name?: string | null): TemplateVars {
+    return {
+      name,
+      ctaUrl: this.billingUrl(),
+      supportEmail: this.supportEmail(),
+    };
+  }
+
+  // Resolve a recipient (email + language + name) by our user id or by the
+  // linked Paddle subscription id. Used by the event-driven billing emails.
+  private async resolveRecipient(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<{ id: string; email: string; lang: string; name: string } | null> {
+    try {
+      if (opts.userId) {
+        const { rows } = await this.db.query(
+          `SELECT id, email, COALESCE(preferred_language, 'en') AS lang, name
+             FROM users WHERE id = $1`,
+          [opts.userId],
+        );
+        return rows[0] || null;
+      }
+      if (opts.subId) {
+        const { rows } = await this.db.query(
+          `SELECT id, email, COALESCE(preferred_language, 'en') AS lang, name
+             FROM users WHERE paddle_subscription_id = $1`,
+          [opts.subId],
+        );
+        return rows[0] || null;
+      }
+    } catch (err: any) {
+      this.logger.error(`resolveRecipient failed: ${err?.message}`);
+    }
+    return null;
+  }
 
   async sendWelcomeOnceByUserId(userId: string): Promise<SendResult | null> {
     await this.ensureSchema();
@@ -498,6 +554,78 @@ export class PlatformMailerService {
       template: 'welcome',
       language: lang,
       vars: this.welcomeVars(name),
+    });
+  }
+
+  // ---- getting started (once-only, right after the welcome) ----
+  async sendGettingStartedOnce(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<SendResult | null> {
+    await this.ensureSchema();
+    let claim;
+    try {
+      if (opts.userId) {
+        claim = await this.db.query(
+          `UPDATE users SET getting_started_email_sent_at = NOW()
+            WHERE id = $1 AND getting_started_email_sent_at IS NULL
+          RETURNING id, email, COALESCE(preferred_language, 'en') AS lang, name`,
+          [opts.userId],
+        );
+      } else if (opts.subId) {
+        claim = await this.db.query(
+          `UPDATE users SET getting_started_email_sent_at = NOW()
+            WHERE paddle_subscription_id = $1 AND getting_started_email_sent_at IS NULL
+          RETURNING id, email, COALESCE(preferred_language, 'en') AS lang, name`,
+          [opts.subId],
+        );
+      } else {
+        return null;
+      }
+    } catch (err: any) {
+      this.logger.error(`getting-started claim failed: ${err?.message}`);
+      return null;
+    }
+    if (!claim.rows.length) return null;
+    const { id, email, lang, name } = claim.rows[0];
+    if (!email) return null;
+    return this.send({
+      to: email,
+      userId: id,
+      template: 'getting_started',
+      language: lang,
+      vars: this.gettingStartedVars(name),
+    });
+  }
+
+  // ---- billing lifecycle (event-driven; deduped upstream by webhook_events) ----
+  async sendPaymentFailed(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<SendResult | null> {
+    const r = await this.resolveRecipient(opts);
+    if (!r || !r.email) return null;
+    return this.send({
+      to: r.email,
+      userId: r.id,
+      template: 'payment_failed',
+      language: r.lang,
+      vars: this.billingEmailVars(r.name),
+    });
+  }
+
+  async sendSubscriptionCanceled(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<SendResult | null> {
+    const r = await this.resolveRecipient(opts);
+    if (!r || !r.email) return null;
+    return this.send({
+      to: r.email,
+      userId: r.id,
+      template: 'subscription_canceled',
+      language: r.lang,
+      vars: this.billingEmailVars(r.name),
     });
   }
 
