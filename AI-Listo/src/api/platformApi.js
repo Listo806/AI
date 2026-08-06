@@ -105,6 +105,38 @@ export async function getAdminUserById(id) {
   return res?.data || res;
 }
 
+// --- Sign-ups & Customers (email automation admin) ---
+
+function buildSignupQuery({ limit, offset, q } = {}) {
+  const p = new URLSearchParams();
+  if (limit != null) p.set("limit", String(limit));
+  if (offset != null) p.set("offset", String(offset));
+  if (q) p.set("q", q);
+  const qs = p.toString();
+  return qs ? `?${qs}` : "";
+}
+
+// Everyone who submitted the registration form, with attribution. Returns
+// { data, total, limit, offset }.
+export async function getAdminSignups(opts = {}) {
+  return apiClient.request(`/admin/signups${buildSignupQuery(opts)}`);
+}
+
+// Only users who completed payment. Same shape as getAdminSignups.
+export async function getAdminCustomers(opts = {}) {
+  return apiClient.request(`/admin/customers${buildSignupQuery(opts)}`);
+}
+
+// One sign-up with its email history: { user, emails }.
+export async function getAdminSignupDetail(id) {
+  return apiClient.request(`/admin/signups/${id}`);
+}
+
+// Recent platform email delivery log: { data }.
+export async function getAdminEmailLog(limit = 100) {
+  return apiClient.request(`/admin/email/log?limit=${encodeURIComponent(limit)}`);
+}
+
 export async function createAdminUser(payload) {
   const res = await apiClient.request("/admin/users", {
     method: "POST",

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { trackEvent, trackSignupConversion } from "../../utils/track";
+import {
+  trackEvent,
+  trackSignupConversion,
+  getAttribution,
+} from "../../utils/track";
+import { getSetupOffer } from "../../utils/offer";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -199,12 +204,24 @@ export default function StartTrial() {
     trackEvent("signup_started", { plan: form.plan });
 
     try {
+      // Attach the sign-up attribution so the account is a complete record
+      // before checkout: language, landing page, UTM, Google Click ID, and which
+      // offer the visitor came through ($7 exit offer vs standard).
+      const attribution = getAttribution();
+      const payload = {
+        ...form,
+        language: lang,
+        landingPage: attribution.landingPage || null,
+        utm: attribution.utm || {},
+        gclid: attribution.gclid || null,
+        offer: getSetupOffer() === "exit7" ? "exit7" : "standard",
+      };
       const response = await fetch(
         "https://backend.cortexaaicrm.com/api/trial/start-trial",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         },
       );
 

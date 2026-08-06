@@ -5,10 +5,37 @@ import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class TrialService {
+  private signupColsReady = false;
+
   constructor(
     private readonly db: DatabaseService,
     private readonly authService: AuthService,
   ) {}
+
+  // Self-healing: the sign-up attribution columns ship in migration 102 but
+  // migrations are not auto-run here, so ensure they exist before we write them.
+  private async ensureSignupColumns(): Promise<void> {
+    if (this.signupColsReady) return;
+    const cols = [
+      `preferred_language VARCHAR(5) DEFAULT 'en'`,
+      `registered_at TIMESTAMPTZ DEFAULT NOW()`,
+      `landing_page TEXT`,
+      `utm_source TEXT`,
+      `utm_medium TEXT`,
+      `utm_campaign TEXT`,
+      `utm_term TEXT`,
+      `utm_content TEXT`,
+      `gclid TEXT`,
+      `offer_used VARCHAR(32)`,
+      `checkout_status VARCHAR(24) DEFAULT 'registered'`,
+      `abandoned_stage SMALLINT NOT NULL DEFAULT 0`,
+      `welcome_email_sent_at TIMESTAMPTZ`,
+    ];
+    for (const c of cols) {
+      await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
+    }
+    this.signupColsReady = true;
+  }
 
   async startTrial(dto: any) {
     try {
@@ -70,6 +97,15 @@ export class TrialService {
       |--------------------------------------------------------------------------
       */
 
+      // Capture the sign-up attribution passed by the front end, so an abandoned
+      // registration is a complete, permanently-kept record even before payment.
+      await this.ensureSignupColumns();
+      const lang = ['en', 'es', 'pt'].includes(String(dto.language))
+        ? dto.language
+        : 'en';
+      const utm = dto.utm || {};
+      const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
+
       const { rows } = await this.db.query(
         `
         INSERT INTO users
@@ -84,23 +120,25 @@ export class TrialService {
           is_active,
           payment_status,
           team_id,
+          preferred_language,
+          landing_page,
+          utm_source,
+          utm_medium,
+          utm_campaign,
+          utm_term,
+          utm_content,
+          gclid,
+          offer_used,
+          checkout_status,
+          registered_at,
           created_at,
           updated_at
         )
         VALUES
         (
-          $1,
-          $2,
-          $3,
-          $4,
-          $5,
-          'TRIAL',
-          $6,
-          true,
-          'trial',
-          $7,
-          NOW(),
-          NOW()
+          $1, $2, $3, $4, $5, 'TRIAL', $6, true, 'trial', $7,
+          $8, $9, $10, $11, $12, $13, $14, $15, $16, 'registered', NOW(),
+          NOW(), NOW()
         )
         RETURNING id
         `,
@@ -112,6 +150,15 @@ export class TrialService {
           'owner',
           dto.plan || null,
           teamId,
+          lang,
+          dto.landingPage || null,
+          utm.source || dto.utmSource || null,
+          utm.medium || dto.utmMedium || null,
+          utm.campaign || dto.utmCampaign || null,
+          utm.term || dto.utmTerm || null,
+          utm.content || dto.utmContent || null,
+          dto.gclid || null,
+          offerUsed,
         ],
       );
 

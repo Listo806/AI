@@ -101,6 +101,7 @@ import PlatformListings from "./pages/platform/PlatformListings";
 import VaUpload from "./pages/va/VaUpload";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSignups from "./pages/admin/AdminSignups";
 import AdminTeams from "./pages/admin/AdminTeams";
 import AdminPlans from "./pages/admin/AdminPlans";
 import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
@@ -332,6 +333,8 @@ function AppRoutes() {
         {/* Admin */}
         <Route path="admin/listings" element={<AdminListings />} />
         <Route path="admin/users" element={<AdminUsers />} />
+        <Route path="admin/signups" element={<AdminSignups />} />
+        <Route path="admin/customers" element={<AdminSignups customersOnly />} />
         <Route path="admin/teams" element={<AdminTeams />} />
         <Route path="admin/plans" element={<AdminPlans />} />
 

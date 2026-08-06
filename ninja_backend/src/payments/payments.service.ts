@@ -32,6 +32,32 @@ export class PaymentsService {
     }
   }
 
+  // Move the existing sign-up record to checkout_status='paid' on the confirmed
+  // payment. Best-effort + self-healing; never creates a new record.
+  private async markCheckoutPaid(opts: {
+    userId?: string | null;
+    subId?: string | null;
+  }): Promise<void> {
+    try {
+      await this.db.query(
+        `ALTER TABLE users ADD COLUMN IF NOT EXISTS checkout_status VARCHAR(24) DEFAULT 'registered'`,
+      );
+      if (opts.userId) {
+        await this.db.query(
+          `UPDATE users SET checkout_status = 'paid', updated_at = NOW() WHERE id = $1`,
+          [opts.userId],
+        );
+      } else if (opts.subId) {
+        await this.db.query(
+          `UPDATE users SET checkout_status = 'paid', updated_at = NOW() WHERE paddle_subscription_id = $1`,
+          [opts.subId],
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(`checkout_status update failed: ${err?.message}`);
+    }
+  }
+
   async createCheckout(userId: string) {
     const { rows } = await this.db.query(
       `SELECT id FROM users WHERE id = $1`,
@@ -359,8 +385,10 @@ export class PaymentsService {
       [eventId, eventType, JSON.stringify(body)],
     );
 
-    // Once-only localized welcome email on the first confirmed payment.
+    // First confirmed payment: move the SAME sign-up record to paid (never a new
+    // account) and fire the once-only localized welcome email.
     if (isActivation && matched) {
+      await this.markCheckoutPaid({ userId: customUserId, subId });
       await this.fireWelcomeEmail({ userId: customUserId, subId });
     }
 

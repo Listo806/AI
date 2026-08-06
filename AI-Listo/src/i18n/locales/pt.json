@@ -96,7 +96,9 @@
     "teams": "Equipes",
     "marketplace": "Marketplace",
     "vaUpload": "Upload VA",
-    "generator": "Gerador de leads"
+    "generator": "Gerador de leads",
+    "adminSignups": "Cadastros",
+    "adminCustomers": "Clientes"
   },
   "header": {
     "profile": "Perfil",

@@ -96,7 +96,9 @@
     "admin": "Admin",
     "listings": "Listings",
     "users": "Users",
-    "teams": "Teams"
+    "teams": "Teams",
+    "adminSignups": "Sign-ups",
+    "adminCustomers": "Customers"
   },
   "header": {
     "profile": "Profile",
