@@ -107,13 +107,40 @@ export async function getAdminUserById(id) {
 
 // --- Sign-ups & Customers (email automation admin) ---
 
-function buildSignupQuery({ limit, offset, q } = {}) {
+const SIGNUP_API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "https://backend.cortexaaicrm.com/api";
+
+function buildSignupQuery({ limit, offset, q, paymentStatus, offer } = {}) {
   const p = new URLSearchParams();
   if (limit != null) p.set("limit", String(limit));
   if (offset != null) p.set("offset", String(offset));
   if (q) p.set("q", q);
+  if (paymentStatus && paymentStatus !== "all") p.set("paymentStatus", paymentStatus);
+  if (offer && offer !== "all") p.set("offer", offer);
   const qs = p.toString();
   return qs ? `?${qs}` : "";
+}
+
+// Download a CSV export of sign-ups/customers (respects the current filters).
+export async function exportSignupsCsv(kind, opts = {}) {
+  const path =
+    kind === "customers"
+      ? "/admin/customers/export.csv"
+      : "/admin/signups/export.csv";
+  const token = localStorage.getItem("listo_access_token");
+  const res = await fetch(`${SIGNUP_API_BASE}${path}${buildSignupQuery(opts)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${kind}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // Everyone who submitted the registration form, with attribution. Returns

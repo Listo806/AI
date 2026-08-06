@@ -48,8 +48,11 @@ CREATE TABLE IF NOT EXISTS email_log (
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS track_token UUID DEFAULT gen_random_uuid();
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ;
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS sent_at TIMESTAMPTZ;
+ALTER TABLE email_log ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS clicked_at TIMESTAMPTZ;
+-- email_log.status: scheduled | sending | sent | delivered | skipped | error | canceled
+CREATE INDEX IF NOT EXISTS idx_email_log_due ON email_log(status, scheduled_at);
 
 CREATE INDEX IF NOT EXISTS idx_email_log_user ON email_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_email_log_template ON email_log(template);

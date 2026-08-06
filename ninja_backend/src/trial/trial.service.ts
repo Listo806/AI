@@ -2,6 +2,7 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
 import { AuthService } from '../auth/auth.service';
+import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 
 @Injectable()
 export class TrialService {
@@ -10,6 +11,7 @@ export class TrialService {
   constructor(
     private readonly db: DatabaseService,
     private readonly authService: AuthService,
+    private readonly mailer: PlatformMailerService,
   ) {}
 
   // Self-healing: the sign-up attribution columns ship in migration 102 but
@@ -180,6 +182,15 @@ export class TrialService {
          ON CONFLICT (team_id, user_id) DO NOTHING`,
         [teamId, newUserId],
       );
+
+      // Queue the abandoned-signup email sequence for this new (unpaid) account.
+      // Best-effort: sending is gated by ABANDONED_SIGNUP_EMAILS_ENABLED and the
+      // queue is canceled the moment they pay.
+      try {
+        await this.mailer.scheduleAbandonedSequence(newUserId, email, lang);
+      } catch (_e) {
+        /* non-fatal */
+      }
 
       const session = await this.authService.loginById(newUserId);
 
