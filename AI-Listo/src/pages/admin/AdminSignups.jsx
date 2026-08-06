@@ -3,6 +3,7 @@ import {
   getAdminSignups,
   getAdminCustomers,
   getAdminSignupDetail,
+  exportSignupsCsv,
 } from "../../api/platformApi";
 import "../platform/platform.css";
 import "./admin.css";
@@ -149,7 +150,9 @@ function DetailPanel({ id, onClose }) {
                     <th style={{ padding: "6px 8px" }}>Template</th>
                     <th style={{ padding: "6px 8px" }}>Lang</th>
                     <th style={{ padding: "6px 8px" }}>Status</th>
+                    <th style={{ padding: "6px 8px" }}>Scheduled</th>
                     <th style={{ padding: "6px 8px" }}>Sent</th>
+                    <th style={{ padding: "6px 8px" }}>Delivered</th>
                     <th style={{ padding: "6px 8px" }}>Opened</th>
                     <th style={{ padding: "6px 8px" }}>Clicked</th>
                   </tr>
@@ -160,7 +163,13 @@ function DetailPanel({ id, onClose }) {
                       <td style={{ padding: "6px 8px" }}>{e.template}</td>
                       <td style={{ padding: "6px 8px" }}>{e.language}</td>
                       <td style={{ padding: "6px 8px" }}>{e.status}</td>
+                      <td style={{ padding: "6px 8px" }}>
+                        {fmtDate(e.scheduled_at)}
+                      </td>
                       <td style={{ padding: "6px 8px" }}>{fmtDate(e.sent_at)}</td>
+                      <td style={{ padding: "6px 8px" }}>
+                        {fmtDate(e.delivered_at)}
+                      </td>
                       <td style={{ padding: "6px 8px" }}>
                         {fmtDate(e.opened_at)}
                       </td>
@@ -184,13 +193,16 @@ export default function AdminSignups({ customersOnly = false }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("all");
+  const [offer, setOffer] = useState("all");
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     const fetcher = customersOnly ? getAdminCustomers : getAdminSignups;
-    fetcher({ limit: PAGE_SIZE, offset, q })
+    fetcher({ limit: PAGE_SIZE, offset, q, paymentStatus, offer })
       .then((res) => {
         setRows(res?.data || []);
         setTotal(res?.total || 0);
@@ -200,7 +212,22 @@ export default function AdminSignups({ customersOnly = false }) {
         setTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [customersOnly, offset, q]);
+  }, [customersOnly, offset, q, paymentStatus, offer]);
+
+  const onExport = async () => {
+    setExporting(true);
+    try {
+      await exportSignupsCsv(customersOnly ? "customers" : "signups", {
+        q,
+        paymentStatus,
+        offer,
+      });
+    } catch (_e) {
+      /* ignore */
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     load();
@@ -226,7 +253,16 @@ export default function AdminSignups({ customersOnly = false }) {
         </p>
       </div>
 
-      <form onSubmit={onSearch} style={{ marginBottom: 16 }}>
+      <form
+        onSubmit={onSearch}
+        style={{
+          marginBottom: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center",
+        }}
+      >
         <input
           type="text"
           value={q}
@@ -236,14 +272,40 @@ export default function AdminSignups({ customersOnly = false }) {
             padding: "8px 12px",
             border: "1px solid #cbd5e1",
             borderRadius: 8,
-            width: 280,
+            width: 260,
             maxWidth: "100%",
           }}
         />
+        {!customersOnly && (
+          <select
+            value={paymentStatus}
+            onChange={(e) => {
+              setOffset(0);
+              setPaymentStatus(e.target.value);
+            }}
+            style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cbd5e1" }}
+          >
+            <option value="all">All payment status</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="trial">Trial</option>
+          </select>
+        )}
+        <select
+          value={offer}
+          onChange={(e) => {
+            setOffset(0);
+            setOffer(e.target.value);
+          }}
+          style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cbd5e1" }}
+        >
+          <option value="all">All offers</option>
+          <option value="exit7">$7 exit offer</option>
+          <option value="standard">Standard</option>
+        </select>
         <button
           type="submit"
           style={{
-            marginLeft: 8,
             padding: "8px 16px",
             borderRadius: 8,
             border: "none",
@@ -253,6 +315,21 @@ export default function AdminSignups({ customersOnly = false }) {
           }}
         >
           Search
+        </button>
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={exporting}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "1px solid #cbd5e1",
+            background: "#fff",
+            color: "#0f172a",
+            cursor: exporting ? "default" : "pointer",
+          }}
+        >
+          {exporting ? "Exporting…" : "Export CSV"}
         </button>
       </form>
 

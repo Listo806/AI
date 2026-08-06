@@ -5,6 +5,7 @@ import { SignupsAdminService } from './signups-admin.service';
 import { PlatformMailController } from './platform-mail.controller';
 import { EmailTrackController } from './email-track.controller';
 import { SignupsAdminController } from './signups-admin.controller';
+import { SendgridEventsController } from './sendgrid-events.controller';
 
 // Platform lifecycle email: transactional welcome-on-payment + the 3-step
 // abandoned-signup sequence, localized (en/es/pt), with open/click tracking, an
@@ -16,6 +17,7 @@ import { SignupsAdminController } from './signups-admin.controller';
     PlatformMailController,
     EmailTrackController,
     SignupsAdminController,
+    SendgridEventsController,
   ],
   providers: [
     PlatformMailerService,
