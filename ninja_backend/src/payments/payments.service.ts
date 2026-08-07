@@ -206,14 +206,30 @@ export class PaymentsService {
     this.purchaseFlagReady = true;
   }
 
-  async claimPurchaseConversion(
-    userId: string,
-  ): Promise<{ fire: boolean; value: number; currency: string }> {
-    const result = { fire: false, value: 97, currency: 'USD' };
+  async claimPurchaseConversion(userId: string): Promise<{
+    fire: boolean;
+    value: number;
+    currency: string;
+    offer: string;
+    plan: string | null;
+    transactionId: string | null;
+  }> {
+    const result = {
+      fire: false,
+      value: 97,
+      currency: 'USD',
+      offer: '$97',
+      plan: null as string | null,
+      transactionId: null as string | null,
+    };
     if (!userId) return result;
     await this.ensurePurchaseFlagColumn();
     // Only the first call for an active, not-yet-reported user flips the flag
     // and returns a row; every later call (including a page refresh) gets none.
+    // Return the attribution needed for an accurate Purchase conversion: the
+    // offer they used (which determines the real amount: $7 exit offer vs the
+    // standard $97 activation), the plan, and the Paddle subscription id as a
+    // stable transaction id for Google Ads deduplication.
     const { rows } = await this.db.query(
       `UPDATE users
           SET purchase_conversion_reported = true,
@@ -221,10 +237,19 @@ export class PaymentsService {
         WHERE id = $1
           AND payment_status IN ('active', 'paid')
           AND purchase_conversion_reported = false
-        RETURNING id`,
+        RETURNING id, offer_used, COALESCE(selected_plan, plan) AS plan,
+                  paddle_subscription_id`,
       [userId],
     );
-    result.fire = rows.length > 0;
+    if (rows.length > 0) {
+      const r = rows[0];
+      const isExit7 = String(r.offer_used || '') === 'exit7';
+      result.fire = true;
+      result.value = isExit7 ? 7 : 97;
+      result.offer = isExit7 ? '$7' : '$97';
+      result.plan = r.plan || null;
+      result.transactionId = r.paddle_subscription_id || userId;
+    }
     return result;
   }
 

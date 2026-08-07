@@ -108,6 +108,19 @@ export class SignupsAdminController {
     this.sendCsv(res, 'customers', rows);
   }
 
+  @Get('funnel')
+  @ApiOperation({ summary: 'Sign-up to purchase funnel totals (admin)' })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'groupBy', required: false })
+  async funnel(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('groupBy') groupBy?: string,
+  ) {
+    return this.signups.funnel({ from, to, groupBy });
+  }
+
   @Get('signups/:id')
   @ApiOperation({ summary: 'One sign-up with its email history (admin)' })
   async detail(@Param('id') id: string) {

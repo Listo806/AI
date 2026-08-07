@@ -27,10 +27,16 @@ export function initAnalytics() {
 }
 
 // Generic funnel/step event -> GA4 (funnel analysis) + Google Ads (audiences).
+// Also mirrored into GTM's dataLayer, so if a Google Tag Manager container is
+// added later it can consume the exact same events with no code change. The
+// dataLayer push is a harmless no-op when no GTM container is installed.
 export function trackEvent(name, params = {}) {
-  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+  if (typeof window === "undefined") return;
+  if (typeof window.gtag === "function") {
     window.gtag("event", name, params);
   }
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: name, ...params });
 }
 
 // Fire a specific Google Ads conversion action, e.g. "AW-XXXX/label".
@@ -79,6 +85,48 @@ export function trackSignupConversion({ onSent } = {}) {
   } else {
     done();
   }
+}
+
+// Dedicated Purchase conversion action (Google Ads), separate from Sign-up.
+// VITE_ADS_PURCHASE_CONVERSION overrides it if the label ever changes.
+export const PURCHASE_CONVERSION_SEND_TO =
+  import.meta.env.VITE_ADS_PURCHASE_CONVERSION ||
+  "AW-17836518151/2dX2CMD3mNccEIfWjrlC";
+
+// Fire the purchase once a payment is confirmed. Emits BOTH a GA4 `purchase`
+// event (for the funnel + revenue reporting) and the Google Ads Purchase
+// conversion action, each carrying the transaction id (so Google Ads dedupes
+// duplicate reports), the real value + currency, the offer ($7 or $97), the
+// plan, and the ad click id / campaign pulled from stored attribution.
+export function trackPurchase(order = {}) {
+  const value = Number(order.value) || 0;
+  const currency = order.currency || "USD";
+  const transactionId = order.transactionId || undefined;
+  const attribution = getAttribution();
+  const gclid = attribution.gclid || undefined;
+  const campaign = attribution.utm?.campaign || undefined;
+
+  // GA4 standard purchase event.
+  trackEvent("purchase", {
+    transaction_id: transactionId,
+    value,
+    currency,
+    offer: order.offer, // "$7" | "$97"
+    plan: order.plan || undefined,
+    gclid,
+    campaign,
+    items: order.plan
+      ? [{ item_id: order.plan, item_name: order.plan, price: value, quantity: 1 }]
+      : undefined,
+  });
+
+  // Google Ads Purchase conversion action (transaction_id enables Ads-side
+  // deduplication so a re-report never double-counts).
+  trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+    value,
+    currency,
+    transaction_id: transactionId,
+  });
 }
 
 // Provide user-identifying data for Google Ads Enhanced Conversions. gtag hashes

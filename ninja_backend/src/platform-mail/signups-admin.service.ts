@@ -112,6 +112,75 @@ export class SignupsAdminService {
     return rows;
   }
 
+  // Funnel totals for the admin: how many people signed up vs how many paid,
+  // over an optional date range, optionally broken down by a dimension we store
+  // (campaign, offer, language, landing page). Upper-funnel stages (popup views,
+  // begin checkout) live in GA4; this is the DB-backed sign-up -> purchase view.
+  async funnel(
+    opts: { from?: string; to?: string; groupBy?: string } = {},
+  ) {
+    await this.mailer.ensureSchema();
+    const params: any[] = [];
+    const dateClauses: string[] = [];
+    if (opts.from) {
+      params.push(opts.from);
+      dateClauses.push(`created_at >= $${params.length}`);
+    }
+    if (opts.to) {
+      params.push(opts.to);
+      dateClauses.push(`created_at <= $${params.length}`);
+    }
+    const dateWhere = dateClauses.length
+      ? ' AND ' + dateClauses.join(' AND ')
+      : '';
+    const paidExpr = `(payment_status = 'active' OR checkout_status = 'paid')`;
+
+    const { rows: t } = await this.db.query(
+      `SELECT
+          COUNT(*) FILTER (WHERE role = 'owner')::int AS signups,
+          COUNT(*) FILTER (WHERE role = 'owner' AND ${paidExpr})::int AS purchases
+         FROM users
+        WHERE 1=1 ${dateWhere}`,
+      params,
+    );
+    const signups = t[0]?.signups ?? 0;
+    const purchases = t[0]?.purchases ?? 0;
+
+    const groupCols: Record<string, string> = {
+      campaign: `COALESCE(NULLIF(utm_campaign, ''), '(none)')`,
+      offer: `COALESCE(NULLIF(offer_used, ''), 'standard')`,
+      language: `COALESCE(NULLIF(preferred_language, ''), 'en')`,
+      landing_page: `COALESCE(NULLIF(landing_page, ''), '(none)')`,
+    };
+    const gb =
+      opts.groupBy && groupCols[opts.groupBy] ? groupCols[opts.groupBy] : null;
+    let breakdown: any[] = [];
+    if (gb) {
+      const { rows } = await this.db.query(
+        `SELECT ${gb} AS key,
+                COUNT(*)::int AS signups,
+                COUNT(*) FILTER (WHERE ${paidExpr})::int AS purchases
+           FROM users
+          WHERE role = 'owner' ${dateWhere}
+          GROUP BY 1
+          ORDER BY signups DESC
+          LIMIT 100`,
+        params,
+      );
+      breakdown = rows;
+    }
+
+    return {
+      signups,
+      purchases,
+      conversionRate: signups
+        ? Math.round((purchases / signups) * 1000) / 10
+        : 0,
+      groupBy: opts.groupBy || null,
+      breakdown,
+    };
+  }
+
   async detail(id: string) {
     await this.mailer.ensureSchema();
     const { rows } = await this.db.query(

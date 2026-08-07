@@ -185,6 +185,9 @@ export default function StartTrial() {
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
+    // Funnel: the visitor reached / opened the registration form.
+    trackEvent("sign_up_started", { plan: form.plan, source: "trial" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (event) => {
@@ -201,7 +204,6 @@ export default function StartTrial() {
     if (loading) return;
 
     setLoading(true);
-    trackEvent("signup_started", { plan: form.plan });
 
     try {
       // Attach the sign-up attribution so the account is a complete record
@@ -243,7 +245,7 @@ export default function StartTrial() {
         setUser(data.user);
       }
 
-      trackEvent("account_created", { plan: form.plan });
+      trackEvent("sign_up_completed", { plan: form.plan });
       trackSignupConversion();
       navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
     } catch (error) {
