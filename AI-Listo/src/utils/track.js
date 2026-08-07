@@ -26,6 +26,31 @@ export function initAnalytics() {
   }
 }
 
+// On-page QA log. Every tracked event/conversion is recorded to sessionStorage
+// (so a full funnel journey across page navigations is captured in one place)
+// and broadcast as a DOM event the debug panel listens to. Add ?trackdebug=1 to
+// any page to see every event fire live with its data — no Tag Assistant setup
+// needed. Purely observational; never affects what is sent to GA4 / Ads.
+const TRACK_LOG_KEY = "cortexa_track_log";
+export function pushTrackLog(type, name, params) {
+  if (typeof window === "undefined") return;
+  try {
+    const entry = { t: new Date().toISOString(), type, name, params: params || {} };
+    let log = [];
+    try {
+      log = JSON.parse(sessionStorage.getItem(TRACK_LOG_KEY) || "[]");
+    } catch (_e) {
+      log = [];
+    }
+    log.push(entry);
+    if (log.length > 60) log = log.slice(-60);
+    sessionStorage.setItem(TRACK_LOG_KEY, JSON.stringify(log));
+    window.dispatchEvent(new CustomEvent("cortexa-track", { detail: entry }));
+  } catch (_e) {
+    /* best-effort: QA logging must never break tracking */
+  }
+}
+
 // Generic funnel/step event -> GA4 (funnel analysis) + Google Ads (audiences).
 // Also mirrored into GTM's dataLayer, so if a Google Tag Manager container is
 // added later it can consume the exact same events with no code change. The
@@ -37,6 +62,7 @@ export function trackEvent(name, params = {}) {
   }
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({ event: name, ...params });
+  pushTrackLog("event", name, params);
 }
 
 // Fire a specific Google Ads conversion action, e.g. "AW-XXXX/label".
@@ -48,6 +74,7 @@ export function trackAdsConversion(sendTo, params = {}) {
   ) {
     window.gtag("event", "conversion", { send_to: sendTo, ...params });
   }
+  pushTrackLog("conversion", "conversion", { send_to: sendTo, ...params });
 }
 
 // Dedicated Sign-up conversion action (Google Ads). Fired on every real
@@ -79,6 +106,11 @@ export function trackSignupConversion({ onSent } = {}) {
       value: 67.0,
       currency: "USD",
       event_callback: once,
+    });
+    pushTrackLog("conversion", "sign_up_conversion", {
+      send_to: SIGNUP_CONVERSION_SEND_TO,
+      value: 67.0,
+      currency: "USD",
     });
     // Fallback: if gtag is blocked/slow and the callback never fires, proceed.
     setTimeout(once, 1200);

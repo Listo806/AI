@@ -16,6 +16,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import NotificationToast from "./components/NotificationToast";
 import ExitIntentOffer from "./components/ExitIntentOffer";
 import LanguageAutoDetect from "./components/LanguageAutoDetect";
+import TrackDebugPanel from "./components/TrackDebugPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -487,6 +488,7 @@ export default function App() {
           <LanguageAutoDetect />
           <AppRoutes />
           <ExitIntentOffer />
+          <TrackDebugPanel />
           <NotificationToast />
         </NotificationProvider>
       </AuthProvider>
