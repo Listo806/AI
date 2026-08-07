@@ -4,6 +4,7 @@ import {
   getAdminCustomers,
   getAdminSignupDetail,
   exportSignupsCsv,
+  sendAdminTestEmail,
 } from "../../api/platformApi";
 import "../platform/platform.css";
 import "./admin.css";
@@ -188,6 +189,131 @@ function DetailPanel({ id, onClose }) {
   );
 }
 
+const TEST_TEMPLATES = [
+  ["welcome", "Welcome / Payment Success"],
+  ["getting_started", "Getting Started"],
+  ["abandoned_1", "Abandoned #1"],
+  ["abandoned_2", "Abandoned #2 (Business Editorial)"],
+  ["abandoned_3", "Abandoned #3 (Final reminder)"],
+  ["payment_failed", "Payment Failed"],
+  ["subscription_canceled", "Subscription Canceled"],
+];
+
+// Admin tool: send any lifecycle email to any address on demand, so templates
+// can be reviewed or a full setup verified without waiting for a real payment.
+function TestEmailPanel() {
+  const [to, setTo] = useState("");
+  const [template, setTemplate] = useState("welcome");
+  const [language, setLanguage] = useState("en");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const onSend = async (e) => {
+    e.preventDefault();
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await sendAdminTestEmail({ to, template, language });
+      if (res?.ok) {
+        setResult({ ok: true, msg: `Sent to ${to}.` });
+      } else {
+        setResult({
+          ok: false,
+          msg: res?.error || res?.reason || "Could not send. Check the email provider is configured.",
+        });
+      }
+    } catch (_e) {
+      setResult({ ok: false, msg: "Request failed. Are you signed in as admin?" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const inputStyle = {
+    padding: "8px 10px",
+    border: "1px solid #cbd5e1",
+    borderRadius: 8,
+  };
+
+  return (
+    <details
+      style={{
+        marginBottom: 16,
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+        background: "#f8fafc",
+        padding: "12px 16px",
+      }}
+    >
+      <summary style={{ cursor: "pointer", fontWeight: 600, color: "#0f172a" }}>
+        Send a test email
+      </summary>
+      <p style={{ margin: "8px 0 12px", color: "#64748b", fontSize: 13 }}>
+        Send any template to any address to preview it or verify sending. No
+        payment needed. Requires the email provider to be configured on the
+        server.
+      </p>
+      <form
+        onSubmit={onSend}
+        style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}
+      >
+        <input
+          type="email"
+          required
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder="recipient@email.com"
+          style={{ ...inputStyle, width: 240, maxWidth: "100%" }}
+        />
+        <select
+          value={template}
+          onChange={(e) => setTemplate(e.target.value)}
+          style={inputStyle}
+        >
+          {TEST_TEMPLATES.map(([val, label]) => (
+            <option key={val} value={val}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+        </select>
+        <button
+          type="submit"
+          disabled={sending}
+          style={{
+            padding: "8px 16px",
+            borderRadius: 8,
+            border: "none",
+            background: "#2563eb",
+            color: "#fff",
+            cursor: sending ? "default" : "pointer",
+          }}
+        >
+          {sending ? "Sending…" : "Send test"}
+        </button>
+        {result && (
+          <span
+            style={{
+              fontSize: 13,
+              color: result.ok ? "#16a34a" : "#dc2626",
+            }}
+          >
+            {result.msg}
+          </span>
+        )}
+      </form>
+    </details>
+  );
+}
+
 export default function AdminSignups({ customersOnly = false }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -252,6 +378,8 @@ export default function AdminSignups({ customersOnly = false }) {
           {subtitle} {total ? `(${total})` : ""}
         </p>
       </div>
+
+      {!customersOnly && <TestEmailPanel />}
 
       <form
         onSubmit={onSearch}
