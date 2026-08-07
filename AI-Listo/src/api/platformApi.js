@@ -164,6 +164,15 @@ export async function getAdminEmailLog(limit = 100) {
   return apiClient.request(`/admin/email/log?limit=${encodeURIComponent(limit)}`);
 }
 
+// Send a test of any lifecycle email to any address (no real payment needed).
+// Returns { ok, status, reason } or { ok:false, error }.
+export async function sendAdminTestEmail({ to, template, language } = {}) {
+  return apiClient.request(`/admin/email/test-send`, {
+    method: "POST",
+    body: JSON.stringify({ to, template, language }),
+  });
+}
+
 export async function createAdminUser(payload) {
   const res = await apiClient.request("/admin/users", {
     method: "POST",

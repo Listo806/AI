@@ -629,6 +629,43 @@ export class PlatformMailerService {
     });
   }
 
+  // ---- admin test send (verify any template to any address, no real payment) ----
+  // Sends a chosen template with representative sample vars, and logs it like any
+  // real send so it shows up in the admin email log. Used by the admin test tool.
+  async sendTestEmail(opts: {
+    to: string;
+    template: TemplateName;
+    language?: string;
+  }): Promise<SendResult> {
+    await this.ensureSchema();
+    const name = 'Test';
+    let vars: TemplateVars;
+    switch (opts.template) {
+      case 'welcome':
+        vars = this.welcomeVars(name);
+        break;
+      case 'getting_started':
+        vars = this.gettingStartedVars(name);
+        break;
+      case 'payment_failed':
+      case 'subscription_canceled':
+        vars = this.billingEmailVars(name);
+        break;
+      default:
+        // abandoned_1 / abandoned_2 / abandoned_3
+        vars = { name, ctaUrl: this.continueUrl() };
+        if (opts.template === 'abandoned_2') {
+          vars.editorialUrl = this.editorialUrl(opts.language || 'en');
+        }
+    }
+    return this.send({
+      to: opts.to,
+      template: opts.template,
+      language: opts.language,
+      vars,
+    });
+  }
+
   // ---- engagement tracking ----
   async recordOpen(token: string): Promise<void> {
     try {
