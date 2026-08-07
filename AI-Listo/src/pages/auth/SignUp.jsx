@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/apiClient';
@@ -19,6 +19,11 @@ export default function SignUp() {
   const [role, setRole] = useState('user');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Funnel: the visitor reached / opened the registration form.
+  useEffect(() => {
+    trackEvent('sign_up_started', { source: 'marketplace' });
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,8 +60,8 @@ export default function SignUp() {
       if (res.accessToken) {
         apiClient.setTokens(res.accessToken, res.refreshToken);
         localStorage.setItem('listo_user', JSON.stringify(res.user));
-        // Funnel: account created via the marketplace signup form.
-        trackEvent('account_created');
+        // Funnel: account successfully created via the marketplace signup form.
+        trackEvent('sign_up_completed');
         // Google Ads sign-up conversion. Fire it, then hard-navigate only once
         // the beacon has been sent, so the page unload does not cancel the
         // request (which is what made Ads report "wasn't detected").

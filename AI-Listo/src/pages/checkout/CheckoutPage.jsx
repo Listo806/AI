@@ -8,7 +8,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { trackEvent, trackAdsConversion, setUserData } from "../../utils/track";
+import { trackEvent, trackPurchase, setUserData } from "../../utils/track";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
@@ -27,13 +27,6 @@ import "./CheckoutPage.css";
 // front end just renders the subscribe button for the selected tier.
 const API_BASE = "https://backend.cortexaaicrm.com";
 const SETUP_FEE = 97;
-
-// Dedicated Purchase conversion action (Google Ads). The default below is the
-// dedicated "Purchase" action created in Google Ads, separate from Sign-up.
-// VITE_ADS_PURCHASE_CONVERSION can override it if it ever changes.
-const PURCHASE_CONVERSION_SEND_TO =
-  import.meta.env.VITE_ADS_PURCHASE_CONVERSION ||
-  "AW-17836518151/2dX2CMD3mNccEIfWjrlC";
 
 const PLAN_DATA = {
   solo: { price: 197, users: 1 },
@@ -232,9 +225,9 @@ export default function CheckoutPage() {
     acceptedTermsRef.current = acceptedTerms;
   }, [acceptedTerms]);
 
-  // Funnel: record that the checkout / plan-review page was viewed.
+  // Funnel: the user reached the checkout. This is the begin_checkout stage.
   useEffect(() => {
-    trackEvent("checkout_view", { plan: selectedPlan });
+    trackEvent("begin_checkout", { plan: selectedPlan });
   }, [selectedPlan]);
 
   // Load Paddle config once (null on error, so PayPal remains the fallback).
@@ -261,7 +254,7 @@ export default function CheckoutPage() {
   // the browser's checkout.completed, so poll a one-time server claim: it
   // returns fire:true a single time for a confirmed, not-yet-reported user, so
   // the tag fires exactly once and a page refresh can never re-trigger it.
-  const reportPaddlePurchaseWhenConfirmed = async () => {
+  const reportPaddlePurchaseWhenConfirmed = async (paddleTxnId) => {
     for (let attempt = 0; attempt < 8; attempt += 1) {
       try {
         const res = await apiClient.request(
@@ -270,9 +263,15 @@ export default function CheckoutPage() {
         );
         const data = res?.data ?? res;
         if (data?.fire) {
-          trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+          // Fire GA4 purchase + the Google Ads Purchase conversion, with the
+          // real value + offer + plan from the server (authoritative) and a
+          // transaction id for dedup (server value, else the Paddle event's).
+          trackPurchase({
             value: data.value ?? setupFee,
             currency: data.currency ?? "USD",
+            offer: data.offer ?? (offerActive ? "$7" : "$97"),
+            plan: data.plan ?? selectedPlan,
+            transactionId: data.transactionId ?? paddleTxnId,
           });
           return;
         }
@@ -324,6 +323,8 @@ export default function CheckoutPage() {
         await initPaddle(paddleConfig, (ev) => {
           if (ev?.name === "checkout.completed") {
             const uid = customer.userId || localStorage.getItem("trialUserId");
+            const paddleTxnId =
+              ev?.data?.transaction_id || ev?.data?.id || undefined;
             setUserData({ email: customer.email, phone: customer.phone });
             trackEvent("trial_activated", {
               plan: selectedPlan,
@@ -336,7 +337,7 @@ export default function CheckoutPage() {
             // the backend, which reports fire:true only after the signature-
             // verified Paddle webhook activates the account, and only once per
             // user, so a Thank You page refresh can never re-fire it.
-            reportPaddlePurchaseWhenConfirmed();
+            reportPaddlePurchaseWhenConfirmed(paddleTxnId);
             if (uid) finishAndLogin(uid);
           }
         });
@@ -425,11 +426,14 @@ export default function CheckoutPage() {
               // Enhanced Conversions: pass the customer's contact info so Google
               // Ads can match this purchase to the ad click (gtag hashes it).
               setUserData({ email: customer.email, phone: customer.phone });
-              // Google Ads: count the completed $97 purchase as a conversion.
-              trackAdsConversion(PURCHASE_CONVERSION_SEND_TO, {
+              // Fire GA4 purchase + the Google Ads Purchase conversion with the
+              // value, offer, plan, and the subscription id as the transaction id.
+              trackPurchase({
                 value: setupFee,
                 currency: "USD",
-                transaction_id: data.subscriptionID,
+                offer: offerActive ? "$7" : "$97",
+                plan: selectedPlan,
+                transactionId: data.subscriptionID,
               });
               // Funnel + retargeting: trial activated (paid). Used to exclude
               // these customers from acquisition retargeting audiences.

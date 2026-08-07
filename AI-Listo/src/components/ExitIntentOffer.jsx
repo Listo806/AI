@@ -197,7 +197,7 @@ export default function ExitIntentOffer() {
   useEffect(() => {
     if (mode === "test" && offerIsAvailable()) {
       setOpen(true);
-      trackEvent("exit_offer_shown", { path: location.pathname, test: true });
+      trackEvent("exit_popup_view", { path: location.pathname, test: true });
     }
   }, [mode, location.pathname]);
 
@@ -225,7 +225,7 @@ export default function ExitIntentOffer() {
     dbgRef.current.triggers += 1;
     dbgRef.current.lastEvent = "OPENED";
     setOpen(true);
-    trackEvent("exit_offer_shown", { path: location.pathname });
+    trackEvent("exit_popup_view", { path: location.pathname });
   }, [local, location.pathname]);
 
   const close = useCallback((reason) => {
@@ -236,7 +236,7 @@ export default function ExitIntentOffer() {
   const claim = useCallback(() => {
     setSetupOffer(EXIT_OFFER);
     markClaimedThisSession();
-    trackEvent("exit_offer_click", { cta: "start_trial" });
+    trackEvent("exit_popup_click", { cta: "start_trial" });
     setOpen(false);
     if (local === "trial") {
       window.scrollTo({ top: 0, behavior: "smooth" });

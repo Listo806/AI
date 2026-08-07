@@ -5,6 +5,7 @@ import {
   getAdminSignupDetail,
   exportSignupsCsv,
   sendAdminTestEmail,
+  getAdminFunnel,
 } from "../../api/platformApi";
 import "../platform/platform.css";
 import "./admin.css";
@@ -199,6 +200,147 @@ const TEST_TEMPLATES = [
   ["subscription_canceled", "Subscription Canceled"],
 ];
 
+// Admin funnel totals: how many people signed up vs how many actually paid,
+// over a date range, optionally broken down by campaign, offer, or language.
+// This is the DB-backed sign-up to purchase view (the "X sign-ups, Y purchases"
+// summary); the upper-funnel ad and popup stages live in GA4.
+function FunnelPanel() {
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [groupBy, setGroupBy] = useState("none");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    getAdminFunnel({ from, to, groupBy })
+      .then((res) => setData(res?.data ?? res))
+      .catch(() => setData(null))
+      .finally(() => setLoading(false));
+  }, [from, to, groupBy]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const inputStyle = {
+    padding: "8px 10px",
+    border: "1px solid #cbd5e1",
+    borderRadius: 8,
+  };
+  const stat = (label, value, color) => (
+    <div
+      style={{
+        flex: "1 1 140px",
+        background: "#fff",
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+        padding: "14px 16px",
+      }}
+    >
+      <div style={{ color: "#64748b", fontSize: 13 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: color || "#0f172a" }}>
+        {value}
+      </div>
+    </div>
+  );
+
+  return (
+    <section
+      style={{
+        marginBottom: 16,
+        border: "1px solid #e2e8f0",
+        borderRadius: 12,
+        background: "#f8fafc",
+        padding: "16px 18px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 10,
+          alignItems: "center",
+          marginBottom: 14,
+        }}
+      >
+        <strong style={{ fontSize: 15, marginRight: "auto" }}>Funnel</strong>
+        <label style={{ fontSize: 13, color: "#64748b" }}>
+          From{" "}
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            style={inputStyle}
+          />
+        </label>
+        <label style={{ fontSize: 13, color: "#64748b" }}>
+          To{" "}
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            style={inputStyle}
+          />
+        </label>
+        <select
+          value={groupBy}
+          onChange={(e) => setGroupBy(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="none">No breakdown</option>
+          <option value="campaign">By campaign</option>
+          <option value="offer">By offer</option>
+          <option value="language">By language</option>
+          <option value="landing_page">By landing page</option>
+        </select>
+      </div>
+
+      {loading && <p style={{ color: "#64748b", margin: 0 }}>Loading…</p>}
+      {!loading && data && (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {stat("Sign-ups", data.signups ?? 0)}
+            {stat("Purchases", data.purchases ?? 0, "#16a34a")}
+            {stat("Conversion rate", `${data.conversionRate ?? 0}%`, "#2563eb")}
+          </div>
+
+          {data.breakdown && data.breakdown.length > 0 && (
+            <div style={{ overflowX: "auto", marginTop: 14 }}>
+              <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "#64748b" }}>
+                    <th style={{ padding: "6px 8px" }}>{data.groupBy}</th>
+                    <th style={{ padding: "6px 8px" }}>Sign-ups</th>
+                    <th style={{ padding: "6px 8px" }}>Purchases</th>
+                    <th style={{ padding: "6px 8px" }}>Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.breakdown.map((r, i) => (
+                    <tr key={i} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "6px 8px", wordBreak: "break-all" }}>
+                        {r.key}
+                      </td>
+                      <td style={{ padding: "6px 8px" }}>{r.signups}</td>
+                      <td style={{ padding: "6px 8px" }}>{r.purchases}</td>
+                      <td style={{ padding: "6px 8px" }}>
+                        {r.signups
+                          ? `${Math.round((r.purchases / r.signups) * 1000) / 10}%`
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 // Admin tool: send any lifecycle email to any address on demand, so templates
 // can be reviewed or a full setup verified without waiting for a real payment.
 function TestEmailPanel() {
@@ -379,6 +521,7 @@ export default function AdminSignups({ customersOnly = false }) {
         </p>
       </div>
 
+      {!customersOnly && <FunnelPanel />}
       {!customersOnly && <TestEmailPanel />}
 
       <form

@@ -159,6 +159,17 @@ export async function getAdminSignupDetail(id) {
   return apiClient.request(`/admin/signups/${id}`);
 }
 
+// Sign-up to purchase funnel totals, optionally by date range and dimension.
+// Returns { signups, purchases, conversionRate, groupBy, breakdown }.
+export async function getAdminFunnel({ from, to, groupBy } = {}) {
+  const p = new URLSearchParams();
+  if (from) p.set("from", from);
+  if (to) p.set("to", to);
+  if (groupBy && groupBy !== "none") p.set("groupBy", groupBy);
+  const qs = p.toString();
+  return apiClient.request(`/admin/funnel${qs ? "?" + qs : ""}`);
+}
+
 // Recent platform email delivery log: { data }.
 export async function getAdminEmailLog(limit = 100) {
   return apiClient.request(`/admin/email/log?limit=${encodeURIComponent(limit)}`);
