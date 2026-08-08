@@ -29,11 +29,13 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { PipelineModule } from "./pipeline/pipeline.module";
 import { CalendarModule } from "./calendar/calendar.module";
 import { PlatformMailModule } from "./platform-mail/platform-mail.module";
+import { PlansModule } from "./plans/plans.module";
 
 @Module({
   imports: [
     ConfigModule,
     DatabaseModule,
+    PlansModule,
     AuthModule,
     UsersModule,
     TeamsModule,
