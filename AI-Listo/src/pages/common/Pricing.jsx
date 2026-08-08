@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import "./Common.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import { trackEvent } from "../../utils/track";
 import { orderedPlans, formatUsd } from "../../config/plans";
+import { useAuth } from "../../context/AuthContext";
+import { selectAccountPlan } from "../../api/platformApi";
 import {
   Menu,
   X,
@@ -1107,6 +1109,41 @@ export default function PricingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
   const [billing, setBilling] = useState("monthly"); // "monthly" | "annual"
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Choosing a plan. If the visitor already has an account (e.g. they just
+  // registered through the exit popup), set the plan on that SAME account and go
+  // straight to Free activation or paid checkout — no second registration. A
+  // brand-new visitor goes through /trial to register first.
+  const handlePlanClick = async (plan) => {
+    trackEvent("plan_selected", {
+      plan: plan.id,
+      billing_cycle: plan.isFree ? "free" : billing,
+    });
+    if (user) {
+      try {
+        const res = await selectAccountPlan({
+          plan: plan.id,
+          billingCycle: plan.isFree ? undefined : billing,
+        });
+        const data = res?.data ?? res;
+        if (plan.isFree || data?.free) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        navigate(`/checkout?plan=${plan.id}&billing=${billing}`);
+        return;
+      } catch (_e) {
+        // fall through to the registration path
+      }
+    }
+    if (plan.isFree) {
+      navigate("/trial?plan=free");
+    } else {
+      navigate(`/trial?plan=${plan.id}&billing=${billing}`);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -1234,19 +1271,10 @@ export default function PricingPage() {
                   >
                     {meta.desc}
                   </p>
-                  <Link
-                    to={
-                      plan.isFree
-                        ? "/trial?plan=free"
-                        : `/trial?plan=${plan.id}&billing=${billing}`
-                    }
+                  <button
+                    type="button"
                     className="cx-plans-btn"
-                    onClick={() =>
-                      trackEvent("plan_selected", {
-                        plan: plan.id,
-                        billing_cycle: plan.isFree ? "free" : billing,
-                      })
-                    }
+                    onClick={() => handlePlanClick(plan)}
                   >
                     {plan.isFree ? (
                       tr.plansV2.getStarted
@@ -1256,7 +1284,7 @@ export default function PricingPage() {
                         {tr.plansV2.startTrial}
                       </>
                     )}
-                  </Link>
+                  </button>
                   <ul className="cx-plans-features">
                     {meta.features.map((feat, i) => (
                       <li key={i} className="cx-plans-feature-item">

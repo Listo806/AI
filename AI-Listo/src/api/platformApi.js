@@ -159,6 +159,16 @@ export async function getAdminSignupDetail(id) {
   return apiClient.request(`/admin/signups/${id}`);
 }
 
+// Set the plan on the logged-in account (used after the exit-popup signup, when
+// the user picks a plan on the pricing page). Never creates a second account.
+// Returns { success, plan, billingCycle, free }.
+export async function selectAccountPlan({ plan, billingCycle } = {}) {
+  return apiClient.request(`/trial/select-plan`, {
+    method: "POST",
+    body: JSON.stringify({ plan, billingCycle }),
+  });
+}
+
 // Sign-up to purchase funnel totals, optionally by date range and dimension.
 // Returns { signups, purchases, conversionRate, groupBy, breakdown }.
 export async function getAdminFunnel({ from, to, groupBy } = {}) {
