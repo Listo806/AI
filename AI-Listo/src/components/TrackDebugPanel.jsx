@@ -1,29 +1,25 @@
 import { useEffect, useState, useCallback } from "react";
 
-// On-page tracking QA overlay. Enable by adding ?trackdebug=1 to any URL (the
-// flag then persists across the whole funnel journey via localStorage); disable
-// with ?trackdebug=0. It lists every funnel event and conversion as it fires,
-// with the exact data sent (value, currency, transaction id, offer, plan), so a
-// full test can be verified and screenshotted from one place, without setting up
-// Tag Assistant or GA4 DebugView. It never sends anything itself; it only reads
-// the log written by src/utils/track.js.
+// On-page tracking QA overlay. It shows ONLY when the CURRENT page URL carries a
+// truthy ?trackdebug value. There is no cookie, no localStorage, and no persisted
+// flag of any kind, so a normal visitor on the bare site never sees it. Because
+// this component mounts once at the app root and stays mounted across in-app
+// navigation, the value read once at load keeps the panel visible through a
+// multi-page test without persisting anything. It lists every funnel event and
+// conversion as it fires with the exact data sent; it never sends anything
+// itself, it only reads the log written by src/utils/track.js.
 const LOG_KEY = "cortexa_track_log";
-const FLAG_KEY = "cortexa_trackdebug";
+// Legacy key from an earlier build that persisted the flag; cleared on mount so
+// it can never again make the panel appear on normal traffic.
+const LEGACY_FLAG_KEY = "cortexa_trackdebug";
 
 function resolveEnabled() {
   if (typeof window === "undefined") return false;
   try {
     const p = new URLSearchParams(window.location.search);
-    if (p.has("trackdebug")) {
-      const v = p.get("trackdebug");
-      if (v === "0" || v === "off" || v === "false") {
-        localStorage.removeItem(FLAG_KEY);
-        return false;
-      }
-      localStorage.setItem(FLAG_KEY, "1");
-      return true;
-    }
-    return localStorage.getItem(FLAG_KEY) === "1";
+    if (!p.has("trackdebug")) return false;
+    const v = (p.get("trackdebug") || "").toLowerCase();
+    return v !== "0" && v !== "off" && v !== "false";
   } catch (_e) {
     return false;
   }
@@ -73,6 +69,17 @@ export default function TrackDebugPanel() {
       setLog(JSON.parse(sessionStorage.getItem(LOG_KEY) || "[]"));
     } catch (_e) {
       setLog([]);
+    }
+  }, []);
+
+  // Always clear any legacy persisted flag from earlier builds, even when the
+  // panel is disabled, so a browser that once stored it stops showing the panel
+  // on normal traffic after this deploy.
+  useEffect(() => {
+    try {
+      localStorage.removeItem(LEGACY_FLAG_KEY);
+    } catch (_e) {
+      /* no-op */
     }
   }, []);
 
