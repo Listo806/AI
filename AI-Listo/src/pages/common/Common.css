@@ -3477,3 +3477,446 @@
     font-size: 17px;
   }
 }
+/* =========================================================
+   PRICING V3 — approved 4-plan desktop + mobile design
+   ========================================================= */
+.pricing-v3-page {
+  min-height: 100vh;
+  height: auto;
+  background: #ffffff !important;
+  color: #090909;
+  overflow-x: hidden;
+}
+
+.pricing-v3-page .pricing-v3-main {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 30px 46px;
+  background: #ffffff !important;
+}
+
+.pricing-page .cx-pricing-v3 {
+  width: 100%;
+  max-width: 1460px;
+  margin: 0 auto;
+}
+
+.pricing-page .cx-pricing-v3-heading {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.pricing-page .cx-pricing-v3-heading h1 {
+  margin: 0;
+  color: #050505;
+  font-size: clamp(40px, 3.5vw, 62px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+.pricing-page .cx-pricing-v3-billing {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #171717;
+}
+
+.pricing-page .cx-pricing-v3-billing > button:not(.cx-pricing-v3-switch) {
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pricing-page .cx-pricing-v3-billing > button.active {
+  color: #090909;
+  font-weight: 700;
+}
+
+.pricing-page .cx-pricing-v3-switch {
+  width: 58px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  padding: 4px;
+  background: #9b9b9b;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex: 0 0 auto;
+}
+
+.pricing-page .cx-pricing-v3-switch span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.pricing-page .cx-pricing-v3-switch.annual {
+  background: #111111;
+}
+
+.pricing-page .cx-pricing-v3-switch.annual span {
+  transform: translateX(26px);
+}
+
+.pricing-page .cx-pricing-v3-save {
+  color: #0868ff;
+  background: #eaf2ff;
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pricing-page .cx-pricing-v3-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+  width: 100%;
+  overflow: visible;
+}
+
+.pricing-page .cx-pricing-v3-card {
+  min-width: 0;
+  min-height: 590px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  color: #0b0b0b;
+  border: 1px solid #d8dde5;
+  border-radius: 14px;
+  padding: 26px 20px 24px;
+  box-shadow: none;
+}
+
+.pricing-page .cx-pricing-v3-card-business {
+  background: linear-gradient(145deg, #111111 0%, #080909 100%);
+  color: #ffffff;
+  border-color: #111111;
+}
+
+.pricing-page .cx-pricing-v3-card-top {
+  text-align: center;
+  min-height: 270px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pricing-page .cx-pricing-v3-card h2 {
+  margin: 0;
+  color: inherit;
+  font-size: 31px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.pricing-page .cx-pricing-v3-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pricing-page .cx-pricing-v3-popular {
+  padding: 5px 9px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #111111;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pricing-page .cx-pricing-v3-desc {
+  width: 100%;
+  max-width: 245px;
+  min-height: 48px;
+  margin: 7px auto 0;
+  color: #111111;
+  font-size: 15px;
+  line-height: 1.38;
+  font-weight: 500;
+}
+
+.pricing-page .cx-pricing-v3-card-business .cx-pricing-v3-desc {
+  color: #f3f4f6;
+}
+
+.pricing-page .cx-pricing-v3-price {
+  min-height: 74px;
+  margin-top: 22px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 13px;
+}
+
+.pricing-page .cx-pricing-v3-price strong {
+  color: inherit;
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+}
+
+.pricing-page .cx-pricing-v3-price span {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pricing-page .cx-pricing-v3-users {
+  min-height: 24px;
+  margin: -2px 0 8px;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: inherit;
+}
+
+.pricing-page .cx-pricing-v3-cta {
+  width: 100%;
+  min-height: 49px;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #090909;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pricing-page .cx-pricing-v3-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+}
+
+.pricing-page .cx-pricing-v3-cta-black {
+  background: #101010;
+  color: #ffffff;
+  border-color: #101010;
+}
+
+.pricing-page .cx-pricing-v3-cta-business {
+  background: #ffffff;
+  color: #090909;
+  border-color: #ffffff;
+}
+
+.pricing-page .cx-pricing-v3-features {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid #d7dce3;
+}
+
+.pricing-page .cx-pricing-v3-card-business .cx-pricing-v3-features {
+  border-top-color: #45484e;
+}
+
+.pricing-page .cx-pricing-v3-features h3 {
+  margin: 0 0 12px;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 700;
+  text-align: left;
+}
+
+.pricing-page .cx-pricing-v3-card-business .cx-pricing-v3-features h3 {
+  color: #e5e7eb;
+}
+
+.pricing-page .cx-pricing-v3-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.pricing-page .cx-pricing-v3-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.28;
+  font-weight: 500;
+  text-align: left;
+}
+
+.pricing-page .cx-pricing-v3-features li svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+@media (max-width: 1180px) and (min-width: 769px) {
+  .pricing-v3-page .pricing-v3-main {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .pricing-page .cx-pricing-v3-grid {
+    gap: 12px;
+  }
+
+  .pricing-page .cx-pricing-v3-card {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .pricing-page .cx-pricing-v3-card h2 {
+    font-size: 27px;
+  }
+
+  .pricing-page .cx-pricing-v3-price strong {
+    font-size: 44px;
+  }
+
+  .pricing-page .cx-pricing-v3-desc,
+  .pricing-page .cx-pricing-v3-features li {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing-v3-page,
+  .pricing-v3-page .pricing-v3-main {
+    background: #ffffff !important;
+  }
+
+  .pricing-v3-page .pricing-v3-main {
+    margin-top: 0 !important;
+    padding: 28px 16px 42px;
+  }
+
+  .pricing-page .cx-pricing-v3-heading {
+    margin-bottom: 24px;
+  }
+
+  .pricing-page .cx-pricing-v3-heading h1 {
+    font-size: 36px;
+    line-height: 1.08;
+  }
+
+  .pricing-page .cx-pricing-v3-billing {
+    margin-top: 18px;
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+
+  .pricing-page .cx-pricing-v3-billing > button:not(.cx-pricing-v3-switch) {
+    font-size: 14px;
+  }
+
+  .pricing-page .cx-pricing-v3-switch {
+    width: 52px;
+    height: 29px;
+    padding: 4px;
+  }
+
+  .pricing-page .cx-pricing-v3-switch span {
+    width: 21px;
+    height: 21px;
+  }
+
+  .pricing-page .cx-pricing-v3-switch.annual span {
+    transform: translateX(23px);
+  }
+
+  .pricing-page .cx-pricing-v3-save {
+    font-size: 13px;
+  }
+
+  .pricing-page .cx-pricing-v3-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    overflow: visible;
+  }
+
+  .pricing-page .cx-pricing-v3-card {
+    width: 100%;
+    min-height: 0;
+    padding: 25px 20px 24px;
+  }
+
+  .pricing-page .cx-pricing-v3-card-top {
+    min-height: 0;
+  }
+
+  .pricing-page .cx-pricing-v3-card h2 {
+    font-size: 31px;
+  }
+
+  .pricing-page .cx-pricing-v3-desc {
+    min-height: 0;
+    margin-top: 8px;
+    font-size: 15px;
+  }
+
+  .pricing-page .cx-pricing-v3-price {
+    min-height: 0;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  .pricing-page .cx-pricing-v3-price strong {
+    font-size: 50px;
+  }
+
+  .pricing-page .cx-pricing-v3-users {
+    min-height: 0;
+    margin: 0 0 16px;
+  }
+
+  .pricing-page .cx-pricing-v3-cta {
+    margin-top: 10px;
+    min-height: 52px;
+  }
+
+  .pricing-page .cx-pricing-v3-features {
+    margin-top: 20px;
+  }
+
+  .pricing-page .cx-pricing-v3-features li {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 390px) {
+  .pricing-v3-page .pricing-v3-main {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .pricing-page .cx-pricing-v3-heading h1 {
+    font-size: 32px;
+  }
+
+  .pricing-page .cx-pricing-v3-billing {
+    gap: 7px;
+  }
+}

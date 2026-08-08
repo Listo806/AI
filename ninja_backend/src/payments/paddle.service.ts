@@ -392,10 +392,20 @@ export class PaddleService {
   }
 
   /**
-   * One-time setup: create the product and the prices for our billing model —
-   * a one-time $97 setup fee plus a 14-day-trial monthly price per tier. Returns
-   * the ids to store as PADDLE_PRICE_SOLO/TEAM/GROWTH and PADDLE_SETUP_PRICE.
-   * Run once per environment (sandbox, then live). Amounts are in minor units.
+   * One-time admin setup for the NEW pricing model.
+   *
+   * Recurring prices stay exactly on the existing plans:
+   *   solo   -> $197/month
+   *   team   -> $347/month (displayed as Business)
+   *   growth -> $497/month (displayed as Scale)
+   *
+   * Starting prices are separate ONE-TIME prices:
+   *   solo   -> $7
+   *   team   -> $14
+   *   growth -> $21
+   *
+   * Never use a starting-price ID as a recurring subscription price.
+   * Run once per Paddle environment and store the returned env values.
    */
   async setupPlans(): Promise<any> {
     if (!this.isConfigured || !this.paddle) {
@@ -418,28 +428,51 @@ export class PaddleService {
         trialPeriod: { interval: 'day', frequency: 14 },
       });
 
-    const solo: any = await makeMonthly('Solo', '19700');
-    const team: any = await makeMonthly('Team', '34700');
-    const growth: any = await makeMonthly('Growth', '49700');
+    const makeStartingPrice = (label: string, amount: string) =>
+      (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA ${label} one-time starting charge`,
+        unitPrice: { amount, currencyCode: 'USD' },
+      });
 
-    // One-time setup fee: a price with no billing cycle.
-    const setup: any = await (this.paddle as any).prices.create({
-      productId,
-      description: 'CORTEXA one-time setup fee',
-      unitPrice: { amount: '9700', currencyCode: 'USD' },
-    });
+    // Existing recurring subscriptions.
+    const solo: any = await makeMonthly('Solo', '19700');
+    const team: any = await makeMonthly('Business', '34700');
+    const growth: any = await makeMonthly('Scale', '49700');
+
+    // New one-time starting charges.
+    const startSolo: any = await makeStartingPrice('Solo', '700');
+    const startTeam: any = await makeStartingPrice('Business', '1400');
+    const startGrowth: any = await makeStartingPrice('Scale', '2100');
 
     return {
       productId,
-      prices: { solo: solo.id, team: team.id, growth: growth.id },
-      setupPrice: setup.id,
+      recurringPrices: {
+        solo: solo.id,
+        team: team.id,
+        growth: growth.id,
+      },
+      startPrices: {
+        solo: startSolo.id,
+        team: startTeam.id,
+        growth: startGrowth.id,
+      },
       env: {
         PADDLE_PRICE_SOLO: solo.id,
         PADDLE_PRICE_TEAM: team.id,
         PADDLE_PRICE_GROWTH: growth.id,
-        PADDLE_SETUP_PRICE: setup.id,
+
+        PADDLE_START_PRICE_SOLO: startSolo.id,
+        PADDLE_START_PRICE_TEAM: startTeam.id,
+        PADDLE_START_PRICE_GROWTH: startGrowth.id,
       },
-      note: 'Store these ids as env vars, then the checkout config will serve them.',
+      mapping: {
+        solo: '$7 now -> $197/month',
+        team: '$14 now -> $347/month',
+        growth: '$21 now -> $497/month',
+      },
+      note:
+        'Store all six price IDs as env vars. The start price IDs are one-time charges; the regular price IDs remain recurring subscriptions.',
     };
   }
 
@@ -601,20 +634,34 @@ export class PaddleService {
   }
 
   /**
-   * Public config for the frontend Paddle.js checkout: the client-side token,
-   * the environment, and the plan/setup price ids. All come from env — the
-   * client-side token is publishable (it ships in the browser bundle).
+   * Public config for Paddle.js.
+   *
+   * `prices` are the EXISTING recurring subscriptions.
+   * `startPrices` are the NEW one-time starting charges.
+   * The frontend requires both IDs for the selected plan before opening checkout.
    */
   getPublicConfig() {
     return {
       clientToken: this.configService.get('PADDLE_CLIENT_TOKEN') || null,
       environment: this.environment === 'production' ? 'production' : 'sandbox',
+
       prices: {
         solo: this.configService.get('PADDLE_PRICE_SOLO') || null,
         team: this.configService.get('PADDLE_PRICE_TEAM') || null,
         growth: this.configService.get('PADDLE_PRICE_GROWTH') || null,
       },
-      setupPrice: this.configService.get('PADDLE_SETUP_PRICE') || null,
+
+      startPrices: {
+        solo: this.configService.get('PADDLE_START_PRICE_SOLO') || null,
+        team: this.configService.get('PADDLE_START_PRICE_TEAM') || null,
+        growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
+      },
+
+      mapping: {
+        solo: { startingCharge: 7, recurringMonthly: 197 },
+        team: { startingCharge: 14, recurringMonthly: 347 },
+        growth: { startingCharge: 21, recurringMonthly: 497 },
+      },
     };
   }
 

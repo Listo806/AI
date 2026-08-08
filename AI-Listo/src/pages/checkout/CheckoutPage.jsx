@@ -13,25 +13,21 @@ import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
 import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
-import {
-  setupOfferActive,
-  clearSetupOffer,
-  SETUP_PRICE_7,
-  OFFER_SETUP_FEE,
-} from "../../utils/offer";
+import { clearSetupOffer } from "../../utils/offer";
 import "./CheckoutPage.css";
 
-// Checkout with PayPal subscriptions. The customer pays a one-time $97 setup fee
-// today, then gets a 14-day free trial, then the monthly plan price. The PayPal
-// plan (created in PayPal) carries the setup fee + trial + monthly billing; the
-// front end just renders the subscribe button for the selected tier.
+// IMPORTANT BILLING MAPPING:
+// The amounts below are the public "to start" charges. They are NOT monthly plans.
+// Each starting charge stays connected to the existing recurring subscription:
+// solo   -> $7 now  -> $197/month
+// team   -> $14 now -> $347/month (displayed as Business)
+// growth -> $21 now -> $497/month (displayed as Scale)
 const API_BASE = "https://backend.cortexaaicrm.com";
-const SETUP_FEE = 97;
 
 const PLAN_DATA = {
-  solo: { price: 197, users: 1 },
-  team: { price: 347, users: 3, popular: true },
-  growth: { price: 497, users: 5 },
+  solo: { price: 197, startPrice: 7, users: 1 },
+  team: { price: 347, startPrice: 14, users: 3, popular: true },
+  growth: { price: 497, startPrice: 21, users: 5 },
 };
 
 const t = {
@@ -39,17 +35,17 @@ const t = {
     title: "Review your plan",
     subtitle: "You're one step away from starting your subscription.",
     selectedPlan: "Your selected plan",
-    planNames: { solo: "Solo Plan", team: "Team Plan", growth: "Growth Plan" },
+    planNames: { solo: "Solo Plan", team: "Business Plan", growth: "Scale Plan" },
     userCount: { one: "1 user", many: "{count} users" },
     mostPopular: "Most Popular",
     month: "/month",
     afterTrial: "Applies after your free trial",
     monthlyAfterTrial: "Monthly price after your free trial",
-    setupFee: "One-time setup fee (due today)",
+    setupFee: "Starting charge (due today)",
     dueToday: "Due today",
     checkoutTitle: "Secure checkout",
     checkoutDesc:
-      "You pay the one-time $97 setup fee today. Your 14-day free trial starts now, and your monthly plan begins after the trial. Cancel anytime.",
+      "You pay the starting charge today. Your 14-day free trial starts now, and your monthly plan begins after the trial. Cancel anytime.",
     informationTitle: "Your information",
     informationDesc: "This is the account we created for your subscription.",
     fullName: "Full name",
@@ -72,17 +68,17 @@ const t = {
     title: "Revisa tu plan",
     subtitle: "Estás a un paso de comenzar tu suscripción.",
     selectedPlan: "Tu plan seleccionado",
-    planNames: { solo: "Plan Solo", team: "Plan Team", growth: "Plan Growth" },
+    planNames: { solo: "Plan Solo", team: "Plan Business", growth: "Plan Scale" },
     userCount: { one: "1 usuario", many: "{count} usuarios" },
     mostPopular: "Más Popular",
     month: "/mes",
     afterTrial: "Se aplica después de tu prueba gratuita",
     monthlyAfterTrial: "Precio mensual después de tu prueba gratuita",
-    setupFee: "Tarifa única de configuración (a pagar hoy)",
+    setupFee: "Cargo inicial (a pagar hoy)",
     dueToday: "A pagar hoy",
     checkoutTitle: "Pago seguro",
     checkoutDesc:
-      "Hoy pagas la tarifa única de configuración de $97. Tu prueba gratuita de 14 días comienza ahora y tu plan mensual empieza después de la prueba. Cancela cuando quieras.",
+      "Hoy pagas el cargo inicial. Tu prueba gratuita de 14 días comienza ahora y tu plan mensual empieza después de la prueba. Cancela cuando quieras.",
     informationTitle: "Tu información",
     informationDesc: "Esta es la cuenta que creamos para tu suscripción.",
     fullName: "Nombre completo",
@@ -105,17 +101,17 @@ const t = {
     title: "Revise seu plano",
     subtitle: "Você está a um passo de começar sua assinatura.",
     selectedPlan: "Seu plano selecionado",
-    planNames: { solo: "Plano Solo", team: "Plano Team", growth: "Plano Growth" },
+    planNames: { solo: "Plano Solo", team: "Plano Business", growth: "Plano Scale" },
     userCount: { one: "1 usuário", many: "{count} usuários" },
     mostPopular: "Mais Popular",
     month: "/mês",
     afterTrial: "Aplica-se após seu teste gratuito",
     monthlyAfterTrial: "Preço mensal após seu teste gratuito",
-    setupFee: "Taxa única de configuração (a pagar hoje)",
+    setupFee: "Cobrança inicial (a pagar hoje)",
     dueToday: "A pagar hoje",
     checkoutTitle: "Pagamento seguro",
     checkoutDesc:
-      "Hoje você paga a taxa única de configuração de $97. Seu teste gratuito de 14 dias começa agora e seu plano mensal começa após o teste. Cancele quando quiser.",
+      "Hoje você paga a cobrança inicial. Seu teste gratuito de 14 dias começa agora e seu plano mensal começa após o teste. Cancele quando quiser.",
     informationTitle: "Suas informações",
     informationDesc: "Esta é a conta que criamos para sua assinatura.",
     fullName: "Nome completo",
@@ -214,12 +210,12 @@ export default function CheckoutPage() {
   const [paddleConfig, setPaddleConfig] = useState(null);
   const paddleInitRef = useRef(false);
 
-  // Paddle is the active path when it has a client token + a price for this plan.
-  // Exit-intent $7 offer: when the visitor claimed it AND Paddle is active AND a
-  // $7 price is configured, the setup fee for this checkout becomes $7, not $97.
+  // Paddle is usable only when BOTH price IDs for this offer exist:
+  // 1) the plan-specific starting charge ($7/$14/$21)
+  // 2) the existing recurring subscription ($197/$347/$497)
+  // This prevents accidentally creating a $7/$14/$21 monthly subscription.
   const usePaddle = paddleReady(paddleConfig, selectedPlan);
-  const offerActive = usePaddle && setupOfferActive();
-  const setupFee = offerActive ? OFFER_SETUP_FEE : SETUP_FEE;
+  const setupFee = plan.startPrice;
 
   useEffect(() => {
     acceptedTermsRef.current = acceptedTerms;
@@ -269,7 +265,7 @@ export default function CheckoutPage() {
           trackPurchase({
             value: data.value ?? setupFee,
             currency: data.currency ?? "USD",
-            offer: data.offer ?? (offerActive ? "$7" : "$97"),
+            offer: data.offer ?? `$${setupFee}`,
             plan: data.plan ?? selectedPlan,
             transactionId: data.transactionId ?? paddleTxnId,
           });
@@ -285,7 +281,7 @@ export default function CheckoutPage() {
   const finishAndLogin = async (userId) => {
     localStorage.setItem("trialPlan", selectedPlan);
     localStorage.removeItem("password");
-    // The exit-intent $7 offer is consumed once the purchase completes.
+    // Clear any legacy exit-offer flag so it cannot affect a later checkout.
     clearSetupOffer();
     // Payment just completed. Record it so the dashboard paywall gate lets them
     // straight in while the Paddle webhook catches up and flips payment_status to
@@ -342,13 +338,13 @@ export default function CheckoutPage() {
           }
         });
       }
-      trackEvent("paypal_checkout_started", { plan: selectedPlan });
+      trackEvent("paddle_checkout_started", { plan: selectedPlan, startingCharge: setupFee });
       openPaddleCheckout({
         config: paddleConfig,
         plan: selectedPlan,
         userId,
         email: customer.email,
-        setupPriceId: offerActive ? SETUP_PRICE_7 : undefined,
+        startingCharge: setupFee,
       });
     } catch (error) {
       console.error("PADDLE CHECKOUT ERROR:", error);
@@ -394,7 +390,7 @@ export default function CheckoutPage() {
               return actions.reject();
             }
             // Funnel: validation passed, the PayPal checkout is opening.
-            trackEvent("paypal_checkout_started", { plan: selectedPlan });
+            trackEvent("paddle_checkout_started", { plan: selectedPlan, startingCharge: setupFee });
             return actions.resolve();
           },
           createSubscription: (data, actions) =>
@@ -431,7 +427,7 @@ export default function CheckoutPage() {
               trackPurchase({
                 value: setupFee,
                 currency: "USD",
-                offer: offerActive ? "$7" : "$97",
+                offer: `$${setupFee}`,
                 plan: selectedPlan,
                 transactionId: data.subscriptionID,
               });
@@ -584,7 +580,7 @@ export default function CheckoutPage() {
                 </div>
                 <div>
                   <h2>{tr.checkoutTitle}</h2>
-                  <p>{tr.checkoutDesc.replace("$97", `$${setupFee}`)}</p>
+                  <p>{tr.checkoutDesc}</p>
                 </div>
               </div>
 
@@ -636,19 +632,11 @@ export default function CheckoutPage() {
                   </>
                 ) : (
                   <>
-                    <div
-                      ref={paypalContainerRef}
-                      className="checkout-paypal-buttons"
-                    />
-                    {sdkStatus === "loading" && (
-                      <p className="checkout-paypal-status">{tr.sdkLoading}</p>
-                    )}
-                    {sdkStatus === "error" && (
-                      <p className="checkout-paypal-error">{tr.sdkError}</p>
-                    )}
-                    {processing && (
-                      <p className="checkout-paypal-status">{tr.processing}</p>
-                    )}
+                    <p className="checkout-paypal-error">
+                      Pricing is not configured yet for this offer. The starting-price
+                      ID and recurring-price ID must both be configured before checkout
+                      can open.
+                    </p>
                     {errorMsg && (
                       <p className="checkout-paypal-error">{errorMsg}</p>
                     )}

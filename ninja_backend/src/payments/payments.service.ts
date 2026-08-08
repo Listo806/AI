@@ -216,9 +216,9 @@ export class PaymentsService {
   }> {
     const result = {
       fire: false,
-      value: 97,
+      value: 0,
       currency: 'USD',
-      offer: '$97',
+      offer: '',
       plan: null as string | null,
       transactionId: null as string | null,
     };
@@ -226,10 +226,9 @@ export class PaymentsService {
     await this.ensurePurchaseFlagColumn();
     // Only the first call for an active, not-yet-reported user flips the flag
     // and returns a row; every later call (including a page refresh) gets none.
-    // Return the attribution needed for an accurate Purchase conversion: the
-    // offer they used (which determines the real amount: $7 exit offer vs the
-    // standard $97 activation), the plan, and the Paddle subscription id as a
-    // stable transaction id for Google Ads deduplication.
+    // Return the attribution needed for an accurate Purchase conversion.
+    // The starting charge is derived from the underlying plan so $7/$14/$21
+    // never become recurring subscription values.
     const { rows } = await this.db.query(
       `UPDATE users
           SET purchase_conversion_reported = true,
@@ -237,17 +236,29 @@ export class PaymentsService {
         WHERE id = $1
           AND payment_status IN ('active', 'paid')
           AND purchase_conversion_reported = false
-        RETURNING id, offer_used, COALESCE(selected_plan, plan) AS plan,
+        RETURNING id, COALESCE(selected_plan, plan) AS plan,
                   paddle_subscription_id`,
       [userId],
     );
     if (rows.length > 0) {
       const r = rows[0];
-      const isExit7 = String(r.offer_used || '') === 'exit7';
+      const normalizedPlan = String(r.plan || '').toLowerCase();
+
+      // The authoritative starting charge is derived from the selected underlying
+      // subscription plan. This keeps attribution aligned with the new offers:
+      // solo -> $7, team/Business -> $14, growth/Scale -> $21.
+      const startingChargeByPlan: Record<string, number> = {
+        solo: 7,
+        team: 14,
+        growth: 21,
+      };
+
+      const startingCharge = startingChargeByPlan[normalizedPlan] || 0;
+
       result.fire = true;
-      result.value = isExit7 ? 7 : 97;
-      result.offer = isExit7 ? '$7' : '$97';
-      result.plan = r.plan || null;
+      result.value = startingCharge;
+      result.offer = startingCharge ? `$${startingCharge}` : '';
+      result.plan = normalizedPlan || null;
       result.transactionId = r.paddle_subscription_id || userId;
     }
     return result;

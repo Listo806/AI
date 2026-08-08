@@ -36,14 +36,6 @@ import {
   LockKeyhole,
 } from "lucide-react";
 
-import headlogo from "../../assets/cortexa/headlogo.png";
-import footlogo from "../../assets/cortexa/p-flogo.png";
-import headlogoM from "../../assets/cortexa/headlogotran.png";
-import social1 from "../../assets/cortexa/social1.png";
-import social2 from "../../assets/cortexa/social2.png";
-import social3 from "../../assets/cortexa/social3.png";
-import social4 from "../../assets/cortexa/social4.png";
-
 const t = {
   en: {
     nav: {
@@ -314,7 +306,6 @@ const t = {
         badge: "NEW",
       },
     ],
-
   },
   es: {
     nav: {
@@ -600,7 +591,6 @@ const t = {
         badge: "NUEVO",
       },
     ],
-
   },
   pt: {
     nav: {
@@ -885,7 +875,255 @@ const t = {
         badge: "NOVO",
       },
     ],
+  },
+};
 
+const pricingV3 = {
+  en: {
+    title: "Transparent pricing for every team.",
+    monthly: "Billed monthly",
+    annually: "Billed annually",
+    save: "Save 20%",
+    popular: "Popular",
+    toStart: "to start",
+    forever: "forever",
+    keyFeatures: "KEY FEATURES:",
+    everythingFree: "EVERYTHING IN FREE, PLUS:",
+    everythingSolo: "EVERYTHING IN SOLO, PLUS:",
+    everythingBusiness: "EVERYTHING IN BUSINESS, PLUS:",
+    ctaFree: "Get Started",
+    ctaTrial: "Start Free Trial",
+    plans: {
+      free: {
+        name: "Free",
+        desc: "Perfect to explore Cortexa and get started.",
+        price: "$0",
+        users: "",
+        features: [
+          "AI Agent (Limited)",
+          "Basic AI Chat",
+          "Basic Dashboard",
+          "Limited AI Conversations (50/mo)",
+          "Basic Automation (5 workflows)",
+          "Contact Management (Limited)",
+          "Integration (1 App)",
+          "Email Support",
+        ],
+      },
+      solo: {
+        name: "Solo",
+        desc: "Perfect for solo entrepreneurs and getting started.",
+        price: "$7",
+        users: "",
+        features: [
+          "Full CRM & Contact Management",
+          "Lead & Pipeline Management",
+          "Unlimited Basic Automations",
+          "Email & SMS Marketing",
+          "Calendar & Appointments",
+          "Basic Reports & Dashboards",
+          "Integrations (Core)",
+          "Unlimited AI Usage",
+          "Priority Email Support",
+        ],
+      },
+      business: {
+        name: "Business",
+        desc: "For growing businesses that need more power.",
+        price: "$14",
+        users: "3 users",
+        features: [
+          "Advanced Automations",
+          "Team Workspace",
+          "Advanced Reports & Analytics",
+          "Workflows & Sequences",
+          "Custom Fields & Pipelines",
+          "Integrations (Zapier, Make, etc.)",
+          "Unlimited AI Usage",
+          "Priority Support",
+        ],
+      },
+      scale: {
+        name: "Scale",
+        desc: "For teams that want to scale without limits.",
+        price: "$21",
+        users: "5 users",
+        features: [
+          "Team Workspace (Unlimited Users)",
+          "Advanced Permissions & Roles",
+          "Custom Objects & Fields",
+          "White Label (Your Brand)",
+          "Unlimited AI Usage",
+          "Priority Phone Support",
+          "Dedicated Account Manager",
+          "SLA & Uptime Guarantee",
+        ],
+      },
+    },
+  },
+  es: {
+    title: "Precios transparentes para cada equipo.",
+    monthly: "Facturado mensualmente",
+    annually: "Facturado anualmente",
+    save: "Ahorra 20%",
+    popular: "Popular",
+    toStart: "para comenzar",
+    forever: "para siempre",
+    keyFeatures: "CARACTERÍSTICAS CLAVE:",
+    everythingFree: "TODO LO DE FREE, MÁS:",
+    everythingSolo: "TODO LO DE SOLO, MÁS:",
+    everythingBusiness: "TODO LO DE BUSINESS, MÁS:",
+    ctaFree: "Comenzar",
+    ctaTrial: "Iniciar prueba gratis",
+    plans: {
+      free: {
+        name: "Free",
+        desc: "Perfecto para explorar Cortexa y comenzar.",
+        price: "$0",
+        users: "",
+        features: [
+          "Agente de IA (Limitado)",
+          "Chat básico con IA",
+          "Panel básico",
+          "Conversaciones de IA limitadas (50/mes)",
+          "Automatización básica (5 flujos)",
+          "Gestión de contactos (Limitada)",
+          "Integración (1 App)",
+          "Soporte por email",
+        ],
+      },
+      solo: {
+        name: "Solo",
+        desc: "Perfecto para emprendedores individuales que están comenzando.",
+        price: "$7",
+        users: "",
+        features: [
+          "CRM completo y gestión de contactos",
+          "Gestión de leads y pipeline",
+          "Automatizaciones básicas ilimitadas",
+          "Marketing por email y SMS",
+          "Calendario y citas",
+          "Informes y paneles básicos",
+          "Integraciones (Core)",
+          "Uso ilimitado de IA",
+          "Soporte prioritario por email",
+        ],
+      },
+      business: {
+        name: "Business",
+        desc: "Para empresas en crecimiento que necesitan más potencia.",
+        price: "$14",
+        users: "3 usuarios",
+        features: [
+          "Automatizaciones avanzadas",
+          "Espacio de equipo",
+          "Informes y analítica avanzados",
+          "Flujos y secuencias",
+          "Campos y pipelines personalizados",
+          "Integraciones (Zapier, Make, etc.)",
+          "Uso ilimitado de IA",
+          "Soporte prioritario",
+        ],
+      },
+      scale: {
+        name: "Scale",
+        desc: "Para equipos que quieren escalar sin límites.",
+        price: "$21",
+        users: "5 usuarios",
+        features: [
+          "Espacio de equipo (Usuarios ilimitados)",
+          "Permisos y roles avanzados",
+          "Objetos y campos personalizados",
+          "Marca blanca (Tu marca)",
+          "Uso ilimitado de IA",
+          "Soporte telefónico prioritario",
+          "Gerente de cuenta dedicado",
+          "Garantía de SLA y disponibilidad",
+        ],
+      },
+    },
+  },
+  pt: {
+    title: "Preços transparentes para todas as equipes.",
+    monthly: "Cobrado mensalmente",
+    annually: "Cobrado anualmente",
+    save: "Economize 20%",
+    popular: "Popular",
+    toStart: "para começar",
+    forever: "para sempre",
+    keyFeatures: "PRINCIPAIS RECURSOS:",
+    everythingFree: "TUDO DO FREE, MAIS:",
+    everythingSolo: "TUDO DO SOLO, MAIS:",
+    everythingBusiness: "TUDO DO BUSINESS, MAIS:",
+    ctaFree: "Começar",
+    ctaTrial: "Iniciar teste grátis",
+    plans: {
+      free: {
+        name: "Free",
+        desc: "Perfeito para explorar a Cortexa e começar.",
+        price: "$0",
+        users: "",
+        features: [
+          "Agente de IA (Limitado)",
+          "Chat básico com IA",
+          "Dashboard básico",
+          "Conversas de IA limitadas (50/mês)",
+          "Automação básica (5 fluxos)",
+          "Gestão de contatos (Limitada)",
+          "Integração (1 App)",
+          "Suporte por e-mail",
+        ],
+      },
+      solo: {
+        name: "Solo",
+        desc: "Perfeito para empreendedores individuais que estão começando.",
+        price: "$7",
+        users: "",
+        features: [
+          "CRM completo e gestão de contatos",
+          "Gestão de leads e pipeline",
+          "Automações básicas ilimitadas",
+          "Marketing por e-mail e SMS",
+          "Calendário e agendamentos",
+          "Relatórios e dashboards básicos",
+          "Integrações (Core)",
+          "Uso ilimitado de IA",
+          "Suporte prioritário por e-mail",
+        ],
+      },
+      business: {
+        name: "Business",
+        desc: "Para empresas em crescimento que precisam de mais potência.",
+        price: "$14",
+        users: "3 usuários",
+        features: [
+          "Automações avançadas",
+          "Workspace de equipe",
+          "Relatórios e análises avançadas",
+          "Fluxos e sequências",
+          "Campos e pipelines personalizados",
+          "Integrações (Zapier, Make, etc.)",
+          "Uso ilimitado de IA",
+          "Suporte prioritário",
+        ],
+      },
+      scale: {
+        name: "Scale",
+        desc: "Para equipes que querem escalar sem limites.",
+        price: "$21",
+        users: "5 usuários",
+        features: [
+          "Workspace de equipe (Usuários ilimitados)",
+          "Permissões e funções avançadas",
+          "Objetos e campos personalizados",
+          "White Label (Sua marca)",
+          "Uso ilimitado de IA",
+          "Suporte telefônico prioritário",
+          "Gerente de conta dedicado",
+          "Garantia de SLA e disponibilidade",
+        ],
+      },
+    },
   },
 };
 
@@ -893,244 +1131,206 @@ export default function PricingPage() {
   const [lang, setLang] = useState(() => {
     return localStorage.getItem("cortexa_lang") || "en";
   });
+
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState("monthly");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 1024);
     };
+
     window.addEventListener("resize", handleResize);
+
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-  const switchLocale = useLocaleSwitch();
-  const handleLangChange = (newLang) => {
-    setLang(newLang);
-    setLangOpen(false);
-    switchLocale(newLang);
-  };
 
-  const tr = t[lang];
+  const pv3 = pricingV3[lang] || pricingV3.en;
 
-  const renderNewLineText = (text) => {
-    return text.split("\n").map((str, index) => (
-      <React.Fragment key={index}>
-        {str}
-        {index < text.split("\n").length - 1 && <br />}
-      </React.Fragment>
-    ));
-  };
   return (
-    <div className="pricing-page">
-      <main className="main-content">
-        <section className="cx-pricing cx-center">
-          <div className="cx-pricing-header">
-            <h2 className="cx-pricing-title">
-              {tr.pricingMainTitlePre}
-              <span className="cx-pricing-title-blue">
-                {tr.pricingMainTitlePost}
-              </span>
-            </h2>
-            <p className="cx-pricing-subtitle">
-              <span>
-                <span className="text-ai">AI</span> {tr.pricingSubText}
-              </span>
-              <span>
-                <span className="text-ai">AI</span> {tr.pricingSubText1}
-              </span>
-              <span>
-                <span className="text-ai">AI</span> {tr.pricingSubText2}
-              </span>
-            </p>
+    <div className="pricing-page pricing-v3-page">
+      <main className="main-content pricing-v3-main">
+        <section className="cx-pricing-v3" aria-labelledby="pricing-v3-title">
+          <div className="cx-pricing-v3-heading">
+            <h1 id="pricing-v3-title">{pv3.title}</h1>
+
+            <div
+              className="cx-pricing-v3-billing"
+              aria-label="Billing frequency"
+            >
+              <button
+                type="button"
+                className={billingCycle === "monthly" ? "active" : ""}
+                onClick={() => setBillingCycle("monthly")}
+              >
+                {pv3.monthly}
+              </button>
+
+              <button
+                type="button"
+                className={`cx-pricing-v3-switch ${billingCycle === "annually" ? "annual" : ""}`}
+                onClick={() =>
+                  setBillingCycle((current) =>
+                    current === "monthly" ? "annually" : "monthly",
+                  )
+                }
+                aria-label={`${pv3.monthly} / ${pv3.annually}`}
+                aria-pressed={billingCycle === "annually"}
+              >
+                <span />
+              </button>
+
+              <button
+                type="button"
+                className={billingCycle === "annually" ? "active" : ""}
+                onClick={() => setBillingCycle("annually")}
+              >
+                {pv3.annually}
+              </button>
+
+              <span className="cx-pricing-v3-save">{pv3.save}</span>
+            </div>
+          </div>
+
+          <div className="cx-pricing-v3-grid">
+            <article className="cx-pricing-v3-card">
+              <div className="cx-pricing-v3-card-top">
+                <h2>{pv3.plans.free.name}</h2>
+                <p className="cx-pricing-v3-desc">{pv3.plans.free.desc}</p>
+                <div className="cx-pricing-v3-price">
+                  <strong>{pv3.plans.free.price}</strong>
+                  <span>{pv3.forever}</span>
+                </div>
+                <Link
+                  to="/sign-up"
+                  className="cx-pricing-v3-cta cx-pricing-v3-cta-black"
+                  onClick={() =>
+                    trackEvent("choose_plan_click", { plan: "free" })
+                  }
+                >
+                  {pv3.ctaFree}
+                </Link>
+              </div>
+              <div className="cx-pricing-v3-features">
+                <h3>{pv3.keyFeatures}</h3>
+                <ul>
+                  {pv3.plans.free.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={18} strokeWidth={2.5} />{" "}
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+
+            <article className="cx-pricing-v3-card">
+              <div className="cx-pricing-v3-card-top">
+                <h2>{pv3.plans.solo.name}</h2>
+                <p className="cx-pricing-v3-desc">{pv3.plans.solo.desc}</p>
+                <div className="cx-pricing-v3-price">
+                  <strong>{pv3.plans.solo.price}</strong>
+                  <span>{pv3.toStart}</span>
+                </div>
+                <Link
+                  to="/trial?plan=solo"
+                  className="cx-pricing-v3-cta"
+                  onClick={() =>
+                    trackEvent("choose_plan_click", { plan: "solo" })
+                  }
+                >
+                  {pv3.ctaTrial}
+                </Link>
+              </div>
+              <div className="cx-pricing-v3-features">
+                <h3>{pv3.everythingFree}</h3>
+                <ul>
+                  {pv3.plans.solo.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={18} strokeWidth={2.5} />{" "}
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+
+            <article className="cx-pricing-v3-card cx-pricing-v3-card-business">
+              <div className="cx-pricing-v3-card-top">
+                <div className="cx-pricing-v3-name-row">
+                  <h2>{pv3.plans.business.name}</h2>
+                  <span className="cx-pricing-v3-popular">{pv3.popular}</span>
+                </div>
+                <p className="cx-pricing-v3-desc">{pv3.plans.business.desc}</p>
+                <div className="cx-pricing-v3-price">
+                  <strong>{pv3.plans.business.price}</strong>
+                  <span>{pv3.toStart}</span>
+                </div>
+                <div className="cx-pricing-v3-users">
+                  {pv3.plans.business.users}
+                </div>
+                <Link
+                  to="/trial?plan=team"
+                  className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
+                  onClick={() =>
+                    trackEvent("choose_plan_click", { plan: "business" })
+                  }
+                >
+                  {pv3.ctaTrial}
+                </Link>
+              </div>
+              <div className="cx-pricing-v3-features">
+                <h3>{pv3.everythingSolo}</h3>
+                <ul>
+                  {pv3.plans.business.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={18} strokeWidth={2.5} />{" "}
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+
+            <article className="cx-pricing-v3-card">
+              <div className="cx-pricing-v3-card-top">
+                <h2>{pv3.plans.scale.name}</h2>
+                <p className="cx-pricing-v3-desc">{pv3.plans.scale.desc}</p>
+                <div className="cx-pricing-v3-price">
+                  <strong>{pv3.plans.scale.price}</strong>
+                  <span>{pv3.toStart}</span>
+                </div>
+                <div className="cx-pricing-v3-users">
+                  {pv3.plans.scale.users}
+                </div>
+                <Link
+                  to="/trial?plan=growth"
+                  className="cx-pricing-v3-cta"
+                  onClick={() =>
+                    trackEvent("choose_plan_click", { plan: "scale" })
+                  }
+                >
+                  {pv3.ctaTrial}
+                </Link>
+              </div>
+              <div className="cx-pricing-v3-features">
+                <h3>{pv3.everythingBusiness}</h3>
+                <ul>
+                  {pv3.plans.scale.features.map((feature) => (
+                    <li key={feature}>
+                      <Check size={18} strokeWidth={2.5} />{" "}
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
           </div>
         </section>
-
-        <div className="cx-plans-container">
-          <div className="cx-plans-grid">
-            <div className="cx-plans-card">
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <User size={32} strokeWidth={1.8} />
-                </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.solo.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.solo.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.solo.users}</div>
-              <Link
-                to="/trial?plan=solo"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "solo" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.solo.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="cx-plans-card cx-plans-popular">
-              <div className="cx-plans-badge">{tr.plansBadgePopular}</div>
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <Users size={32} strokeWidth={1.8} />
-                </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.team.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.team.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.team.users}</div>
-              <Link
-                to="/trial?plan=team"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "team" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.team.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="cx-plans-card">
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <BarChart3 size={32} strokeWidth={1.8} />
-                </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.growth.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.growth.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.growth.users}</div>
-              <Link
-                to="/trial?plan=growth"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "growth" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.growth.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          
-          <div className="cx-plans-footer-grid">
-            <div className="cx-plans-footer-card">
-              <div className="cx-plans-footer-icon-box">
-                <LockKeyhole size={42} strokeWidth={2} />
-              </div>
-              <div className="cx-plans-footer-info">
-                <h4 className="cx-plans-footer-title">
-                  {tr.plansFooter.setup.title}
-                </h4>
-                <p className="cx-plans-footer-desc">
-                  {tr.plansFooter.setup.desc}
-                </p>
-              </div>
-            </div>
-
-            <div className="cx-plans-footer-card">
-              <div className="cx-plans-footer-icon-box">
-                <ShieldCheck size={42} strokeWidth={2} />
-              </div>
-              <div className="cx-plans-footer-info">
-                <div className="cx-plans-footer-value">
-                  {tr.plansFooter.user.value}
-                </div>
-                <h4 className="cx-plans-footer-title">
-                  {tr.plansFooter.user.title}
-                </h4>
-                <p className="cx-plans-footer-desc">
-                  {tr.plansFooter.user.desc}
-                </p>
-              </div>
-            </div>
-
-            <div className="cx-plans-footer-card">
-              <div className="cx-plans-footer-icon-box">
-                <UserPlus size={42} strokeWidth={2} />
-              </div>
-              <div className="cx-plans-footer-info">
-                <h4 className=" cx-plans-footer-title-large">
-                  {tr.plansFooter.contract.title}
-                </h4>
-                <p className="cx-plans-footer-desc">
-                  {tr.plansFooter.contract.desc}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </main>
     </div>
   );
