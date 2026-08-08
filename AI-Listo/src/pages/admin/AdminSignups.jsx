@@ -111,7 +111,26 @@ function DetailPanel({ id, onClose }) {
                   ["Offer", u.offer_used],
                   ["Checkout status", u.checkout_status],
                   ["Payment status", u.payment_status],
-                  ["Plan", u.selected_plan || u.plan],
+                  ["Plan", u.plan_label || u.selected_plan || u.plan],
+                  ["Billing", u.billing],
+                  [
+                    "Intro amount",
+                    u.intro_amount != null ? `$${u.intro_amount}` : null,
+                  ],
+                  [
+                    "Recurring",
+                    u.recurring_amount != null ? `$${u.recurring_amount}` : null,
+                  ],
+                  ["Plan status", u.plan_status],
+                  [
+                    "Seats",
+                    u.seat_count != null
+                      ? `${u.seat_count}${u.seats_limit ? " / " + u.seats_limit : ""}`
+                      : null,
+                  ],
+                  ["Paddle customer", u.paddle_customer_id],
+                  ["Paddle subscription", u.paddle_subscription_id],
+                  ["Upgraded", u.upgraded_at ? fmtDate(u.upgraded_at) : null],
                   ["Landing page", u.landing_page],
                   ["UTM source", u.utm_source],
                   ["UTM medium", u.utm_medium],
@@ -610,6 +629,7 @@ export default function AdminSignups({ customersOnly = false }) {
             <tr style={{ textAlign: "left", color: "#64748b" }}>
               <th style={{ padding: "8px 10px" }}>Email</th>
               <th style={{ padding: "8px 10px" }}>Name</th>
+              <th style={{ padding: "8px 10px" }}>Plan</th>
               <th style={{ padding: "8px 10px" }}>Lang</th>
               <th style={{ padding: "8px 10px" }}>Offer</th>
               <th style={{ padding: "8px 10px" }}>Checkout</th>
@@ -621,14 +641,14 @@ export default function AdminSignups({ customersOnly = false }) {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={8} style={{ padding: 16, color: "#64748b" }}>
+                <td colSpan={9} style={{ padding: 16, color: "#64748b" }}>
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ padding: 16, color: "#64748b" }}>
+                <td colSpan={9} style={{ padding: 16, color: "#64748b" }}>
                   No records.
                 </td>
               </tr>
@@ -642,6 +662,10 @@ export default function AdminSignups({ customersOnly = false }) {
                 >
                   <td style={{ padding: "8px 10px" }}>{r.email}</td>
                   <td style={{ padding: "8px 10px" }}>{r.name || "—"}</td>
+                  <td style={{ padding: "8px 10px" }}>
+                    {r.plan_label || "—"}
+                    {r.billing && r.billing !== "free" ? ` · ${r.billing}` : ""}
+                  </td>
                   <td style={{ padding: "8px 10px" }}>{r.language}</td>
                   <td style={{ padding: "8px 10px" }}>{r.offer_used || "—"}</td>
                   <td style={{ padding: "8px 10px" }}>

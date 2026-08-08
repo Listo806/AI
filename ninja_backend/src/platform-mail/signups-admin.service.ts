@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from './platform-mailer.service';
+import { getPlan, normalizePlanId } from '../plans/plan-config';
 
 // Admin data for the Sign-ups and Customers sections. Sign-ups = everyone who
 // submitted the registration form (a plain team owner). Customers = the subset
@@ -15,8 +16,40 @@ export class SignupsAdminService {
   private readonly cols = `
     id, email, name, phone, COALESCE(preferred_language, 'en') AS language,
     offer_used, checkout_status, payment_status, plan, selected_plan,
+    billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     utm_source, utm_medium, utm_campaign, utm_term, utm_content, gclid,
-    landing_page, abandoned_stage, welcome_email_sent_at, created_at, registered_at`;
+    landing_page, abandoned_stage, welcome_email_sent_at, created_at,
+    registered_at, upgraded_at, team_id,
+    (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count`;
+
+  // Add the derived plan view (normalized tier + intro/recurring amounts + the
+  // effective billing cycle) from the plan catalog, so the admin shows the same
+  // pricing the customer sees regardless of how the legacy plan string is stored.
+  private enrich(row: any) {
+    if (!row) return row;
+    const planId = normalizePlanId(row.selected_plan || row.plan);
+    const cfg = getPlan(planId);
+    const cycle =
+      row.billing_cycle === 'annual'
+        ? 'annual'
+        : row.billing_cycle === 'monthly'
+          ? 'monthly'
+          : null;
+    const recurringCents = cfg.isFree
+      ? 0
+      : cycle === 'annual'
+        ? cfg.pricing.annualCents
+        : cfg.pricing.monthlyCents;
+    return {
+      ...row,
+      plan_id: planId,
+      plan_label: cfg.label,
+      billing: cfg.isFree ? 'free' : cycle || 'monthly',
+      intro_amount: cfg.pricing.introCents / 100,
+      recurring_amount: recurringCents / 100,
+      seats_limit: cfg.seats,
+    };
+  }
 
   // Build the WHERE clause + params for a sign-ups/customers query with optional
   // search (q), payment-status filter, and offer filter.
@@ -90,7 +123,12 @@ export class SignupsAdminService {
       `SELECT COUNT(*)::int AS n FROM users WHERE ${where}`,
       params,
     );
-    return { data: rows, total: cnt[0]?.n ?? 0, limit: lim, offset: off };
+    return {
+      data: rows.map((r) => this.enrich(r)),
+      total: cnt[0]?.n ?? 0,
+      limit: lim,
+      offset: off,
+    };
   }
 
   // All matching rows (no pagination) for CSV export.
@@ -109,7 +147,7 @@ export class SignupsAdminService {
       `SELECT ${this.cols} FROM users WHERE ${where} ORDER BY created_at DESC LIMIT 5000`,
       params,
     );
-    return rows;
+    return rows.map((r) => this.enrich(r));
   }
 
   // Funnel totals for the admin: how many people signed up vs how many paid,
@@ -196,6 +234,6 @@ export class SignupsAdminService {
         LIMIT 50`,
       [id],
     );
-    return { user: rows[0] || null, emails };
+    return { user: this.enrich(rows[0]) || null, emails };
   }
 }
