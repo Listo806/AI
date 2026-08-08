@@ -166,7 +166,9 @@ export default function StartTrial() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(() => {
     const planParam = new URLSearchParams(window.location.search).get("plan");
-    const plan = ["solo", "team", "growth"].includes(planParam)
+    const plan = ["free", "solo", "business", "scale", "team", "growth"].includes(
+      planParam,
+    )
       ? planParam
       : "team";
 
@@ -210,9 +212,16 @@ export default function StartTrial() {
       // before checkout: language, landing page, UTM, Google Click ID, and which
       // offer the visitor came through ($7 exit offer vs standard).
       const attribution = getAttribution();
+      const billingParam = new URLSearchParams(window.location.search).get(
+        "billing",
+      );
+      const billingCycle = ["monthly", "annual"].includes(billingParam)
+        ? billingParam
+        : undefined;
       const payload = {
         ...form,
         language: lang,
+        billingCycle,
         landingPage: attribution.landingPage || null,
         utm: attribution.utm || {},
         gclid: attribution.gclid || null,
@@ -245,9 +254,21 @@ export default function StartTrial() {
         setUser(data.user);
       }
 
-      trackEvent("sign_up_completed", { plan: form.plan });
+      trackEvent("sign_up_completed", {
+        plan: form.plan,
+        billing_cycle: form.plan === "free" ? "free" : billingCycle || "monthly",
+      });
       trackSignupConversion();
-      navigate(`/checkout?plan=${encodeURIComponent(form.plan)}&source=trial`);
+      // Free accounts are active immediately and go straight into the CRM; paid
+      // plans continue to checkout carrying the plan + billing cycle.
+      if (form.plan === "free") {
+        navigate("/dashboard", { replace: true });
+      } else {
+        const bq = billingCycle ? `&billing=${billingCycle}` : "";
+        navigate(
+          `/checkout?plan=${encodeURIComponent(form.plan)}${bq}&source=trial`,
+        );
+      }
     } catch (error) {
       console.error("SUBMIT ERROR:", error);
       alert(error.message || tr.errors.server);

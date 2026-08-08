@@ -80,7 +80,8 @@ export class PaymentGuard implements CanActivate {
       // owner_id is selected so we can distinguish "owner found & unpaid" (block)
       // from "no owner resolvable" (fail-open allow).
       const { rows } = await this.db.query(
-        `SELECT owner.payment_status AS status, owner.id AS owner_id
+        `SELECT owner.payment_status AS status, owner.id AS owner_id,
+                owner.selected_plan AS selected_plan, owner.plan AS plan
            FROM users u
            LEFT JOIN teams t ON t.id = u.team_id
            LEFT JOIN users owner ON owner.id = t.owner_id
@@ -106,6 +107,18 @@ export class PaymentGuard implements CanActivate {
           `[PaymentGuard] No workspace owner resolvable for user id=${user.id} ` +
             `(teamId=${user.teamId ?? 'null'}); allowing (fail-open).`,
         );
+        return true;
+      }
+
+      // Free tier: the workspace is explicitly on the Free plan, which has CRM
+      // access without any payment. Match the stored plan string exactly (not the
+      // normalize-to-free fallback) so a legacy row with a null plan is never
+      // mistaken for a paid-but-unpaid account and let in.
+      const ownerPlan = (row.selected_plan ?? row.plan ?? '')
+        .toString()
+        .trim()
+        .toLowerCase();
+      if (ownerPlan === 'free') {
         return true;
       }
 

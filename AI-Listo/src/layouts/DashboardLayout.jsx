@@ -90,6 +90,8 @@ export default function DashboardLayout() {
     const status = String(user.paymentStatus || "").toLowerCase();
     const paid = status === "active" || status === "paid";
     if (paid) return;
+    // Free tier has CRM access without paying, so never bounce a Free owner.
+    if (String(user.selectedPlan || "").toLowerCase() === "free") return;
     if (user.role !== "owner" || !user.selectedPlan || !status) return;
     const paidAt = Number(localStorage.getItem("cortexa_paid_at") || 0);
     if (paidAt && Date.now() - paidAt < 30 * 60 * 1000) return;

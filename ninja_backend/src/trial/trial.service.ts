@@ -32,6 +32,8 @@ export class TrialService {
       `checkout_status VARCHAR(24) DEFAULT 'registered'`,
       `abandoned_stage SMALLINT NOT NULL DEFAULT 0`,
       `welcome_email_sent_at TIMESTAMPTZ`,
+      `billing_cycle VARCHAR(10)`,
+      `plan_status VARCHAR(24) DEFAULT 'active'`,
     ];
     for (const c of cols) {
       await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -108,6 +110,19 @@ export class TrialService {
       const utm = dto.utm || {};
       const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
 
+      // Free tier: the account is created active and enters the CRM immediately,
+      // with no checkout. Paid tiers stay 'trial' until they complete payment.
+      const isFree = String(dto.plan || '').trim().toLowerCase() === 'free';
+      const billingCycle = ['monthly', 'annual'].includes(
+        String(dto.billingCycle),
+      )
+        ? dto.billingCycle
+        : isFree
+          ? null
+          : 'monthly';
+      const paymentStatus = isFree ? 'free' : 'trial';
+      const checkoutStatus = isFree ? 'free' : 'registered';
+
       const { rows } = await this.db.query(
         `
         INSERT INTO users
@@ -121,6 +136,8 @@ export class TrialService {
           selected_plan,
           is_active,
           payment_status,
+          billing_cycle,
+          checkout_status,
           team_id,
           preferred_language,
           landing_page,
@@ -131,15 +148,14 @@ export class TrialService {
           utm_content,
           gclid,
           offer_used,
-          checkout_status,
           registered_at,
           created_at,
           updated_at
         )
         VALUES
         (
-          $1, $2, $3, $4, $5, 'TRIAL', $6, true, 'trial', $7,
-          $8, $9, $10, $11, $12, $13, $14, $15, $16, 'registered', NOW(),
+          $1, $2, $3, $4, $5, 'TRIAL', $6, true, $7, $8,
+          $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(),
           NOW(), NOW()
         )
         RETURNING id
@@ -151,6 +167,9 @@ export class TrialService {
           phone || null,
           'owner',
           dto.plan || null,
+          paymentStatus,
+          billingCycle,
+          checkoutStatus,
           teamId,
           lang,
           dto.landingPage || null,
@@ -183,13 +202,16 @@ export class TrialService {
         [teamId, newUserId],
       );
 
-      // Queue the abandoned-signup email sequence for this new (unpaid) account.
-      // Best-effort: sending is gated by ABANDONED_SIGNUP_EMAILS_ENABLED and the
-      // queue is canceled the moment they pay.
-      try {
-        await this.mailer.scheduleAbandonedSequence(newUserId, email, lang);
-      } catch (_e) {
-        /* non-fatal */
+      // Queue the abandoned-signup email sequence for a new PAID-tier signup that
+      // has not checked out yet. Free accounts are already active and did not
+      // abandon a checkout, so they are not enrolled. Best-effort: sending is
+      // gated by ABANDONED_SIGNUP_EMAILS_ENABLED and canceled the moment they pay.
+      if (!isFree) {
+        try {
+          await this.mailer.scheduleAbandonedSequence(newUserId, email, lang);
+        } catch (_e) {
+          /* non-fatal */
+        }
       }
 
       const session = await this.authService.loginById(newUserId);
