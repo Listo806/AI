@@ -3276,7 +3276,95 @@ body .cx-reporting-footer .fdes{
   font-size: 14px;
   line-height: 1.4;
 }
+/* =========================================================
+   MOBILE HERO - NEW CTA BUTTONS
+   Only affects CTA buttons inside .m-hero
+========================================================= */
 
+.mobile-landing .m-hero .m-hero-actions {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Shared CTA */
+.mobile-landing .m-hero .m-hero-cta {
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 18px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none !important;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* FIRST CTA
+   Start Your Free Trial
+*/
+.mobile-landing .m-hero .m-hero-cta-trial {
+  background: #000;
+  color: #fff !important;
+  border: 1.5px solid #fff;
+}
+
+.mobile-landing .m-hero .m-hero-cta-trial:hover,
+.mobile-landing .m-hero .m-hero-cta-trial:focus,
+.mobile-landing .m-hero .m-hero-cta-trial:active {
+  background: #000;
+  color: #fff !important;
+  border-color: #fff;
+  text-decoration: none !important;
+}
+
+/* SECOND CTA
+   Sign Up? — Get Free Access!
+*/
+.mobile-landing .m-hero .m-hero-cta-free {
+  background: #fff;
+  color: #000 !important;
+  border: 1.5px solid #000;
+}
+
+.mobile-landing .m-hero .m-hero-cta-free:hover,
+.mobile-landing .m-hero .m-hero-cta-free:focus,
+.mobile-landing .m-hero .m-hero-cta-free:active {
+  background: #fff;
+  color: #000 !important;
+  border-color: #000;
+  text-decoration: none !important;
+}
+
+/* No decorative elements/icons */
+.mobile-landing .m-hero .m-hero-cta::before,
+.mobile-landing .m-hero .m-hero-cta::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Smaller phones */
+@media (max-width: 380px) {
+  .mobile-landing .m-hero .m-hero-cta {
+    min-height: 56px;
+    padding: 11px 12px;
+    font-size: 18px;
+  }
+}
 @media (max-width: 390px) {
   .m-everything-included {
     padding-left: 14px !important;

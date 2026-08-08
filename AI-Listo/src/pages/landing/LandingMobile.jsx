@@ -679,6 +679,7 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTS GROWING",
       ctaButtonText: "Start Your Free Trial",
       underCTA: "One-time setup fee: $97",
+      heroFreeAccess: "Sign Up? — Get Free Access!",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -1081,6 +1082,7 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTES CRECIENDO",
       ctaButtonText: "Comienza Tu Prueba Gratis",
       underCTA: "Tarifa única de configuración: $97",
+      heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -1494,6 +1496,7 @@ export default function LandingMobile() {
       ctaStat3Label: "AGENTES CRESCENDO",
       ctaButtonText: "Comece Seu Teste Grátis",
       underCTA: "Taxa única de configuração: $97",
+      heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
@@ -1957,19 +1960,14 @@ export default function LandingMobile() {
 
         <p className="m-description">{tr.heroDesc}</p>
         <div className="m-hero-actions">
-          <a href="/trial" className="m-primary-btn">
-            <Zap size={18} />
-            <div className="trial-wrap">
-              <span>{tr.ctaButtonText}</span>
-              <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
-            </div>
-            <ArrowRight size={18} />
+          <a href="/trial" className="m-hero-cta m-hero-cta-trial">
+            {tr.ctaButtonText}
           </a>
-          <p className="m-under-cta">{tr.underCTA}</p>
-          {/*<button className="m-secondary-btn">
-            <Play size={18} />
-            {tr.watchDemo}
-          </button>*/}
+
+          <a href="/sign-up" className="m-hero-cta m-hero-cta-free">
+            {tr.heroFreeAccess}
+          </a>
+
           <div className="hero-checks">
             {[tr.heroCheck6, tr.heroCheck7, tr.heroCheck8, tr.heroCheck9].map(
               (item, index) => (

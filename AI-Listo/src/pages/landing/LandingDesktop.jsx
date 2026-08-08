@@ -102,7 +102,6 @@ import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
 import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
 
-
 import smart1Img from "../../assets/cortexa/smart1.png";
 import smart2Img from "../../assets/cortexa/smart2.png";
 import smart3Img from "../../assets/cortexa/smart3.png";
@@ -519,6 +518,7 @@ export default function Landing() {
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
       heroCTA: "Start Your Free Trial",
+      heroFreeAccess: "Sign Up — Get Free Access***",
       heroUnlock: "Unlock potential today!",
       underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
@@ -1069,6 +1069,7 @@ export default function Landing() {
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
       heroCTA: "Comienza Tu Prueba Gratis",
+      heroFreeAccess: "Regístrate — Obtén acceso gratis***",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
@@ -1077,7 +1078,8 @@ export default function Landing() {
       heroTag4: "Inteligencia de pipeline que cierra ventas",
       heroTag5: "Integración de WhatsApp incorporada",
       heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
-      heroHead: "Diseñado para ayudar a las empresas a automatizar, operar y aumentar sus ingresos",
+      heroHead:
+        "Diseñado para ayudar a las empresas a automatizar, operar y aumentar sus ingresos",
 
       smartBadge: "DEL LEAD A LOS INGRESOS — AUTOMÁTICAMENTE",
 
@@ -1620,6 +1622,7 @@ export default function Landing() {
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
       heroCTA: "Comece Seu Teste Grátis",
+      heroFreeAccess: "Cadastre-se — Obtenha acesso grátis***",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
@@ -1628,7 +1631,8 @@ export default function Landing() {
       heroTag4: "Inteligência de pipeline que fecha negócios",
       heroTag5: "Integração nativa com WhatsApp",
       heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",
-      heroHead: "Desenvolvido para ajudar empresas a automatizar, operar e aumentar a receita",
+      heroHead:
+        "Desenvolvido para ajudar empresas a automatizar, operar e aumentar a receita",
 
       smartBadge: "DO LEAD À RECEITA — AUTOMATICAMENTE",
 
@@ -1918,7 +1922,7 @@ export default function Landing() {
             <a className="nav-menu" href="/pricing">
               {tr.pricing}
             </a>
-             <a className="nav-menu" href="/editorial/the-end-of-legacy-crm">
+            <a className="nav-menu" href="/editorial/the-end-of-legacy-crm">
               Cost Calculator
             </a>
           </nav>
@@ -2005,26 +2009,27 @@ export default function Landing() {
                 <span className="hero-head">{tr.heroHead}</span>
               </div>
               <h1 className="hero-title">
-                {tr.heroTitleLine1} <span className="text-os">{tr.heroTitleLine2}</span> {tr.heroTitleLine3}
+                {tr.heroTitleLine1}{" "}
+                <span className="text-os">{tr.heroTitleLine2}</span>{" "}
+                {tr.heroTitleLine3}
                 <br />
-                {tr.heroTitleLine31} <br/>
-                {tr.heroTitleLine4} <br/>
-                {tr.heroTitleLine5} <br/>
+                {tr.heroTitleLine31} <br />
+                {tr.heroTitleLine4} <br />
+                {tr.heroTitleLine5} <br />
                 <span> {tr.heroTitleLine6}</span>
               </h1>
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>
               </div>
               <div className="hero-inline">
-                <a href="/trial" className="hero-btn">
-                  <Zap size={21} />
+                <a href="/trial" className="hero-btn hero-btn-trial">
                   {tr.heroCTA}
                 </a>
-                <p className="next-btn">
-                  <LockKeyhole size={16} /> {tr.heroUnlock}
-                </p>
+
+                <a href="/sign-up" className="hero-btn hero-btn-free">
+                  {tr.heroFreeAccess}
+                </a>
               </div>
-              <p className="underCTA">{tr.underCTA}</p>
               <div className="hero-checks ul">
                 {[
                   tr.heroCheck6,
@@ -2239,7 +2244,8 @@ export default function Landing() {
         <div className="aios-container">
           <div className="aios-header">
             <h2>
-              <span>{tr.aiosBadgeTitle} </span>{tr.aiosBadgeHighlight}
+              <span>{tr.aiosBadgeTitle} </span>
+              {tr.aiosBadgeHighlight}
             </h2>
 
             <p>{tr.aiosSubtitle}</p>
@@ -2971,7 +2977,9 @@ export default function Landing() {
                     <a href="/pricing">{tr.pricing}</a>
                   </li>
                   <li>
-                    <a href="/editorial/the-end-of-legacy-crm">Cost Calculator</a>
+                    <a href="/editorial/the-end-of-legacy-crm">
+                      Cost Calculator
+                    </a>
                   </li>
                 </ul>
               </div>

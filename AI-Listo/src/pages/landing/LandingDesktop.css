@@ -4153,6 +4153,83 @@ section#footer {
   margin-bottom: 130px;
 }
 
+#cortexa-ai-crm-landing .hero-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  flex-wrap: nowrap;
+}
+
+/* Shared button */
+#cortexa-ai-crm-landing .hero-inline .hero-btn {
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none !important;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-trial {
+  background: #000;
+  color: #fff !important;
+  border: 1.5px solid #000;
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-trial:hover {
+  background: #151515;
+  border-color: #151515;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-free {
+  background: #fff;
+  color: #000 !important;
+  border: 1.5px solid #000;
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-free:hover {
+  background: #f7f7f7;
+  color: #000 !important;
+  border-color: #000;
+  transform: translateY(-1px);
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn::before,
+#cortexa-ai-crm-landing .hero-inline .hero-btn::after {
+  display: none;
+  content: none;
+}
+
+@media (max-width: 767px) {
+  #cortexa-ai-crm-landing .hero-inline {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-top: 16px;
+  }
+
+  #cortexa-ai-crm-landing .hero-inline .hero-btn {
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    font-size: 14px;
+    text-align: center;
+  }
+}
 @media (min-width: 1024px) {
   .cta-left {
     max-width: 520px;
