@@ -4,6 +4,7 @@ import "./Common.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import { trackEvent } from "../../utils/track";
+import { orderedPlans, formatUsd } from "../../config/plans";
 import {
   Menu,
   X,
@@ -43,6 +44,14 @@ import social1 from "../../assets/cortexa/social1.png";
 import social2 from "../../assets/cortexa/social2.png";
 import social3 from "../../assets/cortexa/social3.png";
 import social4 from "../../assets/cortexa/social4.png";
+
+// Icon per plan id for the pricing cards.
+const PLAN_ICONS = {
+  free: CircleDollarSign,
+  solo: User,
+  business: Users,
+  scale: BarChart3,
+};
 
 const t = {
   en: {
@@ -157,6 +166,73 @@ const t = {
           "Email & SMS Campaigns",
           "24/7 Support",
         ],
+      },
+    },
+    plansV2: {
+      monthly: "Billed Monthly",
+      annual: "Billed Annually",
+      save: "Save 20%",
+      toStart: "to start",
+      then: "then",
+      perMonth: "/month",
+      perYear: "/year",
+      forever: "forever",
+      getStarted: "Get Started",
+      startTrial: "Start Free Trial",
+      popular: "MOST POPULAR",
+      plans: {
+        free: {
+          users: "1 user",
+          desc: "Get started at no cost. No credit card required.",
+          features: [
+            "Basic AI Chat & Agent",
+            "50 AI conversations / month",
+            "Basic CRM & Contacts",
+            "Basic Leads & Pipeline",
+            "5 automation workflows",
+            "1 integration",
+            "Email support",
+          ],
+        },
+        solo: {
+          users: "1 user",
+          desc: "Perfect for solo entrepreneurs.",
+          features: [
+            "Everything in Free, plus",
+            "Full CRM & Contact Management",
+            "Unlimited AI usage",
+            "Email & SMS marketing",
+            "Calendar & Appointments",
+            "Core integrations",
+            "Priority email support",
+          ],
+        },
+        business: {
+          users: "3 users",
+          desc: "For growing businesses.",
+          features: [
+            "Everything in Solo, plus",
+            "Team workspace (3 users)",
+            "Advanced automations & workflows",
+            "Advanced reports & analytics",
+            "Custom fields & pipelines",
+            "Zapier, Make & more",
+            "Priority support",
+          ],
+        },
+        scale: {
+          users: "5 users",
+          desc: "For teams that want to scale without limits.",
+          features: [
+            "Everything in Business, plus",
+            "Team workspace (5 users)",
+            "Advanced permissions & roles",
+            "Custom objects & fields",
+            "White label / your brand",
+            "Dedicated account manager",
+            "Priority phone support & SLA",
+          ],
+        },
       },
     },
     plansFooter: {
@@ -433,6 +509,73 @@ const t = {
           "Campañas de Email y SMS",
           "Soporte 24/7",
         ],
+      },
+    },
+    plansV2: {
+      monthly: "Facturación mensual",
+      annual: "Facturación anual",
+      save: "Ahorra 20%",
+      toStart: "para empezar",
+      then: "luego",
+      perMonth: "/mes",
+      perYear: "/año",
+      forever: "para siempre",
+      getStarted: "Comenzar gratis",
+      startTrial: "Iniciar prueba gratis",
+      popular: "MÁS POPULAR",
+      plans: {
+        free: {
+          users: "1 usuario",
+          desc: "Empieza sin costo. No se requiere tarjeta.",
+          features: [
+            "Chat y agente de IA básico",
+            "50 conversaciones de IA / mes",
+            "CRM y contactos básicos",
+            "Prospectos y pipeline básicos",
+            "5 flujos de automatización",
+            "1 integración",
+            "Soporte por email",
+          ],
+        },
+        solo: {
+          users: "1 usuario",
+          desc: "Perfecto para emprendedores individuales.",
+          features: [
+            "Todo lo de Free, más",
+            "CRM y gestión de contactos completos",
+            "Uso ilimitado de IA",
+            "Marketing por email y SMS",
+            "Calendario y citas",
+            "Integraciones principales",
+            "Soporte prioritario por email",
+          ],
+        },
+        business: {
+          users: "3 usuarios",
+          desc: "Para negocios en crecimiento.",
+          features: [
+            "Todo lo de Solo, más",
+            "Espacio de equipo (3 usuarios)",
+            "Automatizaciones y flujos avanzados",
+            "Informes y analítica avanzados",
+            "Campos y pipelines personalizados",
+            "Zapier, Make y más",
+            "Soporte prioritario",
+          ],
+        },
+        scale: {
+          users: "5 usuarios",
+          desc: "Para equipos que quieren escalar sin límites.",
+          features: [
+            "Todo lo de Business, más",
+            "Espacio de equipo (5 usuarios)",
+            "Permisos y roles avanzados",
+            "Objetos y campos personalizados",
+            "Marca blanca / tu marca",
+            "Gerente de cuenta dedicado",
+            "Soporte telefónico prioritario y SLA",
+          ],
+        },
       },
     },
     plansFooter: {
@@ -723,6 +866,73 @@ const t = {
         ],
       },
     },
+    plansV2: {
+      monthly: "Cobrança mensal",
+      annual: "Cobrança anual",
+      save: "Economize 20%",
+      toStart: "para começar",
+      then: "depois",
+      perMonth: "/mês",
+      perYear: "/ano",
+      forever: "para sempre",
+      getStarted: "Começar grátis",
+      startTrial: "Iniciar teste grátis",
+      popular: "MAIS POPULAR",
+      plans: {
+        free: {
+          users: "1 usuário",
+          desc: "Comece sem custo. Não precisa de cartão.",
+          features: [
+            "Chat e agente de IA básico",
+            "50 conversas de IA / mês",
+            "CRM e contatos básicos",
+            "Leads e pipeline básicos",
+            "5 fluxos de automação",
+            "1 integração",
+            "Suporte por email",
+          ],
+        },
+        solo: {
+          users: "1 usuário",
+          desc: "Perfeito para empreendedores individuais.",
+          features: [
+            "Tudo do Free, mais",
+            "CRM e gestão de contatos completos",
+            "Uso ilimitado de IA",
+            "Marketing por email e SMS",
+            "Calendário e agendamentos",
+            "Integrações principais",
+            "Suporte prioritário por email",
+          ],
+        },
+        business: {
+          users: "3 usuários",
+          desc: "Para negócios em crescimento.",
+          features: [
+            "Tudo do Solo, mais",
+            "Espaço de equipe (3 usuários)",
+            "Automações e fluxos avançados",
+            "Relatórios e análises avançados",
+            "Campos e pipelines personalizados",
+            "Zapier, Make e mais",
+            "Suporte prioritário",
+          ],
+        },
+        scale: {
+          users: "5 usuários",
+          desc: "Para equipes que querem escalar sem limites.",
+          features: [
+            "Tudo do Business, mais",
+            "Espaço de equipe (5 usuários)",
+            "Permissões e papéis avançados",
+            "Objetos e campos personalizados",
+            "Marca branca / sua marca",
+            "Gerente de conta dedicado",
+            "Suporte telefônico prioritário e SLA",
+          ],
+        },
+      },
+    },
     plansFooter: {
       setup: {
         title: "Sem contratos de longo prazo",
@@ -896,6 +1106,7 @@ export default function PricingPage() {
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+  const [billing, setBilling] = useState("monthly"); // "monthly" | "annual"
 
   useEffect(() => {
     const handleResize = () => {
@@ -949,139 +1160,114 @@ export default function PricingPage() {
         </section>
 
         <div className="cx-plans-container">
-          <div className="cx-plans-grid">
-            <div className="cx-plans-card">
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <User size={32} strokeWidth={1.8} />
+          <div className="cx-plans-billing-toggle">
+            <button
+              type="button"
+              className={`cx-plans-billing-btn${
+                billing === "monthly" ? " active" : ""
+              }`}
+              onClick={() => setBilling("monthly")}
+            >
+              {tr.plansV2.monthly}
+            </button>
+            <button
+              type="button"
+              className={`cx-plans-billing-btn${
+                billing === "annual" ? " active" : ""
+              }`}
+              onClick={() => setBilling("annual")}
+            >
+              {tr.plansV2.annual} · {tr.plansV2.save}
+            </button>
+          </div>
+          <div className="cx-plans-grid cx-plans-grid-4">
+            {orderedPlans().map((plan) => {
+              const meta = tr.plansV2.plans[plan.id];
+              const Icon = PLAN_ICONS[plan.id] || User;
+              const recurring =
+                billing === "annual"
+                  ? plan.pricing.annual
+                  : plan.pricing.monthly;
+              return (
+                <div
+                  key={plan.id}
+                  className={`cx-plans-card${
+                    plan.popular ? " cx-plans-popular" : ""
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="cx-plans-badge">{tr.plansV2.popular}</div>
+                  )}
+                  <div className="cx-plans-card-header">
+                    <div className="cx-plans-icon-box">
+                      <Icon size={32} strokeWidth={1.8} />
+                    </div>
+                    <div className="cx-plans-meta">
+                      <h3 className="cx-plans-name">{plan.label}</h3>
+                    </div>
+                  </div>
+                  <div className="cx-plans-price-block">
+                    <span className="cx-plans-amount">
+                      {plan.isFree ? "$0" : formatUsd(plan.pricing.intro)}
+                    </span>
+                    <span className="cx-plans-period">
+                      {plan.isFree ? tr.plansV2.forever : tr.plansV2.toStart}
+                    </span>
+                  </div>
+                  <div className="cx-plans-recurring">
+                    {plan.isFree
+                      ? " "
+                      : `${tr.plansV2.then} ${formatUsd(recurring)}${
+                          billing === "annual"
+                            ? tr.plansV2.perYear
+                            : tr.plansV2.perMonth
+                        }`}
+                  </div>
+                  <div className="cx-plans-users">{meta.users}</div>
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      opacity: 0.7,
+                      textAlign: "center",
+                      margin: "2px 0 8px",
+                    }}
+                  >
+                    {meta.desc}
+                  </p>
+                  <Link
+                    to={
+                      plan.isFree
+                        ? "/trial?plan=free"
+                        : `/trial?plan=${plan.id}&billing=${billing}`
+                    }
+                    className="cx-plans-btn"
+                    onClick={() =>
+                      trackEvent("plan_selected", {
+                        plan: plan.id,
+                        billing_cycle: plan.isFree ? "free" : billing,
+                      })
+                    }
+                  >
+                    {plan.isFree ? (
+                      tr.plansV2.getStarted
+                    ) : (
+                      <>
+                        <Zap size={14} fill="currentColor" />{" "}
+                        {tr.plansV2.startTrial}
+                      </>
+                    )}
+                  </Link>
+                  <ul className="cx-plans-features">
+                    {meta.features.map((feat, i) => (
+                      <li key={i} className="cx-plans-feature-item">
+                        <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
+                        {feat}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.solo.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.solo.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.solo.users}</div>
-              <Link
-                to="/trial?plan=solo"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "solo" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.solo.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="cx-plans-card cx-plans-popular">
-              <div className="cx-plans-badge">{tr.plansBadgePopular}</div>
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <Users size={32} strokeWidth={1.8} />
-                </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.team.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.team.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.team.users}</div>
-              <Link
-                to="/trial?plan=team"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "team" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.team.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="cx-plans-card">
-              <div className="cx-plans-card-header">
-                <div className="cx-plans-icon-box">
-                  <BarChart3 size={32} strokeWidth={1.8} />
-                </div>
-                <div className="cx-plans-meta">
-                  <h3 className="cx-plans-name">{tr.plansData.growth.name}</h3>
-                </div>
-              </div>
-              <div className="cx-plans-price-block">
-                <span className="cx-plans-amount">
-                  {tr.plansData.growth.price}
-                </span>
-                <span className="cx-plans-period">{tr.plansPerMonth}</span>
-              </div>
-              <div className="cx-plans-users">{tr.plansData.growth.users}</div>
-              <Link
-                to="/trial?plan=growth"
-                className="cx-plans-btn"
-                onClick={() => trackEvent("choose_plan_click", { plan: "growth" })}
-              >
-                <Zap size={14} fill="currentColor" /> {tr.plansBtnTrial}
-              </Link>
-              <p
-                style={{
-                  marginTop: "4px",
-                  marginBottom: "4px",
-                  fontSize: "12px",
-                  opacity: 0.7,
-                  textAlign: "center",
-                }}
-              >
-                {tr.plansFeeNote}
-              </p>
-              <ul className="cx-plans-features">
-                {tr.plansData.growth.features.map((feat, i) => (
-                  <li key={i} className="cx-plans-feature-item">
-                    <CheckCircle className="cx-check-icon-purple" size={18} />{" "}
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              );
+            })}
           </div>
           
           <div className="cx-plans-footer-grid">

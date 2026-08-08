@@ -1890,6 +1890,54 @@
   align-items: stretch;
 }
 
+/* Four-tier pricing (Free / Solo / Business / Scale) + monthly-annual toggle */
+.pricing-page .cx-plans-container {
+  max-width: 1240px;
+}
+.pricing-page .cx-plans-grid.cx-plans-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.pricing-page .cx-plans-billing-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.pricing-page .cx-plans-billing-btn {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #6b7280;
+  padding: 9px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pricing-page .cx-plans-billing-btn.active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+.pricing-page .cx-plans-recurring {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  min-height: 18px;
+  margin-bottom: 4px;
+}
+@media (max-width: 1100px) {
+  .pricing-page .cx-plans-grid.cx-plans-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .pricing-page .cx-plans-grid.cx-plans-grid-4 {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
 .pricing-page .cx-plans-card {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
