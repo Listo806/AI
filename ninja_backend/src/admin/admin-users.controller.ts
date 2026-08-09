@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiQuery, ApiBody, ApiR
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { AdminUsersService } from './admin-users.service';
 import { CreateAdminUserDto } from './dto/create-admin-user.dto';
@@ -75,12 +76,25 @@ export class AdminUsersController {
   }
 
   @Delete('users/:id')
-  @ApiOperation({ summary: 'Delete user (soft: deactivate)' })
+  @ApiOperation({ summary: 'Deactivate user (soft: keep account/data, block access)' })
   @ApiParam({ name: 'id' })
   @ApiResponse({ status: 200 })
   @ApiResponse({ status: 404 })
   async remove(@Param('id') id: string) {
     const data = await this.adminUsers.remove(id);
+    return { data };
+  }
+
+  @Delete('users/:id/permanent')
+  @ApiOperation({
+    summary: 'Permanently delete user (hard delete; blocked if owns a shared workspace)',
+  })
+  @ApiParam({ name: 'id' })
+  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 404 })
+  @ApiResponse({ status: 400, description: 'Owns a workspace with other active members (transfer ownership first)' })
+  async removePermanent(@Param('id') id: string, @CurrentUser() user: any) {
+    const data = await this.adminUsers.hardRemove(id, user?.id);
     return { data };
   }
 }
