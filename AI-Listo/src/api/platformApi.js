@@ -14,6 +14,13 @@ export async function selectAccountPlan({ plan, billingCycle } = {}) {
   });
 }
 
+// Current team's plan limits and usage against them. Returns
+// { plan, planLabel, isFree, limits, usage }. Paid plans report null limits
+// (unlimited). Used by the usage indicators and upgrade nudges.
+export async function getPlanUsage() {
+  return apiClient.request(`/plans/usage`);
+}
+
 // ============================================================================
 // PLATFORM LISTINGS (Agent/Owner/User - submit without CRM)
 // ============================================================================

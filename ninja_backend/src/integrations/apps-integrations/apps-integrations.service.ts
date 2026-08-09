@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 
 import { DatabaseService } from "../../database/database.service";
+import { UsageService } from "../../plans/usage.service";
 
 import { installAppsIntegrationsTable } from "./apps-integrations.install";
 
@@ -12,6 +13,7 @@ import { installAppsIntegrationsTable } from "./apps-integrations.install";
 export class AppsIntegrationsService implements OnModuleInit {
   constructor(
     private readonly db: DatabaseService,
+    private readonly usage: UsageService,
   ) {}
 
   async onModuleInit() {
@@ -179,6 +181,10 @@ export class AppsIntegrationsService implements OnModuleInit {
     key: string,
     body: any,
   ) {
+    // Free plan is capped at 1 connected integration. Paid plans are unlimited;
+    // re-connecting an already-connected integration is always allowed.
+    await this.usage.assertCanConnectIntegration(teamId, key);
+
     const { rows } = await this.db.query(
       `
       UPDATE integrations
