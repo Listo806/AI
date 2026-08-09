@@ -520,7 +520,6 @@ export default function Landing() {
       heroCTA: "Start Your Free Trial",
       heroFreeAccess: "Sign Up? — Get Free Access!",
       heroUnlock: "Unlock potential today!",
-      underCTA: "One-time setup fee: $97",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
       heroTag3: "Smart Nurturing That Converts",
@@ -1071,7 +1070,6 @@ export default function Landing() {
       heroCTA: "Comienza Tu Prueba Gratis",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
-      underCTA: "Tarifa única de configuración: $97",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
       heroTag3: "Nutrición inteligente que convierte",
@@ -1624,7 +1622,6 @@ export default function Landing() {
       heroCTA: "Comece Seu Teste Grátis",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
       heroUnlock: "Desbloqueie seu potencial hoje!",
-      underCTA: "Taxa única de configuração: $97",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
       heroTag3: "Nutrição inteligente que converte",
@@ -2705,7 +2702,7 @@ export default function Landing() {
               {tr.heroCTA}
             </a>
           </div>
-          <p className="underCTA">{tr.underCTA}</p>
+          
           <div className="roi-grid">
             <div className="roi-item">
               <p className="roi-desc">{tr.roiStat1Desc}</p>
@@ -2734,7 +2731,7 @@ export default function Landing() {
                   {tr.stripBtn}
                 </a>
               </div>
-              <p className="underCTA">{tr.underCTA}</p>
+              
               <div className="cta-benefits">
                 <div>
                   ⚡ <span>{tr.stripBenefit1}</span>
@@ -2906,7 +2903,7 @@ export default function Landing() {
             <Zap size={22} />
             {tr.heroCTA}
           </a>
-          <p className="underCTA">{tr.underCTA}</p>
+          
           <i>
             Product demo — the names, numbers, and activity shown are sample
             data for illustration only, not real customer results.
@@ -2938,7 +2935,7 @@ export default function Landing() {
                   <Zap size={18} />
                   {tr.startYourFreeTrial}
                 </a>
-                <p className="underCTA">{tr.underCTA}</p>
+                
                 <div className="footer-tags">
                   <span>{tr.tagAiPowered}</span>
                   <span>{tr.tagSecure}</span>

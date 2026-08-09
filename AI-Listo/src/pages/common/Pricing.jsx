@@ -89,7 +89,6 @@ const t = {
 
     plansBadgePopular: "MOST POPULAR",
     plansBtnTrial: "Choose plan",
-    plansFeeNote: "One-time setup fee: $97",
     plansPerMonth: "/month",
     plansData: {
       solo: {
@@ -364,7 +363,6 @@ const t = {
 
     plansBadgePopular: "MÁS POPULAR",
     plansBtnTrial: "Elige un plan",
-    plansFeeNote: "Tarifa única de configuración: $97",
     plansPerMonth: "/mes",
     plansData: {
       solo: {
@@ -651,7 +649,6 @@ const t = {
 
     plansBadgePopular: "MAIS POPULAR",
     plansBtnTrial: "Escolha um plano",
-    plansFeeNote: "Taxa única de configuração: $97",
     plansPerMonth: "/mês",
     plansData: {
       solo: {

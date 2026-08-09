@@ -516,7 +516,7 @@ export default function EditorialFunnel() {
                 </span>
                 <p>
                   Cortexa begins with a simple{" "}
-                  <strong>$97 one-time setup fee</strong>, giving businesses a
+                  , giving businesses a
                   transparent starting point without turning onboarding into a
                   large implementation project.
                 </p>

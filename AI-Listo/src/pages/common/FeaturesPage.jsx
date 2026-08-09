@@ -38,7 +38,7 @@ const t = {
     autoSection: { marker: "Operations", title: "Smart Workflows, Zero Redundant Work", desc: "CORTEXA automates repetitive work so agents can focus on closing deals.", bullets: ["Automated lead routing based on zip codes, value, or round-robin rules.", "Automated follow-up reminders so hot opportunities never turn cold.", "Instant pipeline stage updates when a client takes an action.", "Team assignment workflows to balance workloads effortlessly.", "Multi-channel WhatsApp/email-style follow-up flows."], node1: "New Lead Arrived ➔ Meta Ads", node2: "AI Assigned & Route ➔ Area Agent", node3: "Instant WhatsApp Campaign Dispatched" },
     analyticsSection: { marker: "Intelligence", title: "Data-Driven Pipeline Analytics", desc: "CORTEXA gives agents visibility into leads, deals, pipeline, activity, and revenue forecasting.", bullets: ["Detailed lead performance tracking across all digital sources.", "Real-time pipeline value visibility to monitor potential commissions.", "Conversion tracking pinpointing leaky steps in sales funnels.", "Predictive revenue forecasting metrics using performance history.", "Team performance and actionable activity insights."], pipeValue: "Pipeline GCV Value", convRate: "Conversion Rate: +4.2%" },
     ctaSection: { title: "Ready to organize your real estate business with CORTEXA?", btnTrial: "Start Free Trial", btnSupport: "Contact Support" },
-    feeNote: "One-time setup fee: $97",
+    
     footer: { brandDesc: "The AI-powered CRM that helps you capture leads, automate follow-ups, and close more deals faster.", col1: "PRODUCT", col2: "RESOURCES", col3: "COMPANY", col4: "LEGAL", col1_items: ["Features", "AI Assistant", "Automations", "Integrations", "Analytics"], col2_items: ["Setup Guide", "Help Center", "Community", "API Docs"], col3_items: ["About Us", "Blog", "Careers", "Contact"], col4_items: ["Terms of Service", "Privacy Policy", "Refund Policy", "Cancellation Policy"] }
   },
   es: {
@@ -57,7 +57,7 @@ const t = {
     autoSection: { marker: "Operaciones", title: "Flujos de Trabajo Inteligentes, Cero Trabajo Redundante", desc: "CORTEXA automatiza el trabajo repetitivo para que los agentes puedan concentrarse en cerrar tratos.", bullets: ["Enrutamiento automatizado de leads según códigos postales, valor o reglas de distribución equitativa.", "Recordatorios de seguimiento automatizados para que las oportunidades calientes nunca se enfríen.", "Actualizaciones instantáneas de la etapa del pipeline cuando un cliente realiza una acción.", "Flujos de trabajo de asignación de equipos para equilibrar las cargas de trabajo sin esfuerzo.", "Flujos de seguimiento multicanal estilo WhatsApp/correo electrónico."], node1: "Nuevo Lead Recibido ➔ Meta Ads", node2: "IA Asignada y Enrutada ➔ Agente de Zona", node3: "Campaña Instantánea de WhatsApp Enviada" },
     analyticsSection: { marker: "Inteligencia", title: "Análisis de Pipeline Impulsado por Datos", desc: "CORTEXA brinda a los agentes visibilidad sobre leads, ofertas, pipeline, actividad y pronósticos de ingresos.", bullets: ["Seguimiento detallado del rendimiento de leads en todas las fuentes digitales.", "Visibilidad del valor del pipeline en tiempo real para monitorear posibles comisiones.", "Seguimiento de conversión identificando pasos con fugas en los embudos de ventas.", "Métricas predictivas de previsión de ingresos utilizando el historial de rendimiento.", "Rendimiento del equipo e información de actividad procesable."], pipeValue: "Valor GCV del Pipeline", convRate: "Tasa de conversión: +4.2%" },
     ctaSection: { title: "¿Listo para organizar su negocio inmobiliario con CORTEXA?", btnTrial: "Prueba Gratis", btnSupport: "Soporte de Contacto" },
-    feeNote: "Tarifa única de configuración: $97",
+    
     footer: { brandDesc: "El CRM potenciado por IA que lo ayuda a captar leads, automatizar seguimientos y cerrar más acuerdos más rápido.", col1: "PRODUCTO", col2: "RECURSOS", col3: "COMPAÑÍA", col4: "LEGAL", col1_items: ["Características", "Asistente IA", "Automatizaciones", "Integraciones", "Análisis"], col2_items: ["Guía de Configuración", "Centro de Ayuda", "Comunidad", "Docs de API"], col3_items: ["Sobre Nosotros", "Blog", "Carreras", "Contacto"], col4_items: ["Términos de Servicio", "Política de Privacidad", "Política de Reembolso", "Política de Cancelación"] }
   },
   pt: {
@@ -76,7 +76,7 @@ const t = {
     autoSection: { marker: "Operações", title: "Fluxos de Trabalho Inteligentes, Zero Trabalho Redundante", desc: "A CORTEXA automatiza o trabalho repetitivo para que os corretores possam focar no fechamento de negócios.", bullets: ["Roteamento automatizado de leads com base em CEPs, valor ou regras de rodízio.", "Lembretes automatizados de acompanhamento para que as oportunidades quentes nunca esfriem.", "Atualizações instantâneas de estágio do pipeline quando um cliente realiza uma ação.", "Fluxos de trabalho de atribuição de equipe para equilibrar as cargas de trabalho sem esforço.", "Fluxos de acompanhamento multicanais estilo WhatsApp/e-mail."], node1: "Novo Lead Recebido ➔ Meta Ads", node2: "IA Atribuída e Roteada ➔ Corretor da Região", node3: "Campanha Instantânea de WhatsApp Disparada" },
     analyticsSection: { marker: "Inteligência", title: "Análise de Pipeline Baseada em Dados", desc: "A CORTEXA oferece aos corretores visibilidade de leads, negócios, pipeline, atividade e previsão de receita.", bullets: ["Rastreamento detalhado do desempenho de leads em todas as fontes digitais.", "Visibilidade do valor do pipeline em tempo real para monitorar possíveis comissões.", "Rastreamento de conversão identificando etapas com gargalos nos funis de vendas.", "Métricas preditivas de previsão de receita usando o histórico de desempenho.", "Desempenho da equipe e insights de atividades acionáveis."], pipeValue: "Valor GCV do Pipeline", convRate: "Taxa de Conversão: +4.2%" },
     ctaSection: { title: "Pronto para organizar seu negócio imobiliário com a CORTEXA?", btnTrial: "Teste Grátis", btnSupport: "Suporte de Contato" },
-    feeNote: "Taxa única de configuração: $97",
+    
     footer: { brandDesc: "O CRM alimentado por IA que ajuda você a capturar leads, automatizar acompanhamentos e fechar mais negócios mais rápido.", col1: "PRODUTO", col2: "RECURSOS", col3: "EMPRESA", col4: "LEGAL", col1_items: ["Recursos", "Assistente IA", "Automações", "Integrações", "Análise"], col2_items: ["Guia de Configuração", "Central de Ajuda", "Comunidade", "Docs da API"], col3_items: ["Sobre Nós", "Blog", "Carreiras", "Contato"], col4_items: ["Termos de Serviço", "Política de Privacidade", "Política de Reembolso", "Política de Cancelamento"] }
   }
 };
@@ -321,7 +321,6 @@ export default function FeaturesPage() {
               {cur.hero.btnIntegrations} <ArrowUpRight size={18} />
             </a>
           </div>
-          <p className={styles.feeNote}>{cur.feeNote}</p>
         </section>
 
         {/* ================= 2. CORE FEATURES SECTION ================= */}
@@ -468,7 +467,6 @@ export default function FeaturesPage() {
               {cur.ctaSection.btnSupport}
             </a>
           </div>
-          <p className={styles.feeNote}>{cur.feeNote}</p>
         </section>
       </main>
 

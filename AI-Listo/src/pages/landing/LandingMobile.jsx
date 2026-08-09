@@ -318,7 +318,7 @@ function ReportingSection({ tr }) {
               </div>
               <ArrowRight size={18} />
             </a>
-            <p className="m-under-cta">{tr.underCTA}</p>
+            
           </div>
         </div>
       </div>
@@ -678,7 +678,6 @@ export default function LandingMobile() {
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
       ctaButtonText: "Start Your Free Trial",
-      underCTA: "One-time setup fee: $97",
       heroFreeAccess: "Sign Up? — Get Free Access!",
 
       faqSubtitle: "FAQS",
@@ -1081,7 +1080,6 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
       ctaButtonText: "Comienza Tu Prueba Gratis",
-      underCTA: "Tarifa única de configuración: $97",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
@@ -1495,7 +1493,6 @@ export default function LandingMobile() {
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
       ctaButtonText: "Comece Seu Teste Grátis",
-      underCTA: "Taxa única de configuração: $97",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
@@ -2741,7 +2738,7 @@ export default function LandingMobile() {
                 <path d="m12 5 7 7-7 7" />
               </svg>
             </a>
-            <p className="m-under-cta">{tr.underCTA}</p>
+            
           </div>
 
           <div className="m-bottom-preview-container">

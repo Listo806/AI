@@ -20,7 +20,6 @@
 // Exit-intent "$7 setup" offer.
 //
 // A visitor who is about to leave the public site is shown a popup offering the
-// one-time setup fee at $7 instead of $97. Claiming it carries a flag from the
 // popup, through trial signup, into checkout.
 
 const OFFER_KEY = "cortexa_setup_offer";

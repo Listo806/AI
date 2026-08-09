@@ -163,7 +163,6 @@ export default function CityPage() {
             <Link to="/trial">
               <button style={btn}>Start Free Trial</button>
             </Link>
-            <p style={{ marginTop: "10px", fontSize: "13px", color: "#666" }}>One-time setup fee: $97</p>
           </div>
         </section>
 

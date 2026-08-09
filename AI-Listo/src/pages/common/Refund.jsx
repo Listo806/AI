@@ -13,14 +13,13 @@ const t = {
           },
           {
             ul: [
-              "A one-time setup and activation fee of $97 USD is charged today at signup.",
               "A payment method (PayPal) is required to sign up.",
               "Your 14-day free trial begins after the setup fee is paid, with no monthly charge during the trial.",
               "After the free trial, your monthly plan is billed automatically until you cancel.",
             ],
           },
           {
-            p: "The $97 setup fee covers onboarding and activation and is generally non-refundable once paid, except where required by law.",
+            p: "",
           },
         ],
       },
@@ -38,7 +37,6 @@ const t = {
               "Solo Plan: $197 USD/month",
               "Team Plan: $347 USD/month",
               "Growth Plan: $497 USD/month",
-              "One-time setup fee: $97 USD, charged today at signup.",
             ],
           },
           {
@@ -53,7 +51,7 @@ const t = {
             ul: [
               "You may cancel anytime to prevent future charges.",
               "Cancelling during the 14-day free trial stops your subscription before the first monthly charge.",
-              "The one-time $97 setup fee and paid monthly periods are generally non-refundable except where required by law.",
+              "",
             ],
           },
           {
@@ -95,14 +93,13 @@ const t = {
           },
           {
             ul: [
-              "Hoy se cobra una tarifa única de configuración y activación de $97 USD al registrarte.",
               "Se requiere un método de pago (PayPal) para registrarte.",
               "Tu prueba gratuita de 14 días comienza después de pagar la tarifa de configuración, sin cargo mensual durante la prueba.",
               "Al terminar la prueba, tu plan mensual se cobra automáticamente hasta que canceles.",
             ],
           },
           {
-            p: "La tarifa de configuración de $97 cubre la incorporación y la activación y normalmente no es reembolsable una vez pagada, salvo obligación legal.",
+            p: "",
           },
         ],
       },
@@ -120,7 +117,6 @@ const t = {
               "Solo: $197 USD/mes",
               "Team: $347 USD/mes",
               "Growth: $497 USD/mes",
-              "Tarifa única de configuración: $97 USD, cobrada hoy al registrarte.",
             ],
           },
           {
@@ -135,7 +131,6 @@ const t = {
             ul: [
               "Puede cancelar en cualquier momento para evitar cobros futuros.",
               "Cancelar durante la prueba gratuita de 14 días detiene la suscripción antes del primer cobro mensual.",
-              "La tarifa única de configuración de $97 y los periodos mensuales ya facturados normalmente no son reembolsables salvo obligación legal.",
             ],
           },
         ],
@@ -174,14 +169,13 @@ const t = {
           },
           {
             ul: [
-              "Hoje é cobrada uma taxa única de configuração e ativação de $97 USD no cadastro.",
               "Um método de pagamento (PayPal) é necessário para o cadastro.",
               "Seu teste gratuito de 14 dias começa após o pagamento da taxa de configuração, sem cobrança mensal durante o teste.",
               "Ao terminar o teste, seu plano mensal é cobrado automaticamente até você cancelar.",
             ],
           },
           {
-            p: "A taxa de configuração de $97 cobre o onboarding e a ativação e normalmente não é reembolsável após o pagamento, salvo exigência legal.",
+            p: "",
           },
         ],
       },
@@ -199,7 +193,6 @@ const t = {
               "Solo: $197 USD/mês",
               "Team: $347 USD/mês",
               "Growth: $497 USD/mês",
-              "Taxa única de configuração: $97 USD, cobrada hoje no cadastro.",
             ],
           },
           {
@@ -214,7 +207,6 @@ const t = {
             ul: [
               "Você pode cancelar a qualquer momento para evitar cobranças futuras.",
               "Cancelar durante o teste gratuito de 14 dias interrompe a assinatura antes da primeira cobrança mensal.",
-              "A taxa única de configuração de $97 e os períodos mensais já pagos normalmente não são reembolsáveis, salvo exigência legal.",
             ],
           },
         ],
