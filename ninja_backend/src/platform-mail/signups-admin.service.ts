@@ -62,6 +62,7 @@ export class SignupsAdminService {
     q?: string,
     paymentStatus?: string,
     offer?: string,
+    language?: string,
   ): { where: string; params: any[] } {
     const clauses: string[] = [];
     const params: any[] = [];
@@ -70,6 +71,12 @@ export class SignupsAdminService {
         ? `(payment_status = 'active' OR checkout_status = 'paid')`
         : `role = 'owner'`,
     );
+    // Never show soft-deleted sign-ups (removed from the admin list on purpose).
+    clauses.push(`deleted_at IS NULL`);
+    if (language && language !== 'all' && ['en', 'es', 'pt'].includes(language)) {
+      params.push(language);
+      clauses.push(`COALESCE(preferred_language, 'en') = $${params.length}`);
+    }
     if (q && String(q).trim()) {
       params.push(`%${String(q).trim()}%`);
       clauses.push(`(email ILIKE $${params.length} OR name ILIKE $${params.length})`);
@@ -101,6 +108,7 @@ export class SignupsAdminService {
       q?: string;
       paymentStatus?: string;
       offer?: string;
+      language?: string;
     } = {},
   ) {
     await this.mailer.ensureSchema();
@@ -111,6 +119,7 @@ export class SignupsAdminService {
       opts.q,
       opts.paymentStatus,
       opts.offer,
+      opts.language,
     );
 
     const listParams = params.slice();
@@ -138,7 +147,12 @@ export class SignupsAdminService {
   // All matching rows (no pagination) for CSV export.
   async exportRows(
     kind: 'signups' | 'customers',
-    opts: { q?: string; paymentStatus?: string; offer?: string } = {},
+    opts: {
+      q?: string;
+      paymentStatus?: string;
+      offer?: string;
+      language?: string;
+    } = {},
   ) {
     await this.mailer.ensureSchema();
     const { where, params } = this.buildWhere(
@@ -146,6 +160,7 @@ export class SignupsAdminService {
       opts.q,
       opts.paymentStatus,
       opts.offer,
+      opts.language,
     );
     const { rows } = await this.db.query(
       `SELECT ${this.cols} FROM users WHERE ${where} ORDER BY created_at DESC LIMIT 5000`,
@@ -182,7 +197,7 @@ export class SignupsAdminService {
           COUNT(*) FILTER (WHERE role = 'owner')::int AS signups,
           COUNT(*) FILTER (WHERE role = 'owner' AND ${paidExpr})::int AS purchases
          FROM users
-        WHERE 1=1 ${dateWhere}`,
+        WHERE deleted_at IS NULL ${dateWhere}`,
       params,
     );
     const signups = t[0]?.signups ?? 0;
@@ -203,7 +218,7 @@ export class SignupsAdminService {
                 COUNT(*)::int AS signups,
                 COUNT(*) FILTER (WHERE ${paidExpr})::int AS purchases
            FROM users
-          WHERE role = 'owner' ${dateWhere}
+          WHERE role = 'owner' AND deleted_at IS NULL ${dateWhere}
           GROUP BY 1
           ORDER BY signups DESC
           LIMIT 100`,
@@ -239,5 +254,24 @@ export class SignupsAdminService {
       [id],
     );
     return { user: this.enrich(rows[0]) || null, emails };
+  }
+
+  // Soft-delete a sign-up: hide it from every admin view (list, customers,
+  // funnel, export) and deactivate the account. Reversible (the row is kept with
+  // deleted_at set) and safe — it never cascades into or destroys CRM data, so a
+  // mistaken click cannot wipe a real customer's records. Used to clean test,
+  // fake, or duplicate registrations out of the list.
+  async remove(id: string): Promise<{ deleted: boolean }> {
+    await this.mailer.ensureSchema();
+    const { rowCount } = await this.db.query(
+      `UPDATE users
+          SET deleted_at = NOW(),
+              is_active = false,
+              token_version = COALESCE(token_version, 0) + 1,
+              updated_at = NOW()
+        WHERE id = $1 AND deleted_at IS NULL`,
+      [id],
+    );
+    return { deleted: (rowCount ?? 0) > 0 };
   }
 }

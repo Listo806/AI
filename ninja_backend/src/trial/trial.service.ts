@@ -15,6 +15,21 @@ export class TrialService {
     private readonly mailer: PlatformMailerService,
   ) {}
 
+  // Resolve the site language the customer actually registered in. Primary source
+  // is the value the front end sends (derived from the URL/i18n at submit).
+  // Fallback: infer es/pt from the landing-page URL version so campaign traffic
+  // (Spanish/Portuguese landing pages) is captured even if the client value is
+  // missing. Never silently default everything to 'en'.
+  private resolveLanguage(dto: any): string {
+    const supported = ['en', 'es', 'pt'];
+    const direct = String(dto?.language || '').trim().toLowerCase();
+    if (supported.includes(direct)) return direct;
+    const landing = String(dto?.landingPage || '');
+    const m = landing.match(/\/(es|pt)(?:[/?#]|$)/i);
+    if (m) return m[1].toLowerCase();
+    return 'en';
+  }
+
   // Self-healing: the sign-up attribution columns ship in migration 102 but
   // migrations are not auto-run here, so ensure they exist before we write them.
   private async ensureSignupColumns(): Promise<void> {
@@ -106,9 +121,7 @@ export class TrialService {
       // Capture the sign-up attribution passed by the front end, so an abandoned
       // registration is a complete, permanently-kept record even before payment.
       await this.ensureSignupColumns();
-      const lang = ['en', 'es', 'pt'].includes(String(dto.language))
-        ? dto.language
-        : 'en';
+      const lang = this.resolveLanguage(dto);
       const utm = dto.utm || {};
       const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
 

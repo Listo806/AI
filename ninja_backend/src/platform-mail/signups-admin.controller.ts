@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   Query,
@@ -61,14 +62,23 @@ export class SignupsAdminController {
   @ApiQuery({ name: 'q', required: false })
   @ApiQuery({ name: 'paymentStatus', required: false })
   @ApiQuery({ name: 'offer', required: false })
+  @ApiQuery({ name: 'language', required: false })
   async signupsList(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('q') q?: string,
     @Query('paymentStatus') paymentStatus?: string,
     @Query('offer') offer?: string,
+    @Query('language') language?: string,
   ) {
-    return this.signups.list('signups', { limit, offset, q, paymentStatus, offer });
+    return this.signups.list('signups', {
+      limit,
+      offset,
+      q,
+      paymentStatus,
+      offer,
+      language,
+    });
   }
 
   @Get('customers')
@@ -77,13 +87,15 @@ export class SignupsAdminController {
   @ApiQuery({ name: 'offset', required: false })
   @ApiQuery({ name: 'q', required: false })
   @ApiQuery({ name: 'offer', required: false })
+  @ApiQuery({ name: 'language', required: false })
   async customersList(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('q') q?: string,
     @Query('offer') offer?: string,
+    @Query('language') language?: string,
   ) {
-    return this.signups.list('customers', { limit, offset, q, offer });
+    return this.signups.list('customers', { limit, offset, q, offer, language });
   }
 
   @Get('signups/export.csv')
@@ -93,11 +105,13 @@ export class SignupsAdminController {
     @Query('q') q?: string,
     @Query('paymentStatus') paymentStatus?: string,
     @Query('offer') offer?: string,
+    @Query('language') language?: string,
   ) {
     const rows = await this.signups.exportRows('signups', {
       q,
       paymentStatus,
       offer,
+      language,
     });
     this.sendCsv(res, 'signups', rows);
   }
@@ -108,8 +122,13 @@ export class SignupsAdminController {
     @Res() res: Response,
     @Query('q') q?: string,
     @Query('offer') offer?: string,
+    @Query('language') language?: string,
   ) {
-    const rows = await this.signups.exportRows('customers', { q, offer });
+    const rows = await this.signups.exportRows('customers', {
+      q,
+      offer,
+      language,
+    });
     this.sendCsv(res, 'customers', rows);
   }
 
@@ -130,6 +149,14 @@ export class SignupsAdminController {
   @ApiOperation({ summary: 'One sign-up with its email history (admin)' })
   async detail(@Param('id') id: string) {
     return this.signups.detail(id);
+  }
+
+  @Delete('signups/:id')
+  @ApiOperation({
+    summary: 'Soft-delete a sign-up: hide from lists + deactivate (admin)',
+  })
+  async remove(@Param('id') id: string) {
+    return this.signups.remove(id);
   }
 
   private sendCsv(res: Response, name: string, rows: any[]) {
