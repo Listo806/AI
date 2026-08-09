@@ -350,6 +350,10 @@ export default function AdminCustomers() {
         <Kpi variant="gold" icon={<Gift size={18} />} label="Free Accounts" value={kpis ? kpis.freeAccounts.toLocaleString() : "—"} sub={kpis ? `${kpis.freePctOfTotal}% of total` : ""} subClass="muted" />
       </div>
 
+      {/* Below the full-width KPIs: left content + right details panel */}
+      <div className="cxc-layout">
+        <div className="cxc-main">
+
       {/* Tabs + filters panel */}
       <div className="cxc-panel">
         <div className="cxc-tabs">
@@ -433,10 +437,6 @@ export default function AdminCustomers() {
         <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
         <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
       </div>
-
-      {/* Customer list (left) + Customer Details panel (right) */}
-      <div className="cxc-layout">
-        <div className="cxc-main">
 
       {/* Table */}
       <div className="cxc-panel">
