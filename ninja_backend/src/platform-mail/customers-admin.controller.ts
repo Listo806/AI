@@ -122,6 +122,12 @@ export class CustomersAdminController {
     return this.customers.deleteNote(id, noteId);
   }
 
+  @Post('import')
+  @ApiOperation({ summary: 'Bulk import customers from CSV rows (upsert by email)' })
+  async import(@Body() body: { customers?: any[] }) {
+    return { data: await this.customers.importCustomers(body?.customers || []) };
+  }
+
   @Post(':id/change-plan')
   @ApiOperation({ summary: 'Move a customer between plans (updates account config)' })
   async changePlan(@Param('id') id: string, @Body() body: any) {
