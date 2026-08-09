@@ -44,12 +44,13 @@
 }
 @media (max-width: 1200px) { .cxc-layout { grid-template-columns: 1fr; } }
 .cxc-main { min-width: 0; }
-.cxc-side { position: sticky; top: 16px; }
+.cxc-side { min-width: 0; }
 .cxc-panelcard {
   background: #fff; border: 1px solid #eef2f7; border-radius: 14px;
-  display: flex; flex-direction: column; max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column; height: 100%;
 }
-.cxc-panelcard .cxc-drawer-body { overflow-y: auto; flex: 1; }
+/* No inner scrollbar: the panel grows with its content and the page scrolls. */
+.cxc-panelcard .cxc-drawer-body { flex: 1; }
 .cxc-empty { padding: 48px 18px; text-align: center; color: #94a3b8; font-size: 14px; }
 
 /* Buttons */
@@ -85,19 +86,21 @@
 /* KPI cards */
 .cxc-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
   margin-bottom: 16px;
 }
+@media (max-width: 1150px) { .cxc-kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .cxc-kpis { grid-template-columns: repeat(2, 1fr); } }
 .cxc-kpi {
   background: #fff;
   border: 1px solid #eef2f7;
   border-radius: 14px;
-  padding: 14px;
+  padding: 16px;
   position: relative;
   overflow: hidden;
 }
-.cxc-kpi-top { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.cxc-kpi-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .cxc-kpi-icon {
   width: 34px; height: 34px;
   border-radius: 9px;
@@ -363,7 +366,7 @@
 
 .cxc-drawer-foot {
   display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid #eef2f7;
-  position: sticky; bottom: 0; background: #fff;
+  background: #fff; margin-top: auto;
 }
 
 /* Modals */
