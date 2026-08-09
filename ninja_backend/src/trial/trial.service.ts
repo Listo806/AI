@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
 import { AuthService } from '../auth/auth.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
+import { normalizePlanId } from '../plans/plan-config';
 
 @Injectable()
 export class TrialService {
@@ -34,6 +35,7 @@ export class TrialService {
       `welcome_email_sent_at TIMESTAMPTZ`,
       `billing_cycle VARCHAR(10)`,
       `plan_status VARCHAR(24) DEFAULT 'active'`,
+      `signup_source VARCHAR(32)`,
     ];
     for (const c of cols) {
       await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -110,18 +112,27 @@ export class TrialService {
       const utm = dto.utm || {};
       const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
 
-      // Free tier: the account is created active and enters the CRM immediately,
-      // with no checkout. Paid tiers stay 'trial' until they complete payment.
-      const isFree = String(dto.plan || '').trim().toLowerCase() === 'free';
+      // Plan may be unknown at signup: the exit popup creates the account first
+      // and the plan is chosen on the next (pricing) step. Free is created active
+      // and enters the CRM; a paid tier stays 'trial' until payment; a no-plan
+      // popup signup is 'registered' (a saved lead) until they pick a plan.
+      const rawPlan = String(dto.plan || '').trim().toLowerCase();
+      const isFree = rawPlan === 'free';
+      const knownPaid = ['solo', 'business', 'scale', 'team', 'growth'].includes(
+        rawPlan,
+      );
+      const noPlan = !isFree && !knownPaid;
+      const selectedPlan = isFree || knownPaid ? dto.plan : null;
+      const source = dto.source ? String(dto.source).slice(0, 32) : 'organic';
       const billingCycle = ['monthly', 'annual'].includes(
         String(dto.billingCycle),
       )
         ? dto.billingCycle
-        : isFree
+        : isFree || noPlan
           ? null
           : 'monthly';
-      const paymentStatus = isFree ? 'free' : 'trial';
-      const checkoutStatus = isFree ? 'free' : 'registered';
+      const paymentStatus = isFree ? 'free' : noPlan ? 'registered' : 'trial';
+      const checkoutStatus = isFree ? 'free' : noPlan ? 'registered' : 'registered';
 
       const { rows } = await this.db.query(
         `
@@ -148,6 +159,7 @@ export class TrialService {
           utm_content,
           gclid,
           offer_used,
+          signup_source,
           registered_at,
           created_at,
           updated_at
@@ -155,8 +167,8 @@ export class TrialService {
         VALUES
         (
           $1, $2, $3, $4, $5, 'TRIAL', $6, true, $7, $8,
-          $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, NOW(),
-          NOW(), NOW()
+          $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+          NOW(), NOW(), NOW()
         )
         RETURNING id
         `,
@@ -166,7 +178,7 @@ export class TrialService {
           name || null,
           phone || null,
           'owner',
-          dto.plan || null,
+          selectedPlan,
           paymentStatus,
           billingCycle,
           checkoutStatus,
@@ -180,6 +192,7 @@ export class TrialService {
           utm.content || dto.utmContent || null,
           dto.gclid || null,
           offerUsed,
+          source,
         ],
       );
 
@@ -226,5 +239,52 @@ export class TrialService {
       console.error('🔥 TRIAL ERROR:', err);
       throw err;
     }
+  }
+
+  // Set the plan on an already-registered (logged-in) account — used after the
+  // exit-popup signup, when the user picks a plan on the pricing page. Never
+  // creates a second account. Free activates immediately (no Paddle); a paid
+  // plan is recorded and stays unpaid until Paddle confirms at checkout.
+  async selectPlan(userId: string, dto: any) {
+    if (!userId) throw new ConflictException('Not authenticated');
+    await this.ensureSignupColumns();
+    const planId = normalizePlanId(dto?.plan);
+    const isFree = planId === 'free';
+    const billingCycle = ['monthly', 'annual'].includes(String(dto?.billingCycle))
+      ? dto.billingCycle
+      : isFree
+        ? null
+        : 'monthly';
+
+    if (isFree) {
+      await this.db.query(
+        `UPDATE users
+            SET selected_plan = 'free', billing_cycle = NULL,
+                payment_status = 'free', checkout_status = 'free',
+                plan_status = 'active', updated_at = NOW()
+          WHERE id = $1`,
+        [userId],
+      );
+      try {
+        await this.mailer.cancelScheduled(userId);
+      } catch (_e) {
+        /* non-fatal */
+      }
+      return { success: true, plan: 'free', free: true };
+    }
+
+    // Store the chosen plan using the vocabulary the live checkout expects
+    // (solo / team / growth), mapping the new tier names onto it.
+    const legacyKey =
+      planId === 'business' ? 'team' : planId === 'scale' ? 'growth' : 'solo';
+    await this.db.query(
+      `UPDATE users
+          SET selected_plan = $2, billing_cycle = $3,
+              checkout_status = 'registered', plan_status = 'active',
+              updated_at = NOW()
+        WHERE id = $1`,
+      [userId, legacyKey, billingCycle],
+    );
+    return { success: true, plan: legacyKey, billingCycle, free: false };
   }
 }
