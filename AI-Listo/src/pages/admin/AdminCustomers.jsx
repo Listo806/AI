@@ -228,9 +228,12 @@ export default function AdminCustomers() {
     const params = { ...filters, tab, limit: rowsPerPage, offset: (page - 1) * rowsPerPage };
     Promise.all([getCustomersHub(params), getCustomersSummary(params)])
       .then(([list, sum]) => {
-        setRows(list?.data || []);
+        const data = list?.data || [];
+        setRows(data);
         setTotal(list?.total || 0);
         setSummary(sum || null);
+        // Keep the persistent details panel populated: default to the first row.
+        setDetail((d) => (d.id && data.some((r) => r.id === d.id) ? d : { id: data[0]?.id || null, tab: "overview" }));
       })
       .catch(() => { setRows([]); setTotal(0); })
       .finally(() => setLoading(false));
@@ -336,6 +339,9 @@ export default function AdminCustomers() {
           <button className="cxc-btn cxc-btn-primary" onClick={() => setShowAdd(true)}><Plus size={15} /> Add Customer</button>
         </div>
       </div>
+
+      <div className="cxc-layout">
+        <div className="cxc-main">
 
       {/* KPI cards */}
       <div className="cxc-kpis">
@@ -556,16 +562,20 @@ export default function AdminCustomers() {
         <button className="cxc-btn cxc-btn-primary" onClick={() => setShowPlans(true)}><Plus size={15} /> Create Plan</button>
       </div>
 
-      {detail.id && (
-        <CustomerDrawer
-          id={detail.id}
-          initialTab={detail.tab}
-          onClose={() => setDetail({ id: null, tab: "overview" })}
-          onChanged={load}
-          onEdit={(c) => setEditCustomer(c)}
-          onChangePlan={(c) => setChangePlanFor(c)}
-        />
-      )}
+        </div>{/* /cxc-main */}
+
+        <aside className="cxc-side">
+          <CustomerPanel
+            id={detail.id}
+            tab={detail.tab}
+            onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
+            onChanged={load}
+            onEdit={(c) => setEditCustomer(c)}
+            onChangePlan={(c) => setChangePlanFor(c)}
+          />
+        </aside>
+      </div>{/* /cxc-layout */}
+
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {editCustomer && <EditCustomerModal customer={editCustomer} onClose={() => setEditCustomer(null)} onSuccess={load} />}
       {changePlanFor && <ChangePlanModal customer={changePlanFor} onClose={() => setChangePlanFor(null)} onSuccess={load} />}
@@ -591,20 +601,21 @@ function UsageBar({ label, used, limit }) {
   );
 }
 
-function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePlan }) {
+function CustomerPanel({ id, tab, onSelectTab, onChanged, onEdit, onChangePlan }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState(initialTab || "overview");
   const [noteText, setNoteText] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
+  const activeTab = tab || "overview";
 
   const reload = useCallback(() => {
+    if (!id) { setData(null); setLoading(false); return; }
     setLoading(true);
     getCustomerDetail(id).then((d) => setData(d)).catch(() => setData(null)).finally(() => setLoading(false));
   }, [id]);
   useEffect(() => { reload(); }, [reload]);
-  useEffect(() => { setTab(initialTab || "overview"); }, [initialTab, id]);
 
+  const setTab = (t) => onSelectTab && onSelectTab(t);
   const c = data?.customer;
   const sub = data?.subscription;
   const usage = data?.usage;
@@ -616,25 +627,24 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
   };
   const removeNote = async (nid) => { try { await deleteCustomerNote(id, nid); reload(); } catch { /* ignore */ } };
   const doDeactivate = async () => { if (!window.confirm("Deactivate this customer?")) return; await deactivateCustomer(id); onChanged && onChanged(); reload(); setMoreOpen(false); };
-  const doDelete = async () => { if (!window.confirm("Delete this customer? Payment records are kept.")) return; await deleteCustomerHub(id); onChanged && onChanged(); onClose(); };
+  const doDelete = async () => { if (!window.confirm("Delete this customer? Payment records are kept.")) return; await deleteCustomerHub(id); setMoreOpen(false); onChanged && onChanged(); };
 
   const R = (k, v) => (
     <div className="cxc-summary-row"><span className="k">{k}</span><span className="v">{v ?? "—"}</span></div>
   );
 
   return (
-    <div className="cxc-drawer-overlay" onClick={onClose}>
-      <div className="cxc-drawer" onClick={(e) => e.stopPropagation()}>
-        <div className="cxc-drawer-head">
-          <strong style={{ fontSize: 16 }}>Customer Details</strong>
-          <button className="cxc-drawer-close" onClick={onClose}>×</button>
-        </div>
+    <div className="cxc-panelcard">
+      <div className="cxc-drawer-head">
+        <strong style={{ fontSize: 16 }}>Customer Details</strong>
+      </div>
 
-        {loading && <div className="cxc-drawer-body cxc-muted">Loading…</div>}
-        {!loading && !c && <div className="cxc-drawer-body cxc-muted">Customer not found.</div>}
+      {!id && <div className="cxc-empty">Select a customer to see their details.</div>}
+      {id && loading && <div className="cxc-drawer-body cxc-muted">Loading…</div>}
+      {id && !loading && !c && <div className="cxc-drawer-body cxc-muted">Customer not found.</div>}
 
-        {!loading && c && (
-          <>
+      {id && !loading && c && (
+        <>
             <div className="cxc-drawer-body">
               <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
                 <div className="cxc-avatar" style={{ width: 46, height: 46, fontSize: 16, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
@@ -649,11 +659,11 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
 
               <div className="cxc-drawer-tabs">
                 {["overview", "subscription", "payments", "activity", "notes"].map((t) => (
-                  <button key={t} className={`cxc-drawer-tab ${tab === t ? "active" : ""}`} onClick={() => setTab(t)} style={{ textTransform: "capitalize" }}>{t}</button>
+                  <button key={t} className={`cxc-drawer-tab ${activeTab === t ? "active" : ""}`} onClick={() => setTab(t)} style={{ textTransform: "capitalize" }}>{t}</button>
                 ))}
               </div>
 
-              {(tab === "overview" || tab === "subscription") && sub && (
+              {(activeTab === "overview" || activeTab === "subscription") && sub && (
                 <>
                   <div className="cxc-summary-head">
                     <span className="cxc-summary-title">Subscription Summary</span>
@@ -683,7 +693,7 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
                 </>
               )}
 
-              {tab === "payments" && (
+              {activeTab === "payments" && (
                 <div style={{ marginTop: 12 }}>
                   {(!data?.payments || data.payments.length === 0) && <div className="cxc-muted" style={{ fontSize: 13 }}>No recorded payments.</div>}
                   {(data?.payments || []).map((p) => (
@@ -696,7 +706,7 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
                 </div>
               )}
 
-              {tab === "activity" && (
+              {activeTab === "activity" && (
                 <div style={{ marginTop: 12 }}>
                   {(!data?.activity || data.activity.length === 0) && <div className="cxc-muted" style={{ fontSize: 13 }}>No activity yet.</div>}
                   {(data?.activity || []).map((a, i) => (
@@ -708,7 +718,7 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
                 </div>
               )}
 
-              {tab === "notes" && (
+              {activeTab === "notes" && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                     <input className="cxc-input" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add an internal note" />
@@ -743,7 +753,6 @@ function CustomerDrawer({ id, initialTab, onClose, onChanged, onEdit, onChangePl
           </>
         )}
       </div>
-    </div>
   );
 }
 
