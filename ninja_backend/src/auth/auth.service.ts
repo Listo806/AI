@@ -114,6 +114,12 @@ export class AuthService {
 
       await this.eventLogger.logUserLoggedIn(user.id, user.teamId);
 
+      // Best-effort: record last activity so the admin "Last Active" reflects the
+      // most recent login. Never block or fail login over this.
+      this.db
+        .query(`UPDATE users SET last_seen_at = NOW() WHERE id = $1`, [user.id])
+        .catch(() => {});
+
       return {
         user: {
           id: user.id,
@@ -223,6 +229,10 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(user);
+
+    this.db
+      .query(`UPDATE users SET last_seen_at = NOW() WHERE id = $1`, [userId])
+      .catch(() => {});
 
     return {
       accessToken: tokens.accessToken,

@@ -182,6 +182,109 @@ export async function deleteAdminSignup(id) {
   return apiClient.request(`/admin/signups/${id}`, { method: "DELETE" });
 }
 
+// ============================================================================
+// CUSTOMERS HUB (master admin: sign-ups + customers + plans in one)
+// ============================================================================
+
+function buildCustomersQuery(params = {}) {
+  const p = new URLSearchParams();
+  const keys = [
+    "tab",
+    "q",
+    "plan",
+    "billing",
+    "paymentStatus",
+    "source",
+    "language",
+    "from",
+    "to",
+    "limit",
+    "offset",
+  ];
+  for (const k of keys) {
+    const v = params[k];
+    if (v != null && v !== "" && v !== "all") p.set(k, String(v));
+  }
+  const qs = p.toString();
+  return qs ? `?${qs}` : "";
+}
+
+// Master customer list. Returns { data, total, limit, offset }.
+export async function getCustomersHub(params = {}) {
+  return apiClient.request(`/admin/customers-hub${buildCustomersQuery(params)}`);
+}
+
+// KPIs + tab counts + breakdowns + funnel (respects the same filters).
+export async function getCustomersSummary(params = {}) {
+  return apiClient.request(
+    `/admin/customers-hub/summary${buildCustomersQuery(params)}`,
+  );
+}
+
+// One customer: { customer, subscription, payments, notes, activity, usage }.
+export async function getCustomerDetail(id) {
+  return apiClient.request(`/admin/customers-hub/${id}`);
+}
+
+export async function getCustomerNotes(id) {
+  const res = await apiClient.request(`/admin/customers-hub/${id}/notes`);
+  return res?.data ?? res;
+}
+
+export async function addCustomerNote(id, note) {
+  const res = await apiClient.request(`/admin/customers-hub/${id}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+  return res?.data ?? res;
+}
+
+export async function deleteCustomerNote(id, noteId) {
+  return apiClient.request(`/admin/customers-hub/${id}/notes/${noteId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function changeCustomerPlan(id, { plan, billingCycle } = {}) {
+  return apiClient.request(`/admin/customers-hub/${id}/change-plan`, {
+    method: "POST",
+    body: JSON.stringify({ plan, billingCycle }),
+  });
+}
+
+export async function deactivateCustomer(id) {
+  return apiClient.request(`/admin/customers-hub/${id}/deactivate`, {
+    method: "POST",
+  });
+}
+
+export async function deleteCustomerHub(id) {
+  return apiClient.request(`/admin/customers-hub/${id}`, { method: "DELETE" });
+}
+
+export async function getPlansCatalog() {
+  return apiClient.request(`/admin/customers-hub/plans`);
+}
+
+// Download the filtered customer list as CSV (respects current filters).
+export async function exportCustomersHubCsv(params = {}) {
+  const token = localStorage.getItem("listo_access_token");
+  const res = await fetch(
+    `${SIGNUP_API_BASE}/admin/customers-hub/export.csv${buildCustomersQuery(params)}`,
+    { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  );
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "customers.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // Sign-up to purchase funnel totals, optionally by date range and dimension.
 // Returns { signups, purchases, conversionRate, groupBy, breakdown }.
 export async function getAdminFunnel({ from, to, groupBy } = {}) {

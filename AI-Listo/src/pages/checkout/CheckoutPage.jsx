@@ -14,6 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import { fetchPaddleConfig } from "../../api/paddleApi";
 import { paddleReady, initPaddle, openPaddleCheckout } from "./paddleCheckout";
 import { clearSetupOffer } from "../../utils/offer";
+import { buildLocalizedPath } from "../../i18n/locales";
 import "./CheckoutPage.css";
 
 // IMPORTANT BILLING MAPPING:
@@ -132,9 +133,22 @@ const t = {
   },
 };
 
+// Accept both the new tier names (business/scale) and the legacy checkout keys
+// (solo/team/growth), mapping everything to the checkout's keys. Returns null for
+// free / unknown / missing so checkout NEVER silently bills the wrong tier — the
+// caller redirects to pricing instead of defaulting to any plan.
+const PLAN_ALIASES = {
+  solo: "solo",
+  team: "team",
+  growth: "growth",
+  business: "team",
+  scale: "growth",
+  pro: "solo",
+};
 const normalizePlan = (value) => {
-  const key = String(value || "").toLowerCase();
-  return PLAN_DATA[key] ? key : "team";
+  const key = String(value || "").trim().toLowerCase();
+  const mapped = PLAN_ALIASES[key];
+  return mapped && PLAN_DATA[mapped] ? mapped : null;
 };
 
 const formatMoney = (value) =>
@@ -174,9 +188,13 @@ export default function CheckoutPage() {
   const [lang] = useState(() => localStorage.getItem("cortexa_lang") || "en");
   const tr = t[lang] || t.en;
 
-  const selectedPlan = normalizePlan(
-    searchParams.get("plan") || localStorage.getItem("trialPlan") || "team",
-  );
+  const requestedPlan =
+    searchParams.get("plan") || localStorage.getItem("trialPlan");
+  const resolvedPlan = normalizePlan(requestedPlan);
+  // True only when a real plan was supplied. A charge is gated on this, so a
+  // missing/unknown plan can never be billed as the display default below.
+  const planIsValid = Boolean(resolvedPlan);
+  const selectedPlan = resolvedPlan || "team";
   const plan = PLAN_DATA[selectedPlan];
 
   const [customer] = useState(() => ({
@@ -221,10 +239,20 @@ export default function CheckoutPage() {
     acceptedTermsRef.current = acceptedTerms;
   }, [acceptedTerms]);
 
+  // Safety: if checkout was reached without a valid plan (missing or unknown
+  // param), send the customer back to pricing to choose one, rather than showing
+  // or charging a default plan.
+  useEffect(() => {
+    if (!planIsValid) {
+      navigate(buildLocalizedPath("/pricing", lang), { replace: true });
+    }
+  }, [planIsValid, navigate, lang]);
+
   // Funnel: the user reached the checkout. This is the begin_checkout stage.
   useEffect(() => {
+    if (!planIsValid) return;
     trackEvent("begin_checkout", { plan: selectedPlan });
-  }, [selectedPlan]);
+  }, [selectedPlan, planIsValid]);
 
   // Load Paddle config once (null on error, so PayPal remains the fallback).
   useEffect(() => {
@@ -302,6 +330,11 @@ export default function CheckoutPage() {
   // completed checkout the account is activated server-side by the Paddle
   // webhook; here we fire the same conversion/funnel events and log the user in.
   const startPaddle = async () => {
+    // Never open a charge for a missing/unknown plan — go pick one first.
+    if (!planIsValid) {
+      navigate(buildLocalizedPath("/pricing", lang), { replace: true });
+      return;
+    }
     if (!acceptedTermsRef.current) {
       alert(tr.validation.terms);
       return;
@@ -378,6 +411,11 @@ export default function CheckoutPage() {
           onClick: (data, actions) => {
             // Funnel: customer clicked the PayPal button.
             trackEvent("paypal_button_click", { plan: selectedPlan });
+            // Never charge a missing/unknown plan — go pick one first.
+            if (!planIsValid) {
+              navigate(buildLocalizedPath("/pricing", lang), { replace: true });
+              return actions.reject();
+            }
             if (!acceptedTermsRef.current) {
               alert(tr.validation.terms);
               return actions.reject();
