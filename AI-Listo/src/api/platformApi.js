@@ -252,6 +252,13 @@ export async function changeCustomerPlan(id, { plan, billingCycle } = {}) {
   });
 }
 
+export async function updateCustomerInfo(id, payload = {}) {
+  return apiClient.request(`/admin/customers-hub/${id}/update`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function deactivateCustomer(id) {
   return apiClient.request(`/admin/customers-hub/${id}/deactivate`, {
     method: "POST",

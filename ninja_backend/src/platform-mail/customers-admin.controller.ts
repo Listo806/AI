@@ -156,6 +156,12 @@ export class CustomersAdminController {
     return { data: await this.customers.importCustomers(body?.customers || []) };
   }
 
+  @Post(':id/update')
+  @ApiOperation({ summary: 'Edit a customer\'s contact fields' })
+  async update(@Param('id') id: string, @Body() body: any) {
+    return this.customers.updateCustomer(id, body);
+  }
+
   @Post(':id/change-plan')
   @ApiOperation({ summary: 'Move a customer between plans (updates account config)' })
   async changePlan(@Param('id') id: string, @Body() body: any) {
