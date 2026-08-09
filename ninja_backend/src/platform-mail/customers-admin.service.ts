@@ -1,4 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PlatformMailerService } from './platform-mailer.service';
 import { UsageService } from '../plans/usage.service';
@@ -585,6 +587,119 @@ export class CustomersAdminService {
       [userId],
     );
     return { deleted: (rowCount ?? 0) > 0 };
+  }
+
+  // Bulk import customers from parsed CSV rows. Upserts by email: existing
+  // accounts get their attributes updated (never overwritten with blanks); new
+  // emails get a proper account created (team + owner membership + random
+  // password). Capped and best-effort per row so one bad row can't abort the run.
+  async importCustomers(rows: any[]) {
+    await this.ready();
+    const list = Array.isArray(rows) ? rows.slice(0, 2000) : [];
+    let created = 0;
+    let updated = 0;
+    let skipped = 0;
+    const errors: string[] = [];
+
+    for (const raw of list) {
+      const email = String(raw?.email || '').trim().toLowerCase();
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        skipped += 1;
+        continue;
+      }
+      const name = raw?.name ? String(raw.name).slice(0, 200) : null;
+      const phone = raw?.phone ? String(raw.phone).slice(0, 40) : null;
+      const language = ['en', 'es', 'pt'].includes(
+        String(raw?.language || '').toLowerCase(),
+      )
+        ? String(raw.language).toLowerCase()
+        : null;
+      const source = raw?.source ? String(raw.source).slice(0, 64) : 'import';
+      const planId = raw?.plan ? normalizePlanId(raw.plan) : null;
+
+      try {
+        const { rows: existing } = await this.db.query(
+          `SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+          [email],
+        );
+        if (existing[0]) {
+          await this.db.query(
+            `UPDATE users SET
+               name = COALESCE($2, name),
+               phone = COALESCE($3, phone),
+               preferred_language = COALESCE($4, preferred_language),
+               signup_source = COALESCE(NULLIF($5, ''), signup_source),
+               updated_at = NOW()
+             WHERE id = $1`,
+            [existing[0].id, name, phone, language, source],
+          );
+          if (planId) await this.changePlan(existing[0].id, { plan: planId });
+          updated += 1;
+          continue;
+        }
+
+        const isFree = planId === 'free';
+        const knownPaid = !!planId && !isFree;
+        const selectedPlan = planId
+          ? isFree
+            ? 'free'
+            : planId === 'business'
+              ? 'team'
+              : planId === 'scale'
+                ? 'growth'
+                : 'solo'
+          : null;
+        const paymentStatus = isFree ? 'free' : 'registered';
+        const checkoutStatus = isFree ? 'free' : 'registered';
+        const billingCycle = knownPaid ? 'monthly' : null;
+
+        const teamName = name ? `${name.split(' ')[0]}'s Team` : 'Imported Team';
+        const { rows: t } = await this.db.query(
+          `INSERT INTO teams (name, created_at, updated_at) VALUES ($1, NOW(), NOW()) RETURNING id`,
+          [teamName],
+        );
+        const teamId = t[0].id;
+        const password = await bcrypt.hash(randomUUID(), 10);
+        const { rows: u } = await this.db.query(
+          `INSERT INTO users
+             (email, password, name, phone, role, plan, selected_plan, is_active,
+              payment_status, billing_cycle, checkout_status, team_id,
+              preferred_language, signup_source, offer_used, registered_at,
+              created_at, updated_at)
+           VALUES ($1,$2,$3,$4,'owner','TRIAL',$5,true,$6,$7,$8,$9,$10,$11,'standard',NOW(),NOW(),NOW())
+           RETURNING id`,
+          [
+            email,
+            password,
+            name,
+            phone,
+            selectedPlan,
+            paymentStatus,
+            billingCycle,
+            checkoutStatus,
+            teamId,
+            language || 'en',
+            source,
+          ],
+        );
+        const uid = u[0].id;
+        await this.db.query(
+          `UPDATE teams SET owner_id = $1, updated_at = NOW() WHERE id = $2`,
+          [uid, teamId],
+        );
+        await this.db.query(
+          `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+           VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+           ON CONFLICT (team_id, user_id) DO NOTHING`,
+          [teamId, uid],
+        );
+        created += 1;
+      } catch (err: any) {
+        errors.push(`${email}: ${err?.message}`);
+        skipped += 1;
+      }
+    }
+    return { created, updated, skipped, errors: errors.slice(0, 20) };
   }
 
   // Read-only plan catalog for the plan filter + Change Plan UI.

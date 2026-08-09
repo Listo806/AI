@@ -9,9 +9,66 @@ import {
   deactivateCustomer,
   deleteCustomerHub,
   exportCustomersHubCsv,
+  importCustomers,
 } from "../../api/platformApi";
+import AdminPlans from "./AdminPlans";
 import "../platform/platform.css";
 import "./admin.css";
+
+// Minimal CSV parser (handles quoted fields + commas/newlines) for the import.
+function parseCsv(text) {
+  const rows = [];
+  let field = "";
+  let row = [];
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 1; }
+        else inQuotes = false;
+      } else field += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === ",") { row.push(field); field = ""; }
+    else if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (ch === "\r") { /* skip */ }
+    else field += ch;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter((r) => r.some((c) => String(c).trim() !== ""));
+}
+
+// Turn a parsed CSV (with a header row) into customer objects, matching common
+// column names loosely so exports from this page can be re-imported.
+function csvToCustomers(rows) {
+  if (!rows.length) return [];
+  const header = rows[0].map((h) => String(h).trim().toLowerCase());
+  const idx = (names) => header.findIndex((h) => names.includes(h));
+  const map = {
+    email: idx(["email", "email address"]),
+    name: idx(["name", "full name"]),
+    phone: idx(["phone", "phone number"]),
+    plan: idx(["plan", "plan_id", "plan_label"]),
+    language: idx(["language", "lang"]),
+    source: idx(["source", "source_label", "signup_source"]),
+  };
+  const out = [];
+  for (let i = 1; i < rows.length; i += 1) {
+    const r = rows[i];
+    const get = (k) => (map[k] >= 0 ? String(r[map[k]] || "").trim() : "");
+    const email = get("email");
+    if (!email) continue;
+    out.push({
+      email,
+      name: get("name") || undefined,
+      phone: get("phone") || undefined,
+      plan: get("plan") || undefined,
+      language: get("language") || undefined,
+      source: get("source") || undefined,
+    });
+  }
+  return out;
+}
 
 const PAGE_SIZE = 10;
 
@@ -166,6 +223,8 @@ export default function AdminCustomers() {
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(new Set());
   const [detailId, setDetailId] = useState(null);
+  const [showPlans, setShowPlans] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const query = { ...filters, tab, limit: PAGE_SIZE, offset };
 
@@ -224,6 +283,31 @@ export default function AdminCustomers() {
     }
   };
 
+  const onImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const customers = csvToCustomers(parseCsv(text));
+      if (!customers.length) {
+        alert("No rows with an email column were found in that CSV.");
+        return;
+      }
+      const res = await importCustomers(customers);
+      const r = res?.data ?? res;
+      alert(
+        `Import finished.\nCreated: ${r?.created ?? 0}\nUpdated: ${r?.updated ?? 0}\nSkipped: ${r?.skipped ?? 0}`,
+      );
+      load();
+    } catch (err) {
+      alert(err?.message || "Import failed. Please check the CSV and try again.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const onDelete = async (row) => {
     if (
       !window.confirm(
@@ -264,6 +348,13 @@ export default function AdminCustomers() {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button type="button" className="crm-btn crm-btn-secondary" onClick={onExport}>
             Export CSV
+          </button>
+          <label className="crm-btn crm-btn-secondary" style={{ cursor: "pointer", margin: 0 }}>
+            {importing ? "Importing…" : "Import Customers"}
+            <input type="file" accept=".csv,text/csv" onChange={onImportFile} disabled={importing} style={{ display: "none" }} />
+          </label>
+          <button type="button" className="crm-btn crm-btn-primary" onClick={() => setShowPlans(true)}>
+            Manage Plans
           </button>
         </div>
       </div>
@@ -447,6 +538,21 @@ export default function AdminCustomers() {
 
       {detailId && (
         <CustomerDrawer id={detailId} onClose={() => setDetailId(null)} onChanged={load} />
+      )}
+
+      {showPlans && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.35)", zIndex: 1000, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: 24, overflowY: "auto" }}
+          onClick={() => setShowPlans(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ width: 980, maxWidth: "100%", background: "#fff", borderRadius: 12, padding: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px" }}>
+              <strong style={{ fontSize: 16 }}>Plan management</strong>
+              <button type="button" onClick={() => setShowPlans(false)} style={{ border: "none", background: "none", fontSize: 22, cursor: "pointer", color: "#94a3b8" }}>×</button>
+            </div>
+            <AdminPlans />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -266,6 +266,14 @@ export async function getPlansCatalog() {
   return apiClient.request(`/admin/customers-hub/plans`);
 }
 
+// Bulk import customers from parsed CSV rows. Returns { created, updated, skipped, errors }.
+export async function importCustomers(customers = []) {
+  return apiClient.request(`/admin/customers-hub/import`, {
+    method: "POST",
+    body: JSON.stringify({ customers }),
+  });
+}
+
 // Download the filtered customer list as CSV (respects current filters).
 export async function exportCustomersHubCsv(params = {}) {
   const token = localStorage.getItem("listo_access_token");
