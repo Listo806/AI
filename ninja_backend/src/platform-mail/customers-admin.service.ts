@@ -63,7 +63,10 @@ export class CustomersAdminService {
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
     (SELECT COALESCE(SUM(p.amount), 0)::float
        FROM payments p JOIN subscriptions s ON s.id = p.subscription_id
-      WHERE s.team_id = users.team_id AND p.status = 'succeeded') AS ltv`;
+      WHERE s.team_id = users.team_id AND p.status = 'succeeded') AS ltv,
+    (SELECT s.current_period_end FROM subscriptions s
+      WHERE s.team_id = users.team_id
+      ORDER BY s.created_at DESC LIMIT 1) AS next_billing`;
 
   // Friendly, normalized acquisition source used by both the filter and the
   // breakdown so they always agree.
@@ -84,6 +87,7 @@ export class CustomersAdminService {
     const ps = String(row.payment_status || '').toLowerCase();
     const cs = String(row.checkout_status || '').toLowerCase();
     if (ps === 'active' || cs === 'paid') return 'active';
+    if (ps === 'failed') return 'failed';
     if (ps === 'past_due') return 'past_due';
     if (ps === 'canceled' || ps === 'suspended') return 'canceled';
     if (ps === 'trial' || ps === 'pending') return 'trialing';
@@ -245,7 +249,8 @@ export class CustomersAdminService {
          COUNT(*) FILTER (WHERE payment_status IN ('trial','pending'))::int AS trialing,
          COUNT(*) FILTER (WHERE payment_status = 'past_due')::int AS past_due,
          COUNT(*) FILTER (WHERE payment_status IN ('canceled','suspended'))::int AS canceled,
-         COUNT(*) FILTER (WHERE COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')::int AS registered
+         COUNT(*) FILTER (WHERE COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')::int AS registered,
+         COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days')::int AS new_this_week
        FROM users WHERE ${where}`,
       params,
     );
@@ -328,6 +333,15 @@ export class CustomersAdminService {
             ? Math.round((activePaid / totalRegistered) * 1000) / 10
             : 0,
         freeAccounts: c.free_accounts ?? 0,
+        newThisWeek: c.new_this_week ?? 0,
+        activePctOfTotal:
+          totalRegistered > 0
+            ? Math.round((activePaid / totalRegistered) * 1000) / 10
+            : 0,
+        freePctOfTotal:
+          totalRegistered > 0
+            ? Math.round(((c.free_accounts ?? 0) / totalRegistered) * 1000) / 10
+            : 0,
       },
       tabs: {
         all: totalRegistered,
@@ -557,6 +571,33 @@ export class CustomersAdminService {
         [userId, legacyKey, cycle],
       );
     }
+    const { rows } = await this.db.query(
+      `SELECT ${this.cols} FROM users WHERE id = $1`,
+      [userId],
+    );
+    return { success: true, customer: this.enrich(rows[0]) };
+  }
+
+  // Edit basic contact fields (name, phone, language). Never blanks existing
+  // values with empty input.
+  async updateCustomer(userId: string, dto: any) {
+    await this.ready();
+    const name = dto?.name != null ? String(dto.name).slice(0, 200) : null;
+    const phone = dto?.phone != null ? String(dto.phone).slice(0, 40) : null;
+    const language = ['en', 'es', 'pt'].includes(
+      String(dto?.language || '').toLowerCase(),
+    )
+      ? String(dto.language).toLowerCase()
+      : null;
+    await this.db.query(
+      `UPDATE users SET
+         name = COALESCE(NULLIF($2, ''), name),
+         phone = COALESCE(NULLIF($3, ''), phone),
+         preferred_language = COALESCE($4, preferred_language),
+         updated_at = NOW()
+       WHERE id = $1`,
+      [userId, name, phone, language],
+    );
     const { rows } = await this.db.query(
       `SELECT ${this.cols} FROM users WHERE id = $1`,
       [userId],
