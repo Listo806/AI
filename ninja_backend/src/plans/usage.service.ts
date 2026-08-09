@@ -1,6 +1,13 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { PlanId, getLimit, getPlan, normalizePlanId } from './plan-config';
+import {
+  PlanFeatures,
+  PlanId,
+  getLimit,
+  getPlan,
+  hasFeature,
+  normalizePlanId,
+} from './plan-config';
 
 // Meters the Free-plan usage caps and enforces them at the point of use.
 //
@@ -120,8 +127,41 @@ export class UsageService {
     }
   }
 
+  // ---- feature access -------------------------------------------------------
+
+  // Whether the team may use a given feature.
+  //
+  // GRANDFATHERING: any paid or legacy account keeps FULL access (returns true)
+  // regardless of tier. The old paid plans were feature-identical, so gating an
+  // existing paying customer by the new per-tier feature set would REMOVE access
+  // they already have. Only a genuine Free account is gated, by the Free plan's
+  // feature set. (Per-tier differentiation between paid plans is intentionally
+  // deferred until the grandfathering policy for existing customers is decided.)
+  async featureAllowed(
+    teamId: string | null | undefined,
+    feature: keyof PlanFeatures,
+  ): Promise<boolean> {
+    const { isFree } = await this.resolveTeamPlan(teamId);
+    if (!isFree) return true;
+    return hasFeature('free', feature);
+  }
+
+  // Effective feature access for this account, matching featureAllowed(): a
+  // genuine Free account gets the Free feature set; any paid/legacy account is
+  // grandfathered to full access. Single source of truth the frontend reads so
+  // its lock UI can never disagree with what the backend actually enforces.
+  private effectiveFeatures(isFree: boolean): PlanFeatures {
+    const free = getPlan('free').features;
+    const out = {} as PlanFeatures;
+    for (const key of Object.keys(free) as (keyof PlanFeatures)[]) {
+      out[key] = isFree ? free[key] : true;
+    }
+    return out;
+  }
+
   // Read-only snapshot for the dashboard: current plan, whether Free caps apply,
-  // the plan limits, and current usage. Paid plans report unlimited (null limits).
+  // the plan limits, the effective feature access, and current usage. Paid plans
+  // report unlimited (null limits) and full feature access.
   async getUsageSummary(teamId?: string | null) {
     const { planId, isFree } = await this.resolveTeamPlan(teamId);
     const cfg = getPlan(planId);
@@ -136,6 +176,7 @@ export class UsageService {
       planLabel: cfg.label,
       isFree,
       limits: cfg.limits,
+      features: this.effectiveFeatures(isFree),
       usage: {
         aiConversationsThisMonth: conversations,
         integrationsConnected: integrations,

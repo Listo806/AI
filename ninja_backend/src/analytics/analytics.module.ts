@@ -6,9 +6,10 @@ import { ReportGeneratorService } from './reports/report-generator.service';
 import { ReportsController } from './reports/reports.controller';
 import { DatabaseModule } from '../database/database.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, PlansModule],
   controllers: [AnalyticsController, ReportsController],
   providers: [AnalyticsService, EventLoggerService, ReportGeneratorService, PaymentGuard],
   exports: [EventLoggerService, AnalyticsService, ReportGeneratorService],

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
 import LanguageSelector from "../components/LanguageSelector";
 import { useAuth } from "../context/AuthContext";
+import { PlanProvider } from "../context/PlanContext";
 import { useTheme } from "../theme/ThemeProvider";
 import "../styles/crm-dashboard.css";
 import BottomNav from "../components/BottomNav";
@@ -208,8 +209,9 @@ export default function DashboardLayout() {
   }, []);
 
   return (
+    <PlanProvider>
     <div className={`crm-root ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar 
+      <Sidebar
         isOpen={sidebarOpen} 
         onClose={closeSidebar}
         isCollapsed={sidebarCollapsed}
@@ -370,12 +372,13 @@ export default function DashboardLayout() {
         <main className={`crm-content ${location.pathname === '/dashboard' ? 'dashboard-content-dark' : ''}`}>
           <Outlet />
         </main>
-        <BottomNav 
-          onToggleSidebar={handleSidebarToggle} 
-          currentTab={location.pathname} 
-          setCurrentTab={(route) => navigate(route)} 
+        <BottomNav
+          onToggleSidebar={handleSidebarToggle}
+          currentTab={location.pathname}
+          setCurrentTab={(route) => navigate(route)}
         />
       </div>
     </div>
+    </PlanProvider>
   );
 }

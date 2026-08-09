@@ -13,6 +13,8 @@ import {
 
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
+import { FeatureAccessGuard } from "../plans/feature-access.guard";
+import { RequireFeature } from "../plans/require-feature.decorator";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import { CalendarService } from "./calendar.service";
 import { BookingEngineService } from "./booking-engine.service";
@@ -119,6 +121,8 @@ export class CalendarController {
   }
 
   @Post("appointments")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("calendar")
   create(@CurrentUser() user: any, @Body() body: any) {
     return this.calendar.create(this.requireTeam(user), this.userId(user), body);
   }
