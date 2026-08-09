@@ -340,10 +340,7 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-      <div className="cxc-layout">
-        <div className="cxc-main">
-
-      {/* KPI cards */}
+      {/* KPI cards (full width) */}
       <div className="cxc-kpis">
         <Kpi variant="blue" icon={<Users size={18} />} label="Total Registered" value={kpis ? kpis.totalRegistered.toLocaleString() : "—"} sub={kpis ? `+${kpis.newThisWeek} this week` : ""} subClass="pos" />
         <Kpi variant="green" icon={<UserCheck size={18} />} label="Active Customers" value={kpis ? kpis.activeCustomers.toLocaleString() : "—"} sub={kpis ? `${kpis.activePctOfTotal}% of total` : ""} subClass="pos" />
@@ -436,6 +433,10 @@ export default function AdminCustomers() {
         <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
         <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
       </div>
+
+      {/* Customer list (left) + Customer Details panel (right) */}
+      <div className="cxc-layout">
+        <div className="cxc-main">
 
       {/* Table */}
       <div className="cxc-panel">
@@ -531,7 +532,20 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-      {/* Bottom action toolbar */}
+        </div>{/* /cxc-main */}
+        <aside className="cxc-side">
+          <CustomerPanel
+            id={detail.id}
+            tab={detail.tab}
+            onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
+            onChanged={load}
+            onEdit={(c) => setEditCustomer(c)}
+            onChangePlan={(c) => setChangePlanFor(c)}
+          />
+        </aside>
+      </div>{/* /cxc-layout */}
+
+      {/* Bottom action toolbar (full width) */}
       <div className="cxc-toolbar">
         <div className="cxc-menu-wrap">
           <button className="cxc-btn" onClick={() => setBulkMenu((v) => !v)}>Bulk Actions ({selected.size} selected) <ChevronDown size={14} /></button>
@@ -561,20 +575,6 @@ export default function AdminCustomers() {
         <div className="cxc-toolbar-spacer" />
         <button className="cxc-btn cxc-btn-primary" onClick={() => setShowPlans(true)}><Plus size={15} /> Create Plan</button>
       </div>
-
-        </div>{/* /cxc-main */}
-
-        <aside className="cxc-side">
-          <CustomerPanel
-            id={detail.id}
-            tab={detail.tab}
-            onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
-            onChanged={load}
-            onEdit={(c) => setEditCustomer(c)}
-            onChangePlan={(c) => setChangePlanFor(c)}
-          />
-        </aside>
-      </div>{/* /cxc-layout */}
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {editCustomer && <EditCustomerModal customer={editCustomer} onClose={() => setEditCustomer(null)} onSuccess={load} />}
