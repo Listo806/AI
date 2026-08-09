@@ -274,6 +274,14 @@ export async function importCustomers(customers = []) {
   });
 }
 
+// Add a single customer (creates a real account). Returns { success, customer }.
+export async function createCustomer(payload = {}) {
+  return apiClient.request(`/admin/customers-hub`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 // Download the filtered customer list as CSV (respects current filters).
 export async function exportCustomersHubCsv(params = {}) {
   const token = localStorage.getItem("listo_access_token");

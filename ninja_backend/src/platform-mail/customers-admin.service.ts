@@ -589,6 +589,113 @@ export class CustomersAdminService {
     return { deleted: (rowCount ?? 0) > 0 };
   }
 
+  // Create a proper account (team + owner user + owner membership) with a random
+  // password. Shared by import and the admin "Add Customer" action. Caller must
+  // have already checked the email does not exist.
+  private async createAccount(
+    email: string,
+    opts: {
+      name?: string | null;
+      phone?: string | null;
+      planId?: string | null;
+      language?: string | null;
+      source?: string | null;
+    },
+  ): Promise<{ id: string; teamId: string }> {
+    const planId = opts.planId ? normalizePlanId(opts.planId) : null;
+    const isFree = planId === 'free';
+    const knownPaid = !!planId && !isFree;
+    const selectedPlan = planId
+      ? isFree
+        ? 'free'
+        : planId === 'business'
+          ? 'team'
+          : planId === 'scale'
+            ? 'growth'
+            : 'solo'
+      : null;
+    const paymentStatus = isFree ? 'free' : 'registered';
+    const checkoutStatus = isFree ? 'free' : 'registered';
+    const billingCycle = knownPaid ? 'monthly' : null;
+
+    const teamName = opts.name
+      ? `${String(opts.name).split(' ')[0]}'s Team`
+      : 'New Team';
+    const { rows: t } = await this.db.query(
+      `INSERT INTO teams (name, created_at, updated_at) VALUES ($1, NOW(), NOW()) RETURNING id`,
+      [teamName],
+    );
+    const teamId = t[0].id;
+    const password = await bcrypt.hash(randomUUID(), 10);
+    const { rows: u } = await this.db.query(
+      `INSERT INTO users
+         (email, password, name, phone, role, plan, selected_plan, is_active,
+          payment_status, billing_cycle, checkout_status, team_id,
+          preferred_language, signup_source, offer_used, registered_at,
+          created_at, updated_at)
+       VALUES ($1,$2,$3,$4,'owner','TRIAL',$5,true,$6,$7,$8,$9,$10,$11,'standard',NOW(),NOW(),NOW())
+       RETURNING id`,
+      [
+        email,
+        password,
+        opts.name || null,
+        opts.phone || null,
+        selectedPlan,
+        paymentStatus,
+        billingCycle,
+        checkoutStatus,
+        teamId,
+        opts.language || 'en',
+        opts.source || 'admin',
+      ],
+    );
+    const uid = u[0].id;
+    await this.db.query(
+      `UPDATE teams SET owner_id = $1, updated_at = NOW() WHERE id = $2`,
+      [uid, teamId],
+    );
+    await this.db.query(
+      `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
+       VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
+       ON CONFLICT (team_id, user_id) DO NOTHING`,
+      [teamId, uid],
+    );
+    return { id: uid, teamId };
+  }
+
+  // Admin "Add Customer": create one account. Rejects duplicate emails.
+  async createCustomer(dto: any) {
+    await this.ready();
+    const email = String(dto?.email || '').trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      throw new BadRequestException('A valid email is required');
+    }
+    const { rows: existing } = await this.db.query(
+      `SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      [email],
+    );
+    if (existing[0]) {
+      throw new BadRequestException('An account with this email already exists');
+    }
+    const language = ['en', 'es', 'pt'].includes(
+      String(dto?.language || '').toLowerCase(),
+    )
+      ? String(dto.language).toLowerCase()
+      : 'en';
+    const { id } = await this.createAccount(email, {
+      name: dto?.name ? String(dto.name).slice(0, 200) : null,
+      phone: dto?.phone ? String(dto.phone).slice(0, 40) : null,
+      planId: dto?.plan ? normalizePlanId(dto.plan) : null,
+      language,
+      source: dto?.source ? String(dto.source).slice(0, 64) : 'admin',
+    });
+    const { rows } = await this.db.query(
+      `SELECT ${this.cols} FROM users WHERE id = $1`,
+      [id],
+    );
+    return { success: true, customer: this.enrich(rows[0]) };
+  }
+
   // Bulk import customers from parsed CSV rows. Upserts by email: existing
   // accounts get their attributes updated (never overwritten with blanks); new
   // emails get a proper account created (team + owner membership + random
@@ -638,61 +745,7 @@ export class CustomersAdminService {
           continue;
         }
 
-        const isFree = planId === 'free';
-        const knownPaid = !!planId && !isFree;
-        const selectedPlan = planId
-          ? isFree
-            ? 'free'
-            : planId === 'business'
-              ? 'team'
-              : planId === 'scale'
-                ? 'growth'
-                : 'solo'
-          : null;
-        const paymentStatus = isFree ? 'free' : 'registered';
-        const checkoutStatus = isFree ? 'free' : 'registered';
-        const billingCycle = knownPaid ? 'monthly' : null;
-
-        const teamName = name ? `${name.split(' ')[0]}'s Team` : 'Imported Team';
-        const { rows: t } = await this.db.query(
-          `INSERT INTO teams (name, created_at, updated_at) VALUES ($1, NOW(), NOW()) RETURNING id`,
-          [teamName],
-        );
-        const teamId = t[0].id;
-        const password = await bcrypt.hash(randomUUID(), 10);
-        const { rows: u } = await this.db.query(
-          `INSERT INTO users
-             (email, password, name, phone, role, plan, selected_plan, is_active,
-              payment_status, billing_cycle, checkout_status, team_id,
-              preferred_language, signup_source, offer_used, registered_at,
-              created_at, updated_at)
-           VALUES ($1,$2,$3,$4,'owner','TRIAL',$5,true,$6,$7,$8,$9,$10,$11,'standard',NOW(),NOW(),NOW())
-           RETURNING id`,
-          [
-            email,
-            password,
-            name,
-            phone,
-            selectedPlan,
-            paymentStatus,
-            billingCycle,
-            checkoutStatus,
-            teamId,
-            language || 'en',
-            source,
-          ],
-        );
-        const uid = u[0].id;
-        await this.db.query(
-          `UPDATE teams SET owner_id = $1, updated_at = NOW() WHERE id = $2`,
-          [uid, teamId],
-        );
-        await this.db.query(
-          `INSERT INTO team_members (team_id, user_id, role, status, created_at, updated_at)
-           VALUES ($1, $2, 'owner', 'active', NOW(), NOW())
-           ON CONFLICT (team_id, user_id) DO NOTHING`,
-          [teamId, uid],
-        );
+        await this.createAccount(email, { name, phone, planId, language, source });
         created += 1;
       } catch (err: any) {
         errors.push(`${email}: ${err?.message}`);

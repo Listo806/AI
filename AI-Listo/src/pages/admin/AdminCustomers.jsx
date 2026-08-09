@@ -10,6 +10,7 @@ import {
   deleteCustomerHub,
   exportCustomersHubCsv,
   importCustomers,
+  createCustomer,
 } from "../../api/platformApi";
 import AdminPlans from "./AdminPlans";
 import "../platform/platform.css";
@@ -225,6 +226,7 @@ export default function AdminCustomers() {
   const [detailId, setDetailId] = useState(null);
   const [showPlans, setShowPlans] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
 
   const query = { ...filters, tab, limit: PAGE_SIZE, offset };
 
@@ -353,8 +355,11 @@ export default function AdminCustomers() {
             {importing ? "Importing…" : "Import Customers"}
             <input type="file" accept=".csv,text/csv" onChange={onImportFile} disabled={importing} style={{ display: "none" }} />
           </label>
-          <button type="button" className="crm-btn crm-btn-primary" onClick={() => setShowPlans(true)}>
+          <button type="button" className="crm-btn crm-btn-secondary" onClick={() => setShowPlans(true)}>
             Manage Plans
+          </button>
+          <button type="button" className="crm-btn crm-btn-primary" onClick={() => setShowAdd(true)}>
+            Add Customer
           </button>
         </div>
       </div>
@@ -550,10 +555,79 @@ export default function AdminCustomers() {
               <strong style={{ fontSize: 16 }}>Plan management</strong>
               <button type="button" onClick={() => setShowPlans(false)} style={{ border: "none", background: "none", fontSize: 22, cursor: "pointer", color: "#94a3b8" }}>×</button>
             </div>
+            <div style={{ margin: "0 12px 8px", padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 12, color: "#92400e" }}>
+              These are the billing plan records. The live pricing tiers customers
+              actually check out on are Free, Solo, Business, and Scale.
+            </div>
             <AdminPlans />
           </div>
         </div>
       )}
+
+      {showAdd && (
+        <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />
+      )}
+    </div>
+  );
+}
+
+// ---- Add Customer modal ----------------------------------------------------
+
+function AddCustomerModal({ onClose, onSuccess }) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", plan: "free", language: "en" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    if (!form.email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      await createCustomer(form);
+      onSuccess && onSuccess();
+      onClose();
+    } catch (err) {
+      setError(err?.message || "Could not add the customer.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.35)", zIndex: 1100, display: "flex", justifyContent: "center", alignItems: "flex-start", padding: 24 }} onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: 420, maxWidth: "100%", background: "#fff", borderRadius: 12, padding: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 18 }}>Add Customer</h3>
+          <button type="button" onClick={onClose} style={{ border: "none", background: "none", fontSize: 22, cursor: "pointer", color: "#94a3b8" }}>×</button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input type="text" placeholder="Full name" value={form.name} onChange={(e) => set("name", e.target.value)} style={inputStyle} />
+          <input type="email" placeholder="Email address" value={form.email} onChange={(e) => set("email", e.target.value)} style={inputStyle} />
+          <input type="tel" placeholder="Phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} style={inputStyle} />
+          <select value={form.plan} onChange={(e) => set("plan", e.target.value)} style={inputStyle}>
+            {PLAN_OPTIONS.map((p) => (<option key={p.value} value={p.value}>{p.label}</option>))}
+          </select>
+          <select value={form.language} onChange={(e) => set("language", e.target.value)} style={inputStyle}>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="pt">Portuguese</option>
+          </select>
+          {error && <div className="crm-error" style={{ fontSize: 13 }}>{error}</div>}
+          <div style={{ fontSize: 11, color: "#94a3b8" }}>
+            Creates an account with a random password. Paid plans are recorded as registered until the customer pays.
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
+            <button type="button" className="crm-btn crm-btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="button" className="crm-btn crm-btn-primary" onClick={submit} disabled={submitting}>
+              {submitting ? "Adding…" : "Add Customer"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
