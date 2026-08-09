@@ -392,6 +392,117 @@ export class PaddleService {
   }
 
   /**
+   * SAFE production helper: create ONLY the three one-time starting prices
+   * for the NEW pricing model.
+   *
+   * No PADDLE_PRODUCT_ID env is required.
+   *
+   * We derive the existing Paddle Product ID from one of the existing recurring
+   * Price IDs (prefer TEAM, then SOLO, then GROWTH). Paddle Price entities already
+   * contain their related productId, so this avoids manually copying a pro_... ID.
+   *
+   * Existing recurring prices remain untouched:
+   *   solo   -> $197/month
+   *   team   -> $347/month
+   *   growth -> $497/month
+   *
+   * Creates only:
+   *   solo   -> $7 one-time
+   *   team   -> $14 one-time
+   *   growth -> $21 one-time
+   */
+  async setupStartingPrices(): Promise<any> {
+    if (!this.isConfigured || !this.paddle) {
+      throw new BadRequestException('Paddle service is not configured');
+    }
+
+    const recurringPriceId =
+      this.configService.get('PADDLE_PRICE_TEAM') ||
+      this.configService.get('PADDLE_PRICE_SOLO') ||
+      this.configService.get('PADDLE_PRICE_GROWTH');
+
+    if (!recurringPriceId) {
+      throw new BadRequestException(
+        'At least one existing recurring Paddle Price ID is required: PADDLE_PRICE_TEAM, PADDLE_PRICE_SOLO, or PADDLE_PRICE_GROWTH.',
+      );
+    }
+
+    if (!String(recurringPriceId).startsWith('pri_')) {
+      throw new BadRequestException(
+        `Invalid recurring Paddle Price ID: '${recurringPriceId}'. Expected a pri_... Price ID.`,
+      );
+    }
+
+    // Resolve the existing Product automatically from the recurring Price.
+    const existingPrice: any = await (this.paddle as any).prices.get(
+      recurringPriceId,
+    );
+
+    const productId =
+      existingPrice?.productId ||
+      existingPrice?.product_id ||
+      existingPrice?.data?.productId ||
+      existingPrice?.data?.product_id;
+
+    if (!productId || !String(productId).startsWith('pro_')) {
+      this.logger.error(
+        `Could not derive Paddle product from recurring price ${recurringPriceId}: ${JSON.stringify(existingPrice)}`,
+      );
+
+      throw new BadRequestException(
+        `Could not resolve the Paddle Product ID from recurring price '${recurringPriceId}'.`,
+      );
+    }
+
+    this.logger.log(
+      `Resolved existing Paddle product ${productId} from recurring price ${recurringPriceId}`,
+    );
+
+    const makeStartingPrice = (label: string, amount: string) =>
+      (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA ${label} one-time starting charge`,
+        unitPrice: {
+          amount,
+          currencyCode: 'USD',
+        },
+      });
+
+    const startSolo: any = await makeStartingPrice('Solo', '700');
+    const startTeam: any = await makeStartingPrice('Business', '1400');
+    const startGrowth: any = await makeStartingPrice('Scale', '2100');
+
+    return {
+      success: true,
+      environment: this.environment,
+
+      derivedFromRecurringPrice: recurringPriceId,
+      productId,
+
+      startPrices: {
+        solo: startSolo.id,
+        team: startTeam.id,
+        growth: startGrowth.id,
+      },
+
+      env: {
+        PADDLE_START_PRICE_SOLO: startSolo.id,
+        PADDLE_START_PRICE_TEAM: startTeam.id,
+        PADDLE_START_PRICE_GROWTH: startGrowth.id,
+      },
+
+      mapping: {
+        solo: '$7 one-time -> existing $197/month',
+        team: '$14 one-time -> existing $347/month',
+        growth: '$21 one-time -> existing $497/month',
+      },
+
+      note:
+        'Add the three returned PADDLE_START_PRICE_* values to Render and redeploy. Existing recurring PADDLE_PRICE_* values are unchanged.',
+    };
+  }
+
+  /**
    * One-time admin setup for the NEW pricing model.
    *
    * Recurring prices stay exactly on the existing plans:

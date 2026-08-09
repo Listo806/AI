@@ -55,6 +55,22 @@ export class PaddleController {
     return this.paddleService.setupPlans();
   }
 
+
+  // Safe production setup for the new $7 / $14 / $21 starting charges.
+  // It derives the existing product from PADDLE_PRICE_TEAM/SOLO/GROWTH and
+  // creates ONLY the three one-time prices. Existing recurring prices are untouched.
+  @Post('setup-starting-prices')
+  @UseGuards(JwtAuthGuard)
+  async setupStartingPrices(@CurrentUser() user: any) {
+    const role = String(user?.role || '').toLowerCase();
+
+    if (!['admin', 'super_admin', 'owner', 'developer'].includes(role)) {
+      throw new ForbiddenException('Admins only');
+    }
+
+    return this.paddleService.setupStartingPrices();
+  }
+
   @Get('client-token')
   @UseGuards(JwtAuthGuard)
   async getClientToken() {

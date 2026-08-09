@@ -3920,3 +3920,377 @@
     gap: 7px;
   }
 }
+
+/* =========================================================
+   NEW CREATE YOUR ACCOUNT FLOW — DESKTOP + MOBILE
+   CTA -> Create Account -> Pricing -> Review / Checkout
+   ========================================================= */
+
+.trial-v3-page,
+.trial-v3-page * {
+  box-sizing: border-box;
+}
+
+.trial-v3-page {
+  min-height: 100vh;
+  width: 100%;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(0, 0, 0, 0.018), transparent 34%),
+    #ffffff;
+  color: #050505;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+.trial-v3-card {
+  width: min(700px, 100%);
+  padding: 30px 50px!important;
+  border: 1px solid #e4e4e4;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.035);
+  min-height: 95svh;
+}
+
+.trial-v3-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.trial-v3-header h1 {
+  margin: 0;
+  color: #000;
+  font-size: clamp(46px, 3.3vw, 74px);
+  line-height: 0.98;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.trial-v3-header p {
+  margin: 16px 0 0;
+  color: #151515;
+  font-size: clamp(23px, 2.15vw, 31px);
+  line-height: 1.3;
+  font-weight: 400;
+}
+
+.trial-v3-form {
+  width: 100%;
+}
+
+.trial-v3-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.trial-v3-field {
+  width: 100%;
+  min-height: 55px;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  border: 1.5px solid #d7d9df;
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.trial-v3-field:focus-within {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.055);
+}
+
+.trial-v3-field-icon {
+  flex: 0 0 auto;
+  color: #000;
+}
+
+.trial-v3-field input {
+  min-width: 0;
+  flex: 1;
+  height: 55px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #000;
+  font: inherit;
+  font-size: clamp(18px, 1.65vw, 24px);
+  font-weight: 400;
+}
+
+.trial-v3-field input::placeholder {
+  color: #777c8d;
+  opacity: 1;
+}
+
+.trial-v3-password-toggle {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #000;
+  cursor: pointer;
+}
+
+.trial-v3-submit {
+  width: 100%;
+  min-height: 60px;
+  margin-top: 34px;
+  padding: 0 38px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.11);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.trial-v3-submit:hover {
+  background: #111;
+  transform: translateY(-1px);
+}
+
+.trial-v3-submit:disabled {
+  opacity: 0.66;
+  cursor: wait;
+  transform: none;
+}
+
+.trial-v3-submit-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.trial-v3-submit-main strong {
+  font-size: clamp(18px, 1.4vw, 26px);
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.018em;
+}
+
+.trial-v3-submit-arrow {
+  justify-self: end;
+}
+
+.trial-v3-security {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  color: #0c0c0c;
+}
+
+.trial-v3-security p {
+  margin: 0;
+  font-size: clamp(17px, 0.8vw, 24px);
+  font-weight: 400;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .trial-v3-page {
+    padding: 28px 20px;
+  }
+
+  .trial-v3-card {
+    padding: 12px!important;
+    border-radius: 24px;
+  }
+
+  .trial-v3-header {
+    margin-bottom: 38px;
+  }
+
+  .trial-v3-field {
+    min-height: 72px;
+    padding: 0 22px;
+    gap: 20px;
+  }
+
+  .trial-v3-field input {
+    height: 48px;
+  }
+
+  .trial-v3-submit {
+    min-height: 54px;
+    padding: 0 28px;
+  }
+
+}
+
+/* Mobile: same exact flow, responsive layout only */
+@media (max-width: 600px) {
+  .trial-v3-field input {
+    height: 48px;
+  }
+  .trial-v3-page {
+    min-height: 100svh;
+    padding: 18px 14px;
+    align-items: flex-start;
+    background: #fff;
+  }
+
+  .trial-v3-card {
+    width: 100%;
+    margin: 0 auto;
+    padding: 42px 18px 34px;
+    border-radius: 20px;
+  }
+
+  .trial-v3-header {
+    margin-bottom: 32px;
+  }
+
+  .trial-v3-header h1 {
+    font-size: clamp(29px, 7vw, 46px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .trial-v3-header p {
+    margin-top: 16px;
+    font-size: 18px;
+  }
+
+  .trial-v3-fields {
+    gap: 12px;
+  }
+
+  .trial-v3-field {
+    min-height: 48px;
+    padding: 0 16px;
+    gap: 14px;
+    border-radius: 11px;
+  }
+
+  .trial-v3-field-icon {
+    width: 23px;
+    height: 23px;
+  }
+
+  .trial-v3-field input {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .trial-v3-password-toggle {
+    width: 40px;
+    height: 40px;
+  }
+
+  .trial-v3-password-toggle svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .trial-v3-submit {
+    min-height: 52px;
+    margin-top: 24px;
+    padding: 0 18px;
+    grid-template-columns: 1fr 26px;
+    border-radius: 10px;
+  }
+
+  .trial-v3-submit-main {
+    gap: 10px;
+  }
+
+  .trial-v3-submit-main svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .trial-v3-submit-main strong {
+    max-width: 260px;
+    font-size: 13px;
+    line-height: 1.15;
+  }
+
+  .trial-v3-submit-arrow {
+    width: 25px;
+    height: 25px;
+  }
+
+  .trial-v3-security {
+    margin-top: 16px;
+    gap: 10px;
+  }
+
+  .trial-v3-security svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .trial-v3-security p {
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .trial-v3-page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .trial-v3-card {
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+
+  .trial-v3-header h1 {
+    font-size: 32px;
+  }
+
+  .trial-v3-submit-main strong {
+    font-size: 13px;
+  }
+}
+
+/* New signup flow: pricing CTAs are buttons because plan selection is persisted
+   before navigation to Checkout / Free dashboard. */
+.pricing-page button.cx-pricing-v3-cta {
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.pricing-page button.cx-pricing-v3-cta:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}

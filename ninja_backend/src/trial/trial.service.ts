@@ -112,7 +112,7 @@ export class TrialService {
       const utm = dto.utm || {};
       const offerUsed = dto.offer === 'exit7' ? 'exit7' : 'standard';
 
-      // Plan may be unknown at signup: the exit popup creates the account first
+      // Plan may be unknown at signup: Create Account creates the account first
       // and the plan is chosen on the next (pricing) step. Free is created active
       // and enters the CRM; a paid tier stays 'trial' until payment; a no-plan
       // popup signup is 'registered' (a saved lead) until they pick a plan.
@@ -242,7 +242,7 @@ export class TrialService {
   }
 
   // Set the plan on an already-registered (logged-in) account — used after the
-  // exit-popup signup, when the user picks a plan on the pricing page. Never
+  // account-first signup, when the user picks a plan on the pricing page. Never
   // creates a second account. Free activates immediately (no Paddle); a paid
   // plan is recorded and stays unpaid until Paddle confirms at checkout.
   async selectPlan(userId: string, dto: any) {

@@ -1157,35 +1157,74 @@ export default function PricingPage() {
   const { user } = useAuth();
   const cycle = billingCycle === "annually" ? "annual" : "monthly";
 
-  // Plan CTA. planKey is the checkout vocabulary: free / solo / team (Business) /
-  // growth (Scale). A visitor who already registered (e.g. via the exit popup) is
-  // logged in — set the plan on that SAME account and go straight to Free
-  // activation or paid checkout, no second registration. A new visitor follows
-  // the Link to /trial to register first.
+  // New signup flow:
+  // CTA -> Create Account -> Pricing -> Review / Checkout.
+  //
+  // The latest backend already exposes /trial/select-plan through
+  // selectAccountPlan(), so preserve that developer integration.
   const onPlanCta = (e, planKey) => {
     trackEvent("plan_selected", {
       plan: planKey,
       billing_cycle: planKey === "free" ? "free" : cycle,
     });
-    if (!user) return; // let the <Link> navigate to /trial
+
+    const hasRegisteredAccount = Boolean(
+      user || localStorage.getItem("trialUserId"),
+    );
+
+    // Pricing can still be visited publicly. If there is no registered account,
+    // account creation must happen FIRST. We intentionally do not send the user
+    // directly to Checkout or bind the selected plan yet.
+    if (!hasRegisteredAccount) {
+      e.preventDefault();
+
+      localStorage.setItem("pendingPlanIntent", planKey);
+      localStorage.setItem(
+        "pendingBillingCycle",
+        planKey === "free" ? "free" : cycle,
+      );
+
+      navigate("/trial?from=pricing");
+      return;
+    }
+
     e.preventDefault();
+
     (async () => {
       try {
         const res = await selectAccountPlan({
           plan: planKey,
           billingCycle: planKey === "free" ? undefined : cycle,
         });
+
         const data = res?.data ?? res;
+        const selectedPlan = data?.plan || planKey;
+
+        localStorage.setItem("trialPlan", selectedPlan);
+        localStorage.setItem(
+          "signupFlowStage",
+          planKey === "free" || data?.free
+            ? "free_plan_selected"
+            : "checkout",
+        );
+
         if (planKey === "free" || data?.free) {
           navigate("/dashboard", { replace: true });
           return;
         }
-        navigate(`/checkout?plan=${data?.plan || planKey}&billing=${cycle}`);
-      } catch (_err) {
+
         navigate(
-          planKey === "free"
-            ? "/trial?plan=free"
-            : `/trial?plan=${planKey}&billing=${cycle}`,
+          `/checkout?plan=${encodeURIComponent(selectedPlan)}&billing=${cycle}&source=trial`,
+          { replace: true },
+        );
+      } catch (error) {
+        console.error("PLAN SELECTION ERROR:", error);
+
+        // Do not create a second registration. If the account exists but the
+        // authenticated plan-update failed, keep the visitor on Pricing.
+        alert(
+          error?.message ||
+            "Unable to save your selected plan. Please try again.",
         );
       }
     })();
@@ -1246,7 +1285,7 @@ export default function PricingPage() {
                   <span>{pv3.forever}</span>
                 </div>
                 <Link
-                  to="/trial?plan=free"
+                  to="/trial?from=pricing"
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-black"
                   onClick={(e) => onPlanCta(e, "free")}
                 >
@@ -1275,7 +1314,7 @@ export default function PricingPage() {
                   <span>{pv3.toStart}</span>
                 </div>
                 <Link
-                  to={`/trial?plan=solo&billing=${cycle}`}
+                  to="/trial?from=pricing"
                   className="cx-pricing-v3-cta"
                   onClick={(e) => onPlanCta(e, "solo")}
                 >
@@ -1310,7 +1349,7 @@ export default function PricingPage() {
                   {pv3.plans.business.users}
                 </div>
                 <Link
-                  to={`/trial?plan=team&billing=${cycle}`}
+                  to="/trial?from=pricing"
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
                   onClick={(e) => onPlanCta(e, "team")}
                 >
@@ -1342,7 +1381,7 @@ export default function PricingPage() {
                   {pv3.plans.scale.users}
                 </div>
                 <Link
-                  to={`/trial?plan=growth&billing=${cycle}`}
+                  to="/trial?from=pricing"
                   className="cx-pricing-v3-cta"
                   onClick={(e) => onPlanCta(e, "growth")}
                 >

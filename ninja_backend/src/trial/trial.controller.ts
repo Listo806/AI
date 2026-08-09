@@ -12,7 +12,7 @@ export class TrialController {
     return this.trialService.startTrial(dto);
   }
 
-  // Set the plan on the logged-in account (after the exit-popup signup picks a
+  // Set the plan on the logged-in account after Create Account -> Pricing picks a
   // plan on the pricing page). Auth-gated so it only updates the caller's own
   // account. Never creates a second account.
   @Post('select-plan')
