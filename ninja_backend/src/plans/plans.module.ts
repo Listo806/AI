@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PlanService } from './plan.service';
 import { UsageService } from './usage.service';
 import { FeatureAccessGuard } from './feature-access.guard';
+import { PlanOverridesService } from './plan-overrides.service';
 import { PlansController } from './plans.controller';
 
 // Central plan catalog + resolution service + Free-plan usage metering +
@@ -11,7 +12,7 @@ import { PlansController } from './plans.controller';
 // controllers) can inject them.
 @Module({
   controllers: [PlansController],
-  providers: [PlanService, UsageService, FeatureAccessGuard],
-  exports: [PlanService, UsageService, FeatureAccessGuard],
+  providers: [PlanService, UsageService, FeatureAccessGuard, PlanOverridesService],
+  exports: [PlanService, UsageService, FeatureAccessGuard, PlanOverridesService],
 })
 export class PlansModule {}

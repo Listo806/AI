@@ -17,6 +17,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { CustomersAdminService } from './customers-admin.service';
+import { PlanOverridesService } from '../plans/plan-overrides.service';
 
 const CSV_FIELDS = [
   'email',
@@ -51,7 +52,10 @@ function csvCell(v: any): string {
 @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
 @ApiBearerAuth('JWT-auth')
 export class CustomersAdminController {
-  constructor(private readonly customers: CustomersAdminService) {}
+  constructor(
+    private readonly customers: CustomersAdminService,
+    private readonly planOverrides: PlanOverridesService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Master customer list (all lifecycle statuses)' })
@@ -86,6 +90,24 @@ export class CustomersAdminController {
   @ApiOperation({ summary: 'Plan catalog for filters and Change Plan' })
   async plans() {
     return this.customers.plansCatalog();
+  }
+
+  @Get('plan-config')
+  @ApiOperation({ summary: 'Editable plan limits + feature access (merged with overrides)' })
+  async planConfig() {
+    return this.planOverrides.listMerged();
+  }
+
+  @Post('plan-config/:planId')
+  @ApiOperation({ summary: 'Override a plan\'s limits/features (real enforcement for Free)' })
+  async setPlanConfig(@Param('planId') planId: string, @Body() body: any) {
+    return this.planOverrides.setOverride(planId, body || {});
+  }
+
+  @Post('plan-config/:planId/reset')
+  @ApiOperation({ summary: 'Reset a plan back to the code defaults' })
+  async resetPlanConfig(@Param('planId') planId: string) {
+    return this.planOverrides.resetOverride(planId);
   }
 
   @Get('export.csv')
