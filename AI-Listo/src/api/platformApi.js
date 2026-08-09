@@ -120,13 +120,14 @@ export async function getAdminUserById(id) {
 const SIGNUP_API_BASE =
   import.meta.env.VITE_API_BASE_URL || "https://backend.cortexaaicrm.com/api";
 
-function buildSignupQuery({ limit, offset, q, paymentStatus, offer } = {}) {
+function buildSignupQuery({ limit, offset, q, paymentStatus, offer, language } = {}) {
   const p = new URLSearchParams();
   if (limit != null) p.set("limit", String(limit));
   if (offset != null) p.set("offset", String(offset));
   if (q) p.set("q", q);
   if (paymentStatus && paymentStatus !== "all") p.set("paymentStatus", paymentStatus);
   if (offer && offer !== "all") p.set("offer", offer);
+  if (language && language !== "all") p.set("language", language);
   const qs = p.toString();
   return qs ? `?${qs}` : "";
 }
@@ -167,6 +168,11 @@ export async function getAdminCustomers(opts = {}) {
 // One sign-up with its email history: { user, emails }.
 export async function getAdminSignupDetail(id) {
   return apiClient.request(`/admin/signups/${id}`);
+}
+
+// Soft-delete a sign-up (hide from lists + deactivate). Returns { deleted }.
+export async function deleteAdminSignup(id) {
+  return apiClient.request(`/admin/signups/${id}`, { method: "DELETE" });
 }
 
 // Sign-up to purchase funnel totals, optionally by date range and dimension.

@@ -56,6 +56,7 @@ export class PlatformMailerService {
         `paddle_subscription_id TEXT`,
         `signup_source VARCHAR(32)`,
         `upgraded_at TIMESTAMPTZ`,
+        `deleted_at TIMESTAMPTZ`,
       ];
       for (const c of userCols) {
         await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);

@@ -8,6 +8,7 @@ import {
 import { getSetupOffer } from "../../utils/offer";
 import apiClient from "../../api/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { currentSiteLanguage } from "../../i18n/currentLanguage";
 import {
   ArrowRight,
   Eye,
@@ -80,10 +81,9 @@ const t = {
 export default function StartTrial() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
-
-  const [lang] = useState(
-    () => localStorage.getItem("cortexa_lang") || "en",
-  );
+  // Capture the actual site language the visitor is registering in (URL version
+  // first), not just a possibly-stale localStorage value.
+  const [lang] = useState(() => currentSiteLanguage());
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 

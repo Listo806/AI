@@ -6,6 +6,7 @@ import {
   exportSignupsCsv,
   sendAdminTestEmail,
   getAdminFunnel,
+  deleteAdminSignup,
 } from "../../api/platformApi";
 import "../platform/platform.css";
 import "./admin.css";
@@ -483,14 +484,16 @@ export default function AdminSignups({ customersOnly = false }) {
   const [q, setQ] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("all");
   const [offer, setOffer] = useState("all");
+  const [language, setLanguage] = useState("all");
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true);
     const fetcher = customersOnly ? getAdminCustomers : getAdminSignups;
-    fetcher({ limit: PAGE_SIZE, offset, q, paymentStatus, offer })
+    fetcher({ limit: PAGE_SIZE, offset, q, paymentStatus, offer, language })
       .then((res) => {
         setRows(res?.data || []);
         setTotal(res?.total || 0);
@@ -500,7 +503,7 @@ export default function AdminSignups({ customersOnly = false }) {
         setTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [customersOnly, offset, q, paymentStatus, offer]);
+  }, [customersOnly, offset, q, paymentStatus, offer, language]);
 
   const onExport = async () => {
     setExporting(true);
@@ -509,11 +512,37 @@ export default function AdminSignups({ customersOnly = false }) {
         q,
         paymentStatus,
         offer,
+        language,
       });
     } catch (_e) {
       /* ignore */
     } finally {
       setExporting(false);
+    }
+  };
+
+  // Delete a sign-up after an explicit confirmation. Removes it from the list on
+  // success. Stops the row-click (which opens the detail panel) from firing.
+  const onDelete = async (e, row) => {
+    e.stopPropagation();
+    const label = row.email || row.name || "this signup";
+    if (
+      !window.confirm(
+        `Are you sure you want to delete this signup?\n\n${label}\n\nIt will be removed from this list.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingId(row.id);
+    try {
+      await deleteAdminSignup(row.id);
+      setRows((prev) => prev.filter((r) => r.id !== row.id));
+      setTotal((t) => Math.max(0, t - 1));
+      if (selected === row.id) setSelected(null);
+    } catch (_e) {
+      window.alert("Could not delete this signup. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -594,6 +623,19 @@ export default function AdminSignups({ customersOnly = false }) {
           <option value="exit7">$7 exit offer</option>
           <option value="standard">Standard</option>
         </select>
+        <select
+          value={language}
+          onChange={(e) => {
+            setOffset(0);
+            setLanguage(e.target.value);
+          }}
+          style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #cbd5e1" }}
+        >
+          <option value="all">All languages</option>
+          <option value="en">English (en)</option>
+          <option value="es">Spanish (es)</option>
+          <option value="pt">Portuguese (pt)</option>
+        </select>
         <button
           type="submit"
           style={{
@@ -637,19 +679,20 @@ export default function AdminSignups({ customersOnly = false }) {
               <th style={{ padding: "8px 10px" }}>Payment</th>
               <th style={{ padding: "8px 10px" }}>Source</th>
               <th style={{ padding: "8px 10px" }}>Registered</th>
+              <th style={{ padding: "8px 10px", textAlign: "right" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={9} style={{ padding: 16, color: "#64748b" }}>
+                <td colSpan={10} style={{ padding: 16, color: "#64748b" }}>
                   Loading…
                 </td>
               </tr>
             )}
             {!loading && rows.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ padding: 16, color: "#64748b" }}>
+                <td colSpan={10} style={{ padding: 16, color: "#64748b" }}>
                   No records.
                 </td>
               </tr>
@@ -680,6 +723,25 @@ export default function AdminSignups({ customersOnly = false }) {
                   </td>
                   <td style={{ padding: "8px 10px", whiteSpace: "nowrap" }}>
                     {fmtDate(r.registered_at || r.created_at)}
+                  </td>
+                  <td style={{ padding: "8px 10px", textAlign: "right" }}>
+                    <button
+                      type="button"
+                      onClick={(e) => onDelete(e, r)}
+                      disabled={deletingId === r.id}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: 8,
+                        border: "1px solid #fecaca",
+                        background: "#fff",
+                        color: "#dc2626",
+                        fontWeight: 600,
+                        cursor: deletingId === r.id ? "default" : "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {deletingId === r.id ? "Deleting…" : "Delete"}
+                    </button>
                   </td>
                 </tr>
               ))}
