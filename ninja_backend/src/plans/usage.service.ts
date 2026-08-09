@@ -3,11 +3,10 @@ import { DatabaseService } from '../database/database.service';
 import {
   PlanFeatures,
   PlanId,
-  getLimit,
   getPlan,
-  hasFeature,
   normalizePlanId,
 } from './plan-config';
+import { PlanOverridesService } from './plan-overrides.service';
 
 // Meters the Free-plan usage caps and enforces them at the point of use.
 //
@@ -22,7 +21,10 @@ import {
 export class UsageService {
   private readonly logger = new Logger(UsageService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly overrides: PlanOverridesService,
+  ) {}
 
   // Resolve the team owner's effective plan and whether the Free caps apply.
   // Free caps apply only when the normalized plan is 'free' AND the account has
@@ -103,7 +105,7 @@ export class UsageService {
     if (!teamId) return true;
     const { isFree } = await this.resolveTeamPlan(teamId);
     if (!isFree) return true;
-    const limit = getLimit('free', 'aiConversationsPerMonth');
+    const limit = await this.overrides.getLimit('free', 'aiConversationsPerMonth');
     if (limit == null) return true;
     const used = await this.countConversationsThisMonth(teamId);
     return used < limit;
@@ -115,7 +117,7 @@ export class UsageService {
   async assertCanConnectIntegration(teamId: string, key: string): Promise<void> {
     const { isFree } = await this.resolveTeamPlan(teamId);
     if (!isFree) return;
-    const limit = getLimit('free', 'integrations');
+    const limit = await this.overrides.getLimit('free', 'integrations');
     if (limit == null) return;
     // Re-connecting an already-connected integration must never be blocked.
     const others = await this.countConnectedIntegrations(teamId, key);
@@ -143,15 +145,15 @@ export class UsageService {
   ): Promise<boolean> {
     const { isFree } = await this.resolveTeamPlan(teamId);
     if (!isFree) return true;
-    return hasFeature('free', feature);
+    return this.overrides.hasFeature('free', feature);
   }
 
   // Effective feature access for this account, matching featureAllowed(): a
-  // genuine Free account gets the Free feature set; any paid/legacy account is
-  // grandfathered to full access. Single source of truth the frontend reads so
-  // its lock UI can never disagree with what the backend actually enforces.
-  private effectiveFeatures(isFree: boolean): PlanFeatures {
-    const free = getPlan('free').features;
+  // genuine Free account gets the (override-aware) Free feature set; any
+  // paid/legacy account is grandfathered to full access. Single source of truth
+  // the frontend reads so its lock UI can never disagree with enforcement.
+  private async effectiveFeatures(isFree: boolean): Promise<PlanFeatures> {
+    const free = await this.overrides.getFeatures('free');
     const out = {} as PlanFeatures;
     for (const key of Object.keys(free) as (keyof PlanFeatures)[]) {
       out[key] = isFree ? free[key] : true;
@@ -160,11 +162,15 @@ export class UsageService {
   }
 
   // Read-only snapshot for the dashboard: current plan, whether Free caps apply,
-  // the plan limits, the effective feature access, and current usage. Paid plans
-  // report unlimited (null limits) and full feature access.
+  // the (override-aware) plan limits, the effective feature access, and current
+  // usage. Paid plans report unlimited (null limits) and full feature access.
   async getUsageSummary(teamId?: string | null) {
     const { planId, isFree } = await this.resolveTeamPlan(teamId);
     const cfg = getPlan(planId);
+    const [limits, features] = await Promise.all([
+      this.overrides.getLimits(planId),
+      this.effectiveFeatures(isFree),
+    ]);
     const [conversations, integrations] = teamId
       ? await Promise.all([
           this.countConversationsThisMonth(teamId),
@@ -175,8 +181,8 @@ export class UsageService {
       plan: planId,
       planLabel: cfg.label,
       isFree,
-      limits: cfg.limits,
-      features: this.effectiveFeatures(isFree),
+      limits,
+      features,
       usage: {
         aiConversationsThisMonth: conversations,
         integrationsConnected: integrations,

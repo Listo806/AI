@@ -11,6 +11,9 @@ import {
   exportCustomersHubCsv,
   importCustomers,
   createCustomer,
+  getPlanConfig,
+  setPlanConfig,
+  resetPlanConfig,
 } from "../../api/platformApi";
 import AdminPlans from "./AdminPlans";
 import "../platform/platform.css";
@@ -555,9 +558,10 @@ export default function AdminCustomers() {
               <strong style={{ fontSize: 16 }}>Plan management</strong>
               <button type="button" onClick={() => setShowPlans(false)} style={{ border: "none", background: "none", fontSize: 22, cursor: "pointer", color: "#94a3b8" }}>×</button>
             </div>
-            <div style={{ margin: "0 12px 8px", padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 12, color: "#92400e" }}>
-              These are the billing plan records. The live pricing tiers customers
-              actually check out on are Free, Solo, Business, and Scale.
+            <PlanConfigEditor />
+            <div style={{ margin: "16px 12px 8px", padding: "8px 12px", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, fontSize: 12, color: "#92400e" }}>
+              Below are the legacy billing-plan records. The live pricing tiers
+              customers check out on are Free, Solo, Business, and Scale.
             </div>
             <AdminPlans />
           </div>
@@ -567,6 +571,150 @@ export default function AdminCustomers() {
       {showAdd && (
         <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />
       )}
+    </div>
+  );
+}
+
+// ---- Plan limits & features editor (real enforcement) ----------------------
+
+const LIMIT_LABELS = {
+  aiConversationsPerMonth: "AI conversations / month",
+  automationWorkflows: "Automation workflows",
+  integrations: "Integrations",
+};
+const FEATURE_LABELS = {
+  crm: "CRM",
+  aiAgent: "AI agent",
+  automations: "Automations",
+  emailSmsMarketing: "Email & SMS marketing",
+  calendar: "Calendar",
+  reports: "Reports",
+  advancedAnalytics: "Advanced analytics",
+  teamWorkspace: "Team workspace",
+  advancedAutomations: "Advanced automations",
+  workflowsSequences: "Workflows & sequences",
+  customFields: "Custom fields",
+  advancedPermissions: "Advanced permissions",
+  whiteLabel: "White label",
+  customObjects: "Custom objects",
+};
+const label = (map, k) => map[k] || k;
+
+function PlanConfigEditor() {
+  const [plans, setPlans] = useState([]);
+  const [enforced, setEnforced] = useState(["free"]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    getPlanConfig()
+      .then((d) => {
+        setPlans(d?.plans || []);
+        setEnforced(d?.enforcedPlanIds || ["free"]);
+      })
+      .catch(() => setPlans([]))
+      .finally(() => setLoading(false));
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const update = (planId, patch) =>
+    setPlans((prev) => prev.map((p) => (p.id === planId ? { ...p, ...patch } : p)));
+
+  const save = async (p) => {
+    setSavingId(p.id);
+    try {
+      await setPlanConfig(p.id, { limits: p.limits, features: p.features });
+      await new Promise((r) => setTimeout(r, 150));
+      load();
+    } catch (e) {
+      alert(e?.message || "Could not save plan.");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const reset = async (p) => {
+    if (!window.confirm(`Reset ${p.label} back to the default limits and features?`)) return;
+    setSavingId(p.id);
+    try {
+      await resetPlanConfig(p.id);
+      load();
+    } catch (_e) {
+      /* ignore */
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return (
+    <div style={{ padding: "0 12px" }}>
+      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Plan limits &amp; features</div>
+      <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+        These control what the app actually enforces (usage caps and locked features).
+        Prices are set in Paddle and shown read-only. Only the Free plan is enforced today.
+      </div>
+      {loading && <div style={{ color: "#64748b", fontSize: 13 }}>Loading…</div>}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {plans.map((p) => (
+          <div key={p.id} style={{ flex: "1 1 340px", minWidth: 300, border: "1px solid #e5e7eb", borderRadius: 10, padding: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <strong style={{ fontSize: 14 }}>{p.label}</strong>
+              <span style={{ fontSize: 11, color: "#64748b" }}>
+                {p.isFree ? "$0" : `$${p.pricing.intro} start · $${p.pricing.monthly}/mo`}
+                {enforced.includes(p.id) && (
+                  <span style={{ marginLeft: 8, background: "#dcfce7", color: "#166534", padding: "1px 6px", borderRadius: 999, fontWeight: 600 }}>enforced</span>
+                )}
+              </span>
+            </div>
+
+            <div style={{ marginBottom: 8 }}>
+              {Object.keys(p.limits || {}).map((k) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: "#475569" }}>{label(LIMIT_LABELS, k)}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={p.limits[k] == null ? "" : p.limits[k]}
+                    placeholder="unlimited"
+                    onChange={(e) =>
+                      update(p.id, { limits: { ...p.limits, [k]: e.target.value === "" ? null : Number(e.target.value) } })
+                    }
+                    style={{ ...inputStyle, width: 110 }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <details>
+              <summary style={{ fontSize: 12, color: "#2563eb", cursor: "pointer", marginBottom: 6 }}>Feature access</summary>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                {Object.keys(p.features || {}).map((k) => (
+                  <label key={k} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#475569" }}>
+                    <input
+                      type="checkbox"
+                      checked={!!p.features[k]}
+                      onChange={(e) => update(p.id, { features: { ...p.features, [k]: e.target.checked } })}
+                    />
+                    {label(FEATURE_LABELS, k)}
+                  </label>
+                ))}
+              </div>
+            </details>
+
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              <button type="button" className="crm-btn crm-btn-primary" style={{ padding: "6px 12px" }} disabled={savingId === p.id} onClick={() => save(p)}>
+                {savingId === p.id ? "Saving…" : "Save"}
+              </button>
+              {p.overridden && (
+                <button type="button" className="crm-btn crm-btn-secondary" style={{ padding: "6px 12px" }} disabled={savingId === p.id} onClick={() => reset(p)}>
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

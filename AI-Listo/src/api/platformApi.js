@@ -282,6 +282,24 @@ export async function createCustomer(payload = {}) {
   });
 }
 
+// Editable plan limits + features (merged with admin overrides).
+export async function getPlanConfig() {
+  return apiClient.request(`/admin/customers-hub/plan-config`);
+}
+
+export async function setPlanConfig(planId, body) {
+  return apiClient.request(`/admin/customers-hub/plan-config/${planId}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export async function resetPlanConfig(planId) {
+  return apiClient.request(`/admin/customers-hub/plan-config/${planId}/reset`, {
+    method: "POST",
+  });
+}
+
 // Download the filtered customer list as CSV (respects current filters).
 export async function exportCustomersHubCsv(params = {}) {
   const token = localStorage.getItem("listo_access_token");
