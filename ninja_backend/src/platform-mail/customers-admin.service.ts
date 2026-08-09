@@ -87,6 +87,7 @@ export class CustomersAdminService {
     const ps = String(row.payment_status || '').toLowerCase();
     const cs = String(row.checkout_status || '').toLowerCase();
     if (ps === 'active' || cs === 'paid') return 'active';
+    if (ps === 'failed') return 'failed';
     if (ps === 'past_due') return 'past_due';
     if (ps === 'canceled' || ps === 'suspended') return 'canceled';
     if (ps === 'trial' || ps === 'pending') return 'trialing';

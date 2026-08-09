@@ -454,7 +454,7 @@ export default function AdminCustomers() {
               {loading && <tr><td colSpan={11} style={{ padding: 20, color: "#64748b" }}>Loading…</td></tr>}
               {!loading && rows.length === 0 && <tr><td colSpan={11} style={{ padding: 20, color: "#64748b" }}>No customers match these filters.</td></tr>}
               {!loading && rows.map((r) => {
-                const st = (r.status === "canceled" && String(r.payment_status).toLowerCase() === "failed") ? "failed" : r.status;
+                const st = r.status;
                 return (
                   <tr key={r.id}>
                     <td><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} /></td>

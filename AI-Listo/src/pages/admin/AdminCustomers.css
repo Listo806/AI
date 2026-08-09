@@ -92,6 +92,12 @@
 .cxc-kpi-label { font-size: 12px; color: #64748b; font-weight: 600; line-height: 1.2; }
 .cxc-kpi-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
 .cxc-kpi-sub { font-size: 12px; margin-top: 4px; font-weight: 600; }
+.cxc-kpi--blue   { background: #f6faff; border-color: #e3edfb; }
+.cxc-kpi--green  { background: #f4fcf7; border-color: #dcefe3; }
+.cxc-kpi--purple { background: #f9f7ff; border-color: #ece7f9; }
+.cxc-kpi--amber  { background: #fff9f3; border-color: #f6e6d5; }
+.cxc-kpi--teal   { background: #f2fdfb; border-color: #d8f0ec; }
+.cxc-kpi--gold   { background: #fffdf2; border-color: #f2ecd0; }
 .cxc-kpi--blue   .cxc-kpi-icon { background: #e0edff; color: #2563eb; }
 .cxc-kpi--green  .cxc-kpi-icon { background: #dcfce7; color: #16a34a; }
 .cxc-kpi--purple .cxc-kpi-icon { background: #ede9fe; color: #7c3aed; }
