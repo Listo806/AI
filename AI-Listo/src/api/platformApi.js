@@ -225,6 +225,16 @@ export async function deleteAdminUser(id) {
   return res?.data || res;
 }
 
+// Permanently delete a user (hard delete). The backend blocks this with a 409
+// if the user owns a workspace that still has other active members, so ownership
+// must be transferred first. Returns { deleted } on success.
+export async function hardDeleteAdminUser(id) {
+  const res = await apiClient.request(`/admin/users/${id}/permanent`, {
+    method: "DELETE",
+  });
+  return res?.data || res;
+}
+
 // ============================================================================
 // ADMIN TEAMS (Super Admin / Admin) - Full CRUD + members
 // ============================================================================

@@ -28,7 +28,7 @@ export class AdminUsersService {
     const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const { rows } = await this.db.query(
-      `SELECT id, email, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
+      `SELECT id, email, name, role, team_id as "teamId", is_active as "isActive", created_at as "createdAt", updated_at as "updatedAt"
        FROM users
        ${where}
        ORDER BY created_at DESC`,
@@ -126,7 +126,8 @@ export class AdminUsersService {
     return this.update(id, { role: role as UserRole });
   }
 
-  /** Soft delete: set is_active = false and invalidate tokens */
+  /** Soft delete (Deactivate): set is_active = false and invalidate tokens.
+   * Keeps the account and all data, only blocks access. */
   async remove(id: string): Promise<{ deleted: boolean }> {
     const { rowCount } = await this.db.query(
       `UPDATE users SET is_active = false, token_version = COALESCE(token_version, 0) + 1, updated_at = NOW()
@@ -137,5 +138,122 @@ export class AdminUsersService {
       throw new NotFoundException('User not found');
     }
     return { deleted: true };
+  }
+
+  /**
+   * Hard delete (permanent): removes the user account for good, inside a single
+   * transaction so it either fully succeeds or changes nothing.
+   *
+   * SAFETY:
+   *  - Super Admins and the caller's own account cannot be deleted.
+   *  - If the user OWNS a workspace that still has other ACTIVE members, deletion
+   *    is blocked (409) — ownership must be transferred first, so shared CRM data
+   *    belonging to other active users is never destroyed by accident.
+   *  - When safe, the user's own solo workspace(s) and their data are removed via
+   *    the schema's ON DELETE CASCADE, after first clearing the few FK references
+   *    that would otherwise RESTRICT the delete (team invitations/notifications
+   *    and the "invited_by" audit link).
+   */
+  async hardRemove(
+    id: string,
+    currentUserId?: string,
+  ): Promise<{ deleted: boolean }> {
+    const { rows: urows } = await this.db.query(
+      `SELECT id, role FROM users WHERE id = $1`,
+      [id],
+    );
+    const target = urows[0];
+    if (!target) {
+      throw new NotFoundException('User not found');
+    }
+    if (String(target.role) === 'super_admin') {
+      throw new BadRequestException('Super Admin accounts cannot be deleted');
+    }
+    if (currentUserId && String(currentUserId) === String(id)) {
+      throw new BadRequestException('You cannot delete your own account');
+    }
+
+    // Workspaces this user owns.
+    const { rows: teamRows } = await this.db.query(
+      `SELECT id FROM teams WHERE owner_id = $1`,
+      [id],
+    );
+    const ownedTeamIds: string[] = teamRows.map((r) => r.id);
+
+    // Ownership safety: block if any owned workspace still has OTHER active
+    // members. Their shared data must not be deleted — transfer ownership first.
+    if (ownedTeamIds.length) {
+      const { rows: cnt } = await this.db.query(
+        `SELECT COUNT(*)::int AS n
+           FROM team_members
+          WHERE team_id = ANY($1::uuid[])
+            AND user_id <> $2
+            AND status = 'active'`,
+        [ownedTeamIds, id],
+      );
+      const others = cnt[0]?.n ?? 0;
+      if (others > 0) {
+        // BadRequest (400) rather than Conflict (409): the shared API client
+        // rewrites 409 into a signup-specific message, but passes 400 messages
+        // through unchanged so the admin sees the real reason.
+        throw new BadRequestException(
+          `This user owns a workspace with ${others} other active member(s). ` +
+            `Transfer workspace ownership to another user before deleting this account.`,
+        );
+      }
+    }
+
+    const client = await this.db.getClient();
+    try {
+      await client.query('BEGIN');
+
+      // Clear the FK references that RESTRICT the team/user delete.
+      await client.query(
+        `DELETE FROM team_notifications
+          WHERE team_id = ANY($1::uuid[]) OR user_id = $2 OR actor_user_id = $2`,
+        [ownedTeamIds, id],
+      );
+      await client.query(
+        `DELETE FROM team_invitations
+          WHERE team_id = ANY($1::uuid[]) OR invited_by = $2`,
+        [ownedTeamIds, id],
+      );
+      // "invited_by" on memberships in OTHER teams points at this user (RESTRICT);
+      // null it so the membership record stays but no longer blocks the delete.
+      await client.query(
+        `UPDATE team_members SET invited_by = NULL WHERE invited_by = $1`,
+        [id],
+      );
+
+      // Delete the owned workspace(s): cascades leads, contacts, deals,
+      // subscriptions, memberships, ai_* config, etc., and detaches members
+      // (users.team_id -> NULL), which also releases teams.owner_id.
+      if (ownedTeamIds.length) {
+        await client.query(`DELETE FROM teams WHERE id = ANY($1::uuid[])`, [
+          ownedTeamIds,
+        ]);
+      }
+
+      // Finally the user (cascades their memberships and the records they
+      // authored via ON DELETE CASCADE / SET NULL).
+      const del = await client.query(`DELETE FROM users WHERE id = $1`, [id]);
+
+      await client.query('COMMIT');
+
+      // Best-effort, non-blocking cleanup of rows with no FK (never fail the
+      // delete over these): the sign-up email history.
+      try {
+        await this.db.query(`DELETE FROM email_log WHERE user_id = $1`, [id]);
+      } catch {
+        /* email_log may not exist in some environments — ignore */
+      }
+
+      return { deleted: (del.rowCount ?? 0) > 0 };
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 }

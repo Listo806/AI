@@ -5,6 +5,7 @@ import {
   updateAdminUser,
   updateAdminUserRole,
   deleteAdminUser,
+  hardDeleteAdminUser,
 } from '../../api/platformApi';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -303,6 +304,82 @@ function DeleteConfirmModal({ user, onClose, onConfirm }) {
   );
 }
 
+// Permanent (hard) delete confirmation. Distinct from Deactivate: this removes
+// the account for good. Surfaces the backend's ownership-transfer block as a
+// warning instead of a silent failure.
+function PermanentDeleteModal({ user, onClose, onConfirm }) {
+  const { t } = useTranslation();
+  const [submitting, setSubmitting] = useState(false);
+  const [warning, setWarning] = useState('');
+  const handleConfirm = async () => {
+    setSubmitting(true);
+    setWarning('');
+    try {
+      await onConfirm();
+      onClose();
+    } catch (err) {
+      // Ownership block or any other reason — keep the modal open and explain.
+      setWarning(
+        err?.message ||
+          t(
+            'admin.users.deletePermanentFailed',
+            'Could not delete this user. Please try again.',
+          ),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!user) return null;
+  return (
+    <div className="admin-reject-modal-overlay" onClick={onClose}>
+      <div className="admin-reject-modal" onClick={(e) => e.stopPropagation()}>
+        <h3 style={{ marginTop: 0 }}>
+          {t('admin.users.deletePermanentTitle', 'Delete user permanently')}
+        </h3>
+        <p style={{ color: 'var(--text-muted, #64748b)', marginBottom: '12px' }}>
+          {t(
+            'admin.users.deletePermanentConfirm',
+            'Are you sure you want to permanently delete this user?',
+          )}
+        </p>
+        <p style={{ marginBottom: '16px' }}>
+          <strong>{user.email}</strong>
+          {user.name ? ` (${user.name})` : ''}
+        </p>
+        {warning && (
+          <div
+            className="crm-error"
+            style={{
+              marginBottom: '16px',
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {warning}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onClose} className="crm-btn crm-btn-secondary">
+            {t('admin.users.cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="crm-btn"
+            style={{ background: '#b91c1c', color: '#fff' }}
+            disabled={submitting}
+          >
+            {submitting
+              ? t('admin.users.deletingPermanent', 'Deleting…')
+              : t('admin.users.deletePermanent', 'Delete permanently')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminUsers() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
   const { showSuccess, showError } = useNotification();
@@ -311,12 +388,14 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [updating, setUpdating] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [showCreate, setShowCreate] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
+  const [permDeleteUser, setPermDeleteUser] = useState(null);
   const [reactivating, setReactivating] = useState(null);
 
   const loadUsers = async () => {
@@ -336,7 +415,18 @@ export default function AdminUsers() {
     if (isAuthenticated() && currentUser) loadUsers();
   }, [isAuthenticated, currentUser, roleFilter]);
 
-  const paginatedUsers = users.slice((page - 1) * pageSize, page * pageSize);
+  // Client-side search by email or name, so admins can quickly find a user
+  // (e.g. a test/dev account) before deleting it.
+  const q = search.trim().toLowerCase();
+  const filteredUsers = q
+    ? users.filter(
+        (u) =>
+          String(u.email || '').toLowerCase().includes(q) ||
+          String(u.name || '').toLowerCase().includes(q),
+      )
+    : users;
+
+  const paginatedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
 
   const handleRoleChange = async (userId, newRole) => {
     setUpdating(userId);
@@ -365,6 +455,20 @@ export default function AdminUsers() {
     showSuccess(t('admin.users.userDeactivated'));
     loadUsers();
     setDeleteUser(null);
+  };
+
+  const handlePermDeleteClick = (u) => {
+    setPermDeleteUser(u);
+  };
+
+  // Throws on failure (incl. the ownership-transfer 409) so the modal can show
+  // the reason and stay open; only clears + reloads on success.
+  const handlePermDeleteConfirm = async () => {
+    if (!permDeleteUser) return;
+    await hardDeleteAdminUser(permDeleteUser.id);
+    showSuccess(t('admin.users.userDeletedPermanently', 'User permanently deleted'));
+    setPermDeleteUser(null);
+    loadUsers();
   };
 
   const handleReactivate = async (u) => {
@@ -430,6 +534,13 @@ export default function AdminUsers() {
             ))}
           </select>
         </label>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          placeholder={t('admin.users.searchPlaceholder', 'Search by email or name')}
+          style={{ padding: '8px 12px', borderRadius: '8px', minWidth: '240px', border: '1px solid #cbd5e1' }}
+        />
       </div>
 
       {error && <div className="crm-error">{error}</div>}
@@ -460,6 +571,9 @@ export default function AdminUsers() {
                 <tr key={u.id}>
                   <td>
                     <strong>{u.email}</strong>
+                    {u.name && (
+                      <div style={{ fontSize: '12px', marginTop: '2px' }}>{u.name}</div>
+                    )}
                     <div className="admin-table-muted" style={{ fontSize: '11px', marginTop: '2px' }}>
                       {u.id}
                     </div>
@@ -515,6 +629,26 @@ export default function AdminUsers() {
                           {reactivating === u.id ? '…' : t('admin.users.reactivate')}
                         </button>
                       )}
+                      <button
+                        type="button"
+                        className="crm-btn admin-action-btn"
+                        style={{
+                          background: '#fff',
+                          color: '#b91c1c',
+                          border: '1px solid #fecaca',
+                        }}
+                        onClick={() => handlePermDeleteClick(u)}
+                        disabled={isSelf(u) || u.role === 'super_admin'}
+                        title={
+                          isSelf(u)
+                            ? t('admin.users.cannotDeleteSelf', 'You cannot delete your own account')
+                            : u.role === 'super_admin'
+                              ? t('admin.users.cannotDeleteSuperAdmin', 'Super Admin cannot be deleted')
+                              : t('admin.users.deletePermanent', 'Delete permanently')
+                        }
+                      >
+                        {t('admin.users.delete', 'Delete')}
+                      </button>
                     </div>
                     {updating === u.id && <span className="admin-table-muted" style={{ marginLeft: '8px', fontSize: '12px' }}>{t('admin.users.updating')}</span>}
                   </td>
@@ -524,9 +658,9 @@ export default function AdminUsers() {
           </table>
         </div>
       )}
-      {!loading && users.length > 0 && (
+      {!loading && filteredUsers.length > 0 && (
         <AdminPagination
-          total={users.length}
+          total={filteredUsers.length}
           page={page}
           pageSize={pageSize}
           onPageChange={setPage}
@@ -552,6 +686,13 @@ export default function AdminUsers() {
           user={deleteUser}
           onClose={() => setDeleteUser(null)}
           onConfirm={handleDeleteConfirm}
+        />
+      )}
+      {permDeleteUser && (
+        <PermanentDeleteModal
+          user={permDeleteUser}
+          onClose={() => setPermDeleteUser(null)}
+          onConfirm={handlePermDeleteConfirm}
         />
       )}
     </div>
