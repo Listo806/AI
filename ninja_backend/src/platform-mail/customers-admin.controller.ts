@@ -70,6 +70,12 @@ export class CustomersAdminController {
     return this.customers.list(query);
   }
 
+  @Post()
+  @ApiOperation({ summary: 'Add a customer (creates a proper account)' })
+  async create(@Body() body: any) {
+    return this.customers.createCustomer(body);
+  }
+
   @Get('summary')
   @ApiOperation({ summary: 'KPIs, tab counts, breakdowns, and funnel' })
   async summary(@Query() query: any) {
