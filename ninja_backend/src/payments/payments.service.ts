@@ -170,6 +170,7 @@ export class PaymentsService {
     userId: string,
     subscriptionId: string,
     plan: string,
+    billingCycle?: string,
   ) {
     await this.ensurePaddleColumn();
     const { rows } = await this.db.query(`SELECT id FROM users WHERE id = $1`, [
@@ -178,15 +179,19 @@ export class PaymentsService {
     if (!rows[0]) {
       throw new NotFoundException('User not found');
     }
+    // Record the chosen billing cycle when the checkout reported one (annual vs
+    // monthly), so the admin + account reflect what the customer actually bought.
+    const cycle = billingCycle === 'annual' ? 'annual' : billingCycle === 'monthly' ? 'monthly' : null;
     await this.db.query(
       `UPDATE users
        SET payment_status = 'active',
            is_active = true,
            plan = $2,
            paddle_subscription_id = $3,
+           billing_cycle = COALESCE($4, billing_cycle),
            updated_at = NOW()
        WHERE id = $1`,
-      [userId, plan || 'pro', subscriptionId],
+      [userId, plan || 'pro', subscriptionId, cycle],
     );
     return { success: true };
   }
@@ -326,6 +331,8 @@ export class PaymentsService {
     const customUserId: string | null =
       data?.custom_data?.userId || data?.custom_data?.user_id || null;
     const customPlan: string | null = data?.custom_data?.plan || null;
+    const customCycle: string | null =
+      data?.custom_data?.billingCycle || data?.custom_data?.billing_cycle || null;
 
     let handled = false;
     let matched = false;
@@ -345,6 +352,7 @@ export class PaymentsService {
             customUserId,
             subId,
             customPlan || 'pro',
+            customCycle || undefined,
           );
           matched = true;
         } else {
