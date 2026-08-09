@@ -25,6 +25,7 @@ import {
   Brain,
 } from "lucide-react";
 import apiClient from "../../api/apiClient";
+import { getPlanUsage } from "../../api/platformApi";
 import { useNavigate } from "react-router-dom";
 const categories = [
   "All Apps",
@@ -220,6 +221,19 @@ export default function AppsIntegrationsHub() {
   const [apiKey, setApiKey] = useState(null);
   const [generatingKey, setGeneratingKey] = useState(false);
   const [revokingKey, setRevokingKey] = useState(false);
+  // Plan usage (Free-plan caps). Fail-silent: never block the page on this.
+  const [usage, setUsage] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    getPlanUsage()
+      .then((u) => {
+        if (alive) setUsage(u);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
   const loadIntegrations = async () => {
     try {
       setLoading(true);
@@ -623,6 +637,50 @@ export default function AppsIntegrationsHub() {
         <Brain className="header-icon" size={20} />
         <h1>App & Integrations</h1>
       </div>
+      {usage?.isFree && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            flexWrap: "wrap",
+            margin: "0 0 20px",
+            padding: "14px 18px",
+            border: "1px solid #e5e7eb",
+            borderRadius: "12px",
+            background: "#f9fafb",
+          }}
+        >
+          <div style={{ fontSize: "14px", color: "#374151" }}>
+            <strong style={{ color: "#111827" }}>Free plan</strong>
+            {"  •  "}
+            {usage.usage?.integrationsConnected ?? 0} of{" "}
+            {usage.limits?.integrations ?? 1} integrations used
+            {"  •  "}
+            {usage.usage?.aiConversationsThisMonth ?? 0} of{" "}
+            {usage.limits?.aiConversationsPerMonth ?? 50} AI conversations this
+            month
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/pricing")}
+            style={{
+              flexShrink: 0,
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              background: "#111827",
+              color: "#fff",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Upgrade
+          </button>
+        </div>
+      )}
       <div className="apps-layout">
         {/* SIDEBAR */}
         <aside className="sidebar">

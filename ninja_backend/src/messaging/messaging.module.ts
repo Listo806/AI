@@ -35,6 +35,7 @@ import { WhatsAppAiSimulatorService } from './whatsapp-ai-simulator.service';
 import { AiBookingController } from './ai-booking.controller';
 import { CalendarModule } from '../calendar/calendar.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
     forwardRef(() => LeadsModule),
     forwardRef(() => PropertiesModule),
     CalendarModule,
+    PlansModule,
   ],
   controllers: [
     WhatsAppController,

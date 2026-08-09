@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { UsageService } from '../plans/usage.service';
 
 export type ConversationOwnership = 'ai' | 'human';
 export type ConversationStatus = 'open' | 'closed';
@@ -33,7 +34,10 @@ export interface CreateConversationDto {
 export class ConversationsService {
   private readonly logger = new Logger(ConversationsService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly usage: UsageService,
+  ) {}
 
   private mapRow(row: any): Conversation {
     return {
@@ -65,14 +69,29 @@ export class ConversationsService {
       return { conversation: this.mapRow(existing[0]), created: false };
     }
     let aiEnabled = dto?.ai_enabled;
+    let teamId: string | null = null;
     if (aiEnabled === undefined) {
       const { rows: leadTeam } = await this.db.query(
-        `SELECT t.ai_auto_reply_enabled FROM leads l
+        `SELECT l.team_id, t.ai_auto_reply_enabled FROM leads l
          INNER JOIN teams t ON t.id = l.team_id
          WHERE l.id = $1`,
         [leadId],
       );
+      teamId = leadTeam[0]?.team_id ?? null;
       aiEnabled = leadTeam[0]?.ai_auto_reply_enabled ?? true;
+    } else if (aiEnabled) {
+      const { rows: leadRow } = await this.db.query(
+        `SELECT team_id FROM leads WHERE id = $1`,
+        [leadId],
+      );
+      teamId = leadRow[0]?.team_id ?? null;
+    }
+    // Free plan cap: 50 AI conversations/month. Past the cap we still create and
+    // keep the conversation (the lead is never dropped) but leave the AI off.
+    // Paid plans are unlimited, and this check fails open on any error.
+    if (aiEnabled && teamId) {
+      const allowed = await this.usage.aiConversationAllowed(teamId);
+      if (!allowed) aiEnabled = false;
     }
     const { rows: created } = await this.db.query(
       `INSERT INTO conversations (lead_id, agent_id, ownership, ai_enabled, status, source, source_meta, updated_at)
