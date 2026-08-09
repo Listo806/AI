@@ -26,9 +26,9 @@ import "./CheckoutPage.css";
 const API_BASE = "https://backend.cortexaaicrm.com";
 
 const PLAN_DATA = {
-  solo: { price: 197, startPrice: 7, users: 1 },
-  team: { price: 347, startPrice: 14, users: 3, popular: true },
-  growth: { price: 497, startPrice: 21, users: 5 },
+  solo: { price: 197, annualPrice: 1891.2, startPrice: 7, users: 1 },
+  team: { price: 347, annualPrice: 3331.2, startPrice: 14, users: 3, popular: true },
+  growth: { price: 497, annualPrice: 4771.2, startPrice: 21, users: 5 },
 };
 
 const t = {
@@ -196,6 +196,10 @@ export default function CheckoutPage() {
   const planIsValid = Boolean(resolvedPlan);
   const selectedPlan = resolvedPlan || "team";
   const plan = PLAN_DATA[selectedPlan];
+  const billingCycle =
+    String(searchParams.get("billing") || "monthly").toLowerCase() === "annual"
+      ? "annual"
+      : "monthly";
 
   const [customer] = useState(() => ({
     name: localStorage.getItem("name") || "",
@@ -232,8 +236,10 @@ export default function CheckoutPage() {
   // 1) the plan-specific starting charge ($7/$14/$21)
   // 2) the existing recurring subscription ($197/$347/$497)
   // This prevents accidentally creating a $7/$14/$21 monthly subscription.
-  const usePaddle = paddleReady(paddleConfig, selectedPlan);
+  const usePaddle = paddleReady(paddleConfig, selectedPlan, billingCycle);
   const setupFee = plan.startPrice;
+  const recurringPrice =
+    billingCycle === "annual" ? plan.annualPrice : plan.price;
 
   useEffect(() => {
     acceptedTermsRef.current = acceptedTerms;
@@ -378,6 +384,7 @@ export default function CheckoutPage() {
         userId,
         email: customer.email,
         startingCharge: setupFee,
+        billingCycle,
       });
     } catch (error) {
       console.error("PADDLE CHECKOUT ERROR:", error);
@@ -554,8 +561,8 @@ export default function CheckoutPage() {
                 </div>
                 <div className="checkout-plan-price">
                   <small>{tr.monthlyAfterTrial}</small>
-                  <strong>${formatMoney(plan.price)}</strong>
-                  <span>{tr.month}</span>
+                  <strong>${formatMoney(recurringPrice)}</strong>
+                  <span>{billingCycle === "annual" ? "/year" : tr.month}</span>
                 </div>
               </div>
               <div className="checkout-summary-line">

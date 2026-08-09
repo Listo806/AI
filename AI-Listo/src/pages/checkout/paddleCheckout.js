@@ -59,18 +59,27 @@ export async function initPaddle(config, onEvent) {
   });
 }
 
-// Checkout is ready only when BOTH price IDs exist:
+// Pick the recurring price for the chosen billing cycle. Annual is used only
+// when an annual price ID is configured for the plan; otherwise it falls back to
+// the monthly price, so annual stays inert until the yearly Paddle prices exist.
+function recurringPriceFor(config, plan, billingCycle) {
+  if (billingCycle === "annual" && config?.annualPrices?.[plan]) {
+    return config.annualPrices[plan];
+  }
+  return config?.prices?.[plan];
+}
+
+// Checkout is ready only when BOTH the one-time start price and the recurring
+// price (for the selected cycle) exist:
 //
-// startPrices[plan]
-// -> $7 / $14 / $21 ONE-TIME
-//
-// prices[plan]
-// -> $197 / $347 / $497 MONTHLY
-export function paddleReady(config, plan) {
+// startPrices[plan]   -> $7 / $14 / $21 ONE-TIME
+// prices[plan]        -> $197 / $347 / $497 MONTHLY
+// annualPrices[plan]  -> $1,891.20 / $3,331.20 / $4,771.20 ANNUAL (when set)
+export function paddleReady(config, plan, billingCycle) {
   return Boolean(
     config?.clientToken &&
       config?.startPrices?.[plan] &&
-      config?.prices?.[plan]
+      recurringPriceFor(config, plan, billingCycle)
   );
 }
 
@@ -80,9 +89,10 @@ export function openPaddleCheckout({
   userId,
   email,
   startingCharge,
+  billingCycle,
 }) {
   const startPriceId = config?.startPrices?.[plan];
-  const recurringPriceId = config?.prices?.[plan];
+  const recurringPriceId = recurringPriceFor(config, plan, billingCycle);
 
   if (!startPriceId) {
     throw new Error(
@@ -123,6 +133,7 @@ export function openPaddleCheckout({
       userId,
       plan,
       startingCharge,
+      billingCycle: billingCycle === "annual" ? "annual" : "monthly",
       pricingModel: "starter_plus_recurring",
     },
   });

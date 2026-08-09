@@ -546,7 +546,16 @@ export class PaddleService {
         unitPrice: { amount, currencyCode: 'USD' },
       });
 
-    // Existing recurring subscriptions.
+    const makeAnnual = (label: string, amount: string) =>
+      (this.paddle as any).prices.create({
+        productId,
+        description: `CORTEXA ${label} plan (annual, 14-day free trial)`,
+        unitPrice: { amount, currencyCode: 'USD' },
+        billingCycle: { interval: 'year', frequency: 1 },
+        trialPeriod: { interval: 'day', frequency: 14 },
+      });
+
+    // Existing recurring subscriptions (monthly).
     const solo: any = await makeMonthly('Solo', '19700');
     const team: any = await makeMonthly('Business', '34700');
     const growth: any = await makeMonthly('Scale', '49700');
@@ -556,12 +565,22 @@ export class PaddleService {
     const startTeam: any = await makeStartingPrice('Business', '1400');
     const startGrowth: any = await makeStartingPrice('Scale', '2100');
 
+    // Annual recurring subscriptions (20% off x12): 1891.20 / 3331.20 / 4771.20.
+    const soloYr: any = await makeAnnual('Solo', '189120');
+    const teamYr: any = await makeAnnual('Business', '333120');
+    const growthYr: any = await makeAnnual('Scale', '477120');
+
     return {
       productId,
       recurringPrices: {
         solo: solo.id,
         team: team.id,
         growth: growth.id,
+      },
+      annualPrices: {
+        solo: soloYr.id,
+        team: teamYr.id,
+        growth: growthYr.id,
       },
       startPrices: {
         solo: startSolo.id,
@@ -576,14 +595,18 @@ export class PaddleService {
         PADDLE_START_PRICE_SOLO: startSolo.id,
         PADDLE_START_PRICE_TEAM: startTeam.id,
         PADDLE_START_PRICE_GROWTH: startGrowth.id,
+
+        PADDLE_PRICE_SOLO_ANNUAL: soloYr.id,
+        PADDLE_PRICE_TEAM_ANNUAL: teamYr.id,
+        PADDLE_PRICE_GROWTH_ANNUAL: growthYr.id,
       },
       mapping: {
-        solo: '$7 now -> $197/month',
-        team: '$14 now -> $347/month',
-        growth: '$21 now -> $497/month',
+        solo: '$7 now -> $197/month or $1,891.20/year',
+        team: '$14 now -> $347/month or $3,331.20/year',
+        growth: '$21 now -> $497/month or $4,771.20/year',
       },
       note:
-        'Store all six price IDs as env vars. The start price IDs are one-time charges; the regular price IDs remain recurring subscriptions.',
+        'Store all nine price IDs as env vars. Start prices are one-time; monthly/annual prices are recurring subscriptions.',
     };
   }
 
@@ -768,10 +791,19 @@ export class PaddleService {
         growth: this.configService.get('PADDLE_START_PRICE_GROWTH') || null,
       },
 
+      // Annual recurring prices. Present only once the *_ANNUAL env vars are set;
+      // until then these are null and the frontend keeps using monthly, so annual
+      // is inert until the client provisions the yearly Paddle prices.
+      annualPrices: {
+        solo: this.configService.get('PADDLE_PRICE_SOLO_ANNUAL') || null,
+        team: this.configService.get('PADDLE_PRICE_TEAM_ANNUAL') || null,
+        growth: this.configService.get('PADDLE_PRICE_GROWTH_ANNUAL') || null,
+      },
+
       mapping: {
-        solo: { startingCharge: 7, recurringMonthly: 197 },
-        team: { startingCharge: 14, recurringMonthly: 347 },
-        growth: { startingCharge: 21, recurringMonthly: 497 },
+        solo: { startingCharge: 7, recurringMonthly: 197, recurringAnnual: 1891.2 },
+        team: { startingCharge: 14, recurringMonthly: 347, recurringAnnual: 3331.2 },
+        growth: { startingCharge: 21, recurringMonthly: 497, recurringAnnual: 4771.2 },
       },
     };
   }
