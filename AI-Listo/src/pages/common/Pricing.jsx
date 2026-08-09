@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useLocaleSwitch } from "../../i18n/useLocaleSwitch";
 import "./Common.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import { trackEvent } from "../../utils/track";
+import { useAuth } from "../../context/AuthContext";
+import { selectAccountPlan } from "../../api/platformApi";
 import {
   Menu,
   X,
@@ -1151,6 +1153,44 @@ export default function PricingPage() {
 
   const pv3 = pricingV3[lang] || pricingV3.en;
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const cycle = billingCycle === "annually" ? "annual" : "monthly";
+
+  // Plan CTA. planKey is the checkout vocabulary: free / solo / team (Business) /
+  // growth (Scale). A visitor who already registered (e.g. via the exit popup) is
+  // logged in — set the plan on that SAME account and go straight to Free
+  // activation or paid checkout, no second registration. A new visitor follows
+  // the Link to /trial to register first.
+  const onPlanCta = (e, planKey) => {
+    trackEvent("plan_selected", {
+      plan: planKey,
+      billing_cycle: planKey === "free" ? "free" : cycle,
+    });
+    if (!user) return; // let the <Link> navigate to /trial
+    e.preventDefault();
+    (async () => {
+      try {
+        const res = await selectAccountPlan({
+          plan: planKey,
+          billingCycle: planKey === "free" ? undefined : cycle,
+        });
+        const data = res?.data ?? res;
+        if (planKey === "free" || data?.free) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        navigate(`/checkout?plan=${data?.plan || planKey}&billing=${cycle}`);
+      } catch (_err) {
+        navigate(
+          planKey === "free"
+            ? "/trial?plan=free"
+            : `/trial?plan=${planKey}&billing=${cycle}`,
+        );
+      }
+    })();
+  };
+
   return (
     <div className="pricing-page pricing-v3-page">
       <main className="main-content pricing-v3-main">
@@ -1206,11 +1246,9 @@ export default function PricingPage() {
                   <span>{pv3.forever}</span>
                 </div>
                 <Link
-                  to="/sign-up"
+                  to="/trial?plan=free"
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-black"
-                  onClick={() =>
-                    trackEvent("choose_plan_click", { plan: "free" })
-                  }
+                  onClick={(e) => onPlanCta(e, "free")}
                 >
                   {pv3.ctaFree}
                 </Link>
@@ -1237,11 +1275,9 @@ export default function PricingPage() {
                   <span>{pv3.toStart}</span>
                 </div>
                 <Link
-                  to="/trial?plan=solo"
+                  to={`/trial?plan=solo&billing=${cycle}`}
                   className="cx-pricing-v3-cta"
-                  onClick={() =>
-                    trackEvent("choose_plan_click", { plan: "solo" })
-                  }
+                  onClick={(e) => onPlanCta(e, "solo")}
                 >
                   {pv3.ctaTrial}
                 </Link>
@@ -1274,11 +1310,9 @@ export default function PricingPage() {
                   {pv3.plans.business.users}
                 </div>
                 <Link
-                  to="/trial?plan=team"
+                  to={`/trial?plan=team&billing=${cycle}`}
                   className="cx-pricing-v3-cta cx-pricing-v3-cta-business"
-                  onClick={() =>
-                    trackEvent("choose_plan_click", { plan: "business" })
-                  }
+                  onClick={(e) => onPlanCta(e, "team")}
                 >
                   {pv3.ctaTrial}
                 </Link>
@@ -1308,11 +1342,9 @@ export default function PricingPage() {
                   {pv3.plans.scale.users}
                 </div>
                 <Link
-                  to="/trial?plan=growth"
+                  to={`/trial?plan=growth&billing=${cycle}`}
                   className="cx-pricing-v3-cta"
-                  onClick={() =>
-                    trackEvent("choose_plan_click", { plan: "scale" })
-                  }
+                  onClick={(e) => onPlanCta(e, "growth")}
                 >
                   {pv3.ctaTrial}
                 </Link>

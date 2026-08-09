@@ -1,87 +1,89 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, Check, ArrowRight } from "lucide-react";
-import { trackEvent } from "../utils/track";
 import {
-  EXIT_OFFER,
-  OFFER_SETUP_FEE,
-  REGULAR_SETUP_FEE,
-  offerIsAvailable,
-  setSetupOffer,
-  clearSetupOffer,
-} from "../utils/offer";
-import "./ExitIntentOffer.css";
+  X,
+  ArrowRight,
+  User,
+  Mail,
+  Phone,
+  LockKeyhole,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+} from "lucide-react";
+import { trackEvent, getAttribution } from "../utils/track";
+import apiClient from "../api/apiClient";
+import { useAuth } from "../context/AuthContext";
 
-// Approved exit-intent popup copy in the three site languages, matching how the
-// checkout/trial funnel pages keep an inline dictionary.
+// Exit-intent popup: a registration form. On submit it creates the Cortexa
+// account immediately (source = exit_popup, no plan yet — a saved lead) and
+// sends the visitor to the pricing page to choose a plan next. Details are saved
+// before any payment and never re-entered. Replaces the old $7 activation popup.
 const T = {
   en: {
-    wait: "WAIT!",
-    dontLeave: "DON'T LEAVE YET.",
-    sub: "You're one step away from activating your",
-    product: "AI Revenue Operating System.",
-    boxLead: "Start making revenue today for just",
-    fee: "ACTIVATION FEE",
-    boxFoot: "and get on board to your",
-    freeTrial: "FREE TRIAL.",
-    features: [
-      "AI Revenue Operating System",
-      "AI Sales Agent Included",
-      "CRM & Pipeline Management",
-      "Automation & Instant Response",
-      "Everything You Need to Grow",
-    ],
-    cta: "START MY FREE TRIAL NOW",
+    headline1: "WAIT!",
+    headline2: "DON'T LEAVE!",
+    sub: "Start Your Free Trial Today.",
+    desc: "Get started with Cortexa for $0. Create your account now and choose the plan that fits your business on the next step.",
+    name: "Full Name",
+    email: "Email Address",
+    phone: "Phone Number (Required)",
+    password: "Password",
+    cta: "CREATE MY ACCOUNT & SEE PLANS",
+    creating: "Creating your account…",
+    reassure: "Start for $0. Upgrade when you're ready.",
     close: "Close",
+    errRequired: "Please fill in all fields.",
+    errEmail: "Please enter a valid email address.",
+    errExists: "That email is already registered. Please log in instead.",
+    errGeneric: "Something went wrong. Please try again.",
   },
   es: {
-    wait: "¡ESPERA!",
-    dontLeave: "NO TE VAYAS AÚN.",
-    sub: "Estás a un paso de activar tu",
-    product: "Sistema Operativo de Ingresos con IA.",
-    boxLead: "Empieza a generar ingresos hoy por solo",
-    fee: "TARIFA DE ACTIVACIÓN",
-    boxFoot: "y comienza tu",
-    freeTrial: "PRUEBA GRATIS.",
-    features: [
-      "Sistema Operativo de Ingresos con IA",
-      "Agente de Ventas IA Incluido",
-      "Gestión de CRM y Pipeline",
-      "Automatización y Respuesta Instantánea",
-      "Todo lo que Necesitas para Crecer",
-    ],
-    cta: "COMENZAR MI PRUEBA GRATIS AHORA",
+    headline1: "¡ESPERA!",
+    headline2: "NO TE VAYAS.",
+    sub: "Comienza tu prueba gratis hoy.",
+    desc: "Empieza con Cortexa por $0. Crea tu cuenta ahora y elige el plan que se adapte a tu negocio en el siguiente paso.",
+    name: "Nombre completo",
+    email: "Correo electrónico",
+    phone: "Número de teléfono (obligatorio)",
+    password: "Contraseña",
+    cta: "CREAR MI CUENTA Y VER PLANES",
+    creating: "Creando tu cuenta…",
+    reassure: "Empieza por $0. Mejora cuando quieras.",
     close: "Cerrar",
+    errRequired: "Completa todos los campos.",
+    errEmail: "Ingresa un correo electrónico válido.",
+    errExists: "Ese correo ya está registrado. Inicia sesión.",
+    errGeneric: "Algo salió mal. Inténtalo de nuevo.",
   },
   pt: {
-    wait: "ESPERE!",
-    dontLeave: "NÃO SAIA AINDA.",
-    sub: "Você está a um passo de ativar seu",
-    product: "Sistema Operacional de Receita com IA.",
-    boxLead: "Comece a gerar receita hoje por apenas",
-    fee: "TAXA DE ATIVAÇÃO",
-    boxFoot: "e comece seu",
-    freeTrial: "TESTE GRÁTIS.",
-    features: [
-      "Sistema Operacional de Receita com IA",
-      "Agente de Vendas IA Incluído",
-      "Gestão de CRM e Pipeline",
-      "Automação e Resposta Instantânea",
-      "Tudo que Você Precisa para Crescer",
-    ],
-    cta: "COMEÇAR MEU TESTE GRÁTIS AGORA",
+    headline1: "ESPERE!",
+    headline2: "NÃO SAIA.",
+    sub: "Comece seu teste grátis hoje.",
+    desc: "Comece com a Cortexa por $0. Crie sua conta agora e escolha o plano ideal para o seu negócio na próxima etapa.",
+    name: "Nome completo",
+    email: "Endereço de e-mail",
+    phone: "Número de telefone (obrigatório)",
+    password: "Senha",
+    cta: "CRIAR MINHA CONTA E VER PLANOS",
+    creating: "Criando sua conta…",
+    reassure: "Comece por $0. Faça upgrade quando quiser.",
     close: "Fechar",
+    errRequired: "Preencha todos os campos.",
+    errEmail: "Digite um e-mail válido.",
+    errExists: "Esse e-mail já está cadastrado. Faça login.",
+    errGeneric: "Algo deu errado. Tente novamente.",
   },
 };
 
-// Allowed pages (locale-stripped): the locale homes, the editorial pages, and the
-// free-trial registration page. Matched by shape so it stays correct across the
-// editorial URL variants on main and their localized paths.
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "https://backend.cortexaaicrm.com/api";
+
+// Allowed pages (locale-stripped): the locale homes and the editorial pages.
 function isAllowedPage(local) {
-  return local === "" || local === "trial" || local.startsWith("editorial/");
+  return local === "" || local.startsWith("editorial/");
 }
 
-// Split a pathname into its locale prefix and the locale-independent remainder.
 function localeInfo(pathname) {
   const parts = pathname.split("/").filter(Boolean);
   let prefix = "";
@@ -92,81 +94,54 @@ function localeInfo(pathname) {
   return { prefix, local: parts.join("/") };
 }
 
-// Shown at most once per page per PAGE LOAD, tracked in memory. It still never
-// nags twice on the same page within one view (including SPA navigation, since
-// this Set lives for the tab's JS lifetime), but a full page reload starts fresh
-// and re-arms it. That makes the offer show again on each fresh visit and makes
-// it trivial to re-test by simply refreshing — no new window required.
-// (Previously sessionStorage, which persisted across reloads in the same tab.)
+// Shown at most once per page per PAGE LOAD (in-memory; a reload re-arms it).
 const shownThisLoad = new Set();
-function shownThisSession(local) {
-  return shownThisLoad.has(local);
-}
-function markShownThisSession(local) {
-  shownThisLoad.add(local);
-}
-function clearShownThisSession() {
-  shownThisLoad.clear();
-}
+const shownThisSession = (local) => shownThisLoad.has(local);
+const markShownThisSession = (local) => shownThisLoad.add(local);
+const clearShownThisSession = () => shownThisLoad.clear();
 
-// Clicking the popup CTA suppresses it for the rest of the browser SESSION only
-// (sessionStorage), not forever. This stops re-showing it while the visitor is in
-// the funnel (e.g. on /trial) but lets it re-engage them on a later visit if they
-// did not buy. The persistent $7 pricing flag (cortexa_setup_offer in
-// localStorage) is separate and still carries the offer into checkout.
+// Submitting suppresses the popup for the rest of the browser SESSION only.
 const CLAIMED_KEY = "cortexa_exit_claimed";
-function claimedThisSession() {
+const claimedThisSession = () => {
   try {
     return sessionStorage.getItem(CLAIMED_KEY) === "1";
   } catch (_e) {
     return false;
   }
-}
-function markClaimedThisSession() {
+};
+const markClaimedThisSession = () => {
   try {
     sessionStorage.setItem(CLAIMED_KEY, "1");
   } catch (_e) {
-    /* private mode — just won't remember */
+    /* private mode */
   }
-}
-function clearClaimedThisSession() {
+};
+const clearClaimedThisSession = () => {
   try {
     sessionStorage.removeItem(CLAIMED_KEY);
   } catch (_e) {
     /* no-op */
   }
-}
+};
 
-// On touch devices, reveal the offer after this long on an allowed page if no
-// exit gesture has fired first. Phones give no reliable exit signal (no cursor;
-// the back button / app-switch happen after the page is already gone), so this
-// timed reveal guarantees mobile visitors actually see the offer. Kept short so
-// it fires before a typical mobile bounce (and is easy to verify). Configurable
-// via VITE_EXIT_OFFER_MOBILE_DELAY_MS; defaults to 12s.
 const MOBILE_FALLBACK_MS =
   Number(import.meta.env.VITE_EXIT_OFFER_MOBILE_DELAY_MS) || 12000;
 
-// An exit-intent popup offering the $7 activation fee. Desktop fires when the
-// cursor leaves the top of the viewport. Touch devices fire on a quick scroll
-// back up after scrolling down, and — since that gesture is unreliable — also on
-// a one-time timed reveal (MOBILE_FALLBACK_MS). Testing helpers: append
-// ?exitoffer=test to any allowed URL to force it open now, or ?exitoffer=reset to
-// clear the per-session gate so it can trigger again.
 export default function ExitIntentOffer() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, setUser } = useAuth();
   const [open, setOpen] = useState(false);
-  const cardRef = useRef(null);
-  // Live diagnostics, surfaced only with ?exitoffer=debug (no effect otherwise).
-  const dbgRef = useRef({
-    ready: false,
-    isTouch: null,
-    mobileMs: null,
-    listeners: false,
-    lastEvent: "-",
-    triggers: 0,
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
   });
-  const [, dbgTick] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const cardRef = useRef(null);
 
   const lang =
     (typeof localStorage !== "undefined" &&
@@ -176,111 +151,132 @@ export default function ExitIntentOffer() {
 
   const { prefix, local } = localeInfo(location.pathname);
   const mode = new URLSearchParams(location.search).get("exitoffer");
-  const debug = mode === "debug";
+  const isLoggedIn = !!user;
 
-  // ?exitoffer=reset — clear the per-session gate + any claimed offer so the
-  // popup can be tested repeatedly.
   useEffect(() => {
     if (mode === "reset") {
       clearShownThisSession();
       clearClaimedThisSession();
-      clearSetupOffer();
-      try {
-        localStorage.removeItem("cortexa_exit_offer_seen_at");
-      } catch (_e) {
-        /* no-op */
-      }
     }
   }, [mode]);
 
-  // ?exitoffer=test — force it open immediately for QA (bypasses detection).
   useEffect(() => {
-    if (mode === "test" && offerIsAvailable()) {
+    if (mode === "test" && !isLoggedIn) {
       setOpen(true);
       trackEvent("exit_popup_view", { path: location.pathname, test: true });
     }
-  }, [mode, location.pathname]);
+  }, [mode, location.pathname, isLoggedIn]);
 
-  // Eligibility broken out so the debug panel can show which condition blocks it.
-  const eligible = {
-    notTestMode: mode !== "test",
-    offerAvailable: offerIsAvailable(),
-    allowedPage: isAllowedPage(local),
-    notClaimed: !claimedThisSession(),
-    notShownYet: !shownThisSession(local),
-  };
   const armed =
-    eligible.notTestMode &&
-    eligible.offerAvailable &&
-    eligible.allowedPage &&
-    eligible.notClaimed &&
-    eligible.notShownYet;
+    mode !== "test" &&
+    !isLoggedIn &&
+    isAllowedPage(local) &&
+    !claimedThisSession() &&
+    !shownThisSession(local);
 
   const trigger = useCallback(() => {
-    if (shownThisSession(local)) {
-      dbgRef.current.lastEvent = "blocked: already shown this load";
-      return;
-    }
+    if (shownThisSession(local)) return;
     markShownThisSession(local);
-    dbgRef.current.triggers += 1;
-    dbgRef.current.lastEvent = "OPENED";
     setOpen(true);
     trackEvent("exit_popup_view", { path: location.pathname });
   }, [local, location.pathname]);
 
   const close = useCallback((reason) => {
     setOpen(false);
-    trackEvent("exit_offer_dismiss", { reason: reason || "close" });
+    trackEvent("exit_popup_dismiss", { reason: reason || "close" });
   }, []);
 
-  const claim = useCallback(() => {
-    setSetupOffer(EXIT_OFFER);
-    markClaimedThisSession();
-    trackEvent("exit_popup_click", { cta: "start_trial" });
-    setOpen(false);
-    if (local === "trial") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      navigate(`${prefix}/trial?offer=${EXIT_OFFER}`);
-    }
-  }, [navigate, prefix, local]);
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
-  // Detection. Re-arms whenever the page (armed) changes, so it can trigger on
-  // the home, each editorial, and the trial page. Armed a couple seconds after
-  // load so it never fires on a fast bounce.
+  const submit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (loading) return;
+      const name = form.name.trim();
+      const email = form.email.trim();
+      const phone = form.phone.trim();
+      const password = form.password;
+      if (!name || !email || !phone || !password) {
+        setError(tr.errRequired);
+        return;
+      }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        setError(tr.errEmail);
+        return;
+      }
+      setError("");
+      setLoading(true);
+      try {
+        const attribution = getAttribution();
+        const res = await fetch(`${API_BASE}/trial/start-trial`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            phone,
+            password,
+            source: "exit_popup",
+            language: lang,
+            landingPage: attribution.landingPage || null,
+            utm: attribution.utm || {},
+            gclid: attribution.gclid || null,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          setError(tr.errExists);
+          setLoading(false);
+          return;
+        }
+        if (!res.ok || !data.success) {
+          setError(data.message || tr.errGeneric);
+          setLoading(false);
+          return;
+        }
+        // Save the account details so the rest of the funnel never re-asks.
+        localStorage.setItem("trialUserId", data.userId);
+        localStorage.setItem("email", email);
+        localStorage.setItem("name", name);
+        localStorage.setItem("phone", phone);
+        if (data.accessToken) {
+          apiClient.setTokens(data.accessToken, data.refreshToken);
+          localStorage.setItem("listo_user", JSON.stringify(data.user));
+          setUser(data.user);
+        }
+        trackEvent("exit_popup_signup", { source: "exit_popup" });
+        markClaimedThisSession();
+        setOpen(false);
+        // Straight to the pricing page (localized) to choose a plan.
+        navigate(`${prefix}/pricing`);
+      } catch (_err) {
+        setError(tr.errGeneric);
+        setLoading(false);
+      }
+    },
+    [form, loading, tr, lang, navigate, prefix, setUser],
+  );
+
+  // Exit-intent detection (desktop cursor-leaves-top; mobile scroll-up + timed
+  // fallback). Re-arms whenever `armed` changes.
   useEffect(() => {
     if (!armed) return undefined;
     let ready = false;
-    dbgRef.current.lastEvent = "armed: waiting 2.5s";
     const armTimer = setTimeout(() => {
       ready = true;
-      dbgRef.current.ready = true;
-      dbgRef.current.lastEvent = "ready (listening)";
     }, 2500);
 
-    // Desktop exit-intent: the cursor leaves through the top of the window
-    // (toward the tabs / address bar / back button). Two complementary signals
-    // for reliability: a `mouseout` with no relatedTarget near the top edge, and
-    // a `mouseleave` on the document element, which fires once when the pointer
-    // actually leaves the page. A small threshold (<= 8px) instead of exactly 0
-    // catches a fast upward flick, whose last recorded Y is often a few pixels
-    // shy of the edge — the most common reason a real exit gesture "did nothing".
     const leftViaTop = (e) => !e.relatedTarget && e.clientY <= 8;
     const onMouseOut = (e) => {
-      if (ready && leftViaTop(e)) {
-        dbgRef.current.lastEvent = "mouseout → top edge";
-        trigger();
-      }
+      if (ready && leftViaTop(e)) trigger();
     };
     const onMouseLeave = (e) => {
-      if (ready && leftViaTop(e)) {
-        dbgRef.current.lastEvent = "mouseleave → top edge";
-        trigger();
-      }
+      if (ready && leftViaTop(e)) trigger();
     };
 
-    // Touch exit-intent: a quick scroll back up toward the top after scrolling
-    // down (reaching for the address bar / back gesture).
     let lastY = window.scrollY;
     let downMax = 0;
     const onScroll = () => {
@@ -291,9 +287,6 @@ export default function ExitIntentOffer() {
       lastY = y;
     };
 
-    // Touch fallback: guarantee the offer is seen on phones/tablets with a
-    // one-time timed reveal, since the scroll gesture above misses most exits
-    // (back button, app switch). trigger() is itself once-per-session guarded.
     const isTouch =
       (typeof window !== "undefined" &&
         ((window.matchMedia &&
@@ -301,21 +294,14 @@ export default function ExitIntentOffer() {
           "ontouchstart" in window)) ||
       (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
     let mobileTimer;
-    dbgRef.current.isTouch = isTouch;
     if (isTouch) {
-      dbgRef.current.mobileMs = MOBILE_FALLBACK_MS;
-      mobileTimer = setTimeout(() => {
-        dbgRef.current.lastEvent = "mobile timer fired";
-        trigger();
-      }, MOBILE_FALLBACK_MS);
+      mobileTimer = setTimeout(() => trigger(), MOBILE_FALLBACK_MS);
     }
 
     document.addEventListener("mouseout", onMouseOut);
     document.documentElement.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("scroll", onScroll, { passive: true });
-    dbgRef.current.listeners = true;
     return () => {
-      dbgRef.current.listeners = false;
       clearTimeout(armTimer);
       if (mobileTimer) clearTimeout(mobileTimer);
       document.removeEventListener("mouseout", onMouseOut);
@@ -324,143 +310,251 @@ export default function ExitIntentOffer() {
     };
   }, [armed, trigger]);
 
-  // Escape to close + move focus into the dialog when it opens.
+  // Escape to close, focus the card, and lock page scroll while open.
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e) => {
       if (e.key === "Escape") close("escape");
     };
     document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const id = window.setTimeout(() => cardRef.current?.focus(), 0);
     return () => {
       document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
       window.clearTimeout(id);
     };
   }, [open, close]);
 
-  // ?exitoffer=debug — keep the live status panel fresh and log eligibility once.
-  useEffect(() => {
-    if (!debug) return undefined;
-    // eslint-disable-next-line no-console
-    console.log("[exit-offer] eligibility", {
-      path: location.pathname,
-      local,
-      armed,
-      ...eligible,
-    });
-    const id = setInterval(() => dbgTick((t) => t + 1), 500);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debug, armed, location.pathname]);
+  if (!open) return null;
 
-  const debugPanel = debug ? (
-    <div
-      role="status"
-      style={{
-        position: "fixed",
-        bottom: 8,
-        left: 8,
-        zIndex: 2147483647,
-        background: "rgba(15,23,42,0.94)",
-        color: "#e2e8f0",
-        font: "12px/1.5 ui-monospace, monospace",
-        padding: "10px 12px",
-        borderRadius: 8,
-        maxWidth: 320,
-        pointerEvents: "none",
-        whiteSpace: "pre-wrap",
-        border: "1px solid #334155",
-      }}
-    >
-      {[
-        "▛ exit-offer debug",
-        "script loaded: yes",
-        `path: ${location.pathname || "/"}  local:"${local}"`,
-        `offerAvailable: ${eligible.offerAvailable}`,
-        `allowedPage: ${eligible.allowedPage}`,
-        `notClaimedThisSession: ${eligible.notClaimed}`,
-        `notShownYet: ${eligible.notShownYet}`,
-        `ELIGIBLE: ${armed ? "YES ✓" : "NO ✗"}`,
-        `listeners attached: ${dbgRef.current.listeners}`,
-        `ready (after 2.5s): ${dbgRef.current.ready}`,
-        `touch device: ${dbgRef.current.isTouch}${
-          dbgRef.current.mobileMs ? `  timer ${dbgRef.current.mobileMs}ms` : ""
-        }`,
-        `times opened: ${dbgRef.current.triggers}`,
-        `last event: ${dbgRef.current.lastEvent}`,
-        `popup open now: ${open}`,
-      ].join("\n")}
-    </div>
-  ) : null;
-
-  if (!open) return debugPanel;
+  const inputWrap = {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    border: "1px solid #d7d9de",
+    borderRadius: 12,
+    padding: "13px 14px",
+    background: "#fff",
+  };
+  const inputStyle = {
+    border: "none",
+    outline: "none",
+    flex: 1,
+    fontSize: 15,
+    background: "transparent",
+    color: "#0f172a",
+  };
 
   return (
-    <>
-      {debugPanel}
+    <div
+      onClick={() => close("backdrop")}
+      role="presentation"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.72)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2147483000,
+        padding: 16,
+      }}
+    >
       <div
-        className="exit-offer-backdrop"
-        onClick={() => close("backdrop")}
-        role="presentation"
-      >
-      <div
-        className="exit-offer-card"
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="exit-offer-title"
+        aria-labelledby="exit-popup-title"
         tabIndex={-1}
         ref={cardRef}
-        onClick={(e) => e.stopPropagation()}
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 500,
+          maxHeight: "92vh",
+          overflowY: "auto",
+          background: "#fff",
+          borderRadius: 20,
+          padding: "38px 34px 26px",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.35)",
+          fontFamily:
+            "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          textAlign: "center",
+        }}
       >
         <button
           type="button"
-          className="exit-offer-close"
           aria-label={tr.close}
           onClick={() => close("x")}
+          style={{
+            position: "absolute",
+            top: 14,
+            right: 14,
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            border: "1px solid #e5e7eb",
+            background: "#fff",
+            color: "#0f172a",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <h2 id="exit-offer-title" className="exit-offer-head">
-          <span className="exit-offer-wait">{tr.wait}</span>
-          <span className="exit-offer-dont">{tr.dontLeave}</span>
+        <h2
+          id="exit-popup-title"
+          style={{
+            margin: "0 0 8px",
+            fontSize: 38,
+            lineHeight: 1.02,
+            fontWeight: 800,
+            letterSpacing: "-0.01em",
+            color: "#0b0b0c",
+          }}
+        >
+          {tr.headline1} — {tr.headline2}
         </h2>
-        <span className="exit-offer-rule" aria-hidden="true" />
-
-        <p className="exit-offer-sub">
-          {tr.sub} <span className="exit-offer-accent">{tr.product}</span>
+        <h3
+          style={{
+            margin: "0 0 10px",
+            fontSize: 22,
+            fontWeight: 800,
+            color: "#0b0b0c",
+          }}
+        >
+          {tr.sub}
+        </h3>
+        <p
+          style={{
+            margin: "0 auto 20px",
+            maxWidth: 380,
+            fontSize: 14.5,
+            lineHeight: 1.5,
+            color: "#4b5563",
+          }}
+        >
+          {tr.desc}
         </p>
 
-        <div className="exit-offer-box">
-          <p className="exit-offer-box-lead">{tr.boxLead}</p>
-          <div className="exit-offer-price">
-            <span className="exit-offer-old">${REGULAR_SETUP_FEE}</span>
-            <ArrowRight className="exit-offer-arrow" size={26} />
-            <span className="exit-offer-new">${OFFER_SETUP_FEE}</span>
-            <span className="exit-offer-fee">{tr.fee}</span>
-          </div>
-          <p className="exit-offer-box-foot">
-            {tr.boxFoot}{" "}
-            <span className="exit-offer-accent">{tr.freeTrial}</span>
-          </p>
-        </div>
+        <form
+          onSubmit={submit}
+          style={{ display: "flex", flexDirection: "column", gap: 12 }}
+        >
+          <label style={inputWrap}>
+            <User size={19} color="#6b7280" />
+            <input
+              style={inputStyle}
+              type="text"
+              name="name"
+              value={form.name}
+              onChange={onChange}
+              placeholder={tr.name}
+              autoComplete="name"
+            />
+          </label>
+          <label style={inputWrap}>
+            <Mail size={19} color="#6b7280" />
+            <input
+              style={inputStyle}
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={onChange}
+              placeholder={tr.email}
+              autoComplete="email"
+            />
+          </label>
+          <label style={inputWrap}>
+            <Phone size={19} color="#6b7280" />
+            <input
+              style={inputStyle}
+              type="tel"
+              name="phone"
+              value={form.phone}
+              onChange={onChange}
+              placeholder={tr.phone}
+              autoComplete="tel"
+            />
+          </label>
+          <label style={inputWrap}>
+            <LockKeyhole size={19} color="#6b7280" />
+            <input
+              style={inputStyle}
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={form.password}
+              onChange={onChange}
+              placeholder={tr.password}
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label="Toggle password visibility"
+              style={{
+                border: "none",
+                background: "transparent",
+                cursor: "pointer",
+                color: "#6b7280",
+                display: "flex",
+              }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </label>
 
-        <ul className="exit-offer-features">
-          {tr.features.map((f) => (
-            <li key={f}>
-              <span className="exit-offer-check">
-                <Check size={14} strokeWidth={3} />
-              </span>
-              <span className="exit-offer-feature-label">{f}</span>
-            </li>
-          ))}
-        </ul>
+          {error && (
+            <div style={{ color: "#dc2626", fontSize: 13, textAlign: "left" }}>
+              {error}
+            </div>
+          )}
 
-        <button type="button" className="exit-offer-cta" onClick={claim}>
-          <ArrowRight size={20} /> {tr.cta}
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 4,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              width: "100%",
+              padding: "15px 18px",
+              borderRadius: 12,
+              border: "none",
+              background: "#0b0b0c",
+              color: "#fff",
+              fontSize: 15.5,
+              fontWeight: 700,
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.8 : 1,
+            }}
+          >
+            {loading ? tr.creating : tr.cta}
+            {!loading && <ArrowRight size={19} />}
+          </button>
+        </form>
+
+        <p
+          style={{
+            margin: "16px 0 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 7,
+            fontSize: 13,
+            color: "#6b7280",
+          }}
+        >
+          <ShieldCheck size={16} /> {tr.reassure}
+        </p>
       </div>
-      </div>
-    </>
+    </div>
   );
 }

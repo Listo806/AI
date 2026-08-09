@@ -4,6 +4,16 @@
  */
 import apiClient from "./apiClient";
 
+// Set the plan on the logged-in account (used after the exit-popup signup, when
+// the user picks a plan on the pricing page). Never creates a second account.
+// Returns { success, plan, billingCycle, free }.
+export async function selectAccountPlan({ plan, billingCycle } = {}) {
+  return apiClient.request(`/trial/select-plan`, {
+    method: "POST",
+    body: JSON.stringify({ plan, billingCycle }),
+  });
+}
+
 // ============================================================================
 // PLATFORM LISTINGS (Agent/Owner/User - submit without CRM)
 // ============================================================================
