@@ -293,13 +293,11 @@
 .cxc-page-btn:disabled { opacity: 0.5; cursor: default; }
 .cxc-rows { display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px; }
 
-/* Bottom sticky toolbar */
+/* Customer-management toolbar (sits above the table) */
 .cxc-toolbar {
-  position: sticky; bottom: 0; left: 0;
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   background: #fff; border: 1px solid #eef2f7; border-radius: 14px;
-  padding: 10px 12px; margin-top: 16px;
-  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.05);
+  padding: 10px 12px; margin: 0 0 12px;
 }
 .cxc-toolbar-spacer { flex: 1; }
 
@@ -368,6 +366,17 @@
   display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid #eef2f7;
   background: #fff; margin-top: auto;
 }
+
+/* Centered Customer Details modal (opens on View; not a permanent panel) */
+.cxc-cust-modal {
+  width: 900px; max-width: 96vw; max-height: 88vh; margin: auto;
+  background: #fff; border-radius: 14px;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+.cxc-cust-modal .cxc-drawer-head { border-bottom: 1px solid #eef2f7; }
+.cxc-cust-modal .cxc-drawer-body { overflow-y: auto; flex: 1; }
+.cxc-cust-modal .cxc-drawer-foot { border-top: 1px solid #eef2f7; }
 
 /* Modals */
 .cxc-modal-overlay {
