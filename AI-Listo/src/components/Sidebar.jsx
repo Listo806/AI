@@ -1,6 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import { usePlan } from "../context/PlanContext";
+import { LockBadge } from "./FeatureLock";
 import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
@@ -28,6 +30,7 @@ const AI_CENTER_ITEMS = [
     path: "/dashboard/calendar",
     icon: "calendar",
     labelKey: "nav.calendar",
+    feature: "calendar",
   },
   // Single, clean AI Agent entry -> opens the one-page ChatGPT-style workspace.
   // The old multi-tab AI setup page stays reachable by URL (/dashboard/ai-cortexa-setup)
@@ -54,6 +57,11 @@ export default function Sidebar({
 }) {
   const { t } = useTranslation();
   const { user, loading } = useAuth();
+  const plan = usePlan();
+  // A nav item is locked when it maps to a plan feature the account lacks. Fails
+  // open: usePlan returns "allowed" while loading / on error, so no badge flashes
+  // for users who actually have access.
+  const isLocked = (item) => !!item?.feature && !plan.hasFeature(item.feature);
   if (loading) return null;
   const location = useLocation();
 
@@ -177,7 +185,7 @@ export default function Sidebar({
   ];
 
   const systemNavItems = [
-    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team" },
+    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team", feature: "teamWorkspace" },
     {
       path: "/dashboard/integrations",
       icon: "plug",
@@ -206,7 +214,7 @@ export default function Sidebar({
     { path: "/dashboard/leads", icon: "users", labelKey: "nav.leads" },
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
-    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics" },
+    { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics", feature: "advancedAnalytics" },
     { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
   ];
 
@@ -306,6 +314,7 @@ export default function Sidebar({
                     {/*{item.isWhatsApp && <span style={{ marginLeft: "4px", fontSize: "12px" }}>🔥</span>}*/}
                   </span>
                 )}
+                {!isCollapsed && isLocked(item) && <LockBadge />}
               </NavLink>
             </span>
           ))}
@@ -368,6 +377,7 @@ export default function Sidebar({
                           {item.label || t(item.labelKey)}
                         </span>
                       )}
+                      {!isCollapsed && isLocked(item) && <LockBadge />}
                     </NavLink>
                   ))}
                 </>
@@ -394,6 +404,7 @@ export default function Sidebar({
                   {item.labelKey === "nav.generator" && (
                     <span className="crm-nav-addon">{t("nav.addOn")}</span>
                   )}
+                  {isLocked(item) && <LockBadge />}
                 </>
               )}
             </NavLink>

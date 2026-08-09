@@ -19,6 +19,7 @@ import LanguageAutoDetect from "./components/LanguageAutoDetect";
 import TrackDebugPanel from "./components/TrackDebugPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VaRouteGuard from "./components/VaRouteGuard";
+import FeatureRoute from "./components/FeatureRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import "./i18n/config";
 import {
@@ -366,18 +367,87 @@ function AppRoutes() {
         <Route path="ai-messaging" element={<AIMessaging />} />
         <Route path="ai-logs" element={<AIActivityLogs />} />
 
-        {/* Analytics Route */}
-        <Route path="analytics" element={<Analytics />} />
+        {/* Analytics Route (paid: advanced analytics) */}
+        <Route
+          path="analytics"
+          element={
+            <FeatureRoute
+              feature="advancedAnalytics"
+              title="Advanced analytics is on a paid plan"
+            >
+              <Analytics />
+            </FeatureRoute>
+          }
+        />
 
-        {/* Team Route */}
-        <Route path="team" element={<Team />} />
-        <Route path="team/members" element={<TeamMembersPage />} />
-        <Route path="team/ai-insights" element={<TeamAIInsightsPage />} />
-        <Route path="team/performance" element={<TeamPerformancePage />} />
-        <Route path="team/activity" element={<TeamActivityPage />} />
-        <Route path="team/notifications" element={<TeamNotificationsPage />} />
-        <Route path="team/manage" element={<TeamManagePage />} />
-        <Route path="team/invites" element={<TeamPendingInvitesPage />} />
+        {/* Team Route (paid: team workspace) */}
+        <Route
+          path="team"
+          element={
+            <FeatureRoute
+              feature="teamWorkspace"
+              title="Team workspace is on a paid plan"
+            >
+              <Team />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/members"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamMembersPage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/ai-insights"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamAIInsightsPage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/performance"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamPerformancePage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/activity"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamActivityPage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/notifications"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamNotificationsPage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/manage"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamManagePage />
+            </FeatureRoute>
+          }
+        />
+        <Route
+          path="team/invites"
+          element={
+            <FeatureRoute feature="teamWorkspace" title="Team workspace is on a paid plan">
+              <TeamPendingInvitesPage />
+            </FeatureRoute>
+          }
+        />
 
         {/* Integrations Routes */}
         <Route path="integrations" element={<Integrations />} />
@@ -402,7 +472,14 @@ function AppRoutes() {
           element={<AppointmentPage />}
         />
         <Route path="whatsapp" element={<WhatsAppPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
+        <Route
+          path="calendar"
+          element={
+            <FeatureRoute feature="calendar" title="Calendar is on a paid plan">
+              <CalendarPage />
+            </FeatureRoute>
+          }
+        />
         <Route path="generator" element={<LeadGeneratorGate />} />
 
         {/* WhatsApp: VITE_WHATSAPP_UI twilio|qr|both — see src/config/whatsappUi.js 

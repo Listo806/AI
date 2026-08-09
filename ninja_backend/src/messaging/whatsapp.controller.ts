@@ -4,6 +4,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiExcludeEndpoint, ApiBearerAuth, 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../subscriptions/guards/crm-access.guard';
+import { FeatureAccessGuard } from '../plans/feature-access.guard';
+import { RequireFeature } from '../plans/require-feature.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { SendWhatsAppDto } from './dto/send-whatsapp.dto';
@@ -305,7 +307,8 @@ export class WhatsAppController {
   }
 
   @Post('broadcast')
-  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard, FeatureAccessGuard)
+  @RequireFeature('emailSmsMarketing')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send WhatsApp template broadcast to eligible conversations (AI-owned, not escalated)' })

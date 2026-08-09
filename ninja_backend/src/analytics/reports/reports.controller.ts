@@ -10,12 +10,15 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@ne
 import { ReportGeneratorService } from './report-generator.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PaymentGuard } from '../../auth/guards/payment.guard';
+import { FeatureAccessGuard } from '../../plans/feature-access.guard';
+import { RequireFeature } from '../../plans/require-feature.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @ApiTags('analytics')
 @ApiBearerAuth('JWT-auth')
 @Controller('analytics/reports')
-@UseGuards(JwtAuthGuard, PaymentGuard)
+@UseGuards(JwtAuthGuard, PaymentGuard, FeatureAccessGuard)
+@RequireFeature('reports')
 export class ReportsController {
   constructor(private readonly reportGeneratorService: ReportGeneratorService) {}
 
