@@ -1964,7 +1964,7 @@ export default function LandingMobile() {
             {tr.ctaButtonText}
           </a>
 
-          <a href="/pricing" className="m-hero-cta m-hero-cta-free">
+          <a href="/trial" className="m-hero-cta m-hero-cta-free">
             {tr.heroFreeAccess}
           </a>
 

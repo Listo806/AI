@@ -2026,7 +2026,7 @@ export default function Landing() {
                   {tr.heroCTA}
                 </a>
 
-                <a href="/pricing" className="hero-btn hero-btn-free">
+                <a href="/trial" className="hero-btn hero-btn-free">
                   {tr.heroFreeAccess}
                 </a>
               </div>
