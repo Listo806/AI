@@ -50,6 +50,12 @@ export class PlatformMailerService {
         `utm_content TEXT`,
         `gclid TEXT`,
         `offer_used VARCHAR(32)`,
+        `billing_cycle VARCHAR(10)`,
+        `plan_status VARCHAR(24) DEFAULT 'active'`,
+        `paddle_customer_id TEXT`,
+        `paddle_subscription_id TEXT`,
+        `signup_source VARCHAR(32)`,
+        `upgraded_at TIMESTAMPTZ`,
       ];
       for (const c of userCols) {
         await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
