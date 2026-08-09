@@ -1,0 +1,142 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { UserRole } from '../users/entities/user.entity';
+import { CustomersAdminService } from './customers-admin.service';
+
+const CSV_FIELDS = [
+  'email',
+  'name',
+  'phone',
+  'language',
+  'plan_label',
+  'billing',
+  'intro_amount',
+  'recurring_amount',
+  'status',
+  'payment_status',
+  'source_label',
+  'seat_count',
+  'created_at',
+  'registered_at',
+  'last_seen_at',
+];
+
+function csvCell(v: any): string {
+  if (v == null) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// The master Customers admin surface: sign-ups, customers, and plan/billing in
+// one place. Uses a dedicated base path so the legacy /admin/customers list
+// keeps working until this page is verified and the old ones are retired.
+@ApiTags('admin')
+@Controller('admin/customers-hub')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+@ApiBearerAuth('JWT-auth')
+export class CustomersAdminController {
+  constructor(private readonly customers: CustomersAdminService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Master customer list (all lifecycle statuses)' })
+  @ApiQuery({ name: 'tab', required: false })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiQuery({ name: 'plan', required: false })
+  @ApiQuery({ name: 'billing', required: false })
+  @ApiQuery({ name: 'paymentStatus', required: false })
+  @ApiQuery({ name: 'source', required: false })
+  @ApiQuery({ name: 'language', required: false })
+  @ApiQuery({ name: 'from', required: false })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'offset', required: false })
+  async list(@Query() query: any) {
+    return this.customers.list(query);
+  }
+
+  @Get('summary')
+  @ApiOperation({ summary: 'KPIs, tab counts, breakdowns, and funnel' })
+  async summary(@Query() query: any) {
+    return this.customers.summary(query);
+  }
+
+  @Get('plans')
+  @ApiOperation({ summary: 'Plan catalog for filters and Change Plan' })
+  async plans() {
+    return this.customers.plansCatalog();
+  }
+
+  @Get('export.csv')
+  @ApiOperation({ summary: 'Export the filtered customer list as CSV' })
+  async exportCsv(@Res() res: Response, @Query() query: any) {
+    const rows = await this.customers.exportRows(query);
+    const header = CSV_FIELDS.join(',');
+    const body = rows
+      .map((r: any) => CSV_FIELDS.map((f) => csvCell(r[f])).join(','))
+      .join('\n');
+    res.set({
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="customers.csv"',
+    });
+    res.send(`${header}\n${body}`);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'One customer with subscription, payments, activity, notes' })
+  async detail(@Param('id') id: string) {
+    return this.customers.detail(id);
+  }
+
+  @Get(':id/notes')
+  async listNotes(@Param('id') id: string) {
+    return { data: await this.customers.listNotes(id) };
+  }
+
+  @Post(':id/notes')
+  async addNote(
+    @Param('id') id: string,
+    @Body() body: { note?: string },
+    @CurrentUser() user: any,
+  ) {
+    return { data: await this.customers.addNote(id, body?.note || '', user) };
+  }
+
+  @Delete(':id/notes/:noteId')
+  async deleteNote(@Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.customers.deleteNote(id, noteId);
+  }
+
+  @Post(':id/change-plan')
+  @ApiOperation({ summary: 'Move a customer between plans (updates account config)' })
+  async changePlan(@Param('id') id: string, @Body() body: any) {
+    return this.customers.changePlan(id, body);
+  }
+
+  @Post(':id/deactivate')
+  @ApiOperation({ summary: 'Deactivate: block access, keep account and history' })
+  async deactivate(@Param('id') id: string) {
+    return this.customers.deactivate(id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete (soft): hide from list; financial records kept' })
+  async remove(@Param('id') id: string) {
+    return this.customers.remove(id);
+  }
+}

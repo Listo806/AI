@@ -104,6 +104,7 @@ import VaUpload from "./pages/va/VaUpload";
 import AdminListings from "./pages/admin/AdminListings";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSignups from "./pages/admin/AdminSignups";
+import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminTeams from "./pages/admin/AdminTeams";
 import AdminPlans from "./pages/admin/AdminPlans";
 import DashboardIndexRedirect from "./components/DashboardIndexRedirect";
@@ -345,8 +346,9 @@ function AppRoutes() {
         {/* Admin */}
         <Route path="admin/listings" element={<AdminListings />} />
         <Route path="admin/users" element={<AdminUsers />} />
+        <Route path="admin/customers" element={<AdminCustomers />} />
         <Route path="admin/signups" element={<AdminSignups />} />
-        <Route path="admin/customers" element={<AdminSignups customersOnly />} />
+        <Route path="admin/customers-legacy" element={<AdminSignups customersOnly />} />
         <Route path="admin/teams" element={<AdminTeams />} />
         <Route path="admin/plans" element={<AdminPlans />} />
 

@@ -315,6 +315,13 @@ export default function DashboardLayout() {
                       {adminMenuOpen && (
                         <div style={{ paddingLeft: 14 }}>
                           <Link
+                            to="/dashboard/admin/customers"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            {t('nav.adminCustomers') || 'Customers'}
+                          </Link>
+                          <Link
                             to="/dashboard/admin/listings"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
@@ -329,25 +336,19 @@ export default function DashboardLayout() {
                             {t('nav.users')}
                           </Link>
                           <Link
-                            to="/dashboard/admin/signups"
-                            className="crm-account-menu-item"
-                            onClick={() => setAccountDropdownOpen(false)}
-                          >
-                            {t('nav.adminSignups')}
-                          </Link>
-                          <Link
-                            to="/dashboard/admin/customers"
-                            className="crm-account-menu-item"
-                            onClick={() => setAccountDropdownOpen(false)}
-                          >
-                            {t('nav.adminCustomers')}
-                          </Link>
-                          <Link
                             to="/dashboard/admin/teams"
                             className="crm-account-menu-item"
                             onClick={() => setAccountDropdownOpen(false)}
                           >
                             {t('nav.teams')}
+                          </Link>
+                          {/* Kept until the new Customers page is verified, then retired. */}
+                          <Link
+                            to="/dashboard/admin/signups"
+                            className="crm-account-menu-item"
+                            onClick={() => setAccountDropdownOpen(false)}
+                          >
+                            {t('nav.adminSignups')}
                           </Link>
                           <Link
                             to="/dashboard/admin/plans"
