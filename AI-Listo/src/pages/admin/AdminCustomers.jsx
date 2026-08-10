@@ -19,6 +19,10 @@ import {
   CreditCard,
   Filter,
   ChevronDown,
+  Info,
+  Receipt,
+  Activity as ActivityIcon,
+  StickyNote,
 } from "lucide-react";
 import {
   getCustomersHub,
@@ -575,9 +579,9 @@ export default function AdminCustomers() {
   );
 }
 
-/* ---------------- Right-side customer details drawer ---------------- */
+/* ---------------- Centered Customer Details modal (matches reference) ---------------- */
 
-function UsageBar({ label, used, limit }) {
+function UsageBar({ label, used, limit, display }) {
   const unlimited = limit == null;
   const pct = unlimited ? 8 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   const cls = unlimited ? "" : pct >= 100 ? "full" : pct >= 80 ? "warn" : "";
@@ -585,11 +589,24 @@ function UsageBar({ label, used, limit }) {
     <div className="cxc-usage-item">
       <div className="cxc-usage-top">
         <span className="lbl">{label}</span>
-        <span className="val">{used} of {unlimited ? "unlimited" : limit}</span>
+        <span className="val">{display || `${used} of ${unlimited ? "unlimited" : limit}`}</span>
       </div>
       <div className="cxc-usage-track"><div className={`cxc-usage-fill ${cls}`} style={{ width: `${pct}%` }} /></div>
     </div>
   );
+}
+
+const CUST_TABS = [
+  { key: "overview", label: "Overview", icon: <Info size={15} /> },
+  { key: "subscription", label: "Subscription", icon: <CreditCard size={15} /> },
+  { key: "payments", label: "Payments", icon: <Receipt size={15} /> },
+  { key: "activity", label: "Activity", icon: <ActivityIcon size={15} /> },
+  { key: "notes", label: "Notes", icon: <StickyNote size={15} /> },
+];
+
+function PayStatusBadge({ status }) {
+  const ok = status === "succeeded" || status === "completed" || status === "paid";
+  return <span className={`cxc-badge ${ok ? "active" : "registered"}`}>{ok ? "Payment succeeded" : (status || "—")}</span>;
 }
 
 function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onChangePlan }) {
@@ -622,132 +639,231 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onCha
   const updatePayment = () => alert("The card is held securely by Paddle. Send the customer their billing link to update it, or change it in the Paddle dashboard.");
   const addSeat = () => alert("Seats are set by the plan. Use Change Plan to adjust the seat allowance, or invite members from the Team page.");
 
-  const R = (k, v) => (
-    <div className="cxc-summary-row"><span className="k">{k}</span><span className="v">{v ?? "—"}</span></div>
+  const paymentMethod = c?.paddle_customer_id
+    ? <span>Card on file · Paddle <button className="cxc-linkbtn" onClick={updatePayment}>Update</button></span>
+    : "—";
+
+  const overviewRows = sub ? [
+    ["Plan", <span className="cxc-plan-badge">{sub.plan}{sub.planId === "business" && <span className="cxc-pop">POPULAR</span>}</span>],
+    ["Price", sub.isFree ? "$0" : `${usd(sub.recurringAmount)} / ${sub.billingCycle === "annual" ? "year" : "month"}`],
+    ["Billing Cycle", sub.isFree ? "—" : (sub.billingCycle === "annual" ? "Annual" : "Monthly")],
+    ["Seats / Users", `${c.seat_count ?? 0} / ${sub.seatsLimit}`],
+    ["Payment Method", paymentMethod],
+    ["Status", <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>],
+    ["Started", fmtDate(sub.startDate)],
+    ["Next Billing Date", sub.nextBillingDate ? `${fmtDate(sub.nextBillingDate)} (${relDays(sub.nextBillingDate)})` : "—"],
+    ["Source / Offer", `${c.source_label || "—"} / ${c.offer_used || "standard"}`],
+  ] : [];
+
+  const payments = data?.payments || [];
+  const activity = data?.activity || [];
+  const notes = data?.notes || [];
+
+  const PlanUsage = () => (
+    <>
+      <UsageBar label="Users / Seats" used={c.seat_count ?? 0} limit={sub?.seatsLimit} />
+      <UsageBar label="AI conversations" used={usage?.usage?.aiConversationsThisMonth ?? 0} limit={usage?.limits?.aiConversationsPerMonth ?? null} />
+      <UsageBar label="Integrations" used={usage?.usage?.integrationsConnected ?? 0} limit={usage?.limits?.integrations ?? null} />
+    </>
   );
 
   return (
     <div className="cxc-modal-overlay" onClick={onClose}>
       <div className="cxc-cust-modal" onClick={(e) => e.stopPropagation()}>
-      <div className="cxc-drawer-head">
-        <strong style={{ fontSize: 16 }}>Customer Details</strong>
-        <button className="cxc-drawer-close" onClick={onClose}>×</button>
-      </div>
+        <div className="cxc-drawer-head">
+          <strong style={{ fontSize: 16 }}>Customer Details</strong>
+          <button className="cxc-drawer-close" onClick={onClose}>×</button>
+        </div>
 
-      {id && loading && <div className="cxc-drawer-body cxc-muted">Loading…</div>}
-      {id && !loading && !c && <div className="cxc-drawer-body cxc-muted">Customer not found.</div>}
+        {loading && <div className="cxc-cust-modal-body"><div className="cxc-muted" style={{ padding: 24 }}>Loading…</div></div>}
+        {!loading && !c && <div className="cxc-cust-modal-body"><div className="cxc-muted" style={{ padding: 24 }}>Customer not found.</div></div>}
 
-      {id && !loading && c && (
-        <>
-            <div className="cxc-drawer-body">
-              <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
-                <div className="cxc-avatar" style={{ width: 46, height: 46, fontSize: 16, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>{c.name || "—"}</div>
-                  <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>
+        {!loading && c && (
+          <div className="cxc-cust-modal-body">
+            {/* Left rail: identity + vertical tabs */}
+            <aside className="cxc-cust-rail">
+              <div className="cxc-cust-idcard">
+                <div className="cxc-avatar" style={{ width: 48, height: 48, fontSize: 17, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
+                <div className="cxc-cust-idmeta">
+                  <div className="cxc-cust-idname">
+                    <span className="nm">{c.name || "—"}</span>
+                    <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>
+                  </div>
+                  {sub?.plan && <span className="cxc-cust-plantag">{sub.plan}</span>}
                 </div>
               </div>
-              <div className="cxc-id-line"><Mail size={13} /> {c.email}</div>
-              {c.phone && <div className="cxc-id-line"><Phone size={13} /> {c.phone}</div>}
-              <div className="cxc-id-line cxc-mono">ID: {c.id}</div>
-
-              <div className="cxc-drawer-tabs">
-                {["overview", "subscription", "payments", "activity", "notes"].map((t) => (
-                  <button key={t} className={`cxc-drawer-tab ${activeTab === t ? "active" : ""}`} onClick={() => setTab(t)} style={{ textTransform: "capitalize" }}>{t}</button>
-                ))}
+              <div className="cxc-cust-contacts">
+                <div className="cxc-id-line"><Mail size={13} /> {c.email}</div>
+                {c.phone && <div className="cxc-id-line"><Phone size={13} /> {c.phone}</div>}
+                <div className="cxc-id-line cxc-mono">ID: {c.id}</div>
               </div>
+              <nav className="cxc-cust-nav">
+                {CUST_TABS.map((t) => (
+                  <button key={t.key} className={`cxc-cust-navitem ${activeTab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+              </nav>
+            </aside>
 
-              {(activeTab === "overview" || activeTab === "subscription") && sub && (
+            {/* Main content */}
+            <div className="cxc-cust-content">
+              {activeTab === "overview" && (
                 <>
-                  <div className="cxc-summary-head">
-                    <span className="cxc-summary-title">Subscription Summary</span>
-                    <button className="cxc-btn cxc-btn-sm cxc-btn-primary" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
-                  </div>
-                  {R("Plan", <span className="cxc-plan-badge">{sub.plan}{sub.planId === "business" && <span className="cxc-pop">POPULAR</span>}</span>)}
-                  {R("Price", sub.isFree ? "$0" : `${usd(sub.recurringAmount)}/${sub.billingCycle === "annual" ? "year" : "month"}`)}
-                  {R("Billing Cycle", sub.isFree ? "—" : (sub.billingCycle === "annual" ? "Annual" : "Monthly"))}
-                  {R("Seats / Users", `${c.seat_count ?? 0} / ${sub.seatsLimit}`)}
-                  {R("Next Billing Date", sub.nextBillingDate ? `${fmtDate(sub.nextBillingDate)} (${relDays(sub.nextBillingDate)})` : "—")}
-                  {R("Payment Method", c.paddle_customer_id ? "Card on file · Paddle" : "—")}
-                  {R("Status", <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>)}
-                  {R("Started", fmtDate(sub.startDate))}
-                  {R("Source / Offer", `${c.source_label || "—"} / ${c.offer_used || "—"}`)}
-                  {R("Intro / Start", usd(sub.introAmount))}
-                  {R("Paddle Customer", sub.paddleCustomerId)}
-                  {R("Paddle Subscription", sub.paddleSubscriptionId)}
+                  <div className="cxc-cust-grid2">
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title">Account Overview</div>
+                      {sub
+                        ? overviewRows.map(([k, v], i) => (
+                            <div key={i} className="cxc-ov-row"><span className="k">{k}</span><span className="v">{v}</span></div>
+                          ))
+                        : <div className="cxc-muted" style={{ fontSize: 13 }}>No subscription details.</div>}
+                    </section>
 
-                  {usage && (
-                    <div className="cxc-usage">
-                      <div className="cxc-summary-title" style={{ marginBottom: 8 }}>Plan Usage</div>
-                      <UsageBar label="Users / Seats" used={c.seat_count ?? 0} limit={sub.seatsLimit} />
-                      <UsageBar label="AI conversations (this month)" used={usage.usage?.aiConversationsThisMonth ?? 0} limit={usage.limits?.aiConversationsPerMonth ?? null} />
-                      <UsageBar label="Integrations" used={usage.usage?.integrationsConnected ?? 0} limit={usage.limits?.integrations ?? null} />
-                    </div>
-                  )}
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title">Quick Actions</div>
+                      <div className="cxc-qa-grid">
+                        <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
+                        <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}>Update Payment Method</button>
+                        <button className="cxc-btn cxc-btn-sm" onClick={addSeat}>Add Seat / User</button>
+                        <a className="cxc-btn cxc-btn-sm" href={`mailto:${c.email}`}><Mail size={13} /> Send Email</a>
+                      </div>
+                      <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
+
+                      <div className="cxc-qa-notes-head">
+                        <span className="cxc-block-title" style={{ margin: 0 }}>Customer Notes</span>
+                        <button className="cxc-linkbtn" onClick={() => setTab("notes")}>+ Add Note</button>
+                      </div>
+                      {notes.length === 0
+                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No notes yet for this customer.</div>
+                        : <div className="cxc-qa-notes-list">
+                            {notes.slice(0, 3).map((n) => (
+                              <div key={n.id} className="cxc-qa-note">
+                                <div>{n.note}</div>
+                                <div className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDate(n.created_at)}</div>
+                              </div>
+                            ))}
+                          </div>}
+                    </section>
+                  </div>
+
+                  <div className="cxc-cust-grid3">
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title">Plan Usage</div>
+                      <PlanUsage />
+                    </section>
+
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title cxc-block-title--link">Recent Payments <button className="cxc-linkbtn" onClick={() => setTab("payments")}>View All</button></div>
+                      {payments.length === 0
+                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No payments yet.</div>
+                        : payments.slice(0, 4).map((p) => (
+                            <div key={p.id} className="cxc-mini-row">
+                              <span className="cxc-sub-date">{fmtDate(p.payment_date || p.created_at)}</span>
+                              <strong>{usd(p.amount)}</strong>
+                              <PayStatusBadge status={p.status} />
+                            </div>
+                          ))}
+                    </section>
+
+                    <section className="cxc-cust-block">
+                      <div className="cxc-block-title cxc-block-title--link">Customer Activity <button className="cxc-linkbtn" onClick={() => setTab("activity")}>View All</button></div>
+                      {activity.length === 0
+                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No activity yet.</div>
+                        : activity.slice(0, 5).map((a, i) => (
+                            <div key={i} className="cxc-mini-row cxc-mini-row--act">
+                              <span className="cxc-sub-date">{fmtDateTime(a.at)}</span>
+                              <span>{a.label}</span>
+                            </div>
+                          ))}
+                    </section>
+                  </div>
                 </>
               )}
 
+              {activeTab === "subscription" && (
+                <div className="cxc-cust-grid2">
+                  <section className="cxc-cust-block">
+                    <div className="cxc-block-title">Subscription</div>
+                    {sub
+                      ? overviewRows.map(([k, v], i) => (
+                          <div key={i} className="cxc-ov-row"><span className="k">{k}</span><span className="v">{v}</span></div>
+                        ))
+                      : <div className="cxc-muted" style={{ fontSize: 13 }}>No subscription details.</div>}
+                    <div style={{ marginTop: 12 }}>
+                      <button className="cxc-btn cxc-btn-primary cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
+                    </div>
+                  </section>
+                  <section className="cxc-cust-block">
+                    <div className="cxc-block-title">Plan Usage</div>
+                    <PlanUsage />
+                  </section>
+                </div>
+              )}
+
               {activeTab === "payments" && (
-                <div style={{ marginTop: 12 }}>
-                  {(!data?.payments || data.payments.length === 0) && <div className="cxc-muted" style={{ fontSize: 13 }}>No recorded payments.</div>}
-                  {(data?.payments || []).map((p) => (
-                    <div key={p.id} className="cxc-summary-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><strong>{usd(p.amount)} {p.currency || "USD"}</strong><span className="cxc-muted">{p.status}</span></div>
-                      <div className="cxc-sub-date">{fmtDateTime(p.payment_date || p.created_at)}</div>
-                      {p.transaction_id && <div className="cxc-sub-date" style={{ wordBreak: "break-all" }}>{p.transaction_id}</div>}
+                <section className="cxc-cust-block">
+                  <div className="cxc-block-title">Payments</div>
+                  {payments.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No recorded payments.</div>}
+                  {payments.map((p) => (
+                    <div key={p.id} className="cxc-mini-row cxc-mini-row--pay">
+                      <span className="cxc-sub-date">{fmtDateTime(p.payment_date || p.created_at)}</span>
+                      <strong>{usd(p.amount)} {p.currency || "USD"}</strong>
+                      <PayStatusBadge status={p.status} />
                     </div>
                   ))}
-                </div>
+                </section>
               )}
 
               {activeTab === "activity" && (
-                <div style={{ marginTop: 12 }}>
-                  {(!data?.activity || data.activity.length === 0) && <div className="cxc-muted" style={{ fontSize: 13 }}>No activity yet.</div>}
-                  {(data?.activity || []).map((a, i) => (
-                    <div key={i} className="cxc-summary-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
-                      <div>{a.label}</div>
-                      <div className="cxc-sub-date">{fmtDateTime(a.at)}</div>
+                <section className="cxc-cust-block">
+                  <div className="cxc-block-title">Customer Activity</div>
+                  {activity.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No activity yet.</div>}
+                  {activity.map((a, i) => (
+                    <div key={i} className="cxc-mini-row cxc-mini-row--act">
+                      <span className="cxc-sub-date">{fmtDateTime(a.at)}</span>
+                      <span>{a.label}</span>
                     </div>
                   ))}
-                </div>
+                </section>
               )}
 
               {activeTab === "notes" && (
-                <div style={{ marginTop: 12 }}>
+                <section className="cxc-cust-block">
+                  <div className="cxc-block-title">Customer Notes</div>
                   <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                     <input className="cxc-input" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add an internal note" />
                     <button className="cxc-btn cxc-btn-primary" onClick={submitNote}>Add</button>
                   </div>
-                  {(!data?.notes || data.notes.length === 0) && <div className="cxc-muted" style={{ fontSize: 13 }}>No notes yet.</div>}
-                  {(data?.notes || []).map((n) => (
-                    <div key={n.id} className="cxc-summary-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
+                  {notes.length === 0 && <div className="cxc-muted" style={{ fontSize: 13 }}>No notes yet.</div>}
+                  {notes.map((n) => (
+                    <div key={n.id} className="cxc-note-row">
                       <div>{n.note}</div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <span className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDateTime(n.created_at)}</span>
                         <button className="cxc-btn cxc-btn-ghost cxc-btn-sm" onClick={() => removeNote(n.id)}>Delete</button>
                       </div>
                     </div>
                   ))}
-                </div>
+                </section>
               )}
             </div>
-
-            <div className="cxc-drawer-foot" style={{ flexWrap: "wrap" }}>
-              <button className="cxc-btn cxc-btn-primary" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
-              <button className="cxc-btn" onClick={updatePayment}>Update Payment</button>
-              <button className="cxc-btn" onClick={addSeat}>Add Seat / User</button>
-              <a className="cxc-btn" href={`mailto:${c.email}`}><Mail size={14} /> Send Email</a>
-              <button className="cxc-btn" onClick={() => onEdit && onEdit(c)}><Pencil size={14} /> Edit Customer</button>
-              <div className="cxc-menu-wrap">
-                <button className="cxc-btn" onClick={() => setMoreOpen((v) => !v)}>More Actions <ChevronDown size={14} /></button>
-                <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">
-                  <button className="cxc-menu-item" onClick={doDeactivate}>Deactivate</button>
-                  <button className="cxc-menu-item danger" onClick={doDelete}>Delete</button>
-                </Menu>
-              </div>
-            </div>
-          </>
+          </div>
         )}
+
+        <div className="cxc-drawer-foot cxc-cust-foot">
+          <button className="cxc-btn" onClick={onClose}>Close</button>
+          <div className="cxc-toolbar-spacer" />
+          <button className="cxc-btn" onClick={() => c && onEdit && onEdit(c)} disabled={!c}><Pencil size={14} /> Edit Customer</button>
+          <div className="cxc-menu-wrap">
+            <button className="cxc-btn cxc-btn-primary" onClick={() => setMoreOpen((v) => !v)} disabled={!c}>More Actions <ChevronDown size={14} /></button>
+            <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">
+              <button className="cxc-menu-item" onClick={() => { setMoreOpen(false); onChangePlan && onChangePlan(c); }}>Change plan</button>
+              <button className="cxc-menu-item" onClick={doDeactivate}>Deactivate</button>
+              <button className="cxc-menu-item danger" onClick={doDelete}>Delete</button>
+            </Menu>
+          </div>
+        </div>
       </div>
     </div>
   );
