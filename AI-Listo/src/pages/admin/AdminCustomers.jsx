@@ -766,31 +766,32 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                         : <div className="cxc-muted" style={{ fontSize: 13 }}>No subscription details.</div>}
                     </section>
 
-                    <section className="cxc-cust-block">
-                      <div className="cxc-block-title">Quick Actions</div>
-                      <div className="cxc-qa-grid">
-                        <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
-                        <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}>Update Payment Method</button>
-                        <button className="cxc-btn cxc-btn-sm" onClick={addSeat}>Add Seat / User</button>
-                        <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
-                      </div>
-                      <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
+                    <div className="cxc-cust-rcol">
+                      <section className="cxc-cust-block">
+                        <div className="cxc-block-title">Quick Actions</div>
+                        <div className="cxc-qa-grid">
+                          <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}>Update Payment Method</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={addSeat}>Add Seat / User</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
+                        </div>
+                        <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
+                      </section>
 
-                      <div className="cxc-qa-notes-head">
-                        <span className="cxc-block-title" style={{ margin: 0 }}>Customer Notes</span>
-                        <button className="cxc-linkbtn" onClick={() => setTab("notes")}>+ Add Note</button>
-                      </div>
-                      {notes.length === 0
-                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>No notes yet for this customer.</div>
-                        : <div className="cxc-qa-notes-list">
-                            {notes.slice(0, 3).map((n) => (
-                              <div key={n.id} className="cxc-qa-note">
-                                <div>{n.note}</div>
-                                <div className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDate(n.created_at)}</div>
-                              </div>
-                            ))}
-                          </div>}
-                    </section>
+                      <section className="cxc-cust-block cxc-cust-notes">
+                        <div className="cxc-block-title cxc-block-title--link">Customer Notes <button className="cxc-linkbtn" onClick={() => setTab("notes")}>+ Add Note</button></div>
+                        {notes.length === 0
+                          ? <div className="cxc-muted" style={{ fontSize: 12 }}>No notes yet for this customer.</div>
+                          : <div className="cxc-qa-notes-list">
+                              {notes.slice(0, 3).map((n) => (
+                                <div key={n.id} className="cxc-qa-note">
+                                  <div>{n.note}</div>
+                                  <div className="cxc-sub-date">{n.author_name || "Admin"} · {fmtDate(n.created_at)}</div>
+                                </div>
+                              ))}
+                            </div>}
+                      </section>
+                    </div>
                   </div>
 
                   <div className="cxc-cust-grid3">
