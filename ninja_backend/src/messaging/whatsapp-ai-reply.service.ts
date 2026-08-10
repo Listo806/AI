@@ -201,7 +201,7 @@ export class WhatsAppAiReplyService {
       (leadStateBefore === 'booking_offered' || leadStateBefore === 'booked')
     ) {
       const rules = await this.booking.getRules(teamId);
-      if (rules.bookingEnabled) {
+      if (rules.bookingEnabled && (await this.booking.planAllowsBooking(teamId))) {
         const bctx = { teamId, leadId, conversationId, rules, history, leadStateBefore };
         if (leadStateBefore === 'booking_offered') {
           return this.booking.onBookingReply(bctx);
@@ -281,7 +281,7 @@ export class WhatsAppAiReplyService {
       // legacy "qualified but no calendar -> escalate" hand-off below.
       if (teamId) {
         const rules = await this.booking.getRules(teamId);
-        if (rules.bookingEnabled) {
+        if (rules.bookingEnabled && (await this.booking.planAllowsBooking(teamId))) {
           for (const p of properties.slice(0, 10)) {
             await this.aiPropertyVisibility.recordMatched(leadId, p.id);
           }
