@@ -881,12 +881,14 @@ function ManagePlansModal({ onClose }) {
 }
 
 /* Plan limits & features editor (real enforcement) */
-const LIMIT_LABELS = { aiConversationsPerMonth: "AI conversations / month", automationWorkflows: "Automation workflows", integrations: "Integrations" };
+const LIMIT_LABELS = { aiConversationsPerMonth: "AI conversations / month", automationWorkflows: "Automation workflows", integrations: "Integrations", whatsappConnections: "WhatsApp connections" };
 const FEATURE_LABELS = {
   crm: "CRM", aiAgent: "AI agent", automations: "Automations", emailSmsMarketing: "Email & SMS marketing",
   calendar: "Calendar", reports: "Reports", advancedAnalytics: "Advanced analytics", teamWorkspace: "Team workspace",
   advancedAutomations: "Advanced automations", workflowsSequences: "Workflows & sequences", customFields: "Custom fields",
   advancedPermissions: "Advanced permissions", whiteLabel: "White label", customObjects: "Custom objects",
+  aiWhatsapp: "AI on WhatsApp", aiBooking: "AI appointment booking", aiAppointmentSetter: "AI appointment setter",
+  advancedAiAgent: "Advanced AI agent", leadGenerator: "Lead Generator", premiumIntegrations: "Premium integrations",
 };
 const flabel = (map, k) => map[k] || k;
 

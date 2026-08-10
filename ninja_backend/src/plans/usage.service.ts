@@ -285,12 +285,13 @@ export class UsageService {
       this.overrides.getLimits(planId),
       this.effectiveFeatures(isFree),
     ]);
-    const [conversations, integrations] = teamId
+    const [conversations, integrations, whatsapp] = teamId
       ? await Promise.all([
           this.countConversationsThisMonth(teamId),
           this.countConnectedIntegrations(teamId),
+          this.countWhatsappConnections(teamId),
         ])
-      : [0, 0];
+      : [0, 0, 0];
     return {
       plan: planId,
       planLabel: cfg.label,
@@ -300,6 +301,7 @@ export class UsageService {
       usage: {
         aiConversationsThisMonth: conversations,
         integrationsConnected: integrations,
+        whatsappConnections: whatsapp,
       },
     };
   }
