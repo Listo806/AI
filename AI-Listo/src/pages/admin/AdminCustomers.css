@@ -404,7 +404,7 @@
 .cxc-usage-track { height: 8px; border-radius: 999px; background: #eef2f7; overflow: hidden; }
 .cxc-usage-fill { height: 100%; border-radius: 999px; background: #2563eb; }
 .cxc-usage-fill.warn { background: #ea580c; }
-.cxc-usage-fill.full { background: #dc2626; }
+.cxc-usage-fill.full { background: #2563eb; }
 
 .cxc-drawer-foot {
   display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid #eef2f7;
@@ -446,11 +446,11 @@
 .cxc-cust-navitem.active { background: #e0edff; color: #2563eb; }
 
 /* Main content */
-.cxc-cust-content { flex: 1; min-width: 0; padding: 14px 16px; }
-.cxc-cust-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.cxc-cust-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 12px; background: #fff; }
-.cxc-block-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+.cxc-cust-content { flex: 1; min-width: 0; padding: 16px 18px; }
+.cxc-cust-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.cxc-cust-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 15px; background: #fff; }
+.cxc-block-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }
 .cxc-block-title--link { display: flex; align-items: center; justify-content: space-between; }
 .cxc-linkbtn { border: none; background: none; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
 .cxc-linkbtn:hover { text-decoration: underline; }
@@ -469,12 +469,12 @@
 
 /* Account overview rows */
 .cxc-ov-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 5px 0; border-bottom: 1px solid #f4f6fa; font-size: 13px;
+  display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid #f4f6fa; font-size: 13px;
 }
 .cxc-ov-row:last-child { border-bottom: none; }
 .cxc-ov-row .k { color: #64748b; }
-.cxc-ov-row .v { color: #0f172a; font-weight: 600; text-align: right; word-break: break-word; }
+.cxc-ov-row .v { color: #0f172a; font-weight: 600; text-align: left; word-break: break-word; }
 
 /* Quick actions */
 .cxc-qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
