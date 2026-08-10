@@ -141,7 +141,7 @@ function Donut({ data }) {
   const r = 40, c = 2 * Math.PI * r;
   let acc = 0;
   return (
-    <svg width="96" height="96" viewBox="0 0 96 96" style={{ flexShrink: 0 }}>
+    <svg width="80" height="80" viewBox="0 0 96 96" style={{ flexShrink: 0 }}>
       <g transform="translate(48,48) rotate(-90)">
         <circle r={r} fill="none" stroke="#eef2f7" strokeWidth="13" />
         {(data || []).map((d, i) => {
@@ -553,7 +553,7 @@ export default function AdminCustomers() {
           <div className="cxc-rows">
             Rows per page:
             <select className="cxc-select" value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}>
-              {[10, 25, 50, 100].map((n) => <option key={n} value={n}>{n}</option>)}
+              {[10, 20, 50, 100, 200, 500, 1000].map((n) => <option key={n} value={n}>{n.toLocaleString()}</option>)}
             </select>
           </div>
         </div>

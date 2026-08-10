@@ -198,7 +198,8 @@ export class CustomersAdminService {
 
   async list(opts: any = {}) {
     await this.ready();
-    const lim = Math.min(Math.max(Number(opts.limit) || 25, 1), 200);
+    // Admin can choose up to 1,000 rows per page from the Customers screen.
+    const lim = Math.min(Math.max(Number(opts.limit) || 25, 1), 1000);
     const off = Math.max(Number(opts.offset) || 0, 0);
     const { where, params } = this.buildWhere(opts);
 
