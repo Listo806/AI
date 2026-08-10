@@ -171,6 +171,57 @@ export class CustomersAdminController {
     return this.customers.sendCustomerEmail(id, body?.subject || '', body?.message || '');
   }
 
+  // ── Team & Seats ──────────────────────────────────────────────────────────
+  @Get(':id/team')
+  @ApiOperation({ summary: 'Team roster + seat totals for a customer account' })
+  async team(@Param('id') id: string) {
+    return this.customers.teamAndSeats(id);
+  }
+
+  @Post(':id/team/members')
+  @ApiOperation({ summary: 'Add a user to the customer account team' })
+  async addMember(
+    @Param('id') id: string,
+    @Body() body: { email?: string; name?: string; role?: string },
+  ) {
+    return this.customers.addTeamMember(id, body || {});
+  }
+
+  @Post(':id/team/members/:userId/role')
+  @ApiOperation({ summary: "Change a team member's role" })
+  async memberRole(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() body: { role?: string },
+  ) {
+    return this.customers.changeMemberRole(id, userId, body?.role || '');
+  }
+
+  @Post(':id/team/members/:userId/seat')
+  @ApiOperation({ summary: 'Assign or remove a member seat' })
+  async memberSeat(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() body: { assigned?: boolean },
+  ) {
+    return this.customers.setMemberSeat(id, userId, !!body?.assigned);
+  }
+
+  @Delete(':id/team/members/:userId')
+  @ApiOperation({ summary: 'Remove a user from the customer account team' })
+  async removeMember(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.customers.removeTeamMember(id, userId);
+  }
+
+  @Post(':id/team/transfer-ownership')
+  @ApiOperation({ summary: 'Transfer account ownership to another team member' })
+  async transferOwnership(
+    @Param('id') id: string,
+    @Body() body: { newOwnerId?: string },
+  ) {
+    return this.customers.transferOwnership(id, body?.newOwnerId || '');
+  }
+
   @Post(':id/change-plan')
   @ApiOperation({ summary: 'Move a customer between plans (updates account config)' })
   async changePlan(@Param('id') id: string, @Body() body: any) {

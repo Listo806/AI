@@ -102,6 +102,201 @@ export class CustomersAdminService {
     return { success: true, to: cust.email };
   }
 
+  // ── Team & Seats (admin management of a customer's account team) ──────────
+  private readonly MEMBER_ROLES = ['admin', 'manager', 'agent', 'viewer'];
+
+  // Resolve the customer (account owner) + their team, or throw.
+  private async ownerTeam(customerId: string) {
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, name, email, selected_plan, plan
+         FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [customerId],
+    );
+    const owner = rows[0];
+    if (!owner) throw new NotFoundException('Customer not found.');
+    if (!owner.team_id) throw new BadRequestException('This customer has no workspace/team yet.');
+    return owner;
+  }
+
+  private seatLimitFor(owner: any): number {
+    return getPlan(normalizePlanId(owner.selected_plan || owner.plan)).seats;
+  }
+
+  // Roster + seat totals for the account.
+  async teamAndSeats(customerId: string) {
+    const { rows } = await this.db.query(
+      `SELECT id, team_id, name, email, selected_plan, plan
+         FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [customerId],
+    );
+    const owner = rows[0];
+    if (!owner) throw new NotFoundException('Customer not found.');
+    const seatLimit = this.seatLimitFor(owner);
+    if (!owner.team_id) {
+      return { ownerId: owner.id, teamId: null, members: [], seats: { limit: seatLimit, used: 0, available: seatLimit } };
+    }
+    const { rows: members } = await this.db.query(
+      `SELECT tm.user_id AS id, tm.role, tm.status, tm.joined_at,
+              u.name, u.email, u.last_seen_at
+         FROM team_members tm
+         JOIN users u ON u.id = tm.user_id
+        WHERE tm.team_id = $1 AND tm.status <> 'removed'
+        ORDER BY (tm.role = 'owner') DESC, tm.joined_at ASC NULLS LAST`,
+      [owner.team_id],
+    );
+    const used = members.filter((m) => m.status === 'active').length;
+    return {
+      ownerId: owner.id,
+      teamId: owner.team_id,
+      members: members.map((m) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        role: m.id === owner.id ? 'owner' : m.role,
+        status: m.status,
+        seatAssigned: m.status === 'active',
+        isOwner: m.id === owner.id || m.role === 'owner',
+        joinedAt: m.joined_at,
+        lastActive: m.last_seen_at,
+      })),
+      seats: { limit: seatLimit, used, available: Math.max(0, seatLimit - used) },
+    };
+  }
+
+  async addTeamMember(customerId: string, body: { email?: string; name?: string; role?: string }) {
+    const owner = await this.ownerTeam(customerId);
+    const email = String(body?.email || '').trim().toLowerCase();
+    const name = String(body?.name || '').trim();
+    const role = this.MEMBER_ROLES.includes(String(body?.role || '').toLowerCase())
+      ? String(body.role).toLowerCase()
+      : 'agent';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException('A valid email address is required.');
+    }
+    const seatLimit = this.seatLimitFor(owner);
+    const { rows: cnt } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM team_members WHERE team_id = $1 AND status = 'active'`,
+      [owner.team_id],
+    );
+    if ((cnt[0]?.n ?? 0) >= seatLimit) {
+      throw new BadRequestException(
+        `This account's plan includes ${seatLimit} seat${seatLimit > 1 ? 's' : ''}. Change the plan to add more users.`,
+      );
+    }
+    let { rows: urows } = await this.db.query(
+      `SELECT id FROM users WHERE LOWER(email) = $1 LIMIT 1`,
+      [email],
+    );
+    let userId = urows[0]?.id;
+    if (!userId) {
+      const hash = await bcrypt.hash(randomUUID(), 10);
+      const ins = await this.db.query(
+        `INSERT INTO users (email, password, name, role, team_id, is_active, created_at, updated_at)
+         VALUES ($1, $2, $3, 'agent', $4, true, NOW(), NOW()) RETURNING id`,
+        [email, hash, name || null, owner.team_id],
+      );
+      userId = ins.rows[0].id;
+    } else {
+      await this.db.query(`UPDATE users SET team_id = $2, updated_at = NOW() WHERE id = $1`, [userId, owner.team_id]);
+    }
+    await this.db.query(
+      `INSERT INTO team_members (team_id, user_id, role, status, joined_at, created_at, updated_at)
+       VALUES ($1, $2, $3, 'active', NOW(), NOW(), NOW())
+       ON CONFLICT (team_id, user_id) DO UPDATE SET role = EXCLUDED.role, status = 'active', updated_at = NOW()`,
+      [owner.team_id, userId, role],
+    );
+    return { success: true };
+  }
+
+  async removeTeamMember(customerId: string, memberUserId: string) {
+    const owner = await this.ownerTeam(customerId);
+    if (memberUserId === owner.id) {
+      throw new BadRequestException('You cannot remove the account owner. Transfer ownership first.');
+    }
+    await this.db.query(
+      `UPDATE team_members SET status = 'removed', updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+      [owner.team_id, memberUserId],
+    );
+    return { success: true };
+  }
+
+  async changeMemberRole(customerId: string, memberUserId: string, roleRaw: string) {
+    const owner = await this.ownerTeam(customerId);
+    if (memberUserId === owner.id) {
+      throw new BadRequestException('The owner role is managed by ownership transfer.');
+    }
+    const role = this.MEMBER_ROLES.includes(String(roleRaw || '').toLowerCase())
+      ? String(roleRaw).toLowerCase()
+      : null;
+    if (!role) throw new BadRequestException('Invalid role.');
+    await this.db.query(
+      `UPDATE team_members SET role = $3, updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+      [owner.team_id, memberUserId, role],
+    );
+    return { success: true };
+  }
+
+  async setMemberSeat(customerId: string, memberUserId: string, assigned: boolean) {
+    const owner = await this.ownerTeam(customerId);
+    if (memberUserId === owner.id) {
+      throw new BadRequestException('The owner always holds a seat.');
+    }
+    if (assigned) {
+      const seatLimit = this.seatLimitFor(owner);
+      const { rows: cnt } = await this.db.query(
+        `SELECT COUNT(*)::int AS n FROM team_members WHERE team_id = $1 AND status = 'active' AND user_id <> $2`,
+        [owner.team_id, memberUserId],
+      );
+      if ((cnt[0]?.n ?? 0) >= seatLimit) {
+        throw new BadRequestException(`All ${seatLimit} seats are in use. Free a seat or upgrade the plan.`);
+      }
+      await this.db.query(
+        `UPDATE team_members SET status = 'active', updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+        [owner.team_id, memberUserId],
+      );
+    } else {
+      await this.db.query(
+        `UPDATE team_members SET status = 'inactive', updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+        [owner.team_id, memberUserId],
+      );
+    }
+    return { success: true };
+  }
+
+  async transferOwnership(customerId: string, newOwnerUserId: string) {
+    const owner = await this.ownerTeam(customerId);
+    if (!newOwnerUserId || newOwnerUserId === owner.id) {
+      throw new BadRequestException('Choose a different team member to transfer ownership to.');
+    }
+    const { rows } = await this.db.query(
+      `SELECT user_id FROM team_members WHERE team_id = $1 AND user_id = $2 AND status <> 'removed' LIMIT 1`,
+      [owner.team_id, newOwnerUserId],
+    );
+    if (!rows.length) throw new BadRequestException('The new owner must be an existing member of this team.');
+    const client = await this.db.getClient();
+    try {
+      await client.query('BEGIN');
+      await client.query(`UPDATE teams SET owner_id = $2, updated_at = NOW() WHERE id = $1`, [owner.team_id, newOwnerUserId]);
+      await client.query(
+        `UPDATE team_members SET role = 'owner', status = 'active', updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+        [owner.team_id, newOwnerUserId],
+      );
+      await client.query(
+        `UPDATE team_members SET role = 'admin', updated_at = NOW() WHERE team_id = $1 AND user_id = $2`,
+        [owner.team_id, owner.id],
+      );
+      await client.query(`UPDATE users SET role = 'owner', updated_at = NOW() WHERE id = $1`, [newOwnerUserId]);
+      await client.query(`UPDATE users SET role = 'admin', updated_at = NOW() WHERE id = $1`, [owner.id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+    return { success: true, newOwnerId: newOwnerUserId };
+  }
+
   private readonly cols = `
     id, email, name, phone, COALESCE(preferred_language, 'en') AS language,
     offer_used, checkout_status, payment_status, plan, selected_plan,
@@ -130,6 +325,16 @@ export class CustomersAdminService {
         THEN 'Direct / Organic'
       ELSE 'Other'
     END`;
+
+  // Active seats in use = active team_members on the owner's team.
+  private readonly seatsUsedExpr = `(SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id AND tm.status = 'active')`;
+
+  // Plan seat allowance, mirrored from plan-config (free/solo=1, business=3,
+  // scale=5) so seat filters can run in SQL alongside pagination.
+  private readonly seatLimitExpr = `(CASE
+      WHEN LOWER(COALESCE(selected_plan, plan, '')) IN ('business','team') THEN 3
+      WHEN LOWER(COALESCE(selected_plan, plan, '')) IN ('scale','growth') THEN 5
+      ELSE 1 END)`;
 
   // Normalized lifecycle status the tabs and badges use.
   private deriveStatus(row: any): string {
@@ -233,6 +438,34 @@ export class CustomersAdminService {
     if (opts.language && opts.language !== 'all') {
       params.push(String(opts.language).toLowerCase());
       clauses.push(`LOWER(COALESCE(preferred_language,'en')) = $${params.length}`);
+    }
+    if (opts.usersRole && opts.usersRole !== 'all') {
+      const r = String(opts.usersRole).toLowerCase();
+      if (r === 'owner') {
+        clauses.push(`EXISTS (SELECT 1 FROM team_members tm WHERE tm.team_id = users.team_id AND tm.role = 'owner')`);
+      } else if (r === 'admin') {
+        clauses.push(`EXISTS (SELECT 1 FROM team_members tm WHERE tm.team_id = users.team_id AND tm.role = 'admin' AND tm.status = 'active')`);
+      } else if (r === 'agent') {
+        clauses.push(`EXISTS (SELECT 1 FROM team_members tm WHERE tm.team_id = users.team_id AND tm.role IN ('agent','user','viewer','manager') AND tm.status = 'active')`);
+      } else if (r === 'owner_only') {
+        clauses.push(`${this.seatsUsedExpr} <= 1`);
+      } else if (r === 'has_additional' || r === 'multiple') {
+        clauses.push(`${this.seatsUsedExpr} > 1`);
+      }
+    }
+    if (opts.seatStatus && opts.seatStatus !== 'all') {
+      const s = String(opts.seatStatus).toLowerCase();
+      if (s === 'available') {
+        clauses.push(`${this.seatsUsedExpr} < ${this.seatLimitExpr}`);
+      } else if (s === 'full') {
+        clauses.push(`${this.seatsUsedExpr} >= ${this.seatLimitExpr}`);
+      } else if (s === 'one_user') {
+        clauses.push(`${this.seatsUsedExpr} = 1`);
+      } else if (s === 'multiple_users') {
+        clauses.push(`${this.seatsUsedExpr} > 1`);
+      } else if (s === 'unused') {
+        clauses.push(`${this.seatLimitExpr} > 1 AND ${this.seatsUsedExpr} < ${this.seatLimitExpr}`);
+      }
     }
     if (opts.from) {
       params.push(opts.from);
