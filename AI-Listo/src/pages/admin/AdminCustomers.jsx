@@ -39,6 +39,12 @@ import {
   createCustomer,
   updateCustomerInfo,
   sendCustomerEmail,
+  getCustomerTeam,
+  addCustomerTeamMember,
+  changeCustomerMemberRole,
+  setCustomerMemberSeat,
+  removeCustomerTeamMember,
+  transferCustomerOwnership,
   getPlanConfig,
   setPlanConfig,
   resetPlanConfig,
@@ -214,7 +220,7 @@ export default function AdminCustomers() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
-  const [filters, setFilters] = useState({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", from: "", to: "" });
+  const [filters, setFilters] = useState({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", usersRole: "all", seatStatus: "all", from: "", to: "" });
   const [moreFilters, setMoreFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -245,7 +251,7 @@ export default function AdminCustomers() {
   useEffect(() => { load(); }, [load]);
 
   const setFilter = (k, v) => { setPage(1); setFilters((f) => ({ ...f, [k]: v })); };
-  const clearFilters = () => { setPage(1); setFilters({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", from: "", to: "" }); };
+  const clearFilters = () => { setPage(1); setFilters({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", usersRole: "all", seatStatus: "all", from: "", to: "" }); };
 
   const toggleSelect = (id) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
@@ -430,6 +436,23 @@ export default function AdminCustomers() {
             <option value="es">Spanish</option>
             <option value="pt">Portuguese</option>
           </select>
+          <select className="cxc-select" value={filters.usersRole} onChange={(e) => setFilter("usersRole", e.target.value)}>
+            <option value="all">All Users / Roles</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="agent">Agent / User</option>
+            <option value="owner_only">Owner Only</option>
+            <option value="has_additional">Has Additional Users</option>
+            <option value="multiple">Multiple Users</option>
+          </select>
+          <select className="cxc-select" value={filters.seatStatus} onChange={(e) => setFilter("seatStatus", e.target.value)}>
+            <option value="all">All Seat Statuses</option>
+            <option value="available">Seats Available</option>
+            <option value="full">Seats Full</option>
+            <option value="one_user">1 User</option>
+            <option value="multiple_users">Multiple Users</option>
+            <option value="unused">Unused Seats</option>
+          </select>
           {moreFilters && (
             <>
               <input className="cxc-select" type="date" value={filters.from} onChange={(e) => setFilter("from", e.target.value)} title="From" />
@@ -611,6 +634,7 @@ const CUST_TABS = [
   { key: "payments", label: "Payments", icon: <Receipt size={15} /> },
   { key: "activity", label: "Activity", icon: <ActivityIcon size={15} /> },
   { key: "notes", label: "Notes", icon: <StickyNote size={15} /> },
+  { key: "team", label: "Team & Seats", icon: <Users size={15} /> },
 ];
 
 function PayStatusBadge({ status }) {
@@ -893,6 +917,8 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                   ))}
                 </section>
               )}
+
+              {activeTab === "team" && <TeamSeatsPanel customerId={id} />}
             </div>
           </div>
         )}
@@ -1001,6 +1027,103 @@ function AddCustomerModal({ onClose, onSuccess }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function TeamSeatsPanel({ customerId }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [add, setAdd] = useState({ open: false, email: "", name: "", role: "agent" });
+  const ROLES = ["admin", "manager", "agent", "viewer"];
+
+  const load = useCallback(() => {
+    setLoading(true);
+    getCustomerTeam(customerId)
+      .then((d) => { setData(d?.data ?? d); setErr(""); })
+      .catch((e) => setErr(e?.message || "Could not load the team."))
+      .finally(() => setLoading(false));
+  }, [customerId]);
+  useEffect(() => { load(); }, [load]);
+
+  const act = async (fn, confirmMsg) => {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    setBusy(true); setErr("");
+    try { await fn(); load(); } catch (e) { setErr(e?.message || "Action failed."); setBusy(false); }
+  };
+  const submitAdd = async () => {
+    if (!add.email.trim()) { setErr("Enter an email address."); return; }
+    await act(async () => { await addCustomerTeamMember(customerId, { email: add.email, name: add.name, role: add.role }); setAdd({ open: false, email: "", name: "", role: "agent" }); });
+  };
+
+  if (loading) return <section className="cxc-cust-block"><div className="cxc-muted" style={{ fontSize: 13 }}>Loading team…</div></section>;
+
+  const seats = data?.seats || { limit: 0, used: 0, available: 0 };
+  const members = data?.members || [];
+
+  return (
+    <>
+      <div className="cxc-cust-grid3" style={{ marginBottom: 16 }}>
+        <div className="cxc-cust-block cxc-seat-stat"><div className="cxc-block-title">Total Seats</div><div className="cxc-seat-num">{seats.limit}</div></div>
+        <div className="cxc-cust-block cxc-seat-stat"><div className="cxc-block-title">Seats Used</div><div className="cxc-seat-num">{seats.used}</div></div>
+        <div className="cxc-cust-block cxc-seat-stat"><div className="cxc-block-title">Seats Available</div><div className="cxc-seat-num" style={{ color: seats.available > 0 ? "#16a34a" : "#dc2626" }}>{seats.available}</div></div>
+      </div>
+
+      <section className="cxc-cust-block">
+        <div className="cxc-block-title cxc-block-title--link">
+          Team Members
+          <button className="cxc-btn cxc-btn-primary cxc-btn-sm" onClick={() => setAdd((a) => ({ ...a, open: !a.open }))}><Plus size={13} /> Add User</button>
+        </div>
+        {err && <div className="cxc-error" style={{ marginBottom: 10 }}>{err}</div>}
+        {add.open && (
+          <div className="cxc-edit-grid" style={{ marginBottom: 12 }}>
+            <div className="cxc-field"><label>Email</label><input className="cxc-input" value={add.email} onChange={(e) => setAdd((a) => ({ ...a, email: e.target.value }))} placeholder="user@company.com" /></div>
+            <div className="cxc-field"><label>Name</label><input className="cxc-input" value={add.name} onChange={(e) => setAdd((a) => ({ ...a, name: e.target.value }))} placeholder="Full name" /></div>
+            <div className="cxc-field"><label>Role</label><select className="cxc-input" value={add.role} onChange={(e) => setAdd((a) => ({ ...a, role: e.target.value }))}>{ROLES.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
+            <div className="cxc-field"><label>&nbsp;</label><button className="cxc-btn cxc-btn-primary" disabled={busy} onClick={submitAdd}>{busy ? "Adding…" : "Add"}</button></div>
+          </div>
+        )}
+        <div className="cxc-table-wrap">
+          <table className="cxc-table cxc-team-table">
+            <thead><tr><th>User</th><th>Role</th><th>Seat</th><th>Last Active</th><th>Joined</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
+            <tbody>
+              {members.length === 0 && <tr><td colSpan={6} className="cxc-muted" style={{ padding: 16 }}>No team members yet.</td></tr>}
+              {members.map((m) => (
+                <tr key={m.id}>
+                  <td>
+                    <div className="cxc-cust-name">{m.name || "—"}{m.isOwner && <span className="cxc-pop" style={{ marginLeft: 6, background: "#e0edff", color: "#1d4ed8" }}>OWNER</span>}</div>
+                    <div className="cxc-cust-email">{m.email}</div>
+                  </td>
+                  <td>
+                    {m.isOwner ? "Owner" : (
+                      <select className="cxc-select" value={m.role} disabled={busy} onChange={(e) => act(() => changeCustomerMemberRole(customerId, m.id, e.target.value))}>
+                        {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    )}
+                  </td>
+                  <td>
+                    {m.isOwner ? <span className="cxc-badge active">Seat</span> : (
+                      <button className={`cxc-btn cxc-btn-sm ${m.seatAssigned ? "" : "cxc-btn-ghost"}`} disabled={busy} onClick={() => act(() => setCustomerMemberSeat(customerId, m.id, !m.seatAssigned))}>{m.seatAssigned ? "Assigned" : "Assign seat"}</button>
+                    )}
+                  </td>
+                  <td>{m.lastActive ? fmtDate(m.lastActive) : "—"}</td>
+                  <td>{m.joinedAt ? fmtDate(m.joinedAt) : "—"}</td>
+                  <td style={{ textAlign: "right" }}>
+                    {!m.isOwner && (
+                      <div className="cxc-row-actions">
+                        <button className="cxc-btn cxc-btn-sm" disabled={busy} onClick={() => act(() => transferCustomerOwnership(customerId, m.id), `Transfer ownership to ${m.email}? They become the account owner and the current owner becomes an admin.`)}>Make owner</button>
+                        <button className="cxc-btn cxc-btn-sm cxc-btn-danger" disabled={busy} onClick={() => act(() => removeCustomerTeamMember(customerId, m.id), `Remove ${m.email} from this account?`)}>Remove</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </>
   );
 }
 

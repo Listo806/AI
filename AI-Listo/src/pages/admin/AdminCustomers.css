@@ -462,6 +462,14 @@
 .cxc-rail-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
 .cxc-rail-input--name { font-weight: 700; font-size: 14px; }
 
+/* Team & Seats tab */
+.cxc-seat-stat { text-align: center; }
+.cxc-seat-stat .cxc-block-title { margin-bottom: 6px; }
+.cxc-seat-num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.cxc-team-table { table-layout: auto; }
+.cxc-team-table td { vertical-align: middle; }
+.cxc-team-table .cxc-select { padding: 5px 8px; font-size: 12px; }
+
 /* Account overview rows */
 .cxc-ov-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
