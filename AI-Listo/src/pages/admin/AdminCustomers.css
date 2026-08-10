@@ -450,11 +450,17 @@
 .cxc-linkbtn { border: none; background: none; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
 .cxc-linkbtn:hover { text-decoration: underline; }
 
-/* Inline "Edit Customer" panel inside the details modal */
-.cxc-edit-block { border-color: #bfdbfe; background: #f6faff; margin-bottom: 16px; }
-.cxc-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
-.cxc-edit-grid .cxc-field { margin-bottom: 0; }
-@media (max-width: 720px) { .cxc-edit-grid { grid-template-columns: 1fr; } }
+/* In-place editing inside the details modal (view mode is untouched) */
+.cxc-edit-banner {
+  background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8;
+  border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 600; margin-bottom: 14px;
+}
+.cxc-rail-input {
+  flex: 1; min-width: 0; padding: 5px 8px; border: 1px solid #cbd5e1;
+  border-radius: 7px; font-size: 13px; background: #fff; color: #0f172a;
+}
+.cxc-rail-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
+.cxc-rail-input--name { font-weight: 700; font-size: 14px; }
 
 /* Account overview rows */
 .cxc-ov-row {
