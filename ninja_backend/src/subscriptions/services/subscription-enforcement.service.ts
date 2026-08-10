@@ -2,6 +2,7 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { DatabaseService } from '../../database/database.service';
 import { SubscriptionsService } from '../subscriptions.service';
 import { SubscriptionStatus } from '../entities/subscription.entity';
+import { UsageService } from '../../plans/usage.service';
 
 export interface SubscriptionFeatures {
   hasActiveSubscription: boolean;
@@ -22,6 +23,7 @@ export class SubscriptionEnforcementService {
   constructor(
     private readonly db: DatabaseService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly usage: UsageService,
   ) {}
 
   /**
@@ -31,20 +33,37 @@ export class SubscriptionEnforcementService {
     const subscription = await this.subscriptionsService.findActiveByTeamId(teamId);
 
     if (!subscription || subscription.status !== SubscriptionStatus.ACTIVE) {
-      // No active subscription - return default (free tier) features
+      // No active LEGACY subscription row. Instead of locking the account out,
+      // fall back to the canonical plan system (the `users` table) so that:
+      //   - a genuine Free account gets Free-tier access (full basic CRM + basic
+      //     AI on WhatsApp), which is what lets a new sign-up actually experience
+      //     the product; and
+      //   - a customer who paid through the new Paddle checkout (which records the
+      //     payment on the users row, not this legacy table) keeps FULL access.
+      // Premium AI capabilities (booking, appointment setter, advanced agent,
+      // etc.) stay gated by the plan feature flags at their own call sites, so
+      // "Free gets CRM + limited AI, premium stays locked" holds. featureAllowed
+      // fails open, so a metering error can never wrongly lock a real user out.
       const listingCount = await this.getCurrentListingCount(teamId);
+      const { paid } = await this.usage.resolveTeamPlan(teamId);
+      const [crmAccess, aiFeatures, aiAutomation, advAnalytics] = await Promise.all([
+        this.usage.featureAllowed(teamId, 'crm'),
+        this.usage.featureAllowed(teamId, 'aiAgent'),
+        this.usage.featureAllowed(teamId, 'advancedAutomations'),
+        this.usage.featureAllowed(teamId, 'advancedAnalytics'),
+      ]);
       return {
-        hasActiveSubscription: false,
-        listingLimit: 0,
+        hasActiveSubscription: paid,
+        listingLimit: paid ? null : 0,
         currentListingCount: listingCount,
-        canCreateListing: false,
-        crmAccess: false,
-        aiFeatures: false,
-        analyticsLevel: 'none',
-        priorityExposure: false,
-        aiAutomation: false,
-        planName: null,
-        planCategory: null,
+        canCreateListing: paid,
+        crmAccess,
+        aiFeatures,
+        analyticsLevel: advAnalytics ? 'advanced' : crmAccess ? 'basic' : 'none',
+        priorityExposure: paid,
+        aiAutomation,
+        planName: paid ? 'Paid' : crmAccess ? 'Free' : null,
+        planCategory: paid ? 'paid' : crmAccess ? 'free' : null,
       };
     }
 

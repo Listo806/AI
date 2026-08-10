@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import { WhatsAppQrOutboundService } from './whatsapp-qr-outbound.service';
 import { WhatsAppQrMessageService } from './whatsapp-qr-message.service';
 import { AiAssistantService, ChatMessage } from '../integrations/ai/ai-assistant.service';
+import { UsageService } from '../plans/usage.service';
 
 const CONTEXT_MESSAGE_LIMIT = 30;
 const WHATSAPP_SYSTEM_PROMPT = `You are a helpful real estate assistant replying over WhatsApp. Be concise, friendly, and professional. Answer in the same language the lead uses when possible.`;
@@ -20,6 +21,7 @@ export class WhatsAppQrAiReplyService {
     private readonly outbound: WhatsAppQrOutboundService,
     private readonly qrMessages: WhatsAppQrMessageService,
     private readonly aiAssistant: AiAssistantService,
+    private readonly usage: UsageService,
   ) {}
 
   /**
@@ -55,12 +57,24 @@ export class WhatsAppQrAiReplyService {
     const conv = rows[0];
     // Use session owner's team (same as AI Auto-Reply page) so "turn on" there applies here
     const { rows: teamRows } = await this.db.query(
-      `SELECT t.ai_auto_reply_enabled FROM users u
+      `SELECT t.id AS team_id, t.ai_auto_reply_enabled FROM users u
        INNER JOIN teams t ON t.id = u.team_id
        WHERE u.id = $1`,
       [conv.user_id],
     );
     if (teamRows.length && teamRows[0].ai_auto_reply_enabled === false) return;
+
+    // Limited AI: on the Free plan the AI stops responding once the monthly AI
+    // conversation cap is reached. The lead and its messages are still captured,
+    // and a human can reply — we simply do not generate an automatic AI reply.
+    // Paid/legacy accounts are never capped (aiConversationAllowed returns true).
+    const resolvedTeamId = teamRows[0]?.team_id || conv.team_id;
+    if (!(await this.usage.aiConversationAllowed(resolvedTeamId))) {
+      this.logger.log(
+        `QR AI reply skipped: Free monthly AI conversation limit reached (team ${resolvedTeamId})`,
+      );
+      return;
+    }
 
     const history = await this.qrMessages.listByConversationId(qrConversationId, {
       limit: CONTEXT_MESSAGE_LIMIT,

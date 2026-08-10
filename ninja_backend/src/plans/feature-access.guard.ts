@@ -23,6 +23,11 @@ const FEATURE_LABELS: Partial<Record<keyof PlanFeatures, string>> = {
   advancedPermissions: 'Advanced permissions',
   whiteLabel: 'White label',
   customObjects: 'Custom objects',
+  aiBooking: 'AI appointment booking',
+  aiAppointmentSetter: 'AI appointment setter',
+  advancedAiAgent: 'Advanced AI agent',
+  leadGenerator: 'Lead Generator',
+  premiumIntegrations: 'Premium integrations',
 };
 
 // Blocks a route decorated with @RequireFeature(...) when the caller's plan does

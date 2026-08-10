@@ -6,6 +6,7 @@ import {
 import { DatabaseService } from "../database/database.service";
 import OpenAI from "openai";
 import { S3Service } from "../common/aws/s3.service";
+import { UsageService } from "../plans/usage.service";
 
 const ALLOWED_TONES = ["professional", "friendly", "sales"] as const;
 export type AutoReplyTone = (typeof ALLOWED_TONES)[number];
@@ -139,6 +140,7 @@ export class AiCenterService {
   constructor(
     private readonly db: DatabaseService,
     private readonly s3Service: S3Service,
+    private readonly usage: UsageService,
   ) {}
   private resolveRequestedCapability(message: string) {
     const value = String(message || "").toLowerCase();
@@ -504,6 +506,15 @@ export class AiCenterService {
   }
 
   async enableAppointmentSetter(teamId: string): Promise<{ ok: boolean }> {
+    // The AI appointment setter is a premium capability. Free plans cannot turn
+    // it on (the 🔒 prefix lets the frontend show the upgrade prompt verbatim).
+    // Paid/legacy accounts are unaffected (featureAllowed returns true).
+    const allowed = await this.usage.featureAllowed(teamId, 'aiAppointmentSetter');
+    if (!allowed) {
+      throw new ForbiddenException(
+        '🔒 The AI appointment setter is available on a paid Cortexa plan. Upgrade to enable it.',
+      );
+    }
     await this.db.query(
       `UPDATE teams SET ai_appointment_setter_enabled = true, updated_at = NOW() WHERE id = $1`,
       [teamId],

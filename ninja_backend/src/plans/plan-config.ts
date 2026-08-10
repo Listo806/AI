@@ -17,6 +17,8 @@ export interface PlanLimits {
   aiConversationsPerMonth: number | null;
   automationWorkflows: number | null;
   integrations: number | null;
+  // How many WhatsApp numbers/accounts the team may connect. Free = 1.
+  whatsappConnections: number | null;
 }
 
 export interface PlanFeatures {
@@ -34,6 +36,15 @@ export interface PlanFeatures {
   advancedPermissions: boolean;
   whiteLabel: boolean;
   customObjects: boolean;
+  // ── Limited-AI entitlements (granular, so Free can experience the AI without
+  // getting the premium automation system). aiAgent stays the master "AI on"
+  // flag; these gate specific capabilities on top of it. ──────────────────────
+  aiWhatsapp: boolean; // AI may respond to WhatsApp conversations
+  aiBooking: boolean; // AI appointment booking / scheduling over chat
+  aiAppointmentSetter: boolean; // autonomous AI appointment setter
+  advancedAiAgent: boolean; // advanced AI sales agent / autonomous follow-up
+  leadGenerator: boolean; // Lead Generator module
+  premiumIntegrations: boolean; // premium/third-party integrations
 }
 
 export interface PlanPricing {
@@ -61,6 +72,19 @@ const UNLIMITED: PlanLimits = {
   aiConversationsPerMonth: null,
   automationWorkflows: null,
   integrations: null,
+  whatsappConnections: null,
+};
+
+// Every paid tier is grandfathered to the full AI/premium feature set (see the
+// grandfathering note in usage.service). Defined once so the three paid plans
+// stay in sync as feature keys are added.
+const PAID_AI_FEATURES = {
+  aiWhatsapp: true,
+  aiBooking: true,
+  aiAppointmentSetter: true,
+  advancedAiAgent: true,
+  leadGenerator: true,
+  premiumIntegrations: true,
 };
 
 export const PLAN_ORDER: PlanId[] = ['free', 'solo', 'business', 'scale'];
@@ -78,13 +102,14 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       aiConversationsPerMonth: 50,
       automationWorkflows: 5,
       integrations: 1,
+      whatsappConnections: 1,
     },
     features: {
-      crm: true,
-      aiAgent: true,
-      automations: true,
+      crm: true, // full basic CRM: leads, pipeline, contacts, notes, activity
+      aiAgent: true, // master AI switch on (limited by the flags below)
+      automations: true, // basic automations only (advanced gated below)
       emailSmsMarketing: false,
-      calendar: false,
+      calendar: true, // basic calendar (AI scheduling gated by aiBooking)
       reports: false,
       advancedAnalytics: false,
       teamWorkspace: false,
@@ -94,6 +119,13 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedPermissions: false,
       whiteLabel: false,
       customObjects: false,
+      // Limited AI: WhatsApp responses ON; every premium AI capability OFF.
+      aiWhatsapp: true,
+      aiBooking: false,
+      aiAppointmentSetter: false,
+      advancedAiAgent: false,
+      leadGenerator: false,
+      premiumIntegrations: false,
     },
     paddleEnv: null,
   },
@@ -121,6 +153,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedPermissions: false,
       whiteLabel: false,
       customObjects: false,
+      ...PAID_AI_FEATURES,
     },
     paddleEnv: { monthly: 'PADDLE_PRICE_SOLO', annual: 'PADDLE_PRICE_SOLO_ANNUAL' },
   },
@@ -148,6 +181,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedPermissions: false,
       whiteLabel: false,
       customObjects: false,
+      ...PAID_AI_FEATURES,
     },
     paddleEnv: {
       monthly: 'PADDLE_PRICE_BUSINESS',
@@ -178,6 +212,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       advancedPermissions: true,
       whiteLabel: true,
       customObjects: true,
+      ...PAID_AI_FEATURES,
     },
     paddleEnv: { monthly: 'PADDLE_PRICE_SCALE', annual: 'PADDLE_PRICE_SCALE_ANNUAL' },
   },
