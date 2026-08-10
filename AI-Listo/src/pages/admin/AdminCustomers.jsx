@@ -311,6 +311,9 @@ export default function AdminCustomers() {
 
   const kpis = summary?.kpis;
   const totalPages = Math.max(1, Math.ceil(total / rowsPerPage));
+  // Keep the current page in range if the total shrinks (delete, bulk actions,
+  // import, refresh) so the admin is never stranded on an empty out-of-range page.
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [page, totalPages]);
   const pageList = () => {
     const out = [];
     const add = (n) => out.push(n);

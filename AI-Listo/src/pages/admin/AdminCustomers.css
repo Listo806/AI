@@ -249,7 +249,7 @@
 /* Fixed column widths so 11 columns always share the content width (no page
    scroll) and the Actions column is always visible. Percentages sum to ~100%. */
 .cxc-table thead th:nth-child(1)  { width: 30px; }  /* checkbox */
-.cxc-table thead th:nth-child(2)  { width: 20%; }   /* Customer */
+.cxc-table thead th:nth-child(2)  { width: 19%; }   /* Customer */
 .cxc-table thead th:nth-child(3)  { width: 11%; }   /* Plan & Pricing */
 .cxc-table thead th:nth-child(4)  { width: 7%; }    /* Seats / Users */
 .cxc-table thead th:nth-child(5)  { width: 9%; }    /* Next Billing */
@@ -258,9 +258,11 @@
 .cxc-table thead th:nth-child(8)  { width: 9%; }    /* Registered */
 .cxc-table thead th:nth-child(9)  { width: 8%; }    /* Last Active */
 .cxc-table thead th:nth-child(10) { width: 7%; }    /* LTV */
-.cxc-table thead th:nth-child(11) { width: 11%; }   /* Actions */
+.cxc-table thead th:nth-child(11) { width: 12%; }   /* Actions */
 .cxc-cust-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .cxc-cust-cell > div { min-width: 0; }
+/* Keep the View button + ... menu at full size so Actions never compresses. */
+.cxc-row-actions .cxc-btn, .cxc-row-actions .cxc-icon-btn { flex-shrink: 0; }
 .cxc-avatar {
   width: 34px; height: 34px; border-radius: 999px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
