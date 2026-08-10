@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { DatabaseService } from '../database/database.service';
@@ -51,6 +56,50 @@ export class CustomersAdminService {
   private async ready(): Promise<void> {
     await this.mailer.ensureSchema();
     await this.ensureNotes();
+  }
+
+  // Escape a plain-text admin message and turn newlines into a simple HTML body.
+  private textToHtml(text: string): string {
+    const esc = String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    return `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#0f172a;line-height:1.6">${esc.replace(/\r?\n/g, '<br>')}</div>`;
+  }
+
+  // Send a free-form email to a single customer through the platform SendGrid
+  // integration (the "Send Email" action on the Customers page).
+  async sendCustomerEmail(customerId: string, subject: string, message: string) {
+    const subj = String(subject || '').trim();
+    const msg = String(message || '').trim();
+    if (!subj) throw new BadRequestException('A subject is required.');
+    if (!msg) throw new BadRequestException('A message is required.');
+
+    const { rows } = await this.db.query(
+      `SELECT id, email, name FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
+      [customerId],
+    );
+    const cust = rows[0];
+    if (!cust?.email) {
+      throw new NotFoundException('Customer not found or has no email address.');
+    }
+
+    const res = await this.mailer.sendCustomEmail({
+      to: cust.email,
+      userId: cust.id,
+      subject: subj,
+      html: this.textToHtml(msg),
+    });
+
+    if (res.status === 'skipped') {
+      throw new BadRequestException(
+        'No email provider is configured. Set the platform SendGrid key (SENDGRID_API_KEY + SENDGRID_FROM_EMAIL) first.',
+      );
+    }
+    if (res.status === 'error') {
+      throw new BadRequestException(res.reason || 'The email could not be sent.');
+    }
+    return { success: true, to: cust.email };
   }
 
   private readonly cols = `
