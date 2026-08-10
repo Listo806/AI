@@ -228,12 +228,9 @@ export default function AdminCustomers() {
     const params = { ...filters, tab, limit: rowsPerPage, offset: (page - 1) * rowsPerPage };
     Promise.all([getCustomersHub(params), getCustomersSummary(params)])
       .then(([list, sum]) => {
-        const data = list?.data || [];
-        setRows(data);
+        setRows(list?.data || []);
         setTotal(list?.total || 0);
         setSummary(sum || null);
-        // Keep the persistent details panel populated: default to the first row.
-        setDetail((d) => (d.id && data.some((r) => r.id === d.id) ? d : { id: data[0]?.id || null, tab: "overview" }));
       })
       .catch(() => { setRows([]); setTotal(0); })
       .finally(() => setLoading(false));
@@ -350,10 +347,6 @@ export default function AdminCustomers() {
         <Kpi variant="gold" icon={<Gift size={18} />} label="Free Accounts" value={kpis ? kpis.freeAccounts.toLocaleString() : "—"} sub={kpis ? `${kpis.freePctOfTotal}% of total` : ""} subClass="muted" />
       </div>
 
-      {/* Below the full-width KPIs: left content + right details panel */}
-      <div className="cxc-layout">
-        <div className="cxc-main">
-
       {/* Tabs + filters panel */}
       <div className="cxc-panel">
         <div className="cxc-tabs">
@@ -438,7 +431,37 @@ export default function AdminCustomers() {
         <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
       </div>
 
-      {/* Table */}
+      {/* Customer management toolbar (above the table) */}
+      <div className="cxc-toolbar">
+        <div className="cxc-menu-wrap">
+          <button className="cxc-btn" onClick={() => setBulkMenu((v) => !v)}>Bulk Actions ({selected.size} selected) <ChevronDown size={14} /></button>
+          <Menu open={bulkMenu} onClose={() => setBulkMenu(false)} className="down">
+            <button className="cxc-menu-item" onClick={bulkExportSelected}>Export selected</button>
+            <button className="cxc-menu-item" onClick={bulkEmail}>Send email</button>
+            <button className="cxc-menu-item" onClick={() => bulkAction(deactivateCustomer, "Deactivate")}>Deactivate</button>
+            <button className="cxc-menu-item danger" onClick={() => bulkAction(deleteCustomerHub, "Delete")}>Delete</button>
+          </Menu>
+        </div>
+        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setChangePlanFor(c); }}>Change Plan</button>
+        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "payments" }); }}>Update Payment</button>
+        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "subscription" }); }}>Add Seat / User</button>
+        <button className="cxc-btn" onClick={bulkEmail} disabled={!selected.size}>Send Email</button>
+        <button className="cxc-btn" onClick={onExport}>Export</button>
+        <div className="cxc-menu-wrap">
+          <button className="cxc-btn" onClick={() => setMoreMenu((v) => !v)}>More <ChevronDown size={14} /></button>
+          <Menu open={moreMenu} onClose={() => setMoreMenu(false)} className="down">
+            <label className="cxc-menu-item" style={{ cursor: "pointer" }}>
+              Import customers
+              <input type="file" accept=".csv,text/csv" onChange={(e) => { setMoreMenu(false); onImportFile(e); }} style={{ display: "none" }} />
+            </label>
+            <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); setShowPlans(true); }}>Manage plans</button>
+            <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); setShowPlans(true); }}>Create plan</button>
+            <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); load(); }}>Refresh</button>
+          </Menu>
+        </div>
+      </div>
+
+      {/* Table (full width) */}
       <div className="cxc-panel">
         <div className="cxc-table-wrap">
           <table className="cxc-table">
@@ -491,11 +514,11 @@ export default function AdminCustomers() {
                     <td className="cxc-ltv">{usd(r.ltv)}</td>
                     <td>
                       <div className="cxc-row-actions">
-                        <button className="cxc-icon-btn" title="View" onClick={() => setDetail({ id: r.id, tab: "overview" })}><Eye size={15} /></button>
-                        <button className="cxc-icon-btn" title="Edit" onClick={() => setEditCustomer(r)}><Pencil size={15} /></button>
+                        <button className="cxc-btn cxc-btn-sm" onClick={() => setDetail({ id: r.id, tab: "overview" })}><Eye size={14} /> View</button>
                         <div className="cxc-menu-wrap">
                           <button className="cxc-icon-btn" title="More" onClick={() => setRowMenu(rowMenu === r.id ? null : r.id)}><MoreHorizontal size={15} /></button>
                           <Menu open={rowMenu === r.id} onClose={() => setRowMenu(null)} className="up-right down">
+                            <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setEditCustomer(r); }}>Edit customer</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setChangePlanFor(r); }}>Change plan</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setDetail({ id: r.id, tab: "payments" }); }}>View payments</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); onDeactivate(r); }}>Deactivate</button>
@@ -532,49 +555,17 @@ export default function AdminCustomers() {
         </div>
       </div>
 
-        </div>{/* /cxc-main */}
-        <aside className="cxc-side">
-          <CustomerPanel
-            id={detail.id}
-            tab={detail.tab}
-            onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
-            onChanged={load}
-            onEdit={(c) => setEditCustomer(c)}
-            onChangePlan={(c) => setChangePlanFor(c)}
-          />
-        </aside>
-      </div>{/* /cxc-layout */}
-
-      {/* Bottom action toolbar (full width) */}
-      <div className="cxc-toolbar">
-        <div className="cxc-menu-wrap">
-          <button className="cxc-btn" onClick={() => setBulkMenu((v) => !v)}>Bulk Actions ({selected.size} selected) <ChevronDown size={14} /></button>
-          <Menu open={bulkMenu} onClose={() => setBulkMenu(false)}>
-            <button className="cxc-menu-item" onClick={bulkExportSelected}>Export selected</button>
-            <button className="cxc-menu-item" onClick={bulkEmail}>Send email</button>
-            <button className="cxc-menu-item" onClick={() => bulkAction(deactivateCustomer, "Deactivate")}>Deactivate</button>
-            <button className="cxc-menu-item danger" onClick={() => bulkAction(deleteCustomerHub, "Delete")}>Delete</button>
-          </Menu>
-        </div>
-        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setChangePlanFor(c); }}>Change Plan</button>
-        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "payments" }); }}>Update Payment</button>
-        <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "subscription" }); }}>Add Seat / User</button>
-        <button className="cxc-btn" onClick={bulkEmail} disabled={!selected.size}>Send Email</button>
-        <button className="cxc-btn" onClick={onExport}>Export</button>
-        <div className="cxc-menu-wrap">
-          <button className="cxc-btn" onClick={() => setMoreMenu((v) => !v)}>More <ChevronDown size={14} /></button>
-          <Menu open={moreMenu} onClose={() => setMoreMenu(false)}>
-            <label className="cxc-menu-item" style={{ cursor: "pointer" }}>
-              Import customers
-              <input type="file" accept=".csv,text/csv" onChange={(e) => { setMoreMenu(false); onImportFile(e); }} style={{ display: "none" }} />
-            </label>
-            <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); setShowPlans(true); }}>Manage plans</button>
-            <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); load(); }}>Refresh</button>
-          </Menu>
-        </div>
-        <div className="cxc-toolbar-spacer" />
-        <button className="cxc-btn cxc-btn-primary" onClick={() => setShowPlans(true)}><Plus size={15} /> Create Plan</button>
-      </div>
+      {detail.id && (
+        <CustomerModal
+          id={detail.id}
+          tab={detail.tab}
+          onClose={() => setDetail({ id: null, tab: "overview" })}
+          onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
+          onChanged={load}
+          onEdit={(c) => setEditCustomer(c)}
+          onChangePlan={(c) => setChangePlanFor(c)}
+        />
+      )}
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
       {editCustomer && <EditCustomerModal customer={editCustomer} onClose={() => setEditCustomer(null)} onSuccess={load} />}
@@ -601,7 +592,7 @@ function UsageBar({ label, used, limit }) {
   );
 }
 
-function CustomerPanel({ id, tab, onSelectTab, onChanged, onEdit, onChangePlan }) {
+function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onChangePlan }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
@@ -627,19 +618,22 @@ function CustomerPanel({ id, tab, onSelectTab, onChanged, onEdit, onChangePlan }
   };
   const removeNote = async (nid) => { try { await deleteCustomerNote(id, nid); reload(); } catch { /* ignore */ } };
   const doDeactivate = async () => { if (!window.confirm("Deactivate this customer?")) return; await deactivateCustomer(id); onChanged && onChanged(); reload(); setMoreOpen(false); };
-  const doDelete = async () => { if (!window.confirm("Delete this customer? Payment records are kept.")) return; await deleteCustomerHub(id); setMoreOpen(false); onChanged && onChanged(); };
+  const doDelete = async () => { if (!window.confirm("Delete this customer? Payment records are kept.")) return; await deleteCustomerHub(id); setMoreOpen(false); onChanged && onChanged(); onClose(); };
+  const updatePayment = () => alert("The card is held securely by Paddle. Send the customer their billing link to update it, or change it in the Paddle dashboard.");
+  const addSeat = () => alert("Seats are set by the plan. Use Change Plan to adjust the seat allowance, or invite members from the Team page.");
 
   const R = (k, v) => (
     <div className="cxc-summary-row"><span className="k">{k}</span><span className="v">{v ?? "—"}</span></div>
   );
 
   return (
-    <div className="cxc-panelcard">
+    <div className="cxc-modal-overlay" onClick={onClose}>
+      <div className="cxc-cust-modal" onClick={(e) => e.stopPropagation()}>
       <div className="cxc-drawer-head">
         <strong style={{ fontSize: 16 }}>Customer Details</strong>
+        <button className="cxc-drawer-close" onClick={onClose}>×</button>
       </div>
 
-      {!id && <div className="cxc-empty">Select a customer to see their details.</div>}
       {id && loading && <div className="cxc-drawer-body cxc-muted">Loading…</div>}
       {id && !loading && !c && <div className="cxc-drawer-body cxc-muted">Customer not found.</div>}
 
@@ -738,13 +732,15 @@ function CustomerPanel({ id, tab, onSelectTab, onChanged, onEdit, onChangePlan }
               )}
             </div>
 
-            <div className="cxc-drawer-foot">
-              <button className="cxc-btn" style={{ flex: 1 }} onClick={() => onEdit && onEdit(c)}><Pencil size={14} /> Edit Customer</button>
-              <div className="cxc-menu-wrap" style={{ flex: 1 }}>
-                <button className="cxc-btn" style={{ width: "100%" }} onClick={() => setMoreOpen((v) => !v)}>More Actions <ChevronDown size={14} /></button>
+            <div className="cxc-drawer-foot" style={{ flexWrap: "wrap" }}>
+              <button className="cxc-btn cxc-btn-primary" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
+              <button className="cxc-btn" onClick={updatePayment}>Update Payment</button>
+              <button className="cxc-btn" onClick={addSeat}>Add Seat / User</button>
+              <a className="cxc-btn" href={`mailto:${c.email}`}><Mail size={14} /> Send Email</a>
+              <button className="cxc-btn" onClick={() => onEdit && onEdit(c)}><Pencil size={14} /> Edit Customer</button>
+              <div className="cxc-menu-wrap">
+                <button className="cxc-btn" onClick={() => setMoreOpen((v) => !v)}>More Actions <ChevronDown size={14} /></button>
                 <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">
-                  <button className="cxc-menu-item" onClick={() => { setMoreOpen(false); onChangePlan && onChangePlan(c); }}>Change plan</button>
-                  <a className="cxc-menu-item" href={`mailto:${c.email}`}>Send email</a>
                   <button className="cxc-menu-item" onClick={doDeactivate}>Deactivate</button>
                   <button className="cxc-menu-item danger" onClick={doDelete}>Delete</button>
                 </Menu>
@@ -753,6 +749,7 @@ function CustomerPanel({ id, tab, onSelectTab, onChanged, onEdit, onChangePlan }
           </>
         )}
       </div>
+    </div>
   );
 }
 
