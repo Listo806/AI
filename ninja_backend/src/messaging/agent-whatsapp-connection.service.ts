@@ -2,6 +2,7 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '../config/config.service';
 import { DatabaseService } from '../database/database.service';
 import { encrypt, decrypt } from '../common/encryption.util';
+import { UsageService } from '../plans/usage.service';
 import twilio from 'twilio';
 
 export interface AgentConnectionStatus {
@@ -23,6 +24,7 @@ export class AgentWhatsAppConnectionService {
   constructor(
     private readonly config: ConfigService,
     private readonly db: DatabaseService,
+    private readonly usage: UsageService,
   ) {}
 
   /**
@@ -35,6 +37,10 @@ export class AgentWhatsAppConnectionService {
     if (!/^\+[1-9]\d{1,14}$/.test(num)) {
       throw new BadRequestException('whatsappNumber must be E.164');
     }
+
+    // Free plans may connect a limited number of WhatsApp numbers. Re-connecting
+    // this agent's own number is always allowed; exceeding the cap is not.
+    await this.usage.assertCanConnectWhatsapp(null, agentId);
 
     const client = (twilio as any)(sid, token);
     try {

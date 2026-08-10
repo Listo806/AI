@@ -9,6 +9,7 @@ import {
 import { LeadStateService } from '../leads/services/lead-state.service';
 import { TwilioWhatsAppService } from './twilio-whatsapp.service';
 import { LeadMessage } from './lead-messages.service';
+import { UsageService } from '../plans/usage.service';
 
 /**
  * Conversational AI appointment booking over WhatsApp.
@@ -61,12 +62,19 @@ export class WhatsAppAiBookingService {
     private readonly bookingEngine: BookingEngineService,
     private readonly leadState: LeadStateService,
     private readonly twilioWhatsApp: TwilioWhatsAppService,
+    private readonly usage: UsageService,
   ) {}
 
   /** Master switch: is conversational auto-booking on for this team? */
   async isEnabled(teamId: string): Promise<boolean> {
     if (!teamId) return false;
     try {
+      // AI appointment booking is a premium capability. A Free plan never books
+      // even if booking rules are turned on, so the AI still qualifies and hands
+      // off (with an upgrade path) instead of scheduling. Paid/legacy accounts
+      // are unaffected (featureAllowed returns true for them).
+      const allowed = await this.usage.featureAllowed(teamId, 'aiBooking');
+      if (!allowed) return false;
       const rules = await this.bookingEngine.getRules(teamId);
       return !!rules.bookingEnabled;
     } catch {

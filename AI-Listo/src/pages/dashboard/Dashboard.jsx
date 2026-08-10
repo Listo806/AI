@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import AiUsageMeter from "../../components/AiUsageMeter";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -565,6 +566,7 @@ export default function CortexaDashboard() {
       <p className="sub_head">
         {t("dashboard.subheading")}
       </p>
+      <AiUsageMeter />
       <header className="dashboard-header">
         <div className="header-actions">
           {isMobile ? (

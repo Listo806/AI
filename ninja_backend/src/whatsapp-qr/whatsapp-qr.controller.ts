@@ -30,6 +30,7 @@ import { SendQrVoiceDto } from "./dto/send-qr-voice.dto";
 import { ToggleAiDto } from "./dto/toggle-ai.dto";
 import { normalizeToE164 } from "./utils/phone-normalize.util";
 import { WhatsAppQrRealtimeService } from "./whatsapp-qr-realtime.service";
+import { UsageService } from "../plans/usage.service";
 
 @ApiTags("whatsapp-qr")
 @Controller("whatsapp-qr")
@@ -44,6 +45,7 @@ export class WhatsAppQrController {
     private readonly conversations: WhatsAppQrConversationService,
     private readonly messages: WhatsAppQrMessageService,
     private readonly outbound: WhatsAppQrOutboundService,
+    private readonly usage: UsageService,
   ) {}
 
   private async resolveConnectedHandle(
@@ -306,6 +308,9 @@ export class WhatsAppQrController {
   @Post("connect")
   @ApiOperation({ summary: "Start or resume QR connection" })
   async connect(@CurrentUser() user: any) {
+    // Free plans may connect a limited number of WhatsApp numbers. Re-connecting
+    // this user's own session is always allowed; adding one beyond the cap is not.
+    await this.usage.assertCanConnectWhatsapp(user.teamId ?? null, user.id);
     const row = await this.sessions.getOrCreateByUserId(user.id);
     await this.sessions.touchLastQrAt(row.id);
     await this.sockets.ensureSocket(user.id, row.id);

@@ -21,9 +21,10 @@ import { WhatsAppQrRealtimeService } from './whatsapp-qr-realtime.service';
 import { CrmModule } from '../crm/crm.module';
 import { AiCenterModule } from "../ai-center/ai-center.module";
 import { PaymentGuard } from "../auth/guards/payment.guard";
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule, AiCenterModule],
+  imports: [ConfigModule, DatabaseModule, SubscriptionsModule, AiAssistantModule, CrmModule, AiCenterModule, PlansModule],
   controllers: [WhatsAppQrController],
   providers: [
     PaymentGuard,

@@ -12,9 +12,10 @@ import { SubscriptionRequiredGuard } from './guards/subscription-required.guard'
 import { PaymentsModule } from '../payments/payments.module';
 import { TeamsModule } from '../teams/teams.module';
 import { AnalyticsModule } from '../analytics/analytics.module';
+import { PlansModule } from '../plans/plans.module';
 
 @Module({
-  imports: [PaymentsModule, TeamsModule, AnalyticsModule],
+  imports: [PaymentsModule, TeamsModule, AnalyticsModule, PlansModule],
   controllers: [SubscriptionsController, PaddleWebhookController],
   providers: [
     SubscriptionsService,
