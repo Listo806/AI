@@ -34,7 +34,6 @@ import { CreateLeadDto } from "./dto/create-lead.dto";
 import { CreateWhatsAppLeadDto } from "./dto/create-whatsapp-lead.dto";
 import { UpdateLeadDto } from "./dto/update-lead.dto";
 import { LeadStatus } from "./entities/lead.entity";
-import { SubscriptionRequiredGuard } from "../subscriptions/guards/subscription-required.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
 import { S3Service } from "../common/aws/s3.service";
 
@@ -125,7 +124,10 @@ export class LeadsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, SubscriptionRequiredGuard, PaymentGuard)
+  // Use the Free-aware CrmAccessGuard (same as the other lead routes) instead of
+  // SubscriptionRequiredGuard, so a Free user can create leads. Premium caps are
+  // enforced elsewhere; a genuine unpaid PAID account is still stopped by PaymentGuard.
+  @UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
   @ApiBearerAuth("JWT-auth")
   @ApiOperation({ summary: "Create a new lead" })
   @ApiBody({ type: CreateLeadDto })
