@@ -328,6 +328,9 @@ export default function AdminCustomers() {
 
   return (
     <div className="cxc-page">
+      {/* cxc-scale shrinks the whole page ~6% per client; kept OFF the modals
+          below so their full-screen overlays are never scaled down. */}
+      <div className="cxc-scale">
       {/* Header */}
       <div className="cxc-header">
         <div>
@@ -352,6 +355,34 @@ export default function AdminCustomers() {
         <Kpi variant="amber" icon={<TrendingUp size={18} />} label="ARR (Annual Recurring)" value={kpis ? usd(kpis.arr) : "—"} sub="Annual recurring" />
         <Kpi variant="teal" icon={<Percent size={18} />} label="Conversion Rate" value={kpis ? `${kpis.conversionRate}%` : "—"} sub="Registered → Paid" />
         <Kpi variant="gold" icon={<Gift size={18} />} label="Free Accounts" value={kpis ? kpis.freeAccounts.toLocaleString() : "—"} sub={kpis ? `${kpis.freePctOfTotal}% of total` : ""} subClass="muted" />
+      </div>
+
+      {/* Analytics: funnel + breakdowns — moved ABOVE tabs/filters per client */}
+      <div className="cxc-analytics">
+        <div className="cxc-card">
+          <div className="cxc-card-title">Registration Funnel (this period)</div>
+          <div className="cxc-funnel">
+            {[
+              { n: 1, label: "Registered", v: summary?.funnel?.registered },
+              { n: 2, label: "Plan Selected", v: summary?.funnel?.planSelected },
+              { n: 3, label: "Checkout Started", v: summary?.funnel?.checkoutStarted },
+              { n: 4, label: "Payment Completed", v: summary?.funnel?.paymentCompleted },
+            ].map((s, i) => {
+              const base = summary?.funnel?.registered || 0;
+              return (
+                <div className="cxc-funnel-step" key={s.n}>
+                  <div className="cxc-funnel-num">{s.n}</div>
+                  <div className="cxc-funnel-label">{s.label}</div>
+                  <div className="cxc-funnel-value">{(s.v ?? 0).toLocaleString()}</div>
+                  {i > 0 && <div className="cxc-funnel-pct">{base ? Math.round(((s.v || 0) / base) * 1000) / 10 : 0}%</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <DonutCard title="By Source" rows={summary?.breakdowns?.source} />
+        <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
+        <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
       </div>
 
       {/* Tabs + filters panel */}
@@ -408,34 +439,6 @@ export default function AdminCustomers() {
           <button className="cxc-btn cxc-btn-sm" onClick={() => setMoreFilters((v) => !v)}><Filter size={14} /> {moreFilters ? "Fewer Filters" : "More Filters"}</button>
           <button className="cxc-btn cxc-btn-ghost cxc-btn-sm" onClick={clearFilters}>Clear Filters</button>
         </div>
-      </div>
-
-      {/* Analytics: funnel + breakdowns */}
-      <div className="cxc-analytics">
-        <div className="cxc-card">
-          <div className="cxc-card-title">Registration Funnel (this period)</div>
-          <div className="cxc-funnel">
-            {[
-              { n: 1, label: "Registered", v: summary?.funnel?.registered },
-              { n: 2, label: "Plan Selected", v: summary?.funnel?.planSelected },
-              { n: 3, label: "Checkout Started", v: summary?.funnel?.checkoutStarted },
-              { n: 4, label: "Payment Completed", v: summary?.funnel?.paymentCompleted },
-            ].map((s, i) => {
-              const base = summary?.funnel?.registered || 0;
-              return (
-                <div className="cxc-funnel-step" key={s.n}>
-                  <div className="cxc-funnel-num">{s.n}</div>
-                  <div className="cxc-funnel-label">{s.label}</div>
-                  <div className="cxc-funnel-value">{(s.v ?? 0).toLocaleString()}</div>
-                  {i > 0 && <div className="cxc-funnel-pct">{base ? Math.round(((s.v || 0) / base) * 1000) / 10 : 0}%</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <DonutCard title="By Source" rows={summary?.breakdowns?.source} />
-        <DonutCard title="By Offer" rows={summary?.breakdowns?.plan} />
-        <DonutCard title="By Language" rows={summary?.breakdowns?.language} />
       </div>
 
       {/* Customer management toolbar (above the table) */}
@@ -561,6 +564,7 @@ export default function AdminCustomers() {
           </div>
         </div>
       </div>
+      </div>{/* end cxc-scale */}
 
       {detail.id && (
         <CustomerModal

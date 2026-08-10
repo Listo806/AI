@@ -9,6 +9,15 @@
   font-size: 14px;
 }
 
+/* Shrink the whole Customers content ~6% (client: "still too big, shrink 5-7%").
+   Compensating width keeps it filling the page instead of leaving a right gap.
+   Applied to a wrapper INSIDE .cxc-page so the fixed-position modals (rendered
+   as siblings after it) keep covering the full viewport. */
+.cxc-scale {
+  zoom: 0.94;
+  width: calc(100% / 0.94);
+}
+
 /* Header */
 .cxc-header {
   display: flex;
