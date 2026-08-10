@@ -65,16 +65,30 @@ export class WhatsAppAiBookingService {
     private readonly usage: UsageService,
   ) {}
 
+  /**
+   * Plan gate only (no rules lookup): does this team's plan include AI
+   * appointment booking? AI appointment booking is a premium capability, so a
+   * Free plan returns false; paid/legacy accounts return true (featureAllowed
+   * grandfathers them). The live reply path calls this directly so booking can
+   * never run for a Free team even if the booking rule was somehow left on.
+   */
+  async planAllowsBooking(teamId: string): Promise<boolean> {
+    if (!teamId) return false;
+    try {
+      return await this.usage.featureAllowed(teamId, 'aiBooking');
+    } catch {
+      return false;
+    }
+  }
+
   /** Master switch: is conversational auto-booking on for this team? */
   async isEnabled(teamId: string): Promise<boolean> {
     if (!teamId) return false;
     try {
-      // AI appointment booking is a premium capability. A Free plan never books
-      // even if booking rules are turned on, so the AI still qualifies and hands
-      // off (with an upgrade path) instead of scheduling. Paid/legacy accounts
-      // are unaffected (featureAllowed returns true for them).
-      const allowed = await this.usage.featureAllowed(teamId, 'aiBooking');
-      if (!allowed) return false;
+      // A Free plan never books even if booking rules are turned on, so the AI
+      // still qualifies and hands off (with an upgrade path) instead of
+      // scheduling. Paid/legacy accounts are unaffected.
+      if (!(await this.planAllowsBooking(teamId))) return false;
       const rules = await this.bookingEngine.getRules(teamId);
       return !!rules.bookingEnabled;
     } catch {

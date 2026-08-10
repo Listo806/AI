@@ -2288,16 +2288,23 @@ export class AiCenterService {
           ],
         );
 
+        // Basic AI auto-reply (limited AI) is available to Free; the appointment
+        // setter is premium, so only flip it on when the plan allows it. Paid/
+        // legacy accounts get it as before.
+        const setterAllowed = await this.usage.featureAllowed(
+          teamId,
+          "aiAppointmentSetter",
+        );
         await this.db.query(
           `
         UPDATE teams
         SET
           ai_auto_reply_enabled = true,
-          ai_appointment_setter_enabled = true,
+          ai_appointment_setter_enabled = $2,
           updated_at = NOW()
         WHERE id = $1
         `,
-          [teamId],
+          [teamId, setterAllowed],
         );
       }
 
@@ -2427,6 +2434,13 @@ export class AiCenterService {
       ...(body.quickControls || {}),
     };
 
+    // The appointment setter is premium: a Free plan can never turn it on
+    // (force the value off), while its basic auto-reply capability stays
+    // available. Paid/legacy accounts keep the requested value.
+    const setterAllowed = await this.usage.featureAllowed(
+      teamId,
+      "aiAppointmentSetter",
+    );
     await Promise.all([
       this.db.query(
         `UPDATE teams
@@ -2439,7 +2453,7 @@ export class AiCenterService {
         [
           capabilities.autoReplyToLeads,
           tone || null,
-          capabilities.appointmentBooking,
+          setterAllowed ? (capabilities.appointmentBooking ?? null) : false,
           teamId,
         ],
       ),
@@ -3614,6 +3628,23 @@ Always give clear next steps.
       throw new ForbiddenException("Team is required");
     }
 
+    // AI appointment booking is a premium capability. A Free plan may save its
+    // basic rules but cannot turn booking on (the 🔒 prefix lets the frontend
+    // show the upgrade prompt verbatim). Paid/legacy accounts are unaffected
+    // (featureAllowed returns true for them).
+    if (
+      Boolean(body.bookingEnabled) &&
+      !(await this.usage.featureAllowed(teamId, "aiBooking"))
+    ) {
+      throw new ForbiddenException(
+        "🔒 AI appointment booking is available on a paid Cortexa plan. Upgrade to enable it.",
+      );
+    }
+    const setterAllowed = await this.usage.featureAllowed(
+      teamId,
+      "aiAppointmentSetter",
+    );
+
     const allowedDays = new Set([
       "monday",
       "tuesday",
@@ -3873,11 +3904,11 @@ Always give clear next steps.
         `
       UPDATE teams
       SET
-        ai_appointment_setter_enabled = true,
+        ai_appointment_setter_enabled = $2,
         updated_at = NOW()
       WHERE id = $1
       `,
-        [teamId],
+        [teamId, setterAllowed],
       );
 
       await this.db.query(
@@ -4536,6 +4567,12 @@ Always give clear next steps.
         [teamId],
       );
 
+      // The appointment setter is premium: a Free plan can never turn it on.
+      // Basic auto-reply stays available. Paid/legacy accounts are unaffected.
+      const setterAllowed = await this.usage.featureAllowed(
+        teamId,
+        "aiAppointmentSetter",
+      );
       await this.db.query(
         `
       UPDATE teams
@@ -4545,7 +4582,7 @@ Always give clear next steps.
         updated_at = NOW()
       WHERE id = $1
       `,
-        [teamId, autoReply, autoBookAppointment],
+        [teamId, autoReply, setterAllowed ? autoBookAppointment : false],
       );
 
       await this.db.query(
