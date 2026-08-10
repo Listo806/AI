@@ -37,6 +37,7 @@ import {
   importCustomers,
   createCustomer,
   updateCustomerInfo,
+  sendCustomerEmail,
   getPlanConfig,
   setPlanConfig,
   resetPlanConfig,
@@ -219,8 +220,8 @@ export default function AdminCustomers() {
   const [selected, setSelected] = useState(new Set());
   const [detail, setDetail] = useState({ id: null, tab: "overview" });
   const [showAdd, setShowAdd] = useState(false);
-  const [editCustomer, setEditCustomer] = useState(null);
   const [changePlanFor, setChangePlanFor] = useState(null);
+  const [sendEmailFor, setSendEmailFor] = useState(null);
   const [showPlans, setShowPlans] = useState(false);
   const [importing, setImporting] = useState(false);
   const [bulkMenu, setBulkMenu] = useState(false);
@@ -455,7 +456,7 @@ export default function AdminCustomers() {
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setChangePlanFor(c); }}>Change Plan</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "payments" }); }}>Update Payment</button>
         <button className="cxc-btn" onClick={() => { const c = oneSelected(); if (c) setDetail({ id: c.id, tab: "subscription" }); }}>Add Seat / User</button>
-        <button className="cxc-btn" onClick={bulkEmail} disabled={!selected.size}>Send Email</button>
+        <button className="cxc-btn" onClick={() => { if (selectedRows.length === 1) setSendEmailFor(selectedRows[0]); else bulkEmail(); }} disabled={!selected.size}>Send Email</button>
         <button className="cxc-btn" onClick={onExport}>Export</button>
         <div className="cxc-menu-wrap">
           <button className="cxc-btn" onClick={() => setMoreMenu((v) => !v)}>More <ChevronDown size={14} /></button>
@@ -528,7 +529,7 @@ export default function AdminCustomers() {
                         <div className="cxc-menu-wrap">
                           <button className="cxc-icon-btn" title="More" onClick={() => setRowMenu(rowMenu === r.id ? null : r.id)}><MoreHorizontal size={15} /></button>
                           <Menu open={rowMenu === r.id} onClose={() => setRowMenu(null)} className="up-right down">
-                            <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setEditCustomer(r); }}>Edit customer</button>
+                            <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setDetail({ id: r.id, tab: "overview", edit: true }); }}>Edit customer</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setChangePlanFor(r); }}>Change plan</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); setDetail({ id: r.id, tab: "payments" }); }}>View payments</button>
                             <button className="cxc-menu-item" onClick={() => { setRowMenu(null); onDeactivate(r); }}>Deactivate</button>
@@ -573,13 +574,14 @@ export default function AdminCustomers() {
           onClose={() => setDetail({ id: null, tab: "overview" })}
           onSelectTab={(t) => setDetail((d) => ({ ...d, tab: t }))}
           onChanged={load}
-          onEdit={(c) => setEditCustomer(c)}
+          initialEdit={detail.edit}
           onChangePlan={(c) => setChangePlanFor(c)}
+          onSendEmail={(c) => setSendEmailFor(c)}
         />
       )}
 
       {showAdd && <AddCustomerModal onClose={() => setShowAdd(false)} onSuccess={load} />}
-      {editCustomer && <EditCustomerModal customer={editCustomer} onClose={() => setEditCustomer(null)} onSuccess={load} />}
+      {sendEmailFor && <SendEmailModal customer={sendEmailFor} onClose={() => setSendEmailFor(null)} />}
       {changePlanFor && <ChangePlanModal customer={changePlanFor} onClose={() => setChangePlanFor(null)} onSuccess={load} />}
       {showPlans && <ManagePlansModal onClose={() => setShowPlans(false)} />}
     </div>
@@ -616,11 +618,14 @@ function PayStatusBadge({ status }) {
   return <span className={`cxc-badge ${ok ? "active" : "registered"}`}>{ok ? "Payment succeeded" : (status || "—")}</span>;
 }
 
-function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onChangePlan }) {
+function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan, onSendEmail, initialEdit }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
+  const [editing, setEditing] = useState(!!initialEdit);
+  const [form, setForm] = useState({ name: "", phone: "", language: "en" });
+  const [savingEdit, setSavingEdit] = useState(false);
   const activeTab = tab || "overview";
 
   const reload = useCallback(() => {
@@ -634,6 +639,24 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onCha
   const c = data?.customer;
   const sub = data?.subscription;
   const usage = data?.usage;
+
+  // Keep the inline edit form in sync with the loaded customer.
+  useEffect(() => {
+    if (c) setForm({ name: c.name || "", phone: c.phone || "", language: c.language || "en" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c?.id]);
+
+  const startEdit = () => { setTab("overview"); setEditing(true); };
+  const cancelEdit = () => {
+    setEditing(false);
+    if (c) setForm({ name: c.name || "", phone: c.phone || "", language: c.language || "en" });
+  };
+  const saveEdit = async () => {
+    setSavingEdit(true);
+    try { await updateCustomerInfo(id, form); setEditing(false); onChanged && onChanged(); reload(); }
+    catch (e) { alert(e?.message || "Could not save the changes."); }
+    finally { setSavingEdit(false); }
+  };
 
   const submitNote = async () => {
     const t = noteText.trim();
@@ -717,6 +740,27 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onCha
             <div className="cxc-cust-content">
               {activeTab === "overview" && (
                 <>
+                  {editing && (
+                    <section className="cxc-cust-block cxc-edit-block">
+                      <div className="cxc-block-title">Edit Customer</div>
+                      <div className="cxc-edit-grid">
+                        <div className="cxc-field"><label>Full name</label>
+                          <input className="cxc-input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} /></div>
+                        <div className="cxc-field"><label>Phone</label>
+                          <input className="cxc-input" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} /></div>
+                        <div className="cxc-field"><label>Email</label>
+                          <input className="cxc-input" value={c.email} disabled title="Email is the account login and cannot be changed here" /></div>
+                        <div className="cxc-field"><label>Language</label>
+                          <select className="cxc-input" value={form.language} onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}>
+                            <option value="en">English</option><option value="es">Spanish</option><option value="pt">Portuguese</option>
+                          </select></div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                        <button className="cxc-btn cxc-btn-primary cxc-btn-sm" disabled={savingEdit} onClick={saveEdit}>{savingEdit ? "Saving…" : "Save changes"}</button>
+                        <button className="cxc-btn cxc-btn-sm" onClick={cancelEdit} disabled={savingEdit}>Cancel</button>
+                      </div>
+                    </section>
+                  )}
                   <div className="cxc-cust-grid2">
                     <section className="cxc-cust-block">
                       <div className="cxc-block-title">Account Overview</div>
@@ -733,7 +777,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onCha
                         <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
                         <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}>Update Payment Method</button>
                         <button className="cxc-btn cxc-btn-sm" onClick={addSeat}>Add Seat / User</button>
-                        <a className="cxc-btn cxc-btn-sm" href={`mailto:${c.email}`}><Mail size={13} /> Send Email</a>
+                        <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
                       </div>
                       <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
 
@@ -861,7 +905,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onEdit, onCha
         <div className="cxc-drawer-foot cxc-cust-foot">
           <button className="cxc-btn" onClick={onClose}>Close</button>
           <div className="cxc-toolbar-spacer" />
-          <button className="cxc-btn" onClick={() => c && onEdit && onEdit(c)} disabled={!c}><Pencil size={14} /> Edit Customer</button>
+          <button className={`cxc-btn ${editing ? "cxc-btn-primary" : ""}`} onClick={startEdit} disabled={!c}><Pencil size={14} /> Edit Customer</button>
           <div className="cxc-menu-wrap">
             <button className="cxc-btn cxc-btn-primary" onClick={() => setMoreOpen((v) => !v)} disabled={!c}>More Actions <ChevronDown size={14} /></button>
             <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">
@@ -915,39 +959,6 @@ function ChangePlanModal({ customer, onClose, onSuccess }) {
   );
 }
 
-function EditCustomerModal({ customer, onClose, onSuccess }) {
-  const [form, setForm] = useState({ name: customer?.name || "", phone: customer?.phone || "", language: customer?.language || "en" });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const submit = async () => {
-    setSaving(true); setError("");
-    try { await updateCustomerInfo(customer.id, form); onSuccess && onSuccess(); onClose(); }
-    catch (e) { setError(e?.message || "Could not save."); }
-    finally { setSaving(false); }
-  };
-  return (
-    <div className="cxc-modal-overlay" onClick={onClose}>
-      <div className="cxc-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cxc-modal-head"><h3 className="cxc-modal-title">Edit Customer</h3><button className="cxc-drawer-close" onClick={onClose}>×</button></div>
-        <div className="cxc-note" style={{ marginBottom: 12 }}>{customer.email}</div>
-        <div className="cxc-field"><label>Full name</label><input className="cxc-input" value={form.name} onChange={(e) => set("name", e.target.value)} /></div>
-        <div className="cxc-field"><label>Phone</label><input className="cxc-input" value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
-        <div className="cxc-field"><label>Language</label>
-          <select className="cxc-input" value={form.language} onChange={(e) => set("language", e.target.value)}>
-            <option value="en">English</option><option value="es">Spanish</option><option value="pt">Portuguese</option>
-          </select>
-        </div>
-        {error && <div className="cxc-error">{error}</div>}
-        <div className="cxc-modal-foot">
-          <button className="cxc-btn" onClick={onClose}>Cancel</button>
-          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function AddCustomerModal({ onClose, onSuccess }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "", plan: "free", language: "en" });
   const [saving, setSaving] = useState(false);
@@ -982,6 +993,43 @@ function AddCustomerModal({ onClose, onSuccess }) {
         <div className="cxc-modal-foot">
           <button className="cxc-btn" onClick={onClose}>Cancel</button>
           <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={saving}>{saving ? "Adding…" : "Add Customer"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SendEmailModal({ customer, onClose }) {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
+  const submit = async () => {
+    if (!subject.trim()) { setError("Please enter a subject."); return; }
+    if (!message.trim()) { setError("Please enter a message."); return; }
+    setSending(true); setError("");
+    try {
+      await sendCustomerEmail(customer.id, { subject, message });
+      setSent(true);
+      setTimeout(onClose, 900);
+    } catch (e) { setError(e?.message || "Could not send the email."); }
+    finally { setSending(false); }
+  };
+  return (
+    <div className="cxc-modal-overlay" onClick={onClose}>
+      <div className="cxc-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="cxc-modal-head"><h3 className="cxc-modal-title">Send Email</h3><button className="cxc-drawer-close" onClick={onClose}>×</button></div>
+        <div className="cxc-field"><label>To</label><input className="cxc-input" value={customer.email} disabled /></div>
+        <div className="cxc-field"><label>Subject</label><input className="cxc-input" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" /></div>
+        <div className="cxc-field"><label>Message</label>
+          <textarea className="cxc-input" rows={8} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write your message…" style={{ resize: "vertical" }} /></div>
+        {error && <div className="cxc-error">{error}</div>}
+        {sent && <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>Email sent.</div>}
+        <div className="cxc-note">Sends through your SendGrid integration from the platform sender address.</div>
+        <div className="cxc-modal-foot">
+          <button className="cxc-btn" onClick={onClose}>Cancel</button>
+          <button className="cxc-btn cxc-btn-primary" onClick={submit} disabled={sending || sent}>{sending ? "Sending…" : "Send Email"}</button>
         </div>
       </div>
     </div>

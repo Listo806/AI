@@ -450,6 +450,12 @@
 .cxc-linkbtn { border: none; background: none; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
 .cxc-linkbtn:hover { text-decoration: underline; }
 
+/* Inline "Edit Customer" panel inside the details modal */
+.cxc-edit-block { border-color: #bfdbfe; background: #f6faff; margin-bottom: 16px; }
+.cxc-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+.cxc-edit-grid .cxc-field { margin-bottom: 0; }
+@media (max-width: 720px) { .cxc-edit-grid { grid-template-columns: 1fr; } }
+
 /* Account overview rows */
 .cxc-ov-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;

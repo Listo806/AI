@@ -162,6 +162,15 @@ export class CustomersAdminController {
     return this.customers.updateCustomer(id, body);
   }
 
+  @Post(':id/email')
+  @ApiOperation({ summary: 'Send a free-form email to a customer via SendGrid' })
+  async sendEmail(
+    @Param('id') id: string,
+    @Body() body: { subject?: string; message?: string },
+  ) {
+    return this.customers.sendCustomerEmail(id, body?.subject || '', body?.message || '');
+  }
+
   @Post(':id/change-plan')
   @ApiOperation({ summary: 'Move a customer between plans (updates account config)' })
   async changePlan(@Param('id') id: string, @Body() body: any) {

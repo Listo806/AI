@@ -259,6 +259,13 @@ export async function updateCustomerInfo(id, payload = {}) {
   });
 }
 
+export async function sendCustomerEmail(id, { subject, message } = {}) {
+  return apiClient.request(`/admin/customers-hub/${id}/email`, {
+    method: "POST",
+    body: JSON.stringify({ subject, message }),
+  });
+}
+
 export async function deactivateCustomer(id) {
   return apiClient.request(`/admin/customers-hub/${id}/deactivate`, {
     method: "POST",

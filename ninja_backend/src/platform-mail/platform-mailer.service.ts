@@ -314,6 +314,59 @@ export class PlatformMailerService {
     };
   }
 
+  // ---- admin free-form email (composed from the Customers hub) ----
+  // Sends a raw subject/html through the same provider (SendGrid preferred, else
+  // SMTP) and records it in email_log like any other send. Never throws.
+  async sendCustomEmail(opts: {
+    to: string;
+    userId?: string | null;
+    subject: string;
+    html: string;
+    text?: string;
+  }): Promise<SendResult> {
+    await this.ensureSchema();
+    const token = crypto.randomUUID();
+    const html = this.htmlFor(opts.html, token);
+    const result = await this.deliver({
+      to: opts.to,
+      subject: opts.subject,
+      html,
+      text: opts.text || opts.html.replace(/<[^>]+>/g, ' '),
+      token,
+    });
+    const status: 'sent' | 'skipped' | 'error' = result.ok
+      ? 'sent'
+      : result.error === 'smtp_not_configured'
+        ? 'skipped'
+        : 'error';
+    try {
+      await this.db.query(
+        `INSERT INTO email_log
+           (user_id, to_email, template, language, subject, status, error, provider, track_token, sent_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [
+          opts.userId || null,
+          opts.to,
+          'admin_custom',
+          'en',
+          opts.subject,
+          status,
+          result.ok ? null : result.error?.slice(0, 500),
+          result.provider,
+          token,
+          status === 'sent' ? new Date() : null,
+        ],
+      );
+    } catch (err: any) {
+      this.logger.error(`admin_custom email_log insert failed: ${err?.message}`);
+    }
+    return {
+      sent: result.ok,
+      status,
+      reason: result.ok ? undefined : result.error,
+    };
+  }
+
   // ---- abandoned sequence: schedule at signup, cancel on pay, worker sends ----
 
   // Queue the 3 abandoned emails as 'scheduled' rows. Idempotent per user (only
