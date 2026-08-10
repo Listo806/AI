@@ -713,7 +713,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
             {/* Left rail: identity + vertical tabs */}
             <aside className="cxc-cust-rail">
               <div className="cxc-cust-idcard">
-                <div className="cxc-avatar" style={{ width: 48, height: 48, fontSize: 17, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
+                <div className="cxc-avatar" style={{ width: 40, height: 40, fontSize: 15, background: avatarColor(c.email) }}>{initials(c.name, c.email)}</div>
                 <div className="cxc-cust-idmeta">
                   <div className="cxc-cust-idname">
                     {editing
