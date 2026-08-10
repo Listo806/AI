@@ -513,13 +513,17 @@ export class CustomersAdminService {
 
     try {
       const { rows: emails } = await this.db.query(
-        `SELECT template, status, sent_at, opened_at, clicked_at, created_at
+        `SELECT template, subject, status, sent_at, opened_at, clicked_at, created_at
            FROM email_log WHERE user_id = $1
           ORDER BY COALESCE(sent_at, created_at) DESC LIMIT 30`,
         [id],
       );
       for (const e of emails) {
-        push('email', `Email: ${e.template} (${e.status || 'queued'})`, e.sent_at || e.created_at);
+        const label =
+          e.template === 'admin_custom'
+            ? `Email sent${e.subject ? `: "${e.subject}"` : ''} (${e.status || 'queued'})`
+            : `Email: ${e.template} (${e.status || 'queued'})`;
+        push('email', label, e.sent_at || e.created_at);
       }
     } catch {
       /* email_log optional */

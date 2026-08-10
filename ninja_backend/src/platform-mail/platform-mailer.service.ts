@@ -147,11 +147,32 @@ export class PlatformMailerService {
     return this.config.get('BILLING_URL') || `${this.appUrl()}/account/billing`;
   }
 
-  private sendgridConfig(): { key: string; from: string } | null {
+  private sendgridConfig(): { key: string; from: string; name?: string } | null {
     const key = this.config.get('SENDGRID_API_KEY');
     const from =
       this.config.get('SENDGRID_FROM_EMAIL') || this.config.get('EMAIL_FROM');
-    return key && from ? { key, from } : null;
+    const name = this.config.get('SENDGRID_FROM_NAME');
+    return key && from ? { key, from, name } : null;
+  }
+
+  // SendGrid requires from.email to be a BARE address. Our EMAIL_FROM is often
+  // stored in SMTP "Display Name <email@x>" form (accepted by nodemailer, but
+  // rejected by SendGrid as "the from email does not contain a valid address").
+  // Parse either shape into { email, name } so the same verified sender works on
+  // both providers, and default a friendly From name when none is given.
+  private parseSender(
+    raw: string,
+    fallbackName?: string,
+  ): { email: string; name?: string } | null {
+    const s = String(raw || '').trim();
+    if (!s) return null;
+    const m = s.match(/^\s*(.*?)\s*<\s*([^<>]+?)\s*>\s*$/);
+    const email = (m ? m[2] : s).trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+    const name = (m && m[1] ? m[1] : fallbackName || '')
+      .replace(/^["']|["']$/g, '')
+      .trim();
+    return name ? { email, name } : { email };
   }
 
   private buildSmtp() {
@@ -193,6 +214,17 @@ export class PlatformMailerService {
   }): Promise<{ ok: boolean; provider: string; error?: string }> {
     const sg = this.sendgridConfig();
     if (sg) {
+      const sender = this.parseSender(sg.from, sg.name || 'Cortexa AI CRM');
+      if (!sender) {
+        return {
+          ok: false,
+          provider: 'sendgrid',
+          error:
+            `invalid_sender: the configured sender ("${sg.from}") is not a valid email address. ` +
+            `Set SENDGRID_FROM_EMAIL to your verified bare sender (e.g. no-reply@cortexaaicrm.com) ` +
+            `and optionally SENDGRID_FROM_NAME for the display name.`,
+        };
+      }
       try {
         const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
           method: 'POST',
@@ -204,7 +236,7 @@ export class PlatformMailerService {
             personalizations: [
               { to: [{ email: opts.to }], custom_args: { token: opts.token } },
             ],
-            from: { email: sg.from },
+            from: sender,
             subject: opts.subject,
             content: [{ type: 'text/html', value: opts.html }],
             custom_args: { token: opts.token },
