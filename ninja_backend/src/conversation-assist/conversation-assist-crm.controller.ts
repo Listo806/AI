@@ -4,6 +4,8 @@ import { PaymentGuard } from '../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AiFeaturesGuard } from '../subscriptions/guards/ai-features.guard';
+import { FeatureAccessGuard } from '../plans/feature-access.guard';
+import { RequireFeature } from '../plans/require-feature.decorator';
 import { ConversationAssistEngineService } from './conversation-assist-engine.service';
 import { ConversationAssistTurnDto } from './dto/conversation-assist-turn.dto';
 import { SiteAssistState } from '../site-assist/site-assist.types';
@@ -18,7 +20,8 @@ export class ConversationAssistCrmController {
    * (no anonymous session DB). Use for in-app CRM assist or other authenticated surfaces.
    */
   @Post('assist-turn')
-  @UseGuards(AiFeaturesGuard)
+  @UseGuards(AiFeaturesGuard, FeatureAccessGuard)
+  @RequireFeature('advancedAiAgent')
   async assistTurn(@Body() dto: ConversationAssistTurnDto, @CurrentUser() user: { id: string }) {
     const sessionId = dto.sessionId?.trim() || `crm:${user.id}`;
     const state = dto.state as unknown as SiteAssistState;

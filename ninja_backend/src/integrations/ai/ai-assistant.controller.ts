@@ -11,6 +11,8 @@ import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { VaRestrictionGuard } from '../../auth/guards/va-restriction.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AiFeaturesGuard } from '../../subscriptions/guards/ai-features.guard';
+import { FeatureAccessGuard } from '../../plans/feature-access.guard';
+import { RequireFeature } from '../../plans/require-feature.decorator';
 
 @Controller('integrations/ai')
 @UseGuards(JwtAuthGuard, VaRestrictionGuard, PaymentGuard)
@@ -18,7 +20,8 @@ export class AiAssistantController {
   constructor(private readonly aiAssistantService: AiAssistantService) {}
 
   @Post('chat')
-  @UseGuards(AiFeaturesGuard)
+  @UseGuards(AiFeaturesGuard, FeatureAccessGuard)
+  @RequireFeature('advancedAiAgent')
   async chat(
     @Body() chatRequestDto: ChatRequestDto,
     @CurrentUser() user: any,
@@ -39,7 +42,8 @@ export class AiAssistantController {
   }
 
   @Post('analyze-lead')
-  @UseGuards(AiFeaturesGuard)
+  @UseGuards(AiFeaturesGuard, FeatureAccessGuard)
+  @RequireFeature('advancedAiAgent')
   async analyzeLead(
     @Body() analyzeLeadDto: AnalyzeLeadDto,
     @CurrentUser() user: any,
@@ -52,7 +56,8 @@ export class AiAssistantController {
   }
 
   @Post('suggest-properties')
-  @UseGuards(AiFeaturesGuard)
+  @UseGuards(AiFeaturesGuard, FeatureAccessGuard)
+  @RequireFeature('advancedAiAgent')
   async suggestProperties(
     @Body() suggestPropertiesDto: SuggestPropertiesDto,
     @CurrentUser() user: any,

@@ -12,6 +12,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } 
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { PaymentGuard } from '../../auth/guards/payment.guard';
 import { CrmAccessGuard } from '../../subscriptions/guards/crm-access.guard';
+import { FeatureAccessGuard } from '../../plans/feature-access.guard';
+import { RequireFeature } from '../../plans/require-feature.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { LeadsService } from '../leads.service';
 import { AILeadAnalysisService } from '../services/ai-lead-analysis.service';
@@ -19,7 +21,8 @@ import { MessageDraftService, MessageChannel } from '../services/message-draft.s
 
 @ApiTags('leads')
 @Controller('leads')
-@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard)
+@UseGuards(JwtAuthGuard, CrmAccessGuard, PaymentGuard, FeatureAccessGuard)
+@RequireFeature('advancedAiAgent')
 @ApiBearerAuth('JWT-auth')
 export class AILeadController {
   constructor(
