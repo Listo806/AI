@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { UserRole } from '../../users/entities/user.entity';
+import { normalizePlanId } from '../../plans/plan-config';
 
 /**
  * PaymentGuard — server-side WORKSPACE payment gate.
@@ -47,9 +48,9 @@ import { UserRole } from '../../users/entities/user.entity';
  */
 @Injectable()
 export class PaymentGuard implements CanActivate {
-  // Owner payment_status values that grant workspace access. Add 'trial' here to
-  // let trial users into the CRM.
-  private static readonly ALLOWED_STATUSES: string[] = ['active', 'paid'];
+  // Owner payment_status values that grant workspace access. 'free' is included
+  // because the Free tier has CRM access without paying.
+  private static readonly ALLOWED_STATUSES: string[] = ['active', 'paid', 'free'];
 
   // Roles that never pay and are always allowed through.
   private static readonly EXEMPT_ROLES: string[] = [
@@ -110,25 +111,25 @@ export class PaymentGuard implements CanActivate {
         return true;
       }
 
-      // Free tier: the workspace is explicitly on the Free plan, which has CRM
-      // access without any payment. Match the stored plan string exactly (not the
-      // normalize-to-free fallback) so a legacy row with a null plan is never
-      // mistaken for a paid-but-unpaid account and let in.
-      const ownerPlan = (row.selected_plan ?? row.plan ?? '')
-        .toString()
-        .trim()
-        .toLowerCase();
-      if (ownerPlan === 'free') {
-        return true;
-      }
-
       const status = (row.status ?? '').toString().trim().toLowerCase();
 
       if (PaymentGuard.ALLOWED_STATUSES.includes(status)) {
         return true;
       }
 
-      // Confident: the workspace owner exists and has not completed checkout.
+      // Free tier — including a brand-new signup still in the 'TRIAL'/'registered'/
+      // null limbo state before they pick a plan — has CRM access without paying.
+      // normalizePlanId maps 'free' AND any legacy/unknown/empty value to 'free'
+      // (matching the CrmAccessGuard entitlement layer), while a genuine PAID tier
+      // the owner selected but has NOT paid for normalizes to solo/business/scale
+      // and is still blocked below. This is what lets new Free users reach the CRM.
+      const ownerPlan = normalizePlanId(row.selected_plan ?? row.plan);
+      if (ownerPlan === 'free') {
+        return true;
+      }
+
+      // Confident: the workspace owner picked a PAID plan and has not completed
+      // checkout.
       throw new ForbiddenException(
         '🔒 Your subscription is not active. Please complete checkout to access the CRM.',
       );

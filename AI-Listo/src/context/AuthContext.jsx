@@ -94,7 +94,11 @@ export function AuthProvider({ children }) {
           // the checkout page instead of the dashboard so they can finish paying.
           const u = response.user || {};
           const paid = ['active', 'paid'].includes(String(u.paymentStatus || '').toLowerCase());
-          if (!paid && u.selectedPlan && (u.role === 'owner' || !u.role)) {
+          const isFreePlan = String(u.selectedPlan || '').toLowerCase() === 'free';
+          // Free tier has CRM access without paying — never bounce a Free owner to
+          // checkout (matches the DashboardLayout exemption). Only an owner who
+          // picked a PAID plan and hasn't paid is sent back to finish checkout.
+          if (!paid && !isFreePlan && u.selectedPlan && (u.role === 'owner' || !u.role)) {
             navigate(`/checkout?plan=${encodeURIComponent(u.selectedPlan)}`);
             return response;
           }
