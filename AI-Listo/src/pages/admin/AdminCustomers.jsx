@@ -1087,9 +1087,9 @@ function TeamSeatsPanel({ customerId }) {
         )}
         <div className="cxc-table-wrap">
           <table className="cxc-table cxc-team-table">
-            <thead><tr><th>User</th><th>Role</th><th>Seat</th><th>Last Active</th><th>Joined</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
+            <thead><tr><th>User</th><th>Role</th><th>Seat</th><th>Status</th><th>Last Active</th><th>Joined</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
             <tbody>
-              {members.length === 0 && <tr><td colSpan={6} className="cxc-muted" style={{ padding: 16 }}>No team members yet.</td></tr>}
+              {members.length === 0 && <tr><td colSpan={7} className="cxc-muted" style={{ padding: 16 }}>No team members yet.</td></tr>}
               {members.map((m) => (
                 <tr key={m.id}>
                   <td>
@@ -1105,9 +1105,10 @@ function TeamSeatsPanel({ customerId }) {
                   </td>
                   <td>
                     {m.isOwner ? <span className="cxc-badge active">Seat</span> : (
-                      <button className={`cxc-btn cxc-btn-sm ${m.seatAssigned ? "" : "cxc-btn-ghost"}`} disabled={busy} onClick={() => act(() => setCustomerMemberSeat(customerId, m.id, !m.seatAssigned))}>{m.seatAssigned ? "Assigned" : "Assign seat"}</button>
+                      <button className={`cxc-btn cxc-btn-sm ${m.seatAssigned ? "" : "cxc-btn-ghost"}`} disabled={busy} onClick={() => act(() => setCustomerMemberSeat(customerId, m.id, !m.seatAssigned))}>{m.seatAssigned ? "Remove seat" : "Assign seat"}</button>
                     )}
                   </td>
+                  <td><span className={`cxc-badge ${m.status === "active" ? "active" : ""}`}>{m.status ? m.status.charAt(0).toUpperCase() + m.status.slice(1) : "—"}</span></td>
                   <td>{m.lastActive ? fmtDate(m.lastActive) : "—"}</td>
                   <td>{m.joinedAt ? fmtDate(m.joinedAt) : "—"}</td>
                   <td style={{ textAlign: "right" }}>
