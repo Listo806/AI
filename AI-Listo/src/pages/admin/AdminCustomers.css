@@ -449,6 +449,9 @@
 .cxc-cust-content { flex: 1; min-width: 0; padding: 16px 18px; }
 .cxc-cust-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .cxc-cust-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+/* Right column of the top row: Quick Actions card stacked over its own Customer Notes card */
+.cxc-cust-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.cxc-cust-notes { flex: 1; }
 .cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 15px; background: #fff; }
 .cxc-block-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }
 .cxc-block-title--link { display: flex; align-items: center; justify-content: space-between; }
@@ -467,12 +470,19 @@
 .cxc-rail-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px #dbeafe; }
 .cxc-rail-input--name { font-weight: 700; font-size: 14px; }
 
-/* Account overview rows */
+/* Team & Seats tab */
+.cxc-seat-stat { text-align: center; }
+.cxc-seat-stat .cxc-block-title { margin-bottom: 6px; }
+.cxc-seat-num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.cxc-team-table { table-layout: auto; }
+.cxc-team-table td { vertical-align: middle; }
+.cxc-team-table .cxc-select { padding: 5px 8px; font-size: 12px; }
+
+/* Account overview rows — clean key/value list, no table-style dividers */
 .cxc-ov-row {
-  display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 10px;
-  padding: 7px 0; border-bottom: 1px solid #f4f6fa; font-size: 13px;
+  display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 10px;
+  padding: 6px 0; font-size: 13px;
 }
-.cxc-ov-row:last-child { border-bottom: none; }
 .cxc-ov-row .k { color: #64748b; }
 .cxc-ov-row .v { color: #0f172a; font-weight: 600; text-align: left; word-break: break-word; }
 

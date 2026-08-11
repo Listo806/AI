@@ -266,6 +266,40 @@ export async function sendCustomerEmail(id, { subject, message } = {}) {
   });
 }
 
+// ── Team & Seats ──────────────────────────────────────────────────────────
+export async function getCustomerTeam(id) {
+  return apiClient.request(`/admin/customers-hub/${id}/team`);
+}
+export async function addCustomerTeamMember(id, payload = {}) {
+  return apiClient.request(`/admin/customers-hub/${id}/team/members`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+export async function changeCustomerMemberRole(id, userId, role) {
+  return apiClient.request(`/admin/customers-hub/${id}/team/members/${userId}/role`, {
+    method: "POST",
+    body: JSON.stringify({ role }),
+  });
+}
+export async function setCustomerMemberSeat(id, userId, assigned) {
+  return apiClient.request(`/admin/customers-hub/${id}/team/members/${userId}/seat`, {
+    method: "POST",
+    body: JSON.stringify({ assigned }),
+  });
+}
+export async function removeCustomerTeamMember(id, userId) {
+  return apiClient.request(`/admin/customers-hub/${id}/team/members/${userId}`, {
+    method: "DELETE",
+  });
+}
+export async function transferCustomerOwnership(id, newOwnerId) {
+  return apiClient.request(`/admin/customers-hub/${id}/team/transfer-ownership`, {
+    method: "POST",
+    body: JSON.stringify({ newOwnerId }),
+  });
+}
+
 export async function deactivateCustomer(id) {
   return apiClient.request(`/admin/customers-hub/${id}/deactivate`, {
     method: "POST",
