@@ -84,10 +84,10 @@ export default function Sidebar({
       label: "Sales Workspace",
       icon: "chart-no-axes-combined",
       tone: "purple",
-      description: "Close more deals. Manage every stage from quote to payment.",
-      capabilities: ["Quotes & Proposals","Deal Revenue Tracking","Orders & Contracts","Sales Performance","Invoicing & Payments","Discounts & Approvals","Returns & Credits","Document Management","Sales Commissions","Advanced Reports"],
+      description: "Run your entire sales operation from quote to revenue in one connected workspace.",
+      capabilities: ["Quotes & Proposals","Customers","Orders & Contracts","Invoices & Payments","Sales Commissions","Returns & Credits","Discounts & Approvals","Document Management","Sales Reporting","Revenue Tracking"],
       perfectFor: ["Sales Teams","B2B Companies","Distributors","Agencies","Service Providers"],
-      benefits: [["circle-dollar-sign","Complete Sales Cycle","From quote to cash in one place"],["trending-up","Increase Revenue","Better visibility and faster conversions"],["shield-check","Team Alignment","Collaborate and win as one team"]],
+      benefits: [["circle-dollar-sign","COMPLETE SALES OPERATIONS","Manage quotes, proposals, orders, contracts, invoices, commissions and the operational side of your sales cycle from one workspace."],["trending-up","REVENUE VISIBILITY","See the activity behind your revenue—from customer orders and invoices to commissions, returns and sales performance."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, analytics and CRM data."]],
       price: 97,
       path: "/dashboard/sales-workspace",
     },
@@ -97,10 +97,10 @@ export default function Sidebar({
       label: "Insurance Workspace",
       icon: "shield-check",
       tone: "blue",
-      description: "Manage prospects, policies, renewals, and client follow-ups in one connected workspace.",
-      capabilities: ["Policy Pipeline","Renewal Tracking","Quote Follow-ups","Client Documents","Commission Tracking","Automated Reminders"],
-      perfectFor: ["Insurance Agencies","Brokers","Independent Agents"],
-      benefits: [["shield","Policy Visibility","Keep every policy and renewal organized"],["bell-ring","Never Miss Renewals","Automated reminders for key dates"],["users","Client Retention","Stay connected throughout the lifecycle"]],
+      description: "Manage your entire insurance operation—from quote to policy, renewal, claim, and commission—in one connected workspace.",
+      capabilities: ["Policies","Quotes","Claims","Renewals","Carriers","Commissions","Client & Policy Documents","Coverage & Premium Tracking","Renewal Management","Insurance Reporting"],
+      perfectFor: ["Insurance Agencies","Independent Agents","Brokers","Insurance Teams","Multi-Carrier Agencies"],
+      benefits: [["shield","COMPLETE POLICY OPERATIONS","Manage quotes, policies, carriers, coverage, premiums, renewals and claims from one organized workspace."],["bell-ring","RENEWAL & CLIENT VISIBILITY","Stay ahead of upcoming renewals, policy activity, claims and important client dates without losing track of opportunities."],["users","COMMISSION TRACKING","Track commissions across policies, agents and carriers with clear visibility into insurance revenue."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics and CRM data."]],
       price: 97,
       path: "/dashboard/insurance-workspace",
     },
@@ -110,10 +110,10 @@ export default function Sidebar({
       label: "Financial Services",
       icon: "landmark",
       tone: "green",
-      description: "Organize client relationships, opportunities, documents, and follow-up workflows.",
-      capabilities: ["Client Portfolio View","Opportunity Tracking","Document Workflows","Task Automation","Client Follow-ups","Performance Reports"],
-      perfectFor: ["Advisors","Consultants","Financial Teams"],
-      benefits: [["landmark","Client Organization","Centralize accounts and opportunities"],["file-check-2","Better Compliance Flow","Keep documents and tasks structured"],["bar-chart-3","Performance Insight","See activity and growth at a glance"]],
+      description: "Manage clients, applications, accounts, transactions, documents, and financial workflows in one connected workspace.",
+      capabilities: ["Client Management","Applications","Accounts","Approvals & Reviews","Transactions","Investment Activity","Advisor Workflows","Document Management","Commission Tracking","Financial Reporting"],
+      perfectFor: ["Financial Advisors","Financial Services Teams","Consultants","Brokers","Wealth & Client Management Teams"],
+      benefits: [["landmark","COMPLETE CLIENT OPERATIONS","Manage clients, applications, accounts, approvals, transactions, documents, and ongoing financial workflows from one organized workspace."],["file-check-2","APPLICATION & ACCOUNT VISIBILITY","Track applications, account activity, reviews, approvals, and important client actions without losing visibility across your operation."],["bar-chart-3","FINANCIAL WORKFLOW MANAGEMENT","Keep advisors, client activity, documents, commissions, and operational workflows organized and connected."],["trending-up","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."]],
       price: 97,
     },
     {
@@ -122,10 +122,10 @@ export default function Sidebar({
       label: "E-Commerce",
       icon: "shopping-cart",
       tone: "orange",
-      description: "Connect customers, orders, support, and revenue activity in one workspace.",
-      capabilities: ["Order Management","Customer Profiles","Abandoned Follow-up","Support Tracking","Revenue Reporting","Customer Segments"],
-      perfectFor: ["Online Stores","DTC Brands","Retail Teams"],
-      benefits: [["shopping-bag","Order Visibility","Keep customer and order context together"],["refresh-cw","Repeat Revenue","Build smarter follow-up workflows"],["pie-chart","Customer Insight","Understand buying patterns faster"]],
+      description: "Manage customers, subscriptions, billing, payments, and recurring revenue in one connected workspace.",
+      capabilities: ["Customers & Subscriptions","Plans & Pricing","Billing Calendar","Recurring Payments","Payment Status Tracking","Failed Payments & Retries","Refunds & Cancellations","Seats & Users","Customer Lifetime Value","Revenue & Billing Reporting","Payment Gateway Integrations"],
+      perfectFor: ["Subscription Businesses","E-Commerce Companies","SaaS Businesses","Membership Businesses","Recurring Revenue Companies"],
+      benefits: [["shopping-bag","COMPLETE SUBSCRIPTION OPERATIONS","Manage customers, subscriptions, plans, billing status, payments, seats, and account activity from one organized workspace."],["refresh-cw","BILLING CALENDAR","See upcoming billing, successful payments, failed payments, retries, past-due accounts, and scheduled billing activity from one powerful calendar."],["pie-chart","RECURRING REVENUE CONTROL","Track subscription activity, customer lifetime value, payment performance, cancellations, and recurring revenue with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity."]],
       price: 97,
     },
     {
@@ -134,10 +134,10 @@ export default function Sidebar({
       label: "Customer Service",
       icon: "headphones",
       tone: "cyan",
-      description: "Give support teams one place to manage customers, conversations, and resolutions.",
-      capabilities: ["Support Queue","Conversation History","Resolution Tracking","Team Assignment","Customer Context","Service Reports"],
-      perfectFor: ["Support Teams","Service Businesses","Operations"],
-      benefits: [["headphones","Faster Support","Keep every customer conversation visible"],["messages-square","Connected Context","CRM and support history stay together"],["badge-check","Better Resolution","Track ownership and outcomes clearly"]],
+      description: "Manage customer support, tickets, escalations, resolutions, and service operations in one connected workspace.",
+      capabilities: ["Tickets & Cases","Support Inbox","Customer Support History","Agent Assignment","Priority & Status Management","SLA Tracking","Escalations","AI-Assisted Support","Knowledge Base","Customer Satisfaction","Service Automation","Support Reporting"],
+      perfectFor: ["Customer Service Teams","Support Teams","Service Businesses","Operations Teams","Client Success Teams"],
+      benefits: [["headphones","COMPLETE SUPPORT OPERATIONS","Manage tickets, cases, assignments, priorities, escalations, and resolutions from one organized workspace."],["messages-square","FASTER RESOLUTION","Give your team the customer history, conversations, support activity, and AI assistance they need to resolve issues faster."],["badge-check","SERVICE PERFORMANCE","Track response times, SLA performance, escalations, resolutions, customer satisfaction, and team activity with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data."]],
       price: 97,
     },
     {
@@ -146,10 +146,10 @@ export default function Sidebar({
       label: "Marketing Workspace",
       icon: "megaphone",
       tone: "pink",
-      description: "Plan campaigns, follow leads, and connect marketing activity directly to revenue.",
-      capabilities: ["Campaign Tracking","Lead Attribution","Audience Segments","Automated Nurture","Content Workflow","Revenue Attribution"],
-      perfectFor: ["Marketing Teams","Agencies","Growth Teams"],
-      benefits: [["megaphone","Campaign Clarity","See what is running and what converts"],["target","Better Targeting","Use CRM context to improve outreach"],["badge-dollar-sign","Revenue Attribution","Connect campaigns to pipeline results"]],
+      description: "Plan, launch, automate, and measure your marketing from campaign to revenue in one connected workspace.",
+      capabilities: ["Campaign Management","Audience Segmentation","Email & SMS Campaigns","Forms & Landing Pages","Marketing Automation","Customer Journeys","Lead Attribution","Retargeting Workflows","Content Management","Campaign Analytics","Revenue Attribution","Marketing Reporting"],
+      perfectFor: ["Marketing Teams","Agencies","Growth Teams","Sales & Marketing Teams","Service Businesses"],
+      benefits: [["megaphone","COMPLETE MARKETING OPERATIONS","Build and manage campaigns, audiences, forms, messaging, automation, and customer journeys from one organized workspace."],["target","AUTOMATED CUSTOMER JOURNEYS","Create targeted follow-up and nurture workflows that move prospects through the customer journey with less manual work."],["badge-dollar-sign","REVENUE ATTRIBUTION","Connect campaigns, leads, conversions, pipeline activity, and revenue so you can see what marketing is actually producing."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, contacts, pipeline, AI, automation, WhatsApp, analytics, and CRM data."]],
       price: 97,
     },
     {
@@ -158,10 +158,10 @@ export default function Sidebar({
       label: "Projects Workspace",
       icon: "briefcase-business",
       tone: "indigo",
-      description: "Coordinate projects, customers, tasks, deadlines, and delivery from one place.",
-      capabilities: ["Project Pipelines","Task Tracking","Milestones","Client Collaboration","Files & Notes","Delivery Reports"],
-      perfectFor: ["Agencies","Consultants","Delivery Teams"],
-      benefits: [["briefcase-business","Project Control","Track delivery from kickoff to completion"],["list-checks","Clear Ownership","Keep tasks and milestones accountable"],["users-round","Client Alignment","Connect project work to customer context"]],
+      description: "Manage client projects, tasks, milestones, deliverables, deadlines, and delivery from one connected workspace.",
+      capabilities: ["Client Projects","Tasks & Assignments","Milestones","Deliverables","Project Deadlines","Files & Documents","Time & Expense Tracking","Project Budgets","Client Delivery Status","Team Assignments","Project Reporting","Delivery Performance"],
+      perfectFor: ["Agencies","Consultants","Professional Services","Client Delivery Teams","Service Businesses"],
+      benefits: [["briefcase-business","COMPLETE CLIENT DELIVERYCOMPLETE CLIENT DELIVERY","Manage projects from kickoff through final delivery with tasks, milestones, deliverables, deadlines, files, and client activity organized in one workspace."],["list-checks","PROJECT VISIBILITY","See project status, progress, priorities, deadlines, budgets, assignments, and delivery activity without losing track of the customer relationship."],["users-round","ON-TIME DELIVERY","Keep teams accountable, identify delays earlier, and manage every client deliverable through completion."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, team data, analytics, and CRM activity."]],
       price: 97,
     },
     {
@@ -170,28 +170,34 @@ export default function Sidebar({
       label: "Real Estate Workspace",
       icon: "building-2",
       tone: "emerald",
-      description: "Manage properties, listings, buyers, sellers, opportunities, and real estate workflows from one connected workspace.",
+      description: "Manage properties, buyers, sellers, showings, offers, transactions, and commissions in one connected real estate workspace.",
       capabilities: [
-        "Property Management",
-        "Listings & Inventory",
-        "Buyer & Seller Tracking",
-        "Property-to-Lead Matching",
-        "Deal Pipeline",
-        "Property Activity Timeline",
-        "AI Property Insights",
+        "Properties & Listings",
+        "Buyers & Sellers",
+        "AI Property-to-Lead Matching",
+        "Showings",
+        "Offers",
+        "Transactions",
+        "Documents",
+        "Commission Tracking",
         "Listing Optimization",
+        "AI Property Insights",
+        "Property Activity",
+        "Real Estate Reporting",
       ],
       perfectFor: [
+        "Real Estate Agents",
+        "Brokers",
         "Real Estate Teams",
-        "Agents & Brokers",
         "Investors",
         "Wholesalers",
         "Property Businesses",
       ],
       benefits: [
-        ["building-2", "Connected Inventory", "Keep properties, leads, and deals connected"],
-        ["search-check", "Faster Matching", "Match the right properties with the right leads"],
-        ["chart-no-axes-combined", "Revenue Visibility", "Track property activity and pipeline performance"],
+        ["building-2", "COMPLETE REAL ESTATE OPERATIONS", "Manage properties, listings, buyers, sellers, showings, offers, transactions, documents, and commissions from one organized workspace."],
+        ["search-check", "SMART PROPERTY MATCHING", "Connect the right properties with the right buyers and leads using your existing Cortexa CRM data and AI-powered matching."],
+        ["chart-no-axes-combined", "FROM LISTING TO COMMISSION", "Follow the complete real estate lifecycle from property and lead matching through showings, offers, transactions, and commissions."],
+        ["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."],
       ],
       price: 97,
       path: "/dashboard/properties",
@@ -202,10 +208,10 @@ export default function Sidebar({
       label: "Team Workspace",
       icon: "users-round",
       tone: "violet",
-      description: "Collaborate across your CRM with shared ownership, roles, permissions, and team visibility.",
-      capabilities: ["Team Members","Roles & Permissions","Shared Pipeline","Team Activity","Seat Management","Performance Visibility"],
-      perfectFor: ["Sales Teams","Operations","Growing Businesses"],
-      benefits: [["users-round","Shared Workspace","Keep everyone connected to the same CRM"],["key-round","Role Control","Manage access with clear permissions"],["chart-spline","Team Visibility","Understand activity and performance"]],
+      description: "Plan, assign, collaborate, and manage your team’s work from one connected workspace.",
+      capabilities: ["Projects","Kanban Boards","Tasks & Assignments","My Tasks","Team Calendar","Deadlines & Priorities","Time Tracking","Workload Visibility","Files & Documents","Comments & @Mentions","Team Collaboration","Roles & Permissions","Activity Tracking","Team Reporting","AI-Assisted Workflows"],
+      perfectFor: ["Sales Teams","Operations Teams","Project Teams","Agencies","Service Businesses","Growing Companies"],
+      benefits: [["users-round","COMPLETE TEAM OPERATIONS","Manage internal projects, tasks, boards, assignments, deadlines, priorities, files, and team activity from one organized workspace."],["key-round","WORK MANAGEMENT","Give every team member clear ownership of their work with tasks, priorities, deadlines, calendars, workload visibility, and time tracking."],["chart-spline","CONNECTED COLLABORATION","Keep projects, tasks, comments, files, approvals, activity, and team communication connected to the work being completed."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa CRM, customers, contacts, AI, automation, analytics, and business data."]],
       path: "/dashboard/team",
     },
   ];
@@ -812,8 +818,7 @@ export default function Sidebar({
               <div>
                 <h3>Cortexa Workspaces</h3>
                 <p>
-                  Specialized business environments designed to help you
-                  sell, serve and scale more effectively.
+                  Build your AI revenue team with powerful business environments designed around the way you operate.
                 </p>
               </div>
             </div>
@@ -821,7 +826,7 @@ export default function Sidebar({
             <div className="crm-workspace-flyout-points">
               <span>
                 <i data-lucide="rocket"></i>
-                Purpose-built for your industry
+                Built for specialized operations
               </span>
               <span>
                 <i data-lucide="lock-keyhole"></i>
@@ -829,13 +834,16 @@ export default function Sidebar({
               </span>
               <span>
                 <i data-lucide="shield-check"></i>
-                Secure, scalable, and powerful
+                Connected to your Cortexa CRM
               </span>
               <span>
                 <i data-lucide="zap"></i>
-                Always connected to your CRM
+                AI-powered across your business
               </span>
             </div>
+            <p className="caption">
+                One platform. More capabilities.
+              </p>
           </div>
 
           <div className="crm-workspace-detail-card">
