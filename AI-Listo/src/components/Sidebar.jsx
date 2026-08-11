@@ -89,6 +89,7 @@ export default function Sidebar({
       perfectFor: ["Sales Teams","B2B Companies","Distributors","Agencies","Service Providers"],
       benefits: [["circle-dollar-sign","Complete Sales Cycle","From quote to cash in one place"],["trending-up","Increase Revenue","Better visibility and faster conversions"],["shield-check","Team Alignment","Collaborate and win as one team"]],
       price: 97,
+      path: "/dashboard/sales-workspace",
     },
     {
       id: "insurance",

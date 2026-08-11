@@ -80,6 +80,7 @@ import AIActivityLogs from "./pages/ai-center/AIActivityLogs";
 import AIAssistant from "./pages/ai-assistant/AIAssistant";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
+import SalesWorkspace from "./pages/sales/SalesWorkspace";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
@@ -381,6 +382,9 @@ function AppRoutes() {
             </FeatureRoute>
           }
         />
+
+        {/* Sales Workspace */}
+        <Route path="sales-workspace" element={<SalesWorkspace />} />
 
         {/* Team Route (paid: team workspace) */}
         <Route
