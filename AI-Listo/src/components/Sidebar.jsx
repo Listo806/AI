@@ -908,7 +908,7 @@ export default function Sidebar({
 
               <div className="crm-workspace-divider" />
 
-              <h4>Perfect For</h4>
+              <h4>BUILT FOR</h4>
 
               <div className="crm-workspace-tags">
                 {hoveredWorkspace.perfectFor.map((item) => (
