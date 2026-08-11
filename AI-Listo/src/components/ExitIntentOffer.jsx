@@ -718,7 +718,6 @@ export default function ExitIntentOffer() {
             max-height: 94vh;
             overflow-y: auto;
             padding: 30px 22px 18px;
-            border: 1px solid rgba(255,255,255,.05);
             border-radius: 18px;
             background: linear-gradient(180deg, #242424 0%, #1d1d1d 100%);
             color: #fff;
