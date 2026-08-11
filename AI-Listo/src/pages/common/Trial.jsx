@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { currentSiteLanguage } from "../../i18n/currentLanguage";
 import {
   ArrowRight,
+  Box,
   Eye,
   EyeOff,
   LockKeyhole,
@@ -25,6 +26,10 @@ const t = {
   en: {
     title: "CREATE YOUR ACCOUNT",
     subtitle: "Get started with your free trial.",
+    mobileTitle: "Create Your Account",
+    mobileSubtitle: "Get Started with Your Free Trial.",
+    mobileContinueBtn: "Continue to Choose Your Plan",
+    mobileSecurity: "Secure checkout powered by Paddle",
     placeholders: {
       name: "Full Name",
       email: "Email Address",
@@ -43,6 +48,10 @@ const t = {
   es: {
     title: "CREA TU CUENTA",
     subtitle: "Comienza con tu prueba gratuita.",
+    mobileTitle: "Crea Tu Cuenta",
+    mobileSubtitle: "Comienza con Tu Prueba Gratuita.",
+    mobileContinueBtn: "Continuar para Elegir Tu Plan",
+    mobileSecurity: "Pago seguro procesado por Paddle",
     placeholders: {
       name: "Nombre completo",
       email: "Correo electrónico",
@@ -61,6 +70,10 @@ const t = {
   pt: {
     title: "CRIE SUA CONTA",
     subtitle: "Comece com seu teste gratuito.",
+    mobileTitle: "Crie Sua Conta",
+    mobileSubtitle: "Comece com Seu Teste Grátis.",
+    mobileContinueBtn: "Continuar para Escolher Seu Plano",
+    mobileSecurity: "Pagamento seguro processado pela Paddle",
     placeholders: {
       name: "Nome completo",
       email: "Endereço de e-mail",
@@ -76,7 +89,6 @@ const t = {
     },
   },
 };
-
 
 export default function StartTrial() {
   const navigate = useNavigate();
@@ -205,9 +217,19 @@ export default function StartTrial() {
   return (
     <main className="trial-v3-page">
       <section className="trial-v3-card">
+        <div className="trial-v3-mobile-brand" aria-hidden="true">
+          <Box size={52} strokeWidth={2.2} />
+        </div>
+
         <header className="trial-v3-header">
-          <h1>{tr.title}</h1>
-          <p>{tr.subtitle}</p>
+          <h1>
+            <span className="trial-v3-desktop-copy">{tr.title}</span>
+            <span className="trial-v3-mobile-copy">{tr.mobileTitle}</span>
+          </h1>
+          <p>
+            <span className="trial-v3-desktop-copy">{tr.subtitle}</span>
+            <span className="trial-v3-mobile-copy">{tr.mobileSubtitle}</span>
+          </p>
         </header>
 
         <form className="trial-v3-form" onSubmit={handleSubmit}>
@@ -286,31 +308,30 @@ export default function StartTrial() {
               <button
                 type="button"
                 className="trial-v3-password-toggle"
-                onClick={() =>
-                  setShowPassword((current) => !current)
-                }
-                aria-label={
-                  showPassword ? "Hide password" : "Show password"
-                }
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? (
-                  <EyeOff size={27} />
-                ) : (
-                  <Eye size={27} />
-                )}
+                {showPassword ? <EyeOff size={27} /> : <Eye size={27} />}
               </button>
             </label>
           </div>
 
-          <button
-            type="submit"
-            className="trial-v3-submit"
-            disabled={loading}
-          >
+          <button type="submit" className="trial-v3-submit" disabled={loading}>
             <span className="trial-v3-submit-main">
               <LockKeyhole size={27} strokeWidth={2} />
               <strong>
-                {loading ? tr.loadingBtn : tr.continueBtn}
+                {loading ? (
+                  tr.loadingBtn
+                ) : (
+                  <>
+                    <span className="trial-v3-desktop-copy">
+                      {tr.continueBtn}
+                    </span>
+                    <span className="trial-v3-mobile-copy">
+                      {tr.mobileContinueBtn}
+                    </span>
+                  </>
+                )}
               </strong>
             </span>
 
@@ -323,7 +344,10 @@ export default function StartTrial() {
 
           <div className="trial-v3-security">
             <ShieldCheck size={30} strokeWidth={2} />
-            <p>{tr.security}</p>
+            <p>
+              <span className="trial-v3-desktop-copy">{tr.security}</span>
+              <span className="trial-v3-mobile-copy">{tr.mobileSecurity}</span>
+            </p>
           </div>
         </form>
       </section>
