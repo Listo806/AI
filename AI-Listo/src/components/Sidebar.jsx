@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { usePlan } from "../context/PlanContext";
 import { LockBadge } from "./FeatureLock";
+import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
 import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
@@ -280,7 +281,16 @@ export default function Sidebar({
                 className={({ isActive }) =>
                   `crm-nav-link ${isActive ? "active" : ""}`
                 }
-                onClick={onClose}
+                onClick={(e) => {
+                  // A locked (add-on) item opens the one universal Feature
+                  // Add-Ons modal focused on the add-on that unlocks it, instead
+                  // of navigating into a gated page.
+                  if (isLocked(item)) {
+                    e.preventDefault();
+                    openFeatureAddOns(FEATURE_TO_ADDON[item.feature] || null);
+                  }
+                  if (onClose) onClose();
+                }}
                 end={
                   item.path === "/dashboard/home" ||
                   item.path === "/vacation-rentals/search"
