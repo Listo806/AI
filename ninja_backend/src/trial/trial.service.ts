@@ -1,5 +1,10 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { AuthService } from '../auth/auth.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
@@ -228,13 +233,21 @@ export class TrialService {
         [teamId, newUserId],
       );
 
-      // Queue the abandoned-signup email sequence for a new PAID-tier signup that
-      // has not checked out yet. Free accounts are already active and did not
-      // abandon a checkout, so they are not enrolled. Best-effort: sending is
-      // gated by ABANDONED_SIGNUP_EMAILS_ENABLED and canceled the moment they pay.
-      if (!isFree) {
+      // Lifecycle email at signup, by state. A PAID-tier signup that has not
+      // checked out yet gets the abandoned-checkout sequence; a NO-PLAN signup
+      // (account created but no plan chosen) gets the single Free-plan recovery
+      // email. Free accounts are already active and get neither. Both are
+      // best-effort, gated by their own enable flags, and canceled the moment the
+      // account activates a plan.
+      if (knownPaid) {
         try {
           await this.mailer.scheduleAbandonedSequence(newUserId, email, lang);
+        } catch (_e) {
+          /* non-fatal */
+        }
+      } else if (noPlan) {
+        try {
+          await this.mailer.scheduleRecoveryEmail(newUserId, email, lang);
         } catch (_e) {
           /* non-fatal */
         }
@@ -299,5 +312,85 @@ export class TrialService {
       [userId, legacyKey, billingCycle],
     );
     return { success: true, plan: legacyKey, billingCycle, free: false };
+  }
+
+  // Validate a single-use recovery token and, only if the EXISTING account still
+  // has no plan, activate Free Forever on it. Never overwrites an active/paid (or
+  // already-Free) plan — in that case it just returns the account so the caller can
+  // sign the user in and send them to the dashboard. The token is hashed in the DB,
+  // time-limited, and consumed on first use (single-purpose).
+  async recoverFreePlan(rawToken: string): Promise<any> {
+    const raw = String(rawToken || '').trim();
+    if (!raw) {
+      throw new BadRequestException('This activation link is invalid or has expired.');
+    }
+    // Guarantees the recovery_* columns exist before we read them.
+    await this.mailer.ensureSchema();
+
+    const hash = crypto.createHash('sha256').update(raw).digest('hex');
+    // Atomically validate AND consume the token in ONE statement, so the link is
+    // truly single-use even under concurrent clicks: only the first request clears
+    // the token and gets the row; any replay (or a second simultaneous click)
+    // matches nothing and is rejected.
+    const { rows } = await this.db.query(
+      `UPDATE users
+          SET recovery_token = NULL, recovery_token_expires = NULL, updated_at = NOW()
+        WHERE recovery_token = $1
+          AND recovery_token_expires IS NOT NULL
+          AND recovery_token_expires > NOW()
+          AND deleted_at IS NULL
+        RETURNING id, payment_status, checkout_status, selected_plan`,
+      [hash],
+    );
+    const user = rows[0];
+    if (!user) {
+      throw new BadRequestException('This activation link is invalid or has expired.');
+    }
+
+    const ps = String(user.payment_status || '').toLowerCase();
+    const cs = String(user.checkout_status || '').toLowerCase();
+    // "Has a plan" — matches the recovery worker's cancel guard exactly, so a
+    // chosen plan (even a paid one selected but not yet paid) is never silently
+    // overwritten to Free. The legitimate recovery target has selected_plan = NULL.
+    const alreadyHadPlan =
+      ps === 'free' ||
+      ps === 'active' ||
+      ps === 'paid' ||
+      cs === 'free' ||
+      cs === 'paid' ||
+      !!String(user.selected_plan || '').trim();
+
+    // SAFETY: never overwrite an existing plan (Free or paid).
+    if (!alreadyHadPlan) {
+      // Still no plan → activate Free Forever on the existing account.
+      await this.db.query(
+        `UPDATE users
+            SET selected_plan = 'free', billing_cycle = NULL,
+                payment_status = 'free', checkout_status = 'free',
+                plan_status = 'active',
+                recovery_activated_at = NOW(),
+                recovery_source = 'free_plan_recovery_email',
+                updated_at = NOW()
+          WHERE id = $1`,
+        [user.id],
+      );
+      // Void any still-pending lifecycle emails for this now-Free account.
+      try {
+        await this.mailer.cancelScheduled(user.id);
+      } catch (_e) {
+        /* non-fatal */
+      }
+    }
+
+    // Sign the user in through the normal session flow (same as signup).
+    const session = await this.authService.loginById(user.id);
+    return {
+      success: true,
+      userId: user.id,
+      activated: !alreadyHadPlan,
+      alreadyHadPlan,
+      redirect: '/dashboard',
+      ...session,
+    };
   }
 }

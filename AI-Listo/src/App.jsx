@@ -32,6 +32,7 @@ import SignUpDev from "./pages/auth/SignUpDev";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AcceptInvite from "./pages/team/AcceptInvite";
+import ActivateFree from "./pages/common/ActivateFree";
 
 import Dashboard from "./pages/dashboard/Dashboard";
 import Leads from "./pages/leads/LeadsList";
@@ -273,6 +274,9 @@ function AppRoutes() {
 
       {/* Team invitation accept (public, locale-independent, like /reset-password) */}
       <Route path="/accept-invite" element={<AcceptInvite />} />
+
+      {/* Free-plan recovery-email CTA (public; secure single-use token in the URL) */}
+      <Route path="/activate-free" element={<ActivateFree />} />
 
       <Route path="/internal/sign-in" element={<SignIn variant="internal" />} />
       <Route path="/team/sign-in" element={<SignIn variant="internal" />} />

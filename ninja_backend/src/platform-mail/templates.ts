@@ -20,7 +20,8 @@ export type TemplateName =
   | 'abandoned_2'
   | 'abandoned_3'
   | 'payment_failed'
-  | 'subscription_canceled';
+  | 'subscription_canceled'
+  | 'recovery';
 export type MailLang = 'en' | 'es' | 'pt';
 
 export interface RenderedEmail {
@@ -301,6 +302,47 @@ const COPY: Record<TemplateName, Record<MailLang, Copy>> = {
       ],
       cta: 'Tentar novamente',
       support: 'Precisa de ajuda? Fale conosco em',
+    },
+  },
+  // Incomplete-registration recovery: sent ~1-2 min after an account is created
+  // with NO plan chosen and still has none. The CTA is a secure single-use link
+  // that activates Free Forever on the existing account (never a new signup).
+  recovery: {
+    en: {
+      subject: 'Your Cortexa account is ready — activate Free Forever',
+      heading: 'Your account is ready',
+      intro: [
+        "You're almost there.",
+        "Your Cortexa account has been created, but you haven't finished activating your plan.",
+        'Activate your Free Forever plan and start using Cortexa with no monthly subscription required.',
+        'Your Free plan includes access to the core Cortexa CRM, WhatsApp, and limited AI capabilities so you can start working immediately.',
+        'No credit card required.',
+      ],
+      cta: 'Activate My Free Plan',
+    },
+    es: {
+      subject: 'Tu cuenta de Cortexa está lista: activa el plan Free Forever',
+      heading: 'Tu cuenta está lista',
+      intro: [
+        'Ya casi terminas.',
+        'Tu cuenta de Cortexa fue creada, pero aún no has activado tu plan.',
+        'Activa tu plan Free Forever y empieza a usar Cortexa sin suscripción mensual.',
+        'Tu plan Free incluye acceso al CRM principal de Cortexa, WhatsApp y capacidades limitadas de IA para que empieces a trabajar de inmediato.',
+        'No se requiere tarjeta de crédito.',
+      ],
+      cta: 'Activar mi plan Free',
+    },
+    pt: {
+      subject: 'Sua conta Cortexa está pronta: ative o plano Free Forever',
+      heading: 'Sua conta está pronta',
+      intro: [
+        'Você está quase lá.',
+        'Sua conta Cortexa foi criada, mas você ainda não ativou seu plano.',
+        'Ative seu plano Free Forever e comece a usar a Cortexa sem assinatura mensal.',
+        'Seu plano Free inclui acesso ao CRM principal da Cortexa, WhatsApp e recursos limitados de IA para você começar a trabalhar imediatamente.',
+        'Não é necessário cartão de crédito.',
+      ],
+      cta: 'Ativar meu plano Free',
     },
   },
   subscription_canceled: {

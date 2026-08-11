@@ -452,6 +452,10 @@ export class CustomersAdminService {
     if (key === 'solo') return `${eff} IN ('solo', 'pro')`;
     if (key === 'business') return `${eff} IN ('team', 'business')`;
     if (key === 'scale') return `${eff} IN ('growth', 'scale')`;
+    // Registered - No Plan: account created but no plan activated. Same predicate
+    // as the 'registered' tab so the plan filter and the tab agree.
+    if (key === 'registered' || key === 'no_plan' || key === 'unselected')
+      return `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`;
     return null;
   }
 
@@ -475,8 +479,17 @@ export class CustomersAdminService {
       clauses.push(`LOWER(COALESCE(billing_cycle,'')) = $${params.length}`);
     }
     if (opts.paymentStatus && opts.paymentStatus !== 'all') {
-      params.push(String(opts.paymentStatus).toLowerCase());
-      clauses.push(`LOWER(COALESCE(payment_status,'')) = $${params.length}`);
+      const psv = String(opts.paymentStatus).toLowerCase();
+      if (psv === 'registered') {
+        // 'registered' must also catch NULL payment_status (matches the tab), which
+        // a bare equality on COALESCE(...,'') would silently drop.
+        clauses.push(
+          `(COALESCE(payment_status,'') IN ('', 'registered') AND COALESCE(checkout_status,'') <> 'paid')`,
+        );
+      } else {
+        params.push(psv);
+        clauses.push(`LOWER(COALESCE(payment_status,'')) = $${params.length}`);
+      }
     }
     if (opts.source && opts.source !== 'all') {
       params.push(opts.source);
@@ -632,7 +645,7 @@ export class CustomersAdminService {
       solo: 'Solo ($197)',
       business: 'Business ($347)',
       scale: 'Scale ($497)',
-      unselected: 'Not selected',
+      unselected: 'Registered - No Plan',
     };
     const byPlan = byPlanRaw.map((r: any) => ({
       key: planLabels[r.key] || r.key,

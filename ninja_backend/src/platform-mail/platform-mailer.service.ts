@@ -57,6 +57,12 @@ export class PlatformMailerService {
         `signup_source VARCHAR(32)`,
         `upgraded_at TIMESTAMPTZ`,
         `deleted_at TIMESTAMPTZ`,
+        // Incomplete-registration recovery (Free-plan recovery email).
+        `recovery_email_sent_at TIMESTAMPTZ`,
+        `recovery_token TEXT`,
+        `recovery_token_expires TIMESTAMPTZ`,
+        `recovery_activated_at TIMESTAMPTZ`,
+        `recovery_source VARCHAR(48)`,
       ];
       for (const c of userCols) {
         await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -430,6 +436,166 @@ export class PlatformMailerService {
         );
       } catch (err: any) {
         this.logger.error(`schedule ${template} failed: ${err?.message}`);
+      }
+    }
+  }
+
+  // ---- incomplete-registration recovery (Free-plan recovery email) ----
+
+  private recoveryUrl(rawToken: string): string {
+    const base =
+      this.config.get('RECOVERY_CTA_BASE_URL') ||
+      `${this.appUrl()}/activate-free`;
+    return `${base}?token=${encodeURIComponent(rawToken)}`;
+  }
+
+  private hashRecoveryToken(raw: string): string {
+    return crypto.createHash('sha256').update(String(raw)).digest('hex');
+  }
+
+  // Queue the single recovery email as a 'scheduled' row, ~2 minutes out.
+  // Idempotent per user (only one recovery row is ever queued/sent), so at most
+  // one recovery email is ever sent per incomplete registration.
+  async scheduleRecoveryEmail(
+    userId: string,
+    email: string,
+    lang: string,
+  ): Promise<void> {
+    if (!userId || !email) return;
+    await this.ensureSchema();
+    try {
+      await this.db.query(
+        `INSERT INTO email_log
+           (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
+         SELECT $1, $2, 'recovery', $3, 'scheduled', NOW() + INTERVAL '2 minutes', gen_random_uuid(), NOW()
+          WHERE NOT EXISTS (
+            SELECT 1 FROM email_log
+             WHERE user_id = $1 AND template = 'recovery'
+               AND status IN ('scheduled', 'sending', 'sent')
+          )`,
+        [userId, email, String(lang || 'en').slice(0, 5)],
+      );
+    } catch (err: any) {
+      this.logger.error(`schedule recovery failed: ${err?.message}`);
+    }
+  }
+
+  // Cron worker: send due recovery emails, re-checking the account per row so a
+  // user who has since activated ANY plan (Free or paid) is canceled, never sent.
+  // A fresh single-use activation token is minted at send time; only its hash is
+  // stored on the user. At most one recovery email per account.
+  async sendRecoveryDue(): Promise<void> {
+    await this.ensureSchema();
+    let due: any[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT el.id, el.track_token, el.language, el.to_email, el.user_id,
+                u.name, u.payment_status, u.checkout_status, u.selected_plan,
+                u.recovery_email_sent_at
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.template = 'recovery'
+            AND el.status = 'scheduled'
+            AND el.scheduled_at <= NOW()
+          ORDER BY el.scheduled_at ASC
+          LIMIT 200`,
+      );
+      due = rows;
+    } catch (err: any) {
+      this.logger.error(`sendRecoveryDue query failed: ${err?.message}`);
+      return;
+    }
+
+    for (const r of due) {
+      const ps = String(r.payment_status || '').toLowerCase();
+      const cs = String(r.checkout_status || '').toLowerCase();
+      // Account has moved on (chose/activated any plan) — cancel, do not send.
+      const hasPlan =
+        ps === 'free' ||
+        ps === 'active' ||
+        ps === 'paid' ||
+        cs === 'free' ||
+        cs === 'paid' ||
+        !!r.selected_plan;
+      if (hasPlan || r.recovery_email_sent_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled' WHERE id = $1`,
+          [r.id],
+        );
+        continue;
+      }
+      // Atomic claim so overlapping runs never double-send this row.
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'scheduled' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+
+      // Fresh single-use activation token (7-day expiry). Store only the hash.
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      try {
+        await this.db.query(
+          `UPDATE users
+              SET recovery_token = $2,
+                  recovery_token_expires = NOW() + INTERVAL '7 days',
+                  updated_at = NOW()
+            WHERE id = $1`,
+          [r.user_id, this.hashRecoveryToken(rawToken)],
+        );
+      } catch (err: any) {
+        this.logger.error(`recovery token store failed: ${err?.message}`);
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
+        continue;
+      }
+
+      const rendered = renderTemplate('recovery', r.language, {
+        name: r.name,
+        ctaUrl: this.recoveryUrl(rawToken),
+      });
+      const token = r.track_token || crypto.randomUUID();
+      const html = this.htmlFor(rendered.html, token);
+      const result = await this.deliver({
+        to: r.to_email,
+        subject: rendered.subject,
+        html,
+        text: rendered.text,
+        token,
+      });
+      const status = result.ok
+        ? 'sent'
+        : result.error === 'smtp_not_configured'
+          ? 'skipped'
+          : 'error';
+      await this.db.query(
+        `UPDATE email_log
+            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+          WHERE id = $1`,
+        [
+          r.id,
+          status,
+          rendered.subject,
+          result.provider,
+          result.error || null,
+          token,
+        ],
+      );
+      if (result.ok) {
+        await this.db.query(
+          `UPDATE users SET recovery_email_sent_at = NOW()
+            WHERE id = $1 AND recovery_email_sent_at IS NULL`,
+          [r.user_id],
+        );
+      } else if (status === 'skipped') {
+        // No email provider configured yet — reset to retry on a later run.
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
       }
     }
   }
