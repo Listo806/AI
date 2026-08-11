@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getPlans, createPlan, updatePlan, deletePlan } from '../../api/subscriptionApi';
+import { loadPlansConfig, PLAN_ORDER } from '../../config/plans';
 import { useNotification } from '../../context/NotificationContext';
 import {
   BriefcaseBusiness,
@@ -587,61 +588,54 @@ export default function AdminPlans() {
   const { showSuccess, showError } = useNotification();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(null);
-  const [togglingId, setTogglingId] = useState(null);
-  const [openMenuId, setOpenMenuId] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const list = await getPlans(false);
-      setPlans(Array.isArray(list) ? list : []);
-    } catch (err) {
-      showError(err?.message || t('common.error'));
-      setPlans([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [showError, t]);
-
+  // Read-only view of the LIVE customer plans. Source of truth is the backend
+  // plan-config (mirrored in ../../config/plans and tied to the Paddle price IDs),
+  // so this list always matches the live pricing structure and can never drift.
+  // The old editable subscription_plans CRUD is retired.
   useEffect(() => {
-    load();
-  }, [load]);
-
-  const handleToggleActive = async (plan) => {
-    setTogglingId(plan.id);
-    setOpenMenuId(null);
-
-    try {
-      await updatePlan(plan.id, { isActive: !plan.isActive });
-      showSuccess(
-        plan.isActive
-          ? t('admin.plans.disabled')
-          : t('admin.plans.enabledSuccess'),
-      );
-      await load();
-    } catch (err) {
-      showError(err?.message || t('common.error'));
-    } finally {
-      setTogglingId(null);
-    }
-  };
-
-  const handleDelete = async (plan) => {
-    setOpenMenuId(null);
-
-    if (!window.confirm(t('admin.plans.deleteConfirm', { name: plan.name }))) {
-      return;
-    }
-
-    try {
-      await deletePlan(plan.id);
-      showSuccess(t('admin.plans.deleted'));
-      await load();
-    } catch (err) {
-      showError(err?.message || t('common.error'));
-    }
-  };
+    let alive = true;
+    loadPlansConfig()
+      .then((cfg) => {
+        if (!alive) return;
+        const ordered = (cfg?.plans || [])
+          .slice()
+          .sort((a, b) => PLAN_ORDER.indexOf(a.id) - PLAN_ORDER.indexOf(b.id));
+        const mapped = ordered.map((p) => {
+          const core = [];
+          if (p.features?.crm) core.push('CRM');
+          if (p.features?.aiAgent) core.push('AI Agent');
+          if (p.features?.advancedAiAgent) core.push('Advanced AI');
+          if (p.features?.teamWorkspace) core.push('Team Workspace');
+          if (p.features?.advancedAnalytics) core.push('Advanced Analytics');
+          return {
+            id: p.id,
+            name:
+              p.id === 'business'
+                ? `${p.label} (3 users)`
+                : p.id === 'scale'
+                  ? `${p.label} (5 users)`
+                  : p.label,
+            description: '',
+            price: p.pricing?.monthly ?? 0,
+            intro: p.pricing?.intro ?? 0,
+            isFree: !!p.isFree,
+            seatLimit: p.seats,
+            aiConversations: p.limits?.aiConversationsPerMonth ?? null,
+            whatsappConnections: p.limits?.whatsappConnections ?? null,
+            leadsContactsLimit: null,
+            coreFeatures: core,
+            isActive: true,
+          };
+        });
+        setPlans(mapped);
+      })
+      .catch(() => alive && setPlans([]))
+      .finally(() => alive && setLoading(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const total = plans.length;
 
@@ -659,14 +653,9 @@ export default function AdminPlans() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="admin-plan-create-btn"
-          onClick={() => setModal('create')}
-        >
-          <Plus size={19} />
-          <span>{t('admin.plans.createNewPlan')}</span>
-        </button>
+        <span className="admin-plan-live-badge">
+          <CheckCircle2 size={16} /> Live pricing
+        </span>
       </div>
 
       {loading ? (
@@ -684,6 +673,10 @@ export default function AdminPlans() {
               <thead>
                 <tr>
                   <th>{t('admin.plans.planColumn')}</th>
+                  <th>
+                    <span>Activation</span>
+                    <small>one-time</small>
+                  </th>
                   <th>
                     <span>{t('admin.plans.priceUsd')}</span>
                     <small>{t('admin.plans.monthly')}</small>
@@ -706,7 +699,6 @@ export default function AdminPlans() {
                   </th>
                   <th>{t('admin.plans.coreFeatures')}</th>
                   <th>{t('admin.plans.status')}</th>
-                  <th>{t('common.actions')}</th>
                 </tr>
               </thead>
 
@@ -762,6 +754,20 @@ export default function AdminPlans() {
                               {plan.description || t('admin.plans.noDescription')}
                             </small>
                           </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <div className="admin-plan-metric">
+                          <strong>
+                            {plan.isFree
+                              ? '—'
+                              : `$${Number(plan.intro ?? 0).toLocaleString(
+                                  'en-US',
+                                  { maximumFractionDigits: 2 },
+                                )}`}
+                          </strong>
+                          <small>{plan.isFree ? 'no charge' : 'to start'}</small>
                         </div>
                       </td>
 
@@ -839,56 +845,6 @@ export default function AdminPlans() {
                         </span>
                       </td>
 
-                      <td>
-                        <div className="admin-plan-actions">
-                          <button
-                            type="button"
-                            className="admin-plan-edit-btn"
-                            onClick={() => setModal({ plan })}
-                          >
-                            {t('common.edit')}
-                          </button>
-
-                          <div className="admin-plan-menu-wrap">
-                            <button
-                              type="button"
-                              className="admin-plan-more-btn"
-                              aria-label={t('admin.plans.moreActions')}
-                              onClick={() =>
-                                setOpenMenuId((current) =>
-                                  current === plan.id ? null : plan.id,
-                                )
-                              }
-                            >
-                              <MoreVertical size={20} />
-                            </button>
-
-                            {openMenuId === plan.id && (
-                              <div className="admin-plan-action-menu">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleActive(plan)}
-                                  disabled={!!togglingId}
-                                >
-                                  {togglingId === plan.id
-                                    ? t('common.loading')
-                                    : plan.isActive
-                                      ? t('admin.plans.disable')
-                                      : t('admin.plans.enable')}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  className="danger"
-                                  onClick={() => handleDelete(plan)}
-                                >
-                                  {t('common.delete')}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
                     </tr>
                   );
                 })}
@@ -918,17 +874,6 @@ export default function AdminPlans() {
         </div>
       )}
 
-      {modal === 'create' && (
-        <PlanFormModal onClose={() => setModal(null)} onSuccess={load} />
-      )}
-
-      {modal?.plan && (
-        <PlanFormModal
-          plan={modal.plan}
-          onClose={() => setModal(null)}
-          onSuccess={load}
-        />
-      )}
     </div>
   );
 }
