@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { UserRole } from '../../users/entities/user.entity';
-import { normalizePlanId } from '../../plans/plan-config';
+import { getPlan, resolveEffectivePlan } from '../../plans/plan-config';
 
 /**
  * PaymentGuard — server-side WORKSPACE payment gate.
@@ -82,7 +82,8 @@ export class PaymentGuard implements CanActivate {
       // from "no owner resolvable" (fail-open allow).
       const { rows } = await this.db.query(
         `SELECT owner.payment_status AS status, owner.id AS owner_id,
-                owner.selected_plan AS selected_plan, owner.plan AS plan
+                owner.selected_plan AS selected_plan, owner.plan AS plan,
+                owner.checkout_status AS checkout_status
            FROM users u
            LEFT JOIN teams t ON t.id = u.team_id
            LEFT JOIN users owner ON owner.id = t.owner_id
@@ -117,19 +118,28 @@ export class PaymentGuard implements CanActivate {
         return true;
       }
 
-      // Free tier — including a brand-new signup still in the 'TRIAL'/'registered'/
-      // null limbo state before they pick a plan — has CRM access without paying.
-      // normalizePlanId maps 'free' AND any legacy/unknown/empty value to 'free'
-      // (matching the CrmAccessGuard entitlement layer), while a genuine PAID tier
-      // the owner selected but has NOT paid for normalizes to solo/business/scale
-      // and is still blocked below. This is what lets new Free users reach the CRM.
-      const ownerPlan = normalizePlanId(row.selected_plan ?? row.plan);
-      if (ownerPlan === 'free') {
+      // Not an obviously-allowed status. Resolve the effective plan with the SAME
+      // rule the entitlement layer uses (resolveEffectivePlan): selected_plan is
+      // intent only, a paid tier is grandfathered from the `plan` column unless it
+      // has terminated, and everything else is Free. Free and every paid tier
+      // include CRM access, so allow whenever the effective plan grants CRM. This
+      // keeps an unpaid plan-selector on Free access (premium still locked by the
+      // feature layer), never falsely blocks a legacy/grandfathered paid account,
+      // and drops a canceled account back to Free rather than locking it out —
+      // exactly matching UsageService.resolveTeamPlan so the two never disagree.
+      const eff = resolveEffectivePlan({
+        selected_plan: row.selected_plan,
+        plan: row.plan,
+        payment_status: row.status,
+        checkout_status: row.checkout_status,
+      });
+      if (getPlan(eff.planId).features.crm) {
         return true;
       }
 
-      // Confident: the workspace owner picked a PAID plan and has not completed
-      // checkout.
+      // Defense-in-depth: the effective plan does not grant CRM access. Not
+      // reachable with the current plan catalog (Free and all paid tiers include
+      // CRM), but kept so a future no-CRM plan blocks correctly.
       throw new ForbiddenException(
         '🔒 Your subscription is not active. Please complete checkout to access the CRM.',
       );

@@ -4,7 +4,7 @@ import {
   PlanFeatures,
   PlanId,
   getPlan,
-  normalizePlanId,
+  resolveEffectivePlan,
 } from './plan-config';
 import { PlanOverridesService } from './plan-overrides.service';
 
@@ -46,11 +46,12 @@ export class UsageService {
       );
       const r = rows[0];
       if (!r) return { planId: 'free', isFree: false, paid: false };
-      const planId = normalizePlanId(r.selected_plan || r.plan);
-      const pay = String(r.payment_status || '').toLowerCase();
-      const checkout = String(r.checkout_status || '').toLowerCase();
-      const paid = pay === 'active' || pay === 'paid' || checkout === 'paid';
-      return { planId, isFree: planId === 'free' && !paid, paid };
+      // One shared rule (see resolveEffectivePlan): selected_plan is intent only, a
+      // confirmed or grandfathered paid tier comes from `plan`, and a terminated
+      // paid account drops back to Free caps. This is the exact rule the CRM
+      // PaymentGuard and the admin Customers view use, so all three agree.
+      const { planId, isFree, paid } = resolveEffectivePlan(r);
+      return { planId, isFree, paid };
     } catch (err: any) {
       this.logger.error(`resolveTeamPlan failed: ${err?.message}`);
       return { planId: 'free', isFree: false, paid: false };
