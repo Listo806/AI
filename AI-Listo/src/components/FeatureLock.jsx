@@ -1,21 +1,17 @@
 import React from "react";
 import { Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { buildLocalizedPath } from "../i18n/locales";
+import { openFeatureAddOns, FEATURE_TO_ADDON } from "./FeatureAddOns";
 
 // Full-page lock shown in place of a paid feature for Free accounts. The feature
 // stays discoverable (the client wants it visible) but gated behind an upgrade.
-// Dashboard routes are not locale-prefixed, so the pricing link is built from
-// the active language via buildLocalizedPath.
+// Clicking upgrade opens the one universal Feature Add-Ons modal, focused on the
+// add-on that unlocks this feature (pass `feature`, e.g. "reports").
 export function FeatureLockScreen({
   title = "This feature is on a paid plan",
   description = "Upgrade your plan to unlock this feature. All your data and settings are kept exactly as they are.",
+  feature = null,
 }) {
-  const navigate = useNavigate();
-  const { i18n } = useTranslation();
-  const goUpgrade = () =>
-    navigate(buildLocalizedPath("/pricing", i18n?.language || "en"));
+  const goUpgrade = () => openFeatureAddOns(FEATURE_TO_ADDON[feature] || null);
 
   return (
     <div
