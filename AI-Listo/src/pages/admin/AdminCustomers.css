@@ -452,7 +452,7 @@
 /* Right column of the top row: Quick Actions card stacked over its own Customer Notes card */
 .cxc-cust-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .cxc-cust-notes { flex: 1; }
-.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 15px; background: #fff; }
+.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 18px 20px; background: #fff; }
 .cxc-block-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }
 .cxc-block-title--link { display: flex; align-items: center; justify-content: space-between; }
 .cxc-linkbtn { border: none; background: none; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
