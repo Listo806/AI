@@ -412,7 +412,6 @@ export default function Sidebar({
       icon: "plug",
       labelKey: "nav.integrations",
     },
-    { path: "/dashboard/generator", icon: "target", labelKey: "nav.generator" },
   ];
 
   const role =
@@ -722,6 +721,33 @@ export default function Sidebar({
                     </button>
                   );
                 })}
+
+                {/* Lead Generator lives inside CORTEXA WORKSPACES, immediately
+                    after Team Workspace. It is not a PREMIUM/ACTIVE workspace. */}
+                <NavLink
+                  to="/dashboard/generator"
+                  className="crm-workspace-item crm-workspace-lead-generator"
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
+                >
+                  <span className="crm-workspace-icon crm-workspace-icon-indigo">
+                    <i data-lucide="target"></i>
+                  </span>
+
+                  <span className="crm-workspace-label">
+                    {t("nav.generator")}
+                  </span>
+
+                  <span className="crm-nav-addon">
+                    {t("nav.addOn")}
+                  </span>
+
+                  <i
+                    data-lucide="chevron-right"
+                    className="crm-workspace-chevron"
+                  ></i>
+                </NavLink>
               </div>
 
               <div className="crm-workspaces-expand-card">
@@ -915,12 +941,12 @@ export default function Sidebar({
                     </>
                   ) : (
                     <>
-                      <small>Starting at</small>
+                      <small className="uper">{hoveredWorkspace.label}</small>
                       <strong>
                         ${hoveredWorkspace.price}
                         <em>/month</em>
                       </strong>
-                      <p>Billed monthly. Cancel anytime.</p>
+                      <p>Add the complete {hoveredWorkspace.label} to your Cortexa account.</p>
                     </>
                   )}
                 </div>
@@ -952,19 +978,12 @@ export default function Sidebar({
                     ? hoveredWorkspace.path
                       ? `Open ${hoveredWorkspace.label}`
                       : `${hoveredWorkspace.label} Active`
-                    : `Activate ${hoveredWorkspace.label}`}
+                    : `ADD TO MY PLAN`}
 
                   <i data-lucide="chevron-right"></i>
                 </button>
               </div>
 
-              <button
-                type="button"
-                className="crm-workspace-full-details"
-              >
-                View Full Details
-                <i data-lucide="external-link"></i>
-              </button>
             </div>
           </div>
         </aside>
