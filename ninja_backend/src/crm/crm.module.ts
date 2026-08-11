@@ -14,10 +14,11 @@ import { ContactsService } from './contacts/contacts.service';
 import { DatabaseModule } from '../database/database.module';
 import { LeadsModule } from '../leads/leads.module';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { PlansModule } from '../plans/plans.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
-  imports: [DatabaseModule, LeadsModule, SubscriptionsModule],
+  imports: [DatabaseModule, LeadsModule, SubscriptionsModule, PlansModule],
   controllers: [CrmController, CrmPropertiesController, CrmProjectsController, DealsController, ContactsController],
   providers: [
     PaymentGuard,

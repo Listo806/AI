@@ -5,6 +5,7 @@ import { LeadsController } from './leads.controller';
 import { AnalyticsModule } from '../analytics/analytics.module';
 import { LeadAIService } from './lead-ai.service';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { PlansModule } from '../plans/plans.module';
 import { WhatsAppLeadService } from './services/whatsapp-lead.service';
 import { WhatsAppPhoneResolverService } from './services/whatsapp-phone-resolver.service';
 import { BuyerLinkerService } from './services/buyer-linker.service';
@@ -20,7 +21,7 @@ import { AwsModule } from '../common/aws/aws.module';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 
 @Module({
-  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule, AwsModule],
+  imports: [ConfigModule, AnalyticsModule, SubscriptionsModule, PlansModule, IntegrationsModule, IntelligenceModule, forwardRef(() => MessagingModule), WebhooksModule, AwsModule],
   controllers: [AILeadController, LeadsController],
   providers: [
     PaymentGuard,
