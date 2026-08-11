@@ -214,6 +214,55 @@ function Menu({ open, onClose, children, className }) {
   return <div ref={ref} className={`cxc-menu ${className || ""}`}>{children}</div>;
 }
 
+// Combined "Users & Seats" filter: the roles group and the seat-status group in
+// one dropdown (replaces the two separate selects) per the approved reference.
+// Still drives the same two backend params (usersRole, seatStatus), so a role
+// and a seat status can both be active at once.
+const USS_ROLE_OPTS = [
+  { v: "owner", label: "Owner" },
+  { v: "admin", label: "Admin" },
+  { v: "agent", label: "Agent / User" },
+  { v: "owner_only", label: "Owner Only" },
+  { v: "has_additional", label: "Has Additional Users" },
+  { v: "multiple", label: "Multiple Users" },
+];
+const USS_SEAT_OPTS = [
+  { v: "available", label: "Seats Available" },
+  { v: "full", label: "Seats Full" },
+  { v: "one_user", label: "1 User" },
+  { v: "multiple_users", label: "Multiple Users" },
+  { v: "unused", label: "Unused Seats" },
+];
+
+function UsersSeatsFilter({ usersRole, seatStatus, setFilter }) {
+  const [open, setOpen] = useState(false);
+  const roleLabel = USS_ROLE_OPTS.find((o) => o.v === usersRole)?.label;
+  const seatLabel = USS_SEAT_OPTS.find((o) => o.v === seatStatus)?.label;
+  const summary = [roleLabel, seatLabel].filter(Boolean).join(" · ") || "Users & Seats";
+  const active = usersRole !== "all" || seatStatus !== "all";
+  return (
+    <div className="cxc-uss">
+      <button type="button" className={`cxc-select cxc-uss-btn ${active ? "active" : ""}`} onClick={() => setOpen((o) => !o)} title="Users & Seats">
+        <Users size={14} />
+        <span className="cxc-uss-label">{summary}</span>
+        <ChevronDown size={14} />
+      </button>
+      <Menu open={open} onClose={() => setOpen(false)} className="cxc-uss-menu">
+        <div className="cxc-uss-head">Users &amp; Seats</div>
+        <button className={`cxc-uss-item ${usersRole === "all" && seatStatus === "all" ? "sel" : ""}`} onClick={() => { setFilter("usersRole", "all"); setFilter("seatStatus", "all"); }}>All Users &amp; Seats</button>
+        {USS_ROLE_OPTS.map((o) => (
+          <button key={o.v} className={`cxc-uss-item ${usersRole === o.v ? "sel" : ""}`} onClick={() => setFilter("usersRole", o.v)}>{o.label}</button>
+        ))}
+        <div className="cxc-uss-div" />
+        <button className={`cxc-uss-item ${seatStatus === "all" ? "sel" : ""}`} onClick={() => setFilter("seatStatus", "all")}>All Seat Statuses</button>
+        {USS_SEAT_OPTS.map((o) => (
+          <button key={o.v} className={`cxc-uss-item ${seatStatus === o.v ? "sel" : ""}`} onClick={() => setFilter("seatStatus", o.v)}>{o.label}</button>
+        ))}
+      </Menu>
+    </div>
+  );
+}
+
 export default function AdminCustomers() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -436,23 +485,7 @@ export default function AdminCustomers() {
             <option value="es">Spanish</option>
             <option value="pt">Portuguese</option>
           </select>
-          <select className="cxc-select" value={filters.usersRole} onChange={(e) => setFilter("usersRole", e.target.value)}>
-            <option value="all">All Users / Roles</option>
-            <option value="owner">Owner</option>
-            <option value="admin">Admin</option>
-            <option value="agent">Agent / User</option>
-            <option value="owner_only">Owner Only</option>
-            <option value="has_additional">Has Additional Users</option>
-            <option value="multiple">Multiple Users</option>
-          </select>
-          <select className="cxc-select" value={filters.seatStatus} onChange={(e) => setFilter("seatStatus", e.target.value)}>
-            <option value="all">All Seat Statuses</option>
-            <option value="available">Seats Available</option>
-            <option value="full">Seats Full</option>
-            <option value="one_user">1 User</option>
-            <option value="multiple_users">Multiple Users</option>
-            <option value="unused">Unused Seats</option>
-          </select>
+          <UsersSeatsFilter usersRole={filters.usersRole} seatStatus={filters.seatStatus} setFilter={setFilter} />
           {moreFilters && (
             <>
               <input className="cxc-select" type="date" value={filters.from} onChange={(e) => setFilter("from", e.target.value)} title="From" />

@@ -201,6 +201,23 @@
 }
 .cxc-filter-actions { display: flex; gap: 10px; align-items: center; padding: 0 12px 14px; }
 
+/* Combined "Users & Seats" filter — trigger matches .cxc-select exactly */
+.cxc-uss { position: relative; display: inline-flex; }
+.cxc-uss-btn { display: inline-flex; align-items: center; gap: 7px; }
+.cxc-uss-btn > svg { flex-shrink: 0; color: #64748b; }
+.cxc-uss-btn.active { border-color: #2563eb; color: #2563eb; background: #f5f8ff; }
+.cxc-uss-btn.active > svg { color: #2563eb; }
+.cxc-uss-label { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cxc-menu.cxc-uss-menu {
+  top: calc(100% + 6px); bottom: auto; left: auto; right: 0;
+  min-width: 232px; max-height: 340px; overflow-y: auto;
+}
+.cxc-uss-head { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; font-weight: 700; padding: 6px 10px 4px; }
+.cxc-uss-item { display: block; width: 100%; text-align: left; border: none; background: none; cursor: pointer; padding: 8px 10px; font-size: 13px; color: #334155; border-radius: 7px; }
+.cxc-uss-item:hover { background: #f1f5f9; }
+.cxc-uss-item.sel { background: #e0edff; color: #2563eb; font-weight: 600; }
+.cxc-uss-div { height: 1px; background: #eef2f7; margin: 6px 4px; }
+
 /* Analytics row: funnel + 3 donuts — ALL FOUR on one row on desktop. minmax(0,…)
    lets every card shrink to share the width instead of overflowing, so the four
    fit within the content area without a horizontal scrollbar. They only stack on
