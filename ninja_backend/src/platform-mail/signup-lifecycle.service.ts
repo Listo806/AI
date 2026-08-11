@@ -32,6 +32,16 @@ export class SignupLifecycleService {
     );
   }
 
+  // Recovery ships independently of the abandoned sequence via its own flag, so
+  // the incomplete-registration recovery email can be turned on on its own.
+  private recoveryEnabled(): boolean {
+    return (
+      String(this.config.get('RECOVERY_EMAILS_ENABLED') || '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweepAbandonedSignups(): Promise<void> {
     if (!this.enabled()) return; // hard off by default
@@ -39,6 +49,18 @@ export class SignupLifecycleService {
       await this.mailer.sendScheduledDue();
     } catch (err: any) {
       this.logger.error(`abandoned sweep failed: ${err?.message}`);
+    }
+  }
+
+  // Runs every minute so the recovery email lands close to the ~1-2 min target
+  // after an incomplete registration. Hard off unless RECOVERY_EMAILS_ENABLED.
+  @Cron(CronExpression.EVERY_MINUTE)
+  async sweepRecovery(): Promise<void> {
+    if (!this.recoveryEnabled()) return; // hard off by default
+    try {
+      await this.mailer.sendRecoveryDue();
+    } catch (err: any) {
+      this.logger.error(`recovery sweep failed: ${err?.message}`);
     }
   }
 }

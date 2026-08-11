@@ -20,4 +20,13 @@ export class TrialController {
   selectPlan(@CurrentUser() user: any, @Body() dto: any) {
     return this.trialService.selectPlan(user?.id, dto);
   }
+
+  // PUBLIC: the recovery-email CTA. The single-use token in the body is the auth,
+  // so no JwtAuthGuard. Activates Free Forever on the existing account only if it
+  // still has no plan (never overwrites a paid plan), then returns a normal
+  // session so the frontend can drop the user straight into the dashboard.
+  @Post('recover-free')
+  recoverFree(@Body() body: any) {
+    return this.trialService.recoverFreePlan(body?.token);
+  }
 }

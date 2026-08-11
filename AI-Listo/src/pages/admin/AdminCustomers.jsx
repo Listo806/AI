@@ -73,11 +73,19 @@ const PLAN_OPTIONS = [
   { value: "scale", label: "Scale ($497)" },
 ];
 
+// Plan filter only: also lets admins isolate incomplete registrations. NOT added
+// to PLAN_OPTIONS because that feeds the assign-plan modals, where "no plan" is not
+// an assignable plan.
+const PLAN_FILTER_OPTIONS = [
+  ...PLAN_OPTIONS,
+  { value: "registered", label: "Registered - No Plan" },
+];
+
 const DONUT_COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#7c3aed", "#06b6d4", "#ef4444", "#94a3b8"];
 const AVATAR_COLORS = ["#2563eb", "#7c3aed", "#0d9488", "#ea580c", "#db2777", "#0891b2", "#4f46e5", "#16a34a"];
 
 const STATUS_LABEL = {
-  active: "Active", free: "Free", trialing: "Trialing", registered: "Registered",
+  active: "Active", free: "Free", trialing: "Trialing", registered: "Registered - No Plan",
   past_due: "Past Due", canceled: "Canceled", failed: "Failed",
 };
 
@@ -542,7 +550,7 @@ export default function AdminCustomers() {
           </div>
           <select className="cxc-select" value={filters.plan} onChange={(e) => setFilter("plan", e.target.value)}>
             <option value="all">All Plans</option>
-            {PLAN_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            {PLAN_FILTER_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
           </select>
           <select className="cxc-select" value={filters.billing} onChange={(e) => setFilter("billing", e.target.value)}>
             <option value="all">All Cycles</option>
