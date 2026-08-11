@@ -52,6 +52,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import PipelineListModal from "./components/PipelineListModal";
+import { openFeatureAddOns, FEATURE_TO_ADDON } from "../../components/FeatureAddOns";
 import { ResponsiveContainer, LineChart, Line, YAxis } from "recharts";
 export default function PipelinePage() {
   const { t } = useTranslation();
@@ -94,6 +95,18 @@ export default function PipelinePage() {
   const showToast = (message, type = "error") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Free accounts hit the backend FeatureAccessGuard on the AI actions, which
+  // returns a 403 tagged as a subscription error. Turn that silent failure into
+  // the same upgrade prompt the dashboard and sidebar use, focused on the add-on
+  // that unlocks these pipeline AI features. Any other error still shows a toast.
+  const handleAiActionError = (err, fallbackMsg) => {
+    if (err?.isSubscriptionError || err?.status === 403) {
+      openFeatureAddOns(FEATURE_TO_ADDON.advancedAiAgent);
+      return;
+    }
+    showToast(fallbackMsg || err?.message || "Something went wrong. Please try again.");
   };
 
   const [activityModalOpen, setActivityModalOpen] = useState(false);
@@ -477,6 +490,7 @@ export default function PipelinePage() {
       await fetchPipelineDashboard();
     } catch (err) {
       console.error("Score deal error:", err);
+      handleAiActionError(err);
     } finally {
       setScoringDealId(null);
     }
@@ -494,6 +508,7 @@ export default function PipelinePage() {
       setPipelineInsight(data || null);
     } catch (err) {
       console.error("Analyze pipeline error:", err);
+      handleAiActionError(err);
     } finally {
       setAnalyzingPipeline(false);
     }
@@ -516,6 +531,7 @@ export default function PipelinePage() {
       }
     } catch (err) {
       console.error("Auto prioritize error:", err);
+      handleAiActionError(err);
     } finally {
       setPrioritizingDeals(false);
     }
@@ -536,6 +552,7 @@ export default function PipelinePage() {
       await fetchDealEvents(selectedDeal.id);
     } catch (err) {
       console.error("Send AI suggestions error:", err);
+      handleAiActionError(err);
     } finally {
       setSendingSuggestions(false);
     }
@@ -731,6 +748,7 @@ export default function PipelinePage() {
       await fetchPipelineDashboard();
     } catch (err) {
       console.error("Command score deal error:", err);
+      handleAiActionError(err);
     } finally {
       setCommandActionLoading(null);
     }
@@ -753,6 +771,7 @@ export default function PipelinePage() {
       await fetchDealEvents(selectedDeal.id);
     } catch (err) {
       console.error("Command generate follow-up error:", err);
+      handleAiActionError(err);
     } finally {
       setCommandActionLoading(null);
     }
@@ -772,6 +791,7 @@ export default function PipelinePage() {
       await fetchDealEvents(selectedDeal.id);
     } catch (err) {
       console.error("Command send suggestions error:", err);
+      handleAiActionError(err);
     } finally {
       setCommandActionLoading(null);
     }
