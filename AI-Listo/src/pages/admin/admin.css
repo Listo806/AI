@@ -184,3 +184,964 @@ body.crm-dark .admin-table .admin-status-badge.published {
   font-size: 13px;
   color: var(--text-muted, #64748b);
 }
+
+
+/* =========================================================
+   ADMIN — PLAN MANAGEMENT
+   Reference layout
+   ========================================================= */
+
+.admin-plan-page-header {
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.admin-plan-heading-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.admin-plan-heading-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #f5f7fb;
+  color: #0d1b3d;
+  box-shadow: inset 0 0 0 1px #eef1f6;
+}
+
+.admin-plan-heading-wrap h1 {
+  margin: 0;
+  color: #0e1830;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.admin-plan-heading-wrap p {
+  margin: 14px 0 0;
+  color: #3f4d68;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-plan-create-btn {
+  min-height: 43px;
+  padding: 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 8px;
+  background: #1464f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(20, 100, 246, 0.16);
+}
+
+.admin-plan-create-btn:hover {
+  background: #0e58e5;
+}
+
+.admin-plan-state {
+  padding: 50px 24px;
+  border: 1px solid #e1e6ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #667085;
+  text-align: center;
+}
+
+.admin-plan-table-card {
+  overflow: visible;
+  border: 1px solid #dde3ec;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.045);
+}
+
+.admin-plan-table-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.admin-plan-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #101828;
+  font-size: 13px;
+}
+
+.admin-plan-table thead th {
+  height: 92px;
+  padding: 15px 10px;
+  border-bottom: 1px solid #e3e7ee;
+  background: #fff;
+  color: #101828;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-plan-table thead th:first-child {
+  padding-left: 26px;
+  min-width: 188px;
+}
+
+.admin-plan-table thead th:nth-child(2) {
+  min-width: 110px;
+}
+
+.admin-plan-table thead th:nth-child(3) {
+  min-width: 60px;
+}
+
+.admin-plan-table thead th:nth-child(4) {
+  min-width: 125px;
+}
+
+.admin-plan-table thead th:nth-child(5) {
+  min-width: 90px;
+}
+
+.admin-plan-table thead th:nth-child(6) {
+  min-width: 119px;
+}
+
+.admin-plan-table thead th:nth-child(7) {
+  min-width: 190px;
+}
+
+.admin-plan-table thead th span,
+.admin-plan-table thead th small {
+  display: block;
+}
+
+.admin-plan-table thead th small {
+  margin-top: 6px;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-plan-table tbody td {
+  height: 128px;
+  padding: 15px 10px;
+  border-bottom: 1px solid #e6eaf0;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.admin-plan-table tbody td:first-child {
+  padding-left: 18px;
+}
+
+.admin-plan-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-plan-table tbody tr:hover td {
+  background: #fcfdff;
+}
+
+.admin-plan-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.admin-plan-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+}
+
+.admin-plan-icon-free {
+  background: linear-gradient(135deg, #12a858, #38c172);
+}
+
+.admin-plan-icon-solo {
+  background: linear-gradient(135deg, #0f58ff, #3478ff);
+}
+
+.admin-plan-icon-business {
+  background: linear-gradient(135deg, #9346e8, #ab69f3);
+}
+
+.admin-plan-icon-scale {
+  background: linear-gradient(135deg, #ff6a00, #ff8b30);
+}
+
+.admin-plan-icon-default {
+  background: linear-gradient(135deg, #526071, #7c8796);
+}
+
+.admin-plan-name-copy {
+  min-width: 0;
+}
+
+.admin-plan-name-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.admin-plan-name-line strong {
+  color: #101828;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.admin-plan-name-copy small {
+  display: block;
+  max-width: 145px;
+  margin-top: 8px;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.admin-plan-free-badge {
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: #d8f5e4;
+  color: #168246;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.admin-plan-metric strong,
+.admin-plan-metric small {
+  display: block;
+}
+
+.admin-plan-metric strong {
+  color: #101828;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.admin-plan-metric small {
+  margin-top: 9px;
+  color: #475467;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.admin-plan-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.admin-plan-feature-list>div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #101828;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-plan-feature-list svg {
+  flex: 0 0 auto;
+  color: #16a34a;
+}
+
+.admin-plan-empty {
+  color: #98a2b3;
+}
+
+.admin-plan-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.admin-plan-status.is-active {
+  background: #dff5e8;
+  color: #168246;
+}
+
+.admin-plan-status.is-inactive {
+  background: #eef1f5;
+  color: #667085;
+}
+
+.admin-plan-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-plan-edit-btn {
+  min-width: 50px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid #87adff;
+  border-radius: 7px;
+  background: #fff;
+  color: #125fe8;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.admin-plan-edit-btn:hover {
+  background: #f5f8ff;
+}
+
+.admin-plan-menu-wrap {
+  position: relative;
+}
+
+.admin-plan-more-btn {
+  width: 20px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #1d355f;
+  cursor: pointer;
+}
+
+.admin-plan-action-menu {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  z-index: 25;
+  width: 125px;
+  padding: 5px;
+  border: 1px solid #e1e6ef;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.admin-plan-action-menu button {
+  width: 100%;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #344054;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-plan-action-menu button:hover {
+  background: #f5f7fa;
+}
+
+.admin-plan-action-menu button.danger {
+  color: #d92d20;
+}
+
+.admin-plan-table-footer {
+  min-height: 70px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #e3e7ee;
+  color: #475467;
+  font-size: 12px;
+}
+
+.admin-plan-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-plan-pagination button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dfe4ec;
+  border-radius: 7px;
+  background: #fff;
+  color: #667085;
+}
+
+.admin-plan-pagination button.active {
+  border-color: #1464f6;
+  color: #1464f6;
+  font-weight: 700;
+}
+
+.admin-plan-pagination button:disabled {
+  color: #b8c0cc;
+  cursor: default;
+}
+
+/* Dark mode compatibility */
+body.crm-dark .admin-plan-table-card,
+body.crm-dark .admin-plan-table thead th,
+body.crm-dark .admin-plan-table tbody td,
+body.crm-dark .admin-plan-action-menu,
+body.crm-dark .admin-plan-edit-btn,
+body.crm-dark .admin-plan-pagination button {
+  background: var(--card, #111827);
+}
+
+body.crm-dark .admin-plan-heading-wrap h1,
+body.crm-dark .admin-plan-table,
+body.crm-dark .admin-plan-table thead th,
+body.crm-dark .admin-plan-name-line strong,
+body.crm-dark .admin-plan-metric strong,
+body.crm-dark .admin-plan-feature-list>div {
+  color: var(--text, #f8fafc);
+}
+
+body.crm-dark .admin-plan-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+@media (max-width: 900px) {
+  .admin-plan-management-page {
+    padding: 20px 16px 28px;
+  }
+
+  .admin-plan-page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-plan-create-btn {
+    align-self: flex-start;
+  }
+}
+
+
+/* =========================================================
+   ADMIN PLAN EDIT / CREATE MODAL
+   ========================================================= */
+
+.admin-plan-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.admin-plan-modal {
+  width: min(790px, 96vw);
+  max-height: 95vh;
+  overflow: hidden;
+  border: 1px solid #dfe4ec;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.admin-plan-modal-header {
+  min-height: 60px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e4e7ec;
+}
+
+.admin-plan-modal-header h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.admin-plan-modal-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #344054;
+  cursor: pointer;
+}
+
+.admin-plan-modal-close:hover {
+  background: #f4f6f8;
+}
+
+.admin-plan-modal-tabs {
+  min-height: 50px;
+  padding: 0 18px;
+  display: flex;
+  align-items: stretch;
+  gap: 17px;
+  border-bottom: 1px solid #e4e7ec;
+  overflow-x: auto;
+}
+
+.admin-plan-modal-tabs button {
+  position: relative;
+  min-width: max-content;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-plan-modal-tabs button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: transparent;
+}
+
+.admin-plan-modal-tabs button.active {
+  color: #1464f6;
+}
+
+.admin-plan-modal-tabs button.active::after {
+  background: #1464f6;
+}
+
+.admin-plan-modal-body {
+  max-height: calc(92vh - 164px);
+  padding: 22px 22px 14px;
+  overflow-y: auto;
+}
+
+.admin-plan-modal-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.admin-plan-modal-section {
+  min-width: 0;
+  padding: 0 18px!important;
+  text-align: left;
+}
+
+.admin-plan-modal-section:first-child {
+  padding-left: 0!important;
+}
+
+.admin-plan-modal-section:last-child {
+  padding-right: 0!important;
+}
+
+.admin-plan-modal-section-split {
+  border-right: 1px solid #e8ebf0;
+}
+
+.admin-plan-modal-section h4,
+.admin-plan-modal-wide-section h4 {
+  margin: 0 0 18px;
+  color: #101828;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.admin-plan-modal-field {
+  margin-bottom: 16px;
+  display: block;
+  text-align: left;
+}
+
+.admin-plan-modal-field>span {
+  display: block;
+  margin-bottom: 7px;
+  color: #101828;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-plan-modal-field input,
+.admin-plan-modal-field textarea,
+.admin-plan-modal-field select {
+  width: 100%;
+  border: 1px solid #d7dce5;
+  border-radius: 6px;
+  background: #fff;
+  color: #101828;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+}
+
+.admin-plan-modal-field input,
+.admin-plan-modal-field select {
+  height: 36px;
+  padding: 0 10px;
+}
+
+.admin-plan-modal-field textarea {
+  min-height: 58px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.admin-plan-modal-field input:focus,
+.admin-plan-modal-field textarea:focus,
+.admin-plan-modal-field select:focus {
+  border-color: #7aa7ff;
+  box-shadow: 0 0 0 3px rgba(20, 100, 246, 0.08);
+}
+
+.admin-plan-modal-field small {
+  display: block;
+  margin-top: 7px;
+  color: #667085;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.admin-plan-modal-input-suffix {
+  display: flex;
+  align-items: stretch;
+}
+
+.admin-plan-modal-input-suffix input {
+  min-width: 0;
+  flex: 1;
+  border-radius: 6px 0 0 6px;
+}
+
+.admin-plan-modal-input-suffix em {
+  min-width: 72px;
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d7dce5;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  background: #f8fafc;
+  color: #475467;
+  font-size: 10px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.admin-plan-price-hint {
+  margin: -2px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #168246;
+  font-size: 10px;
+}
+
+.admin-plan-icon-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-plan-modal-icon-preview {
+  width: 37px;
+  height: 37px;
+  flex: 0 0 37px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+}
+
+.admin-plan-color-picker {
+  width: 142px;
+  height: 37px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #d7dce5;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.admin-plan-color-picker input {
+  min-width: 0;
+  flex: 1;
+  height: auto;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  color: #475467;
+  font-size: 11px;
+}
+
+.admin-plan-color-dot {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08);
+}
+
+.admin-plan-color-chevron {
+  color: #475467;
+}
+
+.admin-plan-modal-wide-section {
+  margin-top: 18px;
+  padding-top: 18px!important;
+  border-top: 1px solid #e8ebf0;
+  text-align: left;
+}
+
+.admin-plan-limits-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-plan-summary-section {
+  margin-top: 2px;
+}
+
+.admin-plan-inclusions {
+  min-height: 45px;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #b8ebc9;
+  border-radius: 7px;
+  background: #f0fbf4;
+}
+
+.admin-plan-inclusions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #344054;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.admin-plan-inclusions svg {
+  color: #16a34a;
+}
+
+.admin-plan-tab-panel-simple {
+  min-height: 290px;
+  padding: 6px 0;
+}
+
+.admin-plan-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-plan-checkbox-grid label {
+  min-height: 48px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e2e7ee;
+  border-radius: 8px;
+  background: #fafbfc;
+  color: #344054;
+  font-size: 12px;
+}
+
+.admin-plan-status-toggle-card {
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid #e2e7ee;
+  border-radius: 9px;
+  background: #fafbfc;
+  text-align: left;
+}
+
+.admin-plan-status-toggle-card strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.admin-plan-status-toggle-card p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 11px;
+}
+
+.admin-plan-switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  flex: 0 0 42px;
+}
+
+.admin-plan-switch input {
+  position: absolute;
+  opacity: 0;
+}
+
+.admin-plan-switch span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d0d5dd;
+  cursor: pointer;
+}
+
+.admin-plan-switch span::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+  transition: transform .18s ease;
+}
+
+.admin-plan-switch input:checked+span {
+  background: #1464f6;
+}
+
+.admin-plan-switch input:checked+span::after {
+  transform: translateX(18px);
+}
+
+.admin-plan-modal-footer {
+  min-height: 70px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e4e7ec;
+  background: #fff;
+}
+
+.admin-plan-modal-cancel,
+.admin-plan-modal-save {
+  min-height: 36px;
+  padding: 0 17px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.admin-plan-modal-cancel {
+  border: 1px solid #d7dce5;
+  background: #fff;
+  color: #344054;
+}
+
+.admin-plan-modal-save {
+  border: 0;
+  background: #1464f6;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(20, 100, 246, 0.18);
+}
+
+.admin-plan-modal-save:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+@media (max-width: 720px) {
+  .admin-plan-modal-overlay {
+    padding: 12px;
+  }
+
+  .admin-plan-modal {
+    width: 100%;
+    max-height: 96vh;
+  }
+
+  .admin-plan-modal-tabs {
+    gap: 12px;
+  }
+
+  .admin-plan-modal-body {
+    max-height: calc(96vh - 164px);
+    padding: 18px 16px 12px;
+  }
+
+  .admin-plan-modal-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-plan-modal-section {
+    padding: 0;
+  }
+
+  .admin-plan-modal-section-split {
+    padding-bottom: 18px;
+    border-right: 0;
+    border-bottom: 1px solid #e8ebf0;
+  }
+
+  .admin-plan-modal-section:last-child {
+    padding-top: 18px!important;
+  }
+
+  .admin-plan-limits-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-plan-inclusions {
+    grid-template-columns: 1fr 1fr;
+    padding: 12px;
+  }
+
+  .admin-plan-checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+}
