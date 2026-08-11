@@ -14,6 +14,7 @@ import {
   getPlan,
   normalizePlanId,
   publicPlansConfig,
+  resolveEffectivePlan,
 } from '../plans/plan-config';
 
 // The master Customers admin data layer. One record per account (a team OWNER
@@ -340,10 +341,20 @@ export class CustomersAdminService {
   private deriveStatus(row: any): string {
     const ps = String(row.payment_status || '').toLowerCase();
     const cs = String(row.checkout_status || '').toLowerCase();
-    if (ps === 'active' || cs === 'paid') return 'active';
+    // A lapsed/terminated payment_status wins over checkout_status='paid' (set at
+    // purchase and never cleared on cancel), so a canceled/past-due/refunded account
+    // is never shown as active.
     if (ps === 'failed') return 'failed';
     if (ps === 'past_due') return 'past_due';
-    if (ps === 'canceled' || ps === 'suspended') return 'canceled';
+    if (
+      ps === 'canceled' ||
+      ps === 'cancelled' ||
+      ps === 'suspended' ||
+      ps === 'refunded' ||
+      ps === 'expired'
+    )
+      return 'canceled';
+    if (ps === 'active' || cs === 'paid') return 'active';
     if (ps === 'trial' || ps === 'pending') return 'trialing';
     if (ps === 'free') return 'free';
     return 'registered';
@@ -351,30 +362,64 @@ export class CustomersAdminService {
 
   private enrich(row: any) {
     if (!row) return row;
-    const notChosen =
-      !row.selected_plan && String(row.payment_status || '') === 'registered';
-    const planId = normalizePlanId(row.selected_plan || row.plan);
-    const cfg = getPlan(planId);
+    const status = this.deriveStatus(row);
+    // Same source of truth as the CRM guard and the usage layer: selected_plan is
+    // intent only; a paid/grandfathered tier comes from `plan`; a terminated paid
+    // account drops back to Free.
+    const eff = resolveEffectivePlan(row);
+    const cfg = getPlan(eff.planId);
     const cycle =
       row.billing_cycle === 'annual'
         ? 'annual'
         : row.billing_cycle === 'monthly'
           ? 'monthly'
           : null;
-    const recurringCents = cfg.isFree
-      ? 0
-      : cycle === 'annual'
-        ? cfg.pricing.annualCents
-        : cfg.pricing.monthlyCents;
+
+    // A paid or grandfathered paid tier shows its real label and recurring price.
+    // An account that only clicked Solo without paying is NOT shown as an assigned
+    // "Solo $197/month" plan.
+    if (!eff.isFree) {
+      const recurringCents =
+        cycle === 'annual' ? cfg.pricing.annualCents : cfg.pricing.monthlyCents;
+      return {
+        ...row,
+        status,
+        plan_id: eff.planId,
+        plan_label: cfg.label,
+        billing: cycle || 'monthly',
+        intro_amount: cfg.pricing.introCents / 100,
+        recurring_amount: recurringCents / 100,
+        seats_limit: cfg.seats,
+      };
+    }
+
+    // Effective Free. Distinguish: picked a paid plan but has not paid -> Registered;
+    // genuinely on Free -> Free; never picked anything -> Not selected. Never a paid
+    // label or price.
+    const pickedPaid =
+      !!row.selected_plan && normalizePlanId(row.selected_plan) !== 'free';
+    const choseFree =
+      String(row.payment_status || '').toLowerCase() === 'free' ||
+      (!!row.selected_plan && normalizePlanId(row.selected_plan) === 'free');
+    const plan_label = pickedPaid
+      ? 'Registered'
+      : choseFree
+        ? 'Free'
+        : 'Not selected';
+    const plan_id = pickedPaid
+      ? 'registered'
+      : choseFree
+        ? 'free'
+        : 'unselected';
     return {
       ...row,
-      status: this.deriveStatus(row),
-      plan_id: notChosen ? 'unselected' : planId,
-      plan_label: notChosen ? 'Not selected' : cfg.label,
-      billing: cfg.isFree ? 'free' : cycle || 'monthly',
-      intro_amount: cfg.pricing.introCents / 100,
-      recurring_amount: recurringCents / 100,
-      seats_limit: cfg.seats,
+      status,
+      plan_id,
+      plan_label,
+      billing: 'free',
+      intro_amount: 0,
+      recurring_amount: 0,
+      seats_limit: 1,
     };
   }
 
@@ -388,7 +433,9 @@ export class CustomersAdminService {
       case 'trialing':
         return `payment_status IN ('trial', 'pending')`;
       case 'active':
-        return `(payment_status = 'active' OR checkout_status = 'paid')`;
+        // checkout_status='paid' is sticky and never cleared on cancel, so exclude a
+        // terminated payment_status from the paid-active set.
+        return `(payment_status = 'active' OR (checkout_status = 'paid' AND LOWER(COALESCE(payment_status,'')) NOT IN ('canceled','cancelled','suspended','past_due','refunded','expired','failed')))`;
       case 'past_due':
         return `payment_status = 'past_due'`;
       case 'canceled':

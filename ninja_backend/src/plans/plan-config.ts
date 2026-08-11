@@ -183,9 +183,13 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       customObjects: false,
       ...PAID_AI_FEATURES,
     },
+    // The live Paddle checkout (paddle.service getPublicConfig) uses the internal
+    // keys solo/team/growth, so the recurring price env for Business is
+    // PADDLE_PRICE_TEAM. Kept in sync here so every price reference agrees on one
+    // naming and no future consumer reads a variable the checkout does not set.
     paddleEnv: {
-      monthly: 'PADDLE_PRICE_BUSINESS',
-      annual: 'PADDLE_PRICE_BUSINESS_ANNUAL',
+      monthly: 'PADDLE_PRICE_TEAM',
+      annual: 'PADDLE_PRICE_TEAM_ANNUAL',
     },
   },
   scale: {
@@ -214,7 +218,8 @@ export const PLANS: Record<PlanId, PlanConfig> = {
       customObjects: true,
       ...PAID_AI_FEATURES,
     },
-    paddleEnv: { monthly: 'PADDLE_PRICE_SCALE', annual: 'PADDLE_PRICE_SCALE_ANNUAL' },
+    // Scale maps to the internal 'growth' key used by the live checkout.
+    paddleEnv: { monthly: 'PADDLE_PRICE_GROWTH', annual: 'PADDLE_PRICE_GROWTH_ANNUAL' },
   },
 };
 
@@ -238,6 +243,65 @@ export function normalizePlanId(raw?: string | null): PlanId {
     .trim()
     .toLowerCase();
   return LEGACY_MAP[key] || 'free';
+}
+
+// Paid statuses that have lapsed and must drop the account back to Free caps.
+const TERMINATED_STATUSES = [
+  'canceled',
+  'cancelled',
+  'suspended',
+  'past_due',
+  'refunded',
+  'expired',
+];
+
+// Resolve an account's EFFECTIVE plan (for entitlements, CRM access, and admin
+// display) from its raw user columns. This is the SINGLE source of truth so the
+// payment guard, the usage/feature layer, and the Customers view can never disagree
+// about what plan an account is on.
+//
+// Rules:
+//  - selected_plan is only an INTENT to buy and never grants a tier by itself.
+//  - An account is on a paid tier when it has actually paid (payment_status
+//    active/paid, or checkout_status paid) OR it carries a paid tier on the legacy
+//    `plan` column and is not in a terminated state (grandfathered pre-Paddle).
+//  - Everything else — an unpaid plan-selector, a terminated/canceled paid account,
+//    or a genuine Free account — resolves to Free.
+//  - For a confirmed-paid account the tier comes from the `plan` column (what
+//    activation writes), NOT selected_plan, so an unpaid upgrade click cannot
+//    escalate entitlements before the higher tier is paid.
+export function resolveEffectivePlan(row: {
+  selected_plan?: string | null;
+  plan?: string | null;
+  payment_status?: string | null;
+  checkout_status?: string | null;
+}): { planId: PlanId; paid: boolean; terminated: boolean; isFree: boolean } {
+  const pay = String(row?.payment_status || '').toLowerCase();
+  const checkout = String(row?.checkout_status || '').toLowerCase();
+  const terminated = TERMINATED_STATUSES.includes(pay);
+  // checkout_status='paid' is a sticky "has ever paid" flag set at purchase and
+  // never cleared on cancellation, so a terminated payment_status must win over it —
+  // otherwise a canceled account would read as still-paid and keep premium forever.
+  const paid =
+    !terminated &&
+    (pay === 'active' || pay === 'paid' || checkout === 'paid');
+  const planTier = normalizePlanId(row?.plan);
+  const selectedTier = normalizePlanId(row?.selected_plan || row?.plan);
+
+  let planId: PlanId;
+  if (paid) {
+    // Confirmed paid: entitle the tier activation wrote to `plan`. Fall back to the
+    // selected tier only for an anomalous paid row with no `plan`, so a paying
+    // customer is never under-entitled.
+    planId = planTier !== 'free' ? planTier : selectedTier;
+  } else if (planTier !== 'free' && !terminated) {
+    // Grandfather a pre-Paddle paid account that carries its tier on `plan`.
+    planId = planTier;
+  } else {
+    // Unpaid plan-selector, terminated/canceled paid account, or genuine Free.
+    planId = 'free';
+  }
+  return { planId, paid, terminated, isFree: planId === 'free' };
 }
 
 export function getPlan(id?: string | null): PlanConfig {

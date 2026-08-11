@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionPlansService } from './subscription-plans.service';
 import { SubscriptionsController } from './subscriptions.controller';
-import { PaddleWebhookController } from './webhooks/paddle-webhook.controller';
 import { SubscriptionActiveGuard } from './guards/subscription-active.guard';
 import { SubscriptionEnforcementService } from './services/subscription-enforcement.service';
 import { ListingLimitGuard } from './guards/listing-limit.guard';
@@ -16,7 +15,11 @@ import { PlansModule } from '../plans/plans.module';
 
 @Module({
   imports: [PaymentsModule, TeamsModule, AnalyticsModule, PlansModule],
-  controllers: [SubscriptionsController, PaddleWebhookController],
+  // Single canonical Paddle webhook: POST /api/payments/paddle/webhook
+  // (PaymentsService.processPaddleWebhook). The former PaddleWebhookController at
+  // POST /api/webhooks/paddle was a competing Paddle-Classic handler that misparsed
+  // Paddle Billing payloads; it has been unregistered so there is one flow.
+  controllers: [SubscriptionsController],
   providers: [
     SubscriptionsService,
     SubscriptionPlansService,

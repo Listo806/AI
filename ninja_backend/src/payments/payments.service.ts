@@ -2,6 +2,16 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PayPalService } from './paypal.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
+import { normalizePlanId } from '../plans/plan-config';
+
+// Seat allowance per normalized plan, mirrored from plan-config so a Paddle
+// activation can stamp the subscription row's seat_limit without a plan lookup.
+const SEATS_BY_PLAN: Record<string, number> = {
+  free: 1,
+  solo: 1,
+  business: 3,
+  scale: 5,
+};
 
 @Injectable()
 export class PaymentsService {
@@ -466,6 +476,13 @@ export class PaymentsService {
       [eventId, eventType, JSON.stringify(body)],
     );
 
+    // Beyond activating the user (which grants access), mirror the confirmed
+    // billing into the team-scoped subscriptions + payments tables so the admin's
+    // Next Billing (subscriptions.current_period_end) and LTV (SUM of succeeded
+    // payments) populate. Best-effort and self-contained: a failure here is logged
+    // but never blocks activation or triggers a Paddle retry.
+    await this.persistPaddleBilling(eventType, data, customUserId, subId);
+
     // First confirmed payment: move the SAME sign-up record to paid (never a new
     // account) and fire the once-only welcome + getting-started emails.
     if (isActivation && matched) {
@@ -484,6 +501,242 @@ export class PaymentsService {
     }
 
     return { status: 'success', matched, eventType };
+  }
+
+  // --- Paddle subscriptions + payments persistence ---
+  //
+  // The user-table activation above grants access and drives the plan label. This
+  // block additionally keeps the team-scoped `subscriptions` and `payments` tables
+  // in sync so the admin Customers view can derive Next Billing (from
+  // subscriptions.current_period_end) and LTV (from SUM of succeeded payments).
+  // Everything here is best-effort: reporting must never block account access.
+
+  // Map a Paddle event to the subscription status we should persist, or null when
+  // the event should not touch the subscription/payment tables.
+  private paddleBillingStatus(eventType: string, data: any): string | null {
+    switch (eventType) {
+      case 'subscription.activated':
+      case 'subscription.created':
+      case 'transaction.completed':
+      case 'transaction.paid':
+        return 'active';
+      case 'subscription.past_due':
+        return 'past_due';
+      case 'subscription.canceled':
+        return 'canceled';
+      case 'subscription.updated': {
+        const s = String(data?.status || '').toLowerCase();
+        if (s === 'active') return 'active';
+        if (s === 'past_due') return 'past_due';
+        if (s === 'paused') return 'suspended';
+        if (s === 'canceled') return 'canceled';
+        return null;
+      }
+      default:
+        return null;
+    }
+  }
+
+  private async resolveTeamIdForPaddle(
+    userId: string | null,
+    subId: string | null,
+  ): Promise<string | null> {
+    try {
+      if (userId) {
+        const { rows } = await this.db.query(
+          `SELECT team_id FROM users WHERE id = $1 LIMIT 1`,
+          [userId],
+        );
+        if (rows[0]?.team_id) return rows[0].team_id;
+      }
+      if (subId) {
+        const { rows } = await this.db.query(
+          `SELECT team_id FROM users WHERE paddle_subscription_id = $1 LIMIT 1`,
+          [subId],
+        );
+        if (rows[0]?.team_id) return rows[0].team_id;
+      }
+    } catch (err: any) {
+      this.logger.error(`resolveTeamIdForPaddle failed: ${err?.message}`);
+    }
+    return null;
+  }
+
+  private async lookupUserPlan(
+    userId: string | null,
+    subId: string | null,
+  ): Promise<string | null> {
+    try {
+      const where = userId ? 'id = $1' : 'paddle_subscription_id = $1';
+      const key = userId || subId;
+      if (!key) return null;
+      const { rows } = await this.db.query(
+        `SELECT selected_plan, plan FROM users WHERE ${where} LIMIT 1`,
+        [key],
+      );
+      return rows[0]?.selected_plan || rows[0]?.plan || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Insert or update the single subscriptions row for this Paddle subscription.
+  // Keyed on the unique paddle_subscription_id, so repeated deliveries just refresh
+  // the status and billing period. Returns the row id for the payment FK.
+  private async upsertPaddleSubscription(opts: {
+    teamId: string;
+    paddleSubId: string;
+    paddleCustomerId: string | null;
+    seatLimit: number;
+    status: string;
+    periodStart: string | null;
+    periodEnd: string | null;
+  }): Promise<string | null> {
+    const { rows } = await this.db.query(
+      `INSERT INTO subscriptions
+         (team_id, provider, status, seat_limit, paddle_subscription_id,
+          paddle_customer_id, current_period_start, current_period_end,
+          created_at, updated_at)
+       VALUES ($1, 'paddle', $2, $3, $4, $5, $6, $7, NOW(), NOW())
+       ON CONFLICT (paddle_subscription_id) DO UPDATE SET
+         status = EXCLUDED.status,
+         seat_limit = EXCLUDED.seat_limit,
+         paddle_customer_id = COALESCE(EXCLUDED.paddle_customer_id, subscriptions.paddle_customer_id),
+         current_period_start = COALESCE(EXCLUDED.current_period_start, subscriptions.current_period_start),
+         current_period_end = COALESCE(EXCLUDED.current_period_end, subscriptions.current_period_end),
+         updated_at = NOW()
+       RETURNING id`,
+      [
+        opts.teamId,
+        opts.status,
+        opts.seatLimit,
+        opts.paddleSubId,
+        opts.paddleCustomerId,
+        opts.periodStart,
+        opts.periodEnd,
+      ],
+    );
+    return rows[0]?.id || null;
+  }
+
+  // The most recent Paddle subscription row for a team — used to attach a
+  // one-time charge (e.g. the $7 activation) that arrives without a subscription id.
+  private async latestTeamPaddleSubscription(
+    teamId: string,
+  ): Promise<string | null> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM subscriptions
+        WHERE team_id = $1 AND provider = 'paddle'
+        ORDER BY created_at DESC LIMIT 1`,
+      [teamId],
+    );
+    return rows[0]?.id || null;
+  }
+
+  private async recordPaddlePayment(opts: {
+    subscriptionRowId: string;
+    paddleTxnId: string;
+    amount: number;
+    currency: string;
+    status: string;
+    paymentDate: string | null;
+  }): Promise<void> {
+    await this.db.query(
+      `INSERT INTO payments
+         (subscription_id, paddle_transaction_id, amount, currency, status,
+          payment_date, created_at)
+       VALUES ($1, $2, $3, $4, $5, COALESCE($6::timestamptz, NOW()), NOW())
+       ON CONFLICT (paddle_transaction_id) DO UPDATE SET
+         status = EXCLUDED.status,
+         amount = EXCLUDED.amount`,
+      [
+        opts.subscriptionRowId,
+        opts.paddleTxnId,
+        opts.amount,
+        opts.currency,
+        opts.status,
+        opts.paymentDate,
+      ],
+    );
+  }
+
+  // Mirror a confirmed Paddle event into subscriptions + payments. Best-effort:
+  // any failure is logged and swallowed so account access is never affected.
+  private async persistPaddleBilling(
+    eventType: string,
+    data: any,
+    customUserId: string | null,
+    subId: string | null,
+  ): Promise<void> {
+    try {
+      const status = this.paddleBillingStatus(eventType, data);
+      if (!status) return;
+
+      const teamId = await this.resolveTeamIdForPaddle(customUserId, subId);
+      if (!teamId) return;
+
+      // Billing period → the admin's Next Billing. Subscription events carry
+      // current_billing_period; transaction events carry billing_period; fall back
+      // to next_billed_at.
+      const periodStart =
+        data?.current_billing_period?.starts_at ||
+        data?.billing_period?.starts_at ||
+        null;
+      const periodEnd =
+        data?.current_billing_period?.ends_at ||
+        data?.billing_period?.ends_at ||
+        data?.next_billed_at ||
+        null;
+      const paddleCustomerId = data?.customer_id || null;
+      const planKey = normalizePlanId(
+        data?.custom_data?.plan ||
+          (await this.lookupUserPlan(customUserId, subId)),
+      );
+      const seatLimit = SEATS_BY_PLAN[planKey] ?? 1;
+
+      // Resolve the subscriptions row to write against. With a subscription id we
+      // upsert it; without one (a standalone $7 charge) we attach to the team's
+      // existing Paddle subscription row so LTV still counts it.
+      let subRowId: string | null = null;
+      if (subId) {
+        subRowId = await this.upsertPaddleSubscription({
+          teamId,
+          paddleSubId: subId,
+          paddleCustomerId,
+          seatLimit,
+          status,
+          periodStart,
+          periodEnd,
+        });
+      } else {
+        subRowId = await this.latestTeamPaddleSubscription(teamId);
+      }
+
+      if (eventType.startsWith('transaction.') && subRowId) {
+        const txnId = data?.id || null;
+        const totals = data?.details?.totals || data?.totals || {};
+        const rawAmount =
+          totals.grand_total ?? totals.total ?? data?.amount ?? null;
+        // Paddle Billing amounts are minor units (cents) as strings.
+        const amount = rawAmount != null ? Number(rawAmount) / 100 : null;
+        const currency = data?.currency_code || data?.currency || 'USD';
+        const paymentDate = data?.billed_at || data?.created_at || null;
+        if (txnId && amount != null && Number.isFinite(amount)) {
+          await this.recordPaddlePayment({
+            subscriptionRowId: subRowId,
+            paddleTxnId: txnId,
+            amount,
+            currency,
+            status: 'succeeded',
+            paymentDate,
+          });
+        }
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `persistPaddleBilling(${eventType}) failed (non-fatal): ${err?.message}`,
+      );
+    }
   }
 
   // --- PayPal webhook processing (keeps the users table in sync with PayPal) ---
