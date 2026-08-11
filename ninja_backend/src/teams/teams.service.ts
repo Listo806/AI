@@ -14,21 +14,11 @@ import { NotificationsService } from "../notifications/notifications.service";
 import { TeamAIInsightsService } from "./insights/ai-insights.service";
 import { TeamAnalyticsService } from "./analytics/team-analytics.service";
 import { ConfigService } from "../config/config.service";
+import { getPlan, resolveEffectivePlan } from "../plans/plan-config";
 import { randomBytes } from "crypto";
 @Injectable()
 export class TeamsService {
   private readonly logger = new Logger(TeamsService.name);
-
-  /**
-   * Per-plan seat caps (Feature B). A team's tier lives on the OWNER's
-   * `users.plan` ('solo' | 'team' | 'growth'). 'growth' is the $497 "Business"
-   * tier. Anything unknown (trial / unpaid / no plan) falls back to the Solo cap.
-   */
-  private static readonly PLAN_SEAT_LIMITS: Record<string, number> = {
-    solo: 1,
-    team: 3,
-    growth: 5,
-  };
 
   /**
    * Seat-limit error message. The 🔒 prefix follows the existing subscription
@@ -2468,21 +2458,24 @@ export class TeamsService {
   ===================================================== */
 
   /**
-   * Resolve the seat cap for a team from its plan tier. The tier lives on the
-   * team OWNER's `users.plan` (falling back to `selected_plan`): solo=1, team=3,
-   * growth=5. Trial / unpaid / unknown tiers default to the Solo cap (1).
+   * Resolve the seat cap for a team from its EFFECTIVE plan (the team OWNER's).
+   * Uses the shared resolveEffectivePlan rule so seats are payment-gated exactly
+   * like every other entitlement: selected_plan is intent only, so an owner who
+   * merely clicked the 3/5-user plan without paying stays at the Free/Solo cap of
+   * 1, while a confirmed-paid Business gets 3 and Scale gets 5. Paid seat add-ons
+   * still raise the cap on top.
    */
   async getTeamSeatLimit(teamId: string): Promise<number> {
     const { rows } = await this.db.query(
-      `SELECT LOWER(TRIM(COALESCE(u.plan, u.selected_plan, ''))) AS tier
+      `SELECT u.plan, u.selected_plan, u.payment_status, u.checkout_status
        FROM teams t
        JOIN users u ON u.id = t.owner_id
        WHERE t.id = $1
        LIMIT 1`,
       [teamId],
     );
-    const tier = rows[0]?.tier || "";
-    const base = TeamsService.PLAN_SEAT_LIMITS[tier] ?? 1;
+    const { planId } = resolveEffectivePlan(rows[0] || {});
+    const base = getPlan(planId).seats;
 
     // Add paid extra seats: each active $97 'seat' add-on raises the limit by 1.
     let extra = 0;
