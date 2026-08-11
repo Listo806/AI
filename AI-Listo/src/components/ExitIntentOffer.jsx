@@ -329,38 +329,11 @@ export default function ExitIntentOffer() {
 
   if (!open) return null;
 
-  const inputWrap = {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    border: "1px solid #d7d9de",
-    borderRadius: 12,
-    padding: "13px 14px",
-    background: "#fff",
-  };
-  const inputStyle = {
-    border: "none",
-    outline: "none",
-    flex: 1,
-    fontSize: 15,
-    background: "transparent",
-    color: "#0f172a",
-  };
-
   return (
     <div
       onClick={() => close("backdrop")}
       role="presentation"
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.72)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 2147483000,
-        padding: 16,
-      }}
+      className="exit-offer-backdrop"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -369,87 +342,29 @@ export default function ExitIntentOffer() {
         aria-labelledby="exit-popup-title"
         tabIndex={-1}
         ref={cardRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: 500,
-          maxHeight: "92vh",
-          overflowY: "auto",
-          background: "#fff",
-          borderRadius: 20,
-          padding: "38px 34px 26px",
-          boxShadow: "0 24px 60px rgba(0,0,0,0.35)",
-          fontFamily:
-            "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-          textAlign: "center",
-        }}
+        className="exit-offer-card"
       >
         <button
           type="button"
           aria-label={tr.close}
           onClick={() => close("x")}
-          style={{
-            position: "absolute",
-            top: 14,
-            right: 14,
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            border: "1px solid #e5e7eb",
-            background: "#fff",
-            color: "#0f172a",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="exit-offer-close"
         >
           <X size={18} />
         </button>
 
-        <h2
-          id="exit-popup-title"
-          style={{
-            margin: "0 0 8px",
-            fontSize: 38,
-            lineHeight: 1.02,
-            fontWeight: 800,
-            letterSpacing: "-0.01em",
-            color: "#0b0b0c",
-          }}
-        >
-          {tr.headline1} — {tr.headline2}
+        <h2 id="exit-popup-title" className="exit-offer-title">
+          {tr.headline1}
         </h2>
-        <h3
-          style={{
-            margin: "0 0 10px",
-            fontSize: 22,
-            fontWeight: 800,
-            color: "#0b0b0c",
-          }}
-        >
-          {tr.sub}
-        </h3>
-        <p
-          style={{
-            margin: "0 auto 20px",
-            maxWidth: 380,
-            fontSize: 14.5,
-            lineHeight: 1.5,
-            color: "#4b5563",
-          }}
-        >
-          {tr.desc}
-        </p>
 
-        <form
-          onSubmit={submit}
-          style={{ display: "flex", flexDirection: "column", gap: 12 }}
-        >
-          <label style={inputWrap}>
-            <User size={19} color="#6b7280" />
+        <h3 className="exit-offer-subtitle">{tr.sub}</h3>
+
+        <p className="exit-offer-desc">{tr.desc}</p>
+
+        <form onSubmit={submit} className="exit-offer-form">
+          <label className="exit-offer-input-wrap">
+            <User size={19} />
             <input
-              style={inputStyle}
               type="text"
               name="name"
               value={form.name}
@@ -458,10 +373,10 @@ export default function ExitIntentOffer() {
               autoComplete="name"
             />
           </label>
-          <label style={inputWrap}>
-            <Mail size={19} color="#6b7280" />
+
+          <label className="exit-offer-input-wrap">
+            <Mail size={19} />
             <input
-              style={inputStyle}
               type="email"
               name="email"
               value={form.email}
@@ -470,10 +385,10 @@ export default function ExitIntentOffer() {
               autoComplete="email"
             />
           </label>
-          <label style={inputWrap}>
-            <Phone size={19} color="#6b7280" />
+
+          <label className="exit-offer-input-wrap">
+            <Phone size={19} />
             <input
-              style={inputStyle}
               type="tel"
               name="phone"
               value={form.phone}
@@ -482,10 +397,10 @@ export default function ExitIntentOffer() {
               autoComplete="tel"
             />
           </label>
-          <label style={inputWrap}>
-            <LockKeyhole size={19} color="#6b7280" />
+
+          <label className="exit-offer-input-wrap">
+            <LockKeyhole size={19} />
             <input
-              style={inputStyle}
               type={showPassword ? "text" : "password"}
               name="password"
               value={form.password}
@@ -497,64 +412,452 @@ export default function ExitIntentOffer() {
               type="button"
               onClick={() => setShowPassword((s) => !s)}
               aria-label="Toggle password visibility"
-              style={{
-                border: "none",
-                background: "transparent",
-                cursor: "pointer",
-                color: "#6b7280",
-                display: "flex",
-              }}
+              className="exit-offer-password-toggle"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </label>
 
-          {error && (
-            <div style={{ color: "#dc2626", fontSize: 13, textAlign: "left" }}>
-              {error}
+          {error && <div className="exit-offer-error">{error}</div>}
+
+          <div className="exit-offer-benefits">
+            <div className="exit-offer-benefit-title">
+              <span className="exit-offer-new">NEW</span>
+              <strong>{tr.reassure}</strong>
             </div>
-          )}
+
+            <div className="exit-offer-benefit-row">
+              <ShieldCheck size={18} />
+              <span>Start free with our $0 plan</span>
+            </div>
+            <div className="exit-offer-benefit-row">
+              <ShieldCheck size={18} />
+              <span>Upgrade anytime, no pressure</span>
+            </div>
+            <div className="exit-offer-benefit-row">
+              <ShieldCheck size={18} />
+              <span>Unlock powerful features as you grow</span>
+            </div>
+            <div className="exit-offer-benefit-row">
+              <ShieldCheck size={18} />
+              <span>Cancel anytime, risk-free</span>
+            </div>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              marginTop: 4,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              width: "100%",
-              padding: "15px 18px",
-              borderRadius: 12,
-              border: "none",
-              background: "#0b0b0c",
-              color: "#fff",
-              fontSize: 15.5,
-              fontWeight: 700,
-              cursor: loading ? "default" : "pointer",
-              opacity: loading ? 0.8 : 1,
-            }}
+            className="exit-offer-submit"
           >
-            {loading ? tr.creating : tr.cta}
+            <span>{loading ? tr.creating : tr.cta}</span>
             {!loading && <ArrowRight size={19} />}
           </button>
         </form>
 
-        <p
-          style={{
-            margin: "16px 0 0",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 7,
-            fontSize: 13,
-            color: "#6b7280",
-          }}
-        >
-          <ShieldCheck size={16} /> {tr.reassure}
+        <p className="exit-offer-reassure">
+          <ShieldCheck size={16} />
+          <span>{tr.reassure}</span>
         </p>
       </div>
+
+      <style>{`
+        /* ===============================
+           SHARED
+        =============================== */
+        .exit-offer-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 2147483000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 18px;
+          background: rgba(0,0,0,.72);
+          backdrop-filter: blur(2px);
+        }
+
+        .exit-offer-card {
+          position: relative;
+          width: 100%;
+          font-family:
+            system-ui,
+            -apple-system,
+            "Segoe UI",
+            Roboto,
+            Helvetica,
+            Arial,
+            sans-serif;
+          text-align: center;
+        }
+
+        .exit-offer-close {
+          position: absolute;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+        }
+
+        .exit-offer-form {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .exit-offer-input-wrap {
+          width: 100%;
+          display: flex;
+          align-items: center;
+        }
+
+        .exit-offer-input-wrap input {
+          min-width: 0;
+          flex: 1;
+          border: 0;
+          outline: none;
+          background: transparent;
+          font: inherit;
+        }
+
+        .exit-offer-password-toggle {
+          border: 0;
+          background: transparent;
+          display: grid;
+          place-items: center;
+          cursor: pointer;
+          padding: 0;
+        }
+
+        .exit-offer-error {
+          color: #dc2626;
+          text-align: left;
+        }
+
+        .exit-offer-submit {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          border: 0;
+          cursor: pointer;
+        }
+
+        .exit-offer-submit:disabled {
+          opacity: .72;
+          cursor: wait;
+        }
+
+        .exit-offer-benefits {
+          display: none;
+        }
+
+        /* ===============================
+           DESKTOP — WHITE POPUP
+        =============================== */
+        @media (min-width: 769px) {
+          .exit-offer-card {
+            max-width: 615px;
+            max-height: 92vh;
+            overflow-y: auto;
+            padding: 44px 46px 28px;
+            border-radius: 28px;
+            background: #fff;
+            color: #111;
+            box-shadow: 0 28px 80px rgba(0,0,0,.38);
+          }
+
+          .exit-offer-close {
+            top: 18px;
+            right: 18px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid #d9dde5;
+            background: #fff;
+            color: #111827;
+          }
+
+          .exit-offer-title {
+            margin: 0 0 10px;
+            font-size: 76px;
+            line-height: .95;
+            font-weight: 900;
+            letter-spacing: -0.055em;
+            color: #000;
+          }
+
+          .exit-offer-subtitle {
+            margin: 0 0 12px;
+            font-size: 26px;
+            line-height: 1.15;
+            font-weight: 800;
+            color: #000;
+          }
+
+          .exit-offer-desc {
+            max-width: 475px;
+            margin: 0 auto 26px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #5b6472;
+          }
+
+          .exit-offer-form {
+            gap: 11px;
+          }
+
+          .exit-offer-input-wrap {
+            min-height: 54px;
+            padding: 0 16px;
+            gap: 11px;
+            border: 1px solid #d8dde5;
+            border-radius: 12px;
+            background: #fff;
+            color: #7a8492;
+          }
+
+          .exit-offer-input-wrap input {
+            height: 52px;
+            font-size: 15px;
+            color: #111827;
+          }
+
+          .exit-offer-input-wrap input::placeholder {
+            color: #6f7782;
+            opacity: 1;
+          }
+
+          .exit-offer-password-toggle {
+            width: 30px;
+            height: 30px;
+            color: #7a8492;
+          }
+
+          .exit-offer-benefits {
+            margin-top: 8px;
+            padding: 18px 18px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-radius: 12px;
+            background: #f8f9fb;
+            text-align: left;
+          }
+
+          .exit-offer-benefit-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 15px;
+            color: #111;
+          }
+
+          .exit-offer-new {
+            padding: 3px 7px;
+            border-radius: 4px;
+            background: #4f7fe8;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+          }
+
+          .exit-offer-benefit-row {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #111;
+            font-size: 14px;
+          }
+
+          .exit-offer-benefit-row svg {
+            color: #2563eb;
+            flex: 0 0 auto;
+          }
+
+          .exit-offer-submit {
+            min-height: 58px;
+            margin-top: 9px;
+            padding: 0 20px 0 28px;
+            border-radius: 11px;
+            background: #000;
+            color: #fff;
+          }
+
+          .exit-offer-submit span {
+            padding-left: 20px;
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+          }
+
+          .exit-offer-submit svg {
+            justify-self: end;
+          }
+
+          .exit-offer-reassure {
+            margin: 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            color: #6b7280;
+            font-size: 13px;
+          }
+        }
+
+        /* ===============================
+           MOBILE — DARK POPUP
+        =============================== */
+        @media (max-width: 768px) {
+          .exit-offer-backdrop {
+            padding: 10px;
+            background: rgba(0,0,0,.84);
+            backdrop-filter: blur(3px);
+          }
+
+          .exit-offer-card {
+            max-width: 320px;
+            max-height: 94vh;
+            overflow-y: auto;
+            padding: 30px 22px 18px;
+            border: 1px solid rgba(255,255,255,.05);
+            border-radius: 18px;
+            background: linear-gradient(180deg, #242424 0%, #1d1d1d 100%);
+            color: #fff;
+            box-shadow: 0 24px 65px rgba(0,0,0,.5);
+          }
+
+          .exit-offer-close {
+            top: 11px;
+            right: 11px;
+            width: 29px;
+            height: 29px;
+            border: 0;
+            border-radius: 50%;
+            background: #505050;
+            color: #e8e8e8;
+          }
+
+          .exit-offer-title {
+            margin: 0 0 14px;
+            color: #fff;
+            font-size: 55px;
+            line-height: .93;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+          }
+
+          .exit-offer-subtitle {
+            margin: 0 0 8px;
+            color: #fff;
+            font-size: 17px;
+            line-height: 1.2;
+            font-weight: 800;
+          }
+
+          .exit-offer-desc {
+            max-width: 265px;
+            margin: 0 auto 19px;
+            color: #d1d1d1;
+            font-size: 12px;
+            line-height: 1.5;
+          }
+
+          .exit-offer-form {
+            gap: 9px;
+          }
+
+          .exit-offer-input-wrap {
+            min-height: 43px;
+            padding: 0 12px;
+            gap: 9px;
+            border: 1px solid #494949;
+            border-radius: 9px;
+            background: rgba(255,255,255,.012);
+            color: #b3b3b3;
+          }
+
+          .exit-offer-input-wrap input {
+            height: 41px;
+            color: #f5f5f5;
+            font-size: 12px;
+          }
+
+          .exit-offer-input-wrap input::placeholder {
+            color: #b7b7b7;
+            opacity: 1;
+          }
+
+          .exit-offer-password-toggle {
+            width: 27px;
+            height: 27px;
+            color: #aaa;
+          }
+
+          .exit-offer-error {
+            font-size: 11.5px;
+            color: #ff8f8f;
+          }
+
+          /* Hide desktop benefits block on mobile */
+          .exit-offer-benefits {
+            display: none !important;
+          }
+
+          .exit-offer-submit {
+            min-height: 54px;
+            margin-top: 1px;
+            padding: 0 14px 0 18px;
+            border-radius: 9px;
+            background: linear-gradient(180deg, #303030 0%, #292929 100%);
+            color: #fff;
+          }
+
+          .exit-offer-submit span {
+            padding-left: 14px;
+            font-size: 12.5px;
+            line-height: 1.18;
+            font-weight: 800;
+            text-align: center;
+          }
+
+          .exit-offer-submit svg {
+            justify-self: end;
+            color: #d8d8d8;
+          }
+
+          .exit-offer-reassure {
+            margin: 13px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #cecece;
+            font-size: 10px;
+            line-height: 1.3;
+          }
+
+          .exit-offer-reassure svg {
+            color: #c7c7c7;
+            flex: 0 0 auto;
+          }
+        }
+
+        @media (max-width: 350px) {
+          .exit-offer-card {
+            max-width: 300px;
+            padding-left: 18px;
+            padding-right: 18px;
+          }
+
+          .exit-offer-title {
+            font-size: 49px;
+          }
+
+          .exit-offer-submit span {
+            padding-left: 8px;
+            font-size: 11.5px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
