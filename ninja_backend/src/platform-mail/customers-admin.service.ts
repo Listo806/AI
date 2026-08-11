@@ -109,7 +109,8 @@ export class CustomersAdminService {
   // Resolve the customer (account owner) + their team, or throw.
   private async ownerTeam(customerId: string) {
     const { rows } = await this.db.query(
-      `SELECT id, team_id, name, email, selected_plan, plan
+      `SELECT id, team_id, name, email, selected_plan, plan,
+              payment_status, checkout_status
          FROM users WHERE id = $1 AND deleted_at IS NULL LIMIT 1`,
       [customerId],
     );
@@ -120,7 +121,9 @@ export class CustomersAdminService {
   }
 
   private seatLimitFor(owner: any): number {
-    return getPlan(normalizePlanId(owner.selected_plan || owner.plan)).seats;
+    // Payment-gated seats via the shared rule: an unpaid plan-selector caps at 1,
+    // a confirmed-paid Business/Scale gets 3/5. Matches TeamsService.getTeamSeatLimit.
+    return getPlan(resolveEffectivePlan(owner).planId).seats;
   }
 
   // Roster + seat totals for the account.
