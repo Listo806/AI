@@ -2,6 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { QRCodeCanvas } from "qrcode.react";
 import { useWhatsAppDashboard } from "./hooks/useWhatsAppDashboard";
+import AiCapBanner from "../../components/AiCapBanner";
 import "./WhatsApp.css";
 
 import {
@@ -163,6 +164,7 @@ export default function WhatsAppPage() {
   );
   return (
     <div className="leads-page whatsapp-page">
+      <AiCapBanner />
       <div className="heading_page">
         <MessageCircle className="header-icon" size={20} />
         <h1>
