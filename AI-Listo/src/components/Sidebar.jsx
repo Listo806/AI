@@ -378,7 +378,13 @@ export default function Sidebar({
                       className={({ isActive }) =>
                         `crm-nav-link ${isActive ? "active" : ""}`
                       }
-                      onClick={onClose}
+                      onClick={(e) => {
+                        if (isLocked(item)) {
+                          e.preventDefault();
+                          openFeatureAddOns(FEATURE_TO_ADDON[item.feature] || null);
+                        }
+                        if (onClose) onClose();
+                      }}
                       title={isCollapsed ? t(item.labelKey) : undefined}
                     >
                       <i data-lucide={item.icon} className="crm-nav-icon"></i>
@@ -403,7 +409,13 @@ export default function Sidebar({
               className={({ isActive }) =>
                 `crm-nav-link ${isActive ? "active" : ""}`
               }
-              onClick={onClose}
+              onClick={(e) => {
+                if (isLocked(item)) {
+                  e.preventDefault();
+                  openFeatureAddOns(FEATURE_TO_ADDON[item.feature] || null);
+                }
+                if (onClose) onClose();
+              }}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
               <i data-lucide={item.icon} className="crm-nav-icon"></i>

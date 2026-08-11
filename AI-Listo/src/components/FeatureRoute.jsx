@@ -13,7 +13,7 @@ export default function FeatureRoute({ feature, title, description, children }) 
   if (loading) return null;
 
   if (!hasFeature(feature)) {
-    return <FeatureLockScreen title={title} description={description} />;
+    return <FeatureLockScreen feature={feature} title={title} description={description} />;
   }
   return children;
 }
