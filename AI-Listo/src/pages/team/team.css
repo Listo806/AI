@@ -3778,3 +3778,179 @@ TEAM QUICK ACTIONS
     flex-direction: column;
   }
 }
+/* ===== Team Workspace new Tasks layout ===== */
+
+.tw-new-header,.tw-section-head{display:flex;justify-content:space-between;align-items:flex-start}
+.tw-new-header{margin-bottom:16px}.tw-new-header h1{font-size:20px;margin:0 0 7px;font-weight:600;color: #111827;}.tw-new-header p,.tw-section-head p{margin:0;font-size:13px}
+.tw-header-actions,.tw-section-actions,.tw-filters,.tw-row-actions{display:flex;align-items:center;gap:8px}
+.tw-global-search,.tw-filters label{display:flex;align-items:center;gap:7px;border:1px solid #e4e7ec;border-radius:6px;padding:0 10px;background:#fff}
+.tw-global-search{height:34px;width:265px}.tw-global-search input,.tw-filters input{border:0;outline:0;width:100%;font-size:11px}
+.tw-new-btn,.tw-section-actions .primary{border:0;background:#1769ff;color:#fff;border-radius:6px;height:34px;padding:0 16px;display:flex;align-items:center;gap:6px;font-weight:650}
+.tw-stat-strip{display:grid;grid-template-columns:repeat(8,minmax(125px,1fr));border:1px solid #e7eaf0;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.tw-stat{position:relative;min-height:110px;padding:14px 8px;border-right:1px solid #edf0f4}.tw-stat>span{display:block;font-size:10px;font-weight:700;margin-bottom:7px}.tw-stat>strong{display:block;font-size:22px}.tw-stat>small{display:block;font-size:9px;color:#0f172ac9;margin-top:7px}.tw-stat>em{display:block;font-size:9px;color:#12a05c;font-style:normal;margin-top:11px}.tw-stat>em b{font-weight:400;color:#0f172ac9;margin-left:4px}
+.tw-stat-icon{position:absolute;right:12px;top:13px;width:29px;height:29px;border-radius:5px;display:grid;place-items:center;background:#eef5ff;color:#1769ff}.tw-stat-icon.i-2{background:#fff1e8;color:#f97316}.tw-stat-icon.i-3,.tw-stat-icon.i-4{background:#edfdf4;color:#16a34a}
+.tw-tabs{display:flex;gap:26px;border-bottom:1px solid #e8ebf0;padding:0 7px;overflow:auto}.tw-tabs button{border:0;background:none;padding:12px 0;font-size:11px;color:#475467;white-space:nowrap}.tw-tabs button.active{color:#1769ff;border-bottom:2px solid #1769ff;font-weight:700}
+.tw-tasks-section{padding-top:14px}.tw-section-head{align-items:center;margin-bottom:14px}.tw-section-head h2{font-size:18px;margin:0 0 4px;margin-top: 10px;text-align: left;}
+.tw-section-actions button,.tw-filters button{height:30px;border:1px solid #e4e7ec;background:#fff;border-radius:5px;padding:0 2px;font-size:10px;display:flex;align-items:center;gap:5px}.tw-section-actions .primary{height:30px}
+.tw-filters{gap:7px;margin-bottom:10px;overflow-x:auto}.tw-filters label{height:30px;min-width:150px}.tw-filters button{white-space:nowrap}.tw-filters .reset{color:#1769ff;border:0}.tw-view-label{font-size:10px;margin-left:auto}
+.tw-table-wrap{overflow:auto;border:1px solid #eaecf0;border-radius:6px}.tw-task-table{border-collapse:collapse;width:100%;font-size:9px}.tw-task-table th{font-size:9px;text-align:left;color:#344054;background:#fafbfc;padding:9px 8px;border-bottom:1px solid #eaecf0;white-space:nowrap}.tw-task-table td{padding:8px;border-bottom:1px solid #f0f2f5;white-space:nowrap;color:#475467;text-align: left;}.tw-task-table .task-name{font-weight:700;color:#1d2939;}
+.tw-pill{display:inline-flex;padding:3px 6px;border-radius:4px;font-size:8px}.status-in-progress{background:#eef5ff;color:#1769ff}.status-completed{background:#ecfdf3;color:#168653}.status-review{background:#f5f0ff;color:#7c3aed}.status-on-hold,.status-pending{background:#fff7e8;color:#d97706}.priority-high{background:#fff0f0;color:#ef4444}.priority-medium{background:#fff8e8;color:#d97706}.priority-low{background:#ecfdf3;color:#168653}
+.tw-assignee{display:flex;align-items:center;gap:6px}.tw-avatar{width:20px;height:20px;border-radius:50%;background:#111827;color:#fff;display:inline-grid;place-items:center;font-size:8px;font-weight:700}.tw-progress{display:flex;align-items:center;gap:7px}.tw-progress i,.tw-work-row i{width:72px;height:4px;background:#eef1f5;border-radius:9px;overflow:hidden}.tw-progress i b,.tw-work-row i b{display:block;height:100%;background:#1769ff;border-radius:9px}.tw-label{background:#f4f3ff;color:#6941c6;border-radius:4px;padding:3px 6px}.tw-activity-time{color:#16a34a!important}
+.tw-pagination{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:10px 2px;font-size:9px;color:#667085}.tw-pagination>div{display:flex;gap:4px}.tw-pagination button{width:25px;height:25px;border:0;background:#fff;border-radius:4px;font-size:9px}.tw-pagination button.active{border:1px solid #1769ff;color:#1769ff}.tw-pagination select{justify-self:end;border:1px solid #e4e7ec;border-radius:4px;height:26px;font-size:9px}
+.tw-bottom-dashboard{display:grid;grid-template-columns:1.05fr .9fr .9fr .8fr .9fr;gap:8px;margin-top:10px}.tw-mini-card{border:1px solid #e8ebf0;border-radius:6px;min-height:205px;padding:11px;background:#fff}.tw-mini-head{display:flex;justify-content:space-between;font-size:9px;margin-bottom:10px}.tw-mini-head strong{font-size:10px}.tw-mini-head span{color:#667085;font-size:8px}
+.tw-donut{width:110px;height:110px;border-radius:50%;margin:8px auto;display:grid;place-items:center;position:relative}.tw-donut:after{content:"";position:absolute;inset:19px;background:#fff;border-radius:50%}.tw-donut b{z-index:1;font-size:15px;text-align:center}.tw-donut b small{display:block;font-size:8px;color:#667085}.status-donut{background:conic-gradient(#1769ff 0 33%,#45b8c5 33% 58%,#4cc38a 58% 78%,#ffb020 78% 90%,#9b51e0 90% 97%,#f04438 97%)}.priority-donut{background:conic-gradient(#f04438 0 36%,#ffb020 36% 75%,#4cc38a 75%)}
+.tw-legend{font-size:8px}.tw-legend p{display:flex;gap:5px;margin:5px 0}.tw-legend p i{width:6px;height:6px;border-radius:50%;background:#1769ff}.tw-legend p span{margin-left:auto;color:#667085}
+.tw-work-row{display:grid;grid-template-columns:20px 1fr 65px 24px;align-items:center;gap:5px;margin:7px 0;font-size:8px}.tw-work-row i{width:65px}.tw-work-row em{font-style:normal;color:#667085}
+.tw-activity-row{display:grid;grid-template-columns:22px 1fr auto;gap:6px;margin:8px 0}.tw-activity-icon{width:20px;height:20px;border-radius:4px;background:#ecfdf3;color:#16a34a;display:grid;place-items:center}.tw-activity-row b,.tw-deadline b{display:block;font-size:8px}.tw-activity-row span,.tw-deadline span{display:block;font-size:6.5px;color:#667085}.tw-activity-row time{font-size:6px;color:#667085}.tw-recent-activity>button,.deadlines>button{display:block;margin:9px auto 0;border:0;background:none;color:#1769ff;font-size:8px;font-weight:700}
+.tw-deadline{display:grid;grid-template-columns:1fr auto auto;gap:6px;padding:6px 0;border-bottom:1px solid #f1f3f5;align-items:center}.tw-deadline em{font-size:6px;color:#f59e0b;font-style:normal;font-weight:700}
+.tw-existing-data{margin-top:18px;border-top:1px solid #eef1f5;padding-top:18px}
+@media(max-width:900px){.team-workspace{padding:14px}.tw-new-header,.tw-section-head{flex-direction:column;gap:12px}.tw-stat-strip{grid-template-columns:repeat(2,1fr)}.tw-bottom-dashboard{grid-template-columns:1fr}.tw-header-actions{width:100%}.tw-global-search{flex:1}}
+
+/* =========================================================
+   TASKS BY STATUS / TASKS BY PRIORITY
+   Chart left + legend right, matching reference
+   ========================================================= */
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1),
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  column-gap: 2px;
+  align-items: center;
+  padding: 10px;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-mini-head,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-mini-head {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-donut,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-donut {
+  grid-column: 1;
+  grid-row: 2;
+  width: 108px;
+  height: 108px;
+  margin: 2px 0;
+  justify-self: start;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  margin: 7px 0;
+  line-height: 1.2;
+  color: #475467;
+  white-space: nowrap;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p i,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p i {
+  width: 7px;
+  height: 7px;
+  margin: 0;
+  border-radius: 50%;
+  flex: none;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p span,
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p span {
+  margin-left: 0;
+  color: #667085;
+  text-align: right;
+}
+
+/* Tasks by Status legend colors - same order as donut */
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(1) i {
+  background: #1769ff;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(2) i {
+  background: #45b8c5;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(3) i {
+  background: #4cc38a;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(4) i {
+  background: #ffb020;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(5) i {
+  background: #9b51e0;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-legend p:nth-child(6) i {
+  background: #f04438;
+}
+
+/* Tasks by Priority legend colors - same order as donut */
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p:nth-child(1) i {
+  background: #f04438;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p:nth-child(2) i {
+  background: #ffb020;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-legend p:nth-child(3) i {
+  background: #4cc38a;
+}
+
+/* Keep donut center text crisp */
+.tw-bottom-dashboard > .tw-mini-card:nth-child(-n+2) .tw-donut b {
+  font-size: 14px;
+  line-height: 1.05;
+}
+
+.tw-bottom-dashboard > .tw-mini-card:nth-child(-n+2) .tw-donut b small {
+  margin-top: 3px;
+  font-size: 6.5px;
+  line-height: 1.1;
+}
+
+/* When cards become narrower, preserve chart-left / legend-right */
+@media (max-width: 1400px) and (min-width: 901px) {
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(1),
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(2) {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-donut,
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-donut {
+    width: 102px;
+    height: 102px;
+  }
+}
+
+/* Mobile/tablet: still side-by-side while space allows */
+@media (max-width: 600px) {
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(1),
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(2) {
+    grid-template-columns: 105px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(1) .tw-donut,
+  .tw-bottom-dashboard > .tw-mini-card:nth-child(2) .tw-donut {
+    width: 96px;
+    height: 96px;
+  }
+}

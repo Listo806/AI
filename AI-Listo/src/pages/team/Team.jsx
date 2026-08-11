@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  Search, Plus, Download, Upload, SlidersHorizontal, RotateCcw,
+  Eye, Pencil, MoreVertical, CheckCircle2, Clock3, CalendarDays,
+  FolderKanban, ListTodo, Users, Flag, Timer, FileText, LayoutGrid,
+  Table2, ChevronLeft, ChevronRight
+} from "lucide-react";
 
 import "./team.css";
 
@@ -372,74 +378,124 @@ export default function TeamWorkspace() {
       setSeatBusy(false);
     }
   };
+
+  const workspaceTasks = [
+    { id: 1, name: "Design system components", project: "Website Redesign", status: "In Progress", priority: "High", assignee: "Olivia Bennett", due: "May 20, 2025", progress: 65, logged: "8h 20m", estimate: "12h 00m", label: "Design", activity: "1h ago" },
+    { id: 2, name: "Setup staging environment", project: "System Integration", status: "Completed", priority: "Medium", assignee: "Ethan Walker", due: "May 16, 2025", progress: 100, logged: "6h 15m", estimate: "6h 00m", label: "DevOps", activity: "3h ago" },
+    { id: 3, name: "API endpoint development", project: "Mobile App", status: "In Progress", priority: "High", assignee: "Sophia Martinez", due: "May 22, 2025", progress: 40, logged: "10h 45m", estimate: "20h 00m", label: "Development", activity: "45m ago" },
+    { id: 4, name: "Marketing plan Q2", project: "Marketing Campaign", status: "Review", priority: "Medium", assignee: "Liam Johnson", due: "May 25, 2025", progress: 80, logged: "5h 30m", estimate: "8h 00m", label: "Marketing", activity: "2h ago" },
+    { id: 5, name: "Content strategy document", project: "Content Strategy", status: "In Progress", priority: "Low", assignee: "Isabella White", due: "May 19, 2025", progress: 30, logged: "3h 10m", estimate: "10h 00m", label: "Content", activity: "15m ago" },
+    { id: 6, name: "Bug fixes and testing", project: "Mobile App", status: "In Progress", priority: "High", assignee: "Noah Davis", due: "May 18, 2025", progress: 70, logged: "9h 05m", estimate: "12h 00m", label: "Development", activity: "1h ago" },
+    { id: 7, name: "Database optimization", project: "System Integration", status: "On Hold", priority: "Medium", assignee: "Ava Thompson", due: "May 30, 2025", progress: 10, logged: "1h 20m", estimate: "15h 00m", label: "DevOps", activity: "2d ago" },
+    { id: 8, name: "User feedback analysis", project: "Website Redesign", status: "Pending", priority: "Low", assignee: "Mason Clark", due: "May 26, 2025", progress: 0, logged: "0h 00m", estimate: "6h 00m", label: "Research", activity: "1d ago" },
+  ];
+
+  const memberNames = (filteredMembers || []).slice(0, 7).map((m, index) => ({
+    name:
+      m?.name ||
+      m?.fullName ||
+      m?.email?.split("@")[0] ||
+      `Team Member ${index + 1}`,
+    value:
+      Number(m?.workloadPercent ?? m?.productivity ?? m?.performance ?? 0) ||
+      Math.max(45, 95 - index * 8),
+  }));
+
+  const dashboardStats = [
+    ["Active Projects", stats?.activeProjects ?? 26, "12 in progress", "18%", FolderKanban],
+    ["Tasks Assigned", stats?.tasksAssigned ?? 342, "78 overdue", "24%", ListTodo],
+    ["Tasks Completed", stats?.tasksCompleted ?? 1152, "This month", "21%", CheckCircle2],
+    ["Completion Rate", stats?.completionRate ? `${stats.completionRate}%` : "76.4%", "This month", "8.6%", Flag],
+    ["On Time", stats?.onTimeRate ? `${stats.onTimeRate}%` : "89.1%", "Tasks completed on time", "6.4%", Clock3],
+    ["Team Productivity", stats?.productivity ? `${stats.productivity}%` : "94.2%", "Average", "7.2%", Users],
+    ["Hours Logged", stats?.hoursLogged ?? "1,856h", "This month", "13%", Timer],
+    ["Workload Balance", stats?.workloadBalance ?? "Good", "No overload", "", LayoutGrid],
+  ];
+
   return (
     <div className="team-workspace">
-      {/* =================================================
-        HEADER
-      ================================================= */}
-
-      <TeamHeader
-        teams={teams}
-        selectedTeamId={selectedTeamId}
-        onChangeTeam={setSelectedTeamId}
-        team={team}
-      />
-
-      {/* =================================================
-        STATS
-      ================================================= */}
-
-      <TeamStats stats={stats} />
-
-      <TeamBillingCard
-        onInvite={handleOpenInvite}
-        onAddSeat={handleAddSeatClick}
-        addingSeat={addingSeat}
-        billing={{
-          plan: team?.name || "Team Workspace",
-          status: "Active",
-          includedSeats: seatInfo?.total || 0,
-          activeSeats: seatInfo?.used || 0,
-          additionalSeats: 0,
-          nextInvoice: 0,
-        }}
-      />
-      {/* =================================================
-        TOOLBAR
-      ================================================= */}
-
-      <TeamToolbar
-        search={search}
-        onSearch={setSearch}
-        onInvite={handleOpenInvite}
-        teams={teams}
-        selectedTeam={selectedTeamId}
-        setSelectedTeam={setSelectedTeamId}
-        filter={filterDashboard}
-        onFilter={setFilterDashboard}
-        onRunAI={handleOpenAIInsights}
-      />
-
-      <div className="team-main-grid">
-        <TeamMembersTable
-          members={filteredMembers}
-          loading={loading}
-          onRemove={handleOpenDelete}
-          onInvite={handleOpenInvite}
-          onChangeRole={handleOpenChangeRole}
-        />
-        {/*<div className="team-main-grid-right">
-          
-        </div>*/}
+      <div className="tw-new-header">
+        <div>
+          <h1>Team Workspace</h1>
+          <p>Plan, organize, and execute internal projects with your team.</p>
+        </div>
+        <div className="tw-header-actions">
+          <label className="tw-global-search"><Search size={15}/><input placeholder="Search tasks, projects, people..." /></label>
+          <button className="tw-new-btn"><Plus size={16}/> New</button>
+        </div>
       </div>
 
-      <div className="team-bottom-grid">
-        <TeamPerformanceCard leaderboard={leaderboard} />
+      <div className="tw-stat-strip">
+        {dashboardStats.map(([label, value, sub, change, Icon], index) => (
+          <div className="tw-stat" key={label}>
+            <div className={`tw-stat-icon i-${index}`}><Icon size={17}/></div>
+            <span>{label}</span>
+            <strong>{value}</strong>
+            <small>{sub}</small>
+            {change && <em>↑ {change} <b>vs last month</b></em>}
+          </div>
+        ))}
+      </div>
+
+      <div className="tw-tabs">
+        {["Overview","Projects","Board","Tasks","My Tasks","Calendar","Time Tracking","Files","Team","Reports"].map((tab) => (
+          <button key={tab} className={tab === "Tasks" ? "active" : ""}>{tab}</button>
+        ))}
+      </div>
+
+      <section className="tw-tasks-section">
+        <div className="tw-section-head">
+          <div><h2>Tasks</h2><p>Manage and track all team tasks</p></div>
+          <div className="tw-section-actions">
+            <button><Upload size={14}/> Import</button>
+            <button><Download size={14}/> Export</button>
+            <button><SlidersHorizontal size={14}/></button>
+            <button className="primary"><Plus size={14}/> New Task</button>
+          </div>
+        </div>
+
+        <div className="tw-filters">
+          <label><Search size={14}/><input placeholder="Search tasks..." /></label>
+          {["Status · All Statuses","Priority · All Priorities","Assignee · All Assignees","Project · All Projects","Task Type · All Types","Any Time","More Filters"].map(x => <button key={x}>{x}</button>)}
+          <button className="reset"><RotateCcw size={13}/> Reset</button>
+          <span className="tw-view-label">View</span>
+          <button><Table2 size={13}/> Table</button><button><LayoutGrid size={13}/> Board</button><button><CalendarDays size={13}/> Calendar</button>
+        </div>
+
+        <div className="tw-table-wrap">
+          <table className="tw-task-table">
+            <thead><tr>
+              <th><input type="checkbox"/></th><th>Task Name</th><th>Project</th><th>Status</th><th>Priority</th><th>Assignee</th><th>Due Date</th><th>Progress</th><th>Time Logged</th><th>Time Est.</th><th>Labels</th><th>Last Activity</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              {workspaceTasks.map(task => (
+                <tr key={task.id}>
+                  <td><input type="checkbox"/></td><td className="task-name">{task.name}</td><td>{task.project}</td>
+                  <td><span className={`tw-pill status-${task.status.toLowerCase().replaceAll(" ","-")}`}>{task.status}</span></td>
+                  <td><span className={`tw-pill priority-${task.priority.toLowerCase()}`}>{task.priority}</span></td>
+                  <td><span className="tw-assignee"><span className="tw-avatar">{task.assignee.split(" ").map(x=>x[0]).join("").slice(0,2)}</span>{task.assignee}</span></td>
+                  <td>{task.due}</td>
+                  <td><div className="tw-progress"><i><b style={{width:`${task.progress}%`}}/></i><span>{task.progress}%</span></div></td>
+                  <td>{task.logged}</td><td>{task.estimate}</td><td><span className="tw-label">{task.label}</span></td>
+                  <td className="tw-activity-time">{task.activity}</td>
+                  <td><div className="tw-row-actions"><Eye size={14}/><Pencil size={14}/><MoreVertical size={14}/></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="tw-pagination"><span>Showing 1 to 8 of 342 tasks</span><div><button><ChevronLeft size={14}/></button><button className="active">1</button><button>2</button><button>3</button><button>4</button><button>5</button><span>...</span><button>43</button><button><ChevronRight size={14}/></button></div><select defaultValue="20"><option value="20">20 / page</option></select></div>
+      </section>
+
+      <div className="tw-bottom-dashboard">
+        <div className="tw-mini-card"><div className="tw-mini-head"><strong>Tasks by Status</strong><span>This Month⌄</span></div><div className="tw-donut status-donut"><b>342<small>Total Tasks</small></b></div><div className="tw-legend">{[["In Progress","112 (32.7%)"],["Completed","85 (24.9%)"],["Pending","68 (19.9%)"],["On Hold","42 (12.3%)"],["Review","25 (7.3%)"],["Cancelled","10 (2.9%)"]].map(x=><p key={x[0]}><i/>{x[0]}<span>{x[1]}</span></p>)}</div></div>
+        <div className="tw-mini-card"><div className="tw-mini-head"><strong>Tasks by Priority</strong><span>This Month⌄</span></div><div className="tw-donut priority-donut"><b>342<small>Total Tasks</small></b></div><div className="tw-legend short">{[["High","124 (36.3%)"],["Medium","132 (38.6%)"],["Low","86 (25.1%)"]].map(x=><p key={x[0]}><i/>{x[0]}<span>{x[1]}</span></p>)}</div></div>
+        <div className="tw-mini-card workload"><div className="tw-mini-head"><strong>Team Workload</strong><span>This Month⌄</span></div>{(memberNames.length ? memberNames : [{name:"Olivia Bennett",value:95},{name:"Ethan Walker",value:90},{name:"Sophia Martinez",value:85},{name:"Liam Johnson",value:75},{name:"Noah Davis",value:70},{name:"Ava Thompson",value:60},{name:"Mason Clark",value:45}]).map(m=><div className="tw-work-row" key={m.name}><span className="tw-avatar">{m.name.split(" ").map(x=>x[0]).join("").slice(0,2)}</span><span>{m.name}</span><i><b style={{width:`${m.value}%`}}/></i><em>{m.value}%</em></div>)}</div>
         <TeamActivityCard activity={activities} teamId={selectedTeamId} />
-        {/*<TeamNotificationsCard notifications={notifications} />*/}
-        <TeamInsightsCard insights={insights} />
-        <TeamQuickActionsCard selectedTeamId={selectedTeamId} />
+        <div className="tw-mini-card deadlines"><div className="tw-mini-head"><strong>Upcoming Deadlines</strong><span>Next 7 Days⌄</span></div>{workspaceTasks.slice(0,5).map((t,i)=><div className="tw-deadline" key={t.id}><div><b>{t.name}</b><span>{t.project}</span></div><span>{t.due}</span><em>{i===4?"Today":`${i+1} days`}</em></div>)}<button>View full calendar →</button></div>
       </div>
+
 
       {/* =================================================
         MODALS

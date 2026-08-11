@@ -1,50 +1,140 @@
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-export default function TeamActivityCard({ activity }) {
+import {
+  CheckCircle2,
+  Pencil,
+  MessageSquare,
+  FileText,
+  UserRound,
+  Activity,
+} from "lucide-react";
+
+export default function TeamActivityCard({ activity = [] }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+
+  const getIcon = (item, index) => {
+    const type = String(item?.type || item?.eventType || "").toLowerCase();
+
+    if (
+      type.includes("complete") ||
+      type.includes("closed") ||
+      type.includes("success")
+    ) {
+      return CheckCircle2;
+    }
+
+    if (
+      type.includes("update") ||
+      type.includes("edit") ||
+      type.includes("change")
+    ) {
+      return Pencil;
+    }
+
+    if (
+      type.includes("comment") ||
+      type.includes("message") ||
+      type.includes("respond")
+    ) {
+      return MessageSquare;
+    }
+
+    if (
+      type.includes("file") ||
+      type.includes("document") ||
+      type.includes("upload")
+    ) {
+      return FileText;
+    }
+
+    if (
+      type.includes("member") ||
+      type.includes("user") ||
+      type.includes("invite")
+    ) {
+      return UserRound;
+    }
+
+    const icons = [
+      Activity,
+      CheckCircle2,
+      Pencil,
+      MessageSquare,
+      FileText,
+      UserRound,
+    ];
+
+    return icons[index % icons.length];
+  };
+
+  const rows = Array.isArray(activity) ? activity.slice(0, 5) : [];
+
   return (
-    <div className="team-card">
-      <div className="team-card-header">
-        <div>
-          <h3 className="team-card-title">{t("team.activityCard.title", "Recent Activity")}</h3>
-          <p className="team-card-description">{t("team.activityCard.description", "Latest team updates")}</p>
-        </div>
-        <button
-          type="button"
-          className="team-link-btn "
-          onClick={() => {
-            navigate("/dashboard/team/activity?type=team");
-          }}
-        >
-          {t("team.activityCard.viewAll", "View All")}
-        </button>
+    <div className="tw-mini-card tw-recent-activity">
+      <div className="tw-mini-head">
+        <strong>Recent Activity</strong>
+        <span>All Activity⌄</span>
       </div>
-      <div className="team-activity-list">
-        {activity?.length ? (
-          activity.map((item) => (
-            <div
-              key={item.id || item._id || item.email}
-              className="team-activity-item"
-            >
-              <div className="team-activity-avatar-wrap">
-                <img
-                  src={item.avatar || "https://i.pravatar.cc/100"}
-                  alt=""
-                  className="team-activity-avatar"
-                />
-                <span className="team-activity-dot" />
+
+      <div className="tw-activity-rows">
+        {rows.length > 0 ? (
+          rows.map((item, index) => {
+            const Icon = getIcon(item, index);
+
+            const title =
+              item?.message ||
+              item?.title ||
+              item?.action ||
+              item?.type ||
+              "Team activity";
+
+            const description =
+              item?.sub ||
+              item?.description ||
+              item?.details ||
+              item?.email ||
+              "";
+
+            const time =
+              item?.time ||
+              item?.timeAgo ||
+              item?.relativeTime ||
+              item?.createdAt ||
+              item?.created_at ||
+              "";
+
+            return (
+              <div
+                className="tw-activity-row"
+                key={item?.id || item?._id || `${title}-${index}`}
+              >
+                <span className="tw-activity-icon">
+                  <Icon size={13} />
+                </span>
+
+                <div className="tw-activity-copy">
+                  <b>{title}</b>
+                  {description ? <span>{description}</span> : null}
+                </div>
+
+                <time>{time}</time>
               </div>
-              <div className="team-activity-content">
-                <div className="team-activity-message">{item.message}</div>
-                <div className="team-activity-time">{item.time}</div>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="team-empty-state">{t("team.activityCard.emptyState", "No recent activity")}</div>
+          <div className="tw-activity-empty">
+            No recent activity
+          </div>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={() =>
+          navigate("/dashboard/team/activity?type=team")
+        }
+      >
+        View all activity →
+      </button>
     </div>
   );
 }
