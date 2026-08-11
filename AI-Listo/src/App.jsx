@@ -81,6 +81,7 @@ import AIAssistant from "./pages/ai-assistant/AIAssistant";
 import Analytics from "./pages/dashboard/Analytics";
 import Team from "./pages/team/Team";
 import SalesWorkspace from "./pages/sales/SalesWorkspace";
+import InsuranceWorkspace from "./pages/insurance/InsuranceWorkspace";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
@@ -385,6 +386,9 @@ function AppRoutes() {
 
         {/* Sales Workspace */}
         <Route path="sales-workspace" element={<SalesWorkspace />} />
+
+        {/* Insurance Workspace */}
+        <Route path="insurance-workspace" element={<InsuranceWorkspace />} />
 
         {/* Team Route (paid: team workspace) */}
         <Route

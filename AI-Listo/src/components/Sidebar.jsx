@@ -102,6 +102,7 @@ export default function Sidebar({
       perfectFor: ["Insurance Agencies","Brokers","Independent Agents"],
       benefits: [["shield","Policy Visibility","Keep every policy and renewal organized"],["bell-ring","Never Miss Renewals","Automated reminders for key dates"],["users","Client Retention","Stay connected throughout the lifecycle"]],
       price: 97,
+      path: "/dashboard/insurance-workspace",
     },
     {
       id: "financial",
