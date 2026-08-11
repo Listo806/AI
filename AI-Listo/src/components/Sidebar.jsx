@@ -75,6 +75,219 @@ export default function Sidebar({
     }
   });
 
+  const [hoveredWorkspace, setHoveredWorkspace] = useState(null);
+
+  const workspaceItems = [
+    {
+      id: "sales",
+      feature: "salesWorkspace",
+      label: "Sales Workspace",
+      icon: "chart-no-axes-combined",
+      tone: "purple",
+      description: "Close more deals. Manage every stage from quote to payment.",
+      capabilities: ["Quotes & Proposals","Deal Revenue Tracking","Orders & Contracts","Sales Performance","Invoicing & Payments","Discounts & Approvals","Returns & Credits","Document Management","Sales Commissions","Advanced Reports"],
+      perfectFor: ["Sales Teams","B2B Companies","Distributors","Agencies","Service Providers"],
+      benefits: [["circle-dollar-sign","Complete Sales Cycle","From quote to cash in one place"],["trending-up","Increase Revenue","Better visibility and faster conversions"],["shield-check","Team Alignment","Collaborate and win as one team"]],
+      price: 97,
+    },
+    {
+      id: "insurance",
+      feature: "insuranceWorkspace",
+      label: "Insurance Workspace",
+      icon: "shield-check",
+      tone: "blue",
+      description: "Manage prospects, policies, renewals, and client follow-ups in one connected workspace.",
+      capabilities: ["Policy Pipeline","Renewal Tracking","Quote Follow-ups","Client Documents","Commission Tracking","Automated Reminders"],
+      perfectFor: ["Insurance Agencies","Brokers","Independent Agents"],
+      benefits: [["shield","Policy Visibility","Keep every policy and renewal organized"],["bell-ring","Never Miss Renewals","Automated reminders for key dates"],["users","Client Retention","Stay connected throughout the lifecycle"]],
+      price: 97,
+    },
+    {
+      id: "financial",
+      feature: "financialWorkspace",
+      label: "Financial Services",
+      icon: "landmark",
+      tone: "green",
+      description: "Organize client relationships, opportunities, documents, and follow-up workflows.",
+      capabilities: ["Client Portfolio View","Opportunity Tracking","Document Workflows","Task Automation","Client Follow-ups","Performance Reports"],
+      perfectFor: ["Advisors","Consultants","Financial Teams"],
+      benefits: [["landmark","Client Organization","Centralize accounts and opportunities"],["file-check-2","Better Compliance Flow","Keep documents and tasks structured"],["bar-chart-3","Performance Insight","See activity and growth at a glance"]],
+      price: 97,
+    },
+    {
+      id: "ecommerce",
+      feature: "ecommerceWorkspace",
+      label: "E-Commerce",
+      icon: "shopping-cart",
+      tone: "orange",
+      description: "Connect customers, orders, support, and revenue activity in one workspace.",
+      capabilities: ["Order Management","Customer Profiles","Abandoned Follow-up","Support Tracking","Revenue Reporting","Customer Segments"],
+      perfectFor: ["Online Stores","DTC Brands","Retail Teams"],
+      benefits: [["shopping-bag","Order Visibility","Keep customer and order context together"],["refresh-cw","Repeat Revenue","Build smarter follow-up workflows"],["pie-chart","Customer Insight","Understand buying patterns faster"]],
+      price: 97,
+    },
+    {
+      id: "customer-service",
+      feature: "customerServiceWorkspace",
+      label: "Customer Service",
+      icon: "headphones",
+      tone: "cyan",
+      description: "Give support teams one place to manage customers, conversations, and resolutions.",
+      capabilities: ["Support Queue","Conversation History","Resolution Tracking","Team Assignment","Customer Context","Service Reports"],
+      perfectFor: ["Support Teams","Service Businesses","Operations"],
+      benefits: [["headphones","Faster Support","Keep every customer conversation visible"],["messages-square","Connected Context","CRM and support history stay together"],["badge-check","Better Resolution","Track ownership and outcomes clearly"]],
+      price: 97,
+    },
+    {
+      id: "marketing",
+      feature: "marketingWorkspace",
+      label: "Marketing Workspace",
+      icon: "megaphone",
+      tone: "pink",
+      description: "Plan campaigns, follow leads, and connect marketing activity directly to revenue.",
+      capabilities: ["Campaign Tracking","Lead Attribution","Audience Segments","Automated Nurture","Content Workflow","Revenue Attribution"],
+      perfectFor: ["Marketing Teams","Agencies","Growth Teams"],
+      benefits: [["megaphone","Campaign Clarity","See what is running and what converts"],["target","Better Targeting","Use CRM context to improve outreach"],["badge-dollar-sign","Revenue Attribution","Connect campaigns to pipeline results"]],
+      price: 97,
+    },
+    {
+      id: "projects",
+      feature: "projectsWorkspace",
+      label: "Projects Workspace",
+      icon: "briefcase-business",
+      tone: "indigo",
+      description: "Coordinate projects, customers, tasks, deadlines, and delivery from one place.",
+      capabilities: ["Project Pipelines","Task Tracking","Milestones","Client Collaboration","Files & Notes","Delivery Reports"],
+      perfectFor: ["Agencies","Consultants","Delivery Teams"],
+      benefits: [["briefcase-business","Project Control","Track delivery from kickoff to completion"],["list-checks","Clear Ownership","Keep tasks and milestones accountable"],["users-round","Client Alignment","Connect project work to customer context"]],
+      price: 97,
+    },
+    {
+      id: "real-estate",
+      feature: "realEstateWorkspace",
+      label: "Real Estate Workspace",
+      icon: "building-2",
+      tone: "emerald",
+      description: "Manage properties, listings, buyers, sellers, opportunities, and real estate workflows from one connected workspace.",
+      capabilities: [
+        "Property Management",
+        "Listings & Inventory",
+        "Buyer & Seller Tracking",
+        "Property-to-Lead Matching",
+        "Deal Pipeline",
+        "Property Activity Timeline",
+        "AI Property Insights",
+        "Listing Optimization",
+      ],
+      perfectFor: [
+        "Real Estate Teams",
+        "Agents & Brokers",
+        "Investors",
+        "Wholesalers",
+        "Property Businesses",
+      ],
+      benefits: [
+        ["building-2", "Connected Inventory", "Keep properties, leads, and deals connected"],
+        ["search-check", "Faster Matching", "Match the right properties with the right leads"],
+        ["chart-no-axes-combined", "Revenue Visibility", "Track property activity and pipeline performance"],
+      ],
+      price: 97,
+      path: "/dashboard/properties",
+    },
+    {
+      id: "team",
+      feature: "teamWorkspace",
+      label: "Team Workspace",
+      icon: "users-round",
+      tone: "violet",
+      description: "Collaborate across your CRM with shared ownership, roles, permissions, and team visibility.",
+      capabilities: ["Team Members","Roles & Permissions","Shared Pipeline","Team Activity","Seat Management","Performance Visibility"],
+      perfectFor: ["Sales Teams","Operations","Growing Businesses"],
+      benefits: [["users-round","Shared Workspace","Keep everyone connected to the same CRM"],["key-round","Role Control","Manage access with clear permissions"],["chart-spline","Team Visibility","Understand activity and performance"]],
+      path: "/dashboard/team",
+    },
+  ];
+
+
+  // CORTEXA WORKSPACES uses the same plan-feature gating as the
+  // regular sidebar, but MUST NOT inherit PlanContext's fail-open behavior
+  // for brand-new/unregistered workspace feature keys.
+  //
+  // Why:
+  // - usePlan()/hasFeature intentionally fails open while loading/on error.
+  // - New keys such as salesWorkspace, insuranceWorkspace, etc. are not yet
+  //   guaranteed to exist in the plan/add-on registry.
+  // - Treating an unknown key as allowed made almost every workspace ACTIVE.
+  //
+  // A workspace can become ACTIVE only when its feature is actually registered
+  // in FEATURE_TO_ADDON, or is an existing core feature we already gate today.
+  const CORE_WORKSPACE_FEATURES = new Set([
+    "teamWorkspace",
+  ]);
+
+  const isWorkspaceFeatureRegistered = (workspace) => {
+    const feature = workspace?.feature;
+    if (!feature) return false;
+
+    return (
+      CORE_WORKSPACE_FEATURES.has(feature) ||
+      Object.prototype.hasOwnProperty.call(FEATURE_TO_ADDON || {}, feature)
+    );
+  };
+
+  const isSuperAdminAccount = [
+    "super_admin",
+    "super-admin",
+  ].includes(String(user?.role || "").toLowerCase());
+
+  const isWorkspaceActive = (workspace) => {
+    // Team Workspace is always available.
+    if (workspace?.id === "team") {
+      return true;
+    }
+
+    // Super Admin has full access to every Cortexa Workspace.
+    if (isSuperAdminAccount) {
+      return true;
+    }
+
+    // For all other accounts, only registered workspace features can
+    // become ACTIVE, and the current plan must include that feature.
+    if (!isWorkspaceFeatureRegistered(workspace)) {
+      return false;
+    }
+
+    return !isLocked(workspace);
+  };
+
+  const getWorkspaceBadge = (workspace) =>
+    isWorkspaceActive(workspace) ? "ACTIVE" : "PREMIUM";
+
+  const canOpenWorkspace = (workspace) =>
+    isWorkspaceActive(workspace) && !!workspace?.path;
+
+
+  // Helpful while wiring backend/add-on feature keys. Remove later if desired.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    console.table(
+      workspaceItems.map((workspace) => ({
+        workspace: workspace.label,
+        feature: workspace.feature,
+        registered: isWorkspaceFeatureRegistered(workspace),
+        superAdmin: isSuperAdminAccount,
+        teamAlwaysActive: workspace.id === "team",
+        hasFeature: workspace.feature
+          ? plan.hasFeature(workspace.feature)
+          : false,
+        locked: workspace.feature ? isLocked(workspace) : true,
+        badge: getWorkspaceBadge(workspace),
+      })),
+    );
+  }, [plan]);
+
+
   const WhatsAppIcon = () => {
     return (
       <svg
@@ -110,7 +323,7 @@ export default function Sidebar({
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [isCollapsed, aiCenterOpen]);
+  }, [isCollapsed, aiCenterOpen, hoveredWorkspace]);
 
   const isAiCenterActive = AI_CENTER_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
@@ -186,7 +399,6 @@ export default function Sidebar({
   ];
 
   const systemNavItems = [
-    { path: "/dashboard/team", icon: "users-2", labelKey: "nav.team", feature: "teamWorkspace" },
     {
       path: "/dashboard/integrations",
       icon: "plug",
@@ -216,7 +428,6 @@ export default function Sidebar({
     { path: "/dashboard/pipeline", icon: "git-branch", labelKey: "nav.pipeline" },
     { path: "/dashboard/contacts", icon: "contact", labelKey: "nav.contacts" },
     { path: "/dashboard/analytics", icon: "bar-chart-3", labelKey: "nav.analytics", feature: "advancedAnalytics" },
-    { path: "/dashboard/properties", icon: "building", labelKey: "nav.properties" },
   ];
 
   let navItems = operationalNav;
@@ -432,6 +643,102 @@ export default function Sidebar({
             </NavLink>
           ))}
           
+
+          {!isCollapsed && (
+            <section
+              className="crm-workspaces-section"
+              onMouseLeave={() => setHoveredWorkspace(null)}
+            >
+              <div className="crm-workspaces-heading">
+                <span>CORTEXA WORKSPACES</span>
+                <span className="crm-workspaces-new">NEW</span>
+              </div>
+
+              <div className="crm-workspaces-list">
+                {workspaceItems.map((workspace) => {
+                  const workspaceActive = isWorkspaceActive(workspace);
+                  const workspaceCanOpen = canOpenWorkspace(workspace);
+
+                  return (
+                    <button
+                      key={workspace.id}
+                      type="button"
+                      className={`crm-workspace-item ${
+                        workspaceActive ? "is-active" : ""
+                      } ${workspaceCanOpen ? "is-clickable" : "is-premium"}`}
+                      onMouseEnter={() => setHoveredWorkspace(workspace)}
+                      onFocus={() => setHoveredWorkspace(workspace)}
+                      onClick={() => {
+                        if (workspaceCanOpen) {
+                          window.location.href = workspace.path;
+                          return;
+                        }
+
+                        // Same behavior as locked menu items above:
+                        // show the add-on flow if there is a configured add-on.
+                        if (isLocked(workspace)) {
+                          const addon = FEATURE_TO_ADDON[workspace.feature];
+
+                          if (addon) {
+                            openFeatureAddOns(addon);
+                            return;
+                          }
+                        }
+
+                        // Otherwise keep the preview open.
+                        setHoveredWorkspace(workspace);
+                      }}
+                    >
+                      <span
+                        className={`crm-workspace-icon crm-workspace-icon-${workspace.tone}`}
+                      >
+                        <i data-lucide={workspace.icon}></i>
+                      </span>
+
+                      <span className="crm-workspace-label">
+                        {workspace.label}
+                      </span>
+
+                      <span
+                        className={`crm-workspace-badge ${
+                          workspaceActive ? "active" : ""
+                        }`}
+                      >
+                        {getWorkspaceBadge(workspace)}
+                      </span>
+
+                      <i
+                        data-lucide="chevron-right"
+                        className="crm-workspace-chevron"
+                      ></i>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="crm-workspaces-expand-card">
+                <div className="crm-workspaces-expand-title">
+                  <i data-lucide="crown"></i>
+                  <strong>Expand Cortexa</strong>
+                </div>
+
+                <p>
+                  Unlock powerful workspaces and scale your operations.
+                </p>
+
+                <button
+                  type="button"
+                  onMouseEnter={() =>
+                    setHoveredWorkspace(workspaceItems[0])
+                  }
+                >
+                  <span>Explore All Workspaces</span>
+                  <i data-lucide="arrow-right"></i>
+                </button>
+              </div>
+            </section>
+          )}
+
         </nav>
 
         {/* {!isCollapsed && (
@@ -489,6 +796,169 @@ export default function Sidebar({
           </div>
         </div> */}
       </aside>
+
+      {!isCollapsed && hoveredWorkspace && (
+        <aside
+          className="crm-workspace-flyout"
+          onMouseEnter={() => setHoveredWorkspace(hoveredWorkspace)}
+          onMouseLeave={() => setHoveredWorkspace(null)}
+        >
+          <div className="crm-workspace-flyout-intro">
+            <div className="crm-workspace-flyout-kicker">
+              <i data-lucide="sparkles"></i>
+
+              <div>
+                <h3>Cortexa Workspaces</h3>
+                <p>
+                  Specialized business environments designed to help you
+                  sell, serve and scale more effectively.
+                </p>
+              </div>
+            </div>
+
+            <div className="crm-workspace-flyout-points">
+              <span>
+                <i data-lucide="rocket"></i>
+                Purpose-built for your industry
+              </span>
+              <span>
+                <i data-lucide="lock-keyhole"></i>
+                Activate only what you need
+              </span>
+              <span>
+                <i data-lucide="shield-check"></i>
+                Secure, scalable, and powerful
+              </span>
+              <span>
+                <i data-lucide="zap"></i>
+                Always connected to your CRM
+              </span>
+            </div>
+          </div>
+
+          <div className="crm-workspace-detail-card">
+            <div className="crm-workspace-detail-head">
+              <span
+                className={`crm-workspace-detail-icon crm-workspace-icon-${hoveredWorkspace.tone}`}
+              >
+                <i data-lucide={hoveredWorkspace.icon}></i>
+              </span>
+
+              <div className="crm-workspace-detail-title">
+                <h3>{hoveredWorkspace.label}</h3>
+                <p>{hoveredWorkspace.description}</p>
+              </div>
+
+              <span
+                className={`crm-workspace-detail-badge ${
+                  isWorkspaceActive(hoveredWorkspace) ? "active" : ""
+                }`}
+              >
+                {getWorkspaceBadge(hoveredWorkspace)}
+              </span>
+            </div>
+
+            <div className="crm-workspace-detail-body">
+              <h4>Key Capabilities</h4>
+
+              <div className="crm-workspace-capabilities">
+                {hoveredWorkspace.capabilities.map((capability) => (
+                  <span key={capability}>
+                    <i data-lucide="circle-check"></i>
+                    {capability}
+                  </span>
+                ))}
+              </div>
+
+              <div className="crm-workspace-divider" />
+
+              <h4>Perfect For</h4>
+
+              <div className="crm-workspace-tags">
+                {hoveredWorkspace.perfectFor.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+
+              <div className="crm-workspace-divider" />
+
+              <h4>What You Get</h4>
+
+              <div className="crm-workspace-benefits">
+                {hoveredWorkspace.benefits.map(([icon, title, desc]) => (
+                  <div key={title}>
+                    <i data-lucide={icon}></i>
+                    <strong>{title}</strong>
+                    <p>{desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="crm-workspace-price-row">
+                <div>
+                  {isWorkspaceActive(hoveredWorkspace) ? (
+                    <>
+                      <small>Status</small>
+                      <strong className="crm-workspace-active-label">
+                        Active
+                      </strong>
+                    </>
+                  ) : (
+                    <>
+                      <small>Starting at</small>
+                      <strong>
+                        ${hoveredWorkspace.price}
+                        <em>/month</em>
+                      </strong>
+                      <p>Billed monthly. Cancel anytime.</p>
+                    </>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className={
+                    isWorkspaceActive(hoveredWorkspace)
+                      ? "is-active"
+                      : ""
+                  }
+                  onClick={() => {
+                    if (canOpenWorkspace(hoveredWorkspace)) {
+                      window.location.href = hoveredWorkspace.path;
+                      return;
+                    }
+
+                    if (isLocked(hoveredWorkspace)) {
+                      const addon =
+                        FEATURE_TO_ADDON[hoveredWorkspace.feature];
+
+                      if (addon) {
+                        openFeatureAddOns(addon);
+                      }
+                    }
+                  }}
+                >
+                  {isWorkspaceActive(hoveredWorkspace)
+                    ? hoveredWorkspace.path
+                      ? `Open ${hoveredWorkspace.label}`
+                      : `${hoveredWorkspace.label} Active`
+                    : `Activate ${hoveredWorkspace.label}`}
+
+                  <i data-lucide="chevron-right"></i>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                className="crm-workspace-full-details"
+              >
+                View Full Details
+                <i data-lucide="external-link"></i>
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
     </>
   );
 }

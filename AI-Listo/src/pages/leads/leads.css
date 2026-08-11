@@ -96,7 +96,7 @@ body .leads-page {
 
 .leads-page .filters-row {
   display: flex;
-  gap: 12px;
+  gap: 11px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
@@ -263,8 +263,8 @@ body .leads-page {
 
 .leads-page .leads-layout {
   display: grid;
-  grid-template-columns: 265px 1fr 290px;
-  gap: 16px;
+  grid-template-columns: 262px 1fr 288px;
+  gap: 10px;
   padding-bottom: 16px;
 }
 
@@ -278,7 +278,7 @@ body .leads-page {
 
 .leads-page .lead-sidebar,
 .leads-page .conversation-panel {
-  padding: 12px;
+  padding: 12px 10px;
 }
 
 .leads-page .insights-panel {
