@@ -61,6 +61,7 @@ import {
 } from "../../api/analyticsApi";
 import { fetchTeams, fetchTeamDashboard } from "../team/services/team.service";
 import { downloadCsv } from "../../utils/helpers";
+import LockedAi from "../../components/LockedAi";
 
 import "./dashboard.css";
 
@@ -724,6 +725,7 @@ export default function CortexaDashboard() {
         </div>
 
         <div className="banner-right">
+          <LockedAi feature="aiActionCenter">
           <div className="banner-right-top">
             <div className="mini-insight-card">
               <div className="card-lbl">{t("dashboard.aiConfidence")}</div>
@@ -745,6 +747,7 @@ export default function CortexaDashboard() {
               </div>
             </div>
           </div>
+          </LockedAi>
           <div className="banner-action-row">
             <button
               className="banner-btn text-dark"
@@ -1001,6 +1004,7 @@ export default function CortexaDashboard() {
               {t("dashboard.viewAll")} →
             </a>
           </div>
+          <LockedAi feature="aiActionCenter">
           <div className="queue-list-wrapper">
             <div className="list-tbl-header">
               <span>{t("dashboard.leadHeader")}</span>
@@ -1059,6 +1063,7 @@ export default function CortexaDashboard() {
               ))
             )}
           </div>
+          </LockedAi>
         </div>
       {/*</section>
 
