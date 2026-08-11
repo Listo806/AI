@@ -4058,6 +4058,14 @@ Always give clear next steps.
       throw new ForbiddenException("Team is required");
     }
 
+    // Advanced automations are premium: a Free plan cannot turn proactive
+    // follow-up or auto-escalation on (forced off below). The rest of the
+    // behavior settings stay editable. Paid/legacy accounts are unaffected.
+    const advancedAllowed = await this.usage.featureAllowed(
+      teamId,
+      "advancedAutomations",
+    );
+
     const allowedTones = ["professional", "friendly", "sales"];
 
     const allowedPersonalities = [
@@ -4240,9 +4248,9 @@ Always give clear next steps.
 
           Boolean(body.useEmojis),
 
-          body.proactiveFollowUp !== false,
+          advancedAllowed && body.proactiveFollowUp !== false,
 
-          body.autoEscalateHotLeads !== false,
+          advancedAllowed && body.autoEscalateHotLeads !== false,
         ],
       );
 
@@ -4398,13 +4406,21 @@ Always give clear next steps.
       throw new ForbiddenException("Team is required");
     }
 
+    // Advanced automations (automated follow-up, auto deal-assign) are premium:
+    // force them off for Free. Basic auto-reply stays available. Paid/legacy
+    // accounts are unaffected (featureAllowed returns true for them).
+    const advancedAllowed = await this.usage.featureAllowed(
+      teamId,
+      "advancedAutomations",
+    );
+
     const autoReply = body.autoReply !== false;
 
-    const autoFollowUp = body.autoFollowUp !== false;
+    const autoFollowUp = advancedAllowed && body.autoFollowUp !== false;
 
     const autoBookAppointment = body.autoBookAppointment !== false;
 
-    const autoAssignAgent = Boolean(body.autoAssignAgent);
+    const autoAssignAgent = advancedAllowed && Boolean(body.autoAssignAgent);
 
     const autoCreateTask = body.autoCreateTask !== false;
 
