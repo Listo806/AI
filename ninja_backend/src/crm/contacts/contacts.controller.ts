@@ -30,6 +30,8 @@ import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
 import { PaymentGuard } from "../../auth/guards/payment.guard";
 import { VaRestrictionGuard } from "../../auth/guards/va-restriction.guard";
 import { CrmAccessGuard } from "../../subscriptions/guards/crm-access.guard";
+import { FeatureAccessGuard } from "../../plans/feature-access.guard";
+import { RequireFeature } from "../../plans/require-feature.decorator";
 
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
@@ -58,6 +60,8 @@ export class ContactsController {
   // ======================================================
 
   @Get("ai-insights")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   async getAiInsights(@CurrentUser() user: any) {
     return this.contactsService.getAiInsights(
       user.id,
@@ -71,6 +75,8 @@ export class ContactsController {
   // ======================================================
 
   @Post("ai-review")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   async runAiReview(@CurrentUser() user: any) {
     return this.contactsService.runAiReview(
       user.id,

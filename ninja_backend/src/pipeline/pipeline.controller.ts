@@ -14,6 +14,8 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaymentGuard } from "../auth/guards/payment.guard";
 import { CrmAccessGuard } from "../subscriptions/guards/crm-access.guard";
+import { FeatureAccessGuard } from "../plans/feature-access.guard";
+import { RequireFeature } from "../plans/require-feature.decorator";
 import { PipelineService } from "./pipeline.service";
 import { CreateDealDto } from "./dto/create-deal.dto";
 import { UpdateDealDto } from "./dto/update-deal.dto";
@@ -82,6 +84,8 @@ export class PipelineController {
   }
 
   @Post("analyze")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   analyzePipeline(@Req() req: any) {
     const user = req.user;
 
@@ -92,6 +96,8 @@ export class PipelineController {
   }
 
   @Post("auto-prioritize")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   autoPrioritizeDeals(@Req() req: any) {
     const user = req.user;
 
@@ -162,6 +168,8 @@ export class PipelineController {
   }
 
   @Post("deals/:id/score")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   scoreDeal(@Param("id") id: string, @Req() req: any) {
     const user = req.user;
 
@@ -173,6 +181,8 @@ export class PipelineController {
   }
 
   @Post("deals/:id/send-suggestions")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   sendDealSuggestions(@Param("id") id: string, @Req() req: any) {
     const user = req.user;
 
@@ -184,6 +194,8 @@ export class PipelineController {
   }
 
   @Post("deals/:id/generate-followup")
+  @UseGuards(FeatureAccessGuard)
+  @RequireFeature("advancedAiAgent")
   generateDealFollowUp(@Param("id") id: string, @Req() req: any) {
     const user = req.user;
 
