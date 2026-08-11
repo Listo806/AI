@@ -24,6 +24,9 @@ import {
   Activity as ActivityIcon,
   StickyNote,
   Globe,
+  BriefcaseBusiness,
+  Rocket,
+  UserRound,
 } from "lucide-react";
 import {
   getCustomersHub,
@@ -383,6 +386,68 @@ export default function AdminCustomers() {
     return out;
   };
 
+  const planBreakdown = Array.isArray(summary?.breakdowns?.plan)
+    ? summary.breakdowns.plan
+    : [];
+
+  const getPlanCount = (...aliases) => {
+    const normalizedAliases = aliases.map((v) =>
+      String(v).trim().toLowerCase(),
+    );
+
+    const match = planBreakdown.find((item) => {
+      const key = String(
+        item?.key ?? item?.plan ?? item?.label ?? item?.name ?? "",
+      )
+        .trim()
+        .toLowerCase();
+
+      return normalizedAliases.includes(key);
+    });
+
+    return Number(match?.count ?? match?.value ?? 0) || 0;
+  };
+
+  const customersByPlan = [
+    {
+      key: "free",
+      label: "FREE",
+      count: getPlanCount("free"),
+      price: "Free accounts",
+      Icon: UserRound,
+      tone: "free",
+    },
+    {
+      key: "solo",
+      label: "SOLO",
+      count: getPlanCount("solo"),
+      price: "$197 / month",
+      Icon: UserRound,
+      tone: "solo",
+    },
+    {
+      key: "business",
+      label: "BUSINESS",
+      count: getPlanCount("business", "team"),
+      price: "$347 / month",
+      Icon: BriefcaseBusiness,
+      tone: "business",
+    },
+    {
+      key: "scale",
+      label: "SCALE",
+      count: getPlanCount("scale", "growth"),
+      price: "$497 / month",
+      Icon: Rocket,
+      tone: "scale",
+    },
+  ];
+
+  const activeCustomersByPlan = customersByPlan.reduce(
+    (sum, planItem) => sum + planItem.count,
+    0,
+  );
+
   return (
     <div className="cxc-page">
       {/* cxc-scale shrinks the whole page ~6% per client; kept OFF the modals
@@ -416,25 +481,43 @@ export default function AdminCustomers() {
 
       {/* Analytics: funnel + breakdowns — moved ABOVE tabs/filters per client */}
       <div className="cxc-analytics">
-        <div className="cxc-card">
-          <div className="cxc-card-title">Registration Funnel (this period)</div>
-          <div className="cxc-funnel">
-            {[
-              { n: 1, label: "Registered", v: summary?.funnel?.registered },
-              { n: 2, label: "Plan Selected", v: summary?.funnel?.planSelected },
-              { n: 3, label: "Checkout Started", v: summary?.funnel?.checkoutStarted },
-              { n: 4, label: "Payment Completed", v: summary?.funnel?.paymentCompleted },
-            ].map((s, i) => {
-              const base = summary?.funnel?.registered || 0;
-              return (
-                <div className="cxc-funnel-step" key={s.n}>
-                  <div className="cxc-funnel-num">{s.n}</div>
-                  <div className="cxc-funnel-label">{s.label}</div>
-                  <div className="cxc-funnel-value">{(s.v ?? 0).toLocaleString()}</div>
-                  {i > 0 && <div className="cxc-funnel-pct">{base ? Math.round(((s.v || 0) / base) * 1000) / 10 : 0}%</div>}
+        <div className="cxc-card cxc-plan-customers-card">
+          <div className="cxc-plan-customers-head">
+            <div>
+              <h2>Customers by Plan</h2>
+              <p>Active customers by their current plan.</p>
+            </div>
+
+            <div className="cxc-active-customers-pill">
+              <Users size={15} />
+              <strong>
+                {activeCustomersByPlan.toLocaleString()} Active Customers
+              </strong>
+            </div>
+          </div>
+
+          <div className="cxc-plan-customers-grid">
+            {customersByPlan.map(({ key, label, count, price, Icon, tone }) => (
+              <div
+                key={key}
+                className={`cxc-plan-customer-card cxc-plan-customer-card--${tone}`}
+              >
+                <div className="cxc-plan-customer-top">
+                  <div className="cxc-plan-customer-icon">
+                    <Icon size={27} />
+                  </div>
+                  <strong>{label}</strong>
                 </div>
-              );
-            })}
+
+                <div className="cxc-plan-customer-count">
+                  {count.toLocaleString()}
+                </div>
+
+                <div className="cxc-plan-customer-price">
+                  {price}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         <DonutCard title="By Source" rows={summary?.breakdowns?.source} />

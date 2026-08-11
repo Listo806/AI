@@ -152,7 +152,7 @@
   background: #fff;
   border: 1px solid #eef2f7;
   border-radius: 14px;
-  padding: 14px;
+  padding: 14px 11px;
   min-width: 0;
 }
 .cxc-card-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; color: #0f172a; }
@@ -224,8 +224,8 @@
    genuinely narrow screens (tablet / phone). */
 .cxc-analytics {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(0, 2.05fr) minmax(0, 1.2fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 9px;
   margin-bottom: 16px;
 }
 @media (max-width: 900px) { .cxc-analytics { grid-template-columns: 1fr 1fr; } }
@@ -247,7 +247,7 @@
 .cxc-funnel-pct { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
 /* Donut breakdowns — compact so a donut + legend fit inside a narrow card. */
-.cxc-donut-body { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.cxc-donut-body { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .cxc-legend { flex: 1; min-width: 88px; }
 .cxc-legend-row {
   display: flex; align-items: center; gap: 5px; font-size: 11px;
@@ -554,3 +554,200 @@
 .cxc-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .cxc-error { color: #b91c1c; font-size: 13px; background: #fef2f2; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 8px; }
 .cxc-note { font-size: 11px; color: #94a3b8; }
+
+
+/* =========================================================
+   CUSTOMERS BY PLAN — replaces Registration Funnel ONLY
+   Keeps the original .cxc-analytics grid unchanged.
+   ========================================================= */
+
+.cxc-plan-customers-card {
+  padding: 14px 10px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cxc-plan-customers-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cxc-plan-customers-head > div:first-child {
+  min-width: 0;
+}
+
+.cxc-plan-customers-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cxc-plan-customers-head p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.cxc-active-customers-pill {
+  min-height: 26px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: #2563eb;
+  white-space: nowrap;
+}
+
+.cxc-active-customers-pill strong {
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.cxc-plan-customers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.cxc-plan-customer-card {
+  min-width: 0;
+  min-height: 84px;
+  padding: 7px;
+  border: 1px solid;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cxc-plan-customer-top {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+.cxc-plan-customer-icon {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+}
+
+.cxc-plan-customer-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.cxc-plan-customer-top > strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.cxc-plan-customer-count {
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.cxc-plan-customer-price {
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* Free */
+.cxc-plan-customer-card--free {
+  border-color: #cfecdf;
+  background: #f8fdf9;
+}
+
+.cxc-plan-customer-card--free .cxc-plan-customer-icon {
+  background: #e2f6ec;
+  color: #209653;
+}
+
+.cxc-plan-customer-card--free .cxc-plan-customer-top > strong {
+  color: #209653;
+}
+
+/* Solo */
+.cxc-plan-customer-card--solo {
+  border-color: #d8e4f7;
+  background: #f7faff;
+}
+
+.cxc-plan-customer-card--solo .cxc-plan-customer-icon {
+  background: #e3edfc;
+  color: #2563eb;
+}
+
+.cxc-plan-customer-card--solo .cxc-plan-customer-top > strong {
+  color: #2563eb;
+}
+
+/* Business */
+.cxc-plan-customer-card--business {
+  border-color: #e4d9f5;
+  background: #fbf8ff;
+}
+
+.cxc-plan-customer-card--business .cxc-plan-customer-icon {
+  background: #eee5fb;
+  color: #7c3aed;
+}
+
+.cxc-plan-customer-card--business .cxc-plan-customer-top > strong {
+  color: #7c3aed;
+}
+
+/* Scale */
+.cxc-plan-customer-card--scale {
+  border-color: #f3dfcb;
+  background: #fffaf5;
+}
+
+.cxc-plan-customer-card--scale .cxc-plan-customer-icon {
+  background: #fbeddd;
+  color: #dd6b0b;
+}
+
+.cxc-plan-customer-card--scale .cxc-plan-customer-top > strong {
+  color: #dd6b0b;
+}
+
+/* Only adjust the new card internally on narrow screens.
+   DO NOT override .cxc-analytics grid-template-columns here. */
+@media (max-width: 560px) {
+  .cxc-plan-customers-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cxc-plan-customers-head {
+    flex-direction: column;
+  }
+
+  .cxc-active-customers-pill {
+    align-self: flex-start;
+  }
+}
