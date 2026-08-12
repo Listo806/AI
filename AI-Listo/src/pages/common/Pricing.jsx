@@ -885,7 +885,7 @@ const pricingV3 = {
     save: "Save 20%",
     popular: "Popular",
     toStart: "to start",
-    forever: "forever",
+    forever: "Forever",
     keyFeatures: "KEY FEATURES:",
     everythingFree: "EVERYTHING IN FREE, PLUS:",
     everythingSolo: "EVERYTHING IN SOLO, PLUS:",
@@ -896,7 +896,7 @@ const pricingV3 = {
       free: {
         name: "Free",
         desc: "Perfect to explore Cortexa and get started.",
-        price: "$0",
+        price: "Free",
         users: "",
         features: [
           "AI Agent (Limited)",
@@ -967,7 +967,7 @@ const pricingV3 = {
     save: "Ahorra 20%",
     popular: "Popular",
     toStart: "para comenzar",
-    forever: "para siempre",
+    forever: "Para siempre",
     keyFeatures: "CARACTERÍSTICAS CLAVE:",
     everythingFree: "TODO LO DE FREE, MÁS:",
     everythingSolo: "TODO LO DE SOLO, MÁS:",
@@ -978,7 +978,7 @@ const pricingV3 = {
       free: {
         name: "Free",
         desc: "Perfecto para explorar Cortexa y comenzar.",
-        price: "$0",
+        price: "Gratis",
         users: "",
         features: [
           "Agente de IA (Limitado)",
@@ -1049,7 +1049,7 @@ const pricingV3 = {
     save: "Economize 20%",
     popular: "Popular",
     toStart: "para começar",
-    forever: "para sempre",
+    forever: "Para sempre",
     keyFeatures: "PRINCIPAIS RECURSOS:",
     everythingFree: "TUDO DO FREE, MAIS:",
     everythingSolo: "TUDO DO SOLO, MAIS:",
@@ -1060,7 +1060,7 @@ const pricingV3 = {
       free: {
         name: "Free",
         desc: "Perfeito para explorar a Cortexa e começar.",
-        price: "$0",
+        price: "Grátis",
         users: "",
         features: [
           "Agente de IA (Limitado)",
@@ -1277,9 +1277,9 @@ export default function PricingPage() {
               <div className="cx-pricing-v3-card-top">
                 <h2>{pv3.plans.free.name}</h2>
                 <p className="cx-pricing-v3-desc">{pv3.plans.free.desc}</p>
-                <div className="cx-pricing-v3-price">
-                  <strong>{pv3.plans.free.price}</strong>
-                  <span>{pv3.forever}</span>
+                <div className="cx-pricing-v3-price n-flex">
+                  <strong>{pv3.plans.free.price}</strong><br />
+                  <b>{pv3.forever}</b>
                 </div>
                 <Link
                   to="/trial?from=pricing"

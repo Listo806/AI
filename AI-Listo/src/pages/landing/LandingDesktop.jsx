@@ -59,6 +59,8 @@ import {
   Grid,
   ChevronRight,
   CircleDollarSign,
+  CreditCard,
+  Infinity,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -517,8 +519,10 @@ export default function Landing() {
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
       heroCheck11: "Books appointments directly on your calendar",
       heroCheck12: "See every lead, deal & opportunity in one dashboard",
-      heroCTA: "Start Your Free Trial",
+      heroCTA: "Get Started, It’s Free",
       heroFreeAccess: "Sign Up? — Get Free Access!",
+      heroNoCard: "No credit card required.",
+      heroFreeForever: "Free forever.",
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
@@ -1067,8 +1071,10 @@ export default function Landing() {
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
       heroCheck11: "Agenda citas directamente en tu calendario",
       heroCheck12: "Ve cada lead, venta y oportunidad en un solo panel",
-      heroCTA: "Comienza Tu Prueba Gratis",
+      heroCTA: "Empieza Gratis",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
+      heroNoCard: "No se requiere tarjeta de crédito.",
+      heroFreeForever: "Gratis para siempre.",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
@@ -1619,8 +1625,10 @@ export default function Landing() {
       heroCheck11: "Agenda compromissos diretamente no seu calendário",
       heroCheck12:
         "Veja todos os leads, negócios e oportunidades em um único painel",
-      heroCTA: "Comece Seu Teste Grátis",
+      heroCTA: "Comece Grátis",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
+      heroNoCard: "Nenhum cartão de crédito necessário.",
+      heroFreeForever: "Grátis para sempre.",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
@@ -2018,14 +2026,25 @@ export default function Landing() {
               <div className="hero-checks">
                 <p>{tr.herotextabove}</p>
               </div>
-              <div className="hero-inline">
-                <a href="/trial" className="hero-btn hero-btn-trial">
+              <div className="hero-inline hero-inline-free-access">
+                <a
+                  href="/trial?flow=free-access&plan=free"
+                  className="hero-btn hero-btn-trial hero-btn-free-access-main"
+                >
                   {tr.heroCTA}
                 </a>
+              </div>
 
-                <a href="/trial" className="hero-btn hero-btn-free">
-                  {tr.heroFreeAccess}
-                </a>
+              <div className="hero-free-access-meta">
+                <span>
+                  <CreditCard size={20} />
+                  {tr.heroNoCard}
+                </span>
+                <i aria-hidden="true" />
+                <span>
+                  <Infinity size={24} />
+                  {tr.heroFreeForever}
+                </span>
               </div>
               <div className="hero-checks ul">
                 {[

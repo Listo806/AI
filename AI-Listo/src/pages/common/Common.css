@@ -3666,7 +3666,9 @@
   justify-content: center;
   gap: 13px;
 }
-
+.n-flex{
+  display: unset;
+}
 .pricing-page .cx-pricing-v3-price strong {
   color: inherit;
   font-size: 52px;
@@ -3674,7 +3676,10 @@
   font-weight: 700;
   letter-spacing: -0.055em;
 }
-
+.pricing-page .cx-pricing-v3-price b{
+  margin-top: 6px;
+  display: block;
+}
 .pricing-page .cx-pricing-v3-price span {
   color: inherit;
   font-size: 15px;
@@ -4577,5 +4582,15 @@
 
   .trial-v3-security p {
     font-size: 13px !important;
+  }
+}
+
+.trial-v2-submit-free-access {
+  margin-top: 24px;
+}
+
+@media (max-width: 767px) {
+  .trial-mobile-layout .trial-v2-submit-free-access {
+    margin-top: 26px;
   }
 }

@@ -677,8 +677,10 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "REVENUE INCREASE",
       ctaStat3Label: "AGENTS GROWING",
-      ctaButtonText: "Start Your Free Trial",
+      ctaButtonText: "Get Started, It’s Free",
       heroFreeAccess: "Sign Up? — Get Free Access!",
+      heroNoCard: "No credit card required.",
+      heroFreeForever: "Free forever.",
 
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
@@ -1079,8 +1081,10 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE INGRESOS",
       ctaStat3Label: "AGENTES CRECIENDO",
-      ctaButtonText: "Comienza Tu Prueba Gratis",
+      ctaButtonText: "Empieza Gratis",
       heroFreeAccess: "¿Regístrate? — ¡Obtén acceso gratis!",
+      heroNoCard: "No se requiere tarjeta de crédito.",
+      heroFreeForever: "Gratis para siempre.",
 
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
@@ -1492,8 +1496,10 @@ export default function LandingMobile() {
       ctaStat1Label: "ROI",
       ctaStat2Label: "AUMENTO DE RECEITA",
       ctaStat3Label: "AGENTES CRESCENDO",
-      ctaButtonText: "Comece Seu Teste Grátis",
+      ctaButtonText: "Comece Grátis",
       heroFreeAccess: "Cadastre-se? — Obtenha acesso grátis!",
+      heroNoCard: "Nenhum cartão de crédito necessário.",
+      heroFreeForever: "Grátis para sempre.",
 
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
@@ -1957,13 +1963,24 @@ export default function LandingMobile() {
 
         <p className="m-description">{tr.heroDesc}</p>
         <div className="m-hero-actions">
-          <a href="/trial" className="m-hero-cta m-hero-cta-trial">
+          <a
+            href="/trial?flow=free-access&plan=free"
+            className="m-hero-cta m-hero-cta-trial m-hero-free-access-main"
+          >
             {tr.ctaButtonText}
           </a>
 
-          <a href="/trial" className="m-hero-cta m-hero-cta-free">
-            {tr.heroFreeAccess}
-          </a>
+          <div className="m-hero-free-access-meta">
+            <span>
+              <CreditCard size={23} />
+              {tr.heroNoCard}
+            </span>
+            <i aria-hidden="true" />
+            <span>
+              <Infinity size={26} />
+              {tr.heroFreeForever}
+            </span>
+          </div>
 
           <div className="hero-checks">
             {[tr.heroCheck6, tr.heroCheck7, tr.heroCheck8, tr.heroCheck9].map(

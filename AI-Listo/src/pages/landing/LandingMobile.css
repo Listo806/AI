@@ -3480,3 +3480,72 @@ body .cx-reporting-footer .fdes{
   }
 
 }
+
+/* =========================================================
+   MOBILE HERO — GET STARTED, IT'S FREE
+   ========================================================= */
+.mobile-landing .m-hero .m-hero-actions {
+  gap: 0;
+}
+
+.mobile-landing .m-hero .m-hero-free-access-main {
+  min-height: 60px;
+  background: #000;
+  color: #fff !important;
+  border: 1.5px solid #fff;
+  border-radius: 10px;
+  font-size: 21px;
+  font-weight: 750;
+}
+
+.mobile-landing .m-hero .m-hero-free-access-main:hover,
+.mobile-landing .m-hero .m-hero-free-access-main:focus,
+.mobile-landing .m-hero .m-hero-free-access-main:active {
+  background: #000;
+  color: #fff !important;
+  border-color: #fff;
+}
+
+.mobile-landing .m-hero .m-hero-free-access-meta {
+  margin-top: 14px;
+  padding: 0 10px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  border-bottom: 1px solid rgba(255,255,255,.72);
+  color: #fff;
+}
+
+.mobile-landing .m-hero .m-hero-free-access-meta > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.mobile-landing .m-hero .m-hero-free-access-meta > i {
+  width: 1px;
+  height: 30px;
+  background: rgba(255,255,255,.65);
+}
+
+.mobile-landing .m-hero .m-hero-free-access-meta + .hero-checks {
+  margin-top: 22px;
+}
+
+@media (max-width: 390px) {
+  .mobile-landing .m-hero .m-hero-free-access-meta {
+    gap: 10px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .mobile-landing .m-hero .m-hero-free-access-meta > span {
+    gap: 6px;
+    font-size: 13px;
+  }
+}

@@ -4283,3 +4283,65 @@ section#footer {
     }
   }
 }
+
+/* =========================================================
+   HERO — FREE ACCESS CTA
+   Replaces only the two desktop hero CTA buttons.
+   ========================================================= */
+#cortexa-ai-crm-landing .hero-inline.hero-inline-free-access {
+  display: block;
+  padding-top: 18px;
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-free-access-main {
+  width: min(100%, 420px);
+  min-height: 58px;
+  padding: 0 28px;
+  background: #000;
+  border: 1.5px solid #000;
+  border-radius: 9px;
+  color: #fff !important;
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+#cortexa-ai-crm-landing .hero-inline .hero-btn-free-access-main:hover {
+  background: #151515;
+  border-color: #151515;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+#cortexa-ai-crm-landing .hero-free-access-meta {
+  width: min(100%, 420px);
+  margin-top: 14px;
+  padding: 0 4px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 16px;
+  border-bottom: 1px solid #d7dce3;
+  color: #323844;
+}
+
+#cortexa-ai-crm-landing .hero-free-access-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+#cortexa-ai-crm-landing .hero-free-access-meta > i {
+  width: 1px;
+  height: 24px;
+  background: #cbd0d8;
+}
+
+@media (max-width: 767px) {
+  #cortexa-ai-crm-landing .hero-free-access-meta {
+    display: none;
+  }
+}
