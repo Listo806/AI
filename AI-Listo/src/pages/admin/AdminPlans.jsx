@@ -588,6 +588,7 @@ export default function AdminPlans() {
   const { showSuccess, showError } = useNotification();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
 
   // Read-only view of the LIVE customer plans. Source of truth is the backend
   // plan-config (mirrored in ../../config/plans and tied to the Paddle price IDs),
@@ -699,6 +700,7 @@ export default function AdminPlans() {
                   </th>
                   <th>{t('admin.plans.coreFeatures')}</th>
                   <th>{t('admin.plans.status')}</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
@@ -845,6 +847,27 @@ export default function AdminPlans() {
                         </span>
                       </td>
 
+                      <td>
+                        <div className="admin-plan-actions">
+                          <button
+                            type="button"
+                            className="admin-plan-edit-btn"
+                            onClick={() => setModal({ plan })}
+                          >
+                            {t('common.edit')}
+                          </button>
+
+                          <button
+                            type="button"
+                            className="admin-plan-more-btn"
+                            aria-label={t('admin.plans.actions') || 'Actions'}
+                            title={t('admin.plans.actions') || 'Actions'}
+                          >
+                            <MoreVertical size={17} />
+                          </button>
+                        </div>
+                      </td>
+
                     </tr>
                   );
                 })}
@@ -872,6 +895,20 @@ export default function AdminPlans() {
             </div>
           </div>
         </div>
+      )}
+
+      {modal?.plan && (
+        <PlanFormModal
+          plan={modal.plan}
+          onClose={() => setModal(null)}
+          onSuccess={() => {
+            // The current table is sourced from loadPlansConfig().
+            // Keep the new read-only/live-config architecture intact for now.
+            // Close the modal after save; backend/config persistence wiring can
+            // be connected separately without changing this table layout.
+            setModal(null);
+          }}
+        />
       )}
 
     </div>

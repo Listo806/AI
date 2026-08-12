@@ -311,7 +311,7 @@ body.crm-dark .admin-table .admin-status-badge.published {
 }
 
 .admin-plan-table thead th:nth-child(4) {
-  min-width: 125px;
+  min-width: 95px;
 }
 
 .admin-plan-table thead th:nth-child(5) {
@@ -323,7 +323,7 @@ body.crm-dark .admin-table .admin-status-badge.published {
 }
 
 .admin-plan-table thead th:nth-child(7) {
-  min-width: 190px;
+  min-width: 115px;
 }
 
 .admin-plan-table thead th span,

@@ -3282,7 +3282,7 @@ body .cx-reporting-footer .fdes{
 ========================================================= */
 
 .mobile-landing .m-hero .m-hero-actions {
-  margin-top: 32px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3489,12 +3489,12 @@ body .cx-reporting-footer .fdes{
 }
 
 .mobile-landing .m-hero .m-hero-free-access-main {
-  min-height: 60px;
+  min-height: 68px;
   background: #000;
   color: #fff !important;
   border: 1.5px solid #fff;
   border-radius: 10px;
-  font-size: 21px;
+  font-size: 25px;
   font-weight: 750;
 }
 
@@ -3508,11 +3508,11 @@ body .cx-reporting-footer .fdes{
 
 .mobile-landing .m-hero .m-hero-free-access-meta {
   margin-top: 14px;
-  padding: 0 10px 18px;
+  padding: 0 0 18px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
+  justify-content: space-between;
+  gap: 6px;
   border-bottom: 1px solid rgba(255,255,255,.72);
   color: #fff;
 }
@@ -3522,7 +3522,7 @@ body .cx-reporting-footer .fdes{
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.2;
   white-space: nowrap;
 }
