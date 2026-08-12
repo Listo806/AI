@@ -120,6 +120,7 @@ export default function Sidebar({
       perfectFor: ["Financial Advisors","Financial Services Teams","Consultants","Brokers","Wealth & Client Management Teams"],
       benefits: [["landmark","COMPLETE CLIENT OPERATIONS","Manage clients, applications, accounts, approvals, transactions, documents, and ongoing financial workflows from one organized workspace."],["file-check-2","APPLICATION & ACCOUNT VISIBILITY","Track applications, account activity, reviews, approvals, and important client actions without losing visibility across your operation."],["bar-chart-3","FINANCIAL WORKFLOW MANAGEMENT","Keep advisors, client activity, documents, commissions, and operational workflows organized and connected."],["trending-up","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, pipeline, contacts, AI, automation, WhatsApp, analytics, and CRM data."]],
       price: 97,
+      path: "/dashboard/financial-services",
     },
     {
       id: "ecommerce",
