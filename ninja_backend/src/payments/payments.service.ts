@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PayPalService } from './paypal.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
-import { normalizePlanId } from '../plans/plan-config';
+import { normalizePlanId, getPlan } from '../plans/plan-config';
 
 // Seat allowance per normalized plan, mirrored from plan-config so a Paddle
 // activation can stamp the subscription row's seat_limit without a plan lookup.
@@ -483,6 +483,11 @@ export class PaymentsService {
     // but never blocks activation or triggers a Paddle retry.
     await this.persistPaddleBilling(eventType, data, customUserId, subId);
 
+    // Server-side Google Ads conversions (Paid Subscription + Renewal) via GA4
+    // Measurement Protocol. Default-off until GA4_MP_API_SECRET is set; best-effort
+    // and self-contained, so it never blocks activation or triggers a Paddle retry.
+    await this.reportPaddleConversions(eventType, data, customUserId, subId);
+
     // First confirmed payment: move the SAME sign-up record to paid (never a new
     // account) and fire the once-only welcome + getting-started emails.
     if (isActivation && matched) {
@@ -735,6 +740,170 @@ export class PaymentsService {
     } catch (err: any) {
       this.logger.error(
         `persistPaddleBilling(${eventType}) failed (non-fatal): ${err?.message}`,
+      );
+    }
+  }
+
+  // --- Server-side Paid Subscription + Renewal conversions (GA4 Measurement
+  //     Protocol -> the linked Google Ads account) ---
+  //
+  // These fire from the confirmed Paddle payment because there is no browser open
+  // at renewal time. Default-off: a complete no-op unless GA4_MP_API_SECRET is set
+  // (the client creates it in GA4 Admin > Data streams > Measurement Protocol API
+  // secrets), so this cannot touch the live payment flow until it is switched on.
+  // Once on, GA4 receives `paid_subscription` / `subscription_renewal`; marking
+  // those as Key events in GA4 imports them as conversions into the linked Ads acct.
+
+  private paidSubFlagReady = false;
+  private async ensurePaidSubFlagColumn(): Promise<void> {
+    if (this.paidSubFlagReady) return;
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS paid_sub_conversion_reported BOOLEAN NOT NULL DEFAULT false`,
+    );
+    this.paidSubFlagReady = true;
+  }
+
+  // Deterministic GA4-style client_id so a given user maps to one client across
+  // renewals. This is not the browser's real client_id (we do not store that yet),
+  // so these server conversions are counted and revenue-valued but not stitched to
+  // the original web session — good enough for counting paid subscriptions and
+  // renewals, and upgradeable later by capturing the real client_id at checkout.
+  private ga4ClientIdFor(userId: string): string {
+    let h = 0;
+    const s = String(userId);
+    for (let i = 0; i < s.length; i += 1) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return `${h}.${1000000000 + (h % 1000000000)}`;
+  }
+
+  private async resolveUserIdForConversion(
+    customUserId: string | null,
+    subId: string | null,
+  ): Promise<string | null> {
+    if (customUserId) return customUserId;
+    if (!subId) return null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT id FROM users WHERE paddle_subscription_id = $1 LIMIT 1`,
+        [subId],
+      );
+      return rows[0]?.id || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // POST a GA4 Measurement Protocol event. No-op unless GA4_MP_API_SECRET is set.
+  // Best-effort with a short timeout: never throws, never blocks the webhook.
+  private async sendGa4ServerEvent(
+    eventName: string,
+    params: Record<string, any>,
+    clientId: string,
+    userId?: string | null,
+  ): Promise<void> {
+    const secret = process.env.GA4_MP_API_SECRET;
+    const measurementId = process.env.GA4_MEASUREMENT_ID || 'G-WTDN8QJ9CM';
+    if (!secret) return;
+    try {
+      const url =
+        `https://www.google-analytics.com/mp/collect` +
+        `?measurement_id=${encodeURIComponent(measurementId)}` +
+        `&api_secret=${encodeURIComponent(secret)}`;
+      const body: any = {
+        client_id: clientId,
+        events: [{ name: eventName, params }],
+      };
+      if (userId) body.user_id = String(userId);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `GA4 MP event ${eventName} failed (non-fatal): ${err?.message}`,
+      );
+    }
+  }
+
+  // Fire the Paid Subscription (first confirmed payment, once per account) and
+  // Renewal (every later charge) conversions. Triggered only by transaction.completed
+  // — Paddle's canonical "payment completed" event — which is deduped upstream by
+  // webhook_events, so each real charge reaches here exactly once. Best-effort.
+  private async reportPaddleConversions(
+    eventType: string,
+    data: any,
+    customUserId: string | null,
+    subId: string | null,
+  ): Promise<void> {
+    // Off unless configured: skipping here means the DB claim and lookups below
+    // never run, so the whole feature is a no-op until the client sets the secret.
+    if (!process.env.GA4_MP_API_SECRET) return;
+    if (eventType !== 'transaction.completed') return;
+    try {
+      await this.ensurePaidSubFlagColumn();
+
+      const userId = await this.resolveUserIdForConversion(customUserId, subId);
+      if (!userId) return;
+
+      const planKey = normalizePlanId(
+        data?.custom_data?.plan ||
+          (await this.lookupUserPlan(customUserId, subId)),
+      );
+      const recurring = getPlan(planKey).pricing.monthlyCents / 100;
+
+      // Actual amount charged (Paddle minor units) for the renewal value.
+      const totals = data?.details?.totals || data?.totals || {};
+      const rawAmount =
+        totals.grand_total ?? totals.total ?? data?.amount ?? null;
+      const charged = rawAmount != null ? Number(rawAmount) / 100 : null;
+      const currency = data?.currency_code || data?.currency || 'USD';
+      const txnId = data?.id || subId || userId;
+
+      // Atomically claim the once-only paid-subscription conversion. The first
+      // confirmed payment wins; every later charge is a renewal.
+      const claim = await this.db.query(
+        `UPDATE users
+            SET paid_sub_conversion_reported = true, updated_at = NOW()
+          WHERE id = $1 AND paid_sub_conversion_reported = false
+          RETURNING id`,
+        [userId],
+      );
+      const isFirstPayment = (claim.rowCount || 0) > 0;
+      const clientId = this.ga4ClientIdFor(userId);
+
+      // Renewal is valued at the amount actually charged; the paid-subscription
+      // conversion is valued at the plan's recurring price, falling back to the
+      // charged amount if the plan could not be resolved (never a 0-value event).
+      const chargedValue =
+        charged != null && Number.isFinite(charged) ? charged : null;
+      const renewalValue = chargedValue != null ? chargedValue : recurring;
+      const subValue = recurring > 0 ? recurring : chargedValue != null ? chargedValue : 0;
+
+      if (isFirstPayment) {
+        await this.sendGa4ServerEvent(
+          'paid_subscription',
+          { value: subValue, currency, plan: planKey, transaction_id: txnId },
+          clientId,
+          userId,
+        );
+      } else {
+        await this.sendGa4ServerEvent(
+          'subscription_renewal',
+          { value: renewalValue, currency, plan: planKey, transaction_id: txnId },
+          clientId,
+          userId,
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `reportPaddleConversions(${eventType}) failed (non-fatal): ${err?.message}`,
       );
     }
   }
