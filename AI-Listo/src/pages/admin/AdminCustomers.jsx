@@ -27,6 +27,7 @@ import {
   BriefcaseBusiness,
   Rocket,
   UserRound,
+  RefreshCw,
 } from "lucide-react";
 import {
   getCustomersHub,
@@ -587,12 +588,7 @@ export default function AdminCustomers() {
         <div className="cxc-filter-actions">
           <button className="cxc-btn cxc-btn-sm" onClick={() => setMoreFilters((v) => !v)}><Filter size={14} /> {moreFilters ? "Fewer Filters" : "More Filters"}</button>
           <button className="cxc-btn cxc-btn-ghost cxc-btn-sm" onClick={clearFilters}>Clear Filters</button>
-        </div>
-      </div>
-
-      {/* Customer management toolbar (above the table) */}
-      <div className="cxc-toolbar">
-        <div className="cxc-menu-wrap">
+          <div className="cxc-menu-wrap">
           <button className="cxc-btn" onClick={() => setBulkMenu((v) => !v)}>Bulk Actions ({selected.size} selected) <ChevronDown size={14} /></button>
           <Menu open={bulkMenu} onClose={() => setBulkMenu(false)} className="down">
             <button className="cxc-menu-item" onClick={bulkExportSelected}>Export selected</button>
@@ -617,6 +613,7 @@ export default function AdminCustomers() {
             <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); setShowPlans(true); }}>Create plan</button>
             <button className="cxc-menu-item" onClick={() => { setMoreMenu(false); load(); }}>Refresh</button>
           </Menu>
+        </div>
         </div>
       </div>
 
@@ -886,7 +883,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                 ) : (
                   c.phone && <div className="cxc-id-line"><Phone size={13} /> {c.phone}</div>
                 )}
-                <div className="cxc-id-line cxc-mono">ID: {c.id}</div>
+                <div className="cxc-id-line cxc-mono">Customer ID: {c.id}</div>
               </div>
               <nav className="cxc-cust-nav">
                 {CUST_TABS.map((t) => (
@@ -918,9 +915,9 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                       <section className="cxc-cust-block">
                         <div className="cxc-block-title">Quick Actions</div>
                         <div className="cxc-qa-grid">
-                          <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}>Change Plan</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}>Update Payment Method</button>
-                          <button className="cxc-btn cxc-btn-sm" onClick={addSeat}>Add Seat / User</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={() => onChangePlan && onChangePlan(c)}><RefreshCw size={12} /> Change Plan</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={updatePayment}><CreditCard size={12} /> Update Payment Method</button>
+                          <button className="cxc-btn cxc-btn-sm" onClick={addSeat}><Users size={12} /> Add Seat / User</button>
                           <button className="cxc-btn cxc-btn-sm" onClick={() => onSendEmail && onSendEmail(c)}><Mail size={13} /> Send Email</button>
                         </div>
                         <button className="cxc-btn cxc-btn-danger cxc-qa-deact" onClick={doDeactivate}>Deactivate Customer</button>
@@ -1059,7 +1056,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
             <>
               <button className="cxc-btn" onClick={onClose}>Close</button>
               <div className="cxc-toolbar-spacer" />
-              <button className="cxc-btn" onClick={startEdit} disabled={!c}><Pencil size={14} /> Edit Customer</button>
+              <button className="cxc-btn btn-edit" onClick={startEdit} disabled={!c}><Pencil size={14} /> Edit Customer</button>
               <div className="cxc-menu-wrap">
                 <button className="cxc-btn cxc-btn-primary" onClick={() => setMoreOpen((v) => !v)} disabled={!c}>More Actions <ChevronDown size={14} /></button>
                 <Menu open={moreOpen} onClose={() => setMoreOpen(false)} className="up-right">

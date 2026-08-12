@@ -2,7 +2,7 @@
    Light/white theme, self-contained, namespaced cxc- to avoid collisions. */
 
 .cxc-page {
-  padding: 24px 28px 96px;
+  padding: 24px 20px 96px;
   background: #f6f8fb;
   min-height: 100vh;
   color: #0f172a;
@@ -430,7 +430,7 @@
 
 /* Centered Customer Details modal (opens on View; large dashboard layout) */
 .cxc-cust-modal {
-  width: 960px; max-width: 95vw; max-height: 92vh; margin: auto;
+  width: 868px; max-width: 95vw; max-height: 92vh; margin: auto;
   background: #fff; border-radius: 14px;
   display: flex; flex-direction: column; overflow: hidden;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
@@ -439,7 +439,7 @@
 .cxc-cust-modal .cxc-drawer-foot { border-top: 1px solid #eef2f7; padding: 11px 18px; }
 
 /* Body = left rail + main content */
-.cxc-cust-modal-body { display: flex; flex: 1; min-height: 0; overflow-y: auto; }
+.cxc-cust-modal-body { display: flex; flex: 1; min-height: 0; }
 
 /* Left rail: identity + vertical tabs */
 .cxc-cust-rail {
@@ -469,7 +469,7 @@
 /* Right column of the top row: Quick Actions card stacked over its own Customer Notes card */
 .cxc-cust-rcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .cxc-cust-notes { flex: 1; }
-.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 18px 20px; background: #fff; }
+.cxc-cust-block { border: 1px solid #eef2f7; border-radius: 11px; padding: 12px!important; background: #fff; text-align: left;}
 .cxc-block-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 10px; }
 .cxc-block-title--link { display: flex; align-items: center; justify-content: space-between; }
 .cxc-linkbtn { border: none; background: none; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; padding: 0; }
@@ -750,4 +750,243 @@
   .cxc-active-customers-pill {
     align-self: flex-start;
   }
+}
+
+/* =========================================================
+   CUSTOMER DETAILS MODAL — redesigned to match reference
+   ========================================================= */
+.cxc-cust-modal{
+  width:872px;
+  max-width:94vw;
+  max-height:90vh;
+  margin:auto;
+  background:#fff;
+  border:1px solid #e6ebf2;
+  border-radius:12px;
+  box-shadow:0 26px 70px rgba(15,23,42,.26),0 3px 10px rgba(15,23,42,.08);
+}
+.cxc-cust-modal .cxc-drawer-head{
+  min-height:56px;
+  padding:0 18px;
+  border-bottom:1px solid #e9edf3;
+}
+.cxc-cust-modal .cxc-drawer-head>strong{
+  color:#172033;
+  font-size:16px!important;
+  font-weight:700;
+}
+.cxc-cust-modal .cxc-drawer-close{
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  border-radius:7px;
+  color:#101828;
+}
+.cxc-cust-modal .cxc-drawer-close:hover{background:#f4f6f8}
+.cxc-cust-modal .cxc-drawer-foot{
+  min-height:58px;
+  padding:10px 18px;
+  border-top:1px solid #e9edf3;
+}
+.cxc-cust-modal-body{background:#fff}
+.cxc-cust-rail{
+  width:224px;
+  padding:17px 14px;
+  border-right:1px solid #edf0f5;
+  background:#fff;
+}
+.cxc-cust-idcard{gap:10px;margin-bottom:12px}
+.cxc-cust-idcard .cxc-avatar{
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px;
+  font-size:14px!important;
+  box-shadow:0 2px 6px rgba(15,23,42,.12);
+}
+.cxc-cust-idmeta{padding-top:1px}
+.cxc-cust-idname{
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+}
+.cxc-cust-idname .nm{
+  color:#111827;
+  font-size:14px;
+  font-weight:800;
+}
+.cxc-cust-idname .cxc-badge{
+  padding:2px 7px;
+  border-radius:5px;
+  font-size:9px;
+}
+.cxc-cust-idname .cxc-badge:before{display:none}
+.cxc-cust-plantag{
+  margin-top:5px;
+  padding:2px 7px;
+  border-radius:4px;
+  background:#eef4ff;
+  color:#2563eb;
+  font-size:9px;
+  text-transform:capitalize;
+}
+.cxc-cust-contacts{
+  padding:0 0 12px;
+  margin:0 0 7px;
+  border-bottom:1px solid #edf0f5;
+}
+.cxc-cust-contacts .cxc-id-line{
+  margin:6px 0;
+  gap:8px;
+  color:#475467;
+  font-size:10px;
+  line-height:1.3;
+  word-break:break-word;
+}
+.cxc-cust-contacts .cxc-id-line svg{
+  width:13px;height:13px;
+  flex:0 0 13px;
+}
+.cxc-cust-contacts .cxc-mono{
+  display:block;
+  padding-left:21px;
+  color:#667085;
+  font-size:9px;
+  word-break:break-all;
+}
+.cxc-cust-nav{gap:2px}
+.cxc-cust-navitem{
+  min-height:34px;
+  padding:0 10px;
+  gap:9px;
+  border-radius:6px;
+  font-size:11px;
+}
+.cxc-cust-navitem svg{width:14px;height:14px}
+.cxc-cust-navitem.active{background:#eaf2ff;color:#2563eb}
+
+.cxc-cust-content{
+  padding:14px;
+  background:#fff;
+  overflow-y: auto;
+}
+.cxc-cust-grid2{
+  grid-template-columns:minmax(0,1.25fr) minmax(215px,.92fr);
+  gap:10px;
+  margin-bottom:18px;
+}
+.cxc-cust-grid3{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.cxc-cust-rcol{gap:17px}
+.cxc-cust-grid3 .cxc-cust-block{
+  min-height:162px;
+  padding:12px !important;
+  border:1px solid #edf0f5;
+  border-radius:8px;
+  background:#fff;
+}
+.cxc-cust-notes{
+  padding-top:4px;
+  border-top:1px solid #edf0f5;
+}
+
+.cxc-linkbtn{
+  font-size:9px;
+  font-weight:700;
+}
+.cxc-linkbtn:hover{text-decoration:none}
+
+.cxc-ov-row .k{color:#667085}
+.cxc-ov-row .v{font-weight:700}
+.cxc-ov-row .cxc-badge{
+  padding:3px 8px;
+  border-radius:5px;
+  font-size:9px;
+}
+.cxc-ov-row .cxc-badge:before{display:none}
+.cxc-ov-row .cxc-plan-badge{font-size:10px}
+
+.cxc-qa-grid{
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+.cxc-qa-grid .cxc-btn{
+  min-height:32px;
+  padding:6px 7px;
+  justify-content:center;
+  border-radius:5px;
+  border-color:#e5e9f0;
+  font-size:8.5px;
+  gap: 3px;
+}
+.cxc-qa-grid .cxc-btn svg{width:11px;height:11px}
+.cxc-qa-deact{
+  width:100%;
+  min-height:31px;
+  margin-top:8px;
+  border-radius:5px;
+  border-color:#fee2e2;
+  background:#fff2f2;
+  color:#dc2626;
+  font-size:9px;
+}
+.cxc-qa-note{font-size:10px}
+
+.cxc-cust-modal .cxc-usage-item{margin-bottom:14px}
+.cxc-cust-modal .cxc-usage-top{
+  margin-bottom:6px;
+  font-size:8.5px;
+}
+.cxc-cust-modal .cxc-usage-track{height:5px}
+.cxc-cust-modal .cxc-usage-fill{background:#1769ff}
+
+.cxc-cust-modal .cxc-mini-row{
+  display:grid;
+  grid-template-columns:minmax(72px,auto) auto 1fr;
+  gap:7px;
+  padding:7px 0;
+  border-bottom:0;
+  font-size:8.5px;
+}
+.cxc-cust-modal .cxc-mini-row .cxc-sub-date{
+  min-width:0;
+  font-size:8px;
+}
+.cxc-cust-modal .cxc-mini-row strong{font-size:8.5px}
+.cxc-cust-modal .cxc-mini-row .cxc-badge{
+  justify-self:end;
+  margin-left:0;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:7.5px;
+}
+.cxc-cust-modal .cxc-mini-row .cxc-badge:before{display:none}
+.cxc-cust-modal .cxc-mini-row--act{
+  grid-template-columns:96px minmax(0,1fr);
+  align-items:start;
+}
+.cxc-cust-modal .cxc-mini-row--act span:last-child{
+  margin-left:0;
+  text-align:left;
+}
+
+.cxc-cust-foot .cxc-btn{
+  min-height:34px;
+  padding:7px 13px;
+  border-radius:6px;
+  font-size:11px;
+}
+.cxc-cust-foot .cxc-btn.btn-edit{
+  color: #2563eb;
+}
+.cxc-cust-foot .cxc-btn-primary{min-width:118px}
+
+.cxc-modal-overlay{
+  background:rgba(15,23,42,.5);
+}
+
+@media(max-width:900px){
+  .cxc-cust-modal{width:min(680px,96vw)}
+  .cxc-cust-grid2,.cxc-cust-grid3{grid-template-columns:1fr}
 }
