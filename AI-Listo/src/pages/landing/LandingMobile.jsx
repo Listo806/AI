@@ -575,7 +575,7 @@ export default function LandingMobile() {
       heroTitle2: "Built to Turn",
       heroTitle3: "Conversations",
       heroTitle4: "Into Revenue.",
-      heroDesc: "AI finds. AI qualifies. AI follows up. You close.",
+      heroDesc: "AI organizes. AI qualifies. You follow up. You close.",
       heroTopBanner1: "Agentic AI",
       heroTopBanner2:
         "revenue operating system for businesses tired of complicated, overpriced CRM software.",
@@ -983,7 +983,7 @@ export default function LandingMobile() {
       heroTitle3: "Conversaciones",
       heroTitle4: "en Ingresos.",
       heroDesc:
-        "La IA encuentra. La IA califica. La IA da seguimiento. Tú cierras.",
+        "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
       heroTopBanner1: "Agentic AI",
       heroTopBanner2:
         "sistema operativo de ingresos impulsado por IA para empresas cansadas de CRM complicados y demasiado costosos.",
@@ -1394,7 +1394,7 @@ export default function LandingMobile() {
       heroTitle2: "Criado para Transformar",
       heroTitle3: "Conversas",
       heroTitle4: "em Receita.",
-      heroDesc: "A IA encontra. A IA qualifica. A IA acompanha. Você fecha.",
+      heroDesc: "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
       heroTopBanner1: "Agentic AI",
       heroTopBanner2:
         "sistema operacional de receita com IA para empresas cansadas de CRMs complicados e caros.",

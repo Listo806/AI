@@ -509,7 +509,7 @@ export default function Landing() {
       heroTitleLine6: "Into Revenue.",
       heroSubtitle:
         "Capture, follow up, and close — all in one system. Connect all your apps so your listings, leads, and data flow into one place automatically.",
-      herotextabove: "AI finds. AI qualifies. AI follows up. You close.",
+      herotextabove: "AI organizes. AI qualifies. You follow up. You close.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
       heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
@@ -1058,7 +1058,7 @@ export default function Landing() {
       heroSubtitle:
         "Captura, da seguimiento y cierra — todo en un solo sistema. Conecta todas tus aplicaciones para que tus propiedades, leads y datos fluyan automáticamente en un solo lugar.",
       herotextabove:
-        "La IA encuentra. La IA califica. La IA hace seguimiento. Tú cierras.",
+        "La IA organiza. La IA califica. Tú haces seguimiento. Tú cierras.",
       heroCheck5: "Tu agente de IA encuentra y califica leads automáticamente",
       heroCheck6:
         "Tu agente de IA encuentra, captura y califica leads automáticamente.",
@@ -1611,7 +1611,7 @@ export default function Landing() {
       heroSubtitle:
         "Capture, acompanhe e feche — tudo em um único sistema. Conecte todos os seus aplicativos para que seus imóveis, leads e dados fluam automaticamente em um só lugar.",
       herotextabove:
-        "A IA encontra. A IA qualifica. A IA faz o acompanhamento. Você fecha.",
+        "A IA organiza. A IA qualifica. Você faz o acompanhamento. Você fecha.",
       heroCheck5: "Seu agente de IA encontra e qualifica leads automaticamente",
       heroCheck6:
         "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
