@@ -57,6 +57,18 @@ export class CustomersAdminService {
   private async ready(): Promise<void> {
     await this.mailer.ensureSchema();
     await this.ensureNotes();
+    await this.ensureCountryColumn();
+  }
+
+  // Registration country (ISO-3166 alpha-2), captured from the signup request IP.
+  // Self-healing so the admin read paths never fail before the first new signup.
+  private countryColReady = false;
+  private async ensureCountryColumn(): Promise<void> {
+    if (this.countryColReady) return;
+    await this.db.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_country VARCHAR(2)`,
+    );
+    this.countryColReady = true;
   }
 
   // Escape a plain-text admin message and turn newlines into a simple HTML body.
@@ -306,7 +318,7 @@ export class CustomersAdminService {
     offer_used, checkout_status, payment_status, plan, selected_plan,
     billing_cycle, plan_status, paddle_customer_id, paddle_subscription_id,
     signup_source, utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-    gclid, landing_page, created_at, registered_at, upgraded_at, last_seen_at,
+    gclid, landing_page, signup_country, created_at, registered_at, upgraded_at, last_seen_at,
     team_id,
     (SELECT COUNT(*)::int FROM team_members tm WHERE tm.team_id = users.team_id) AS seat_count,
     (SELECT COALESCE(SUM(p.amount), 0)::float
@@ -393,6 +405,7 @@ export class CustomersAdminService {
         intro_amount: cfg.pricing.introCents / 100,
         recurring_amount: recurringCents / 100,
         seats_limit: cfg.seats,
+        country: row.signup_country || null,
       };
     }
 
@@ -423,6 +436,7 @@ export class CustomersAdminService {
       intro_amount: 0,
       recurring_amount: 0,
       seats_limit: 1,
+      country: row.signup_country || null,
     };
   }
 
@@ -501,6 +515,15 @@ export class CustomersAdminService {
     if (opts.language && opts.language !== 'all') {
       params.push(String(opts.language).toLowerCase());
       clauses.push(`LOWER(COALESCE(preferred_language,'en')) = $${params.length}`);
+    }
+    if (opts.country && opts.country !== 'all') {
+      const cc = String(opts.country).trim();
+      if (cc.toLowerCase() === 'unknown') {
+        clauses.push(`COALESCE(signup_country,'') = ''`);
+      } else {
+        params.push(cc.toUpperCase());
+        clauses.push(`UPPER(COALESCE(signup_country,'')) = $${params.length}`);
+      }
     }
     if (opts.usersRole && opts.usersRole !== 'all') {
       const r = String(opts.usersRole).toLowerCase();
@@ -634,6 +657,9 @@ export class CustomersAdminService {
     };
     const bySource = await breakdown(this.sourceExpr);
     const byLanguage = await breakdown(`COALESCE(preferred_language, 'en')`);
+    const byCountry = await breakdown(
+      `COALESCE(NULLIF(signup_country, ''), 'Unknown')`,
+    );
     const byPlanRaw = await breakdown(
       `CASE
          WHEN payment_status = 'free' OR LOWER(COALESCE(selected_plan,plan,'')) = 'free' THEN 'free'
@@ -704,7 +730,7 @@ export class CustomersAdminService {
         checkoutStarted: fr.checkout_started ?? 0,
         paymentCompleted: fr.payment_completed ?? 0,
       },
-      breakdowns: { source: bySource, plan: byPlan, language: byLanguage },
+      breakdowns: { source: bySource, plan: byPlan, language: byLanguage, country: byCountry },
     };
   }
 

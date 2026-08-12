@@ -119,6 +119,40 @@ const avatarColor = (seed) => {
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 };
 
+// Registration country display: flag emoji + English country name derived from
+// the stored ISO-3166 alpha-2 code. Falls back to the raw code, then to "Unknown".
+let REGION_NAMES = null;
+try {
+  REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
+} catch {
+  REGION_NAMES = null;
+}
+const flagEmoji = (code) => {
+  const cc = String(code || "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(cc)) return "";
+  return String.fromCodePoint(...[...cc].map((ch) => 127397 + ch.charCodeAt(0)));
+};
+const countryName = (code) => {
+  const cc = String(code || "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(cc)) return cc || "";
+  try {
+    return (REGION_NAMES && REGION_NAMES.of(cc)) || cc;
+  } catch {
+    return cc;
+  }
+};
+function CountryCell({ code }) {
+  if (!code) return <span className="cxc-muted">Unknown</span>;
+  const flag = flagEmoji(code);
+  const name = countryName(code);
+  return (
+    <span className="cxc-country" title={name}>
+      {flag ? `${flag} ` : ""}
+      {name}
+    </span>
+  );
+}
+
 // CSV parsing for import
 function parseCsv(text) {
   const rows = [];
@@ -279,9 +313,13 @@ export default function AdminCustomers() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState(null);
+  // Stable Country-filter options: captured from the unfiltered view so picking a
+  // country never collapses the dropdown to only that country (this filter exists
+  // to compare countries, so you must be able to switch between them freely).
+  const [countryOpts, setCountryOpts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
-  const [filters, setFilters] = useState({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", usersRole: "all", seatStatus: "all", from: "", to: "" });
+  const [filters, setFilters] = useState({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", country: "all", usersRole: "all", seatStatus: "all", from: "", to: "" });
   const [moreFilters, setMoreFilters] = useState(false);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -304,6 +342,12 @@ export default function AdminCustomers() {
         setRows(list?.data || []);
         setTotal(list?.total || 0);
         setSummary(sum || null);
+        // Refresh the Country dropdown options only from the unfiltered view, so
+        // selecting a country keeps the full list available to switch between.
+        if ((filters.country || "all") === "all") {
+          const cs = sum?.breakdowns?.country;
+          if (Array.isArray(cs)) setCountryOpts(cs);
+        }
       })
       .catch(() => { setRows([]); setTotal(0); })
       .finally(() => setLoading(false));
@@ -312,7 +356,7 @@ export default function AdminCustomers() {
   useEffect(() => { load(); }, [load]);
 
   const setFilter = (k, v) => { setPage(1); setFilters((f) => ({ ...f, [k]: v })); };
-  const clearFilters = () => { setPage(1); setFilters({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", usersRole: "all", seatStatus: "all", from: "", to: "" }); };
+  const clearFilters = () => { setPage(1); setFilters({ q: "", plan: "all", billing: "all", paymentStatus: "all", source: "all", language: "all", country: "all", usersRole: "all", seatStatus: "all", from: "", to: "" }); };
 
   const toggleSelect = (id) => setSelected((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const allChecked = rows.length > 0 && rows.every((r) => selected.has(r.id));
@@ -577,6 +621,14 @@ export default function AdminCustomers() {
             <option value="es">Spanish</option>
             <option value="pt">Portuguese</option>
           </select>
+          <select className="cxc-select" value={filters.country} onChange={(e) => setFilter("country", e.target.value)}>
+            <option value="all">All Countries</option>
+            {countryOpts.map((cnt) => (
+              <option key={cnt.key} value={cnt.key}>
+                {cnt.key === "Unknown" ? "Unknown" : `${flagEmoji(cnt.key)} ${countryName(cnt.key)}`}
+              </option>
+            ))}
+          </select>
           <UsersSeatsFilter usersRole={filters.usersRole} seatStatus={filters.seatStatus} setFilter={setFilter} />
           {moreFilters && (
             <>
@@ -630,6 +682,7 @@ export default function AdminCustomers() {
                 <th>Next Billing</th>
                 <th>Payment Status</th>
                 <th>Source</th>
+                <th>Country</th>
                 <th>Registered<small>Date &amp; Time</small></th>
                 <th>Last Active</th>
                 <th>LTV<small>Total Revenue</small></th>
@@ -637,8 +690,8 @@ export default function AdminCustomers() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={11} style={{ padding: 20, color: "#64748b" }}>Loading…</td></tr>}
-              {!loading && rows.length === 0 && <tr><td colSpan={11} style={{ padding: 20, color: "#64748b" }}>No customers match these filters.</td></tr>}
+              {loading && <tr><td colSpan={12} style={{ padding: 20, color: "#64748b" }}>Loading…</td></tr>}
+              {!loading && rows.length === 0 && <tr><td colSpan={12} style={{ padding: 20, color: "#64748b" }}>No customers match these filters.</td></tr>}
               {!loading && rows.map((r) => {
                 const st = r.status;
                 return (
@@ -665,6 +718,7 @@ export default function AdminCustomers() {
                     </td>
                     <td><span className={`cxc-badge ${st}`}>{STATUS_LABEL[st] || st}</span></td>
                     <td>{r.source_label || "—"}</td>
+                    <td><CountryCell code={r.country} /></td>
                     <td>{fmtDate(r.registered_at || r.created_at)}<div className="cxc-sub-date">{fmtTime(r.registered_at || r.created_at)}</div></td>
                     <td>{r.last_seen_at ? <>{fmtDate(r.last_seen_at)}<div className="cxc-sub-date">{fmtTime(r.last_seen_at)}</div></> : <span className="cxc-muted">—</span>}</td>
                     <td className="cxc-ltv">{usd(r.ltv)}</td>
@@ -883,6 +937,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                 ) : (
                   c.phone && <div className="cxc-id-line"><Phone size={13} /> {c.phone}</div>
                 )}
+                <div className="cxc-id-line"><Globe size={13} /> <CountryCell code={c.country} /></div>
                 <div className="cxc-id-line cxc-mono">Customer ID: {c.id}</div>
               </div>
               <nav className="cxc-cust-nav">
