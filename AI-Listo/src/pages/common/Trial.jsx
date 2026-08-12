@@ -93,6 +93,11 @@ const t = {
 export default function StartTrial() {
   const navigate = useNavigate();
   const { setUser } = useAuth();
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const isFreeAccessFlow =
+    searchParams.get("flow") === "free-access" ||
+    searchParams.get("plan") === "free";
   // Capture the actual site language the visitor is registering in (URL version
   // first), not just a possibly-stale localStorage value.
   const [lang] = useState(() => currentSiteLanguage());
@@ -135,20 +140,15 @@ export default function StartTrial() {
     try {
       const attribution = getAttribution();
 
-      // New required signup flow:
-      // CTA -> Create Account -> Pricing -> Plan Review / Checkout.
-      //
-      // Do NOT assign a paid/free tier here. The latest backend already supports
-      // an account being registered with no selected plan.
       const payload = {
         name: form.name,
         email: form.email,
         phone: form.phone,
         password: form.password,
 
-        plan: null,
+        plan: isFreeAccessFlow ? "free" : null,
         billingCycle: null,
-        source: "create_account",
+        source: isFreeAccessFlow ? "free_access" : "create_account",
 
         language: lang,
         landingPage: attribution.landingPage || null,
@@ -183,11 +183,6 @@ export default function StartTrial() {
       // Password must never be persisted in localStorage.
       localStorage.removeItem("password");
 
-      // There is deliberately no plan yet.
-      localStorage.removeItem("trialPlan");
-      localStorage.setItem("signupFlowStage", "choose_plan");
-      localStorage.setItem("signupSource", "create_account");
-
       if (data.accessToken) {
         apiClient.setTokens(data.accessToken, data.refreshToken);
 
@@ -197,12 +192,64 @@ export default function StartTrial() {
         }
       }
 
+      if (isFreeAccessFlow) {
+        if (!data.accessToken) {
+          throw new Error(
+            "Account was created but automatic login failed. Please log in and try again.",
+          );
+        }
+
+        const freeResult = await apiClient.request("/trial/select-plan", {
+          method: "POST",
+          body: JSON.stringify({
+            plan: "free",
+            billingCycle: null,
+          }),
+        });
+
+        if (!freeResult?.success) {
+          throw new Error(
+            freeResult?.message || "Unable to activate the Free plan.",
+          );
+        }
+
+        const authenticatedUser = freeResult?.user || data.user;
+
+        if (authenticatedUser) {
+          localStorage.setItem(
+            "listo_user",
+            JSON.stringify(authenticatedUser),
+          );
+          setUser(authenticatedUser);
+        }
+
+        localStorage.setItem("trialPlan", "free");
+        localStorage.setItem("signupFlowStage", "free_active");
+        localStorage.setItem("signupSource", "free_access");
+        localStorage.removeItem("pendingPlanIntent");
+        localStorage.removeItem("pendingBillingCycle");
+
+        trackEvent("sign_up_completed", {
+          source: "free_access",
+          plan: "free",
+        });
+        trackSignupConversion();
+
+        navigate("/dashboard/ai-cortexa-setup", {
+          replace: true,
+        });
+        return;
+      }
+
+      localStorage.removeItem("trialPlan");
+      localStorage.setItem("signupFlowStage", "choose_plan");
+      localStorage.setItem("signupSource", "create_account");
+
       trackEvent("sign_up_completed", {
         source: "create_account",
       });
       trackSignupConversion();
 
-      // Always go to pricing after account creation.
       navigate("/pricing?from=signup", {
         replace: true,
       });
@@ -227,8 +274,12 @@ export default function StartTrial() {
             <span className="trial-v3-mobile-copy">{tr.mobileTitle}</span>
           </h1>
           <p>
-            <span className="trial-v3-desktop-copy">{tr.subtitle}</span>
-            <span className="trial-v3-mobile-copy">{tr.mobileSubtitle}</span>
+            <span className="trial-v3-desktop-copy">
+              {isFreeAccessFlow ? "Create your Free Forever account." : tr.subtitle}
+            </span>
+            <span className="trial-v3-mobile-copy">
+              {isFreeAccessFlow ? "Create your Free Forever account." : tr.mobileSubtitle}
+            </span>
           </p>
         </header>
 
@@ -325,10 +376,10 @@ export default function StartTrial() {
                 ) : (
                   <>
                     <span className="trial-v3-desktop-copy">
-                      {tr.continueBtn}
+                      {isFreeAccessFlow ? "CREATE MY FREE ACCOUNT" : tr.continueBtn}
                     </span>
                     <span className="trial-v3-mobile-copy">
-                      {tr.mobileContinueBtn}
+                      {isFreeAccessFlow ? "Create My Free Account" : tr.mobileContinueBtn}
                     </span>
                   </>
                 )}
@@ -345,8 +396,12 @@ export default function StartTrial() {
           <div className="trial-v3-security">
             <ShieldCheck size={30} strokeWidth={2} />
             <p>
-              <span className="trial-v3-desktop-copy">{tr.security}</span>
-              <span className="trial-v3-mobile-copy">{tr.mobileSecurity}</span>
+              <span className="trial-v3-desktop-copy">
+                {isFreeAccessFlow ? "No credit card required. Free forever." : tr.security}
+              </span>
+              <span className="trial-v3-mobile-copy">
+                {isFreeAccessFlow ? "No credit card required. Free forever." : tr.mobileSecurity}
+              </span>
             </p>
           </div>
         </form>
