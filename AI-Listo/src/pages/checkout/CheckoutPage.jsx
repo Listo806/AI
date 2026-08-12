@@ -227,6 +227,18 @@ export default function CheckoutPage() {
   const paypalContainerRef = useRef(null);
   const buttonsRenderedRef = useRef(false);
 
+  // Checkout-abandon tracking. checkoutStartedRef flips true once the visitor
+  // reaches a valid paid checkout; purchaseDoneRef flips true the moment a
+  // payment completes; abandonFiredRef guards against firing twice. selectedPlan
+  // is mirrored to a ref so the unmount/pagehide handler reads the latest plan.
+  const checkoutStartedRef = useRef(false);
+  const purchaseDoneRef = useRef(false);
+  const abandonFiredRef = useRef(false);
+  const selectedPlanRef = useRef(selectedPlan);
+  useEffect(() => {
+    selectedPlanRef.current = selectedPlan;
+  }, [selectedPlan]);
+
   // Paddle stays dormant until its config carries a client token AND a price for
   // this plan; until then the PayPal path below is used exactly as before.
   const [paddleConfig, setPaddleConfig] = useState(null);
@@ -254,11 +266,45 @@ export default function CheckoutPage() {
     }
   }, [planIsValid, navigate, lang]);
 
-  // Funnel: the user reached the checkout. This is the begin_checkout stage.
+  // Funnel: the user reached the checkout for a paid plan. This is the
+  // begin_checkout stage and also the "activation intent" signal (someone who
+  // reached the paid $7/$14/$21 activation checkout but has not paid yet) used to
+  // build the activation-intent retargeting audience.
   useEffect(() => {
     if (!planIsValid) return;
+    checkoutStartedRef.current = true;
     trackEvent("begin_checkout", { plan: selectedPlan });
-  }, [selectedPlan, planIsValid]);
+    trackEvent("activation_intent", {
+      plan: selectedPlan,
+      offer: `$${setupFee}`,
+      value: setupFee,
+      currency: "USD",
+    });
+  }, [selectedPlan, planIsValid, setupFee]);
+
+  // Funnel: fire a single checkout_abandoned event if the visitor engaged the
+  // paid checkout but leaves — closing the tab (pagehide) or navigating away
+  // (unmount) — without completing a purchase. This is the direct signal for the
+  // checkout-abandon retargeting audience. A completed purchase sets
+  // purchaseDoneRef first, so paying customers never fire it. Best-effort and
+  // guarded so it can never fire twice or block navigation.
+  useEffect(() => {
+    const fireAbandon = (e) => {
+      if (abandonFiredRef.current) return;
+      // A persisted pagehide means the page is going into the back/forward cache
+      // (e.g. a mobile app-switch to fetch a card) and may be restored, so the
+      // visitor has not really left — don't count it as an abandon.
+      if (e && e.persisted) return;
+      if (!checkoutStartedRef.current || purchaseDoneRef.current) return;
+      abandonFiredRef.current = true;
+      trackEvent("checkout_abandoned", { plan: selectedPlanRef.current });
+    };
+    window.addEventListener("pagehide", fireAbandon);
+    return () => {
+      window.removeEventListener("pagehide", fireAbandon);
+      fireAbandon();
+    };
+  }, []);
 
   // Load Paddle config once (null on error, so PayPal remains the fallback).
   useEffect(() => {
@@ -357,6 +403,8 @@ export default function CheckoutPage() {
         paddleInitRef.current = true;
         await initPaddle(paddleConfig, (ev) => {
           if (ev?.name === "checkout.completed") {
+            // Payment completed: this visitor did not abandon checkout.
+            purchaseDoneRef.current = true;
             const uid = customer.userId || localStorage.getItem("trialUserId");
             const paddleTxnId =
               ev?.data?.transaction_id || ev?.data?.id || undefined;
@@ -441,6 +489,8 @@ export default function CheckoutPage() {
           createSubscription: (data, actions) =>
             actions.subscription.create({ plan_id: planId }),
           onApprove: async (data) => {
+            // Payment approved: this visitor did not abandon checkout.
+            purchaseDoneRef.current = true;
             setErrorMsg("");
             setProcessing(true);
             try {

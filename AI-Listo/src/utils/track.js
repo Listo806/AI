@@ -15,6 +15,14 @@ const GA4_MEASUREMENT_ID =
 
 let ga4Configured = false;
 
+// The visitor's current lifecycle stage, kept in memory and re-asserted on every
+// auth change (see setUserJourney). It is merged into every trackEvent below, so
+// Google Ads / GA4 can segment audiences by where the person is in the funnel and
+// — most importantly — keep a paying customer flagged as `paid` on every page so
+// the acquisition-audience exclusion never decays. Defaults to an anonymous
+// visitor until the auth layer reports who they are.
+let currentJourney = { journey_stage: "visitor", customer_type: "visitor" };
+
 // Configure GA4 once (idempotent). No-op until VITE_GA4_MEASUREMENT_ID is set,
 // so this is safe to ship before the client provides a GA4 property. Automatic
 // page_view is disabled so the SPA route-change tracker controls page_views.
@@ -57,12 +65,122 @@ export function pushTrackLog(type, name, params) {
 // dataLayer push is a harmless no-op when no GTM container is installed.
 export function trackEvent(name, params = {}) {
   if (typeof window === "undefined") return;
+  // Stamp every event with the current journey stage/customer type so audiences
+  // and funnel reports can be segmented by lifecycle. Explicit params win, so a
+  // caller can always override.
+  const merged = { ...currentJourney, ...params };
   if (typeof window.gtag === "function") {
-    window.gtag("event", name, params);
+    window.gtag("event", name, merged);
   }
   window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event: name, ...params });
-  pushTrackLog("event", name, params);
+  window.dataLayer.push({ event: name, ...merged });
+  pushTrackLog("event", name, merged);
+}
+
+// Terminated paid statuses that drop an account back to Free (mirrors
+// TERMINATED_STATUSES in the backend plan-config.ts single source of truth).
+const TERMINATED_PAY_STATUSES = [
+  "canceled",
+  "cancelled",
+  "suspended",
+  "past_due",
+  "refunded",
+  "expired",
+];
+
+const PAID_PLAN_KEYS = ["solo", "team", "growth", "business", "scale", "pro"];
+const TIER_OF = {
+  team: "business",
+  growth: "scale",
+  pro: "solo",
+  business: "business",
+  scale: "scale",
+  solo: "solo",
+  free: "free",
+};
+
+// Derive the lifecycle stage for a user object (as returned by /users/me, login,
+// or the recovery/exit-popup flows — all carry paymentStatus/plan/selectedPlan).
+// This mirrors the backend resolveEffectivePlan rules so the browser and server
+// never disagree about who is a paying customer:
+//   - paid            -> a confirmed paying customer (exclude from acquisition)
+//   - past_customer   -> a lapsed/canceled paid account (win-back only)
+//   - free            -> activated the Free plan
+//   - registered_no_plan -> signed up but has not activated any plan
+//   - visitor         -> not signed in
+// Note: the browser user object has no checkout_status, so the backend's rare
+// "checkout_status=paid but payment_status not active" fallback is not visible
+// here. That state only arises from a partial activation failure (activation
+// writes payment_status + plan together), so it is not a normal customer state.
+export function deriveJourney(user) {
+  if (!user) return { journeyStage: "visitor", customerType: "visitor", planTier: "none" };
+  const pay = String(user.paymentStatus || "").trim().toLowerCase();
+  const sel = String(user.selectedPlan || "").trim().toLowerCase();
+  const rawPlan = String(user.plan || "").trim().toLowerCase();
+  const terminated = TERMINATED_PAY_STATUSES.includes(pay);
+  const paid = !terminated && (pay === "active" || pay === "paid");
+  // Prefer the tier written to `plan` at activation; fall back to the selected
+  // tier when `plan` is still the placeholder 'TRIAL' (a brief window if the
+  // transaction webhook lands before the subscription one). Mirrors the backend.
+  const planTierOf = (v) => (PAID_PLAN_KEYS.includes(v) ? TIER_OF[v] || "free" : null);
+
+  if (paid) {
+    const tier = planTierOf(rawPlan) || planTierOf(sel) || "solo";
+    return { journeyStage: "paid", customerType: "paid", planTier: tier };
+  }
+  if (terminated) {
+    return { journeyStage: "past_customer", customerType: "former_customer", planTier: "free" };
+  }
+  // Grandfathered pre-Paddle paid account that carries its tier on `plan`.
+  if (planTierOf(rawPlan)) {
+    return { journeyStage: "paid", customerType: "paid", planTier: planTierOf(rawPlan) };
+  }
+  const activatedFree = pay === "free" || rawPlan === "free" || sel === "free";
+  if (activatedFree) {
+    return { journeyStage: "free", customerType: "free", planTier: "free" };
+  }
+  return { journeyStage: "registered_no_plan", customerType: "lead", planTier: "none" };
+}
+
+// Publish the user's lifecycle to Google Ads + GA4. Sets GA4 user_properties
+// (journey_stage / customer_type / plan_tier) and a stable user_id so the
+// paying-customer exclusion stays attached to the person across sessions and
+// devices, and updates the in-memory currentJourney that every trackEvent stamps.
+// Safe no-op when gtag is absent. Call whenever the authenticated user changes.
+export function setUserJourney(user) {
+  const j = deriveJourney(user);
+  currentJourney = { journey_stage: j.journeyStage, customer_type: j.customerType };
+  const uid = user && user.id ? String(user.id) : null;
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("set", "user_properties", {
+      journey_stage: j.journeyStage,
+      customer_type: j.customerType,
+      plan_tier: j.planTier,
+    });
+    if (uid) {
+      window.gtag("config", GA4_MEASUREMENT_ID, {
+        user_id: uid,
+        send_page_view: false,
+      });
+      window.gtag("config", GOOGLE_ADS_ID, { user_id: uid });
+    }
+  }
+  if (typeof window !== "undefined") {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: "journey_set",
+      journey_stage: j.journeyStage,
+      customer_type: j.customerType,
+      plan_tier: j.planTier,
+    });
+  }
+  pushTrackLog("journey", "journey_set", {
+    journey_stage: j.journeyStage,
+    customer_type: j.customerType,
+    plan_tier: j.planTier,
+    user_id: uid,
+  });
+  return j;
 }
 
 // Fire a specific Google Ads conversion action, e.g. "AW-XXXX/label".
