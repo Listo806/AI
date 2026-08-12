@@ -145,6 +145,7 @@ export default function Sidebar({
       perfectFor: ["Customer Service Teams","Support Teams","Service Businesses","Operations Teams","Client Success Teams"],
       benefits: [["headphones","COMPLETE SUPPORT OPERATIONS","Manage tickets, cases, assignments, priorities, escalations, and resolutions from one organized workspace."],["messages-square","FASTER RESOLUTION","Give your team the customer history, conversations, support activity, and AI assistance they need to resolve issues faster."],["badge-check","SERVICE PERFORMANCE","Track response times, SLA performance, escalations, resolutions, customer satisfaction, and team activity with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, WhatsApp, AI, automation, analytics, and CRM data."]],
       price: 97,
+      path: "/dashboard/customer-service-workspace",
     },
     {
       id: "marketing",
@@ -157,6 +158,7 @@ export default function Sidebar({
       perfectFor: ["Marketing Teams","Agencies","Growth Teams","Sales & Marketing Teams","Service Businesses"],
       benefits: [["megaphone","COMPLETE MARKETING OPERATIONS","Build and manage campaigns, audiences, forms, messaging, automation, and customer journeys from one organized workspace."],["target","AUTOMATED CUSTOMER JOURNEYS","Create targeted follow-up and nurture workflows that move prospects through the customer journey with less manual work."],["badge-dollar-sign","REVENUE ATTRIBUTION","Connect campaigns, leads, conversions, pipeline activity, and revenue so you can see what marketing is actually producing."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa leads, contacts, pipeline, AI, automation, WhatsApp, analytics, and CRM data."]],
       price: 97,
+      path: "/dashboard/marketing-workspace",
     },
     {
       id: "projects",
