@@ -118,12 +118,27 @@ export class PlatformMailerService {
   }
 
   // ---- config / urls ----
+  // Email CTAs need ONE absolute base URL. APP_URL / FRONTEND_URL are sometimes set
+  // to a comma-separated CORS origin LIST (e.g. "a.com,https://www.a.com,http://localhost:5173"),
+  // which would otherwise produce a broken link like "<list>/activate-free". Resolve
+  // to a single clean origin: prefer the first https, non-localhost entry, then any
+  // non-localhost entry, then the first entry; strip a trailing slash.
   appUrl(): string {
-    return (
+    const raw =
       this.config.get('APP_URL') ||
       this.config.get('FRONTEND_URL') ||
-      'https://www.cortexaaicrm.com'
-    );
+      'https://www.cortexaaicrm.com';
+    const parts = String(raw)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const isLocal = (u: string) => /localhost|127\.0\.0\.1|:\d{2,5}\b/i.test(u);
+    const pick =
+      parts.find((p) => /^https:\/\//i.test(p) && !isLocal(p)) ||
+      parts.find((p) => !isLocal(p)) ||
+      parts[0] ||
+      'https://www.cortexaaicrm.com';
+    return pick.replace(/\/+$/, '');
   }
   private backendUrl(): string {
     return this.config.get('BACKEND_URL') || 'https://backend.cortexaaicrm.com';
