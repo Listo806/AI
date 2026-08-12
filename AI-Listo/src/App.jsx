@@ -9,7 +9,12 @@ import {
   useParams,
   useLocation,
 } from "react-router-dom";
-import { trackEvent, initAnalytics, captureClickIds } from "./utils/track";
+import {
+  trackEvent,
+  initAnalytics,
+  captureClickIds,
+  setUserJourney,
+} from "./utils/track";
 import ThemeProvider from "./theme/ThemeProvider";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -555,6 +560,19 @@ function AppRoutes() {
 // page-based retargeting audiences (e.g. pricing visitors) miss most people.
 function PageViewTracker() {
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Publish the visitor's lifecycle stage (visitor / registered_no_plan / free /
+  // paid / past_customer) to Google Ads + GA4 whenever the signed-in user
+  // changes. This is what powers the journey-based retargeting audiences and,
+  // crucially, keeps a paying customer flagged as `paid` on every page so they
+  // stay excluded from acquisition campaigns instead of the flag decaying. Runs
+  // before the page_view effect below so each page_view carries the right stage.
+  useEffect(() => {
+    initAnalytics();
+    setUserJourney(user);
+  }, [user]);
+
   useEffect(() => {
     // Configure GA4 once (no-op until a Measurement ID is set), then record the
     // page view for both GA4 (funnel analysis) and Google Ads (audiences).
