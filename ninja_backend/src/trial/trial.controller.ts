@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { TrialService } from './trial.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -7,9 +7,23 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class TrialController {
   constructor(private trialService: TrialService) {}
 
+  // Best-effort client IP for signup-country capture. Prefers the proxy-forwarded
+  // headers (Render/Cloudflare sit in front), falling back to the socket address.
+  private clientIp(req: any): string | undefined {
+    const xff = req?.headers?.['x-forwarded-for'];
+    if (typeof xff === 'string' && xff.trim()) return xff.split(',')[0].trim();
+    return (
+      req?.headers?.['cf-connecting-ip'] ||
+      req?.headers?.['x-real-ip'] ||
+      req?.ip ||
+      req?.socket?.remoteAddress ||
+      undefined
+    );
+  }
+
   @Post('start-trial')
-  startTrial(@Body() dto: any) {
-    return this.trialService.startTrial(dto);
+  startTrial(@Body() dto: any, @Req() req: any) {
+    return this.trialService.startTrial(dto, this.clientIp(req));
   }
 
   // Set the plan on the logged-in account after Create Account -> Pricing picks a
