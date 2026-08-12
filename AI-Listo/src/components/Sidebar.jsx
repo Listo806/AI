@@ -77,6 +77,11 @@ export default function Sidebar({
 
   const [hoveredWorkspace, setHoveredWorkspace] = useState(null);
 
+  // Super Admin QA mode:
+  // false = internal/admin view (all workspaces available to Super Admin)
+  // true  = render the same locked/unpaid presentation a normal customer sees
+  const [previewWorkspacesAsCustomer, setPreviewWorkspacesAsCustomer] = useState(false);
+
   const workspaceItems = [
     {
       id: "sales",
@@ -254,8 +259,10 @@ export default function Sidebar({
       return true;
     }
 
-    // Super Admin has full access to every Cortexa Workspace.
-    if (isSuperAdminAccount) {
+    // Super Admin has full access in ADMIN / ACTIVE VIEW.
+    // In CUSTOMER PREVIEW VIEW we intentionally skip this bypass so the
+    // workspace is evaluated exactly like a standard customer account.
+    if (isSuperAdminAccount && !previewWorkspacesAsCustomer) {
       return true;
     }
 
@@ -331,7 +338,7 @@ export default function Sidebar({
     if (window.lucide) {
       window.lucide.createIcons();
     }
-  }, [isCollapsed, aiCenterOpen, hoveredWorkspace]);
+  }, [isCollapsed, aiCenterOpen, hoveredWorkspace, previewWorkspacesAsCustomer]);
 
   const isAiCenterActive = AI_CENTER_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
@@ -837,6 +844,47 @@ export default function Sidebar({
           onMouseEnter={() => setHoveredWorkspace(hoveredWorkspace)}
           onMouseLeave={() => setHoveredWorkspace(null)}
         >
+          {isSuperAdminAccount && (
+            <div className="crm-workspace-admin-previewbar">
+              <div className="crm-workspace-admin-previewbar-copy">
+                <span className="crm-workspace-admin-previewbar-eyebrow">
+                  <i data-lucide="shield-check"></i>
+                  SUPER ADMIN VIEW
+                </span>
+                <strong>
+                  {previewWorkspacesAsCustomer
+                    ? "Customer Preview View"
+                    : "Admin / Active View"}
+                </strong>
+                <small>
+                  {previewWorkspacesAsCustomer
+                    ? "Showing the unpaid customer-facing workspace state."
+                    : "Showing your internal Super Admin workspace access."}
+                </small>
+              </div>
+
+              <button
+                type="button"
+                className={`crm-workspace-preview-toggle ${
+                  previewWorkspacesAsCustomer ? "is-previewing" : ""
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewWorkspacesAsCustomer((current) => !current);
+                }}
+              >
+                <i
+                  data-lucide={
+                    previewWorkspacesAsCustomer ? "shield-check" : "eye"
+                  }
+                ></i>
+                {previewWorkspacesAsCustomer
+                  ? "Back to Admin View"
+                  : "Preview as Customer"}
+              </button>
+            </div>
+          )}
+
           <div className="crm-workspace-flyout-intro">
             <div className="crm-workspace-flyout-kicker">
               <i data-lucide="sparkles"></i>
@@ -872,7 +920,18 @@ export default function Sidebar({
               </p>
           </div>
 
-          <div className="crm-workspace-detail-card">
+          <div className={`crm-workspace-detail-card ${
+            isSuperAdminAccount && previewWorkspacesAsCustomer
+              ? "is-customer-preview"
+              : ""
+          }`}>
+            {isSuperAdminAccount && previewWorkspacesAsCustomer && (
+              <div className="crm-workspace-customer-preview-note">
+                <i data-lucide="eye"></i>
+                CUSTOMER PREVIEW — this is the unpaid customer-facing presentation
+              </div>
+            )}
+
             <div className="crm-workspace-detail-head">
               <span
                 className={`crm-workspace-detail-icon crm-workspace-icon-${hoveredWorkspace.tone}`}
@@ -964,7 +1023,12 @@ export default function Sidebar({
                       return;
                     }
 
-                    if (isLocked(hoveredWorkspace)) {
+                    // Customer Preview must exercise the same ADD TO MY PLAN
+                    // presentation/flow without requiring a second customer login.
+                    if (
+                      previewWorkspacesAsCustomer ||
+                      isLocked(hoveredWorkspace)
+                    ) {
                       const addon =
                         FEATURE_TO_ADDON[hoveredWorkspace.feature];
 
