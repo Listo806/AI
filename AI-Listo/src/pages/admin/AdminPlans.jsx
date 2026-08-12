@@ -589,6 +589,8 @@ export default function AdminPlans() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [togglingId, setTogglingId] = useState(null);
 
   // Read-only view of the LIVE customer plans. Source of truth is the backend
   // plan-config (mirrored in ../../config/plans and tied to the Paddle price IDs),
@@ -637,6 +639,61 @@ export default function AdminPlans() {
       alive = false;
     };
   }, []);
+
+  const handleToggleActive = async (plan) => {
+    setTogglingId(plan.id);
+    setOpenMenuId(null);
+
+    try {
+      await updatePlan(plan.id, {
+        isActive: !plan.isActive,
+      });
+
+      setPlans((current) =>
+        current.map((item) =>
+          item.id === plan.id
+            ? { ...item, isActive: !plan.isActive }
+            : item,
+        ),
+      );
+
+      showSuccess(
+        plan.isActive
+          ? t('admin.plans.disabled')
+          : t('admin.plans.enabledSuccess'),
+      );
+    } catch (err) {
+      showError(err?.message || t('common.error'));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const handleDelete = async (plan) => {
+    setOpenMenuId(null);
+
+    if (
+      !window.confirm(
+        t('admin.plans.deleteConfirm', {
+          name: plan.name,
+        }),
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deletePlan(plan.id);
+
+      setPlans((current) =>
+        current.filter((item) => item.id !== plan.id),
+      );
+
+      showSuccess(t('admin.plans.deleted'));
+    } catch (err) {
+      showError(err?.message || t('common.error'));
+    }
+  };
 
   const total = plans.length;
 
@@ -857,14 +914,47 @@ export default function AdminPlans() {
                             {t('common.edit')}
                           </button>
 
-                          <button
-                            type="button"
-                            className="admin-plan-more-btn"
-                            aria-label={t('admin.plans.actions') || 'Actions'}
-                            title={t('admin.plans.actions') || 'Actions'}
-                          >
-                            <MoreVertical size={17} />
-                          </button>
+                          <div className="admin-plan-menu-wrap">
+                            <button
+                              type="button"
+                              className="admin-plan-more-btn"
+                              aria-label={t('admin.plans.moreActions') || 'More actions'}
+                              title={t('admin.plans.moreActions') || 'More actions'}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId((current) =>
+                                  current === plan.id ? null : plan.id,
+                                );
+                              }}
+                            >
+                              <MoreVertical size={17} />
+                            </button>
+
+                            {openMenuId === plan.id && (
+                              <div className="admin-plan-action-menu">
+                                <button
+                                  type="button"
+                                  className="admin-plan-action-menu-item"
+                                  onClick={() => handleToggleActive(plan)}
+                                  disabled={!!togglingId}
+                                >
+                                  {togglingId === plan.id
+                                    ? t('common.loading')
+                                    : plan.isActive
+                                      ? t('admin.plans.disable')
+                                      : t('admin.plans.enable')}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="admin-plan-action-menu-item is-danger"
+                                  onClick={() => handleDelete(plan)}
+                                >
+                                  {t('common.delete')}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
 
