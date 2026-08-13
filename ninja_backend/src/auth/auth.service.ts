@@ -17,6 +17,7 @@ import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '../config/config.service';
 import { EventLoggerService } from '../analytics/events/event-logger.service';
+import { captureSignupCountry } from '../common/signup-geo.util';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +31,10 @@ export class AuthService {
     private readonly eventLogger: EventLoggerService,
   ) {}
 
-  async signup(signupDto: SignupDto) {
+  async signup(
+    signupDto: SignupDto,
+    geo?: { country?: string | null; ip?: string | null },
+  ) {
     const { password, role } = signupDto;
     // Normalize the email so it is stored consistently and can always be matched
     // at login (avoids capitalized/whitespace mismatches).
@@ -72,6 +76,10 @@ export class AuthService {
       teamId: null,
       preferredLanguage: signupDto.language || null,
     });
+
+    // Registration country (best-effort, non-blocking): Cloudflare country header
+    // first, IP fallback. Never blocks or fails signup; missing shows as Unknown.
+    void captureSignupCountry(this.db, user.id, geo || {});
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
