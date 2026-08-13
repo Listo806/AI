@@ -30,6 +30,7 @@ import { PipelineModule } from "./pipeline/pipeline.module";
 import { CalendarModule } from "./calendar/calendar.module";
 import { PlatformMailModule } from "./platform-mail/platform-mail.module";
 import { PlansModule } from "./plans/plans.module";
+import { InsuranceModule } from "./insurance/insurance.module";
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { PlansModule } from "./plans/plans.module";
     PipelineModule,
     CalendarModule,
     PlatformMailModule,
+    InsuranceModule,
   ],
   controllers: [AppController],
 })
