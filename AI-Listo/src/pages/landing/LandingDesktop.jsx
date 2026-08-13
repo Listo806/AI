@@ -181,7 +181,7 @@ export default function Landing() {
       nav: [
         "Features",
         "AI Assistant",
-        "AI Automation",
+        "AI Workflows",
         "Pipeline",
         "Analytics",
         "Testimonials",
@@ -683,7 +683,7 @@ export default function Landing() {
       nav: [
         "Características",
         "Asistente de IA",
-        "AI Automatización",
+        "Flujos de trabajo IA",
         "Pipeline",
         "Análisis",
         "Testimonios",
@@ -1192,7 +1192,7 @@ export default function Landing() {
       nav: [
         "Recursos",
         "Assistente de IA",
-        "AI Automação",
+        "Fluxos de trabalho IA",
         "Pipeline",
         "Análises",
         "Testemunhos",

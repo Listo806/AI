@@ -8,7 +8,31 @@ import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Home, icons } from "lucide-react";
+
+const toLucideComponentName = (name = "") =>
+  String(name)
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+
+function SidebarIcon({ name, className, style, ...props }) {
+  // Keep Dashboard/Home explicit. Some lucide-react builds/tree-shaking
+  // configurations do not expose every icon consistently through `icons`.
+  if (name === "home") {
+    return <Home className={className} style={style} {...props} />;
+  }
+
+  const Icon = icons[toLucideComponentName(name)];
+
+  if (!Icon) {
+    return null;
+  }
+
+  return <Icon className={className} style={style} {...props} />;
+}
+
 const AI_CENTER_PATHS = [
   "/dashboard/ai-cortexa",
   // "/dashboard/ai-center",
@@ -336,15 +360,7 @@ export default function Sidebar({
       localStorage.setItem("aiCenterSidebarOpen", JSON.stringify(aiCenterOpen));
     } catch (_) {}
   }, [aiCenterOpen]);
-
-  // Initialize Lucide icons when component mounts or updates
-  useEffect(() => {
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-  }, [isCollapsed, aiCenterOpen, hoveredWorkspace, previewWorkspacesAsCustomer]);
-
-  const isAiCenterActive = AI_CENTER_PATHS.some(
+const isAiCenterActive = AI_CENTER_PATHS.some(
     (p) => location.pathname === p || location.pathname.startsWith(p + "/"),
   );
 
@@ -543,9 +559,9 @@ export default function Sidebar({
                   (primaryRouteIsQr &&
                     item.path === "/dashboard/whatsapp" &&
                     item.icon === "smartphone") ? (
-                  <i data-lucide="smartphone" className="crm-nav-icon"></i>
+                  <SidebarIcon name="smartphone" className="crm-nav-icon" />
                 ) : (
-                  <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                  <SidebarIcon name={item.icon} className="crm-nav-icon" />
                 )}
                 {!isCollapsed && (
                   <span className="crm-nav-label">
@@ -571,7 +587,7 @@ export default function Sidebar({
                   onClick={onClose}
                   title={t("nav.aiCenter.label")}
                 >
-                  <i data-lucide="bot" className="crm-nav-icon"></i>
+                  <SidebarIcon name="bot" className="crm-nav-icon" />
                 </NavLink>
               ) : (
                 <>
@@ -593,12 +609,10 @@ export default function Sidebar({
                       font: "inherit",
                     }}
                   >
-                    <i data-lucide="bot" className="crm-nav-icon"></i>
+                    <SidebarIcon name="bot" className="crm-nav-icon" />
                     <span className="crm-nav-label">{t("nav.aiCenter.label")}</span>
-                    <i
-                      data-lucide={aiCenterOpen ? "chevron-down" : "chevron-right"}
-                      style={{ marginLeft: "auto", width: "16px", height: "16px" }}
-                    />
+                    <SidebarIcon name={aiCenterOpen ? "chevron-down" : "chevron-right"}
+                      style={{ marginLeft: "auto", width: "16px", height: "16px" }} />
                   </button>*/}
                   {AI_CENTER_ITEMS.map((item, index) => (
                     <NavLink
@@ -616,7 +630,7 @@ export default function Sidebar({
                       }}
                       title={isCollapsed ? t(item.labelKey) : undefined}
                     >
-                      <i data-lucide={item.icon} className="crm-nav-icon"></i>
+                      <SidebarIcon name={item.icon} className="crm-nav-icon" />
                       {!isCollapsed && (
                         <span className="crm-nav-label">
                           {item.label || t(item.labelKey)}
@@ -647,7 +661,7 @@ export default function Sidebar({
               }}
               title={isCollapsed ? t(item.labelKey) : undefined}
             >
-              <i data-lucide={item.icon} className="crm-nav-icon"></i>
+              <SidebarIcon name={item.icon} className="crm-nav-icon" />
               {!isCollapsed && (
                 <>
                   <span className="crm-nav-label">{t(item.labelKey)}</span>
@@ -710,7 +724,7 @@ export default function Sidebar({
                       <span
                         className={`crm-workspace-icon crm-workspace-icon-${workspace.tone}`}
                       >
-                        <i data-lucide={workspace.icon}></i>
+                        <SidebarIcon name={workspace.icon} />
                       </span>
 
                       <span className="crm-workspace-label">
@@ -725,10 +739,8 @@ export default function Sidebar({
                         {getWorkspaceBadge(workspace)}
                       </span>
 
-                      <i
-                        data-lucide="chevron-right"
-                        className="crm-workspace-chevron"
-                      ></i>
+                      <SidebarIcon name="chevron-right"
+                        className="crm-workspace-chevron" />
                     </button>
                   );
                 })}
@@ -743,7 +755,7 @@ export default function Sidebar({
                   }}
                 >
                   <span className="crm-workspace-icon crm-workspace-icon-indigo">
-                    <i data-lucide="target"></i>
+                    <SidebarIcon name="target" />
                   </span>
 
                   <span className="crm-workspace-label">
@@ -754,32 +766,34 @@ export default function Sidebar({
                     {t("nav.addOn")}
                   </span>
 
-                  <i
-                    data-lucide="chevron-right"
-                    className="crm-workspace-chevron"
-                  ></i>
+                  <SidebarIcon name="chevron-right"
+                    className="crm-workspace-chevron" />
                 </NavLink>
               </div>
 
-              <div className="crm-workspaces-expand-card">
-                <div className="crm-workspaces-expand-title">
-                  <i data-lucide="crown"></i>
-                  <strong>Expand Cortexa</strong>
+              <div className="crm-workspaces-expand-card crm-workspaces-ai-usage">
+                <div className="crm-workspaces-ai-usage-head">
+                  <span>AI Usage</span>
+                  <strong>82%</strong>
                 </div>
 
-                <p>
-                  Unlock powerful workspaces and scale your operations.
-                </p>
-
-                <button
-                  type="button"
-                  onMouseEnter={() =>
-                    setHoveredWorkspace(workspaceItems[0])
-                  }
+                <div
+                  className="crm-workspaces-ai-usage-track"
+                  role="progressbar"
+                  aria-label="AI Usage"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="82"
                 >
-                  <span>Explore All Workspaces</span>
-                  <i data-lucide="arrow-right"></i>
-                </button>
+                  <span
+                    className="crm-workspaces-ai-usage-fill"
+                    style={{ width: "82%" }}
+                  />
+                </div>
+
+                <div className="crm-workspaces-ai-usage-reset">
+                  Resets Aug 30
+                </div>
               </div>
             </section>
           )}
@@ -848,11 +862,20 @@ export default function Sidebar({
           onMouseEnter={() => setHoveredWorkspace(hoveredWorkspace)}
           onMouseLeave={() => setHoveredWorkspace(null)}
         >
+          <button
+            type="button"
+            className="crm-workspace-flyout-close"
+            aria-label="Close workspace preview"
+            onClick={() => setHoveredWorkspace(null)}
+          >
+            <SidebarIcon name="x" />
+          </button>
+
           {isSuperAdminAccount && (
             <div className="crm-workspace-admin-previewbar">
               <div className="crm-workspace-admin-previewbar-copy">
                 <span className="crm-workspace-admin-previewbar-eyebrow">
-                  <i data-lucide="shield-check"></i>
+                  <SidebarIcon name="shield-check" />
                   SUPER ADMIN VIEW
                 </span>
                 <strong>
@@ -877,11 +900,9 @@ export default function Sidebar({
                   setPreviewWorkspacesAsCustomer((current) => !current);
                 }}
               >
-                <i
-                  data-lucide={
+                <SidebarIcon name={
                     previewWorkspacesAsCustomer ? "shield-check" : "eye"
-                  }
-                ></i>
+                  } />
                 {previewWorkspacesAsCustomer
                   ? "Back to Admin View"
                   : "Preview as Customer"}
@@ -891,7 +912,7 @@ export default function Sidebar({
 
           <div className="crm-workspace-flyout-intro">
             <div className="crm-workspace-flyout-kicker">
-              <i data-lucide="sparkles"></i>
+              <SidebarIcon name="sparkles" />
 
               <div>
                 <h3>Cortexa Workspaces</h3>
@@ -903,19 +924,19 @@ export default function Sidebar({
 
             <div className="crm-workspace-flyout-points">
               <span>
-                <i data-lucide="rocket"></i>
+                <SidebarIcon name="rocket" />
                 Built for specialized operations
               </span>
               <span>
-                <i data-lucide="lock-keyhole"></i>
+                <SidebarIcon name="lock-keyhole" />
                 Activate only what you need
               </span>
               <span>
-                <i data-lucide="shield-check"></i>
+                <SidebarIcon name="shield-check" />
                 Connected to your Cortexa CRM
               </span>
               <span>
-                <i data-lucide="zap"></i>
+                <SidebarIcon name="zap" />
                 AI-powered across your business
               </span>
             </div>
@@ -931,7 +952,7 @@ export default function Sidebar({
           }`}>
             {isSuperAdminAccount && previewWorkspacesAsCustomer && (
               <div className="crm-workspace-customer-preview-note">
-                <i data-lucide="eye"></i>
+                <SidebarIcon name="eye" />
                 CUSTOMER PREVIEW — this is the unpaid customer-facing presentation
               </div>
             )}
@@ -940,7 +961,7 @@ export default function Sidebar({
               <span
                 className={`crm-workspace-detail-icon crm-workspace-icon-${hoveredWorkspace.tone}`}
               >
-                <i data-lucide={hoveredWorkspace.icon}></i>
+                <SidebarIcon name={hoveredWorkspace.icon} />
               </span>
 
               <div className="crm-workspace-detail-title">
@@ -963,7 +984,7 @@ export default function Sidebar({
               <div className="crm-workspace-capabilities">
                 {hoveredWorkspace.capabilities.map((capability) => (
                   <span key={capability}>
-                    <i data-lucide="circle-check"></i>
+                    <SidebarIcon name="circle-check" />
                     {capability}
                   </span>
                 ))}
@@ -971,7 +992,7 @@ export default function Sidebar({
 
               <div className="crm-workspace-divider" />
 
-              <h4>BUILT FOR</h4>
+              <h4>Perfect For</h4>
 
               <div className="crm-workspace-tags">
                 {hoveredWorkspace.perfectFor.map((item) => (
@@ -986,7 +1007,7 @@ export default function Sidebar({
               <div className="crm-workspace-benefits">
                 {hoveredWorkspace.benefits.map(([icon, title, desc]) => (
                   <div key={title}>
-                    <i data-lucide={icon}></i>
+                    <SidebarIcon name={icon} />
                     <strong>{title}</strong>
                     <p>{desc}</p>
                   </div>
@@ -994,25 +1015,15 @@ export default function Sidebar({
               </div>
 
               <div className="crm-workspace-price-row">
-                <div>
-                  {isWorkspaceActive(hoveredWorkspace) ? (
-                    <>
-                      <small>Status</small>
-                      <strong className="crm-workspace-active-label">
-                        Active
-                      </strong>
-                    </>
-                  ) : (
-                    <>
-                      <small className="uper">{hoveredWorkspace.label}</small>
+                {!isWorkspaceActive(hoveredWorkspace) &&
+                  previewWorkspacesAsCustomer && (
+                    <div className="crm-workspace-preview-price">
                       <strong>
                         ${hoveredWorkspace.price}
                         <em>/month</em>
                       </strong>
-                      <p>Add the complete {hoveredWorkspace.label} to your Cortexa account.</p>
-                    </>
+                    </div>
                   )}
-                </div>
 
                 <button
                   type="button"
@@ -1027,8 +1038,6 @@ export default function Sidebar({
                       return;
                     }
 
-                    // Customer Preview must exercise the same ADD TO MY PLAN
-                    // presentation/flow without requiring a second customer login.
                     if (
                       previewWorkspacesAsCustomer ||
                       isLocked(hoveredWorkspace)
@@ -1046,10 +1055,14 @@ export default function Sidebar({
                     ? hoveredWorkspace.path
                       ? `Open ${hoveredWorkspace.label}`
                       : `${hoveredWorkspace.label} Active`
-                    : `ADD TO MY PLAN`}
-
-                  <i data-lucide="chevron-right"></i>
+                    : `Add ${hoveredWorkspace.label}`}
                 </button>
+
+                <p className="crm-workspace-price-helper">
+                  {isWorkspaceActive(hoveredWorkspace)
+                    ? "This workspace is active on your account."
+                    : "Add this workspace to your plan."}
+                </p>
               </div>
 
             </div>

@@ -584,7 +584,7 @@ export default function LandingMobile() {
       nav: [
         "Features",
         "AI Assistant",
-        "AI Automation",
+        "AI Workflows",
         "Pipeline",
         "Analytics",
         "Testimonials",
@@ -992,7 +992,7 @@ export default function LandingMobile() {
       nav: [
         "Funciones",
         "Asistente IA",
-        "Automatización IA",
+        "Flujos de trabajo IA",
         "Pipeline",
         "Analítica",
         "Testimonios",
@@ -1403,7 +1403,7 @@ export default function LandingMobile() {
       nav: [
         "Recursos",
         "Assistente IA",
-        "Automação IA",
+        "Fluxos de trabalho IA",
         "Pipeline",
         "Analytics",
         "Depoimentos",
