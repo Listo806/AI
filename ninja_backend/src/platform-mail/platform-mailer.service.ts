@@ -1161,6 +1161,21 @@ export class PlatformMailerService {
       case 'subscription_canceled':
         vars = this.billingEmailVars(name);
         break;
+      case 'free_welcome':
+      case 'free_plan_value':
+      case 'free_ai':
+      case 'free_team':
+      case 'free_upgrade':
+        // Same vars the live sequence uses (deep-linked CTA, first name, real AI
+        // allowance for free_ai). A sample unsubscribe token renders the footer
+        // link; it isn't a real subscriber token, so clicking it just reports an
+        // invalid link, which is correct for a test recipient.
+        vars = this.freeOnboardingVars(
+          opts.template,
+          name,
+          this.unsubUrl('test-sample'),
+        );
+        break;
       default:
         // abandoned_1 / abandoned_2 / abandoned_3
         vars = { name, ctaUrl: this.continueUrl() };
@@ -1174,6 +1189,28 @@ export class PlatformMailerService {
       language: opts.language,
       vars,
     });
+  }
+
+  // Send all 5 Free-onboarding emails to one address on demand, so the sequence
+  // can be reviewed in a real inbox before the automation is switched on. This
+  // is independent of FREE_ONBOARDING_EMAILS_ENABLED and the scheduled queue.
+  async sendFreeOnboardingTest(
+    to: string,
+    language = 'en',
+  ): Promise<Array<{ template: TemplateName; sent: boolean; status: string; reason?: string }>> {
+    const sequence: TemplateName[] = [
+      'free_welcome',
+      'free_plan_value',
+      'free_ai',
+      'free_team',
+      'free_upgrade',
+    ];
+    const out: Array<{ template: TemplateName; sent: boolean; status: string; reason?: string }> = [];
+    for (const template of sequence) {
+      const r = await this.sendTestEmail({ to, template, language });
+      out.push({ template, sent: r.sent, status: r.status, reason: r.reason });
+    }
+    return out;
   }
 
   // ---- engagement tracking ----
