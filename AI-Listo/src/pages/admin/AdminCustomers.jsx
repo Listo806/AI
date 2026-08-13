@@ -449,6 +449,10 @@ export default function AdminCustomers() {
     );
 
     const match = planBreakdown.find((item) => {
+      // Match on the stable machine id first (free/solo/business/scale); the
+      // display label (e.g. "Solo ($197)") is not a reliable key.
+      const id = String(item?.id ?? "").trim().toLowerCase();
+      if (id && normalizedAliases.includes(id)) return true;
       const key = String(
         item?.key ?? item?.plan ?? item?.label ?? item?.name ?? "",
       )
@@ -538,13 +542,13 @@ export default function AdminCustomers() {
           <div className="cxc-plan-customers-head">
             <div>
               <h2>Customers by Plan</h2>
-              <p>Active customers by their current plan.</p>
+              <p>Customers by their selected plan.</p>
             </div>
 
             <div className="cxc-active-customers-pill">
               <Users size={15} />
               <strong>
-                {activeCustomersByPlan.toLocaleString()} Active Customers
+                {activeCustomersByPlan.toLocaleString()} Customers
               </strong>
             </div>
           </div>
