@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Plus,
@@ -28,122 +28,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import "./InsuranceWorkspace.css";
+import insuranceApi from "../../api/insuranceApi";
 
-const POLICIES = [
-  {
-    id: "POL-2025-1248",
-    holder: "TechFlow Solutions",
-    contact: "Olivia Bennett",
-    type: "Commercial General Liability",
-    carrier: "Travelers Insurance",
-    carrierMark: "☂",
-    period: "Jan 15, 2025 - Jan 15, 2026",
-    premium: 4250,
-    status: "Active",
-    billing: "Jan 15, 2026",
-    billingNote: "in 243 days",
-    agent: "John Smith",
-  },
-  {
-    id: "POL-2025-1247",
-    holder: "Bright Marketing",
-    contact: "Ethan Walker",
-    type: "Professional Liability",
-    carrier: "Hiscox",
-    carrierMark: "H",
-    period: "Feb 01, 2025 - Feb 01, 2026",
-    premium: 2180,
-    status: "Active",
-    billing: "Feb 01, 2026",
-    billingNote: "in 260 days",
-    agent: "Sophia Martinez",
-  },
-  {
-    id: "POL-2025-1246",
-    holder: "GreenLeaf Realty",
-    contact: "Sophia Martinez",
-    type: "Property Insurance",
-    carrier: "State Farm",
-    carrierMark: "●",
-    period: "Apr 10, 2025 - Apr 10, 2026",
-    premium: 6750,
-    status: "Active",
-    billing: "Apr 10, 2026",
-    billingNote: "in 328 days",
-    agent: "Liam Johnson",
-  },
-  {
-    id: "POL-2025-1245",
-    holder: "Summit Enterprises",
-    contact: "Liam Johnson",
-    type: "Workers Compensation",
-    carrier: "The Hartford",
-    carrierMark: "H",
-    period: "Mar 05, 2025 - Mar 05, 2026",
-    premium: 3920,
-    status: "Active",
-    billing: "Mar 05, 2026",
-    billingNote: "in 292 days",
-    agent: "John Smith",
-  },
-  {
-    id: "POL-2025-1244",
-    holder: "Innovate Labs",
-    contact: "Noah Davis",
-    type: "Cyber Liability",
-    carrier: "CNA",
-    carrierMark: "CNA",
-    period: "May 01, 2025 - May 01, 2026",
-    premium: 5600,
-    status: "Pending",
-    billing: "-",
-    billingNote: "",
-    agent: "Olivia Bennett",
-  },
-  {
-    id: "POL-2025-1243",
-    holder: "NextGen Industries",
-    contact: "Ava Thompson",
-    type: "Commercial Auto",
-    carrier: "Progressive",
-    carrierMark: "P",
-    period: "Feb 20, 2025 - Feb 20, 2026",
-    premium: 3150,
-    status: "Active",
-    billing: "Feb 20, 2026",
-    billingNote: "in 279 days",
-    agent: "Sophia Martinez",
-  },
-  {
-    id: "POL-2025-1242",
-    holder: "Pulse Technologies",
-    contact: "Mason Clark",
-    type: "Directors & Officers",
-    carrier: "Chubb",
-    carrierMark: "C",
-    period: "Jan 30, 2025 - Jan 30, 2026",
-    premium: 4780,
-    status: "Active",
-    billing: "Jan 30, 2026",
-    billingNote: "in 258 days",
-    agent: "Liam Johnson",
-  },
-  {
-    id: "POL-2025-1241",
-    holder: "BlueStone Architects",
-    contact: "Isabella White",
-    type: "Umbrella Liability",
-    carrier: "AIG",
-    carrierMark: "AIG",
-    period: "Mar 12, 2025 - Mar 12, 2026",
-    premium: 2850,
-    status: "Cancelled",
-    billing: "-",
-    billingNote: "",
-    agent: "John Smith",
-  },
-];
-
+// NOTE: The KPI cards, Policies-by-Type, Recent Activity and Upcoming Renewals
+// below still use placeholder data. They are wired to live backend data in their
+// own later phases (Claims, Renewals, Activity, KPIs). This phase wires the
+// Policies table to the real, account-scoped backend.
 const INSURANCE_STATS = [
   ["Active Policies", "1,248", "$3,245,750", "Total Premium", "15%", ShieldCheck, "blue"],
   ["Policies Expiring (30 Days)", "87", "$221,840", "Premium at Risk", "8%", CalendarClock, "amber"],
@@ -177,27 +67,148 @@ const RENEWALS = [
   ["Summit Enterprises", "Workers Compensation", "POL-2025-1245", "Mar 05, 2026", "$3,920.00", "in 61 days"],
 ];
 
+// Format an ISO date into the workspace's short display, e.g. "Jan 15, 2026".
+function formatDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
+// Relative note for a next-billing / renewal date, e.g. "in 243 days".
+function relativeNote(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+  if (days < 0) return `${Math.abs(days)} days ago`;
+  if (days === 0) return "today";
+  if (days === 1) return "in 1 day";
+  return `in ${days} days`;
+}
+
+function initials(name) {
+  const s = String(name || "").trim();
+  if (!s) return "";
+  return s
+    .split(/\s+/)
+    .map((x) => x[0] || "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+// Map a backend policy row to the exact shape the table renders, with safe
+// fallbacks so a partially-filled policy never breaks the UI.
+function toPolicyRow(p) {
+  const start = formatDate(p.coverageStart);
+  const end = formatDate(p.coverageEnd);
+  const period = start && end ? `${start} - ${end}` : start || end || "-";
+  const carrier = p.carrierName || "-";
+  return {
+    key: p.id,
+    id: p.policyNumber || p.id,
+    holder: p.holderName || p.contactName || "-",
+    contact: p.contactName || "",
+    type: p.policyType || "-",
+    carrier,
+    carrierMark: p.carrierMark || initials(carrier).charAt(0) || "☂",
+    period,
+    premium: Number(p.premium) || 0,
+    status: p.status || "Pending",
+    billing: formatDate(p.nextBilling) || "-",
+    billingNote: p.nextBilling ? relativeNote(p.nextBilling) : "",
+    agent: p.agentName || "Unassigned",
+  };
+}
+
+// Windowed page-number list, keeping the existing pagination look but driven by
+// the real total.
+function pageWindow(current, totalPages) {
+  const pages = [];
+  const max = 7;
+  if (totalPages <= max) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+    return pages;
+  }
+  pages.push(1);
+  let start = Math.max(2, current - 1);
+  let end = Math.min(totalPages - 1, current + 1);
+  if (current <= 3) {
+    start = 2;
+    end = 4;
+  } else if (current >= totalPages - 2) {
+    start = totalPages - 3;
+    end = totalPages - 1;
+  }
+  if (start > 2) pages.push("...");
+  for (let i = start; i <= end; i++) pages.push(i);
+  if (end < totalPages - 1) pages.push("...");
+  pages.push(totalPages);
+  return pages;
+}
+
+const EMPTY_CELL_STYLE = {
+  textAlign: "center",
+  padding: "36px 16px",
+  color: "#64748b",
+};
+
 export default function InsuranceWorkspace() {
   const [activeTab, setActiveTab] = useState("Policies");
   const [search, setSearch] = useState("");
 
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return POLICIES;
-    return POLICIES.filter((item) =>
-      [
-        item.id,
-        item.holder,
-        item.contact,
-        item.type,
-        item.carrier,
-        item.agent,
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
-  }, [search]);
+  const [policies, setPolicies] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    const handle = setTimeout(() => {
+      insuranceApi
+        .listPolicies({ search: search.trim() || undefined, page, limit })
+        .then((res) => {
+          if (cancelled) return;
+          const data = Array.isArray(res?.data)
+            ? res.data
+            : Array.isArray(res)
+              ? res
+              : [];
+          setPolicies(data.map(toPolicyRow));
+          setTotal(Number(res?.total ?? data.length) || 0);
+          setLoading(false);
+        })
+        .catch((e) => {
+          if (cancelled) return;
+          setPolicies([]);
+          setTotal(0);
+          setError(e?.message || "Failed to load policies");
+          setLoading(false);
+        });
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [search, page, limit]);
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(page, totalPages);
+  const from = total === 0 ? 0 : (safePage - 1) * limit + 1;
+  const to = Math.min(safePage * limit, total);
+  const pages = useMemo(
+    () => pageWindow(safePage, totalPages),
+    [safePage, totalPages],
+  );
 
   return (
     <div className="insurance-ws">
@@ -284,7 +295,10 @@ export default function InsuranceWorkspace() {
             <Search size={14} />
             <input
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               placeholder="Search policies..."
             />
           </label>
@@ -327,94 +341,140 @@ export default function InsuranceWorkspace() {
             </thead>
 
             <tbody>
-              {rows.map((policy) => (
-                <tr key={policy.id}>
-                  <td><input type="checkbox" /></td>
-                  <td className="policy-id">{policy.id}</td>
-
-                  <td>
-                    <div className="insurance-ws-two-line">
-                      <strong>{policy.holder}</strong>
-                      <span>{policy.contact}</span>
-                    </div>
-                  </td>
-
-                  <td>{policy.type}</td>
-
-                  <td>
-                    <div className="insurance-ws-carrier">
-                      <span>{policy.carrierMark}</span>
-                      <strong>{policy.carrier}</strong>
-                    </div>
-                  </td>
-
-                  <td>{policy.period}</td>
-
-                  <td>
-                    <div className="insurance-ws-two-line premium">
-                      <strong>
-                        ${policy.premium.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </strong>
-                      <span>Annual</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span className={`insurance-ws-status ${policy.status.toLowerCase()}`}>
-                      {policy.status}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="insurance-ws-two-line billing">
-                      <strong>{policy.billing}</strong>
-                      {policy.billingNote && <span>{policy.billingNote}</span>}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="insurance-ws-agent">
-                      <span>
-                        {policy.agent
-                          .split(" ")
-                          .map((x) => x[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </span>
-                      {policy.agent}
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="insurance-ws-row-actions">
-                      <Eye size={14} />
-                      <Pencil size={14} />
-                      <MoreVertical size={14} />
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={11} style={EMPTY_CELL_STYLE}>Loading policies...</td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={11} style={EMPTY_CELL_STYLE}>{error}</td>
+                </tr>
+              ) : policies.length === 0 ? (
+                <tr>
+                  <td colSpan={11} style={EMPTY_CELL_STYLE}>
+                    {search.trim()
+                      ? "No policies match your search."
+                      : "No policies yet. Create your first policy to get started."}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                policies.map((policy) => (
+                  <tr key={policy.key}>
+                    <td><input type="checkbox" /></td>
+                    <td className="policy-id">{policy.id}</td>
+
+                    <td>
+                      <div className="insurance-ws-two-line">
+                        <strong>{policy.holder}</strong>
+                        <span>{policy.contact}</span>
+                      </div>
+                    </td>
+
+                    <td>{policy.type}</td>
+
+                    <td>
+                      <div className="insurance-ws-carrier">
+                        <span>{policy.carrierMark}</span>
+                        <strong>{policy.carrier}</strong>
+                      </div>
+                    </td>
+
+                    <td>{policy.period}</td>
+
+                    <td>
+                      <div className="insurance-ws-two-line premium">
+                        <strong>
+                          ${policy.premium.toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                          })}
+                        </strong>
+                        <span>Annual</span>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className={`insurance-ws-status ${policy.status.toLowerCase()}`}>
+                        {policy.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="insurance-ws-two-line billing">
+                        <strong>{policy.billing}</strong>
+                        {policy.billingNote && <span>{policy.billingNote}</span>}
+                      </div>
+                    </td>
+
+                    <td>
+                      <div className="insurance-ws-agent">
+                        <span>
+                          {policy.agent
+                            .split(" ")
+                            .map((x) => x[0])
+                            .join("")
+                            .slice(0, 2)}
+                        </span>
+                        {policy.agent}
+                      </div>
+                    </td>
+
+                    <td>
+                      <div className="insurance-ws-row-actions">
+                        <Eye size={14} />
+                        <Pencil size={14} />
+                        <MoreVertical size={14} />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="insurance-ws-pagination">
-          <span>Showing 1 to 8 of 1,248 policies</span>
+          <span>
+            {total === 0
+              ? "No policies"
+              : `Showing ${from} to ${to} of ${total.toLocaleString("en-US")} policies`}
+          </span>
           <div>
-            <button><ChevronLeft size={14} /></button>
-            <button className="active">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button>4</button>
-            <button>5</button>
-            <span>...</span>
-            <button>156</button>
-            <button><ChevronRight size={14} /></button>
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeft size={14} />
+            </button>
+            {pages.map((n, i) =>
+              n === "..." ? (
+                <span key={`gap-${i}`}>...</span>
+              ) : (
+                <button
+                  key={n}
+                  className={n === safePage ? "active" : ""}
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </button>
+              ),
+            )}
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
-          <select defaultValue="20">
+          <select
+            value={limit}
+            onChange={(e) => {
+              setLimit(Number(e.target.value));
+              setPage(1);
+            }}
+          >
             <option value="20">20 / page</option>
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
           </select>
         </div>
       </section>
