@@ -98,6 +98,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
 
   const [status, setStatus] = useState(DEFAULT_STATUS);
   const [qr, setQr] = useState(null);
+  const [pairingCode, setPairingCode] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
@@ -326,12 +327,37 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       setError("");
     });
 
+    // Mobile pairing-code (phone-number method): the 8-character code to type into
+    // WhatsApp on the same phone. Arrives instead of a QR when connecting by number.
+    socket.on("pairing-code", (payload) => {
+      if (!mountedRef.current) return;
+
+      const code = payload?.code ?? payload?.data?.code ?? null;
+
+      if (!code) return;
+
+      setPairingCode(code);
+      setConnecting(true);
+      setError("");
+    });
+
+    socket.on("pairing-error", (payload) => {
+      if (!mountedRef.current) return;
+
+      setConnecting(false);
+      setError(
+        payload?.message ||
+          "Could not generate a connection code. Check the number and try again.",
+      );
+    });
+
     socket.on("connected", async (payload) => {
       if (!mountedRef.current) return;
 
       stopPolling();
 
       setQr(null);
+      setPairingCode(null);
       setConnecting(false);
 
       const optimisticStatus = {
@@ -366,6 +392,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       connectedNotifiedRef.current = false;
 
       setQr(null);
+      setPairingCode(null);
       setConnecting(false);
 
       setStatus((current) => ({
@@ -440,6 +467,64 @@ export function useWhatsAppSetup({ onConnected } = {}) {
     }
   }, [connecting, openSocket, refreshQr, startPolling, status.connected]);
 
+  // Mobile: connect by phone number instead of a QR. Opens realtime first (so the
+  // pairing-code event is not missed), then asks the backend for the code. The code
+  // itself arrives via the "pairing-code" socket handler above; status polling
+  // detects the completed link.
+  const connectWithCode = useCallback(
+    async (phone) => {
+      if (connecting || status.connected) {
+        return;
+      }
+
+      const trimmed = String(phone || "").trim();
+
+      if (!trimmed) {
+        setError(
+          "Please enter your WhatsApp number with the country code.",
+        );
+        return;
+      }
+
+      setConnecting(true);
+      setError("");
+      setQr(null);
+      setPairingCode(null);
+
+      connectedNotifiedRef.current = false;
+
+      openSocket();
+
+      try {
+        const response = await whatsappSetupService.connectWithCode(trimmed);
+
+        const data = response?.data ?? response ?? {};
+
+        const backendMessage = String(data.message || "");
+
+        if (
+          backendMessage.includes("WHATSAPP_QR_ENABLED=true") ||
+          backendMessage.includes("REDIS_URL")
+        ) {
+          throw new Error(backendMessage);
+        }
+
+        startPolling();
+      } catch (requestError) {
+        console.error("CONNECT WHATSAPP (CODE) FAILED:", requestError);
+
+        setConnecting(false);
+
+        setError(
+          requestError?.response?.data?.message ||
+            requestError?.message ||
+            "Unable to start WhatsApp connection.",
+        );
+      }
+    },
+    [connecting, openSocket, startPolling, status.connected],
+  );
+
   const disconnect = useCallback(async () => {
     if (disconnecting) return;
 
@@ -455,6 +540,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
       connectedNotifiedRef.current = false;
 
       setQr(null);
+      setPairingCode(null);
       setConnecting(false);
       setStatus(DEFAULT_STATUS);
 
@@ -510,6 +596,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
   return {
     status,
     qr,
+    pairingCode,
 
     loading,
     connecting,
@@ -521,6 +608,7 @@ export function useWhatsAppSetup({ onConnected } = {}) {
     phone: status.phone,
 
     connect,
+    connectWithCode,
     disconnect,
 
     refresh: refreshStatus,

@@ -303,6 +303,7 @@ export default function CortexaAISetup({
                   {isOpen && step.id === 1 && (
                     <WhatsAppConnectCard
                       qr={whatsappSetup?.qr}
+                      pairingCode={whatsappSetup?.pairingCode}
                       connected={whatsappSetup?.connected}
                       phone={whatsappSetup?.phone}
                       loading={whatsappSetup?.loading}
@@ -311,6 +312,7 @@ export default function CortexaAISetup({
                       socketConnected={whatsappSetup?.socketConnected}
                       error={whatsappSetup?.error}
                       onConnect={whatsappSetup?.connect}
+                      onConnectWithCode={whatsappSetup?.connectWithCode}
                       onDisconnect={whatsappSetup?.disconnect}
                       onRefreshQr={whatsappSetup?.refreshQr}
                     />

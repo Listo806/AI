@@ -28,6 +28,15 @@ export const whatsappSetupService = {
     });
   },
 
+  // Mobile: start a connection by phone number. The 8-character pairing code is
+  // delivered over the /whatsapp-qr socket as a "pairing-code" event.
+  connectWithCode(phone) {
+    return request("/whatsapp-qr/pairing-code", {
+      method: "POST",
+      body: JSON.stringify({ phone }),
+    });
+  },
+
   disconnect() {
     return request("/whatsapp-qr/disconnect", {
       method: "POST",

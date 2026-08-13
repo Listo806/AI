@@ -60,7 +60,11 @@ export class BaileysSocketService
     return this.handles.get(userId);
   }
 
-  async ensureSocket(userId: string, sessionId: string): Promise<SocketHandle> {
+  async ensureSocket(
+    userId: string,
+    sessionId: string,
+    options?: { pairingPhone?: string },
+  ): Promise<SocketHandle> {
     if (!this.isQrEnabled()) {
       return { userId, sessionId, connected: false };
     }
@@ -78,7 +82,7 @@ export class BaileysSocketService
       return handle;
     }
 
-    await this.startSocket(userId, sessionId, authResult);
+    await this.startSocket(userId, sessionId, authResult, options);
     return this.handles.get(userId) || { userId, sessionId, connected: false };
   }
 
@@ -253,6 +257,7 @@ export class BaileysSocketService
     userId: string,
     sessionId: string,
     authResult: { state: any; saveCreds: () => Promise<void> },
+    options?: { pairingPhone?: string },
   ): Promise<void> {
     const oldCtx = this.contexts.get(userId);
     if (oldCtx?.sock) {
@@ -301,11 +306,36 @@ export class BaileysSocketService
 
     sock.ev.on("creds.update", saveCreds);
 
+    // Mobile pairing-code mode: when a phone number is supplied we request an
+    // 8-character pairing code once (so the customer links WhatsApp from the same
+    // phone, no QR to scan) and emit that instead of the QR. Desktop connect
+    // (no pairingPhone) keeps emitting the QR exactly as before.
+    let pairingRequested = false;
+
     sock.ev.on("connection.update", async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
-        this.realtime.emitQr(userId, qr);
+        if (options?.pairingPhone) {
+          if (!pairingRequested) {
+            pairingRequested = true;
+            try {
+              const digits = String(options.pairingPhone).replace(/\D/g, "");
+              const code = await sock.requestPairingCode(digits);
+              this.realtime.emitPairingCode(userId, code);
+            } catch (err: any) {
+              this.logger.warn(
+                `pairing-code failed user=${userId}: ${err?.message}`,
+              );
+              this.realtime.emitPairingError(
+                userId,
+                err?.message || "Could not generate a pairing code",
+              );
+            }
+          }
+        } else {
+          this.realtime.emitQr(userId, qr);
+        }
       }
 
       if (connection === "open") {
@@ -365,7 +395,8 @@ export class BaileysSocketService
           ctx.reconnectTimer = null;
           if (ctx.closing) return;
           const nextAuth = await this.redisAuth.useRedisAuthState(userId);
-          if (nextAuth) await this.startSocket(userId, sessionId, nextAuth);
+          if (nextAuth)
+            await this.startSocket(userId, sessionId, nextAuth, options);
         }, delayMs);
       }
     });
