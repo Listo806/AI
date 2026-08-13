@@ -677,6 +677,10 @@ export class CustomersAdminService {
       unselected: 'Registered - No Plan',
     };
     const byPlan = byPlanRaw.map((r: any) => ({
+      // Keep the machine id (free/solo/business/scale/unselected) alongside the
+      // display label so the "Customers by Plan" cards can match on it reliably;
+      // the label alone (e.g. "Solo ($197)") broke that lookup and showed 0.
+      id: r.key,
       key: planLabels[r.key] || r.key,
       count: r.count,
     }));
