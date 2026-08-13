@@ -273,14 +273,12 @@ export default function StartTrial() {
             <span className="trial-v3-desktop-copy">{tr.title}</span>
             <span className="trial-v3-mobile-copy">{tr.mobileTitle}</span>
           </h1>
-          <p>
-            <span className="trial-v3-desktop-copy">
-              {isFreeAccessFlow ? "Create your Free Forever account." : tr.subtitle}
-            </span>
-            <span className="trial-v3-mobile-copy">
-              {isFreeAccessFlow ? "Create your Free Forever account." : tr.mobileSubtitle}
-            </span>
-          </p>
+          {isFreeAccessFlow && (
+            <p>
+              <span className="trial-v3-desktop-copy">Create your Free Forever account.</span>
+              <span className="trial-v3-mobile-copy">Create your Free Forever account.</span>
+            </p>
+          )}
         </header>
 
         <form className="trial-v3-form" onSubmit={handleSubmit}>

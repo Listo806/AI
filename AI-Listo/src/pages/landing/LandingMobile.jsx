@@ -596,12 +596,12 @@ export default function LandingMobile() {
       benefitsSubtitle: "WHAT CORTEXA DOES FOR YOU",
       benefitsTitle1: "Everything You Need.",
       benefitsTitle2: "All in One Place.",
-      followUpTitle: "Automated Follow-Ups",
+      followUpTitle: "Follow-Up Management",
       followUpDesc:
-        "Automatically follows up on new leads so fewer slip through the cracks.",
-      setterTitle: "AI Appointment Setter",
+        "Organize follow-up tasks and keep track of every opportunity.",
+      setterTitle: "Appointment Management",
       setterDesc:
-        "Qualifies leads, books appointments, and moves opportunities forward.",
+        "Manage scheduling, appointments, and related customer activity in one place.",
       pipelineTitle: "Pipeline Management",
       pipelineDesc:
         "See your entire pipeline at a glance and never lose track of a deal.",
@@ -652,12 +652,12 @@ export default function LandingMobile() {
       aiosSectionTitle1: "Revenue ",
       aiosSectionTitle2: "Workspace",
 
-      setterSectionSubtitle: "AI Appointment Booking",
-      setterSectionTitle1: "AI Appointment",
-      setterSectionTitle2: "Booking That Fills",
-      setterSectionTitle3: "Your Calendar 24/7.",
+      setterSectionSubtitle: "APPOINTMENT MANAGEMENT",
+      setterSectionTitle1: "Manage Your",
+      setterSectionTitle2: "Appointments in One",
+      setterSectionTitle3: "Connected Workspace.",
       setterSectionDesc:
-        "AI handles calls, books appointments, and reschedules-all ỉn real time. No missed opportunities. More revenue.",
+        "Organize availability, bookings, and scheduling from one connected workspace. Keep appointments and customer activity easy to manage.",
       bookAppointmentTitle: "Book Appointment",
       confirmBtnText: "Confirm Appointment",
 
@@ -685,42 +685,42 @@ export default function LandingMobile() {
       faqSubtitle: "FAQS",
       faqTitle: "Everything you need to know",
       faq: [
-        {
-          q: "What does CORTEXA actually do?",
-          a: "CORTEXA automates your lead follow-ups, conversations, pipeline updates, and appointment scheduling — all in one system.",
-        },
-        {
-          q: "How does the AI Assistant work?",
-          a: "The AI responds instantly to leads, qualifies them, books appointments, and keeps every conversation moving automatically.",
-        },
-        {
-          q: "Can I manage all my leads in one place?",
-          a: "Yes. All your leads, messages, and deal stages are centralized in one dashboard so nothing gets lost.",
-        },
-        {
-          q: "Does it update my pipeline automatically?",
-          a: "Yes. As leads interact, the system moves them through your pipeline without manual input.",
-        },
-        {
-          q: "Will I still need to follow up manually?",
-          a: "No. CORTEXA is designed to handle follow-ups automatically while keeping leads engaged.",
-        },
-        {
-          q: "Can my team use this together?",
-          a: "Yes. You can add team members, assign leads, and manage deals collaboratively.",
-        },
-        {
-          q: "What kind of businesses is this for?",
-          a: "Cortexa is built for businesses of every size and industry. Whether you run a real estate company, e-commerce store, agency, consulting firm, insurance office, financial services business, contractor business, healthcare practice, or another growing company, Cortexa's Agentic AI Revenue Operating System helps turn conversations into revenue. The platform connects your AI Agent, AI WhatsApp, leads, contacts, pipelines, appointment booking, analytics, dashboards, Revenue Intelligence, automations, and Team Workspace into one connected operating system—helping your business automate customer conversations, respond faster, streamline daily operations, and grow revenue. Industry-specific modules can be added as your business grows, while the core operating system is ready to help your business from day one.",
-        },
-        {
-          q: "What happens after a lead comes in?",
-          a: "The system responds instantly, qualifies the lead, and pushes them toward booking or closing — automatically.",
-        },
-      ],
+              {
+                q: "What does CORTEXA actually do?",
+                a: "CORTEXA brings your leads, contacts, pipeline, tasks, properties, analytics, team activity, and connected business tools into one centralized CRM workspace. It helps businesses organize customer relationships, manage opportunities, monitor performance, and keep their sales operation connected.",
+              },
+              {
+                q: "How does the AI Assistant work?",
+                a: "The CORTEXA AI Assistant helps users work with information already available in their workspace. It can help surface useful information, summarize activity, provide insights, and assist users with everyday CRM and business tasks while keeping the user in control.",
+              },
+              {
+                q: "Can I manage all my leads in one place?",
+                a: "Yes. Leads, contacts, notes, activities, pipeline stages, and related customer information can be organized in one centralized workspace, making it easier for your team to manage opportunities without switching between multiple systems.",
+              },
+              {
+                q: "How do I manage my sales pipeline?",
+                a: "CORTEXA provides a visual pipeline where you can organize opportunities, move deals between stages, assign responsibilities, create tasks and reminders, and monitor progress from one workspace.",
+              },
+              {
+                q: "Can I connect the business tools I already use?",
+                a: "Yes. CORTEXA supports integrations with compatible third-party business tools and services. Available integrations may vary, and customers remain responsible for their own third-party accounts, permissions, and applicable provider terms.",
+              },
+              {
+                q: "Can my team use CORTEXA together?",
+                a: "Yes. CORTEXA provides team workspace capabilities that help users share CRM information, assign tasks and leads, monitor activity, and coordinate work from the same platform. Available team capacity depends on the customer's plan.",
+              },
+              {
+                q: "What kind of businesses is CORTEXA for?",
+                a: "CORTEXA is designed for businesses and professional teams that need a centralized system for managing leads, contacts, sales pipelines, customer information, tasks, reporting, and day-to-day CRM operations.",
+              },
+              {
+                q: "What happens after a lead is added to CORTEXA?",
+                a: "The lead becomes part of your centralized CRM workspace, where your team can organize the record, assign responsibility, add notes and tasks, manage its pipeline stage, and track activity and progress.",
+              },
+            ],
 
       finalCtaSubtitle: "AUTOMATE YOUR SUCCESS",
-      finalCtaTitle1: "Automate Your",
+      finalCtaTitle1: "Connect Your",
       finalCtaTitle2: "Entire Workflow",
       finalCtaTitle3: "",
       finalCtaDesc: "AI Leads. AI Qualifies. AI Closes. All in your ",
@@ -801,9 +801,9 @@ export default function LandingMobile() {
       stageClosed: "Closed Won",
 
       heroCheck6:
-        "Your AI Agent finds, captures, and qualifies leads automatically",
-      heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
-      heroCheck8: "Automated follow-ups and appointment booking run 24/7",
+        "Capture, organize, and manage leads in one connected workspace",
+      heroCheck7: "Connect your business tools and communication channels",
+      heroCheck8: "Manage follow-up tasks, scheduling, and appointments in one place",
       heroCheck9:
         "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
 
@@ -1003,11 +1003,11 @@ export default function LandingMobile() {
       benefitsSubtitle: "LO QUE CORTEXA HACE POR TI",
       benefitsTitle1: "Todo lo que necesitas.",
       benefitsTitle2: "En un solo lugar.",
-      followUpTitle: "Seguimientos Automatizados",
+      followUpTitle: "Gestión de Seguimientos",
       followUpDesc:
-        "Hace seguimiento automático de los nuevos leads para que menos se escapen.",
-      setterTitle: "Agendador de Citas con IA",
-      setterDesc: "Califica leads, agenda citas y avanza las oportunidades.",
+        "Organiza las tareas de seguimiento y mantén el control de cada oportunidad.",
+      setterTitle: "Gestión de Citas",
+      setterDesc: "Gestiona la programación, las citas y la actividad relacionada con los clientes en un solo lugar.",
       pipelineTitle: "Gestión de Pipeline",
       pipelineDesc:
         "Mira todo tu pipeline de un vistazo y nunca pierdas el rastro de un trato.",
@@ -1056,12 +1056,12 @@ export default function LandingMobile() {
         "Descubre cómo nuestro Sistema Operativo de Ingresos integrado ayuda a las empresas a automatizar más rápido, cerrar más oportunidades y aumentar sus ingresos.",
       flowNewButton: "Comienza Tu Prueba Gratis",
 
-      setterSectionSubtitle: "AGENDADOR DE CITAS CON IA",
-      setterSectionTitle1: "Reserva de Citas",
-      setterSectionTitle2: "con IA que Llena",
-      setterSectionTitle3: "Tu Agenda las 24 Horas.",
+      setterSectionSubtitle: "GESTIÓN DE CITAS",
+      setterSectionTitle1: "Gestiona Tus Citas",
+      setterSectionTitle2: "en un Espacio de",
+      setterSectionTitle3: "Trabajo Conectado.",
       setterSectionDesc:
-        "La IA gestiona las llamadas, agenda citas y las reprograma, todo en tiempo real. Sin oportunidades perdidas. Más ingresos.",
+        "Organiza la disponibilidad, las reservas y la programación desde un espacio de trabajo conectado. Mantén las citas y la actividad de los clientes fáciles de gestionar.",
       bookAppointmentTitle: "Agendar Cita",
       confirmBtnText: "Confirmar Cita",
 
@@ -1089,42 +1089,42 @@ export default function LandingMobile() {
       faqSubtitle: "PREGUNTAS FRECUENTES",
       faqTitle: "Todo lo que necesitas saber",
       faq: [
-        {
-          q: "¿Qué hace exactamente CORTEXA?",
-          a: "CORTEXA automatiza el seguimiento de clientes potenciales, las conversaciones, las actualizaciones del embudo de ventas y la programación de citas, todo en un solo sistema.",
-        },
-        {
-          q: "¿Cómo funciona el Asistente de IA?",
-          a: "La IA responde instantáneamente a los clientes potenciales, los califica, agenda citas y mantiene la conversación en marcha automáticamente.",
-        },
-        {
-          q: "¿Puedo gestionar todos mis clientes potenciales en un solo lugar?",
-          a: "Sí. Todos tus clientes potenciales, mensajes y etapas del pipeline están centralizados en un panel para que no se pierda nada.",
-        },
-        {
-          q: "¿Actualiza mi pipeline automáticamente?",
-          a: "Sí. A medida que los clientes potenciales interactúan, el sistema los mueve a través de tu pipeline sin intervención manual.",
-        },
-        {
-          q: "¿Aún tendré que hacer seguimiento manualmente?",
-          a: "No. CORTEXA está diseñado para gestionar el seguimiento automáticamente y mantener a los clientes potenciales comprometidos.",
-        },
-        {
-          q: "¿Puede mi equipo usarlo en conjunto?",
-          a: "Sí. Puedes agregar miembros del equipo, asignar clientes potenciales y gestionar acuerdos de forma colaborativa.",
-        },
-        {
-          q: "¿Para qué tipo de negocios es esto?",
-          a: "Cortexa está diseñada para empresas de todos los tamaños y sectores. Ya sea que dirijas una empresa inmobiliaria, una tienda de comercio electrónico, una agencia, una consultora, una oficina de seguros, una empresa de servicios financieros, una empresa de servicios para contratistas, un centro de atención médica u otra empresa en crecimiento, el Sistema Operativo de Ingresos con IA Agéntica de Cortexa ayuda a convertir las conversaciones en ingresos. La plataforma conecta tu Agente de IA, IA para WhatsApp, clientes potenciales, contactos, embudos de ventas, reservas de citas, análisis, paneles de control, Inteligencia de Ingresos, automatizaciones y espacio de trabajo para equipos en un único sistema operativo integrado. Esto ayuda a tu empresa a automatizar las conversaciones con los clientes, responder más rápido, optimizar las operaciones diarias y aumentar los ingresos. A medida que tu empresa crece, puedes añadir módulos específicos para tu sector, mientras que el sistema operativo principal está listo para ayudar a tu negocio desde el primer día.",
-        },
-        {
-          q: "¿Qué sucede después de que llega un cliente potencial?",
-          a: "El sistema responde al instante, califica al cliente potencial y lo impulsa hacia la reserva o el cierre automáticamente.",
-        },
-      ],
+              {
+                q: "¿Qué hace exactamente CORTEXA?",
+                a: "CORTEXA reúne tus leads, contactos, pipeline, tareas, propiedades, analítica, actividad del equipo y herramientas empresariales conectadas en un espacio de trabajo CRM centralizado. Ayuda a las empresas a organizar las relaciones con los clientes, gestionar oportunidades, supervisar el rendimiento y mantener conectadas sus operaciones de ventas.",
+              },
+              {
+                q: "¿Cómo funciona el Asistente de IA?",
+                a: "El Asistente de IA de CORTEXA ayuda a los usuarios a trabajar con la información que ya está disponible en su espacio de trabajo. Puede ayudar a mostrar información útil, resumir actividades, proporcionar insights y asistir a los usuarios con tareas cotidianas de CRM y del negocio, manteniendo siempre al usuario en control.",
+              },
+              {
+                q: "¿Puedo gestionar todos mis leads en un solo lugar?",
+                a: "Sí. Los leads, contactos, notas, actividades, etapas del pipeline y la información relacionada con los clientes pueden organizarse en un espacio de trabajo centralizado, facilitando que tu equipo gestione oportunidades sin cambiar entre múltiples sistemas.",
+              },
+              {
+                q: "¿Cómo gestiono mi pipeline de ventas?",
+                a: "CORTEXA proporciona un pipeline visual donde puedes organizar oportunidades, mover negocios entre etapas, asignar responsabilidades, crear tareas y recordatorios, y supervisar el progreso desde un solo espacio de trabajo.",
+              },
+              {
+                q: "¿Puedo conectar las herramientas empresariales que ya utilizo?",
+                a: "Sí. CORTEXA admite integraciones con herramientas y servicios empresariales de terceros compatibles. Las integraciones disponibles pueden variar, y los clientes siguen siendo responsables de sus propias cuentas de terceros, permisos y términos aplicables de cada proveedor.",
+              },
+              {
+                q: "¿Puede mi equipo utilizar CORTEXA en conjunto?",
+                a: "Sí. CORTEXA ofrece funciones de espacio de trabajo para equipos que permiten compartir información del CRM, asignar tareas y leads, supervisar la actividad y coordinar el trabajo desde la misma plataforma. La capacidad disponible para el equipo depende del plan del cliente.",
+              },
+              {
+                q: "¿Para qué tipo de empresas está diseñado CORTEXA?",
+                a: "CORTEXA está diseñado para empresas y equipos profesionales que necesitan un sistema centralizado para gestionar leads, contactos, pipelines de ventas, información de clientes, tareas, informes y operaciones diarias de CRM.",
+              },
+              {
+                q: "¿Qué sucede después de añadir un lead a CORTEXA?",
+                a: "El lead pasa a formar parte de tu espacio de trabajo CRM centralizado, donde tu equipo puede organizar el registro, asignar responsabilidades, añadir notas y tareas, gestionar su etapa del pipeline y realizar un seguimiento de la actividad y el progreso.",
+              },
+            ],
 
       finalCtaSubtitle: "AUTOMATIZA TU ÉXITO",
-      finalCtaTitle1: "Automatiza Todo",
+      finalCtaTitle1: "Conecta Tu",
       finalCtaTitle2: "Tu Flujo de Trabajo",
       finalCtaTitle3: "",
       finalCtaDesc:
@@ -1206,11 +1206,11 @@ export default function LandingMobile() {
       stageClosed: "Cerrado Ganado",
 
       heroCheck6:
-        "Tu agente de IA encuentra, captura y califica leads automáticamente.",
+        "Captura, organiza y gestiona leads en un espacio de trabajo conectado.",
       heroCheck7:
-        "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
+        "Conecta tus herramientas empresariales y canales de comunicación.",
       heroCheck8:
-        "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
+        "Gestiona tareas de seguimiento, programación y citas en un solo lugar.",
       heroCheck9:
         "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
 
@@ -1352,7 +1352,7 @@ export default function LandingMobile() {
             included: "Incluido",
           },
           {
-            feature: "Reserva de Citas",
+            feature: "Gestiona Tus Citas",
             other: "Complemento o plan superior",
             included: "Incluido",
           },
@@ -1414,12 +1414,12 @@ export default function LandingMobile() {
       benefitsSubtitle: "O QUE A CORTEXA FAZ POR VOCÊ",
       benefitsTitle1: "Tudo o que você precisa.",
       benefitsTitle2: "Em um só lugar.",
-      followUpTitle: "Acompanhamentos Automatizados",
+      followUpTitle: "Gestão de Acompanhamentos",
       followUpDesc:
-        "Acompanha automaticamente os novos leads para que menos escapem.",
-      setterTitle: "Agendador de Reuniões com IA",
+        "Organize tarefas de acompanhamento e mantenha o controle de cada oportunidade.",
+      setterTitle: "Gestão de Compromissos",
       setterDesc:
-        "Qualifica leads, agenda reuniões e faz os negócios avançarem.",
+        "Gerencie agendamentos, compromissos e atividades relacionadas aos clientes em um só lugar.",
       pipelineTitle: "Gestão de Pipeline",
       pipelineDesc:
         "Visualize todo o seu pipeline em um relance e nunca perca um negócio de vista.",
@@ -1471,12 +1471,12 @@ export default function LandingMobile() {
       aiosSectionTitle1: "de Receita",
       aiosSectionTitle2: "para Equipes",
 
-      setterSectionSubtitle: "AGENDADOR DE REUNIÕES COM IA",
-      setterSectionTitle1: "Agendamento de Compromissos",
-      setterSectionTitle2: "com IA que Preenche",
-      setterSectionTitle3: "Sua Agenda 24/7.",
+      setterSectionSubtitle: "GESTÃO DE COMPROMISSOS",
+      setterSectionTitle1: "Gerencie Seus Compromissos",
+      setterSectionTitle2: "em um Espaço de Trabalho",
+      setterSectionTitle3: "Conectado.",
       setterSectionDesc:
-        "A IA atende chamadas, agenda compromissos e faz remarcações, tudo em tempo real. Nenhuma oportunidade perdida. Mais receita.",
+        "Organize disponibilidade, reservas e agendamentos em um espaço de trabalho conectado. Mantenha compromissos e atividades dos clientes fáceis de gerenciar.",
       bookAppointmentTitle: "Agendar Reunião",
       confirmBtnText: "Confirmar Reunião",
 
@@ -1504,42 +1504,42 @@ export default function LandingMobile() {
       faqSubtitle: "PERGUNTAS FREQUENTES",
       faqTitle: "Tudo o que você precisa saber",
       faq: [
-        {
-          q: "O que exatamente o CORTEXA faz?",
-          a: "O CORTEXA automatiza o acompanhamento de leads, conversas, atualizações do pipeline e agendamento de compromissos, tudo em um único sistema.",
-        },
-        {
-          q: "Como funciona o Assistente de IA?",
-          a: "A IA responde instantaneamente aos leads, faz a qualificação, agenda compromissos e mantém a conversa fluindo automaticamente.",
-        },
-        {
-          q: "Posso gerenciar todos os meus leads em um só lugar?",
-          a: "Sim. Todos os seus leads, mensagens e etapas do pipeline ficam centralizados em um único painel para que nada se perca.",
-        },
-        {
-          q: "Ele atualiza meu pipeline automaticamente?",
-          a: "Sim. À medida que os leads interagem, o sistema os move pelo seu pipeline sem necessidade de intervenção manual.",
-        },
-        {
-          q: "Ainda preciso fazer follow-up manualmente?",
-          a: "Não. O CORTEXA foi projetado para gerenciar o follow-up automaticamente e manter os leads engajados.",
-        },
-        {
-          q: "Minha equipe pode usar em conjunto?",
-          a: "Sim. Você pode adicionar membros da equipe, atribuir leads e gerenciar negociações de forma colaborativa.",
-        },
-        {
-          q: "Para que tipo de negócio isso serve?",
-          a: "A Cortexa foi desenvolvida para empresas de todos os tamanhos e setores. Seja você proprietário de uma imobiliária, loja de e-commerce, agência, consultoria, corretora de seguros, empresa de serviços financeiros, empresa de serviços para empreiteiros, clínica de saúde ou qualquer outro negócio em crescimento, o Sistema Operacional de Receita com IA Agêntica da Cortexa ajuda a transformar conversas em receita. A plataforma conecta seu Agente de IA, IA para WhatsApp, leads, contatos, pipelines, agendamento de compromissos, análises, dashboards, Inteligência de Receita, automações e Espaço de Trabalho da Equipe em um único sistema operacional integrado. Isso ajuda sua empresa a automatizar conversas com clientes, responder mais rapidamente, otimizar as operações diárias e aumentar a receita. À medida que sua empresa cresce, você pode adicionar módulos específicos para o seu setor, enquanto o sistema operacional principal já está pronto para apoiar o seu negócio desde o primeiro dia.",
-        },
-        {
-          q: "O que acontece depois que um lead chega?",
-          a: "O sistema responde instantaneamente, qualifica o lead e o conduz automaticamente para o agendamento ou fechamento.",
-        },
-      ],
+              {
+                q: "O que a CORTEXA realmente faz?",
+                a: "A CORTEXA reúne seus leads, contatos, pipeline, tarefas, propriedades, análises, atividades da equipe e ferramentas de negócios conectadas em um único espaço de trabalho CRM centralizado. Ela ajuda empresas a organizar relacionamentos com clientes, gerenciar oportunidades, monitorar o desempenho e manter suas operações de vendas conectadas.",
+              },
+              {
+                q: "Como funciona o Assistente de IA?",
+                a: "O Assistente de IA da CORTEXA ajuda os usuários a trabalhar com informações que já estão disponíveis em seu espaço de trabalho. Ele pode ajudar a destacar informações úteis, resumir atividades, fornecer insights e auxiliar os usuários em tarefas diárias de CRM e negócios, mantendo o usuário no controle.",
+              },
+              {
+                q: "Posso gerenciar todos os meus leads em um só lugar?",
+                a: "Sim. Leads, contatos, notas, atividades, etapas do pipeline e informações relacionadas aos clientes podem ser organizados em um espaço de trabalho centralizado, facilitando para sua equipe gerenciar oportunidades sem precisar alternar entre vários sistemas.",
+              },
+              {
+                q: "Como gerencio meu pipeline de vendas?",
+                a: "A CORTEXA oferece um pipeline visual onde você pode organizar oportunidades, mover negócios entre etapas, atribuir responsabilidades, criar tarefas e lembretes e monitorar o progresso em um único espaço de trabalho.",
+              },
+              {
+                q: "Posso conectar as ferramentas de negócios que já utilizo?",
+                a: "Sim. A CORTEXA oferece suporte a integrações com ferramentas e serviços empresariais de terceiros compatíveis. As integrações disponíveis podem variar, e os clientes continuam responsáveis por suas próprias contas de terceiros, permissões e termos aplicáveis dos provedores.",
+              },
+              {
+                q: "Minha equipe pode usar a CORTEXA em conjunto?",
+                a: "Sim. A CORTEXA oferece recursos de espaço de trabalho em equipe que ajudam os usuários a compartilhar informações do CRM, atribuir tarefas e leads, monitorar atividades e coordenar o trabalho na mesma plataforma. A capacidade disponível para a equipe depende do plano do cliente.",
+              },
+              {
+                q: "Para que tipo de empresas a CORTEXA foi criada?",
+                a: "A CORTEXA foi desenvolvida para empresas e equipes profissionais que precisam de um sistema centralizado para gerenciar leads, contatos, pipelines de vendas, informações de clientes, tarefas, relatórios e operações diárias de CRM.",
+              },
+              {
+                q: "O que acontece depois que um lead é adicionado à CORTEXA?",
+                a: "O lead passa a fazer parte do seu espaço de trabalho CRM centralizado, onde sua equipe pode organizar o registro, atribuir responsabilidades, adicionar notas e tarefas, gerenciar sua etapa no pipeline e acompanhar atividades e progresso.",
+              },
+            ],
 
       finalCtaSubtitle: "AUTOMATIZE SEU SUCESSO",
-      finalCtaTitle1: "Automatize Todo",
+      finalCtaTitle1: "Conecte Seu",
       finalCtaTitle2: "Seu Fluxo de Trabalho",
       finalCtaTitle3: "",
       finalCtaDesc: "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
@@ -1620,11 +1620,11 @@ export default function LandingMobile() {
       stageClosed: "Ganho Fechado",
 
       heroCheck6:
-        "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
+        "Capture, organize e gerencie leads em um espaço de trabalho conectado",
       heroCheck7:
-        "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
+        "Conecte suas ferramentas de negócios e canais de comunicação",
       heroCheck8:
-        "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
+        "Gerencie tarefas de acompanhamento, agendamentos e compromissos em um só lugar",
       heroCheck9:
         "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
 

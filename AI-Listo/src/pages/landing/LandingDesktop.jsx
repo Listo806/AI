@@ -197,10 +197,9 @@ export default function Landing() {
       trustSectionTitlePost: "Built to Grow Revenue.",
       trustSectionSub:
         "One connected platform. Every feature works together to help you capture more leads, close more deals, and ",
-      trustSectionSub1:
-        "Follow up with every lead automatically, so none slip through ",
-      trustSectionSub2: "— while ",
-      trustSectionSub3: " keeping more capital in your business.",
+      trustSectionSub1: "grow your business",
+      trustSectionSub2: " — while ",
+      trustSectionSub3: "keeping more capital in your business.",
 
       trustFeatures: {
         dashboard: {
@@ -212,33 +211,37 @@ export default function Landing() {
             "Monitor team performance",
           ],
         },
+
         whatsapp: {
           title: "WhatsApp",
           items: [
             "Fully integrated",
             "Connect with QR code",
-            "AI replies 24/7",
-            "Broadcast & templates",
+            "Manage conversations",
+            "Use templates",
           ],
         },
+
         leads: {
           title: "Leads",
           items: [
             "Capture from any source",
             "Auto-assign, tag & score",
-            "Qualify & nurture leads",
-            "Never lose a lead",
+            "Organize & manage leads",
+            "Keep your pipeline full",
           ],
         },
+
         pipeline: {
           title: "Pipeline",
           items: [
             "Visual deal pipeline",
             "Drag, drop & move deals",
-            "Automated follow-ups",
+            "Set reminders & tasks",
             "Focus on what closes",
           ],
         },
+
         properties: {
           title: "Properties",
           items: [
@@ -248,15 +251,17 @@ export default function Landing() {
             "Organize by status, type, price",
           ],
         },
+
         cortexa: {
-          title: "CORTEXA AI",
+          title: "Cortexa AI",
           items: [
-            "AI agent works 24/7",
-            "Chats, books & follows up",
-            "Qualifies leads instantly",
-            "Works across channels",
+            "AI assistant for your business",
+            "Answers & suggests actions",
+            "Helps with daily tasks",
+            "Works across your data",
           ],
         },
+
         analytics: {
           title: "Analytics",
           items: [
@@ -266,15 +271,17 @@ export default function Landing() {
             "Make data-driven decisions",
           ],
         },
+
         contacts: {
           title: "Contacts",
           items: [
             "Store all contacts",
             "View conversations & notes",
             "Segment & filter easily",
-            "Keep database clean",
+            "Keep your database clean",
           ],
         },
+
         workspace: {
           title: "Team Workspace",
           badge: "NEW",
@@ -285,11 +292,12 @@ export default function Landing() {
             "Real-time activity feed",
           ],
         },
+
         apps: {
           title: "Apps & Integrations",
           items: [
             "Connect your favorite tools",
-            "Sync & automate",
+            "Automate key workflows",
             "Save time & work smarter",
             "Everything works together",
           ],
@@ -303,39 +311,72 @@ export default function Landing() {
       faqTitle: "FAQs",
 
       faq: [
-        {
-          q: "What does CORTEXA actually do?",
-          a: "CORTEXA automates your lead follow-ups, conversations, pipeline updates, and appointment scheduling — all in one system.",
-        },
-        {
-          q: "How does the AI Assistant work?",
-          a: "The AI responds instantly to leads, qualifies them, books appointments, and keeps every conversation moving automatically.",
-        },
-        {
-          q: "Can I manage all my leads in one place?",
-          a: "Yes. All your leads, messages, and deal stages are centralized in one dashboard so nothing gets lost.",
-        },
-        {
-          q: "Does it update my pipeline automatically?",
-          a: "Yes. As leads interact, the system moves them through your pipeline without manual input.",
-        },
-        {
-          q: "Will I still need to follow up manually?",
-          a: "No. CORTEXA is designed to handle follow-ups automatically while keeping leads engaged.",
-        },
-        {
-          q: "Can my team use this together?",
-          a: "Yes. You can add team members, assign leads, and manage deals collaboratively.",
-        },
-        {
-          q: "What kind of businesses is this for?",
-          a: "CORTEXA is built for real estate agents, teams, and any business that relies on lead generation and closing deals.",
-        },
-        {
-          q: "What happens after a lead comes in?",
-          a: "The system responds instantly, qualifies the lead, and pushes them toward booking or closing — automatically.",
-        },
-      ],
+
+              {
+
+                q: "What does CORTEXA actually do?",
+
+                a: "CORTEXA brings your leads, contacts, pipeline, tasks, properties, analytics, team activity, and connected business tools into one centralized CRM workspace. It helps businesses organize customer relationships, manage opportunities, monitor performance, and keep their sales operation connected.",
+
+              },
+
+              {
+
+                q: "How does the AI Assistant work?",
+
+                a: "The CORTEXA AI Assistant helps users work with information already available in their workspace. It can help surface useful information, summarize activity, provide insights, and assist users with everyday CRM and business tasks while keeping the user in control.",
+
+              },
+
+              {
+
+                q: "Can I manage all my leads in one place?",
+
+                a: "Yes. Leads, contacts, notes, activities, pipeline stages, and related customer information can be organized in one centralized workspace, making it easier for your team to manage opportunities without switching between multiple systems.",
+
+              },
+
+              {
+
+                q: "How do I manage my sales pipeline?",
+
+                a: "CORTEXA provides a visual pipeline where you can organize opportunities, move deals between stages, assign responsibilities, create tasks and reminders, and monitor progress from one workspace.",
+
+              },
+
+              {
+
+                q: "Can I connect the business tools I already use?",
+
+                a: "Yes. CORTEXA supports integrations with compatible third-party business tools and services. Available integrations may vary, and customers remain responsible for their own third-party accounts, permissions, and applicable provider terms.",
+
+              },
+
+              {
+
+                q: "Can my team use CORTEXA together?",
+
+                a: "Yes. CORTEXA provides team workspace capabilities that help users share CRM information, assign tasks and leads, monitor activity, and coordinate work from the same platform. Available team capacity depends on the customer's plan.",
+
+              },
+
+              {
+
+                q: "What kind of businesses is CORTEXA for?",
+
+                a: "CORTEXA is designed for businesses and professional teams that need a centralized system for managing leads, contacts, sales pipelines, customer information, tasks, reporting, and day-to-day CRM operations.",
+
+              },
+
+              {
+
+                q: "What happens after a lead is added to CORTEXA?",
+
+                a: "The lead becomes part of your centralized CRM workspace, where your team can organize the record, assign responsibility, add notes and tasks, manage its pipeline stage, and track activity and progress.",
+
+              },
+
+            ],
 
       finalTitle:
         "Automate your workflow with AI agents — powered by CORTEXA OS",
@@ -358,20 +399,34 @@ export default function Landing() {
         sub: "Join teams using CORTEXA...",
         btn: "Get Started",
       },
-      
+
       revenueActionEyebrow: "TURN DATA INTO GROWTH",
       revenueActionTitleLead: "Turn Your Revenue Data",
       revenueActionTitleAccent: "Into Action.",
-      revenueActionSub: "Bring your pipeline, customers, tasks, appointments and performance data together so your team can see what matters and act faster.",
+      revenueActionSub:
+        "Bring your pipeline, customers, tasks, appointments and performance data together so your team can see what matters and act faster.",
       revenueActionBenefits: [
-        { title: "CLEAR PRIORITIES", desc: "Know which opportunities need attention." },
-        { title: "CONNECTED DATA", desc: "Keep customer and pipeline information organized." },
-        { title: "SMARTER WORKFLOWS", desc: "Streamline internal processes and reduce repetitive work." },
-        { title: "REVENUE VISIBILITY", desc: "Understand performance from one connected dashboard." },
+        {
+          title: "CLEAR PRIORITIES",
+          desc: "Know which opportunities need attention.",
+        },
+        {
+          title: "CONNECTED DATA",
+          desc: "Keep customer and pipeline information organized.",
+        },
+        {
+          title: "SMARTER WORKFLOWS",
+          desc: "Streamline internal processes and reduce repetitive work.",
+        },
+        {
+          title: "REVENUE VISIBILITY",
+          desc: "Understand performance from one connected dashboard.",
+        },
       ],
       revenueOverviewEyebrow: "ONE DASHBOARD. COMPLETE VISIBILITY.",
       revenueOverviewTitle: "Your Revenue Overview",
-      revenueOverviewSub: "Real-time insights across your pipeline, team, and performance — all in one place.",
+      revenueOverviewSub:
+        "Real-time insights across your pipeline, team, and performance — all in one place.",
       revenueOverviewCta: "Start Your Free Trial",
       revenueOverviewNoCard: "No credit card required",
       revenueOverviewCancel: "Cancel anytime",
@@ -517,7 +572,7 @@ export default function Landing() {
         "for bussinesses tired of complicated, overpriced CRM software.",
       pricing: "Pricing",
 
-      finalTitle: "Automate Your Entire Workflow",
+      finalTitle: "Connect Your Entire Workflow",
       finalDesc: "Leads. Opportunities. Deals. All in your",
       finalDesc1: "Revenue OS",
 
@@ -640,102 +695,111 @@ export default function Landing() {
       stripSubbk: "Únete a equipos que usan CORTEXA...",
 
       trustSectionTitlePre: "Todo lo que necesitas. ",
-      trustSectionTitlePost: "Creado para aumentar los ingresos.",
+      trustSectionTitlePost: "Diseñado para aumentar tus ingresos.",
       trustSectionSub:
-        "Una plataforma conectada. Todas las funciones trabajan juntas para ayudarte a captar más leads, cerrar más negocios y ",
-      trustSectionSub1:
-        "Haz seguimiento automático de cada cliente potencial para que ninguno se pierda ",
-      trustSectionSub2: "— mientras ",
-      trustSectionSub3: "mantienes más capital dentro de tu empresa.",
+        "Una plataforma conectada. Cada función trabaja en conjunto para ayudarte a captar más leads, cerrar más negocios y ",
+      trustSectionSub1: "hacer crecer tu negocio",
+      trustSectionSub2: " — mientras ",
+      trustSectionSub3: "mantienes más capital en tu negocio.",
+
       trustFeatures: {
         dashboard: {
-          title: "Tablero",
+          title: "Panel",
           items: [
-            "Resumen en tiempo real",
-            "Seguimiento de prospectos y acuerdos",
+            "Vista general en tiempo real",
+            "Seguimiento de leads y negocios",
             "Métricas clave de un vistazo",
-            "Monitorear el desempeño del equipo",
+            "Supervisa el rendimiento del equipo",
           ],
         },
+
         whatsapp: {
           title: "WhatsApp",
           items: [
             "Totalmente integrado",
-            "Conéctese con código QR",
-            "Respuestas de IA 24/7",
-            "Difusión y plantillas",
+            "Conecta mediante código QR",
+            "Gestiona conversaciones",
+            "Usa plantillas",
           ],
         },
+
         leads: {
-          title: "Prospectos",
+          title: "Leads",
           items: [
-            "Captura desde cualquier fuente",
-            "Asignación automática, etiquetas y puntuación",
-            "Calificar y nutrir prospectos",
-            "Nunca pierda un prospecto",
+            "Captación desde cualquier fuente",
+            "Asignación, etiquetado y puntuación automáticos",
+            "Organiza y gestiona tus leads",
+            "Mantén tu pipeline lleno",
           ],
         },
+
         pipeline: {
-          title: "Túnel de ventas",
+          title: "Pipeline",
           items: [
-            "Túnel visual de acuerdos",
-            "Arrastrar, soltar y mover acuerdos",
-            "Seguimientos automatizados",
-            "Enfócate en lo que cierra",
+            "Pipeline visual de negocios",
+            "Arrastra, suelta y mueve negocios",
+            "Configura recordatorios y tareas",
+            "Enfócate en lo que genera cierres",
           ],
         },
+
         properties: {
           title: "Propiedades",
           items: [
-            "Agregar y administrar propiedades",
-            "Compartir por WhatsApp o enlace",
-            "Seguimiento de visitas y consultas",
-            "Organizar por estado, tipo, precio",
+            "Añade y gestiona propiedades",
+            "Comparte por WhatsApp o mediante un enlace",
+            "Haz seguimiento de visitas y consultas",
+            "Organiza por estado, tipo y precio",
           ],
         },
+
         cortexa: {
-          title: "CORTEXA AI",
+          title: "Cortexa AI",
           items: [
-            "Agente de IA trabaja 24/7",
-            "Chatea, reserva y hace seguimiento",
-            "Califica prospectos al instante",
-            "Funciona en todos los canales",
+            "Asistente de IA para tu negocio",
+            "Responde y sugiere acciones",
+            "Te ayuda con las tareas diarias",
+            "Funciona con todos tus datos",
           ],
         },
+
         analytics: {
           title: "Analítica",
           items: [
-            "Informes potentes",
-            "Seguimiento de fuentes e ingresos",
-            "Medir el rendimiento",
-            "Tomar decisiones basadas en datos",
+            "Informes avanzados",
+            "Haz seguimiento de fuentes e ingresos",
+            "Mide el rendimiento",
+            "Toma decisiones basadas en datos",
           ],
         },
+
         contacts: {
           title: "Contactos",
           items: [
-            "Almacenar todos los contactos",
-            "Ver conversaciones y notas",
-            "Segmentar y filtrar fácilmente",
-            "Mantener la base de datos limpia",
+            "Guarda todos tus contactos",
+            "Consulta conversaciones y notas",
+            "Segmenta y filtra fácilmente",
+            "Mantén limpia tu base de datos",
           ],
         },
+
         workspace: {
-          title: "Espacio del equipo",
+          title: "Espacio de trabajo del equipo",
           badge: "NUEVO",
           items: [
-            "Tableros de tarefas estilo Kanban",
-            "Asignar prospectos y tareas",
-            "Seguimiento del rendimiento individual",
-            "Flujo de actividad en tiempo real",
+            "Tableros de tareas estilo Kanban",
+            "Asigna leads y tareas",
+            "Haz seguimiento del rendimiento individual",
+            "Feed de actividad en tiempo real",
           ],
         },
+
         apps: {
-          title: "Apps e Integraciones",
+          title: "Apps e integraciones",
           items: [
             "Conecta tus herramientas favoritas",
-            "Sincronizar y automatizar",
-            "Ahorre tiempo y trabaje de forma inteligente",
+            "Automatiza flujos de trabajo clave",
+            "Ahorra tiempo y trabaja de forma más inteligente",
             "Todo funciona en conjunto",
           ],
         },
@@ -748,39 +812,72 @@ export default function Landing() {
       faqTitle: "Preguntas frecuentes",
 
       faq: [
-        {
-          q: "¿Qué hace exactamente CORTEXA?",
-          a: "CORTEXA automatiza el seguimiento de clientes potenciales, las conversaciones, las actualizaciones del embudo de ventas y la programación de citas, todo en un solo sistema.",
-        },
-        {
-          q: "¿Cómo funciona el Asistente de IA?",
-          a: "La IA responde instantáneamente a los clientes potenciales, los califica, agenda citas y mantiene la conversación en marcha automáticamente.",
-        },
-        {
-          q: "¿Puedo gestionar todos mis clientes potenciales en un solo lugar?",
-          a: "Sí. Todos tus clientes potenciales, mensajes y etapas del pipeline están centralizados en un panel para que no se pierda nada.",
-        },
-        {
-          q: "¿Actualiza mi pipeline automáticamente?",
-          a: "Sí. A medida que los clientes potenciales interactúan, el sistema los mueve a través de tu pipeline sin intervención manual.",
-        },
-        {
-          q: "¿Aún tendré que hacer seguimiento manualmente?",
-          a: "No. CORTEXA está diseñado para gestionar el seguimiento automáticamente y mantener a los clientes potenciales comprometidos.",
-        },
-        {
-          q: "¿Puede mi equipo usarlo en conjunto?",
-          a: "Sí. Puedes agregar miembros del equipo, asignar clientes potenciales y gestionar acuerdos de forma colaborativa.",
-        },
-        {
-          q: "¿Para qué tipo de negocios es esto?",
-          a: "CORTEXA está diseñado para agentes inmobiliarios, equipos y cualquier negocio que dependa de generación de leads y cierre de ventas.",
-        },
-        {
-          q: "¿Qué sucede después de que llega un cliente potencial?",
-          a: "El sistema responde al instante, califica al cliente potencial y lo impulsa hacia la reserva o el cierre automáticamente.",
-        },
-      ],
+
+              {
+
+                q: "¿Qué hace exactamente CORTEXA?",
+
+                a: "CORTEXA reúne tus leads, contactos, pipeline, tareas, propiedades, analítica, actividad del equipo y herramientas empresariales conectadas en un espacio de trabajo CRM centralizado. Ayuda a las empresas a organizar las relaciones con los clientes, gestionar oportunidades, supervisar el rendimiento y mantener conectadas sus operaciones de ventas.",
+
+              },
+
+              {
+
+                q: "¿Cómo funciona el Asistente de IA?",
+
+                a: "El Asistente de IA de CORTEXA ayuda a los usuarios a trabajar con la información que ya está disponible en su espacio de trabajo. Puede ayudar a mostrar información útil, resumir actividades, proporcionar insights y asistir a los usuarios con tareas cotidianas de CRM y del negocio, manteniendo siempre al usuario en control.",
+
+              },
+
+              {
+
+                q: "¿Puedo gestionar todos mis leads en un solo lugar?",
+
+                a: "Sí. Los leads, contactos, notas, actividades, etapas del pipeline y la información relacionada con los clientes pueden organizarse en un espacio de trabajo centralizado, facilitando que tu equipo gestione oportunidades sin cambiar entre múltiples sistemas.",
+
+              },
+
+              {
+
+                q: "¿Cómo gestiono mi pipeline de ventas?",
+
+                a: "CORTEXA proporciona un pipeline visual donde puedes organizar oportunidades, mover negocios entre etapas, asignar responsabilidades, crear tareas y recordatorios, y supervisar el progreso desde un solo espacio de trabajo.",
+
+              },
+
+              {
+
+                q: "¿Puedo conectar las herramientas empresariales que ya utilizo?",
+
+                a: "Sí. CORTEXA admite integraciones con herramientas y servicios empresariales de terceros compatibles. Las integraciones disponibles pueden variar, y los clientes siguen siendo responsables de sus propias cuentas de terceros, permisos y términos aplicables de cada proveedor.",
+
+              },
+
+              {
+
+                q: "¿Puede mi equipo utilizar CORTEXA en conjunto?",
+
+                a: "Sí. CORTEXA ofrece funciones de espacio de trabajo para equipos que permiten compartir información del CRM, asignar tareas y leads, supervisar la actividad y coordinar el trabajo desde la misma plataforma. La capacidad disponible para el equipo depende del plan del cliente.",
+
+              },
+
+              {
+
+                q: "¿Para qué tipo de empresas está diseñado CORTEXA?",
+
+                a: "CORTEXA está diseñado para empresas y equipos profesionales que necesitan un sistema centralizado para gestionar leads, contactos, pipelines de ventas, información de clientes, tareas, informes y operaciones diarias de CRM.",
+
+              },
+
+              {
+
+                q: "¿Qué sucede después de añadir un lead a CORTEXA?",
+
+                a: "El lead pasa a formar parte de tu espacio de trabajo CRM centralizado, donde tu equipo puede organizar el registro, asignar responsabilidades, añadir notas y tareas, gestionar su etapa del pipeline y realizar un seguimiento de la actividad y el progreso.",
+
+              },
+
+            ],
 
       finalTitle: "Automatiza todo tu flujo de trabajo",
       finalDesc:
@@ -803,20 +900,34 @@ export default function Landing() {
         sub: "Únete a equipos que usan CORTEXA...",
         btn: "Comenzar",
       },
-      
+
       revenueActionEyebrow: "CONVIERTE DATOS EN CRECIMIENTO",
       revenueActionTitleLead: "Convierte Tus Datos de Ingresos",
       revenueActionTitleAccent: "En Acción.",
-      revenueActionSub: "Reúne tu pipeline, clientes, tareas, citas y datos de rendimiento para que tu equipo vea lo que importa y actúe más rápido.",
+      revenueActionSub:
+        "Reúne tu pipeline, clientes, tareas, citas y datos de rendimiento para que tu equipo vea lo que importa y actúe más rápido.",
       revenueActionBenefits: [
-        { title: "PRIORIDADES CLARAS", desc: "Identifica qué oportunidades necesitan atención." },
-        { title: "DATOS CONECTADOS", desc: "Mantén organizada la información de clientes y pipeline." },
-        { title: "FLUJOS MÁS INTELIGENTES", desc: "Optimiza procesos internos y reduce el trabajo repetitivo." },
-        { title: "VISIBILIDAD DE INGRESOS", desc: "Comprende el rendimiento desde un panel conectado." },
+        {
+          title: "PRIORIDADES CLARAS",
+          desc: "Identifica qué oportunidades necesitan atención.",
+        },
+        {
+          title: "DATOS CONECTADOS",
+          desc: "Mantén organizada la información de clientes y pipeline.",
+        },
+        {
+          title: "FLUJOS MÁS INTELIGENTES",
+          desc: "Optimiza procesos internos y reduce el trabajo repetitivo.",
+        },
+        {
+          title: "VISIBILIDAD DE INGRESOS",
+          desc: "Comprende el rendimiento desde un panel conectado.",
+        },
       ],
       revenueOverviewEyebrow: "UN PANEL. VISIBILIDAD COMPLETA.",
       revenueOverviewTitle: "Tu Resumen de Ingresos",
-      revenueOverviewSub: "Información en tiempo real sobre tu pipeline, equipo y rendimiento — todo en un solo lugar.",
+      revenueOverviewSub:
+        "Información en tiempo real sobre tu pipeline, equipo y rendimiento — todo en un solo lugar.",
       revenueOverviewCta: "Comienza Tu Prueba Gratis",
       revenueOverviewNoCard: "No se requiere tarjeta de crédito",
       revenueOverviewCancel: "Cancela cuando quieras",
@@ -967,9 +1078,8 @@ export default function Landing() {
         "simple para empresas cansadas de software CRM complicado y demasiado costoso.",
       pricing: "Precios",
 
-      finalTitle: "Automatize todo o seu fluxo de trabalho",
-      finalDesc:
-        "Leads. Oportunidades. Negocios. Todo en tu ",
+      finalTitle: "Conecta Todo Tu Flujo de Trabajo",
+      finalDesc: "Leads. Oportunidades. Negocios. Todo en tu ",
       finalDesc1: "Revenue OS",
 
       footerDescription: "AI Leads. AI Califica. AI Cierra.",
@@ -1092,104 +1202,113 @@ export default function Landing() {
 
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
-      
+
       trustSectionTitlePre: "Tudo o que você precisa. ",
-      trustSectionTitlePost: "Feito para Aumentar a Receita.",
+      trustSectionTitlePost: "Feito para aumentar sua receita.",
       trustSectionSub:
-        "Uma plataforma conectada. Todos os recursos trabalham juntos para ajudar você a captar mais leads, fechar mais negócios e ",
-      trustSectionSub1:
-        "Acompanhe automaticamente cada lead para que nenhum seja perdido ",
-      trustSectionSub2: "— enquanto ",
-      trustSectionSub3: "mantém mais capital dentro da sua empresa.",
+        "Uma plataforma conectada. Cada recurso trabalha em conjunto para ajudar você a captar mais leads, fechar mais negócios e ",
+      trustSectionSub1: "fazer seu negócio crescer",
+      trustSectionSub2: " — enquanto ",
+      trustSectionSub3: "mantém mais capital no seu negócio.",
+
       trustFeatures: {
         dashboard: {
           title: "Painel",
           items: [
             "Visão geral em tempo real",
-            "Acompanhar leads e negócios",
-            "Métricas essenciais num relance",
-            "Monitorar o desempenho da equipe",
+            "Acompanhe leads e negócios",
+            "Métricas principais de forma rápida",
+            "Monitore o desempenho da equipe",
           ],
         },
+
         whatsapp: {
           title: "WhatsApp",
           items: [
             "Totalmente integrado",
-            "Conectar via código QR",
-            "Respostas por IA 24/7",
-            "Transmissão e modelos",
+            "Conecte via código QR",
+            "Gerencie conversas",
+            "Use modelos",
           ],
         },
+
         leads: {
           title: "Leads",
           items: [
-            "Capturar de qualquer fonte",
-            "Atribuição automática, tag e pontuação",
-            "Qualificar e nutrir leads",
-            "Nunca perca um lead",
+            "Capte leads de qualquer fonte",
+            "Atribuição, etiquetagem e pontuação automáticas",
+            "Organize e gerencie seus leads",
+            "Mantenha seu pipeline cheio",
           ],
         },
+
         pipeline: {
-          title: "Funil de Vendas",
+          title: "Pipeline",
           items: [
-            "Funil visual de negócios",
-            "Arrastar, soltar e mover negócios",
-            "Acompanhamentos automatizados",
-            "Foco no que fecha negócio",
+            "Pipeline visual de negócios",
+            "Arraste, solte e mova negócios",
+            "Defina lembretes e tarefas",
+            "Concentre-se no que gera fechamentos",
           ],
         },
+
         properties: {
-          title: "Propriedades",
+          title: "Imóveis",
           items: [
-            "Adicionar e gerenciar propriedades",
-            "Compartilhar via WhatsApp ou link",
-            "Rastrear visualizações e consultas",
-            "Organizar por status, tipo, preço",
+            "Adicione e gerencie imóveis",
+            "Compartilhe pelo WhatsApp ou por link",
+            "Acompanhe visualizações e consultas",
+            "Organize por status, tipo e preço",
           ],
         },
+
         cortexa: {
-          title: "CORTEXA AI",
+          title: "Cortexa AI",
           items: [
-            "Agente de IA funciona 24/7",
-            "Conversa, agenda e faz acompanhamento",
-            "Qualifica leads instantaneamente",
-            "Funciona em vários canais",
+            "Assistente de IA para o seu negócio",
+            "Responde e sugere ações",
+            "Ajuda nas tarefas diárias",
+            "Funciona com todos os seus dados",
           ],
         },
+
         analytics: {
-          title: "Análise",
+          title: "Analytics",
           items: [
-            "Relatórios poderosos",
-            "Rastrear origens e receita",
-            "Medir desempenho",
-            "Tomar decisões baseadas em dados",
+            "Relatórios avançados",
+            "Acompanhe fontes e receita",
+            "Meça o desempenho",
+            "Tome decisões baseadas em dados",
           ],
         },
+
         contacts: {
           title: "Contatos",
           items: [
-            "Armazenar todos os contatos",
-            "Ver conversas e notas",
-            "Segmentar e filtrar facilmente",
-            "Manter banco de dados limpo",
+            "Armazene todos os seus contatos",
+            "Visualize conversas e notas",
+            "Segmente e filtre facilmente",
+            "Mantenha seu banco de dados organizado",
           ],
         },
+
         workspace: {
-          title: "Espaço da Equipe",
+          title: "Espaço de trabalho da equipe",
           badge: "NOVO",
           items: [
-            "Quadros de tarefas estilo Kanban",
-            "Atribuir leads e tarefas",
-            "Acompanhar desempenho individual",
+            "Quadros de tarefas no estilo Kanban",
+            "Atribua leads e tarefas",
+            "Acompanhe o desempenho individual",
             "Feed de atividades em tempo real",
           ],
         },
+
         apps: {
-          title: "Apps e Integrações",
+          title: "Apps e integrações",
           items: [
             "Conecte suas ferramentas favoritas",
-            "Sincronizar e automatizar",
-            "Economize tempo e trabalhe de forma inteligente",
+            "Automatize fluxos de trabalho importantes",
+            "Economize tempo e trabalhe de forma mais inteligente",
             "Tudo funciona em conjunto",
           ],
         },
@@ -1201,39 +1320,39 @@ export default function Landing() {
 
       faqTitle: "Perguntas frequentes",
       faq: [
-        {
-          q: "O que exatamente o CORTEXA faz?",
-          a: "O CORTEXA automatiza o acompanhamento de leads, conversas, atualizações do pipeline e agendamento de compromissos, tudo em um único sistema.",
-        },
-        {
-          q: "Como funciona o Assistente de IA?",
-          a: "A IA responde instantaneamente aos leads, faz a qualificação, agenda compromissos e mantém a conversa fluindo automaticamente.",
-        },
-        {
-          q: "Posso gerenciar todos os meus leads em um só lugar?",
-          a: "Sim. Todos os seus leads, mensagens e etapas do pipeline ficam centralizados em um único painel para que nada se perca.",
-        },
-        {
-          q: "Ele atualiza meu pipeline automaticamente?",
-          a: "Sim. À medida que os leads interagem, o sistema os move pelo seu pipeline sem necessidade de intervenção manual.",
-        },
-        {
-          q: "Ainda preciso fazer follow-up manualmente?",
-          a: "Não. O CORTEXA foi projetado para gerenciar o follow-up automaticamente e manter os leads engajados.",
-        },
-        {
-          q: "Minha equipe pode usar em conjunto?",
-          a: "Sim. Você pode adicionar membros da equipe, atribuir leads e gerenciar negociações de forma colaborativa.",
-        },
-        {
-          q: "Para que tipo de negócio isso serve?",
-          a: "O CORTEXA é ideal para corretores imobiliários, equipes e qualquer negócio que dependa de geração de leads e fechamento de vendas.",
-        },
-        {
-          q: "O que acontece depois que um lead chega?",
-          a: "O sistema responde instantaneamente, qualifica o lead e o conduz automaticamente para o agendamento ou fechamento.",
-        },
-      ],
+              {
+                q: "O que a CORTEXA realmente faz?",
+                a: "A CORTEXA reúne seus leads, contatos, pipeline, tarefas, propriedades, análises, atividades da equipe e ferramentas de negócios conectadas em um único espaço de trabalho CRM centralizado. Ela ajuda empresas a organizar relacionamentos com clientes, gerenciar oportunidades, monitorar o desempenho e manter suas operações de vendas conectadas.",
+              },
+              {
+                q: "Como funciona o Assistente de IA?",
+                a: "O Assistente de IA da CORTEXA ajuda os usuários a trabalhar com informações que já estão disponíveis em seu espaço de trabalho. Ele pode ajudar a destacar informações úteis, resumir atividades, fornecer insights e auxiliar os usuários em tarefas diárias de CRM e negócios, mantendo o usuário no controle.",
+              },
+              {
+                q: "Posso gerenciar todos os meus leads em um só lugar?",
+                a: "Sim. Leads, contatos, notas, atividades, etapas do pipeline e informações relacionadas aos clientes podem ser organizados em um espaço de trabalho centralizado, facilitando para sua equipe gerenciar oportunidades sem precisar alternar entre vários sistemas.",
+              },
+              {
+                q: "Como gerencio meu pipeline de vendas?",
+                a: "A CORTEXA oferece um pipeline visual onde você pode organizar oportunidades, mover negócios entre etapas, atribuir responsabilidades, criar tarefas e lembretes e monitorar o progresso em um único espaço de trabalho.",
+              },
+              {
+                q: "Posso conectar as ferramentas de negócios que já utilizo?",
+                a: "Sim. A CORTEXA oferece suporte a integrações com ferramentas e serviços empresariais de terceiros compatíveis. As integrações disponíveis podem variar, e os clientes continuam responsáveis por suas próprias contas de terceiros, permissões e termos aplicáveis dos provedores.",
+              },
+              {
+                q: "Minha equipe pode usar a CORTEXA em conjunto?",
+                a: "Sim. A CORTEXA oferece recursos de espaço de trabalho em equipe que ajudam os usuários a compartilhar informações do CRM, atribuir tarefas e leads, monitorar atividades e coordenar o trabalho na mesma plataforma. A capacidade disponível para a equipe depende do plano do cliente.",
+              },
+              {
+                q: "Para que tipo de empresas a CORTEXA foi criada?",
+                a: "A CORTEXA foi desenvolvida para empresas e equipes profissionais que precisam de um sistema centralizado para gerenciar leads, contatos, pipelines de vendas, informações de clientes, tarefas, relatórios e operações diárias de CRM.",
+              },
+              {
+                q: "O que acontece depois que um lead é adicionado à CORTEXA?",
+                a: "O lead passa a fazer parte do seu espaço de trabalho CRM centralizado, onde sua equipe pode organizar o registro, atribuir responsabilidades, adicionar notas e tarefas, gerenciar sua etapa no pipeline e acompanhar atividades e progresso.",
+              },
+            ],
 
       finalTitle:
         "Automatize seus processos com agentes de IA impulsionados pelo CORTEXA OS",
@@ -1256,20 +1375,34 @@ export default function Landing() {
         sub: "Junte-se a equipes usando CORTEXA...",
         btn: "Começar",
       },
-      
+
       revenueActionEyebrow: "TRANSFORME DADOS EM CRESCIMENTO",
       revenueActionTitleLead: "Transforme Seus Dados de Receita",
       revenueActionTitleAccent: "Em Ação.",
-      revenueActionSub: "Reúna pipeline, clientes, tarefas, compromissos e dados de desempenho para que sua equipe veja o que importa e aja mais rápido.",
+      revenueActionSub:
+        "Reúna pipeline, clientes, tarefas, compromissos e dados de desempenho para que sua equipe veja o que importa e aja mais rápido.",
       revenueActionBenefits: [
-        { title: "PRIORIDADES CLARAS", desc: "Saiba quais oportunidades precisam de atenção." },
-        { title: "DADOS CONECTADOS", desc: "Mantenha as informações de clientes e pipeline organizadas." },
-        { title: "FLUXOS MAIS INTELIGENTES", desc: "Simplifique processos internos e reduza tarefas repetitivas." },
-        { title: "VISIBILIDADE DE RECEITA", desc: "Entenda o desempenho em um único dashboard conectado." },
+        {
+          title: "PRIORIDADES CLARAS",
+          desc: "Saiba quais oportunidades precisam de atenção.",
+        },
+        {
+          title: "DADOS CONECTADOS",
+          desc: "Mantenha as informações de clientes e pipeline organizadas.",
+        },
+        {
+          title: "FLUXOS MAIS INTELIGENTES",
+          desc: "Simplifique processos internos e reduza tarefas repetitivas.",
+        },
+        {
+          title: "VISIBILIDADE DE RECEITA",
+          desc: "Entenda o desempenho em um único dashboard conectado.",
+        },
       ],
       revenueOverviewEyebrow: "UM DASHBOARD. VISIBILIDADE COMPLETA.",
       revenueOverviewTitle: "Sua Visão Geral de Receita",
-      revenueOverviewSub: "Insights em tempo real sobre pipeline, equipe e desempenho — tudo em um só lugar.",
+      revenueOverviewSub:
+        "Insights em tempo real sobre pipeline, equipe e desempenho — tudo em um só lugar.",
       revenueOverviewCta: "Comece Seu Teste Grátis",
       revenueOverviewNoCard: "Nenhum cartão de crédito necessário",
       revenueOverviewCancel: "Cancele quando quiser",
@@ -1422,7 +1555,7 @@ export default function Landing() {
         "simples para empresas cansadas de softwares de CRM complicados e caros.",
       pricing: "Preços",
 
-      finalTitle: "Comece a crescer com IA hoje",
+      finalTitle: "Conecte Todo o Seu Fluxo de Trabalho",
       finalDesc: "Leads. Oportunidades. Negócios. Tudo no seu ",
       finalDesc1: "Revenue OS",
 
@@ -2233,7 +2366,11 @@ export default function Landing() {
                   ].map(([label, value, type]) => (
                     <div className="smart-v2-source-row" key={label}>
                       <span className={`smart-v2-source-icon ${type}`}>
-                        {type === "google" ? "G" : type === "facebook" ? "f" : "◉"}
+                        {type === "google"
+                          ? "G"
+                          : type === "facebook"
+                            ? "f"
+                            : "◉"}
                       </span>
                       <b>{label}</b>
                       <strong>{value}</strong>
@@ -2288,10 +2425,24 @@ export default function Landing() {
                 <span className="smart-v2-chart-label l2">$2M</span>
                 <span className="smart-v2-chart-label l3">$1M</span>
 
-                <svg viewBox="0 0 520 160" preserveAspectRatio="none" aria-hidden="true">
+                <svg
+                  viewBox="0 0 520 160"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
                   <defs>
-                    <linearGradient id="smartRevenueArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.38" />
+                    <linearGradient
+                      id="smartRevenueArea"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="#7c3aed"
+                        stopOpacity="0.38"
+                      />
                       <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
                     </linearGradient>
                   </defs>
@@ -2311,16 +2462,29 @@ export default function Landing() {
                   />
 
                   {[
-                    [15,132],[65,108],[115,95],[165,84],[215,73],
-                    [265,98],[315,76],[365,91],[415,61],[465,78],[510,43]
+                    [15, 132],
+                    [65, 108],
+                    [115, 95],
+                    [165, 84],
+                    [215, 73],
+                    [265, 98],
+                    [315, 76],
+                    [365, 91],
+                    [415, 61],
+                    [465, 78],
+                    [510, 43],
                   ].map(([cx, cy], i) => (
                     <circle key={i} cx={cx} cy={cy} r="3.5" fill="#9b6cff" />
                   ))}
                 </svg>
 
                 <div className="smart-v2-months">
-                  <span>Jan</span><span>Feb</span><span>Mar</span>
-                  <span>Apr</span><span>May</span><span>Jun</span>
+                  <span>Jan</span>
+                  <span>Feb</span>
+                  <span>Mar</span>
+                  <span>Apr</span>
+                  <span>May</span>
+                  <span>Jun</span>
                 </div>
               </div>
             </article>
@@ -2338,7 +2502,9 @@ export default function Landing() {
                     ["Proposal Review", "May 16, 11:00 AM"],
                   ].map(([title, time]) => (
                     <div className="smart-v2-appointment" key={title}>
-                      <span><Clock4 size={15} /></span>
+                      <span>
+                        <Clock4 size={15} />
+                      </span>
                       <p>
                         <b>{title}</b>
                         <small>{time}</small>
@@ -2377,7 +2543,9 @@ export default function Landing() {
 
           <div className="smart-v2-benefits">
             {tr.smartV2Benefits.map((item, index) => {
-              const BenefitIcon = [Eye, GitMerge, Workflow, ChartNoAxesColumn][index];
+              const BenefitIcon = [Eye, GitMerge, Workflow, ChartNoAxesColumn][
+                index
+              ];
 
               return (
                 <div className="smart-v2-benefit" key={item.title}>
@@ -2415,20 +2583,32 @@ export default function Landing() {
       <section className="roi-section revenue-action-section pt-50">
         <div className="revenue-action-container">
           <div className="revenue-action-head">
-            <span className="revenue-action-eyebrow">{tr.revenueActionEyebrow}</span>
+            <span className="revenue-action-eyebrow">
+              {tr.revenueActionEyebrow}
+            </span>
             <h2 className="revenue-action-title">
-              {tr.revenueActionTitleLead} <strong>{tr.revenueActionTitleAccent}</strong>
+              {tr.revenueActionTitleLead}{" "}
+              <strong>{tr.revenueActionTitleAccent}</strong>
             </h2>
             <p className="revenue-action-sub">{tr.revenueActionSub}</p>
-            <a href="/trial" className="revenue-action-btn">{tr.heroCTA}</a>
+            <a href="/trial" className="revenue-action-btn">
+              {tr.heroCTA}
+            </a>
           </div>
 
           <div className="revenue-action-benefits">
             {tr.revenueActionBenefits.map((item, index) => {
-              const RevenueIcon = [Target, CircleDollarSign, Workflow, ChartNoAxesColumn][index];
+              const RevenueIcon = [
+                Target,
+                CircleDollarSign,
+                Workflow,
+                ChartNoAxesColumn,
+              ][index];
               return (
                 <div className="revenue-action-benefit" key={item.title}>
-                  <div className="revenue-action-icon"><RevenueIcon size={30} strokeWidth={2.1} /></div>
+                  <div className="revenue-action-icon">
+                    <RevenueIcon size={30} strokeWidth={2.1} />
+                  </div>
                   <h3>{item.title}</h3>
                   <p>{item.desc}</p>
                 </div>
@@ -2441,28 +2621,49 @@ export default function Landing() {
       <section className="cx-strip revenue-overview-section">
         <div className="revenue-overview-shell">
           <div className="revenue-overview-copy">
-            <span className="revenue-overview-eyebrow">{tr.revenueOverviewEyebrow}</span>
+            <span className="revenue-overview-eyebrow">
+              {tr.revenueOverviewEyebrow}
+            </span>
             <h2>{tr.revenueOverviewTitle}</h2>
             <p>{tr.revenueOverviewSub}</p>
             <a href="/trial" className="revenue-overview-btn">
               {tr.revenueOverviewCta} <ArrowRight size={18} />
             </a>
             <div className="revenue-overview-checks">
-              <span><CheckCircle2 size={16} />{tr.revenueOverviewNoCard}</span>
-              <span><CheckCircle2 size={16} />{tr.revenueOverviewCancel}</span>
+              <span>
+                <CheckCircle2 size={16} />
+                {tr.revenueOverviewNoCard}
+              </span>
+              <span>
+                <CheckCircle2 size={16} />
+                {tr.revenueOverviewCancel}
+              </span>
             </div>
           </div>
 
           <div className="revenue-dashboard">
             <aside className="revenue-dashboard-sidebar">
-              <div className="revenue-dashboard-brand"><span>⬡</span>CORTEXA</div>
+              <div className="revenue-dashboard-brand">
+                <span>⬡</span>CORTEXA
+              </div>
               {[
-                ["⌂", "Overview", true], ["♙", "Leads"], ["⌘", "Pipeline"],
-                ["◎", "Contacts"], ["✓", "Tasks"], ["▣", "Appointments"],
-                ["▥", "Reports"], ["◇", "Documents"], ["⌘", "Integrations"], ["⚙", "Settings"],
+                ["⌂", "Overview", true],
+                ["♙", "Leads"],
+                ["⌘", "Pipeline"],
+                ["◎", "Contacts"],
+                ["✓", "Tasks"],
+                ["▣", "Appointments"],
+                ["▥", "Reports"],
+                ["◇", "Documents"],
+                ["⌘", "Integrations"],
+                ["⚙", "Settings"],
               ].map(([icon, label, active]) => (
-                <div className={`revenue-dashboard-nav ${active ? "active" : ""}`} key={label}>
-                  <span>{icon}</span>{label}
+                <div
+                  className={`revenue-dashboard-nav ${active ? "active" : ""}`}
+                  key={label}
+                >
+                  <span>{icon}</span>
+                  {label}
                 </div>
               ))}
 
@@ -2478,13 +2679,20 @@ export default function Landing() {
               <div className="revenue-dashboard-top">
                 <h3>Dashboard Overview</h3>
                 <span className="revenue-dashboard-date">
-                  <Clock4 size={13} /> May 1 – May 31, 2025 <ChevronRight size={12} />
+                  <Clock4 size={13} /> May 1 – May 31, 2025{" "}
+                  <ChevronRight size={12} />
                 </span>
               </div>
 
               <div className="revenue-dashboard-kpis">
                 {[
-                  ["Total Revenue", "$2,742,500", "+22%", "green", BadgeDollarSign],
+                  [
+                    "Total Revenue",
+                    "$2,742,500",
+                    "+22%",
+                    "green",
+                    BadgeDollarSign,
+                  ],
                   ["New Leads", "1,325", "+10%", "purple", UserRoundPlus],
                   ["Opportunities", "87", "+15%", "blue", BriefcaseBusiness],
                   ["Win Rate", "24%", "+6%", "green", BadgePercent],
@@ -2499,11 +2707,29 @@ export default function Landing() {
                     <small>▲ {growth} vs last month</small>
 
                     <div className={`revenue-mini-line ${tone}`}>
-                      <svg viewBox="0 0 150 42" preserveAspectRatio="none" aria-hidden="true">
+                      <svg
+                        viewBox="0 0 150 42"
+                        preserveAspectRatio="none"
+                        aria-hidden="true"
+                      >
                         <defs>
-                          <linearGradient id={`kpiArea-${index}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
-                            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                          <linearGradient
+                            id={`kpiArea-${index}`}
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="currentColor"
+                              stopOpacity="0.24"
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="currentColor"
+                              stopOpacity="0"
+                            />
                           </linearGradient>
                         </defs>
 
@@ -2527,13 +2753,22 @@ export default function Landing() {
 
               <div className="revenue-dashboard-middle">
                 <div className="revenue-pipeline-card">
-                  <h4>Pipeline Overview</h4><span>Total Pipeline Value</span><strong>$5,630,000</strong>
+                  <h4>Pipeline Overview</h4>
+                  <span>Total Pipeline Value</span>
+                  <strong>$5,630,000</strong>
                   <div className="revenue-bars">
                     {[
-                      ["New", "38%", 38], ["Qualified", "24%", 60], ["Proposal", "33%", 82],
-                      ["Negotiation", "17%", 56], ["Closed Won", "8%", 32],
+                      ["New", "38%", 38],
+                      ["Qualified", "24%", 60],
+                      ["Proposal", "33%", 82],
+                      ["Negotiation", "17%", 56],
+                      ["Closed Won", "8%", 32],
                     ].map(([label, percent, height]) => (
-                      <div key={label}><i style={{ height: `${height}%` }} /><span>{label}</span><b>{percent}</b></div>
+                      <div key={label}>
+                        <i style={{ height: `${height}%` }} />
+                        <span>{label}</span>
+                        <b>{percent}</b>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -2541,12 +2776,29 @@ export default function Landing() {
                 <div className="revenue-task-card">
                   <h4>Tasks Overview</h4>
                   <div className="revenue-task-content">
-                    <div className="revenue-task-donut"><div><strong>128</strong><span>Total Tasks</span></div></div>
+                    <div className="revenue-task-donut">
+                      <div>
+                        <strong>128</strong>
+                        <span>Total Tasks</span>
+                      </div>
+                    </div>
                     <div className="revenue-task-legend">
-                      <span><i className="done"/>Completed <b>58</b></span>
-                      <span><i className="progress"/>In Progress <b>36</b></span>
-                      <span><i className="pending"/>Pending <b>24</b></span>
-                      <span><i className="overdue"/>Overdue <b>10</b></span>
+                      <span>
+                        <i className="done" />
+                        Completed <b>58</b>
+                      </span>
+                      <span>
+                        <i className="progress" />
+                        In Progress <b>36</b>
+                      </span>
+                      <span>
+                        <i className="pending" />
+                        Pending <b>24</b>
+                      </span>
+                      <span>
+                        <i className="overdue" />
+                        Overdue <b>10</b>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -2565,9 +2817,15 @@ export default function Landing() {
 
                 <div className="revenue-bottom-card">
                   <span>Top Activities</span>
-                  <small>Calls <b>48 ▲ 12%</b></small>
-                  <small>Emails <b>126 ▲ 20%</b></small>
-                  <small>Meetings <b>24 ▲ 8%</b></small>
+                  <small>
+                    Calls <b>48 ▲ 12%</b>
+                  </small>
+                  <small>
+                    Emails <b>126 ▲ 20%</b>
+                  </small>
+                  <small>
+                    Meetings <b>24 ▲ 8%</b>
+                  </small>
                 </div>
 
                 <div className="revenue-bottom-card revenue-performance-card">
@@ -2576,7 +2834,9 @@ export default function Landing() {
                   <strong>92%</strong>
                   <div className="revenue-goal-row">
                     <small>Goal Progress</small>
-                    <i className="revenue-progress"><b /></i>
+                    <i className="revenue-progress">
+                      <b />
+                    </i>
                   </div>
                 </div>
               </div>
@@ -2584,7 +2844,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
-      
+
       <section id="ai-assistant" className="cx-hero pt-50">
         <img src={currentaiSetterImg} alt="" />
       </section>
@@ -2602,7 +2862,7 @@ export default function Landing() {
               {tr.trustSectionSub}
               <span className="cx-trust-title-blue">{tr.trustSectionSub1}</span>
               {tr.trustSectionSub2}
-              <span className="cx-trust-title-blue">{tr.trustSectionSub3}</span>
+              <span className="cx-trust-titl">{tr.trustSectionSub3}</span>
             </p>
           </div>
 
@@ -2647,7 +2907,7 @@ export default function Landing() {
               {tr.trustFooterText}
               <span className="cx-trust-title-blue">{tr.trustSectionSub1}</span>
               {tr.trustSectionSub2}
-              <span className="cx-trust-title-blue">{tr.trustSectionSub3}</span>
+              <span className="cx-trust-titl">{tr.trustSectionSub3}</span>
             </p>
           </div>
         </div>
