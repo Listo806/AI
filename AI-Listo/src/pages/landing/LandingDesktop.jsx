@@ -518,7 +518,7 @@ export default function Landing() {
       heroFreeForever: "Free forever.",
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
-      heroTag2: "AI Auto Follow-Ups 24/7",
+      heroTag2: "AI-Assisted Follow-Up Workflows",
       heroTag3: "Customer Follow-Up Workflows",
       heroTag4: "Pipeline Intelligence That Closes",
       heroTag5: "WhatsApp Integration Built-in",
@@ -563,8 +563,8 @@ export default function Landing() {
           desc: "Real-time insights help you act faster and close more deals.",
         },
       ],
-      smartV2Cta: "Turn Your Business Into A Revenue Machine",
-      smartV2Bottom: "More Leads. More Appointments. More Closings.",
+      smartV2Cta: "Run Your Revenue Operation From One Place",
+      smartV2Bottom: "Manage Leads. Appointments. Deals. In One Place.",
 
       topLine1: "The simple ",
       topHighlight: "Agentic AI revenue operating system",
@@ -662,13 +662,13 @@ export default function Landing() {
       titleActive: "tools you already use",
       subtitlePre:
         "Bring your leads, messages, calendars, tasks, files, and workflows ",
-      subtitlePost: "into Cortexa and let AI handle the busy work.",
+      subtitlePost: "into Cortexa and keep your work connected in one place.",
       feature1: "Sync in minutes",
-      feature2: "Automate workflows",
+      feature2: "Manage workflows",
       feature3: "Save time every day",
       feature4: "Keep your team aligned",
       footerTextPre:
-        "Connect your apps, import your data, and automate your workflow inside Cortexa.",
+        "Connect your apps, import your data, and manage your workflow inside Cortexa.",
       footerTextPost:
         "Manage everything from one place in Apps & Integrations.",
       btnText: "See Integrations",
@@ -1023,7 +1023,7 @@ export default function Landing() {
       heroFreeForever: "Gratis para siempre.",
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
-      heroTag2: "Seguimientos automáticos con IA 24/7",
+      heroTag2: "Flujos de seguimiento asistidos por IA",
       heroTag3: "Flujos de seguimiento de clientes",
       heroTag4: "Inteligencia de pipeline que cierra ventas",
       heroTag5: "Integración de WhatsApp incorporada",
@@ -1069,8 +1069,8 @@ export default function Landing() {
           desc: "La información en tiempo real te ayuda a actuar más rápido y cerrar más negocios.",
         },
       ],
-      smartV2Cta: "Convierte Tu Negocio En Una Máquina de Ingresos",
-      smartV2Bottom: "Más oportunidades. Más citas. Más cierres.",
+      smartV2Cta: "Gestiona toda tu operación de ingresos desde un solo lugar",
+      smartV2Bottom: "Gestiona leads. Citas. Negocios. Todo en un solo lugar.",
 
       topLine1: "El ",
       topHighlight: "Sistema operativo de ingresos para IA agéntica",
@@ -1171,13 +1171,13 @@ export default function Landing() {
       subtitlePre:
         "Lleva tus leads, mensajes, calendarios, tareas, archivos y flujos de trabajo ",
       subtitlePost:
-        "a Cortexa y deja que la IA se encargue del trabajo pesado.",
+        "en Cortexa y mantén tu trabajo conectado en un solo lugar.",
       feature1: "Sincroniza en minutos",
-      feature2: "Automatiza flujos de trabajo",
+      feature2: "Gestiona tus flujos de trabajo",
       feature3: "Ahorra tiempo cada día",
       feature4: "Mantén a tu equipo alineado",
       footerTextPre:
-        "Conecta tus apps, importa tus datos y automatiza tu flujo de trabajo dentro de Cortexa.",
+        "Conecta tus aplicaciones, importa tus datos y gestiona tu flujo de trabajo dentro de Cortexa.",
       footerTextPost:
         "Gestiona todo desde un solo lugar en Apps e Integraciones.",
       btnText: "Ver Integraciones",
@@ -1500,7 +1500,7 @@ export default function Landing() {
       heroFreeForever: "Grátis para sempre.",
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
-      heroTag2: "Acompanhamentos automáticos com IA 24/7",
+      heroTag2: "Fluxos de acompanhamento assistidos por IA",
       heroTag3: "Fluxos de acompanhamento de clientes",
       heroTag4: "Inteligência de pipeline que fecha negócios",
       heroTag5: "Integração nativa com WhatsApp",
@@ -1546,8 +1546,8 @@ export default function Landing() {
           desc: "Insights em tempo real ajudam você a agir mais rápido e fechar mais negócios.",
         },
       ],
-      smartV2Cta: "Transforme Seu Negócio Em Uma Máquina de Receita",
-      smartV2Bottom: "Mais leads. Mais agendamentos. Mais fechamentos.",
+      smartV2Cta: "Gerencie toda a sua operação de receita em um só lugar",
+      smartV2Bottom: "Gerencie leads. Agendamentos. Negócios. Tudo em um só lugar.",
 
       topLine1: "O ",
       topHighlight: "Sistema operacional de receita para IA agêntica",
@@ -1646,13 +1646,13 @@ export default function Landing() {
       titleActive: "ferramentas que você já usa",
       subtitlePre:
         "Traga seus leads, mensagens, calendários, tarefas, arquivos e fluxos de trabalho ",
-      subtitlePost: "para o Cortexa e deixe a IA cuidar do trabalho pesado.",
+      subtitlePost: "no Cortexa e mantenha seu trabalho conectado em um só lugar.",
       feature1: "Sincronize em minutos",
-      feature2: "Automatize fluxos de trabalho",
+      feature2: "Gerencie seus fluxos de trabalho",
       feature3: "Economize tempo todos os dias",
       feature4: "Mantenha sua equipe alinhada",
       footerTextPre:
-        "Conecte seus apps, importe seus dados e automatize seu fluxo de trabalho dentro do Cortexa.",
+        "Conecte seus aplicativos, importe seus dados e gerencie seu fluxo de trabalho dentro do Cortexa.",
       footerTextPost: "Gerencie tudo em um só lugar em Apps e Integrações.",
       btnText: "Ver Integrações",
 
