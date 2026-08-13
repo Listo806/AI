@@ -9,6 +9,7 @@ import { DatabaseService } from '../database/database.service';
 import { AuthService } from '../auth/auth.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId } from '../plans/plan-config';
+import { captureSignupCountry } from '../common/signup-geo.util';
 
 @Injectable()
 export class TrialService {
@@ -64,69 +65,10 @@ export class TrialService {
     this.signupColsReady = true;
   }
 
-  // Resolve the ISO country code from an IP via a best-effort geo lookup. Returns
-  // null on any failure, a private/loopback IP, or a bad response. Never throws.
-  private async lookupCountry(ip: string): Promise<string | null> {
-    const raw = String(ip || '').trim();
-    if (
-      !raw ||
-      raw === '::1' ||
-      raw.startsWith('127.') ||
-      raw.startsWith('10.') ||
-      raw.startsWith('192.168.') ||
-      raw.startsWith('::ffff:127.') ||
-      raw.startsWith('169.254.')
-    ) {
-      return null;
-    }
-    const attempt = async (
-      url: string,
-      pick: (j: any) => any,
-    ): Promise<string | null> => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 2500);
-      try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) return null;
-        const j: any = await res.json();
-        const code = pick(j);
-        return typeof code === 'string' && /^[A-Za-z]{2}$/.test(code)
-          ? code.toUpperCase()
-          : null;
-      } catch {
-        return null;
-      } finally {
-        clearTimeout(timer);
-      }
-    };
-    const enc = encodeURIComponent(raw);
-    return (
-      (await attempt(
-        `https://ipwho.is/${enc}?fields=success,country_code`,
-        (j) => (j && j.success ? j.country_code : null),
-      )) ||
-      (await attempt(`https://ipapi.co/${enc}/json/`, (j) =>
-        j && !j.error ? j.country : null,
-      ))
-    );
-  }
-
-  // Store the resolved signup country on the account, once (never overwritten).
-  // Best-effort and fully guarded so it can never affect the signup that spawned it.
-  private async captureSignupCountry(userId: string, ip: string): Promise<void> {
-    try {
-      const code = await this.lookupCountry(ip);
-      if (!code) return;
-      await this.db.query(
-        `UPDATE users SET signup_country = $1 WHERE id = $2 AND signup_country IS NULL`,
-        [code, userId],
-      );
-    } catch {
-      /* best-effort: never break signup */
-    }
-  }
-
-  async startTrial(dto: any, clientIp?: string) {
+  async startTrial(
+    dto: any,
+    geo?: { country?: string | null; ip?: string | null },
+  ) {
     try {
       console.log('DTO:', dto);
 
@@ -281,11 +223,11 @@ export class TrialService {
 
       const newUserId = rows[0].id;
 
-      // Best-effort, non-blocking: resolve the signup country from the request IP
-      // and store it. Fire-and-forget so it never delays or fails the signup; a
-      // missing result simply shows as "Unknown" in the admin Customers view.
-      if (newUserId && clientIp) {
-        void this.captureSignupCountry(newUserId, clientIp);
+      // Best-effort, non-blocking: resolve and store the registration country
+      // (Cloudflare country header first, IP fallback). Fire-and-forget so it never
+      // delays or fails the signup; a missing result shows as "Unknown" in admin.
+      if (newUserId) {
+        void captureSignupCountry(this.db, newUserId, geo || {});
       }
 
       // Make the trial user the OWNER of their team and an active member. The

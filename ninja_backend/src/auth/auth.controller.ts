@@ -5,7 +5,12 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import {
+  countryFromHeaders,
+  clientIpFromHeaders,
+} from '../common/signup-geo.util';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
@@ -29,8 +34,12 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully created' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
-  async signup(@Body() signupDto: SignupDto) {
-    return this.authService.signup(signupDto);
+  async signup(@Body() signupDto: SignupDto, @Req() req: any) {
+    // Registration country: Cloudflare's country header first, IP as the fallback.
+    return this.authService.signup(signupDto, {
+      country: countryFromHeaders(req?.headers),
+      ip: clientIpFromHeaders(req?.headers, req),
+    });
   }
 
   @Post('login')
