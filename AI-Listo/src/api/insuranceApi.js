@@ -12,6 +12,11 @@ function toQuery(params = {}) {
 }
 
 const insuranceApi = {
+  searchContacts(search) {
+    return apiClient.request(`/insurance/contacts${toQuery({ search })}`, {
+      method: "GET",
+    });
+  },
   listPolicies(params = {}) {
     return apiClient.request(`/insurance/policies${toQuery(params)}`, {
       method: "GET",

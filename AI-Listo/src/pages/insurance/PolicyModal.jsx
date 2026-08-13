@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import InsuranceWorkModal from "./InsuranceWorkModal";
+import ContactPicker from "./ContactPicker";
 import insuranceApi from "../../api/insuranceApi";
 
 const STATUS_OPTIONS = [
@@ -16,6 +17,8 @@ const BILLING_OPTIONS = ["Annual", "Semi-Annual", "Quarterly", "Monthly"];
 const EMPTY_FORM = {
   policyNumber: "",
   holderName: "",
+  contactId: "",
+  contactName: "",
   policyType: "",
   premium: "",
   status: "Pending",
@@ -27,11 +30,16 @@ const EMPTY_FORM = {
 };
 
 // <input type="date"> needs YYYY-MM-DD; the API may return a full timestamp.
+// Use local date parts (not toISOString, which shifts to UTC and can render a
+// date one day early in positive-UTC timezones).
 function toDateInput(value) {
   if (!value) return "";
   const d = new Date(value);
   if (isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function formatMoney(value) {
@@ -94,6 +102,8 @@ export default function PolicyModal({
         setForm({
           policyNumber: p.policyNumber || "",
           holderName: p.holderName || "",
+          contactId: p.contactId || "",
+          contactName: p.contactName || "",
           policyType: p.policyType || "",
           premium: p.premium != null ? String(p.premium) : "",
           status: p.status || "Pending",
@@ -118,6 +128,15 @@ export default function PolicyModal({
   const setField = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  const handleContactChange = (contact) =>
+    setForm((f) => ({
+      ...f,
+      contactId: contact ? contact.id : "",
+      contactName: contact ? contact.name || "" : "",
+      // Convenience: fill the policyholder from the contact if it is still blank.
+      holderName: f.holderName || (contact ? contact.name || "" : ""),
+    }));
+
   function buildPayload() {
     // Send null (not "") for blank optional fields so clearing a value on edit
     // actually writes NULL. The backend skips only `undefined`, and '' on a date
@@ -125,6 +144,7 @@ export default function PolicyModal({
     const payload = {
       policyNumber: form.policyNumber.trim(),
       holderName: form.holderName.trim(),
+      contactId: form.contactId || null,
       policyType: form.policyType.trim(),
       status: form.status,
       billingFrequency: form.billingFrequency,
@@ -257,6 +277,17 @@ export default function PolicyModal({
         <>
           {error && <p className="iw-error">{error}</p>}
           <div className="iw-form">
+            <div className="iw-field full">
+              <label>Contact (existing customer)</label>
+              <ContactPicker
+                value={
+                  form.contactId
+                    ? { id: form.contactId, name: form.contactName }
+                    : null
+                }
+                onChange={handleContactChange}
+              />
+            </div>
             <div className="iw-field">
               <label>Policyholder</label>
               <input
