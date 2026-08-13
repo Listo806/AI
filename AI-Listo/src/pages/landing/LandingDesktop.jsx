@@ -505,8 +505,8 @@ export default function Landing() {
       herotextabove: "AI organizes. AI qualifies. You follow up. You close.",
       heroCheck6:
         "Your AI Agent finds, captures, and qualifies leads automatically",
-      heroCheck7: "Multi-chanel outreach via calls, texts, Whatsapp & more",
-      heroCheck8: "Automated follow-ups and appointment booking run 24/7",
+      heroCheck7: "Manage customer conversations across connected channels",
+      heroCheck8: "AI-Assisted Follow-Up Workflows",
       heroCheck9:
         "Pipeline Intelligence, revenue forecasting, one connected dashboard.",
       heroCheck10: "Handles conversations, qualifies, and nurtures every lead",
@@ -519,7 +519,7 @@ export default function Landing() {
       heroUnlock: "Unlock potential today!",
       heroTag1: "One AI Platform. Everything Connected.",
       heroTag2: "AI Auto Follow-Ups 24/7",
-      heroTag3: "Smart Nurturing That Converts",
+      heroTag3: "Customer Follow-Up Workflows",
       heroTag4: "Pipeline Intelligence That Closes",
       heroTag5: "WhatsApp Integration Built-in",
       heroTag6: "Secure. Reliable. Built for Real Estate.",
@@ -1009,9 +1009,9 @@ export default function Landing() {
       heroCheck6:
         "Tu agente de IA encuentra, captura y califica leads automáticamente.",
       heroCheck7:
-        "Alcance multicanal a través de llamadas, mensajes de texto, WhatsApp y más.",
+        "Gestiona las conversaciones con clientes a través de canales conectados",
       heroCheck8:
-        "Los seguimientos automatizados y la reserva de citas funcionan las 24 horas del día, los 7 días de la semana.",
+        "Flujos de seguimiento asistidos por IA",
       heroCheck9:
         "Inteligencia de pipeline, previsión de ingresos y un panel de control unificado.",
       heroCheck10: "Gestiona conversaciones, califica y nutre cada lead",
@@ -1024,7 +1024,7 @@ export default function Landing() {
       heroUnlock: "¡Desbloquea tu potencial hoy!",
       heroTag1: "Una plataforma de IA. Todo conectado.",
       heroTag2: "Seguimientos automáticos con IA 24/7",
-      heroTag3: "Nutrición inteligente que convierte",
+      heroTag3: "Flujos de seguimiento de clientes",
       heroTag4: "Inteligencia de pipeline que cierra ventas",
       heroTag5: "Integración de WhatsApp incorporada",
       heroTag6: "Segura. Confiable. Diseñada para el sector inmobiliario.",
@@ -1485,9 +1485,9 @@ export default function Landing() {
       heroCheck6:
         "Tu agente de IA encuentra, capta y califica clientes potenciales automáticamente.",
       heroCheck7:
-        "Alcance multicanal por meio de chamadas, mensagens de texto, WhatsApp e muito mais",
+        "Gerencie as conversas com clientes por meio de canais conectados",
       heroCheck8:
-        "Os acompanhamentos automatizados e o agendamento de compromissos funcionam 24 horas por dia, 7 dias por semana.",
+        "Fluxos de acompanhamento assistidos por IA",
       heroCheck9:
         "Inteligência de pipeline, previsão de receita e um painel de controle unificado.",
       heroCheck10: "Gerencia conversas, qualifica e nutre cada lead",
@@ -1501,7 +1501,7 @@ export default function Landing() {
       heroUnlock: "Desbloqueie seu potencial hoje!",
       heroTag1: "Uma plataforma de IA. Tudo conectado.",
       heroTag2: "Acompanhamentos automáticos com IA 24/7",
-      heroTag3: "Nutrição inteligente que converte",
+      heroTag3: "Fluxos de acompanhamento de clientes",
       heroTag4: "Inteligência de pipeline que fecha negócios",
       heroTag5: "Integração nativa com WhatsApp",
       heroTag6: "Segura. Confiável. Feita para o mercado imobiliário.",

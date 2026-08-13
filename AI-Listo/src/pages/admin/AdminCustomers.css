@@ -262,7 +262,7 @@
    graceful fallback for very small screens (it scrolls the table only, never the
    page, and hides nothing). table-layout:fixed + min-width:0 lets columns share
    the available width instead of forcing the table wider than the page. */
-.cxc-table-wrap { overflow-x: auto; }
+
 .cxc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .cxc-table thead th {
   text-align: left; padding: 10px 8px; color: #64748b; font-weight: 600;
