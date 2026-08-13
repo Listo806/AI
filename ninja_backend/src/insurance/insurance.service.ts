@@ -17,6 +17,8 @@ const OWNER_ROLE = 'owner';
 export class InsuranceService {
   constructor(private readonly db: DatabaseService) {}
 
+  private schemaReady = false;
+
   // Columns returned for a policy, joined to the reused contact / carrier / agent
   // so the workspace can render real names without a second round-trip.
   private readonly policySelect = `
@@ -52,6 +54,70 @@ export class InsuranceService {
     LEFT JOIN users au ON au.id = p.assigned_to
   `;
 
+  // Create the insurance tables on first use so the workspace works as soon as
+  // the code deploys, even before `npm run migration:run` applies 103/104. Same
+  // belt-and-suspenders pattern as platform-mailer.ensureSchema. Idempotent.
+  private async ensureSchema(): Promise<void> {
+    if (this.schemaReady) return;
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_carriers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        name TEXT NOT NULL,
+        carrier_mark TEXT,
+        contact_email TEXT,
+        contact_phone TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_carriers_team ON insurance_carriers(team_id)`,
+    );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_policies (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        policy_number TEXT,
+        contact_id UUID,
+        lead_id UUID,
+        holder_name TEXT,
+        carrier_id UUID,
+        policy_type TEXT,
+        coverage_start DATE,
+        coverage_end DATE,
+        premium NUMERIC(12,2),
+        billing_frequency TEXT,
+        next_billing DATE,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        assigned_to UUID,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_policies_team ON insurance_policies(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_policies_contact ON insurance_policies(contact_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_policies_carrier ON insurance_policies(carrier_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_policies_status ON insurance_policies(status)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_policies_next_billing ON insurance_policies(next_billing)`,
+    );
+    this.schemaReady = true;
+  }
+
   // The set of team ids this caller may read/write, identical to the CRM rule so
   // insurance and CRM never disagree on what an account can see.
   private async getAccessibleTeamIds(
@@ -78,6 +144,7 @@ export class InsuranceService {
     role: string,
     query: any,
   ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
     const pageNum = Number(query.page);
     const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
     const limitNum = Number(query.limit);
@@ -150,6 +217,7 @@ export class InsuranceService {
     userTeamId: string | null,
     role: string,
   ): Promise<any> {
+    await this.ensureSchema();
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
     if (!accessible.length) throw new NotFoundException('Policy not found');
 
@@ -200,6 +268,7 @@ export class InsuranceService {
     userTeamId: string | null,
     role: string,
   ): Promise<any> {
+    await this.ensureSchema();
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
     if (!accessible.length) {
       throw new ForbiddenException(
