@@ -61,6 +61,11 @@ import {
   CircleDollarSign,
   CreditCard,
   Infinity,
+  BadgeDollarSign,
+  UserRoundPlus,
+  BriefcaseBusiness,
+  BadgePercent,
+  CalendarDays,
 } from "lucide-react";
 import { HashLink } from "react-router-hash-link";
 import "./LandingDesktop.css";
@@ -104,16 +109,22 @@ import aiSetterImg from "../../assets/cortexa/aiSetter.png";
 import aiSetterImgES from "../../assets/cortexa/aiSetterES.png";
 import aiSetterImgPT from "../../assets/cortexa/aiSetterPT.png";
 
-import smart1Img from "../../assets/cortexa/smart1.png";
-import smart2Img from "../../assets/cortexa/smart2.png";
-import smart3Img from "../../assets/cortexa/smart3.png";
-
 import x3xImg from "../../assets/cortexa/3x.png";
-import featurechartImg from "../../assets/cortexa/feature-chart.jpg";
 import powerfulImg from "../../assets/cortexa/powerful.png";
 import workspaceImg from "../../assets/cortexa/workspace.png";
 import workspaceImgES from "../../assets/cortexa/workspaceES.png";
 import workspaceImgPT from "../../assets/cortexa/workspacePT.png";
+
+import sect2 from "../../assets/cortexa/sect2.png";
+import sect2ES from "../../assets/cortexa/sect2es.png";
+import sect2PT from "../../assets/cortexa/sect2pt.png";
+
+import aiosIntegrationSalesforce from "../../assets/cortexa/aios-integration-salesforce.png";
+import aiosIntegrationGoogle from "../../assets/cortexa/aios-integration-google.png";
+import aiosIntegrationMicrosoft from "../../assets/cortexa/aios-integration-microsoft.png";
+import aiosIntegrationWhatsapp from "../../assets/cortexa/aios-integration-whatsapp.png";
+import aiosIntegrationMail from "../../assets/cortexa/aios-integration-mail.png";
+import aiosIntegrationMore from "../../assets/cortexa/aios-integration-more.png";
 
 const IconRenderer = ({ name, className }) => {
   const icons = {
@@ -181,31 +192,6 @@ export default function Landing() {
 
       stripTitlebk: "Your CRM shouldn’t slow you down.",
       stripSubbk: "Join teams using CORTEXA...",
-
-      featuresTitle: "Turn your data into decisions",
-
-      cards: [
-        {
-          eyebrow: "AI Assistant",
-          title: "Instant answers from your dashboard",
-          desc: "Get insights, summaries, and recommendations in seconds. Ask anything about your leads, pipeline, properties, or team performance.",
-        },
-        {
-          eyebrow: "Analytics",
-          title: "Track performance in real time",
-          desc: "Monitor conversion rates, response times, and activity across your business. Know what’s working and where to improve instantly.",
-        },
-        {
-          eyebrow: "AI Follow up",
-          title: "Automate your follow-ups",
-          desc: "Respond faster with personalized replies across your channels and nurture opportunities automatically.",
-        },
-        {
-          eyebrow: "AI Appoitment Setter",
-          title: "Close deals faster with AI",
-          desc: "AI qualifies leads, books appointments, and moves opportunities forward while your team focuses on closing.",
-        },
-      ],
 
       trustSectionTitlePre: "Everything You Need. ",
       trustSectionTitlePost: "Built to Grow Revenue.",
@@ -372,131 +358,83 @@ export default function Landing() {
         sub: "Join teams using CORTEXA...",
         btn: "Get Started",
       },
-      aiTitle: "AI Setter — Your 24/7 Appointment Engine",
-      aisubTitle:
-        "Responds instantly, qualifies buyers, and books appointments — automatically.",
-      aipointTitle1: "Instant Responses",
-      aipointText1: "Every message answered in seconds.",
-      aipointTitle2: "Smart Qualification",
-      aipointText2: "Filters serious buyers automatically.",
-      aipointTitle3: "Automatic Booking",
-      aipointText3: "Appointments scheduled without back-and-forth.",
-      aialt: "AI Setter handling conversations and booking appointments",
+      
+      revenueActionEyebrow: "TURN DATA INTO GROWTH",
+      revenueActionTitleLead: "Turn Your Revenue Data",
+      revenueActionTitleAccent: "Into Action.",
+      revenueActionSub: "Bring your pipeline, customers, tasks, appointments and performance data together so your team can see what matters and act faster.",
+      revenueActionBenefits: [
+        { title: "CLEAR PRIORITIES", desc: "Know which opportunities need attention." },
+        { title: "CONNECTED DATA", desc: "Keep customer and pipeline information organized." },
+        { title: "SMARTER WORKFLOWS", desc: "Streamline internal processes and reduce repetitive work." },
+        { title: "REVENUE VISIBILITY", desc: "Understand performance from one connected dashboard." },
+      ],
+      revenueOverviewEyebrow: "ONE DASHBOARD. COMPLETE VISIBILITY.",
+      revenueOverviewTitle: "Your Revenue Overview",
+      revenueOverviewSub: "Real-time insights across your pipeline, team, and performance — all in one place.",
+      revenueOverviewCta: "Start Your Free Trial",
+      revenueOverviewNoCard: "No credit card required",
+      revenueOverviewCancel: "Cancel anytime",
 
-      beTitle: "What This Actually Does For You",
-      besubTitle:
-        "Automation handles the work. Communication never stops. Every lead keeps moving forward — without you chasing it.",
-      beitem1: "Work Moves Automatically",
-      beitem2: "Conversations Never Go Cold",
-      beitem3: "Know Exactly What To Do Next",
-      beitem4: "More Deals. Less Chasing.",
-      beitemtext1:
-        "Follow-ups, tracking, and organization run in the background.",
-      beitemtext2:
-        "Leads stay active with reminders, replies, and re-engagement.",
-      beitemtext3: "See who needs attention and where your next move is.",
-      beitemtext4: "Less manual work. Faster movement. Better outcomes.",
-      bebottom: "Everything keeps moving — even when you’re not.",
-      stripLabel: "Ready to grow?",
-      stripTitle: "Start closing more deals — with AI working for you 24/7.",
-      stripSub:
-        "No extra hires. No missed leads. Just a smarter way to run your pipeline.",
-      stripBtn: "Start Your Free Trial →",
-      stripBenefit1: "Get started in minutes",
-      stripBenefit3: "Cancel anytime",
-      stripCardTitle: "Pipeline Overview",
-      stripCardPeriod: "This Month",
-      stripRevenueGrowth: "▲ 28% vs last month",
-      stripLeads: "Leads",
-      stripDeals: "Deals",
-      stripRevenue: "Revenue",
-      stripAI: "AI Summary: You're on track to beat your monthly goal by 24%",
-
-      roiTitle: "Cut Payroll. Scale With Your AI Agent.",
-      roiSub:
-        "AI responds instantly, follows up automatically, and keeps your pipeline moving 24/7.",
-      roiBtn: "Get Started",
-
-      roiStat1Desc:
-        "CORTEXA transforms your lead handling into a revenue engine — automating follow-ups and deal flow to generate more closed deals.",
-
-      roiStat2Desc:
-        "More conversations. Faster responses. Zero missed leads — turning your pipeline into predictable revenue.",
-
-      roiStat3Desc:
-        "AI replaces manual outreach, follow-ups, and admin work — freeing your time while your business keeps moving.",
-
-      roiStat4Desc:
-        "Designed to help you recover your investment quickly by capturing deals that would otherwise be lost.",
-
-      aiosBadgeTitle: "Agentic AI",
-      aiosBadgeHighlight: "Revenue Operating System",
-      aiosSubtitle:
-        "All-in-one system to manage conversations, automate follow-ups, track performance, and help your bussiness grow.",
-      aiosCards: [
+      aiosV2Eyebrow: "ALL-IN-ONE REVENUE OPERATING SYSTEM",
+      aiosV2TitleLead: "Connect. Organize.",
+      aiosV2TitleAccent: "Grow Revenue.",
+      aiosV2Subtitle:
+        "Everything you need to manage your pipeline, customers, and operations in one powerful, easy-to-use platform.",
+      aiosV2Cards: [
         {
-          title: "AI CRM",
-          desc: "Manage every lead, client, property, and deal in one place.",
+          title: "CRM",
+          desc: "Manage leads, contacts, accounts, and relationships in one central place.",
         },
         {
-          title: "AI Agent",
-          desc: "Responds, qualifies, and follows up automatically 24/7.",
+          title: "PIPELINE",
+          desc: "Visualize your sales pipeline and move deals forward with confidence.",
         },
         {
-          title: "Smart Dashboards",
-          desc: "See your leads, pipeline, tasks, team, and performance clearly.",
+          title: "SMART DASHBOARDS",
+          desc: "Get real-time insights on your pipeline, team performance, and revenue.",
         },
         {
-          title: "Automated Follow-Up",
-          desc: "Keep every prospect moving without chasing manually.",
+          title: "WORKFLOW MANAGEMENT",
+          desc: "Automate tasks, approvals, and processes to keep your team productive.",
         },
         {
-          title: "Workflow",
-          desc: "Built around listings, buyers, sellers, agents, and deals.",
+          title: "INTEGRATIONS",
+          desc: "Connect the tools you already use and keep your data in sync.",
         },
       ],
-      aiosCRMHeaders: ["Name", "Status", "Last Activity"],
-      aiosCRMRows: [
-        ["John Doe", "New", "2m ago"],
-        ["Sarah Smith", "Contacted", "15m ago"],
-        ["Mike Johnson", "Qualified", "1h ago"],
-        ["Emma Brown", "Proposal", "2h ago"],
-        ["David Wilson", "Closed", "1d ago"],
-      ],
-      aiosAgentGreeting: "Hi! I'm your AI Agent. How can I help today?",
-      aiosAgentReply: "I'm looking for a 3 bedroom house.",
-      aiosDashboardStats: {
-        leads: "Leads",
-        pipeline: "Pipeline",
-        deals: "Deals",
-      },
-      aiosFollowups: [
-        ["New Lead", "1 min"],
-        ["AI Follow-Up", "1 hour"],
-        ["Nurture Msg", "1 day"],
-        ["Convert to Client", "3 days"],
-      ],
-      aiosProperty: {
-        tag: "New Listing",
-        address: "123 Ocean View Dr.",
-        beds: "3",
-        baths: "2",
-        garage: "2",
-      },
-
-      howTitle: "How It Works",
-      howSteps: [
+      aiosV2Benefits: [
         {
-          title: "Connect Your Leads",
-          desc: "Bring in leads from your website, ads, WhatsApp, forms, and campaigns.",
+          title: "One Connected System",
+          desc: "All your data and tools working together.",
         },
         {
-          title: "AI Responds 24/7",
-          desc: "CORTEXA AI answers, qualifies, follows up, and keeps conversations moving.",
+          title: "Clear Visibility",
+          desc: "See what matters and act with confidence.",
         },
         {
-          title: "You Close More Deals",
-          desc: "Your team works the hottest opportunities with better timing and less manual work.",
+          title: "Smarter Workflows",
+          desc: "Automate processes and save valuable time.",
+        },
+        {
+          title: "Better Results",
+          desc: "Drive growth with better data and decisions.",
+        },
+      ],
+      aiosV2BottomLead: "One platform. Your entire business.",
+      aiosV2BottomAccent: "Built to grow revenue.",
+      howV2Steps: [
+        {
+          title: "Connect Your Business",
+          desc: "Connect your CRM, data, tools, and team in just a few clicks.",
+        },
+        {
+          title: "Organize Your Operations",
+          desc: "Bring your pipeline, contacts, tasks, and workflows together in one place.",
+        },
+        {
+          title: "Turn Data Into Decisions",
+          desc: "Get real-time insights, track performance, and make smarter decisions.",
         },
       ],
 
@@ -532,41 +470,46 @@ export default function Landing() {
       heroTag6: "Secure. Reliable. Built for Real Estate.",
       heroHead: "Built to Help Businesses Automate, Operate and Grow Revenue",
 
-      smartBadge: "FROM LEAD TO REVENUE — AUTOMATICALLY",
-
-      smartTitle1: "Capture.",
-      smartTitle2: "Nurture.",
-      smartTitle3: "Close.",
-      smartTitle4: "Repeat.",
-
-      smartSubtitle:
-        "CORTEXA connects your ads, website, WhatsApp, AI Agent, CRM, and analytics into one intelligent system that turns leads into closed deals.",
-
-      captureTitle: "CAPTURE",
-      captureDesc:
-        "Leads come in from everywhere. CORTEXA captures them instantly.",
-
-      convertTitle: "CONVERT",
-      convertDesc:
-        "AI qualifies, nurtures, and books appointments 24/7 on autopilot.",
-
-      closeTitle: "CLOSE",
-      closeDesc:
-        "Pipeline, team, and analytics give complete visibility to close more deals.",
-
-      smartBenefit1Title: "More Revenue",
-      smartBenefit1Text: "Capture more leads and close more deals.",
-      smartBenefit2Title: "Save Time",
-      smartBenefit2Text: "Automate follow-ups and appointments.",
-      smartBenefit3Title: "Empower Your Team",
-      smartBenefit3Text: "Everyone knows what to do and when to do it.",
-      smartBenefit4Title: "Data That Drives",
-      smartBenefit4Text: "Real-time analytics to grow your business.",
-      smartButton: "Turn Your Business Into An Automated Machine",
-      smartBlock1: "Instant capture, Zero leads lose.",
-      smartBlock2: "AI work 24/7. You close more.",
-      smartBlock3: "See everything. Close more.",
-      smartBottom: "More Leads. More Appointments. More Closings.",
+      smartV2Badge: "FROM LEAD TO REVENUE — ONE CONNECTED SYSTEM",
+      smartV2Title1: "See Your Entire Revenue Operation.",
+      smartV2Title2: "In",
+      smartV2TitleAccent: "One Place.",
+      smartV2Subtitle:
+        "Connect your leads, customer data, pipeline, tasks, appointments, and analytics so your team always knows what needs attention next.",
+      smartV2Steps: [
+        {
+          title: "CAPTURE",
+          desc: "Organize leads and customer data in one place.",
+        },
+        {
+          title: "MANAGE",
+          desc: "Track opportunities, tasks, appointments and deal progress.",
+        },
+        {
+          title: "GROW",
+          desc: "Use pipeline and performance insights to make better decisions and close more business.",
+        },
+      ],
+      smartV2Benefits: [
+        {
+          title: "ONE VIEW",
+          desc: "All your leads, deals, tasks and appointments in one dashboard.",
+        },
+        {
+          title: "CLEAR PIPELINE",
+          desc: "Know exactly where every deal stands and what to focus on.",
+        },
+        {
+          title: "SMARTER WORKFLOWS",
+          desc: "Automate internal processes and keep your team aligned.",
+        },
+        {
+          title: "BETTER DECISIONS",
+          desc: "Real-time insights help you act faster and close more deals.",
+        },
+      ],
+      smartV2Cta: "Turn Your Business Into A Revenue Machine",
+      smartV2Bottom: "More Leads. More Appointments. More Closings.",
 
       topLine1: "The simple ",
       topHighlight: "Agentic AI revenue operating system",
@@ -575,7 +518,7 @@ export default function Landing() {
       pricing: "Pricing",
 
       finalTitle: "Automate Your Entire Workflow",
-      finalDesc: "AI Leads. AI Qualifies. AI Closes. All in your",
+      finalDesc: "Leads. Opportunities. Deals. All in your",
       finalDesc1: "Revenue OS",
 
       footerDescription: "AI Leads.   AI Qualifies.  AI CLoses.",
@@ -621,12 +564,6 @@ export default function Landing() {
       refundPolicy: "Refund Policy",
       cancellationPolicy: "Cancellation Policy",
 
-      heroTitlePre: "Built to ",
-      heroTitleActive: "Grow Revenue",
-      heroTitlePost: " — Not Manage Software.",
-      heroDescPre: "Leads.",
-      heroDescPre1: "Qualifies.",
-      heroDescPre2: "Closes.",
       nodeLeadsTitle: "LEADS",
       nodeLeadsSub: "Capture & Qualify",
       nodeContactsTitle: "CONTACTS",
@@ -664,26 +601,6 @@ export default function Landing() {
       rightStat1Title: "",
       rightStat1Desc:
         "Everything you need to manage leads, listings, and clients in one place.",
-      rightStat1Desc1:
-        "Run your leads, follow-ups, and pipeline in one connected workspace.",
-      rightStat2Up: "UP TO",
-      rightStat2Title: "",
-      vsTitleLeft: "With Other Platforms",
-      vsTitleRight: "With Cortexa AIOS",
-      vsText: "VS",
-
-      leftCost1: "High monthly cost with multiple add-ons",
-      leftCost2: "Complex setup and long onboarding",
-      leftCost3: "Pay for features you don't fully use",
-      leftCost4: "Switch between different tools all day",
-      leftCost5: "Hidden costs that add up over time",
-
-      rightBenefit1: "Everything in one AI-powered platform",
-      rightBenefit2: "AI automates follow-ups and conversations",
-      rightBenefit3: "Built to help you close more deals",
-      rightBenefit4: "Ready to use in minutes",
-      rightBenefit5: "Scale your business as you grow",
-      listo1: "Very Low Entry Fee",
 
       badge: "Powerful Integrations",
       titlePre: "Works with ",
@@ -721,31 +638,6 @@ export default function Landing() {
 
       stripTitlebk: "Tu CRM no debería ralentizarte.",
       stripSubbk: "Únete a equipos que usan CORTEXA...",
-
-      featuresTitle: "Convierte tus datos en decisiones",
-
-      cards: [
-        {
-          eyebrow: "Asistente de IA",
-          title: "Respuestas instantáneas desde tu panel",
-          desc: "Obtén insights y recomendaciones en segundos sobre leads, pipeline y rendimiento.",
-        },
-        {
-          eyebrow: "Análisis",
-          title: "Rendimiento en tiempo real",
-          desc: "Monitorea conversiones, respuestas y actividad de tu negocio.",
-        },
-        {
-          eyebrow: "Seguimiento con IA",
-          title: "Automatiza seguimientos",
-          desc: "Nunca pierdas un lead. Responde automáticamente en todos tus canales.",
-        },
-        {
-          eyebrow: "Agendador de citas con IA",
-          title: "Cierra más rápido con IA",
-          desc: "La IA califica leads, agenda citas y avanza oportunidades.",
-        },
-      ],
 
       trustSectionTitlePre: "Todo lo que necesitas. ",
       trustSectionTitlePost: "Creado para aumentar los ingresos.",
@@ -911,140 +803,83 @@ export default function Landing() {
         sub: "Únete a equipos que usan CORTEXA...",
         btn: "Comenzar",
       },
-      aiTitle:
-        "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
-      aisubTitle:
-        "Responde al instante, califica a los compradores y programa citas automáticamente.",
+      
+      revenueActionEyebrow: "CONVIERTE DATOS EN CRECIMIENTO",
+      revenueActionTitleLead: "Convierte Tus Datos de Ingresos",
+      revenueActionTitleAccent: "En Acción.",
+      revenueActionSub: "Reúne tu pipeline, clientes, tareas, citas y datos de rendimiento para que tu equipo vea lo que importa y actúe más rápido.",
+      revenueActionBenefits: [
+        { title: "PRIORIDADES CLARAS", desc: "Identifica qué oportunidades necesitan atención." },
+        { title: "DATOS CONECTADOS", desc: "Mantén organizada la información de clientes y pipeline." },
+        { title: "FLUJOS MÁS INTELIGENTES", desc: "Optimiza procesos internos y reduce el trabajo repetitivo." },
+        { title: "VISIBILIDAD DE INGRESOS", desc: "Comprende el rendimiento desde un panel conectado." },
+      ],
+      revenueOverviewEyebrow: "UN PANEL. VISIBILIDAD COMPLETA.",
+      revenueOverviewTitle: "Tu Resumen de Ingresos",
+      revenueOverviewSub: "Información en tiempo real sobre tu pipeline, equipo y rendimiento — todo en un solo lugar.",
+      revenueOverviewCta: "Comienza Tu Prueba Gratis",
+      revenueOverviewNoCard: "No se requiere tarjeta de crédito",
+      revenueOverviewCancel: "Cancela cuando quieras",
 
-      aipointTitle1: "Respuestas instantáneas",
-      aipointText1: "Cada mensaje se responde en segundos.",
-
-      aipointTitle2: "Calificación inteligente",
-      aipointText2: "Filtra automáticamente a los compradores serios.",
-
-      aipointTitle3: "Reserva automática",
-      aipointText3: "Citas programadas sin idas y venidas.",
-      aialt: "IA que gestiona conversaciones y agenda citas automáticamente",
-
-      beTitle: "Lo que esto realmente hace por ti",
-      besubTitle:
-        "La automatización hace el trabajo. La comunicación nunca se detiene. Cada lead sigue avanzando — sin que tengas que perseguirlo.",
-      beitem1: "El trabajo avanza automáticamente",
-      beitem2: "Las conversaciones nunca se enfrían",
-      beitem3: "Sabe exactamente qué hacer después",
-      beitem4: "Más negocios. Menos seguimiento manual.",
-
-      beitemtext1:
-        "Los seguimientos, el control y la organización funcionan en segundo plano.",
-      beitemtext2:
-        "Los leads se mantienen activos con recordatorios, respuestas y reactivaciones.",
-      beitemtext3:
-        "Ve quién necesita atención y cuál debe ser tu próximo paso.",
-      beitemtext4: "Menos trabajo manual. Más rapidez. Mejores resultados.",
-      bebottom: "Todo sigue avanzando — incluso cuando tú no estás.",
-
-      stripLabel: "¿Listo para crecer?",
-      stripTitle:
-        "Empieza a cerrar más ventas — con IA trabajando para ti 24/7.",
-      stripSub:
-        "Sin contratar más personal. Sin perder leads. Solo una forma más inteligente de gestionar tu pipeline.",
-      stripBtn: "Comienza Tu Prueba Gratis →",
-      stripBenefit1: "Empieza en minutos",
-      stripBenefit3: "Cancela en cualquier momento",
-      stripCardTitle: "Resumen del pipeline",
-      stripCardPeriod: "Este mes",
-      stripRevenueGrowth: "▲ 28% vs el mes pasado",
-      stripLeads: "Leads",
-      stripDeals: "Ventas",
-      stripRevenue: "Ingresos",
-      stripAI:
-        "Resumen IA: Estás en camino de superar tu objetivo mensual en un 24%",
-
-      roiTitle: "Reduce los costos de nómina. Escala con tu agente de IA.",
-      roiSub:
-        "La IA responde al instante, realiza seguimientos automáticamente y mantiene tu pipeline en movimiento las 24 horas del día, los 7 días de la semana.",
-      roiBtn: "Comenzar",
-
-      roiStat1Desc:
-        "CORTEXA transforma la gestión de tus leads en un motor de ingresos — automatizando seguimientos y el flujo de ventas para generar más cierres.",
-
-      roiStat2Desc:
-        "Más conversaciones. Respuestas más rápidas. Cero leads perdidos — convirtiendo tu pipeline en ingresos predecibles.",
-
-      roiStat3Desc:
-        "La IA reemplaza el trabajo manual, seguimientos y tareas administrativas — liberando tu tiempo mientras tu negocio sigue avanzando.",
-
-      roiStat4Desc:
-        "Diseñado para ayudarte a recuperar tu inversión rápidamente al capturar acuerdos que de otro modo se perderían.",
-
-      aiosBadgeTitle: "IA Agéntica",
-      aiosBadgeHighlight: "Sistema Operativo de Ingresos",
-      aiosSubtitle:
-        "Sistema todo en uno para gestionar conversaciones, automatizar seguimientos, monitorear el rendimiento y ayudar a que tu empresa crezca.",
-      aiosCards: [
+      aiosV2Eyebrow: "SISTEMA OPERATIVO DE INGRESOS TODO EN UNO",
+      aiosV2TitleLead: "Conecta. Organiza.",
+      aiosV2TitleAccent: "Aumenta tus Ingresos.",
+      aiosV2Subtitle:
+        "Todo lo que necesitas para gestionar tu pipeline, clientes y operaciones en una plataforma potente y fácil de usar.",
+      aiosV2Cards: [
         {
-          title: "CRM IA",
-          desc: "Gestiona clientes, propiedades y negocios en un solo lugar.",
+          title: "CRM",
+          desc: "Gestiona leads, contactos, cuentas y relaciones en un solo lugar.",
         },
         {
-          title: "Agente IA",
-          desc: "Responde, califica y da seguimiento automáticamente.",
+          title: "PIPELINE",
+          desc: "Visualiza tu pipeline de ventas y haz avanzar los negocios con confianza.",
         },
         {
-          title: "Paneles Inteligentes",
-          desc: "Visualiza leads, pipeline, tareas y rendimiento.",
+          title: "PANELES INTELIGENTES",
+          desc: "Obtén información en tiempo real sobre tu pipeline, equipo e ingresos.",
         },
         {
-          title: "Seguimiento Automático",
-          desc: "Mantén cada prospecto avanzando sin perseguirlo.",
+          title: "GESTIÓN DE FLUJOS",
+          desc: "Automatiza tareas, aprobaciones y procesos para mantener a tu equipo productivo.",
         },
         {
-          title: "Flujo de trabajo",
-          desc: "Diseñado para propiedades, compradores y agentes.",
+          title: "INTEGRACIONES",
+          desc: "Conecta las herramientas que ya utilizas y mantén tus datos sincronizados.",
         },
       ],
-      aiosCRMHeaders: ["Nombre", "Estado", "Última Actividad"],
-      aiosCRMRows: [
-        ["John Doe", "Nuevo", "2 min"],
-        ["Sarah Smith", "Contactado", "15 min"],
-        ["Mike Johnson", "Calificado", "1 h"],
-        ["Emma Brown", "Propuesta", "2 h"],
-        ["David Wilson", "Cerrado", "1 día"],
-      ],
-      aiosAgentGreeting: "¡Hola! Soy tu Agente IA. ¿Cómo puedo ayudarte hoy?",
-      aiosAgentReply: "Estoy buscando una casa de 3 habitaciones.",
-      aiosDashboardStats: {
-        leads: "Leads",
-        pipeline: "Pipeline",
-        deals: "Negocios",
-      },
-      aiosFollowups: [
-        ["Nuevo Lead", "1 min"],
-        ["Seguimiento IA", "1 hora"],
-        ["Mensaje Nutrición", "1 día"],
-        ["Convertir Cliente", "3 días"],
-      ],
-      aiosProperty: {
-        tag: "Nueva Propiedad",
-        address: "123 Ocean View Dr.",
-        beds: "3",
-        baths: "2",
-        garage: "2",
-      },
-
-      howTitle: "Cómo Funciona",
-      howSteps: [
+      aiosV2Benefits: [
         {
-          title: "Conecta Tus Leads",
-          desc: "Recibe leads desde tu sitio web, anuncios, WhatsApp, formularios y campañas.",
+          title: "Un Sistema Conectado",
+          desc: "Todos tus datos y herramientas trabajando juntos.",
         },
         {
-          title: "La IA Responde 24/7",
-          desc: "La IA de CORTEXA responde, califica y realiza seguimientos automáticamente.",
+          title: "Visibilidad Clara",
+          desc: "Ve lo que importa y actúa con confianza.",
         },
         {
-          title: "Cierras Más Negocios",
-          desc: "Tu equipo trabaja las mejores oportunidades con menos esfuerzo manual.",
+          title: "Flujos Más Inteligentes",
+          desc: "Automatiza procesos y ahorra tiempo valioso.",
+        },
+        {
+          title: "Mejores Resultados",
+          desc: "Impulsa el crecimiento con mejores datos y decisiones.",
+        },
+      ],
+      aiosV2BottomLead: "Una plataforma. Todo tu negocio.",
+      aiosV2BottomAccent: "Diseñada para aumentar ingresos.",
+      howV2Steps: [
+        {
+          title: "Conecta Tu Negocio",
+          desc: "Conecta tu CRM, datos, herramientas y equipo en solo unos clics.",
+        },
+        {
+          title: "Organiza Tus Operaciones",
+          desc: "Reúne tu pipeline, contactos, tareas y flujos de trabajo en un solo lugar.",
+        },
+        {
+          title: "Convierte Datos en Decisiones",
+          desc: "Obtén información en tiempo real, mide el rendimiento y toma mejores decisiones.",
         },
       ],
 
@@ -1085,39 +920,46 @@ export default function Landing() {
       heroHead:
         "Diseñado para ayudar a las empresas a automatizar, operar y aumentar sus ingresos",
 
-      smartBadge: "DEL LEAD A LOS INGRESOS — AUTOMÁTICAMENTE",
-
-      smartTitle1: "Captura.",
-      smartTitle2: "Nutre.",
-      smartTitle3: "Cierra.",
-      smartTitle4: "Repite.",
-
-      smartSubtitle:
-        "CORTEXA conecta anuncios, sitio web, WhatsApp, IA, CRM y analíticas en un solo sistema inteligente que convierte leads en ventas.",
-
-      captureTitle: "CAPTAR",
-      captureDesc:
-        "Los leads llegan desde todas partes. CORTEXA los captura al instante.",
-
-      convertTitle: "CONVERTIR",
-      convertDesc: "La IA califica, nutre y agenda citas automáticamente 24/7.",
-
-      closeTitle: "CERRAR",
-      closeDesc: "Pipeline, equipo y analíticas te ayudan a cerrar más ventas.",
-
-      smartBenefit1Title: "Más Ingresos",
-      smartBenefit1Text: "Capta más leads y cierra más negocios.",
-      smartBenefit2Title: "Ahorra Tiempo",
-      smartBenefit2Text: "Automatiza seguimientos y citas.",
-      smartBenefit3Title: "Impulsa Tu Equipo",
-      smartBenefit3Text: "Todos saben qué hacer y cuándo hacerlo.",
-      smartBenefit4Title: "Datos Que Impulsan",
-      smartBenefit4Text: "Analíticas en tiempo real para crecer.",
-      smartButton: "Convierte Tu Negocio En Una Máquina Automatizada",
-      smartBlock1: "Captura instantánea. Cero oportunidades perdidas.",
-      smartBlock2: "La IA trabaja 24/7. Tú cierras más ventas.",
-      smartBlock3: "Ve todo. Cierra más ventas.",
-      smartBottom: "Más oportunidades. Más citas. Más cierres.",
+      smartV2Badge: "DEL LEAD A LOS INGRESOS — UN SISTEMA CONECTADO",
+      smartV2Title1: "Ve Toda Tu Operación de Ingresos.",
+      smartV2Title2: "En",
+      smartV2TitleAccent: "Un Solo Lugar.",
+      smartV2Subtitle:
+        "Conecta tus leads, datos de clientes, pipeline, tareas, citas y analítica para que tu equipo siempre sepa qué necesita atención.",
+      smartV2Steps: [
+        {
+          title: "CAPTURA",
+          desc: "Organiza leads y datos de clientes en un solo lugar.",
+        },
+        {
+          title: "GESTIONA",
+          desc: "Controla oportunidades, tareas, citas y el progreso de cada negocio.",
+        },
+        {
+          title: "CRECE",
+          desc: "Usa el pipeline y los datos de rendimiento para tomar mejores decisiones y cerrar más negocios.",
+        },
+      ],
+      smartV2Benefits: [
+        {
+          title: "UNA SOLA VISTA",
+          desc: "Todos tus leads, negocios, tareas y citas en un solo panel.",
+        },
+        {
+          title: "PIPELINE CLARO",
+          desc: "Sabe exactamente dónde está cada negocio y en qué enfocarte.",
+        },
+        {
+          title: "FLUJOS MÁS INTELIGENTES",
+          desc: "Automatiza procesos internos y mantén a tu equipo alineado.",
+        },
+        {
+          title: "MEJORES DECISIONES",
+          desc: "La información en tiempo real te ayuda a actuar más rápido y cerrar más negocios.",
+        },
+      ],
+      smartV2Cta: "Convierte Tu Negocio En Una Máquina de Ingresos",
+      smartV2Bottom: "Más oportunidades. Más citas. Más cierres.",
 
       topLine1: "El ",
       topHighlight: "Sistema operativo de ingresos para IA agéntica",
@@ -1127,7 +969,7 @@ export default function Landing() {
 
       finalTitle: "Automatize todo o seu fluxo de trabalho",
       finalDesc:
-        "La IA genera clientes potenciales. La IA califica. La IA cierra. Todo en tu ",
+        "Leads. Oportunidades. Negocios. Todo en tu ",
       finalDesc1: "Revenue OS",
 
       footerDescription: "AI Leads. AI Califica. AI Cierra.",
@@ -1173,12 +1015,6 @@ export default function Landing() {
       refundPolicy: "Política de reembolso",
       cancellationPolicy: "Política de cancelación",
 
-      heroTitlePre: "Creado para ",
-      heroTitleActive: "Aumentar Ingresos",
-      heroTitlePost: " — No para Administrar Software.",
-      heroDescPre: "Clientes potenciales.",
-      heroDescPre1: "Califica.",
-      heroDescPre2: "Cierra.",
       nodeLeadsTitle: "CLIENTES POTENCIALES",
       nodeLeadsSub: "Capturar y Calificar",
       nodeContactsTitle: "CONTACTOS",
@@ -1218,27 +1054,6 @@ export default function Landing() {
       rightStat1Title: "",
       rightStat1Desc:
         "Todo lo que necesitas para gestionar clientes potenciales, propiedades y clientes en un solo lugar.",
-      rightStat1Desc1:
-        "Gestiona tus clientes potenciales, seguimientos y embudo de ventas en un solo espacio de trabajo conectado.",
-      rightStat2Up: "HASTA",
-      rightStat2Title: "",
-      vsTitleLeft: "OTRAS HERRAMIENTAS SUELEN INCLUIR",
-      vsTitleLeft: "Con Otras Plataformas",
-      vsTitleRight: "Con Cortexa AIOS",
-      vsText: "VS",
-
-      leftCost1: "Altos costos mensuales con múltiples complementos",
-      leftCost2: "Configuración compleja y largo proceso de implementación",
-      leftCost3: "Pagas por funciones que realmente no utilizas",
-      leftCost4: "Cambias entre diferentes herramientas todo el día",
-      leftCost5: "Costos ocultos que aumentan con el tiempo",
-
-      rightBenefit1: "Todo en una plataforma impulsada por IA",
-      rightBenefit2: "La IA automatiza seguimientos y conversaciones",
-      rightBenefit3: "Diseñado para ayudarte a cerrar más negocios",
-      rightBenefit4: "Listo para usar en minutos",
-      rightBenefit5: "Haz crecer tu negocio a medida que creces",
-      listo1: "Tarifa de entrada muy baja",
 
       badge: "Integraciones Potentes",
       titlePre: "Funciona con las ",
@@ -1277,30 +1092,7 @@ export default function Landing() {
 
       stripTitlebk: "Seu CRM não deve te atrasar.",
       stripSubbk: "Junte-se a equipes usando CORTEXA...",
-      featuresTitle: "Transforme dados em decisões",
-      cards: [
-        {
-          eyebrow: "Assistente de IA",
-          title: "Respostas instantâneas no painel",
-          desc: "Insights e recomendações em segundos sobre leads e performance.",
-        },
-        {
-          eyebrow: "Análises",
-          title: "Performance em tempo real",
-          desc: "Monitore conversões, respostas e atividades do negócio.",
-        },
-        {
-          eyebrow: "Acompanhamento com IA",
-          title: "Automação de follow-ups",
-          desc: "Nunca perca leads. Respostas automáticas em todos canais.",
-        },
-        {
-          eyebrow: "Agendador de compromissos com IA",
-          title: "Feche mais rápido com IA",
-          desc: "IA qualifica leads e agenda reuniões automaticamente.",
-        },
-      ],
-
+      
       trustSectionTitlePre: "Tudo o que você precisa. ",
       trustSectionTitlePost: "Feito para Aumentar a Receita.",
       trustSectionSub:
@@ -1464,139 +1256,83 @@ export default function Landing() {
         sub: "Junte-se a equipes usando CORTEXA...",
         btn: "Começar",
       },
-      aiTitle:
-        "AI Setter: tu motor de citas disponible las 24 horas, los 7 días de la semana.",
-      aisubTitle:
-        "Responde instantaneamente, qualifica os compradores e agenda compromissos automaticamente.",
-      aipointTitle1: "Respostas instantâneas",
-      aipointText1: "Cada mensagem é respondida em segundos.",
-      aipointTitle2: "Qualificação inteligente",
-      aipointText2: "Filtra automaticamente os compradores sérios.",
-      aipointTitle3: "Agendamento automático",
-      aipointText3: "Compromissos agendados sem idas e vindas.",
-      aialt: "IA que gerencia conversas e agenda compromissos automaticamente",
+      
+      revenueActionEyebrow: "TRANSFORME DADOS EM CRESCIMENTO",
+      revenueActionTitleLead: "Transforme Seus Dados de Receita",
+      revenueActionTitleAccent: "Em Ação.",
+      revenueActionSub: "Reúna pipeline, clientes, tarefas, compromissos e dados de desempenho para que sua equipe veja o que importa e aja mais rápido.",
+      revenueActionBenefits: [
+        { title: "PRIORIDADES CLARAS", desc: "Saiba quais oportunidades precisam de atenção." },
+        { title: "DADOS CONECTADOS", desc: "Mantenha as informações de clientes e pipeline organizadas." },
+        { title: "FLUXOS MAIS INTELIGENTES", desc: "Simplifique processos internos e reduza tarefas repetitivas." },
+        { title: "VISIBILIDADE DE RECEITA", desc: "Entenda o desempenho em um único dashboard conectado." },
+      ],
+      revenueOverviewEyebrow: "UM DASHBOARD. VISIBILIDADE COMPLETA.",
+      revenueOverviewTitle: "Sua Visão Geral de Receita",
+      revenueOverviewSub: "Insights em tempo real sobre pipeline, equipe e desempenho — tudo em um só lugar.",
+      revenueOverviewCta: "Comece Seu Teste Grátis",
+      revenueOverviewNoCard: "Nenhum cartão de crédito necessário",
+      revenueOverviewCancel: "Cancele quando quiser",
 
-      beTitle: "O que isso realmente faz por você",
-      besubTitle:
-        "A automação faz o trabalho. A comunicação nunca para. Cada lead continua avançando — sem que você precise correr atrás.",
-      beitem1: "O trabalho avança automaticamente",
-      beitem2: "As conversas nunca esfriam",
-      beitem3: "Saiba exatamente o que fazer a seguir",
-      beitem4: "Mais negócios. Menos trabalho de acompanhamento.",
-
-      beitemtext1:
-        "Acompanhamentos, rastreamento e organização funcionam em segundo plano.",
-      beitemtext2:
-        "Os leads permanecem ativos com lembretes, respostas e reengajamento.",
-      beitemtext3:
-        "Veja quem precisa de atenção e qual deve ser o seu próximo passo.",
-      beitemtext4:
-        "Menos trabalho manual. Mais agilidade. Melhores resultados.",
-      bebottom: "Tudo continua avançando — mesmo quando você não está.",
-      stripLabel: "Pronto para crescer?",
-      stripTitle:
-        "Comece a fechar mais negócios — com IA trabalhando para você 24/7.",
-      stripSub:
-        "Sem contratar mais pessoas. Sem perder leads. Apenas uma forma mais inteligente de gerenciar seu pipeline.",
-      stripBtn: "Comece Seu Teste Grátis →",
-      stripBenefit1: "Comece em minutos",
-      stripBenefit3: "Cancele a qualquer momento",
-      stripCardTitle: "Visão geral do pipeline",
-      stripCardPeriod: "Este mês",
-      stripRevenueGrowth: "▲ 28% em relação ao mês passado",
-      stripLeads: "Leads",
-      stripDeals: "Negócios",
-      stripRevenue: "Receita",
-      stripAI:
-        "Resumo da IA: Você está no caminho para superar sua meta mensal em 24%",
-
-      roiTitle:
-        "Reduza os custos da folha de pagamento. Escale com seu agente de IA.",
-      roiSub:
-        "A IA responde instantaneamente, faz acompanhamentos automáticos e mantém seu pipeline em movimento 24 horas por dia, 7 dias por semana.",
-      roiBtn: "Começar",
-
-      roiStat1Desc:
-        "O CORTEXA transforma a gestão de leads em um motor de receita — automatizando follow-ups e o fluxo de vendas para gerar mais fechamentos.",
-
-      roiStat2Desc:
-        "Mais conversas. Respostas mais rápidas. Zero leads perdidos — transformando seu pipeline em receita previsível.",
-
-      roiStat3Desc:
-        "A IA substitui tarefas manuais, follow-ups e trabalho administrativo — liberando seu tempo enquanto o negócio continua avançando.",
-
-      roiStat4Desc:
-        "Projetado para ajudar você a recuperar seu investimento rapidamente ao capturar negócios que de outra forma seriam perdidos.",
-
-      aiosBadgeTitle: "IA Agêntica",
-      aiosBadgeHighlight: "Sistema Operacional de Receita",
-      aiosSubtitle:
-        "Sistema completo para gerenciar conversas, automatizar acompanhamentos, acompanhar o desempenho e ajudar sua empresa a crescer.",
-
-      aiosCards: [
+      aiosV2Eyebrow: "SISTEMA OPERACIONAL DE RECEITA TUDO EM UM",
+      aiosV2TitleLead: "Conecte. Organize.",
+      aiosV2TitleAccent: "Aumente a Receita.",
+      aiosV2Subtitle:
+        "Tudo o que você precisa para gerenciar pipeline, clientes e operações em uma plataforma poderosa e fácil de usar.",
+      aiosV2Cards: [
         {
-          title: "CRM IA",
-          desc: "Gerencie leads, clientes, imóveis e negócios em um só lugar.",
+          title: "CRM",
+          desc: "Gerencie leads, contatos, contas e relacionamentos em um só lugar.",
         },
         {
-          title: "Agente IA",
-          desc: "Responde, qualifica e acompanha automaticamente.",
+          title: "PIPELINE",
+          desc: "Visualize seu pipeline de vendas e avance negócios com confiança.",
         },
         {
-          title: "Dashboards Inteligentes",
-          desc: "Veja leads, pipeline, tarefas e desempenho claramente.",
+          title: "DASHBOARDS INTELIGENTES",
+          desc: "Veja insights em tempo real sobre pipeline, equipe e receita.",
         },
         {
-          title: "Follow-Up Automático",
-          desc: "Mantenha cada prospect avançando sem esforço manual.",
+          title: "GESTÃO DE FLUXOS",
+          desc: "Automatize tarefas, aprovações e processos para manter sua equipe produtiva.",
         },
         {
-          title: "Fluxo de trabalho",
-          desc: "Criado para imóveis, compradores, vendedores e agentes.",
+          title: "INTEGRAÇÕES",
+          desc: "Conecte as ferramentas que você já usa e mantenha seus dados sincronizados.",
         },
       ],
-      aiosCRMHeaders: ["Nome", "Status", "Última Atividade"],
-      aiosCRMRows: [
-        ["John Doe", "Novo", "2 min"],
-        ["Sarah Smith", "Contatado", "15 min"],
-        ["Mike Johnson", "Qualificado", "1 h"],
-        ["Emma Brown", "Proposta", "2 h"],
-        ["David Wilson", "Fechado", "1 dia"],
-      ],
-      aiosAgentGreeting: "Olá! Sou seu Agente IA. Como posso ajudar hoje?",
-      aiosAgentReply: "Estou procurando uma casa com 3 quartos.",
-      aiosDashboardStats: {
-        leads: "Leads",
-        pipeline: "Pipeline",
-        deals: "Negócios",
-      },
-      aiosFollowups: [
-        ["Novo Lead", "1 min"],
-        ["Follow-Up IA", "1 hora"],
-        ["Mensagem Nutrição", "1 dia"],
-        ["Converter Cliente", "3 dias"],
-      ],
-      aiosProperty: {
-        tag: "Novo Imóvel",
-        address: "123 Ocean View Dr.",
-        beds: "3",
-        baths: "2",
-        garage: "2",
-      },
-
-      howTitle: "Como Funciona",
-      howSteps: [
+      aiosV2Benefits: [
         {
-          title: "Conecte Seus Leads",
-          desc: "Receba leads do seu site, anúncios, WhatsApp, formulários e campanhas.",
+          title: "Um Sistema Conectado",
+          desc: "Todos os seus dados e ferramentas trabalhando juntos.",
         },
         {
-          title: "A IA Responde 24/7",
-          desc: "A IA da CORTEXA responde, qualifica e acompanha automaticamente.",
+          title: "Visibilidade Clara",
+          desc: "Veja o que importa e aja com confiança.",
         },
         {
-          title: "Feche Mais Negócios",
-          desc: "Sua equipe trabalha as melhores oportunidades com menos esforço manual.",
+          title: "Fluxos Mais Inteligentes",
+          desc: "Automatize processos e economize tempo valioso.",
+        },
+        {
+          title: "Melhores Resultados",
+          desc: "Cresça com melhores dados e decisões.",
+        },
+      ],
+      aiosV2BottomLead: "Uma plataforma. Todo o seu negócio.",
+      aiosV2BottomAccent: "Criada para aumentar a receita.",
+      howV2Steps: [
+        {
+          title: "Conecte Seu Negócio",
+          desc: "Conecte seu CRM, dados, ferramentas e equipe em poucos cliques.",
+        },
+        {
+          title: "Organize Suas Operações",
+          desc: "Reúna pipeline, contatos, tarefas e fluxos de trabalho em um só lugar.",
+        },
+        {
+          title: "Transforme Dados em Decisões",
+          desc: "Veja insights em tempo real, acompanhe o desempenho e tome decisões melhores.",
         },
       ],
 
@@ -1639,41 +1375,46 @@ export default function Landing() {
       heroHead:
         "Desenvolvido para ajudar empresas a automatizar, operar e aumentar a receita",
 
-      smartBadge: "DO LEAD À RECEITA — AUTOMATICAMENTE",
-
-      smartTitle1: "Capture.",
-      smartTitle2: "Nutra.",
-      smartTitle3: "Feche.",
-      smartTitle4: "Repita.",
-
-      smartSubtitle:
-        "A CORTEXA conecta anúncios, site, WhatsApp, IA, CRM e análises em um único sistema inteligente que transforma leads em vendas.",
-
-      captureTitle: "CAPTAR",
-      captureDesc:
-        "Os leads chegam de todos os lugares. A CORTEXA captura instantaneamente.",
-
-      convertTitle: "CONVERTER",
-      convertDesc:
-        "A IA qualifica, nutre e agenda compromissos automaticamente 24/7.",
-
-      closeTitle: "FECHAR",
-      closeDesc:
-        "Pipeline, equipe e análises ajudam você a fechar mais negócios.",
-
-      smartBenefit1Title: "Mais Receita",
-      smartBenefit1Text: "Capture mais leads e feche mais negócios.",
-      smartBenefit2Title: "Economize Tempo",
-      smartBenefit2Text: "Automatize follow-ups e agendamentos.",
-      smartBenefit3Title: "Fortaleça Sua Equipe",
-      smartBenefit3Text: "Todos sabem o que fazer e quando fazer.",
-      smartBenefit4Title: "Dados Que Impulsionam",
-      smartBenefit4Text: "Análises em tempo real para crescer.",
-      smartButton: "Transforme Seu Negócio Em Uma Máquina Automatizada",
-      smartBlock1: "Captura instantânea. Nenhum lead perdido.",
-      smartBlock2: "A IA trabalha 24/7. Você fecha mais negócios.",
-      smartBlock3: "Veja tudo. Feche mais negócios.",
-      smartBottom: "Mais leads. Mais agendamentos. Mais fechamentos.",
+      smartV2Badge: "DO LEAD À RECEITA — UM SISTEMA CONECTADO",
+      smartV2Title1: "Veja Toda a Sua Operação de Receita.",
+      smartV2Title2: "Em",
+      smartV2TitleAccent: "Um Só Lugar.",
+      smartV2Subtitle:
+        "Conecte leads, dados de clientes, pipeline, tarefas, compromissos e análises para que sua equipe sempre saiba o que precisa de atenção.",
+      smartV2Steps: [
+        {
+          title: "CAPTURE",
+          desc: "Organize leads e dados de clientes em um só lugar.",
+        },
+        {
+          title: "GERENCIE",
+          desc: "Acompanhe oportunidades, tarefas, compromissos e o progresso dos negócios.",
+        },
+        {
+          title: "CRESÇA",
+          desc: "Use o pipeline e os insights de desempenho para tomar decisões melhores e fechar mais negócios.",
+        },
+      ],
+      smartV2Benefits: [
+        {
+          title: "UMA VISÃO",
+          desc: "Todos os leads, negócios, tarefas e compromissos em um único painel.",
+        },
+        {
+          title: "PIPELINE CLARO",
+          desc: "Saiba exatamente onde cada negócio está e no que focar.",
+        },
+        {
+          title: "FLUXOS MAIS INTELIGENTES",
+          desc: "Automatize processos internos e mantenha sua equipe alinhada.",
+        },
+        {
+          title: "MELHORES DECISÕES",
+          desc: "Insights em tempo real ajudam você a agir mais rápido e fechar mais negócios.",
+        },
+      ],
+      smartV2Cta: "Transforme Seu Negócio Em Uma Máquina de Receita",
+      smartV2Bottom: "Mais leads. Mais agendamentos. Mais fechamentos.",
 
       topLine1: "O ",
       topHighlight: "Sistema operacional de receita para IA agêntica",
@@ -1682,7 +1423,7 @@ export default function Landing() {
       pricing: "Preços",
 
       finalTitle: "Comece a crescer com IA hoje",
-      finalDesc: "A IA gera leads. A IA qualifica. A IA fecha. Tudo no seu ",
+      finalDesc: "Leads. Oportunidades. Negócios. Tudo no seu ",
       finalDesc1: "Revenue OS",
 
       footerDescription: "IA Gera Leads. IA Qualifica. IA Fecha.",
@@ -1728,12 +1469,6 @@ export default function Landing() {
       refundPolicy: "Política de Reembolso",
       cancellationPolicy: "Política de Cancelamento",
 
-      heroTitlePre: "Feito para ",
-      heroTitleActive: "Aumentar a Receita",
-      heroTitlePost: " — Não para Gerenciar Software.",
-      heroDescPre: "Leads.",
-      heroDescPre1: "Qualifica.",
-      heroDescPre2: "Fecha.",
       nodeLeadsTitle: "LEADS",
       nodeLeadsSub: "Capturar e Qualificar",
       nodeContactsTitle: "CONTATOS",
@@ -1772,27 +1507,6 @@ export default function Landing() {
       rightStat1Title: "",
       rightStat1Desc:
         "Tudo o que você precisa para gerenciar leads, imóveis e clientes em um só lugar.",
-      rightStat1Desc1:
-        "Gerencie seus leads, acompanhamentos e pipeline em um único espaço de trabalho integrado.",
-      rightStat2Up: "ATÉ",
-      rightStat2Title: "",
-      vsTitleLeft: "OUTRAS FERRAMENTAS COSTUMAM INCLUIR",
-      vsTitleLeft: "Com Outras Plataformas",
-      vsTitleRight: "Com Cortexa AIOS",
-      vsText: "VS",
-
-      leftCost1: "Alto custo mensal com vários complementos",
-      leftCost2: "Configuração complexa e longo processo de implantação",
-      leftCost3: "Pague por recursos que você nem utiliza totalmente",
-      leftCost4: "Troque entre diferentes ferramentas o dia todo",
-      leftCost5: "Custos ocultos que aumentam com o tempo",
-
-      rightBenefit1: "Tudo em uma plataforma com IA",
-      rightBenefit2: "A IA automatiza acompanhamentos e conversas",
-      rightBenefit3: "Criado para ajudar você a fechar mais negócios",
-      rightBenefit4: "Pronto para usar em poucos minutos",
-      rightBenefit5: "Expanda seu negócio conforme ele cresce",
-      listo1: "Taxa de entrada muito baixa",
 
       badge: "Integrações Poderosas",
       titlePre: "Funciona com as ",
@@ -1826,6 +1540,9 @@ export default function Landing() {
 
   const currentHero =
     lang === "es" ? heroImgES : lang === "pt" ? heroImgPT : heroImg;
+
+  const currentSect2 =
+    lang === "es" ? sect2ES : lang === "pt" ? sect2PT : sect2;
 
   const currentSec2 =
     lang === "es" ? sec2ImgES : lang === "pt" ? sec2ImgPT : sec2Img;
@@ -2107,141 +1824,10 @@ export default function Landing() {
         id="features"
         className="cx-aios-workspace cx-comp cx-center pt-50"
       >
-        <div className="cx-feat-header">
-          <h2 className="cx-feat-main-title">
-            {tr.heroTitlePre}
-            <span className="cx-feat-blue-text">{tr.heroTitleActive}</span>
-            {tr.heroTitlePost}
-          </h2>
-          <p className="cx-feat-sub-title">
-            <span className="text-os">AI </span> {tr.heroDescPre}
-            <span className="text-os"> AI </span> {tr.heroDescPre1}
-            <span className="text-os"> AI </span> {tr.heroDescPre2}
-          </p>
-        </div>
-
-        <div className="cx-feat-main-grid">
-          <div className="cx-feat-diagram-area">
-            <img src={featurechartImg} alt="diagram" />
-          </div>
-        </div>
-        <div className="cx-feat-wrap">
-          <div className="cx-feat-comparison-table">
-            <div className="cx-comp-col-left">
-              <div className="cx-comp-title-row">
-                <XCircle className="cx-comp-header-icon icon-red" size={24} />
-                <h5>{tr.vsTitleLeft}</h5>
-              </div>
-              <ul className="cx-comp-list">
-                <li>
-                  <div className="cx-list-item-content">
-                    <XCircle className="cx-li-icon icon-red-small" size={18} />
-                    <span>{tr.leftCost1}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <XCircle className="cx-li-icon icon-red-small" size={18} />
-                    <span>{tr.leftCost2}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <XCircle className="cx-li-icon icon-red-small" size={18} />
-                    <span>{tr.leftCost3}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <XCircle className="cx-li-icon icon-red-small" size={18} />
-                    <span>{tr.leftCost4}</span>
-                  </div>
-                </li>
-                <li>
-                  <div className="cx-list-item-content">
-                    <XCircle className="cx-li-icon icon-red-small" size={18} />
-                    <span>{tr.leftCost5}</span>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            <div className="cx-comp-vs-circle-wrapper">
-              <div className="cx-comp-vertical-line"></div>
-              <div className="cx-comp-vs-circle">
-                <span>{tr.vsText}</span>
-              </div>
-            </div>
-
-            <div className="cx-comp-col-right">
-              <div className="cx-comp-title-row">
-                <CheckCircle2
-                  className="cx-comp-header-icon icon-blue"
-                  size={24}
-                />
-                <h5>{tr.vsTitleRight}</h5>
-              </div>
-              <div className="cx-comp-right-wrap">
-                <ul className="cx-comp-list">
-                  <li>
-                    <div className="cx-list-item-content">
-                      <CheckCircle2
-                        className="cx-li-icon icon-blue-small"
-                        size={18}
-                      />
-                      <span>{tr.rightBenefit1}</span>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="cx-list-item-content">
-                      <CheckCircle2
-                        className="cx-li-icon icon-blue-small"
-                        size={18}
-                      />
-                      <span>{tr.rightBenefit2}</span>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="cx-list-item-content">
-                      <CheckCircle2
-                        className="cx-li-icon icon-blue-small"
-                        size={18}
-                      />
-                      <span>{tr.rightBenefit3}</span>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="cx-list-item-content">
-                      <CheckCircle2
-                        className="cx-li-icon icon-blue-small"
-                        size={18}
-                      />
-                      <span>{tr.rightBenefit4}</span>
-                    </div>
-                  </li>
-                  <li>
-                    <div className="cx-list-item-content">
-                      <CheckCircle2
-                        className="cx-li-icon icon-blue-small"
-                        size={18}
-                      />
-                      <span>{tr.rightBenefit5}</span>
-                    </div>
-                  </li>
-                </ul>
-                <div className="cx-listo-right">
-                  <div className="cx-listo-right-inner">
-                    <Sparkles />
-                    <span>{tr.listo1}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <img src={currentSect2} alt="features" />
       </section>
       <section id="analytics" className="cx-hero pt-50">
-        <img src={currentSec2} alt="" />
+        <img src={currentSec2} alt="analytics" />
         <i>
           Product demo — the names, numbers, and activity shown are sample data
           for illustration only, not real customer results.
@@ -2256,264 +1842,275 @@ export default function Landing() {
         <img src={currentSec3} alt="" />
       </section>
 
-      <section className="aios-section ai-crm-section">
-        <div className="aios-container">
-          <div className="aios-header">
-            <h2>
-              <span>{tr.aiosBadgeTitle} </span>
-              {tr.aiosBadgeHighlight}
+      <section className="aios-section aios-v2-section">
+        <div className="aios-v2-container">
+          <div className="aios-v2-header">
+            <div className="aios-v2-eyebrow">{tr.aiosV2Eyebrow}</div>
+
+            <h2 className="aios-v2-title">
+              <span>{tr.aiosV2TitleLead} </span>
+              <strong>{tr.aiosV2TitleAccent}</strong>
             </h2>
 
-            <p>{tr.aiosSubtitle}</p>
+            <p className="aios-v2-subtitle">{tr.aiosV2Subtitle}</p>
           </div>
-          <div className="aios-grid">
-            <div className="aios-card">
-              <div className="aios-icon">
-                <User size={34} />
+
+          <div className="aios-v2-grid">
+            <article className="aios-v2-card">
+              <div className="aios-v2-card-icon">
+                <User size={34} strokeWidth={2.4} />
               </div>
-              <h3>{tr.aiosCards[0].title}</h3>
-              <span />
-              <p>{tr.aiosCards[0].desc}</p>
+              <h3>{tr.aiosV2Cards[0].title}</h3>
+              <div className="aios-v2-card-line" />
+              <p>{tr.aiosV2Cards[0].desc}</p>
 
-              <div className="aios-preview crm-preview">
-                <div className="crm-header">
-                  <User size={14} />
-                  <span>{tr.aiosCRMHeaders[0]}</span>
-                  <span>{tr.aiosCRMHeaders[1]}</span>
-                  <span>{tr.aiosCRMHeaders[2]}</span>
-                </div>
-
-                {tr.aiosCRMRows.map((row, i) => (
-                  <div className="crm-row" key={i}>
-                    <User size={14} />
-                    <span>{row[0]}</span>
-                    <label>{row[1]}</label>
-                    <small>{row[2]}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="aios-card">
-              <div className="aios-icon">
-                <Bot size={34} />
-              </div>
-              <h3>{tr.aiosCards[1].title}</h3>
-              <span />
-              <p>{tr.aiosCards[1].desc}</p>
-
-              <div className="aios-preview chat-preview">
-                <div className="bubble left">{tr.aiosAgentGreeting}</div>
-                <div className="bubble left">{tr.aiosAgentReply}</div>
-                <div className="bubble left nonedot">
-                  <div className="crm-dot" />
-                  <div className="crm-dot" />
-                  <div className="crm-dot" />
-                </div>
-              </div>
-            </div>
-            <div className="aios-card">
-              <div className="aios-icon">
-                <BarChart3 size={34} />
-              </div>
-              <h3>{tr.aiosCards[2].title}</h3>
-              <span />
-              <p>{tr.aiosCards[2].desc}</p>
-
-              <div className="aios-preview dashboard-preview">
-                <div className="dashboard-stats">
-                  <div className="dashboard-stat">
-                    <span>{tr.aiosDashboardStats.leads}</span>
-                    <strong>2,450</strong>
-                    <small>+18%</small>
-                  </div>
-                  <div className="dashboard-stat">
-                    <span>{tr.aiosDashboardStats.pipeline}</span>
-                    <strong>$1.25M</strong>
-                    <small>+24%</small>
-                  </div>
-                  <div className="dashboard-stat">
-                    <span>{tr.aiosDashboardStats.deals}</span>
-                    <strong>156</strong>
-                    <small>+15%</small>
-                  </div>
-                </div>
-
-                <div className="dashboard-bottom">
-                  <div className="dashboard-line-chart">
-                    <svg viewBox="0 0 200 80" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient
-                          id="dashboardGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor="#7a5cff"
-                            stopOpacity="0.35"
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor="#7a5cff"
-                            stopOpacity="0"
-                          />
-                        </linearGradient>
-                      </defs>
-
-                      <path
-                        d="
-          M0 70
-          L20 58
-          L40 62
-          L60 45
-          L80 50
-          L100 28
-          L120 34
-          L140 18
-          L160 24
-          L180 4
-          L200 0
-          L200 80
-          L0 80
-          Z"
-                        fill="url(#dashboardGradient)"
-                      />
-
-                      <polyline
-                        points="
-          0,70
-          20,58
-          40,62
-          60,45
-          80,50
-          100,28
-          120,34
-          140,18
-          160,24
-          180,4
-          200,0"
-                        fill="none"
-                        stroke="#7a5cff"
-                        strokeWidth="3"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="dashboard-ring">
-                    <svg viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="48" className="ring-bg" />
-
-                      <circle
-                        cx="60"
-                        cy="60"
-                        r="48"
-                        className="ring-progress"
-                      />
-                    </svg>
-
-                    <span>{tr.aiosDashboardScore}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="aios-card">
-              <div className="aios-icon">
-                <Send size={34} />
-              </div>
-              <h3>{tr.aiosCards[3].title}</h3>
-              <span />
-              <p>{tr.aiosCards[3].desc}</p>
-
-              <div className="aios-preview follow-preview">
-                {tr.aiosFollowups.map((item, i) => (
-                  <div className="follow-row" key={i}>
-                    <span>
-                      <CheckCircle size={12} /> {item[0]}
+              <div className="aios-v2-preview aios-v2-crm-preview">
+                {[
+                  ["John Smith", "New Lead"],
+                  ["Sarah Johnson", "Follow-Up"],
+                  ["Mike Brown", "Client"],
+                ].map((row, index) => (
+                  <div className="aios-v2-person-row" key={row[0]}>
+                    <span className={`aios-v2-avatar avatar-${index + 1}`}>
+                      {row[0]
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")}
                     </span>
-                    <label>{item[1]}</label>
+                    <b>{row[0]}</b>
+                    <small>{row[1]}</small>
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="aios-card">
-              <div className="aios-icon">
-                <Home size={34} />
+            </article>
+
+            <article className="aios-v2-card">
+              <div className="aios-v2-card-icon">
+                <Workflow size={34} strokeWidth={2.4} />
               </div>
-              <h3>{tr.aiosCards[4].title}</h3>
-              <span />
-              <p>{tr.aiosCards[4].desc}</p>
-              <div className="aios-preview house-preview">
-                <div className="property-image">
-                  <div className="listing-tag">{tr.aiosProperty.tag}</div>
-                </div>
-                <div className="property-info">
-                  <h5>{tr.aiosProperty.address}</h5>
-                  <div className="info-wrap">
-                    <strong>$1,250,000</strong>
-                    <div className="property-meta">
-                      <span>🛏 {tr.aiosProperty.beds}</span>
-                      <span>🛁 {tr.aiosProperty.baths}</span>
-                      <span>🚗 {tr.aiosProperty.garage}</span>
-                    </div>
+              <h3>{tr.aiosV2Cards[1].title}</h3>
+              <div className="aios-v2-card-line" />
+              <p>{tr.aiosV2Cards[1].desc}</p>
+
+              <div className="aios-v2-preview aios-v2-pipeline-preview">
+                {[
+                  ["New", "$125K"],
+                  ["Qualified", "$210K"],
+                  ["Proposal", "$175K"],
+                  ["Won", "$320K"],
+                ].map((item, index) => (
+                  <div
+                    className={`aios-v2-pipeline-col p${index + 1}`}
+                    key={item[0]}
+                  >
+                    <b>{item[0]}</b>
+                    <span>
+                      <i />
+                    </span>
+                    <small>{item[1]}</small>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="aios-v2-card">
+              <div className="aios-v2-card-icon">
+                <BarChart3 size={34} strokeWidth={2.4} />
+              </div>
+              <h3>{tr.aiosV2Cards[2].title}</h3>
+              <div className="aios-v2-card-line" />
+              <p>{tr.aiosV2Cards[2].desc}</p>
+
+              <div className="aios-v2-preview aios-v2-dashboard-preview">
+                <div className="aios-v2-dash-stats">
+                  <div className="aios-v2-dash-stat">
+                    <span>Revenue</span>
+                    <strong>$1.25M</strong>
+                    <small>▲ 18%</small>
+                  </div>
+
+                  <div className="aios-v2-dash-stat">
+                    <span>Deals</span>
+                    <strong>156</strong>
+                    <small>▲ 15%</small>
                   </div>
                 </div>
+
+                <div className="aios-v2-mini-chart">
+                  <span className="aios-v2-chart-grid grid-1" />
+                  <span className="aios-v2-chart-grid grid-2" />
+                  <span className="aios-v2-chart-grid grid-3" />
+
+                  <svg
+                    viewBox="0 0 210 105"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient
+                        id="smartChartFill"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="#6d3df5"
+                          stopOpacity="0.18"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#6d3df5"
+                          stopOpacity="0.015"
+                        />
+                      </linearGradient>
+                    </defs>
+                    <polygon
+                      points="
+                          4,92
+                          27,73
+                          49,81
+                          70,57
+                          92,64
+                          115,39
+                          136,48
+                          158,22
+                          181,31
+                          206,5
+                          206,105
+                          4,105
+                        "
+                      fill="url(#smartChartFill)"
+                    />
+
+                    <polyline
+                      points="
+                            4,92
+                            27,73
+                            49,81
+                            70,57
+                            92,64
+                            115,39
+                            136,48
+                            158,22
+                            181,31
+                            206,5
+                          "
+                      fill="none"
+                      stroke="#5733ef"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
               </div>
+            </article>
+
+            <article className="aios-v2-card">
+              <div className="aios-v2-card-icon">
+                <CheckCircle2 size={34} strokeWidth={2.4} />
+              </div>
+              <h3>{tr.aiosV2Cards[3].title}</h3>
+              <div className="aios-v2-card-line" />
+              <p>{tr.aiosV2Cards[3].desc}</p>
+
+              <div className="aios-v2-preview aios-v2-workflow-preview">
+                {[
+                  ["Task Assignment", "Done"],
+                  ["Follow-Up Reminder", "In Progress"],
+                  ["Deal Update", "Pending"],
+                  ["Approval Request", "Done"],
+                ].map((row, index) => (
+                  <div className="aios-v2-workflow-row" key={row[0]}>
+                    <CheckCircle2 size={13} />
+                    <span>{row[0]}</span>
+                    <small className={`workflow-status s${index + 1}`}>
+                      {row[1]}
+                    </small>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="aios-v2-card">
+              <div className="aios-v2-card-icon">
+                <Puzzle size={34} strokeWidth={2.4} />
+              </div>
+              <h3>{tr.aiosV2Cards[4].title}</h3>
+              <div className="aios-v2-card-line" />
+              <p>{tr.aiosV2Cards[4].desc}</p>
+
+              <div className="aios-v2-preview aios-v2-integrations-preview">
+                {[
+                  [aiosIntegrationSalesforce, "Salesforce"],
+                  [aiosIntegrationGoogle, "Google"],
+                  [aiosIntegrationMicrosoft, "Microsoft"],
+                  [aiosIntegrationWhatsapp, "WhatsApp"],
+                  [aiosIntegrationMail, "Email"],
+                  [aiosIntegrationMore, "More integrations"],
+                ].map(([src, alt]) => (
+                  <span className="aios-v2-integration-tile" key={alt}>
+                    <img src={src} alt={alt} />
+                  </span>
+                ))}
+              </div>
+            </article>
+          </div>
+
+          <div className="how-v2-block">
+            <h2 className="how-v2-title">{tr.howTitle}</h2>
+            <div className="how-v2-underline" />
+
+            <div className="how-v2-grid">
+              {tr.howV2Steps.map((step, index) => {
+                const StepIcon = [Link2, Workflow, TrendingUp][index];
+
+                return (
+                  <div className="how-v2-step-wrap" key={step.title}>
+                    <article className="how-v2-card">
+                      <div className="how-v2-number">{index + 1}</div>
+                      <div className="how-v2-icon">
+                        <StepIcon size={32} strokeWidth={2.5} />
+                      </div>
+                      <div className="how-v2-content">
+                        <h3>{step.title}</h3>
+                        <p>{step.desc}</p>
+                      </div>
+                    </article>
+
+                    {index < tr.howV2Steps.length - 1 && (
+                      <div className="how-v2-arrow">→</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <i
-            style={{
-              display: "block",
-              fontSize: "12px",
-              opacity: 0.65,
-              marginTop: "16px",
-              textAlign: "center",
-            }}
-          >
-            Product demo — the names, numbers, and activity shown are sample
-            data for illustration only, not real customer results.
-          </i>
-        </div>
-      </section>
-      <section className="how-section">
-        <div className="how-container">
-          <h2 className="how-title">{tr.howTitle}</h2>
-          <div className="unline"></div>
-          <div className="how-grid">
-            <div className="how-card">
-              <div className="how-number">1</div>
-              <div className="how-icon">
-                <Workflow size={44} />
-              </div>
-              <div className="how-content">
-                <h3>{tr.howSteps[0].title}</h3>
-                <p>{tr.howSteps[0].desc}</p>
-              </div>
-            </div>
-            <div className="how-arrow">→</div>
-            <div className="how-card">
-              <div className="how-number">2</div>
-              <div className="how-icon">
-                <Bot size={44} />
-              </div>
-              <div className="how-content">
-                <h3>{tr.howSteps[1].title}</h3>
-                <p>{tr.howSteps[1].desc}</p>
-              </div>
-            </div>
-            <div className="how-arrow">→</div>
-            <div className="how-card">
-              <div className="how-number">3</div>
-              <div className="how-icon">
-                <TrendingUp size={44} />
-              </div>
-              <div className="how-content">
-                <h3>{tr.howSteps[2].title}</h3>
-                <p>{tr.howSteps[2].desc}</p>
-              </div>
-            </div>
+
+          <div className="aios-v2-benefits">
+            {tr.aiosV2Benefits.map((item, index) => {
+              const BenefitIcon = [ShieldCheck, Eye, Zap, Target][index];
+
+              return (
+                <div className="aios-v2-benefit" key={item.title}>
+                  <div className="aios-v2-benefit-icon">
+                    <BenefitIcon size={28} strokeWidth={2.3} />
+                  </div>
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
+          <p className="aios-v2-bottom">
+            <strong>{tr.aiosV2BottomLead}</strong>{" "}
+            <span>{tr.aiosV2BottomAccent}</span>
+          </p>
         </div>
       </section>
       <section className="powerful">
@@ -2585,122 +2182,225 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="smart">
-        <div className="smart-container">
-          <div className="smart-head">
-            <span className="smart-badge">{tr.smartBadge}</span>
+      <section className="smart smart-v2">
+        <div className="smart-v2-container">
+          <div className="smart-v2-head">
+            <span className="smart-v2-badge">{tr.smartV2Badge}</span>
 
-            <h2>
-              {tr.smartTitle1} {tr.smartTitle2} {tr.smartTitle3}{" "}
-              <span>{tr.smartTitle4}</span>
+            <h2 className="smart-v2-title">
+              <span>{tr.smartV2Title1}</span>
+              <br />
+              <span>{tr.smartV2Title2} </span>
+              <strong>{tr.smartV2TitleAccent}</strong>
             </h2>
 
-            <p>{tr.smartSubtitle}</p>
+            <p className="smart-v2-subtitle">{tr.smartV2Subtitle}</p>
           </div>
 
-          <div className="smart-steps">
-            <div className="smart-step">
-              <div className="step-number">1</div>
-              <div className="step-right-wrap">
-                <h3>{tr.captureTitle}</h3>
-                <p>{tr.captureDesc}</p>
+          <div className="smart-v2-steps">
+            {tr.smartV2Steps.map((step, index) => (
+              <div className="smart-v2-step-wrap" key={step.title}>
+                <div className="smart-v2-step">
+                  <div className="smart-v2-step-number">{index + 1}</div>
+                  <div className="smart-v2-step-copy">
+                    <h3>{step.title}</h3>
+                    <p>{step.desc}</p>
+                  </div>
+                </div>
+
+                {index < tr.smartV2Steps.length - 1 && (
+                  <div className="smart-v2-step-arrow">
+                    <span />
+                    <ChevronRight size={22} />
+                  </div>
+                )}
               </div>
-            </div>
-            <div className="flow-arrow-container">
-              <div className="arrow-line"></div>
-              <div className="arrow-head"></div>
-            </div>
-            <div className="smart-step">
-              <div className="step-number">2</div>
-              <div className="step-right-wrap">
-                <h3>{tr.convertTitle}</h3>
-                <p>{tr.convertDesc}</p>
-              </div>
-            </div>
-            <div className="flow-arrow-container">
-              <div className="arrow-line"></div>
-              <div className="arrow-head"></div>
-            </div>
-            <div className="smart-step">
-              <div className="step-number">3</div>
-              <div className="step-right-wrap">
-                <h3>{tr.closeTitle}</h3>
-                <p>{tr.closeDesc}</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <div className="smart-main-grid">
-            <div className="capture-card">
-              <img src={smart1Img} className="smart-img" />
-            </div>
+          <div className="smart-v2-main-grid">
+            <article className="smart-v2-panel smart-v2-source-panel">
+              <h3>Lead Source Overview</h3>
 
-            <div className="convert-card">
-              <img src={smart2Img} className="smart-img" />
-            </div>
+              <div className="smart-v2-source-content">
+                <div className="smart-v2-source-list">
+                  {[
+                    ["Website", "1,248", "globe"],
+                    ["Google Ads", "842", "google"],
+                    ["Facebook Ads", "624", "facebook"],
+                    ["Referrals", "312", "referral"],
+                    ["Other Sources", "198", "other"],
+                  ].map(([label, value, type]) => (
+                    <div className="smart-v2-source-row" key={label}>
+                      <span className={`smart-v2-source-icon ${type}`}>
+                        {type === "google" ? "G" : type === "facebook" ? "f" : "◉"}
+                      </span>
+                      <b>{label}</b>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
+                </div>
 
-            <div className="close-card">
-              <img src={smart3Img} className="smart-img" />
-            </div>
+                <div className="smart-v2-leads-donut-wrap">
+                  <div className="smart-v2-leads-donut">
+                    <div>
+                      <strong>3,224</strong>
+                      <span>Total Leads</span>
+                    </div>
+                  </div>
+                  <p className="smart-v2-leads-growth">▣ +28%</p>
+                  <small>vs last 30 days</small>
+                </div>
+              </div>
+            </article>
+
+            <article className="smart-v2-panel smart-v2-pipeline-panel">
+              <div className="smart-v2-panel-top">
+                <div>
+                  <h3>Pipeline Overview</h3>
+                  <span>Total Pipeline Value</span>
+                  <strong>$2.48M</strong>
+                </div>
+                <div className="smart-v2-growth">
+                  <b>+32.9% ↑</b>
+                  <small>vs last 30 days</small>
+                </div>
+              </div>
+
+              <div className="smart-v2-pipeline-stages">
+                {[
+                  ["New Leads", "128", "$320K"],
+                  ["Qualified", "64", "$540K"],
+                  ["Proposal", "32", "$680K"],
+                  ["Negotiation", "16", "$420K"],
+                  ["Closed Won", "8", "$520K"],
+                ].map(([label, value, amount]) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                    <small>{amount}</small>
+                  </div>
+                ))}
+              </div>
+
+              <div className="smart-v2-pipeline-chart">
+                <span className="smart-v2-chart-label">$3M</span>
+                <span className="smart-v2-chart-label l2">$2M</span>
+                <span className="smart-v2-chart-label l3">$1M</span>
+
+                <svg viewBox="0 0 520 160" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="smartRevenueArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.38" />
+                      <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+
+                  <polygon
+                    points="15,132 65,108 115,95 165,84 215,73 265,98 315,76 365,91 415,61 465,78 510,43 510,150 15,150"
+                    fill="url(#smartRevenueArea)"
+                  />
+
+                  <polyline
+                    points="15,132 65,108 115,95 165,84 215,73 265,98 315,76 365,91 415,61 465,78 510,43"
+                    fill="none"
+                    stroke="#7c4dff"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {[
+                    [15,132],[65,108],[115,95],[165,84],[215,73],
+                    [265,98],[315,76],[365,91],[415,61],[465,78],[510,43]
+                  ].map(([cx, cy], i) => (
+                    <circle key={i} cx={cx} cy={cy} r="3.5" fill="#9b6cff" />
+                  ))}
+                </svg>
+
+                <div className="smart-v2-months">
+                  <span>Jan</span><span>Feb</span><span>Mar</span>
+                  <span>Apr</span><span>May</span><span>Jun</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="smart-v2-panel smart-v2-task-panel">
+              <h3>Upcoming & Tasks</h3>
+
+              <div className="smart-v2-task-columns">
+                <div className="smart-v2-upcoming-card">
+                  <h4>Upcoming Appointments</h4>
+
+                  {[
+                    ["Project Discovery Call", "Today, 10:00 AM"],
+                    ["Demo Presentation", "Tomorrow, 2:00 PM"],
+                    ["Proposal Review", "May 16, 11:00 AM"],
+                  ].map(([title, time]) => (
+                    <div className="smart-v2-appointment" key={title}>
+                      <span><Clock4 size={15} /></span>
+                      <p>
+                        <b>{title}</b>
+                        <small>{time}</small>
+                      </p>
+                    </div>
+                  ))}
+
+                  <a href="#calendar">
+                    View Calendar <ChevronRight size={15} />
+                  </a>
+                </div>
+
+                <div className="smart-v2-tasks-card">
+                  <div className="smart-v2-tasks-head">
+                    <h4>Tasks</h4>
+                    <span>12</span>
+                  </div>
+
+                  {[
+                    ["Follow up with John S.", "High", "high"],
+                    ["Send proposal to ACME", "High", "high"],
+                    ["Prepare demo", "Medium", "medium"],
+                    ["Contract review", "Medium", "medium"],
+                    ["Check in with Sarah", "Low", "low"],
+                  ].map(([task, priority, tone]) => (
+                    <div className="smart-v2-task-row" key={task}>
+                      <i />
+                      <span>{task}</span>
+                      <small className={tone}>● {priority}</small>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </article>
           </div>
-          <div className="smart-block">
-            <div className="smart-block-card-wrap">
-              <div className="smart-block-card">
-                <Zap />
-                <p>{tr.smartBlock1}</p>
-              </div>
-            </div>
-            <div className="smart-block-card-wrap">
-              <div className="smart-block-card">
-                <Brain />
-                <p>{tr.smartBlock2}</p>
-              </div>
-            </div>
-            <div className="smart-block-card-wrap">
-              <div className="smart-block-card">
-                <Target />
-                <p>{tr.smartBlock2}</p>
-              </div>
-            </div>
-          </div>
-          <div className="smart-benefits">
-            <div>
-              <RotateCcw size={20} />
-              <div>
-                <h4>{tr.smartBenefit1Title}</h4>
-                <p>{tr.smartBenefit1Text}</p>
-              </div>
-            </div>
 
-            <div>
-              <Clock4 />
-              <div>
-                <h4>{tr.smartBenefit2Title}</h4>
-                <p>{tr.smartBenefit2Text}</p>
-              </div>
-            </div>
+          <div className="smart-v2-benefits">
+            {tr.smartV2Benefits.map((item, index) => {
+              const BenefitIcon = [Eye, GitMerge, Workflow, ChartNoAxesColumn][index];
 
-            <div>
-              <Users />
-              <div>
-                <h4>{tr.smartBenefit3Title}</h4>
-                <p>{tr.smartBenefit3Text}</p>
-              </div>
-            </div>
-
-            <div>
-              <ChartNoAxesCombined />
-              <div>
-                <h4>{tr.smartBenefit4Title}</h4>
-                <p>{tr.smartBenefit4Text}</p>
-              </div>
-            </div>
+              return (
+                <div className="smart-v2-benefit" key={item.title}>
+                  <div className="smart-v2-benefit-icon">
+                    <BenefitIcon size={29} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h4>{item.title}</h4>
+                    <p>{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="smart-cta">
-            <a href="/trial">{tr.smartButton} →</a>
+          <div className="smart-v2-cta">
+            <a href="/trial">
+              {tr.smartV2Cta}
+              <ArrowRight size={20} />
+            </a>
           </div>
-          <p className="smart-bottom">{tr.smartBottom}</p>
+
+          <p className="smart-v2-bottom">{tr.smartV2Bottom}</p>
         </div>
       </section>
 
@@ -2712,114 +2412,179 @@ export default function Landing() {
         </i>
       </section>
 
-      <section className="roi-section pt-50">
-        <div className="roi-container">
-          <h2 className="roi-title">{tr.roiTitle}</h2>
-          <p className="roi-sub">{tr.roiSub}</p>
-          <div className="roi-cta">
-            <a href="/trial" className="roi-btn">
-              {tr.heroCTA}
+      <section className="roi-section revenue-action-section pt-50">
+        <div className="revenue-action-container">
+          <div className="revenue-action-head">
+            <span className="revenue-action-eyebrow">{tr.revenueActionEyebrow}</span>
+            <h2 className="revenue-action-title">
+              {tr.revenueActionTitleLead} <strong>{tr.revenueActionTitleAccent}</strong>
+            </h2>
+            <p className="revenue-action-sub">{tr.revenueActionSub}</p>
+            <a href="/trial" className="revenue-action-btn">{tr.heroCTA}</a>
+          </div>
+
+          <div className="revenue-action-benefits">
+            {tr.revenueActionBenefits.map((item, index) => {
+              const RevenueIcon = [Target, CircleDollarSign, Workflow, ChartNoAxesColumn][index];
+              return (
+                <div className="revenue-action-benefit" key={item.title}>
+                  <div className="revenue-action-icon"><RevenueIcon size={30} strokeWidth={2.1} /></div>
+                  <h3>{item.title}</h3>
+                  <p>{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="cx-strip revenue-overview-section">
+        <div className="revenue-overview-shell">
+          <div className="revenue-overview-copy">
+            <span className="revenue-overview-eyebrow">{tr.revenueOverviewEyebrow}</span>
+            <h2>{tr.revenueOverviewTitle}</h2>
+            <p>{tr.revenueOverviewSub}</p>
+            <a href="/trial" className="revenue-overview-btn">
+              {tr.revenueOverviewCta} <ArrowRight size={18} />
             </a>
+            <div className="revenue-overview-checks">
+              <span><CheckCircle2 size={16} />{tr.revenueOverviewNoCard}</span>
+              <span><CheckCircle2 size={16} />{tr.revenueOverviewCancel}</span>
+            </div>
           </div>
-          
-          <div className="roi-grid">
-            <div className="roi-item">
-              <p className="roi-desc">{tr.roiStat1Desc}</p>
-            </div>
-            <div className="roi-item">
-              <p className="roi-desc">{tr.roiStat2Desc}</p>
-            </div>
-            <div className="roi-item">
-              <p className="roi-desc">{tr.roiStat3Desc}</p>
-            </div>
-            <div className="roi-item">
-              <p className="roi-desc">{tr.roiStat4Desc}</p>
+
+          <div className="revenue-dashboard">
+            <aside className="revenue-dashboard-sidebar">
+              <div className="revenue-dashboard-brand"><span>⬡</span>CORTEXA</div>
+              {[
+                ["⌂", "Overview", true], ["♙", "Leads"], ["⌘", "Pipeline"],
+                ["◎", "Contacts"], ["✓", "Tasks"], ["▣", "Appointments"],
+                ["▥", "Reports"], ["◇", "Documents"], ["⌘", "Integrations"], ["⚙", "Settings"],
+              ].map(([icon, label, active]) => (
+                <div className={`revenue-dashboard-nav ${active ? "active" : ""}`} key={label}>
+                  <span>{icon}</span>{label}
+                </div>
+              ))}
+
+              <div className="revenue-sidebar-team-card">
+                <span>Team Members</span>
+                <strong>24</strong>
+                <small>Active users</small>
+                <Users2 size={14} />
+              </div>
+            </aside>
+
+            <div className="revenue-dashboard-main">
+              <div className="revenue-dashboard-top">
+                <h3>Dashboard Overview</h3>
+                <span className="revenue-dashboard-date">
+                  <Clock4 size={13} /> May 1 – May 31, 2025 <ChevronRight size={12} />
+                </span>
+              </div>
+
+              <div className="revenue-dashboard-kpis">
+                {[
+                  ["Total Revenue", "$2,742,500", "+22%", "green", BadgeDollarSign],
+                  ["New Leads", "1,325", "+10%", "purple", UserRoundPlus],
+                  ["Opportunities", "87", "+15%", "blue", BriefcaseBusiness],
+                  ["Win Rate", "24%", "+6%", "green", BadgePercent],
+                ].map(([label, value, growth, tone, KpiIcon], index) => (
+                  <div className="revenue-dashboard-kpi" key={label}>
+                    <div className={`revenue-kpi-icon ${tone}`}>
+                      <KpiIcon size={14} strokeWidth={2} />
+                    </div>
+
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                    <small>▲ {growth} vs last month</small>
+
+                    <div className={`revenue-mini-line ${tone}`}>
+                      <svg viewBox="0 0 150 42" preserveAspectRatio="none" aria-hidden="true">
+                        <defs>
+                          <linearGradient id={`kpiArea-${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+
+                        <polygon
+                          points="2,34 18,29 33,31 48,24 64,27 80,18 95,23 110,15 126,18 148,7 148,42 2,42"
+                          fill={`url(#kpiArea-${index})`}
+                        />
+                        <polyline
+                          points="2,34 18,29 33,31 48,24 64,27 80,18 95,23 110,15 126,18 148,7"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="revenue-dashboard-middle">
+                <div className="revenue-pipeline-card">
+                  <h4>Pipeline Overview</h4><span>Total Pipeline Value</span><strong>$5,630,000</strong>
+                  <div className="revenue-bars">
+                    {[
+                      ["New", "38%", 38], ["Qualified", "24%", 60], ["Proposal", "33%", 82],
+                      ["Negotiation", "17%", 56], ["Closed Won", "8%", 32],
+                    ].map(([label, percent, height]) => (
+                      <div key={label}><i style={{ height: `${height}%` }} /><span>{label}</span><b>{percent}</b></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="revenue-task-card">
+                  <h4>Tasks Overview</h4>
+                  <div className="revenue-task-content">
+                    <div className="revenue-task-donut"><div><strong>128</strong><span>Total Tasks</span></div></div>
+                    <div className="revenue-task-legend">
+                      <span><i className="done"/>Completed <b>58</b></span>
+                      <span><i className="progress"/>In Progress <b>36</b></span>
+                      <span><i className="pending"/>Pending <b>24</b></span>
+                      <span><i className="overdue"/>Overdue <b>10</b></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="revenue-dashboard-bottom">
+                <div className="revenue-bottom-card revenue-appointments-card">
+                  <div className="revenue-bottom-title">
+                    <span>Appointments</span>
+                    <CalendarDays size={13} />
+                  </div>
+                  <small>Upcoming This Week</small>
+                  <strong>14</strong>
+                  <small>Meetings & Appointments</small>
+                </div>
+
+                <div className="revenue-bottom-card">
+                  <span>Top Activities</span>
+                  <small>Calls <b>48 ▲ 12%</b></small>
+                  <small>Emails <b>126 ▲ 20%</b></small>
+                  <small>Meetings <b>24 ▲ 8%</b></small>
+                </div>
+
+                <div className="revenue-bottom-card revenue-performance-card">
+                  <span>Team Performance</span>
+                  <small>This Month</small>
+                  <strong>92%</strong>
+                  <div className="revenue-goal-row">
+                    <small>Goal Progress</small>
+                    <i className="revenue-progress"><b /></i>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-      <section className="cx-strip pt-50 cta-section">
-        <div className="cta-container">
-          <div className="cta-box">
-            <div className="cta-left">
-              <p className="cta-label">{tr.stripLabel}</p>
-              <h2 className="cta-title">{tr.stripTitle}</h2>
-              <p className="cta-sub">{tr.stripSub}</p>
-              <div className="cta-actions">
-                <a href="/trial" className="cta-btn">
-                  {tr.stripBtn}
-                </a>
-              </div>
-              
-              <div className="cta-benefits">
-                <div>
-                  ⚡ <span>{tr.stripBenefit1}</span>
-                </div>
-                <div>
-                  🔒 <span>{tr.stripBenefit3}</span>
-                </div>
-              </div>
-            </div>
-            <div className="cta-right">
-              <div className="cta-card">
-                <div className="cta-card-head">
-                  <p>{tr.stripCardTitle}</p>
-                  <span>{tr.stripCardPeriod}</span>
-                </div>
-                <div className="cta-revenue">
-                  <p className="cta-money">$2,742,500</p>
-                  <p className="cta-growth">{tr.stripRevenueGrowth}</p>
-                </div>
-                <div className="cta-graph"></div>
-                <div className="cta-stats">
-                  <div>
-                    <p>{tr.stripLeads}</p>
-                    <strong>1,293</strong>
-                  </div>
-                  <div>
-                    <p>{tr.stripDeals}</p>
-                    <strong>87</strong>
-                  </div>
-                  <div>
-                    <p>{tr.stripRevenue}</p>
-                    <strong>$893K</strong>
-                  </div>
-                </div>
-                <div className="cta-ai">⚡ {tr.stripAI}</div>
-                <i>
-                  Product demo — the names, numbers, and activity shown are
-                  sample data for illustration only, not real customer results.
-                </i>
-              </div>
-            </div>
-            <div className="cta-glow"></div>
-          </div>
-        </div>
-      </section>
-      {/* FEATURES */}
-      <section id="automation" className="cx-section pt-50">
-        <div className="land-container">
-          <div className="cx-center cx-grid-intro">
-            <h2 className="cx-title-lg">{tr.featuresTitle}</h2>
-          </div>
-          <div className="cx-grid4">
-            {[feaImg1, feaImg2, feaImg3, feaImg4].map((img, i) => (
-              <div className="cx-card" key={i}>
-                <div>
-                  <span className={`cx-eyebrow cx-title-${i + 1}`}>
-                    {tr.cards[i].eyebrow}
-                  </span>
-                  <h3>{tr.cards[i].title}</h3>
-                  <p>{tr.cards[i].desc}</p>
-                </div>
-                <div className="cx-shot">
-                  <img src={img} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
       <section id="ai-assistant" className="cx-hero pt-50">
         <img src={currentaiSetterImg} alt="" />
       </section>
@@ -2922,7 +2687,7 @@ export default function Landing() {
             <Zap size={22} />
             {tr.heroCTA}
           </a>
-          
+
           <i>
             Product demo — the names, numbers, and activity shown are sample
             data for illustration only, not real customer results.
@@ -2954,7 +2719,7 @@ export default function Landing() {
                   <Zap size={18} />
                   {tr.startYourFreeTrial}
                 </a>
-                
+
                 <div className="footer-tags">
                   <span>{tr.tagAiPowered}</span>
                   <span>{tr.tagSecure}</span>
