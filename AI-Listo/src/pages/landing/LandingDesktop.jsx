@@ -1783,7 +1783,7 @@ export default function Landing() {
           </nav>
 
           <div className="cx-actions">
-            <a href="/trial" className="cx-btn cx-btn-primary- small">
+            <a href="/trial?flow=free-access&plan=free" className="cx-btn cx-btn-primary- small">
               {tr.trial}
             </a>
 
@@ -2562,7 +2562,7 @@ export default function Landing() {
           </div>
 
           <div className="smart-v2-cta">
-            <a href="/trial">
+            <a href="/trial?flow=free-access&plan=free">
               {tr.smartV2Cta}
               <ArrowRight size={20} />
             </a>
@@ -2591,7 +2591,7 @@ export default function Landing() {
               <strong>{tr.revenueActionTitleAccent}</strong>
             </h2>
             <p className="revenue-action-sub">{tr.revenueActionSub}</p>
-            <a href="/trial" className="revenue-action-btn">
+            <a href="/trial?flow=free-access&plan=free" className="revenue-action-btn">
               {tr.heroCTA}
             </a>
           </div>
@@ -2626,7 +2626,7 @@ export default function Landing() {
             </span>
             <h2>{tr.revenueOverviewTitle}</h2>
             <p>{tr.revenueOverviewSub}</p>
-            <a href="/trial" className="revenue-overview-btn">
+            <a href="/trial?flow=free-access&plan=free" className="revenue-overview-btn">
               {tr.revenueOverviewCta} <ArrowRight size={18} />
             </a>
             <div className="revenue-overview-checks">
@@ -2943,7 +2943,7 @@ export default function Landing() {
             {tr.finalDesc} <span className="text-os">{tr.finalDesc1}</span>
           </p>
 
-          <a href="/trial" className="cx-btn cx-btn-secondary">
+          <a href="/trial?flow=free-access&plan=free" className="cx-btn cx-btn-secondary">
             <Zap size={22} />
             {tr.heroCTA}
           </a>
@@ -2975,7 +2975,7 @@ export default function Landing() {
 
                 <p>{tr.footerDescription}</p>
 
-                <a href="/trial" className="btn-primary">
+                <a href="/trial?flow=free-access&plan=free" className="btn-primary">
                   <Zap size={18} />
                   {tr.heroCTA}
                 </a>
@@ -3029,7 +3029,7 @@ export default function Landing() {
                 <h3>{tr.getStarted}</h3>
                 <ul>
                   <li>
-                    <a href="/trial">{tr.getStarted}</a>
+                    <a href="/trial?flow=free-access&plan=free">{tr.getStarted}</a>
                   </li>
                   <li>
                     <a href="/sign-in">{tr.login}</a>

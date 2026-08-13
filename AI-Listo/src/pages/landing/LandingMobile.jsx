@@ -311,7 +311,7 @@ function ReportingSection({ tr }) {
               {copy.footerTitle2}
             </h2>
             <p className="fdes">{copy.footerDescription}</p>
-            <a href="/trial" className="trial-wrap">
+            <a href="/trial?flow=free-access&plan=free" className="trial-wrap">
               <div className="trial-wrap-in">
                 <span>{tr.ctaButtonText}</span>
                 <p className="m-bottom-subtext">{tr.finalCtaSubBtn1}!</p>
@@ -2458,7 +2458,7 @@ export default function LandingMobile() {
 
           <p className="m-flow-new-description">{tr.flowNewDescription}</p>
 
-          <Link to="/trial" className="m-flow-new-button">
+          <Link to="/trial?flow=free-access&plan=free" className="m-flow-new-button">
             <span>{tr.flowNewButton}</span>
             <ArrowRight size={18} />
           </Link>
@@ -2600,7 +2600,7 @@ export default function LandingMobile() {
         </div>
 
         <div className="m-final-cta-action">
-          <a href="/trial" className="m-final-purple-btn">
+          <a href="/trial?flow=free-access&plan=free" className="m-final-purple-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="16"
@@ -2725,7 +2725,7 @@ export default function LandingMobile() {
           </p>
 
           <div className="m-bottom-action-wrapper">
-            <a href="/trial" className="m-bottom-primary-btn">
+            <a href="/trial?flow=free-access&plan=free" className="m-bottom-primary-btn">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -3317,7 +3317,7 @@ export default function LandingMobile() {
 
           <div className="m-footer-column">
             <h4>{tr.colGetStarted}</h4>
-            <a href="/trial">{tr.fStart}</a>
+            <a href="/trial?flow=free-access&plan=free">{tr.fStart}</a>
             <a href="/sign-in">{tr.fLogin}</a>
             <a href="/setup-guide">{tr.fSetup}</a>
           </div>
