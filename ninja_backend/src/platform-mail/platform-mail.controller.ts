@@ -15,6 +15,11 @@ const TEST_TEMPLATES: TemplateName[] = [
   'abandoned_3',
   'payment_failed',
   'subscription_canceled',
+  'free_welcome',
+  'free_plan_value',
+  'free_ai',
+  'free_team',
+  'free_upgrade',
 ];
 
 // Admin-only visibility into platform lifecycle email delivery (welcome +
@@ -62,5 +67,23 @@ export class PlatformMailController {
       status: result.status,
       reason: result.reason,
     };
+  }
+
+  @Post('test-free-onboarding')
+  @ApiOperation({
+    summary: 'Send all 5 Free-onboarding emails to any address (admin)',
+  })
+  async testFreeOnboarding(@Body() body: { to?: string; language?: string }) {
+    const to = String(body?.to || '').trim();
+    const language = String(body?.language || 'en')
+      .slice(0, 2)
+      .toLowerCase();
+
+    if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      return { ok: false, error: 'A valid recipient email is required.' };
+    }
+
+    const results = await this.mailer.sendFreeOnboardingTest(to, language);
+    return { ok: results.every((r) => r.sent), results };
   }
 }
