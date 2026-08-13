@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import "./InsuranceWorkspace.css";
 import insuranceApi from "../../api/insuranceApi";
+import PolicyModal from "./PolicyModal";
 
 // NOTE: The KPI cards, Policies-by-Type, Recent Activity and Upcoming Renewals
 // below still use placeholder data. They are wired to live backend data in their
@@ -110,7 +111,7 @@ function toPolicyRow(p) {
   const period = start && end ? `${start} - ${end}` : start || end || "-";
   const carrier = p.carrierName || "-";
   return {
-    key: p.id,
+    uuid: p.id,
     id: p.policyNumber || p.id,
     holder: p.holderName || p.contactName || "-",
     contact: p.contactName || "",
@@ -168,6 +169,14 @@ export default function InsuranceWorkspace() {
   const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("view");
+  const [modalPolicyId, setModalPolicyId] = useState(null);
+  // Bumped on every open so the modal remounts fresh (no stale header / stuck
+  // loading state carried over from a previous open).
+  const [modalNonce, setModalNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -199,7 +208,7 @@ export default function InsuranceWorkspace() {
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [search, page, limit]);
+  }, [search, page, limit, refreshTick]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const safePage = Math.min(page, totalPages);
@@ -209,6 +218,33 @@ export default function InsuranceWorkspace() {
     () => pageWindow(safePage, totalPages),
     [safePage, totalPages],
   );
+
+  const openCreate = () => {
+    setModalMode("create");
+    setModalPolicyId(null);
+    setModalNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+  const openView = (id) => {
+    setModalMode("view");
+    setModalPolicyId(id);
+    setModalNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+  const openEdit = (id) => {
+    setModalMode("edit");
+    setModalPolicyId(id);
+    setModalNonce((n) => n + 1);
+    setModalOpen(true);
+  };
+  const closeModal = () => setModalOpen(false);
+  const handleSaved = () => setRefreshTick((t) => t + 1);
+
+  // Keep the current page within range after the list shrinks (e.g. deleting the
+  // last row on the last page), so the table and footer don't desync.
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   return (
     <div className="insurance-ws">
@@ -224,7 +260,7 @@ export default function InsuranceWorkspace() {
             <input placeholder="Search policies, claims, clients, documents..." />
             <kbd>⌘ K</kbd>
           </label>
-          <button className="insurance-ws-new">
+          <button className="insurance-ws-new" onClick={openCreate}>
             <Plus size={15} />
             New
           </button>
@@ -286,7 +322,7 @@ export default function InsuranceWorkspace() {
             <button><Upload size={14} /> Import</button>
             <button><Download size={14} /> Export</button>
             <button><Settings2 size={14} /></button>
-            <button className="primary"><Plus size={14} /> New Policy</button>
+            <button className="primary" onClick={openCreate}><Plus size={14} /> New Policy</button>
           </div>
         </div>
 
@@ -359,7 +395,7 @@ export default function InsuranceWorkspace() {
                 </tr>
               ) : (
                 policies.map((policy) => (
-                  <tr key={policy.key}>
+                  <tr key={policy.uuid}>
                     <td><input type="checkbox" /></td>
                     <td className="policy-id">{policy.id}</td>
 
@@ -420,9 +456,21 @@ export default function InsuranceWorkspace() {
 
                     <td>
                       <div className="insurance-ws-row-actions">
-                        <Eye size={14} />
-                        <Pencil size={14} />
-                        <MoreVertical size={14} />
+                        <Eye
+                          size={14}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => openView(policy.uuid)}
+                        />
+                        <Pencil
+                          size={14}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => openEdit(policy.uuid)}
+                        />
+                        <MoreVertical
+                          size={14}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => openView(policy.uuid)}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -552,6 +600,15 @@ export default function InsuranceWorkspace() {
           <button className="insurance-ws-link-btn">View all renewals →</button>
         </div>
       </div>
+
+      <PolicyModal
+        key={modalNonce}
+        open={modalOpen}
+        mode={modalMode}
+        policyId={modalPolicyId}
+        onClose={closeModal}
+        onSaved={handleSaved}
+      />
     </div>
   );
 }

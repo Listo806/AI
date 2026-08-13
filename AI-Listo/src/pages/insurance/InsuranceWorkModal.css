@@ -1,0 +1,202 @@
+/* Reusable Insurance Work Modal — generic clean V1. Self-contained so it does
+   not depend on or alter the workspace styles. */
+.iw-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+.iw-modal {
+  background: #ffffff;
+  color: #0f172a;
+  width: 100%;
+  max-width: 720px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+.iw-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.iw-modal-head h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+.iw-modal-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+.iw-modal-close {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: inline-flex;
+}
+.iw-modal-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.iw-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.iw-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+/* Buttons */
+.iw-btn {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 9px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.iw-btn:hover {
+  background: #f8fafc;
+}
+.iw-btn.primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+.iw-btn.primary:hover {
+  background: #1d4ed8;
+}
+.iw-btn.danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.iw-btn.danger:hover {
+  background: #fef2f2;
+}
+.iw-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.iw-btn-spacer {
+  margin-right: auto;
+}
+
+/* Form */
+.iw-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.iw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.iw-field.full {
+  grid-column: 1 / -1;
+}
+.iw-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+.iw-field input,
+.iw-field select,
+.iw-field textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #ffffff;
+  font-family: inherit;
+}
+.iw-field input:focus,
+.iw-field select:focus,
+.iw-field textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.iw-field textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.iw-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+/* Read-only detail */
+.iw-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+  margin: 0;
+}
+.iw-detail > div.full {
+  grid-column: 1 / -1;
+}
+.iw-detail dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 2px;
+}
+.iw-detail dd {
+  margin: 0;
+  font-size: 14px;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.iw-loading {
+  padding: 24px 0;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .iw-modal-overlay {
+    padding: 0;
+  }
+  .iw-modal {
+    max-width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  .iw-form,
+  .iw-detail {
+    grid-template-columns: 1fr;
+  }
+}
