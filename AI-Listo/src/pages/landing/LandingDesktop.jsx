@@ -2717,7 +2717,7 @@ export default function Landing() {
 
                 <a href="/trial" className="btn-primary">
                   <Zap size={18} />
-                  {tr.startYourFreeTrial}
+                  {tr.heroCTA}
                 </a>
 
                 <div className="footer-tags">
