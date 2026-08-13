@@ -263,6 +263,17 @@ export class TrialService {
         } catch (_e) {
           /* non-fatal */
         }
+      } else if (isFree) {
+        // New Free Forever account -> enroll in the Free-user onboarding sequence.
+        try {
+          await this.mailer.scheduleFreeOnboardingSequence(
+            newUserId,
+            email,
+            lang,
+          );
+        } catch (_e) {
+          /* non-fatal */
+        }
       }
 
       const session = await this.authService.loginById(newUserId);
@@ -305,6 +316,22 @@ export class TrialService {
       );
       try {
         await this.mailer.cancelScheduled(userId);
+      } catch (_e) {
+        /* non-fatal */
+      }
+      // Account-first user just activated Free -> enroll in Free onboarding.
+      try {
+        const { rows: u } = await this.db.query(
+          `SELECT email, preferred_language FROM users WHERE id = $1`,
+          [userId],
+        );
+        if (u[0]?.email) {
+          await this.mailer.scheduleFreeOnboardingSequence(
+            userId,
+            u[0].email,
+            u[0].preferred_language || 'en',
+          );
+        }
       } catch (_e) {
         /* non-fatal */
       }
@@ -389,6 +416,22 @@ export class TrialService {
       // Void any still-pending lifecycle emails for this now-Free account.
       try {
         await this.mailer.cancelScheduled(user.id);
+      } catch (_e) {
+        /* non-fatal */
+      }
+      // Recovery just activated Free -> enroll in the Free onboarding sequence.
+      try {
+        const { rows: u } = await this.db.query(
+          `SELECT email, preferred_language FROM users WHERE id = $1`,
+          [user.id],
+        );
+        if (u[0]?.email) {
+          await this.mailer.scheduleFreeOnboardingSequence(
+            user.id,
+            u[0].email,
+            u[0].preferred_language || 'en',
+          );
+        }
       } catch (_e) {
         /* non-fatal */
       }

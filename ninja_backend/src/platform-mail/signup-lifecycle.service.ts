@@ -42,6 +42,16 @@ export class SignupLifecycleService {
     );
   }
 
+  // Free-user onboarding sequence ships behind its own flag (default OFF) so it can
+  // be tested and enabled independently of the abandoned/recovery sequences.
+  private freeOnboardingEnabled(): boolean {
+    return (
+      String(this.config.get('FREE_ONBOARDING_EMAILS_ENABLED') || '')
+        .trim()
+        .toLowerCase() === 'true'
+    );
+  }
+
   @Cron(CronExpression.EVERY_5_MINUTES)
   async sweepAbandonedSignups(): Promise<void> {
     if (!this.enabled()) return; // hard off by default
@@ -61,6 +71,18 @@ export class SignupLifecycleService {
       await this.mailer.sendRecoveryDue();
     } catch (err: any) {
       this.logger.error(`recovery sweep failed: ${err?.message}`);
+    }
+  }
+
+  // Every minute so email #1 lands near "immediately" after a Free signup. Hard
+  // off unless FREE_ONBOARDING_EMAILS_ENABLED.
+  @Cron(CronExpression.EVERY_MINUTE)
+  async sweepFreeOnboarding(): Promise<void> {
+    if (!this.freeOnboardingEnabled()) return; // hard off by default
+    try {
+      await this.mailer.sendFreeOnboardingDue();
+    } catch (err: any) {
+      this.logger.error(`free-onboarding sweep failed: ${err?.message}`);
     }
   }
 }

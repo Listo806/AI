@@ -5,6 +5,7 @@ import { SignupsAdminService } from './signups-admin.service';
 import { CustomersAdminService } from './customers-admin.service';
 import { PlatformMailController } from './platform-mail.controller';
 import { EmailTrackController } from './email-track.controller';
+import { EmailUnsubscribeController } from './email-unsubscribe.controller';
 import { SignupsAdminController } from './signups-admin.controller';
 import { CustomersAdminController } from './customers-admin.controller';
 import { SendgridEventsController } from './sendgrid-events.controller';
@@ -19,6 +20,7 @@ import { PlansModule } from '../plans/plans.module';
   controllers: [
     PlatformMailController,
     EmailTrackController,
+    EmailUnsubscribeController,
     SignupsAdminController,
     CustomersAdminController,
     SendgridEventsController,

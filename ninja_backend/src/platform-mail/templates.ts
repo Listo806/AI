@@ -21,7 +21,13 @@ export type TemplateName =
   | 'abandoned_3'
   | 'payment_failed'
   | 'subscription_canceled'
-  | 'recovery';
+  | 'recovery'
+  // Free-user onboarding sequence (signup, day 3, 5, 7, 10).
+  | 'free_welcome'
+  | 'free_plan_value'
+  | 'free_ai'
+  | 'free_team'
+  | 'free_upgrade';
 export type MailLang = 'en' | 'es' | 'pt';
 
 export interface RenderedEmail {
@@ -43,6 +49,13 @@ export interface TemplateVars {
   editorialUrl?: string;
   // Support contact shown in welcome, getting_started, and the billing emails.
   supportEmail?: string;
+  // Free-onboarding: per-recipient unsubscribe link -> renders a footer opt-out.
+  unsubscribeUrl?: string;
+  // Free-onboarding email #3 only: the account's real Free-plan AI allowance
+  // (from plan-config). Renders an "up to N AI conversations / month" line.
+  aiAllowance?: number | null;
+  // Optional physical/business address line for the footer (CAN-SPAM).
+  businessAddress?: string | null;
 }
 
 const BRAND = 'Cortexa AI CRM';
@@ -55,7 +68,7 @@ function normalizeLang(lang?: string): MailLang {
   return l === 'es' || l === 'pt' ? (l as MailLang) : 'en';
 }
 
-function layout(innerHtml: string): string {
+function layout(innerHtml: string, footerExtra?: string): string {
   return `
   <div style="background:#f1f5f9;padding:24px 0;font-family:Arial,Helvetica,sans-serif">
     <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">
@@ -66,10 +79,28 @@ function layout(innerHtml: string): string {
         ${innerHtml}
       </div>
       <div style="padding:18px 28px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px;line-height:1.5">
-        ${BRAND}
+        ${BRAND}${footerExtra || ''}
       </div>
     </div>
   </div>`;
+}
+
+// A hidden preheader (inbox preview text) placed before the visible content.
+function preheaderHtml(text?: string): string {
+  if (!text) return '';
+  return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${text}</div>`;
+}
+
+// Jira-style green-check list for the onboarding emails.
+function checklistHtml(items?: string[]): string {
+  if (!items || !items.length) return '';
+  const rows = items
+    .map(
+      (s) =>
+        `<tr><td style="vertical-align:top;color:#16a34a;padding:0 8px 8px 0;font-weight:700">&#10003;</td><td style="padding:0 0 8px;color:#334155">${s}</td></tr>`,
+    )
+    .join('');
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;border-collapse:collapse">${rows}</table>`;
 }
 
 function button(label: string, url: string): string {
@@ -92,17 +123,29 @@ function dashLabel(lang: MailLang): string {
   return 'Open your dashboard';
 }
 
+function unsubLabel(lang: MailLang): string {
+  if (lang === 'es') return 'Cancelar suscripción';
+  if (lang === 'pt') return 'Cancelar inscrição';
+  return 'Unsubscribe';
+}
+
 interface Copy {
   subject: string;
   heading: string;
   intro: string[]; // paragraphs before the button
   cta: string; // primary button label
-  steps?: string[]; // getting-started list (welcome-style)
+  steps?: string[]; // getting-started list (welcome-style, bulleted)
+  checklist?: string[]; // Jira-style green-check list (free-onboarding)
+  outro?: string[]; // paragraphs after the checklist, before the button
+  preheader?: string; // hidden inbox preview text
+  aiLine?: string; // free_ai: sentence wrapping the {aiAllowance} number
   editorialLabel?: string; // abandoned_2: text for the editorial link line
   support?: string; // support line (uses supportEmail)
 }
 
-const COPY: Record<TemplateName, Record<MailLang, Copy>> = {
+// Partial per-locale so a template can ship English-only and fall back to it
+// (renderTemplate resolves the locale or English). Every template must have `en`.
+const COPY: Record<TemplateName, Partial<Record<MailLang, Copy>>> = {
   welcome: {
     en: {
       subject: 'Welcome to Cortexa AI CRM — your account is active',
@@ -377,6 +420,129 @@ const COPY: Record<TemplateName, Record<MailLang, Copy>> = {
       support: 'Se foi um engano ou precisa de ajuda, fale conosco em',
     },
   },
+
+  // ===== Free-user onboarding sequence =====
+  // English copy per the client spec. es/pt recipients fall back to English for
+  // V1 (renderTemplate resolves the locale or English); translations later.
+  free_welcome: {
+    en: {
+      subject: 'Welcome to Cortexa — Your Account Is Ready',
+      preheader:
+        'Everything you need to start organizing your business is ready.',
+      heading: 'Welcome to Cortexa',
+      intro: [
+        'Your account is ready.',
+        'Cortexa gives you one connected place to organize your leads, contacts, pipeline, tasks, customer activity, and business data.',
+        'A good place to start:',
+      ],
+      checklist: [
+        'Add or review your contacts',
+        'Organize your leads',
+        'Set up your pipeline',
+        'Explore your dashboard',
+      ],
+      outro: [
+        "You don't have to learn everything today.",
+        'Start with what your business needs most and build from there.',
+      ],
+      cta: 'Open Cortexa',
+      support: 'Need help? Reply to this email or contact',
+    },
+  },
+  free_plan_value: {
+    en: {
+      subject: "Here's What You Get With Cortexa Free",
+      preheader: 'Your Free Forever account has more waiting for you.',
+      heading: "Here's what you get with Cortexa Free",
+      intro: [
+        'Your Cortexa Free Forever account is yours to keep.',
+        'You can use it to start managing important parts of your business from one connected workspace.',
+        'Your Free account includes access to core capabilities such as:',
+      ],
+      checklist: [
+        'Contact management',
+        'Lead organization',
+        'Pipeline visibility',
+        'Dashboard access',
+        'Basic business tools',
+        'Cortexa AI assistance with limited monthly usage',
+      ],
+      outro: [
+        'There is no need to upgrade just to keep your Free account.',
+        'Use Cortexa, learn what works for your business, and expand when you need more.',
+        "Need help deciding where to start? Reply to this email and tell us what kind of business you run, and we'll point you in the right direction.",
+      ],
+      cta: 'Explore my account',
+    },
+  },
+  free_ai: {
+    en: {
+      subject: 'Your Cortexa AI Is Ready When You Need It',
+      preheader: 'See how AI assistance fits into your Cortexa workspace.',
+      heading: 'Your Cortexa AI is ready when you need it',
+      intro: [
+        'Cortexa AI is built into your workspace to help you work with the information and activity inside your CRM.',
+        'Your Free Forever account includes limited AI usage each month.',
+      ],
+      aiLine:
+        'Your Free plan includes up to {aiAllowance} AI conversations each month.',
+      outro: [
+        'The Free plan is designed to let you experience Cortexa AI while keeping your core CRM available to you.',
+        'If your business eventually needs more AI capacity or additional capabilities, you can explore the available upgrades from inside your account.',
+        "Questions about what AI can help you with? Reply to this email and tell us what you're trying to accomplish.",
+      ],
+      cta: 'Explore Cortexa AI',
+    },
+  },
+  free_team: {
+    en: {
+      subject: 'Bring Your Work Together in Cortexa',
+      preheader:
+        'Keep your business activity organized in one connected workspace.',
+      heading: 'Bring your work together in Cortexa',
+      intro: [
+        'Cortexa becomes even more useful when the people and information behind your business stay connected.',
+        'Use your workspace to keep track of:',
+      ],
+      checklist: [
+        'Leads and contacts',
+        'Pipeline activity',
+        'Tasks and responsibilities',
+        'Customer information',
+        'Business activity',
+      ],
+      outro: [
+        'If your current plan supports additional users, you can bring your team into the same workspace and keep everyone working from the same information.',
+        'Working by yourself? No problem. Cortexa works for solo businesses too, so keep using your workspace to organize the parts of your business that matter most.',
+      ],
+      cta: 'Open my workspace',
+    },
+  },
+  free_upgrade: {
+    en: {
+      subject: 'What Could Cortexa Do for Your Business?',
+      preheader: "Tell us what you do and we'll help you find the right setup.",
+      heading: 'What could Cortexa do for your business?',
+      intro: [
+        'Every business uses Cortexa differently.',
+        'A real estate business may need different tools than an agency, service company, sales team, or growing organization.',
+        'That is why Cortexa can grow beyond your Free account.',
+        'Depending on what your business needs, you can access additional plans and Workspaces with expanded capabilities.',
+        'Not sure what makes sense for you? Tell us:',
+      ],
+      checklist: [
+        'What kind of business do you run?',
+        'What are you trying to manage or improve?',
+        'What is taking up too much of your time today?',
+      ],
+      outro: [
+        "Reply directly to this email and we'll help point you toward the Cortexa setup that makes the most sense for your business.",
+        'No pressure to upgrade. Your Free Forever account remains available while you decide what your business needs.',
+      ],
+      cta: 'Explore plans & workspaces',
+      support: 'Or simply reply to this email:',
+    },
+  },
 };
 
 export function renderTemplate(
@@ -385,9 +551,17 @@ export function renderTemplate(
   vars: TemplateVars,
 ): RenderedEmail {
   const l = normalizeLang(lang);
-  const c = COPY[name][l];
+  // Locale copy with an English fallback (every template guarantees `en`).
+  const c = COPY[name][l] || (COPY[name].en as Copy);
 
   const paras = c.intro.map((p) => `<p style="margin:0 0 12px">${p}</p>`).join('');
+
+  // AI-allowance line (free_ai email #3): real number from plan-config.
+  let aiBlock = '';
+  if (c.aiLine && vars.aiAllowance != null) {
+    const line = c.aiLine.replace('{aiAllowance}', String(vars.aiAllowance));
+    aiBlock = `<div style="margin:16px 0;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#0f172a;font-size:14px">${line}</div>`;
+  }
 
   // Extras are driven by the copy fields + provided vars, not the template name,
   // so any template can carry steps, a dashboard link, an editorial link, or a
@@ -412,16 +586,41 @@ export function renderTemplate(
       <a href="mailto:${vars.supportEmail}" style="color:${ACCENT}">${vars.supportEmail}</a></p>`;
   }
 
-  const html = layout(
-    `<h2 style="margin:0 0 16px;font-size:20px">${c.heading}</h2>
+  // Footer support + address + unsubscribe, but ONLY for emails that carry an
+  // unsubscribe link (the onboarding sequence). Other lifecycle emails keep their
+  // existing footer untouched.
+  let footerExtra = '';
+  if (vars.unsubscribeUrl) {
+    if (vars.supportEmail) {
+      footerExtra += `<br>Need help? <a href="mailto:${vars.supportEmail}" style="color:#94a3b8">${vars.supportEmail}</a>`;
+    }
+    if (vars.businessAddress) {
+      footerExtra += `<br>${vars.businessAddress}`;
+    }
+    footerExtra += `<br><a href="${vars.unsubscribeUrl}" style="color:#94a3b8;text-decoration:underline">${unsubLabel(l)}</a>`;
+  }
+
+  const html =
+    preheaderHtml(c.preheader) +
+    layout(
+      `<h2 style="margin:0 0 16px;font-size:20px">${c.heading}</h2>
      <p style="margin:0 0 12px">${greeting(l, vars.name)}</p>
      ${paras}
+     ${checklistHtml(c.checklist)}
+     ${aiBlock}
+     ${(c.outro || []).map((p) => `<p style="margin:0 0 12px">${p}</p>`).join('')}
      ${button(c.cta, vars.ctaUrl)}
      ${extra}
      <p style="color:#94a3b8;font-size:12px;word-break:break-all;margin-top:16px">${vars.ctaUrl}</p>`,
-  );
+      footerExtra,
+    );
 
   const textLines = [c.heading, '', greeting(l, vars.name), '', ...c.intro];
+  if (c.checklist) textLines.push('', ...c.checklist.map((s) => `- ${s}`));
+  if (c.aiLine && vars.aiAllowance != null) {
+    textLines.push('', c.aiLine.replace('{aiAllowance}', String(vars.aiAllowance)));
+  }
+  if (c.outro) textLines.push('', ...c.outro);
   if (c.steps) textLines.push('', ...c.steps);
   if (c.editorialLabel && vars.editorialUrl) {
     textLines.push('', `${c.editorialLabel}: ${vars.editorialUrl}`);
@@ -429,6 +628,9 @@ export function renderTemplate(
   textLines.push('', `${c.cta}: ${vars.ctaUrl}`);
   if (c.support && vars.supportEmail) {
     textLines.push('', `${c.support} ${vars.supportEmail}`);
+  }
+  if (vars.unsubscribeUrl) {
+    textLines.push('', `${unsubLabel(l)}: ${vars.unsubscribeUrl}`);
   }
   const text = textLines.join('\n');
 
