@@ -92,6 +92,7 @@ import FinancialServicesWorkspace from "./pages/financial/FinancialServicesWorks
 import CustomerServiceWorkspace from "./pages/customer-service/CustomerServiceWorkspace";
 import MarketingWorkspace from "./pages/marketing/MarketingWorkspace";
 import ProjectWorkspace from "./pages/projects/ProjectWorkspace";
+import ECommerceWorkspace from "./pages/ecommerce/ECommerceWorkspace";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
@@ -414,6 +415,9 @@ function AppRoutes() {
 
         {/* Projects Workspace */}
         <Route path="projects-workspace" element={<ProjectWorkspace />} />
+
+        {/* E-Commerce Workspace — currently mirrors AdminCustomers */}
+        <Route path="e-commerce-workspace" element={<ECommerceWorkspace />} />
 
         {/* Team Route (paid: team workspace) */}
         <Route

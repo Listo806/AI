@@ -160,6 +160,7 @@ export default function Sidebar({
       perfectFor: ["Subscription Businesses","E-Commerce Companies","SaaS Businesses","Membership Businesses","Recurring Revenue Companies"],
       benefits: [["shopping-bag","COMPLETE SUBSCRIPTION OPERATIONS","Manage customers, subscriptions, plans, billing status, payments, seats, and account activity from one organized workspace."],["refresh-cw","BILLING CALENDAR","See upcoming billing, successful payments, failed payments, retries, past-due accounts, and scheduled billing activity from one powerful calendar."],["pie-chart","RECURRING REVENUE CONTROL","Track subscription activity, customer lifetime value, payment performance, cancellations, and recurring revenue with clear operational visibility."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, analytics, team data, and CRM activity."]],
       price: 97,
+      path: "/dashboard/e-commerce-workspace",
     },
     {
       id: "customer-service",
