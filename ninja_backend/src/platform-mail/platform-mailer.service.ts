@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { ConfigService } from '../config/config.service';
 import { renderTemplate, TemplateName, TemplateVars } from './templates';
+import { getPlan } from '../plans/plan-config';
 
 export interface SendResult {
   sent: boolean;
@@ -63,6 +64,12 @@ export class PlatformMailerService {
         `recovery_token_expires TIMESTAMPTZ`,
         `recovery_activated_at TIMESTAMPTZ`,
         `recovery_source VARCHAR(48)`,
+        // Email marketing opt-out, hard-bounce suppression, and a stable
+        // per-user unsubscribe token for the onboarding footer link.
+        `email_opt_out BOOLEAN NOT NULL DEFAULT false`,
+        `email_opt_out_at TIMESTAMPTZ`,
+        `email_bounced_at TIMESTAMPTZ`,
+        `email_unsub_token TEXT`,
       ];
       for (const c of userCols) {
         await this.db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${c}`);
@@ -110,6 +117,13 @@ export class PlatformMailerService {
       );
       await this.db.query(
         `CREATE INDEX IF NOT EXISTS idx_email_log_due ON email_log(status, scheduled_at)`,
+      );
+      // One row per (user, Free-onboarding template) ever, so concurrent
+      // enrollments (e.g. a double-clicked "Select Free") can never duplicate.
+      await this.db.query(
+        `CREATE UNIQUE INDEX IF NOT EXISTS idx_email_log_free_uniq
+           ON email_log(user_id, template)
+          WHERE template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')`,
       );
       this.schemaReady = true;
     } catch (err: any) {
@@ -643,6 +657,7 @@ export class PlatformMailerService {
            JOIN users u ON u.id = el.user_id
           WHERE el.status = 'scheduled'
             AND el.scheduled_at <= NOW()
+            AND el.template IN ('abandoned_1', 'abandoned_2', 'abandoned_3')
           ORDER BY el.scheduled_at ASC
           LIMIT 200`,
       );
@@ -719,6 +734,228 @@ export class PlatformMailerService {
           [r.id],
         );
       }
+    }
+  }
+
+  // ---- Free-user onboarding sequence (signup, day 3, 5, 7, 10) ----
+
+  // Stable per-user unsubscribe token, created lazily and stored once.
+  private async getOrCreateUnsubToken(userId: string): Promise<string | null> {
+    if (!userId) return null;
+    try {
+      const { rows } = await this.db.query(
+        `SELECT email_unsub_token FROM users WHERE id = $1`,
+        [userId],
+      );
+      if (rows[0]?.email_unsub_token) return rows[0].email_unsub_token;
+      const tok = crypto.randomBytes(24).toString('hex');
+      await this.db.query(
+        `UPDATE users SET email_unsub_token = COALESCE(email_unsub_token, $2) WHERE id = $1`,
+        [userId, tok],
+      );
+      const { rows: after } = await this.db.query(
+        `SELECT email_unsub_token FROM users WHERE id = $1`,
+        [userId],
+      );
+      return after[0]?.email_unsub_token || tok;
+    } catch {
+      return null;
+    }
+  }
+
+  private unsubUrl(token: string): string {
+    return `${this.backendUrl()}/api/email/unsubscribe?token=${encodeURIComponent(token)}`;
+  }
+
+  // Enqueue the 5 Free-onboarding emails. Idempotent per (user, template) via the
+  // NOT EXISTS guard, so the same signup can never enroll twice.
+  async scheduleFreeOnboardingSequence(
+    userId: string,
+    email: string,
+    lang?: string,
+  ): Promise<void> {
+    if (!userId || !email) return;
+    await this.ensureSchema();
+    const plan: Array<[TemplateName, string]> = [
+      ['free_welcome', "INTERVAL '1 minute'"],
+      ['free_plan_value', "INTERVAL '3 days'"],
+      ['free_ai', "INTERVAL '5 days'"],
+      ['free_team', "INTERVAL '7 days'"],
+      ['free_upgrade', "INTERVAL '10 days'"],
+    ];
+    try {
+      for (const [template, iv] of plan) {
+        await this.db.query(
+          `INSERT INTO email_log
+             (user_id, to_email, template, language, status, scheduled_at, track_token, created_at)
+           SELECT $1, $2, $3, $4, 'scheduled', NOW() + ${iv}, gen_random_uuid(), NOW()
+            WHERE NOT EXISTS (
+              SELECT 1 FROM email_log
+               WHERE user_id = $1 AND template = $3
+                 AND status IN ('scheduled', 'sending', 'sent'))
+           ON CONFLICT DO NOTHING`,
+          [userId, email, template, String(lang || 'en').slice(0, 5)],
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(
+        `scheduleFreeOnboardingSequence failed: ${err?.message}`,
+      );
+    }
+  }
+
+  // Per-template CTA (deep-linked to the authenticated page), first name, support,
+  // unsubscribe link, and the real Free-plan AI allowance for email #3.
+  private freeOnboardingVars(
+    template: string,
+    name: string | null,
+    unsubscribeUrl: string | null,
+  ): TemplateVars {
+    const app = this.appUrl();
+    const cta: Record<string, string> = {
+      free_welcome: `${app}/dashboard/home`,
+      free_plan_value: `${app}/dashboard/home`,
+      free_ai: `${app}/dashboard/ai-center`,
+      free_team: `${app}/dashboard/team`,
+      free_upgrade: `${app}/pricing`,
+    };
+    const vars: TemplateVars = {
+      name: name ? String(name).trim().split(/\s+/)[0] : null,
+      ctaUrl: cta[template] || `${app}/dashboard/home`,
+      supportEmail: this.supportEmail(),
+    };
+    if (unsubscribeUrl) vars.unsubscribeUrl = unsubscribeUrl;
+    const addr = this.config.get('EMAIL_BUSINESS_ADDRESS');
+    if (addr) vars.businessAddress = addr;
+    if (template === 'free_ai') {
+      vars.aiAllowance = getPlan('free').limits.aiConversationsPerMonth ?? null;
+    }
+    return vars;
+  }
+
+  // Cron worker: send due Free-onboarding emails, stopping the sequence on upgrade
+  // to paid, marketing opt-out, or a hard bounce. Separate from sendScheduledDue.
+  async sendFreeOnboardingDue(): Promise<void> {
+    await this.ensureSchema();
+    let due: any[] = [];
+    try {
+      const { rows } = await this.db.query(
+        `SELECT el.id, el.track_token, el.template, el.language, el.to_email, el.user_id,
+                u.name, u.payment_status, u.checkout_status, u.email_opt_out,
+                u.email_bounced_at, u.email_unsub_token
+           FROM email_log el
+           JOIN users u ON u.id = el.user_id
+          WHERE el.status = 'scheduled'
+            AND el.scheduled_at <= NOW()
+            AND el.template IN ('free_welcome','free_plan_value','free_ai','free_team','free_upgrade')
+          ORDER BY el.scheduled_at ASC
+          LIMIT 200`,
+      );
+      due = rows;
+    } catch (err: any) {
+      this.logger.error(`sendFreeOnboardingDue query failed: ${err?.message}`);
+      return;
+    }
+
+    // At most one Free email per user per sweep, so a backlog (e.g. the flag was
+    // off for days, then enabled) goes out one step at a time, not all at once.
+    const seenUsers = new Set<string>();
+    for (const r of due) {
+      const paid =
+        r.payment_status === 'active' ||
+        r.payment_status === 'paid' ||
+        r.checkout_status === 'paid';
+      if (paid || r.email_opt_out || r.email_bounced_at) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled' WHERE id = $1`,
+          [r.id],
+        );
+        continue;
+      }
+      if (seenUsers.has(r.user_id)) continue;
+
+      // Never send a marketing email without an unsubscribe link. If the token
+      // can't be minted (transient DB issue), leave the row scheduled to retry.
+      const unsubTok =
+        r.email_unsub_token || (await this.getOrCreateUnsubToken(r.user_id));
+      if (!unsubTok) continue;
+
+      const claim = await this.db.query(
+        `UPDATE email_log SET status = 'sending'
+          WHERE id = $1 AND status = 'scheduled' RETURNING id`,
+        [r.id],
+      );
+      if (!claim.rows.length) continue;
+      seenUsers.add(r.user_id);
+
+      const vars = this.freeOnboardingVars(
+        r.template,
+        r.name,
+        this.unsubUrl(unsubTok),
+      );
+      const rendered = renderTemplate(r.template, r.language, vars);
+      const token = r.track_token || crypto.randomUUID();
+      const html = this.htmlFor(rendered.html, token);
+      const result = await this.deliver({
+        to: r.to_email,
+        subject: rendered.subject,
+        html,
+        text: rendered.text,
+        token,
+      });
+      const status = result.ok
+        ? 'sent'
+        : result.error === 'smtp_not_configured'
+          ? 'skipped'
+          : 'error';
+      await this.db.query(
+        `UPDATE email_log
+            SET status = $2, subject = $3, provider = $4, error = $5, track_token = $6,
+                sent_at = CASE WHEN $2 = 'sent' THEN NOW() ELSE sent_at END
+          WHERE id = $1`,
+        [
+          r.id,
+          status,
+          rendered.subject,
+          result.provider,
+          result.ok ? null : result.error?.slice(0, 500),
+          token,
+        ],
+      );
+      if (status === 'skipped') {
+        await this.db.query(
+          `UPDATE email_log SET status = 'scheduled' WHERE id = $1`,
+          [r.id],
+        );
+      }
+    }
+  }
+
+  // Public: opt a user out of marketing/onboarding mail by their unsubscribe
+  // token (used by the unsubscribe endpoint) and cancel their queued Free emails.
+  async unsubscribeByToken(token: string): Promise<boolean> {
+    if (!token) return false;
+    await this.ensureSchema();
+    try {
+      const res = await this.db.query(
+        `UPDATE users
+            SET email_opt_out = true,
+                email_opt_out_at = COALESCE(email_opt_out_at, NOW())
+          WHERE email_unsub_token = $1`,
+        [token],
+      );
+      if (res.rowCount) {
+        await this.db.query(
+          `UPDATE email_log SET status = 'canceled'
+            WHERE status = 'scheduled'
+              AND user_id IN (SELECT id FROM users WHERE email_unsub_token = $1)`,
+          [token],
+        );
+      }
+      return (res.rowCount || 0) > 0;
+    } catch (err: any) {
+      this.logger.error(`unsubscribeByToken failed: ${err?.message}`);
+      return false;
     }
   }
 
@@ -995,6 +1232,25 @@ export class PlatformMailerService {
           await this.db.query(
             `UPDATE email_log SET status = 'error', error = $2 WHERE track_token = $1`,
             [token, String(ev.event)],
+          );
+          // Suppress future lifecycle mail to a hard-bouncing address.
+          await this.db.query(
+            `UPDATE users u SET email_bounced_at = COALESCE(email_bounced_at, NOW())
+               FROM email_log el WHERE el.track_token = $1 AND u.id = el.user_id`,
+            [token],
+          );
+        } else if (
+          ev.event === 'unsubscribe' ||
+          ev.event === 'group_unsubscribe' ||
+          ev.event === 'spamreport'
+        ) {
+          // Honor SendGrid-side unsubscribe / spam report as a marketing opt-out.
+          await this.db.query(
+            `UPDATE users u
+                SET email_opt_out = true,
+                    email_opt_out_at = COALESCE(email_opt_out_at, NOW())
+               FROM email_log el WHERE el.track_token = $1 AND u.id = el.user_id`,
+            [token],
           );
         }
       } catch (err: any) {
