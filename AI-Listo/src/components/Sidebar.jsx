@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { whatsappUiMode, primaryRouteIsQr } from "../config/whatsappUi";
 import headlogoImg from "../assets/cortexa/headlogo.png";
 import headlogoImgDark from "../assets/cortexa/headlogotran.png";
-import { ChevronsLeft, ChevronsRight, Home, icons } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Home, icons, ChartColumn } from "lucide-react";
 
 const toLucideComponentName = (name = "") =>
   String(name)
@@ -22,6 +22,9 @@ function SidebarIcon({ name, className, style, ...props }) {
   // configurations do not expose every icon consistently through `icons`.
   if (name === "home") {
     return <Home className={className} style={style} {...props} />;
+  }
+  if (name === "bar-chart-3") {
+    return <ChartColumn className={className} style={style} {...props} />;
   }
 
   const Icon = icons[toLucideComponentName(name)];
