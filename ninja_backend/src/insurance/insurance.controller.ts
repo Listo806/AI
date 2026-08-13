@@ -29,6 +29,22 @@ import { UpdateInsurancePolicyDto } from './dto/update-insurance-policy.dto';
 export class InsuranceController {
   constructor(private readonly insurance: InsuranceService) {}
 
+  @Get('contacts')
+  @ApiOperation({
+    summary: "Search the account's existing contacts to link to a policy",
+  })
+  async searchContacts(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+  ) {
+    return this.insurance.searchContacts(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      search,
+    );
+  }
+
   @Get('policies')
   @ApiOperation({ summary: 'List policies for the caller\'s account (paginated, filterable)' })
   async listPolicies(

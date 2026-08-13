@@ -2,6 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateInsurancePolicyDto } from './dto/create-insurance-policy.dto';
@@ -136,6 +137,60 @@ export class InsuranceService {
     }
     if (userTeamId) return [userTeamId];
     return [];
+  }
+
+  // Search the account's EXISTING Cortexa contacts to attach one to a policy.
+  // Reads the shared `contacts` table (reuse, not a second customer database),
+  // scoped to the caller's teams.
+  async searchContacts(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    search?: string,
+  ): Promise<any[]> {
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    // Scope to the SAME single team a new policy would save into (see
+    // resolveTeamId), so the picker never offers a contact the save-validation
+    // would then reject.
+    const teamId =
+      userTeamId && accessible.includes(userTeamId) ? userTeamId : accessible[0];
+
+    const values: any[] = [teamId];
+    let where = 'team_id = $1';
+    if (search && search.trim()) {
+      where += ` AND (
+        LOWER(COALESCE(name, '')) LIKE LOWER($2)
+        OR LOWER(COALESCE(email, '')) LIKE LOWER($2)
+        OR LOWER(COALESCE(phone, '')) LIKE LOWER($2)
+      )`;
+      values.push(`%${search.trim()}%`);
+    }
+
+    const { rows } = await this.db.query(
+      `SELECT id, name, email, phone
+         FROM contacts
+        WHERE ${where}
+        ORDER BY name ASC NULLS LAST
+        LIMIT 20`,
+      values,
+    );
+    return rows;
+  }
+
+  // A linked contact must belong to the same account (team) as the policy, so a
+  // policy can never point at another customer's contact.
+  private async assertContactInTeam(
+    contactId: string,
+    teamId: string,
+  ): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM contacts WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [contactId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected contact is not in this account');
+    }
   }
 
   async findAllPolicies(
@@ -277,6 +332,10 @@ export class InsuranceService {
     }
     const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
 
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, teamId);
+    }
+
     const policyNumber =
       (dto.policyNumber && String(dto.policyNumber).trim()) ||
       (await this.generatePolicyNumber(teamId));
@@ -320,8 +379,12 @@ export class InsuranceService {
     role: string,
   ): Promise<any> {
     // Access check: throws NotFound if the policy is not in the caller's teams.
-    await this.findOnePolicy(id, userId, userTeamId, role);
+    const existing = await this.findOnePolicy(id, userId, userTeamId, role);
     const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, existing.teamId);
+    }
 
     const columnByField: Array<[string, any]> = [
       ['policy_number', dto.policyNumber],
