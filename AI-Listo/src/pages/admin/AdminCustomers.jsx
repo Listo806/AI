@@ -86,8 +86,52 @@ const DONUT_COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#7c3aed", "#06b6d4", "#e
 const AVATAR_COLORS = ["#2563eb", "#7c3aed", "#0d9488", "#ea580c", "#db2777", "#0891b2", "#4f46e5", "#16a34a"];
 
 const STATUS_LABEL = {
-  active: "Active", free: "Free", trialing: "Trialing", registered: "Registered - No Plan",
-  past_due: "Past Due", canceled: "Canceled", failed: "Failed",
+  active: "Active",
+  free: "Free",
+  trialing: "Trialing",
+  registered: "Registered",
+  past_due: "Past Due",
+  canceled: "Canceled",
+  failed: "Failed",
+};
+
+const normalizeCustomerPlan = (customer) => {
+  const raw =
+    customer?.selected_plan ||
+    customer?.plan_id ||
+    "";
+
+  const plan = String(raw).trim().toLowerCase();
+
+  if (plan === "team") return "business";
+  if (plan === "growth") return "scale";
+
+  return plan;
+};
+
+const getCustomerPlanLabel = (customer) => {
+  const plan = normalizeCustomerPlan(customer);
+
+  if (plan === "free") return "Free";
+  if (plan === "solo") return "Solo";
+  if (plan === "business") return "Business";
+  if (plan === "scale") return "Scale";
+
+  return customer?.plan_label || "Registered";
+};
+
+const getCustomerStatusLabel = (customer, status) => {
+  const plan = normalizeCustomerPlan(customer);
+
+  const hasPlan = ["free", "solo", "business", "scale"].includes(plan);
+
+  if (status === "registered") {
+    return hasPlan
+      ? "Checkout Pending"
+      : "Registered - No Plan";
+  }
+
+  return STATUS_LABEL[status] || status;
 };
 
 const usd = (n) =>
@@ -711,16 +755,33 @@ export default function AdminCustomers() {
                       </div>
                     </td>
                     <td>
-                      <div className="cxc-plan-badge">{r.plan_label}{r.plan_id === "business" && <span className="cxc-pop">POPULAR</span>}</div>
-                      {r.plan_id !== "free" && r.plan_id !== "unselected"
-                        ? <div className="cxc-muted" style={{ fontSize: 12 }}>{usd(r.recurring_amount)} / {r.billing === "annual" ? "year" : "month"}</div>
-                        : <div className="cxc-sub-date">{r.billing === "free" ? "No billing" : ""}</div>}
+                      <div className="cxc-plan-badge">
+                        {getCustomerPlanLabel(r)}
+                        {normalizeCustomerPlan(r) === "business" && <span className="cxc-pop">POPULAR</span>}
+                      </div>
+
+                      {normalizeCustomerPlan(r) === "free" ? (
+                        <div className="cxc-sub-date">No billing</div>
+                      ) : ["solo", "business", "scale"].includes(normalizeCustomerPlan(r)) ? (
+                        <div className="cxc-muted" style={{ fontSize: 12 }}>
+                          {usd(
+                            r.recurring_amount ||
+                              (normalizeCustomerPlan(r) === "solo"
+                                ? 197
+                                : normalizeCustomerPlan(r) === "business"
+                                  ? 347
+                                  : 497)
+                          )} / {r.billing_cycle === "annual" || r.billing === "annual" ? "year" : "month"}
+                        </div>
+                      ) : (
+                        <div className="cxc-sub-date" />
+                      )}
                     </td>
                     <td className="cxc-mono">{r.seat_count ?? 0} / {r.seats_limit ?? "—"}</td>
                     <td>
                       {r.next_billing ? <>{fmtDate(r.next_billing)}<div className="cxc-sub-date">{relDays(r.next_billing)}</div></> : <span className="cxc-muted">—</span>}
                     </td>
-                    <td><span className={`cxc-badge ${st}`}>{STATUS_LABEL[st] || st}</span></td>
+                    <td><span className={`cxc-badge ${st}`}>{getCustomerStatusLabel(r, st)}</span></td>
                     <td>{r.source_label || "—"}</td>
                     <td><CountryCell code={r.country} /></td>
                     <td>{fmtDate(r.registered_at || r.created_at)}<div className="cxc-sub-date">{fmtTime(r.registered_at || r.created_at)}</div></td>
@@ -882,7 +943,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
     ["Billing Cycle", sub.isFree ? "—" : (sub.billingCycle === "annual" ? "Annual" : "Monthly")],
     ["Seats / Users", `${c.seat_count ?? 0} / ${sub.seatsLimit}`],
     ["Payment Method", paymentMethod],
-    ["Status", <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>],
+    ["Status", <span className={`cxc-badge ${c.status}`}>{getCustomerStatusLabel({ ...c, plan_id: sub?.planId, plan_label: sub?.plan }, c.status)}</span>],
     ["Started", fmtDate(sub.startDate)],
     ["Next Billing Date", sub.nextBillingDate ? `${fmtDate(sub.nextBillingDate)} (${relDays(sub.nextBillingDate)})` : "—"],
     ["Source / Offer", `${c.source_label || "—"} / ${c.offer_used || "standard"}`],
@@ -922,7 +983,7 @@ function CustomerModal({ id, tab, onClose, onSelectTab, onChanged, onChangePlan,
                     {editing
                       ? <input className="cxc-rail-input cxc-rail-input--name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Full name" />
                       : <span className="nm">{c.name || "—"}</span>}
-                    <span className={`cxc-badge ${c.status}`}>{STATUS_LABEL[c.status] || c.status}</span>
+                    <span className={`cxc-badge ${c.status}`}>{getCustomerStatusLabel({ ...c, plan_id: sub?.planId, plan_label: sub?.plan }, c.status)}</span>
                   </div>
                   {sub?.plan && <span className="cxc-cust-plantag">{sub.plan}</span>}
                 </div>

@@ -95,6 +95,27 @@ export default function StartTrial() {
   const { setUser } = useAuth();
 
   const searchParams = new URLSearchParams(window.location.search);
+
+  const pendingPlanIntent = String(
+    localStorage.getItem("pendingPlanIntent") || "",
+  )
+    .trim()
+    .toLowerCase();
+
+  const pendingBillingCycle = String(
+    localStorage.getItem("pendingBillingCycle") || "",
+  )
+    .trim()
+    .toLowerCase();
+
+  const validPendingPlan = ["free", "solo", "business", "scale"].includes(
+    pendingPlanIntent,
+  )
+    ? pendingPlanIntent
+    : null;
+
+  const cameFromPricing = searchParams.get("from") === "pricing";
+
   const isFreeAccessFlow =
     searchParams.get("flow") === "free-access" ||
     searchParams.get("plan") === "free";
@@ -140,20 +161,51 @@ export default function StartTrial() {
     try {
       const attribution = getAttribution();
 
+      const registrationPlan = isFreeAccessFlow
+        ? "free"
+        : cameFromPricing
+          ? validPendingPlan
+          : null;
+
+      const registrationBilling =
+        registrationPlan && registrationPlan !== "free"
+          ? ["monthly", "annual"].includes(pendingBillingCycle)
+            ? pendingBillingCycle
+            : "monthly"
+          : null;
+
+      /*
+       * QUAN TRỌNG:
+       * Không cho phép customer-facing signup tạo user plan = NULL.
+       */
+      if (!registrationPlan) {
+        navigate("/pricing", {
+          replace: true,
+        });
+
+        return;
+      }
+
       const payload = {
         name: form.name,
         email: form.email,
         phone: form.phone,
         password: form.password,
 
-        plan: isFreeAccessFlow ? "free" : null,
-        billingCycle: null,
-        source: isFreeAccessFlow ? "free_access" : "create_account",
+        plan: registrationPlan,
+        billingCycle: registrationBilling,
+
+        source: isFreeAccessFlow ? "free_access" : "pricing_signup",
 
         language: lang,
+
         landingPage: attribution.landingPage || null,
+
+        registrationPage: window.location.pathname + window.location.search,
+
         utm: attribution.utm || {},
         gclid: attribution.gclid || null,
+
         offer: getSetupOffer() === "exit7" ? "exit7" : "standard",
       };
 
@@ -216,10 +268,7 @@ export default function StartTrial() {
         const authenticatedUser = freeResult?.user || data.user;
 
         if (authenticatedUser) {
-          localStorage.setItem(
-            "listo_user",
-            JSON.stringify(authenticatedUser),
-          );
+          localStorage.setItem("listo_user", JSON.stringify(authenticatedUser));
           setUser(authenticatedUser);
         }
 
@@ -241,18 +290,50 @@ export default function StartTrial() {
         return;
       }
 
-      localStorage.removeItem("trialPlan");
-      localStorage.setItem("signupFlowStage", "choose_plan");
-      localStorage.setItem("signupSource", "create_account");
+      if (cameFromPricing && validPendingPlan) {
+        localStorage.setItem("trialPlan", validPendingPlan);
 
-      trackEvent("sign_up_completed", {
-        source: "create_account",
-      });
-      trackSignupConversion();
+        localStorage.setItem("signupFlowStage", "plan_selected");
 
-      navigate("/pricing?from=signup", {
+        localStorage.setItem("signupSource", "pricing_signup");
+
+        localStorage.removeItem("pendingPlanIntent");
+
+        localStorage.removeItem("pendingBillingCycle");
+
+        trackEvent("sign_up_completed", {
+          source: "pricing_signup",
+          plan: validPendingPlan,
+        });
+
+        trackSignupConversion();
+
+        if (validPendingPlan === "free") {
+          navigate("/dashboard/ai-cortexa-setup", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        navigate(
+          `/checkout?plan=${encodeURIComponent(
+            validPendingPlan,
+          )}&billing=${encodeURIComponent(
+            registrationBilling || "monthly",
+          )}&source=trial`,
+          {
+            replace: true,
+          },
+        );
+
+        return;
+      }
+
+      navigate("/pricing", {
         replace: true,
       });
+      
     } catch (error) {
       console.error("CREATE ACCOUNT ERROR:", error);
       alert(error?.message || tr.errors.server);
@@ -275,8 +356,12 @@ export default function StartTrial() {
           </h1>
           {isFreeAccessFlow && (
             <p>
-              <span className="trial-v3-desktop-copy">Create your Free Forever account.</span>
-              <span className="trial-v3-mobile-copy">Create your Free Forever account.</span>
+              <span className="trial-v3-desktop-copy">
+                Create your Free Forever account.
+              </span>
+              <span className="trial-v3-mobile-copy">
+                Create your Free Forever account.
+              </span>
             </p>
           )}
         </header>
@@ -374,10 +459,14 @@ export default function StartTrial() {
                 ) : (
                   <>
                     <span className="trial-v3-desktop-copy">
-                      {isFreeAccessFlow ? "CREATE MY FREE ACCOUNT" : tr.continueBtn}
+                      {isFreeAccessFlow
+                        ? "CREATE MY FREE ACCOUNT"
+                        : tr.continueBtn}
                     </span>
                     <span className="trial-v3-mobile-copy">
-                      {isFreeAccessFlow ? "Create My Free Account" : tr.mobileContinueBtn}
+                      {isFreeAccessFlow
+                        ? "Create My Free Account"
+                        : tr.mobileContinueBtn}
                     </span>
                   </>
                 )}
@@ -395,10 +484,14 @@ export default function StartTrial() {
             <ShieldCheck size={30} strokeWidth={2} />
             <p>
               <span className="trial-v3-desktop-copy">
-                {isFreeAccessFlow ? "No credit card required. Free forever." : tr.security}
+                {isFreeAccessFlow
+                  ? "No credit card required. Free forever."
+                  : tr.security}
               </span>
               <span className="trial-v3-mobile-copy">
-                {isFreeAccessFlow ? "No credit card required. Free forever." : tr.mobileSecurity}
+                {isFreeAccessFlow
+                  ? "No credit card required. Free forever."
+                  : tr.mobileSecurity}
               </span>
             </p>
           </div>
