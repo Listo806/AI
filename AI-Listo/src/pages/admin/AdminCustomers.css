@@ -34,7 +34,7 @@
 .cxc-title {
   margin: 0;
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 .cxc-sub {
@@ -123,7 +123,7 @@
   flex-shrink: 0;
 }
 .cxc-kpi-label { font-size: 12px; color: #64748b; font-weight: 600; line-height: 1.2; }
-.cxc-kpi-value { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.cxc-kpi-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .cxc-kpi-sub { font-size: 12px; margin-top: 4px; font-weight: 600; }
 .cxc-kpi--blue   { background: #f6faff; border-color: #e3edfb; }
 .cxc-kpi--green  { background: #f4fcf7; border-color: #dcefe3; }
@@ -242,7 +242,7 @@
 .cxc-funnel-step:nth-child(3) .cxc-funnel-num { background: #ea580c; }
 .cxc-funnel-step:nth-child(4) .cxc-funnel-num { background: #16a34a; }
 .cxc-funnel-label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-.cxc-funnel-value { font-size: 18px; font-weight: 800; }
+.cxc-funnel-value { font-size: 18px; font-weight: 700; }
 .cxc-funnel-pct { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
 /* Donut breakdowns — compact so a donut + legend fit inside a narrow card. */
@@ -311,7 +311,7 @@
   font-weight: 700; color: #0f172a;
 }
 .cxc-pop {
-  background: #fee2e2; color: #b91c1c; font-size: 9px; font-weight: 800;
+  background: #fee2e2; color: #b91c1c; font-size: 9px; font-weight: 700;
   padding: 1px 5px; border-radius: 4px; letter-spacing: 0.03em;
 }
 .cxc-badge {
@@ -448,7 +448,7 @@
 .cxc-cust-idcard { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
 .cxc-cust-idmeta { min-width: 0; }
 .cxc-cust-idname { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
-.cxc-cust-idname .nm { font-weight: 800; font-size: 14px; line-height: 1.2; }
+.cxc-cust-idname .nm { font-weight: 700; font-size: 14px; line-height: 1.2; }
 .cxc-cust-plantag { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #2563eb; }
 .cxc-cust-contacts { padding-bottom: 10px; margin-bottom: 6px; border-bottom: 1px solid #eef2f7; }
 .cxc-cust-contacts .cxc-id-line { font-size: 12px; word-break: break-all; margin: 2px 0; }
@@ -489,7 +489,7 @@
 /* Team & Seats tab */
 .cxc-seat-stat { text-align: center; }
 .cxc-seat-stat .cxc-block-title { margin-bottom: 6px; }
-.cxc-seat-num { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.cxc-seat-num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
 .cxc-team-table { table-layout: auto; }
 .cxc-team-table td { vertical-align: middle; }
 .cxc-team-table .cxc-select { padding: 5px 8px; font-size: 12px; }
@@ -664,7 +664,7 @@
   color: #0f172a;
   font-size: 22px;
   line-height: 1;
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 

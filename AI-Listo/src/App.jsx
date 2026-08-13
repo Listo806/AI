@@ -416,8 +416,18 @@ function AppRoutes() {
         {/* Projects Workspace */}
         <Route path="projects-workspace" element={<ProjectWorkspace />} />
 
-        {/* E-Commerce Workspace — currently mirrors AdminCustomers */}
-        <Route path="e-commerce-workspace" element={<ECommerceWorkspace />} />
+        {/* E-Commerce Workspace — customer/tenant workspace only */}
+        <Route
+          path="e-commerce-workspace"
+          element={
+            <FeatureRoute
+              feature="ecommerceWorkspace"
+              title="E-Commerce Workspace is a premium workspace"
+            >
+              <ECommerceWorkspace />
+            </FeatureRoute>
+          }
+        />
 
         {/* Team Route (paid: team workspace) */}
         <Route
