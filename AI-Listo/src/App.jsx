@@ -91,6 +91,7 @@ import InsuranceWorkspace from "./pages/insurance/InsuranceWorkspace";
 import FinancialServicesWorkspace from "./pages/financial/FinancialServicesWorkspace";
 import CustomerServiceWorkspace from "./pages/customer-service/CustomerServiceWorkspace";
 import MarketingWorkspace from "./pages/marketing/MarketingWorkspace";
+import ProjectWorkspace from "./pages/projects/ProjectWorkspace";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
 import EmailProviderPage from "./pages/integrations/EmailProviderPage";
@@ -410,6 +411,9 @@ function AppRoutes() {
 
         {/* Marketing Workspace */}
         <Route path="marketing-workspace" element={<MarketingWorkspace />} />
+
+        {/* Projects Workspace */}
+        <Route path="projects-workspace" element={<ProjectWorkspace />} />
 
         {/* Team Route (paid: team workspace) */}
         <Route

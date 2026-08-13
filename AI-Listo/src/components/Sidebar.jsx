@@ -171,6 +171,7 @@ export default function Sidebar({
       perfectFor: ["Agencies","Consultants","Professional Services","Client Delivery Teams","Service Businesses"],
       benefits: [["briefcase-business","COMPLETE CLIENT DELIVERYCOMPLETE CLIENT DELIVERY","Manage projects from kickoff through final delivery with tasks, milestones, deliverables, deadlines, files, and client activity organized in one workspace."],["list-checks","PROJECT VISIBILITY","See project status, progress, priorities, deadlines, budgets, assignments, and delivery activity without losing track of the customer relationship."],["users-round","ON-TIME DELIVERY","Keep teams accountable, identify delays earlier, and manage every client deliverable through completion."],["shield-check","CONNECTED TO CORTEXA","Works seamlessly with your existing Cortexa customers, contacts, AI, automation, team data, analytics, and CRM activity."]],
       price: 97,
+      path: "/dashboard/projects-workspace",
     },
     {
       id: "real-estate",
