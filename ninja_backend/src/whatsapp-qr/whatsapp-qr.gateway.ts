@@ -63,13 +63,25 @@ export class WhatsAppQrGateway
     client.join(room);
     (client.data as any).userId = room;
 
-    // Re-send last QR if any (client may have joined after it was emitted)
+    // Re-send last QR / pairing-code if any (client may have joined after emit)
     const lastQr = this.realtime.getLastQr(room);
     if (lastQr) client.emit("qr", { qr: lastQr });
+    const lastPairing = this.realtime.getLastPairingCode(room);
+    if (lastPairing) client.emit("pairing-code", { code: lastPairing });
 
     const subQr = this.realtime.qr$.subscribe(({ userId: uid, qr }) => {
       if (uid === room) client.emit("qr", { qr });
     });
+    const subPairing = this.realtime.pairingCode$.subscribe(
+      ({ userId: uid, code }) => {
+        if (uid === room) client.emit("pairing-code", { code });
+      },
+    );
+    const subPairingErr = this.realtime.pairingError$.subscribe(
+      ({ userId: uid, message }) => {
+        if (uid === room) client.emit("pairing-error", { message });
+      },
+    );
     const subConn = this.realtime.connected$.subscribe(
       ({ userId: uid, phone }) => {
         if (uid === room) client.emit("connected", { phone });
@@ -96,6 +108,8 @@ export class WhatsAppQrGateway
 
     this.subs.set(client.id, [
       subQr,
+      subPairing,
+      subPairingErr,
       subConn,
       subDisc,
       subMsg,

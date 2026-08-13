@@ -325,6 +325,35 @@ export class WhatsAppQrController {
     };
   }
 
+  @Post("pairing-code")
+  @ApiOperation({
+    summary: "Start a mobile phone-number pairing-code connection",
+  })
+  async pairingCode(@CurrentUser() user: any, @Body() body: any) {
+    // Mobile alternative to the QR: the customer enters their WhatsApp number and
+    // gets an 8-character code to type into WhatsApp on the same phone. The code
+    // is delivered over the /whatsapp-qr socket as a "pairing-code" event.
+    const e164 = normalizeToE164(body?.phone);
+    if (!e164) {
+      throw new BadRequestException(
+        "A valid WhatsApp phone number in international format is required.",
+      );
+    }
+    await this.usage.assertCanConnectWhatsapp(user.teamId ?? null, user.id);
+    const row = await this.sessions.getOrCreateByUserId(user.id);
+    await this.sessions.touchLastQrAt(row.id);
+    await this.sockets.ensureSocket(user.id, row.id, { pairingPhone: e164 });
+    return {
+      success: true,
+      data: {
+        sessionId: row.id,
+        message: this.sockets.isQrEnabled()
+          ? "Session ready; the pairing code arrives on the /whatsapp-qr socket as a 'pairing-code' event"
+          : "Set WHATSAPP_QR_ENABLED=true and REDIS_URL for auth persistence",
+      },
+    };
+  }
+
   @Post("disconnect")
   @ApiOperation({ summary: "Disconnect and clear Redis auth" })
   async disconnect(@CurrentUser() user: any) {
