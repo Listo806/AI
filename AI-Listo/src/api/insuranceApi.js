@@ -91,6 +91,34 @@ const insuranceApi = {
   deleteQuote(id) {
     return apiClient.request(`/insurance/quotes/${id}`, { method: "DELETE" });
   },
+  listRenewals(params = {}) {
+    return apiClient.request(`/insurance/renewals${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  getRenewal(id) {
+    return apiClient.request(`/insurance/renewals/${id}`, { method: "GET" });
+  },
+  createRenewal(body) {
+    return apiClient.request(`/insurance/renewals`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateRenewal(id, body) {
+    return apiClient.request(`/insurance/renewals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  renewPolicy(id) {
+    return apiClient.request(`/insurance/renewals/${id}/renew`, {
+      method: "POST",
+    });
+  },
+  deleteRenewal(id) {
+    return apiClient.request(`/insurance/renewals/${id}`, { method: "DELETE" });
+  },
 };
 
 export default insuranceApi;
