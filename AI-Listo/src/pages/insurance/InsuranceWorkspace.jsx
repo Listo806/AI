@@ -33,6 +33,8 @@ import PolicyModal from "./PolicyModal";
 import ClaimsSection from "./ClaimsSection";
 import QuotesSection from "./QuotesSection";
 import RenewalsSection from "./RenewalsSection";
+import CarriersSection from "./CarriersSection";
+import CommissionsSection from "./CommissionsSection";
 
 // KPI card config (labels/icons/tones). Values come from the live stats
 // endpoint (/api/insurance/stats). Policies-by-Type, Recent Activity and
@@ -587,10 +589,16 @@ export default function InsuranceWorkspace() {
 
       {activeTab === "Renewals" && <RenewalsSection />}
 
+      {activeTab === "Carriers" && <CarriersSection />}
+
+      {activeTab === "Commissions" && <CommissionsSection />}
+
       {activeTab !== "Policies" &&
         activeTab !== "Claims" &&
         activeTab !== "Quotes" &&
-        activeTab !== "Renewals" && (
+        activeTab !== "Renewals" &&
+        activeTab !== "Carriers" &&
+        activeTab !== "Commissions" && (
           <section className="insurance-ws-policies">
             <div className="insurance-ws-section-head">
               <div>
@@ -605,7 +613,9 @@ export default function InsuranceWorkspace() {
 
       {activeTab !== "Claims" &&
         activeTab !== "Quotes" &&
-        activeTab !== "Renewals" && (
+        activeTab !== "Renewals" &&
+        activeTab !== "Carriers" &&
+        activeTab !== "Commissions" && (
       <div className="insurance-ws-bottom">
         <div className="insurance-ws-bottom-card type-card">
           <div className="insurance-ws-card-head">

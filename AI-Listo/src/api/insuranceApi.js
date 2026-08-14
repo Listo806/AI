@@ -122,6 +122,59 @@ const insuranceApi = {
   deleteRenewal(id) {
     return apiClient.request(`/insurance/renewals/${id}`, { method: "DELETE" });
   },
+  searchCarriers(search) {
+    return apiClient.request(`/insurance/carriers/search${toQuery({ search })}`, {
+      method: "GET",
+    });
+  },
+  listCarriers(params = {}) {
+    return apiClient.request(`/insurance/carriers${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  getCarrier(id) {
+    return apiClient.request(`/insurance/carriers/${id}`, { method: "GET" });
+  },
+  createCarrier(body) {
+    return apiClient.request(`/insurance/carriers`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateCarrier(id, body) {
+    return apiClient.request(`/insurance/carriers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  deleteCarrier(id) {
+    return apiClient.request(`/insurance/carriers/${id}`, { method: "DELETE" });
+  },
+  listCommissions(params = {}) {
+    return apiClient.request(`/insurance/commissions${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  getCommission(id) {
+    return apiClient.request(`/insurance/commissions/${id}`, { method: "GET" });
+  },
+  createCommission(body) {
+    return apiClient.request(`/insurance/commissions`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateCommission(id, body) {
+    return apiClient.request(`/insurance/commissions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  deleteCommission(id) {
+    return apiClient.request(`/insurance/commissions/${id}`, {
+      method: "DELETE",
+    });
+  },
 };
 
 export default insuranceApi;
