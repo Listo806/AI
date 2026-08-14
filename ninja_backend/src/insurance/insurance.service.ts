@@ -728,6 +728,12 @@ export class InsuranceService {
     const claimNumber =
       (dto.claimNumber && String(dto.claimNumber).trim()) ||
       (await this.generateClaimNumber(teamId));
+    const claimStatus = dto.status || 'New';
+    // Stamp the settlement date when a claim starts life as Paid, so the
+    // "paid this month" metric counts by when it was actually paid.
+    const resolvedDate =
+      dto.resolvedDate ||
+      (claimStatus === 'Paid' ? this.toIsoDate(new Date()) : null);
 
     const { rows } = await this.db.query(
       `INSERT INTO insurance_claims (
@@ -750,9 +756,9 @@ export class InsuranceService {
         dto.amountClaimed ?? null,
         dto.amountApproved ?? null,
         dto.amountPaid ?? null,
-        dto.status || 'New',
+        claimStatus,
         dto.assignedTo || null,
-        dto.resolvedDate || null,
+        resolvedDate,
       ],
     );
 
@@ -782,6 +788,15 @@ export class InsuranceService {
       await this.assertContactInTeam(dto.contactId, existing.teamId);
     }
     this.validateClaimAmounts(dto);
+
+    // Stamp the settlement date the first time a claim is marked Paid.
+    if (
+      dto.status === 'Paid' &&
+      dto.resolvedDate === undefined &&
+      !existing.resolvedDate
+    ) {
+      dto.resolvedDate = this.toIsoDate(new Date());
+    }
 
     const columnByField: Array<[string, any]> = [
       ['claim_number', dto.claimNumber],
@@ -1600,5 +1615,181 @@ export class InsuranceService {
     }
 
     return newPolicy;
+  }
+
+  // ─── Dashboard stats ─────────────────────────────────────────────────────
+
+  // All KPI cards, the policies-by-type breakdown, upcoming renewals and a
+  // recent-activity feed, computed server-side and team-scoped in one call.
+  async getStats(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    const zero = {
+      kpis: {
+        activePolicies: { count: 0, totalPremium: 0 },
+        expiring30: { count: 0, premiumAtRisk: 0 },
+        openClaims: { count: 0, totalClaimed: 0 },
+        claimsPaidThisMonth: { count: 0, totalPaid: 0 },
+        commissionsDue: { amount: 0, count: 0 },
+        renewalRate: { percent: 0 },
+      },
+      totalPolicies: 0,
+      policiesByType: [],
+      upcomingRenewals: [],
+      recentActivity: [],
+    };
+    if (!accessible.length) return zero;
+
+    const num = (v: any) => Number(v) || 0;
+
+    const [activeP, exp, openC, paidC, ren, byType, upcoming, activity] =
+      await Promise.all([
+        this.db.query(
+          `SELECT COUNT(*)::int AS count, COALESCE(SUM(premium),0) AS premium
+             FROM insurance_policies WHERE team_id = ANY($1) AND status = 'Active'`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COUNT(*)::int AS count, COALESCE(SUM(premium),0) AS premium
+             FROM insurance_policies
+            WHERE team_id = ANY($1) AND coverage_end IS NOT NULL
+              AND coverage_end >= CURRENT_DATE
+              AND coverage_end <= CURRENT_DATE + INTERVAL '30 days'
+              AND status NOT IN ('Cancelled','Expired','Lapsed')`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COUNT(*)::int AS count, COALESCE(SUM(amount_claimed),0) AS amount
+             FROM insurance_claims WHERE team_id = ANY($1)
+              AND status NOT IN ('Paid','Denied','Closed')`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COUNT(*)::int AS count, COALESCE(SUM(amount_paid),0) AS amount
+             FROM insurance_claims WHERE team_id = ANY($1) AND status = 'Paid'
+              AND resolved_date IS NOT NULL
+              AND date_trunc('month', resolved_date) = date_trunc('month', CURRENT_DATE)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT
+              COUNT(*) FILTER (WHERE status = 'Renewed')::int AS renewed,
+              COUNT(*) FILTER (WHERE status IN ('Renewed','Lapsed','Declined'))::int AS terminal
+             FROM insurance_renewals WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(policy_type), ''), 'Other') AS type,
+                  COUNT(*)::int AS count
+             FROM insurance_policies WHERE team_id = ANY($1)
+            GROUP BY 1 ORDER BY count DESC`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT p.id AS "id", p.policy_number AS "policyNumber",
+                  p.policy_type AS "policyType",
+                  COALESCE(ct.name, p.holder_name) AS "customer",
+                  p.coverage_end AS "date", p.premium AS "premium",
+                  (p.coverage_end - CURRENT_DATE)::int AS "daysLeft"
+             FROM insurance_policies p
+             LEFT JOIN contacts ct ON ct.id = p.contact_id AND ct.team_id = p.team_id
+            WHERE p.team_id = ANY($1) AND p.coverage_end IS NOT NULL
+              AND p.coverage_end >= CURRENT_DATE
+              AND p.coverage_end <= CURRENT_DATE + INTERVAL '30 days'
+              AND p.status NOT IN ('Cancelled','Expired','Lapsed')
+            ORDER BY p.coverage_end ASC LIMIT 8`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT kind, ref, name, status, created_at, updated_at FROM (
+              SELECT 'Policy' AS kind, policy_number AS ref, holder_name AS name,
+                     status, created_at, updated_at
+                FROM insurance_policies WHERE team_id = ANY($1)
+              UNION ALL SELECT 'Claim', claim_number, NULL, status, created_at, updated_at
+                FROM insurance_claims WHERE team_id = ANY($1)
+              UNION ALL SELECT 'Quote', quote_number, holder_name, status, created_at, updated_at
+                FROM insurance_quotes WHERE team_id = ANY($1)
+              UNION ALL SELECT 'Renewal', NULL, holder_name, status, created_at, updated_at
+                FROM insurance_renewals WHERE team_id = ANY($1)
+           ) t ORDER BY updated_at DESC LIMIT 6`,
+          [accessible],
+        ),
+      ]);
+
+    // Commissions table may not exist yet (built in a later phase).
+    let commissionsDue = { amount: 0, count: 0 };
+    try {
+      const com = await this.db.query(
+        `SELECT COUNT(*)::int AS count, COALESCE(SUM(amount),0) AS amount
+           FROM insurance_commissions WHERE team_id = ANY($1)
+            AND status IN ('Pending','Due','Earned')`,
+        [accessible],
+      );
+      commissionsDue = {
+        amount: num(com.rows[0]?.amount),
+        count: com.rows[0]?.count || 0,
+      };
+    } catch {
+      /* commissions not built yet */
+    }
+
+    const totalPolicies = byType.rows.reduce(
+      (s: number, r: any) => s + r.count,
+      0,
+    );
+    const renewed = ren.rows[0]?.renewed || 0;
+    const terminal = ren.rows[0]?.terminal || 0;
+
+    const recentActivity = activity.rows.map((r: any) => {
+      const created = new Date(r.created_at).getTime();
+      const updated = new Date(r.updated_at).getTime();
+      const isNew = updated - created < 3000;
+      const ref = r.ref ? ` ${r.ref}` : '';
+      const title = isNew
+        ? `${r.kind}${ref} created`
+        : `${r.kind}${ref} updated to ${r.status}`;
+      return { title, subtitle: r.name || '', when: r.updated_at, kind: r.kind };
+    });
+
+    return {
+      kpis: {
+        activePolicies: {
+          count: activeP.rows[0].count,
+          totalPremium: num(activeP.rows[0].premium),
+        },
+        expiring30: {
+          count: exp.rows[0].count,
+          premiumAtRisk: num(exp.rows[0].premium),
+        },
+        openClaims: {
+          count: openC.rows[0].count,
+          totalClaimed: num(openC.rows[0].amount),
+        },
+        claimsPaidThisMonth: {
+          count: paidC.rows[0].count,
+          totalPaid: num(paidC.rows[0].amount),
+        },
+        commissionsDue,
+        renewalRate: {
+          percent: terminal ? Math.round((renewed / terminal) * 100) : 0,
+        },
+      },
+      totalPolicies,
+      policiesByType: byType.rows.map((r: any) => ({
+        type: r.type,
+        count: r.count,
+        percent: totalPolicies ? Math.round((r.count / totalPolicies) * 100) : 0,
+      })),
+      upcomingRenewals: upcoming.rows.map((r: any) => ({
+        ...r,
+        premium: num(r.premium),
+      })),
+      recentActivity,
+    };
   }
 }

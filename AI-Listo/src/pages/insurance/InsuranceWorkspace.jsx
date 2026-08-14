@@ -34,42 +34,71 @@ import ClaimsSection from "./ClaimsSection";
 import QuotesSection from "./QuotesSection";
 import RenewalsSection from "./RenewalsSection";
 
-// NOTE: The KPI cards, Policies-by-Type, Recent Activity and Upcoming Renewals
-// below still use placeholder data. They are wired to live backend data in their
-// own later phases (Claims, Renewals, Activity, KPIs). This phase wires the
-// Policies table to the real, account-scoped backend.
-const INSURANCE_STATS = [
-  ["Active Policies", "1,248", "$3,245,750", "Total Premium", "15%", ShieldCheck, "blue"],
-  ["Policies Expiring (30 Days)", "87", "$221,840", "Premium at Risk", "8%", CalendarClock, "amber"],
-  ["Open Claims", "56", "$174,520", "Total Claimed", "12%", ClipboardList, "purple"],
-  ["Claims Paid (This Month)", "32", "$98,650", "Paid Amount", "18%", BadgeDollarSign, "green"],
-  ["Commissions Due", "$28,430", "12 Pending", "", "14%", ShoppingCart, "pink"],
-  ["Renewal Rate", "76.8%", "This Month", "", "6.3%", TrendingUp, "mint"],
+// KPI card config (labels/icons/tones). Values come from the live stats
+// endpoint (/api/insurance/stats). Policies-by-Type, Recent Activity and
+// Upcoming Renewals below are also driven by that live payload.
+const STAT_CONFIG = [
+  { key: "activePolicies", label: "Active Policies", sub: "Total Premium", Icon: ShieldCheck, tone: "blue" },
+  { key: "expiring30", label: "Policies Expiring (30 Days)", sub: "Premium at Risk", Icon: CalendarClock, tone: "amber" },
+  { key: "openClaims", label: "Open Claims", sub: "Total Claimed", Icon: ClipboardList, tone: "purple" },
+  { key: "claimsPaidThisMonth", label: "Claims Paid (This Month)", sub: "Paid Amount", Icon: BadgeDollarSign, tone: "green" },
+  { key: "commissionsDue", label: "Commissions Due", sub: "", Icon: ShoppingCart, tone: "pink" },
+  { key: "renewalRate", label: "Renewal Rate", sub: "Renewed vs closed", Icon: TrendingUp, tone: "mint" },
 ];
 
-const POLICY_TYPES = [
-  ["Commercial General Liability", "32% (399)", "blue"],
-  ["Professional Liability", "18% (224)", "royal"],
-  ["Property Insurance", "16% (199)", "green"],
-  ["Workers Compensation", "12% (150)", "mint"],
-  ["Cyber Liability", "8% (100)", "purple"],
-  ["Other", "14% (176)", "gray"],
-];
+const TYPE_TONES = ["blue", "royal", "green", "mint", "purple", "gray"];
 
-const ACTIVITY = [
-  ["New policy created", "POL-2025-1248 for TechFlow Solutions", "10:24 AM", ShieldCheck],
-  ["Claim #CLM-2025-1042 updated to In Review", "GreenLeaf Realty", "09:15 AM", ClipboardList],
-  ["Payment received", "POL-2025-1246 from GreenLeaf Realty", "Yesterday", ReceiptText],
-  ["Policy renewal sent", "POL-2025-1243 to NextGen Industries", "Yesterday", CalendarClock],
-  ["Claim #CLM-2025-1041 approved", "Bright Marketing", "May 18", CircleCheck],
-];
+const ACTIVITY_ICON = {
+  Policy: ShieldCheck,
+  Claim: ClipboardList,
+  Quote: FileCheck2,
+  Renewal: CalendarClock,
+};
 
-const RENEWALS = [
-  ["TechFlow Solutions", "Commercial General Liability", "POL-2025-1248", "Jan 15, 2026", "$4,250.00", "in 12 days"],
-  ["Bright Marketing", "Professional Liability", "POL-2025-1247", "Feb 01, 2026", "$2,180.00", "in 29 days"],
-  ["GreenLeaf Realty", "Property Insurance", "POL-2025-1246", "Feb 10, 2026", "$6,750.00", "in 38 days"],
-  ["Summit Enterprises", "Workers Compensation", "POL-2025-1245", "Mar 05, 2026", "$3,920.00", "in 61 days"],
-];
+function formatMoney(value) {
+  if (value == null) return "-";
+  const n = Number(value);
+  if (!isFinite(n)) return "-";
+  return `$${n.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+}
+
+// Build a KPI card's value + sub-line from the live stats payload.
+function statCardValue(key, stats) {
+  const k = stats?.kpis?.[key];
+  if (!k) return { value: "—", sub1: "" };
+  const count = (k.count || 0).toLocaleString("en-US");
+  switch (key) {
+    case "activePolicies":
+      return { value: count, sub1: formatMoney(k.totalPremium) };
+    case "expiring30":
+      return { value: count, sub1: formatMoney(k.premiumAtRisk) };
+    case "openClaims":
+      return { value: count, sub1: formatMoney(k.totalClaimed) };
+    case "claimsPaidThisMonth":
+      return { value: count, sub1: formatMoney(k.totalPaid) };
+    case "commissionsDue":
+      return { value: formatMoney(k.amount), sub1: `${k.count || 0} pending` };
+    case "renewalRate":
+      return { value: `${k.percent || 0}%`, sub1: "" };
+    default:
+      return { value: "—", sub1: "" };
+  }
+}
+
+// Short relative time for the activity feed, e.g. "2h ago".
+function formatWhen(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
 
 // Format an ISO date into the workspace's short display, e.g. "Jan 15, 2026".
 function formatDate(value) {
@@ -181,6 +210,8 @@ export default function InsuranceWorkspace() {
   // loading state carried over from a previous open).
   const [modalNonce, setModalNonce] = useState(0);
 
+  const [stats, setStats] = useState(null);
+
   useEffect(() => {
     if (activeTab !== "Policies") return undefined;
     let cancelled = false;
@@ -250,6 +281,23 @@ export default function InsuranceWorkspace() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
+  // Live KPIs / breakdowns / activity. Refetched after policy changes and when
+  // returning to a tab, so the top and bottom cards stay current.
+  useEffect(() => {
+    let cancelled = false;
+    insuranceApi
+      .getStats()
+      .then((s) => {
+        if (!cancelled) setStats(s);
+      })
+      .catch(() => {
+        /* keep the last-good stats on a transient error */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshTick, activeTab]);
+
   return (
     <div className="insurance-ws">
       <div className="insurance-ws-header">
@@ -272,20 +320,20 @@ export default function InsuranceWorkspace() {
       </div>
 
       <div className="insurance-ws-stat-grid">
-        {INSURANCE_STATS.map(
-          ([label, value, sub1, sub2, change, Icon, tone]) => (
-            <div className="insurance-ws-stat-card" key={label}>
+        {STAT_CONFIG.map(({ key, label, sub, Icon, tone }) => {
+          const { value, sub1 } = statCardValue(key, stats);
+          return (
+            <div className="insurance-ws-stat-card" key={key}>
               <div className={`insurance-ws-stat-icon ${tone}`}>
                 <Icon size={18} />
               </div>
               <span>{label}</span>
               <strong>{value}</strong>
               {sub1 && <small>{sub1}</small>}
-              {sub2 && <small>{sub2}</small>}
-              <em>↑ {change} <b>vs last month</b></em>
+              {sub && <small>{sub}</small>}
             </div>
-          ),
-        )}
+          );
+        })}
       </div>
 
       <nav className="insurance-ws-tabs">
@@ -567,17 +615,28 @@ export default function InsuranceWorkspace() {
 
           <div className="insurance-ws-type-layout">
             <div className="insurance-ws-donut">
-              <b>1,248<small>Total Policies</small></b>
+              <b>
+                {(stats?.totalPolicies || 0).toLocaleString("en-US")}
+                <small>Total Policies</small>
+              </b>
             </div>
 
             <div className="insurance-ws-legend">
-              {POLICY_TYPES.map(([label, value, tone]) => (
-                <p key={label}>
-                  <i className={tone} />
-                  <span>{label}</span>
-                  <strong>{value}</strong>
+              {(stats?.policiesByType || []).length === 0 ? (
+                <p>
+                  <span>No policies yet</span>
                 </p>
-              ))}
+              ) : (
+                stats.policiesByType.map((t, i) => (
+                  <p key={t.type}>
+                    <i className={TYPE_TONES[i % TYPE_TONES.length]} />
+                    <span>{t.type}</span>
+                    <strong>
+                      {t.percent}% ({t.count})
+                    </strong>
+                  </p>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -589,16 +648,32 @@ export default function InsuranceWorkspace() {
           </div>
 
           <div className="insurance-ws-activity-list">
-            {ACTIVITY.map(([title, sub, time, Icon]) => (
-              <div className="insurance-ws-activity-row" key={title}>
-                <span><Icon size={13} /></span>
+            {(stats?.recentActivity || []).length === 0 ? (
+              <div className="insurance-ws-activity-row">
                 <div>
-                  <strong>{title}</strong>
-                  <small>{sub}</small>
+                  <small>No recent activity</small>
                 </div>
-                <time>{time}</time>
               </div>
-            ))}
+            ) : (
+              stats.recentActivity.map((a, i) => {
+                const Icon = ACTIVITY_ICON[a.kind] || ReceiptText;
+                return (
+                  <div
+                    className="insurance-ws-activity-row"
+                    key={`${a.kind}-${a.when}-${i}`}
+                  >
+                    <span>
+                      <Icon size={13} />
+                    </span>
+                    <div>
+                      <strong>{a.title}</strong>
+                      {a.subtitle && <small>{a.subtitle}</small>}
+                    </div>
+                    <time>{formatWhen(a.when)}</time>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <button className="insurance-ws-link-btn">View all activity →</button>
@@ -611,21 +686,33 @@ export default function InsuranceWorkspace() {
           </div>
 
           <div className="insurance-ws-renewals">
-            {RENEWALS.map(([client, type, id, date, premium, days]) => (
-              <div key={id}>
-                <Umbrella size={13} />
+            {(stats?.upcomingRenewals || []).length === 0 ? (
+              <div>
                 <div>
-                  <strong>{client}</strong>
-                  <small>{type}</small>
-                </div>
-                <span>{id}</span>
-                <span>{date}</span>
-                <div className="amount">
-                  <strong>{premium}</strong>
-                  <small>{days}</small>
+                  <small>No renewals in the next 30 days</small>
                 </div>
               </div>
-            ))}
+            ) : (
+              stats.upcomingRenewals.map((r) => (
+                <div key={r.id || r.policyNumber}>
+                  <Umbrella size={13} />
+                  <div>
+                    <strong>{r.customer || "-"}</strong>
+                    <small>{r.policyType || "-"}</small>
+                  </div>
+                  <span>{r.policyNumber}</span>
+                  <span>{formatDate(r.date)}</span>
+                  <div className="amount">
+                    <strong>{formatMoney(r.premium)}</strong>
+                    <small>
+                      {r.daysLeft <= 0
+                        ? "due"
+                        : `in ${r.daysLeft} day${r.daysLeft === 1 ? "" : "s"}`}
+                    </small>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <button className="insurance-ws-link-btn">View all renewals →</button>
