@@ -211,6 +211,35 @@ export class InsuranceService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_insurance_renewals_status ON insurance_renewals(status)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_commissions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        policy_id UUID,
+        contact_id UUID,
+        agent_id UUID,
+        rate NUMERIC(5,2),
+        amount NUMERIC(12,2),
+        status TEXT NOT NULL DEFAULT 'Pending',
+        period TEXT,
+        earned_date DATE,
+        due_date DATE,
+        paid_date DATE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_commissions_team ON insurance_commissions(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_commissions_policy ON insurance_commissions(policy_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_commissions_status ON insurance_commissions(status)`,
+    );
     this.schemaReady = true;
   }
 
@@ -285,6 +314,20 @@ export class InsuranceService {
     );
     if (!rows.length) {
       throw new BadRequestException('Selected contact is not in this account');
+    }
+  }
+
+  // A linked carrier must belong to the same account as the policy.
+  private async assertCarrierInTeam(
+    carrierId: string,
+    teamId: string,
+  ): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM insurance_carriers WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [carrierId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected carrier is not in this account');
     }
   }
 
@@ -430,6 +473,9 @@ export class InsuranceService {
     if (dto.contactId) {
       await this.assertContactInTeam(dto.contactId, teamId);
     }
+    if (dto.carrierId) {
+      await this.assertCarrierInTeam(dto.carrierId, teamId);
+    }
 
     const policyNumber =
       (dto.policyNumber && String(dto.policyNumber).trim()) ||
@@ -479,6 +525,9 @@ export class InsuranceService {
 
     if (dto.contactId) {
       await this.assertContactInTeam(dto.contactId, existing.teamId);
+    }
+    if (dto.carrierId) {
+      await this.assertCarrierInTeam(dto.carrierId, existing.teamId);
     }
 
     const columnByField: Array<[string, any]> = [
@@ -1791,5 +1840,514 @@ export class InsuranceService {
       })),
       recentActivity,
     };
+  }
+
+  // ─── Carriers ──────────────────────────────────────────────────────────────
+
+  private readonly carrierSelect = `
+    c.id,
+    c.team_id AS "teamId",
+    c.created_by AS "createdBy",
+    c.name,
+    c.carrier_mark AS "carrierMark",
+    c.contact_email AS "contactEmail",
+    c.contact_phone AS "contactPhone",
+    c.status,
+    c.notes,
+    (SELECT COUNT(*)::int FROM insurance_policies p
+       WHERE p.carrier_id = c.id AND p.team_id = c.team_id) AS "policyCount",
+    c.created_at AS "createdAt",
+    c.updated_at AS "updatedAt"
+  `;
+
+  async searchCarriers(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    search?: string,
+  ): Promise<any[]> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return [];
+    const teamId =
+      userTeamId && accessible.includes(userTeamId) ? userTeamId : accessible[0];
+
+    const values: any[] = [teamId];
+    let where = 'team_id = $1';
+    if (search && search.trim()) {
+      where += ` AND LOWER(COALESCE(name, '')) LIKE LOWER($2)`;
+      values.push(`%${String(search).trim()}%`);
+    }
+    const { rows } = await this.db.query(
+      `SELECT id, name, carrier_mark AS "carrierMark"
+         FROM insurance_carriers WHERE ${where} ORDER BY name ASC LIMIT 20`,
+      values,
+    );
+    return rows;
+  }
+
+  async findAllCarriers(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: any,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const pageNum = Number(query.page);
+    const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
+    const limitNum = Number(query.limit);
+    const limit = Number.isFinite(limitNum)
+      ? Math.min(200, Math.max(1, Math.trunc(limitNum)))
+      : 20;
+
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['c.team_id = ANY($1)'];
+    const values: any[] = [accessible];
+    let param = 2;
+    if (query.search) {
+      where.push(
+        `(LOWER(COALESCE(c.name,'')) LIKE LOWER($${param})
+          OR LOWER(COALESCE(c.contact_email,'')) LIKE LOWER($${param}))`,
+      );
+      values.push(`%${String(query.search).trim()}%`);
+      param++;
+    }
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total FROM insurance_carriers c WHERE ${whereSql}`,
+      values,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const offset = (page - 1) * limit;
+    values.push(limit);
+    const limitParam = values.length;
+    values.push(offset);
+    const offsetParam = values.length;
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.carrierSelect} FROM insurance_carriers c
+        WHERE ${whereSql} ORDER BY c.name ASC
+        LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      values,
+    );
+    return { data: rows, total, page, limit };
+  }
+
+  async findOneCarrier(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Carrier not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.carrierSelect} FROM insurance_carriers c
+        WHERE c.id = $1 AND c.team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Carrier not found');
+    return rows[0];
+  }
+
+  async createCarrier(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You must belong to a team to add carriers');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+
+    const { rows } = await this.db.query(
+      `INSERT INTO insurance_carriers (
+         team_id, created_by, name, carrier_mark, contact_email, contact_phone,
+         status, notes, updated_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW()) RETURNING id`,
+      [
+        teamId,
+        userId,
+        (dto.name || '').trim() || 'Carrier',
+        dto.carrierMark || null,
+        dto.contactEmail || null,
+        dto.contactPhone || null,
+        dto.status || 'active',
+        dto.notes || null,
+      ],
+    );
+    return this.findOneCarrier(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateCarrier(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    await this.findOneCarrier(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    const columnByField: Array<[string, any]> = [
+      ['name', dto.name],
+      ['carrier_mark', dto.carrierMark],
+      ['contact_email', dto.contactEmail],
+      ['contact_phone', dto.contactPhone],
+      ['status', dto.status],
+      ['notes', dto.notes],
+    ];
+    const sets: string[] = [];
+    const values: any[] = [];
+    let param = 1;
+    for (const [col, val] of columnByField) {
+      if (val === undefined) continue;
+      // name and status are NOT NULL: never write them blank.
+      if ((col === 'name' || col === 'status') && String(val).trim() === '') {
+        continue;
+      }
+      sets.push(`${col} = $${param}`);
+      values.push(val === '' ? null : val);
+      param++;
+    }
+    if (!sets.length) return this.findOneCarrier(id, userId, userTeamId, role);
+    sets.push('updated_at = NOW()');
+    values.push(id);
+    const idParam = param;
+    param++;
+    values.push(accessible);
+    const teamParam = param;
+    await this.db.query(
+      `UPDATE insurance_carriers SET ${sets.join(', ')}
+        WHERE id = $${idParam} AND team_id = ANY($${teamParam})`,
+      values,
+    );
+    return this.findOneCarrier(id, userId, userTeamId, role);
+  }
+
+  async removeCarrier(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    await this.findOneCarrier(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    await this.db.query(
+      `DELETE FROM insurance_carriers WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    return { success: true };
+  }
+
+  // ─── Commissions ───────────────────────────────────────────────────────────
+
+  private readonly commissionSelect = `
+    cm.id,
+    cm.team_id AS "teamId",
+    cm.created_by AS "createdBy",
+    cm.policy_id AS "policyId",
+    p.policy_number AS "policyNumber",
+    p.holder_name AS "policyHolder",
+    cm.contact_id AS "contactId",
+    ct.name AS "contactName",
+    cm.agent_id AS "agentId",
+    au.name AS "agentName",
+    cm.rate,
+    cm.amount,
+    cm.status,
+    cm.period,
+    cm.earned_date AS "earnedDate",
+    cm.due_date AS "dueDate",
+    cm.paid_date AS "paidDate",
+    cm.notes,
+    cm.created_at AS "createdAt",
+    cm.updated_at AS "updatedAt"
+  `;
+
+  private readonly commissionJoins = `
+    FROM insurance_commissions cm
+    LEFT JOIN insurance_policies p ON p.id = cm.policy_id AND p.team_id = cm.team_id
+    LEFT JOIN contacts ct ON ct.id = cm.contact_id AND ct.team_id = cm.team_id
+    LEFT JOIN users au ON au.id = cm.agent_id
+  `;
+
+  private round2(n: number): number {
+    return Math.round(n * 100) / 100;
+  }
+
+  // Commission amount is authoritative from premium x rate when a rate is given;
+  // otherwise a directly-entered amount is accepted (validated). Never trusts a
+  // client-provided total when a rate is present.
+  private resolveCommissionAmount(
+    dto: { rate?: number; amount?: number },
+    premium: any,
+  ): number | null {
+    if (dto.rate != null) {
+      if (Number(dto.rate) < 0) {
+        throw new BadRequestException('Commission rate must be zero or greater');
+      }
+      return this.round2(((Number(premium) || 0) * Number(dto.rate)) / 100);
+    }
+    if (dto.amount != null) {
+      if (Number(dto.amount) < 0) {
+        throw new BadRequestException(
+          'Commission amount must be zero or greater',
+        );
+      }
+      return this.round2(Number(dto.amount));
+    }
+    return null;
+  }
+
+  async findAllCommissions(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: any,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const pageNum = Number(query.page);
+    const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
+    const limitNum = Number(query.limit);
+    const limit = Number.isFinite(limitNum)
+      ? Math.min(200, Math.max(1, Math.trunc(limitNum)))
+      : 20;
+
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['cm.team_id = ANY($1)'];
+    const values: any[] = [accessible];
+    let param = 2;
+    if (query.search) {
+      where.push(`(
+        LOWER(COALESCE(p.policy_number,'')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(p.holder_name,'')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(ct.name,'')) LIKE LOWER($${param})
+      )`);
+      values.push(`%${String(query.search).trim()}%`);
+      param++;
+    }
+    if (query.status) {
+      where.push(`cm.status = $${param}`);
+      values.push(query.status);
+      param++;
+    }
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total ${this.commissionJoins} WHERE ${whereSql}`,
+      values,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const offset = (page - 1) * limit;
+    values.push(limit);
+    const limitParam = values.length;
+    values.push(offset);
+    const offsetParam = values.length;
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.commissionSelect} ${this.commissionJoins}
+        WHERE ${whereSql} ORDER BY cm.created_at DESC
+        LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      values,
+    );
+    return { data: rows, total, page, limit };
+  }
+
+  async findOneCommission(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Commission not found');
+    const { rows } = await this.db.query(
+      `SELECT ${this.commissionSelect} ${this.commissionJoins}
+        WHERE cm.id = $1 AND cm.team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Commission not found');
+    return rows[0];
+  }
+
+  async createCommission(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException(
+        'You must belong to a team to create commissions',
+      );
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+    if (!dto.policyId) {
+      throw new BadRequestException('A commission must be linked to a policy');
+    }
+    const policy = await this.getPolicyForRenewal(dto.policyId, teamId);
+    if (dto.agentId) {
+      // agent is an in-account user; the users join is not team-pinned, so we
+      // fall back to the policy's agent when none is supplied.
+    }
+    const amount = this.resolveCommissionAmount(dto, policy.premium);
+    const status = dto.status || 'Pending';
+    const paidDate = status === 'Paid' ? this.toIsoDate(new Date()) : null;
+
+    const { rows } = await this.db.query(
+      `INSERT INTO insurance_commissions (
+         team_id, created_by, policy_id, contact_id, agent_id, rate, amount,
+         status, period, earned_date, due_date, paid_date, notes, updated_at
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW()) RETURNING id`,
+      [
+        teamId,
+        userId,
+        dto.policyId,
+        policy.contact_id || null,
+        dto.agentId || policy.assigned_to || null,
+        dto.rate ?? null,
+        amount,
+        status,
+        dto.period || null,
+        dto.earnedDate || null,
+        dto.dueDate || null,
+        paidDate,
+        dto.notes || null,
+      ],
+    );
+    return this.findOneCommission(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateCommission(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const existing = await this.findOneCommission(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    // Recompute the amount when the rate changes (from the policy's premium), or
+    // when an amount is entered directly. undefined => leave the amount as-is.
+    let amountChange: number | null | undefined;
+    if (dto.rate != null) {
+      if (Number(dto.rate) < 0) {
+        throw new BadRequestException('Commission rate must be zero or greater');
+      }
+      let policyGone = false;
+      let premium: any = null;
+      try {
+        const pol = await this.getPolicyForRenewal(
+          existing.policyId,
+          existing.teamId,
+        );
+        premium = pol.premium;
+      } catch {
+        policyGone = true;
+      }
+      if (!policyGone) {
+        // Rate is authoritative: derive from premium (NULL premium -> 0). Never
+        // let a client-supplied amount win when a rate is present.
+        amountChange = this.round2(((Number(premium) || 0) * Number(dto.rate)) / 100);
+      } else if (dto.amount != null) {
+        if (Number(dto.amount) < 0) {
+          throw new BadRequestException(
+            'Commission amount must be zero or greater',
+          );
+        }
+        amountChange = this.round2(Number(dto.amount));
+      }
+    } else if (dto.amount !== undefined) {
+      if (dto.amount != null && Number(dto.amount) < 0) {
+        throw new BadRequestException(
+          'Commission amount must be zero or greater',
+        );
+      }
+      amountChange = dto.amount == null ? null : this.round2(Number(dto.amount));
+    }
+
+    const sets: string[] = [];
+    const values: any[] = [];
+    let param = 1;
+    const push = (col: string, val: any) => {
+      sets.push(`${col} = $${param}`);
+      values.push(val);
+      param++;
+    };
+
+    const map: Array<[string, any]> = [
+      ['agent_id', dto.agentId],
+      ['rate', dto.rate],
+      ['status', dto.status],
+      ['period', dto.period],
+      ['earned_date', dto.earnedDate],
+      ['due_date', dto.dueDate],
+      ['notes', dto.notes],
+    ];
+    for (const [col, val] of map) {
+      if (val === undefined) continue;
+      // status is NOT NULL: never write it blank.
+      if (col === 'status' && String(val).trim() === '') continue;
+      push(col, val === '' ? null : val);
+    }
+    if (amountChange !== undefined) push('amount', amountChange);
+    if (dto.status === 'Paid' && !existing.paidDate) {
+      push('paid_date', this.toIsoDate(new Date()));
+    }
+    // Clear the paid date if the commission moves back out of Paid.
+    if (dto.status !== undefined && dto.status !== 'Paid' && existing.paidDate) {
+      push('paid_date', null);
+    }
+
+    if (!sets.length) {
+      return this.findOneCommission(id, userId, userTeamId, role);
+    }
+    sets.push('updated_at = NOW()');
+    values.push(id);
+    const idParam = param;
+    param++;
+    values.push(accessible);
+    const teamParam = param;
+    await this.db.query(
+      `UPDATE insurance_commissions SET ${sets.join(', ')}
+        WHERE id = $${idParam} AND team_id = ANY($${teamParam})`,
+      values,
+    );
+    return this.findOneCommission(id, userId, userTeamId, role);
+  }
+
+  async removeCommission(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    await this.findOneCommission(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    await this.db.query(
+      `DELETE FROM insurance_commissions WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    return { success: true };
   }
 }

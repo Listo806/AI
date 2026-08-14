@@ -163,6 +163,11 @@
   font-size: 13.5px;
   margin: 0 0 12px;
 }
+.iw-hint {
+  color: #64748b;
+  font-size: 12.5px;
+  margin: 14px 0 0;
+}
 
 /* Read-only detail */
 .iw-detail {
