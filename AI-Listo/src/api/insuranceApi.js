@@ -40,6 +40,29 @@ const insuranceApi = {
   deletePolicy(id) {
     return apiClient.request(`/insurance/policies/${id}`, { method: "DELETE" });
   },
+  listClaims(params = {}) {
+    return apiClient.request(`/insurance/claims${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  getClaim(id) {
+    return apiClient.request(`/insurance/claims/${id}`, { method: "GET" });
+  },
+  createClaim(body) {
+    return apiClient.request(`/insurance/claims`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+  updateClaim(id, body) {
+    return apiClient.request(`/insurance/claims/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+  deleteClaim(id) {
+    return apiClient.request(`/insurance/claims/${id}`, { method: "DELETE" });
+  },
 };
 
 export default insuranceApi;

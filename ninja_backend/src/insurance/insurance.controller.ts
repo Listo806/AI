@@ -18,6 +18,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { InsuranceService } from './insurance.service';
 import { CreateInsurancePolicyDto } from './dto/create-insurance-policy.dto';
 import { UpdateInsurancePolicyDto } from './dto/update-insurance-policy.dto';
+import { CreateInsuranceClaimDto } from './dto/create-insurance-claim.dto';
+import { UpdateInsuranceClaimDto } from './dto/update-insurance-claim.dto';
 
 // Insurance Workspace API. Guards mirror the CRM: JwtAuthGuard authenticates,
 // PaymentGuard gates unpaid accounts (super_admin/admin/va are exempt). All
@@ -109,6 +111,78 @@ export class InsuranceController {
   @ApiOperation({ summary: 'Delete a policy (team-scoped)' })
   async removePolicy(@Param('id') id: string, @CurrentUser() user: any) {
     return this.insurance.removePolicy(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Claims ────────────────────────────────────────────────────────────────
+
+  @Get('claims')
+  @ApiOperation({ summary: 'List claims for the account (paginated, filterable)' })
+  async listClaims(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('policyId') policyId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.insurance.findAllClaims(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, policyId, page, limit },
+    );
+  }
+
+  @Post('claims')
+  @ApiOperation({ summary: 'Create a claim (must link to a policy)' })
+  async createClaim(
+    @Body() dto: CreateInsuranceClaimDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.createClaim(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('claims/:id')
+  @ApiOperation({ summary: 'Get one claim (team-scoped)' })
+  async getClaim(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.findOneClaim(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('claims/:id')
+  @ApiOperation({ summary: 'Update a claim (team-scoped)' })
+  async updateClaim(
+    @Param('id') id: string,
+    @Body() dto: UpdateInsuranceClaimDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.updateClaim(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('claims/:id')
+  @ApiOperation({ summary: 'Delete a claim (team-scoped)' })
+  async removeClaim(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.removeClaim(
       id,
       user.id,
       user.teamId ?? null,

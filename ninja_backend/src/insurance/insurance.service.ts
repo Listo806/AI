@@ -116,6 +116,37 @@ export class InsuranceService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_insurance_policies_next_billing ON insurance_policies(next_billing)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_claims (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        claim_number TEXT,
+        policy_id UUID,
+        contact_id UUID,
+        claim_type TEXT,
+        description TEXT,
+        incident_date DATE,
+        filed_date DATE,
+        amount_claimed NUMERIC(12,2),
+        amount_approved NUMERIC(12,2),
+        amount_paid NUMERIC(12,2),
+        status TEXT NOT NULL DEFAULT 'New',
+        assigned_to UUID,
+        resolved_date DATE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_claims_team ON insurance_claims(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_claims_policy ON insurance_claims(policy_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_claims_status ON insurance_claims(status)`,
+    );
     this.schemaReady = true;
   }
 
@@ -443,6 +474,307 @@ export class InsuranceService {
 
     await this.db.query(
       `DELETE FROM insurance_policies WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    return { success: true };
+  }
+
+  // ─── Claims ────────────────────────────────────────────────────────────────
+
+  private readonly claimSelect = `
+    c.id,
+    c.team_id AS "teamId",
+    c.created_by AS "createdBy",
+    c.claim_number AS "claimNumber",
+    c.policy_id AS "policyId",
+    p.policy_number AS "policyNumber",
+    p.holder_name AS "policyHolder",
+    c.contact_id AS "contactId",
+    ct.name AS "contactName",
+    c.claim_type AS "claimType",
+    c.description,
+    c.incident_date AS "incidentDate",
+    c.filed_date AS "filedDate",
+    c.amount_claimed AS "amountClaimed",
+    c.amount_approved AS "amountApproved",
+    c.amount_paid AS "amountPaid",
+    c.status,
+    c.assigned_to AS "assignedTo",
+    au.name AS "agentName",
+    c.resolved_date AS "resolvedDate",
+    c.created_at AS "createdAt",
+    c.updated_at AS "updatedAt"
+  `;
+
+  private readonly claimJoins = `
+    FROM insurance_claims c
+    LEFT JOIN insurance_policies p ON p.id = c.policy_id AND p.team_id = c.team_id
+    LEFT JOIN contacts ct ON ct.id = c.contact_id AND ct.team_id = c.team_id
+    LEFT JOIN users au ON au.id = c.assigned_to
+  `;
+
+  // A claim's policy must belong to the same account. Returns the policy row so
+  // the claim can inherit its contact, keeping claim -> policy -> customer linked.
+  private async assertPolicyInTeam(
+    policyId: string,
+    teamId: string,
+  ): Promise<any> {
+    const { rows } = await this.db.query(
+      `SELECT id, contact_id FROM insurance_policies WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [policyId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected policy is not in this account');
+    }
+    return rows[0];
+  }
+
+  // Claim amounts are validated server-side (client rule): never negative.
+  private validateClaimAmounts(dto: {
+    amountClaimed?: number;
+    amountApproved?: number;
+    amountPaid?: number;
+  }): void {
+    for (const v of [dto.amountClaimed, dto.amountApproved, dto.amountPaid]) {
+      if (v != null && (isNaN(Number(v)) || Number(v) < 0)) {
+        throw new BadRequestException('Claim amounts must be zero or greater');
+      }
+    }
+  }
+
+  private async generateClaimNumber(teamId: string): Promise<string> {
+    const { rows } = await this.db.query(
+      `SELECT COUNT(*)::int AS n FROM insurance_claims WHERE team_id = $1`,
+      [teamId],
+    );
+    const year = new Date().getFullYear();
+    const seq = 1000 + (rows[0]?.n || 0) + 1;
+    return `CLM-${year}-${seq}`;
+  }
+
+  async findAllClaims(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: any,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const pageNum = Number(query.page);
+    const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
+    const limitNum = Number(query.limit);
+    const limit = Number.isFinite(limitNum)
+      ? Math.min(200, Math.max(1, Math.trunc(limitNum)))
+      : 20;
+
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['c.team_id = ANY($1)'];
+    const values: any[] = [accessible];
+    let param = 2;
+
+    if (query.search) {
+      where.push(`(
+        LOWER(COALESCE(c.claim_number, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(p.policy_number, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(c.claim_type, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(ct.name, '')) LIKE LOWER($${param})
+      )`);
+      values.push(`%${String(query.search).trim()}%`);
+      param++;
+    }
+    if (query.status) {
+      where.push(`c.status = $${param}`);
+      values.push(query.status);
+      param++;
+    }
+    if (query.policyId) {
+      where.push(`c.policy_id = $${param}`);
+      values.push(query.policyId);
+      param++;
+    }
+
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total ${this.claimJoins} WHERE ${whereSql}`,
+      values,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const offset = (page - 1) * limit;
+    values.push(limit);
+    const limitParam = values.length;
+    values.push(offset);
+    const offsetParam = values.length;
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.claimSelect} ${this.claimJoins}
+        WHERE ${whereSql}
+        ORDER BY c.created_at DESC
+        LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      values,
+    );
+
+    return { data: rows, total, page, limit };
+  }
+
+  async findOneClaim(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Claim not found');
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.claimSelect} ${this.claimJoins}
+        WHERE c.id = $1 AND c.team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Claim not found');
+    return rows[0];
+  }
+
+  async createClaim(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You must belong to a team to create claims');
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+
+    if (!dto.policyId) {
+      throw new BadRequestException('A claim must be linked to a policy');
+    }
+    const policy = await this.assertPolicyInTeam(dto.policyId, teamId);
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, teamId);
+    }
+    this.validateClaimAmounts(dto);
+
+    const contactId = dto.contactId || policy.contact_id || null;
+    const claimNumber =
+      (dto.claimNumber && String(dto.claimNumber).trim()) ||
+      (await this.generateClaimNumber(teamId));
+
+    const { rows } = await this.db.query(
+      `INSERT INTO insurance_claims (
+         team_id, created_by, claim_number, policy_id, contact_id, claim_type,
+         description, incident_date, filed_date, amount_claimed, amount_approved,
+         amount_paid, status, assigned_to, resolved_date, updated_at
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()
+       ) RETURNING id`,
+      [
+        teamId,
+        userId,
+        claimNumber,
+        dto.policyId,
+        contactId,
+        dto.claimType || null,
+        dto.description || null,
+        dto.incidentDate || null,
+        dto.filedDate || null,
+        dto.amountClaimed ?? null,
+        dto.amountApproved ?? null,
+        dto.amountPaid ?? null,
+        dto.status || 'New',
+        dto.assignedTo || null,
+        dto.resolvedDate || null,
+      ],
+    );
+
+    return this.findOneClaim(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateClaim(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const existing = await this.findOneClaim(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    // A claim must always stay linked to a policy: allow moving it to another
+    // in-account policy, but never disconnect it (explicit null).
+    if (dto.policyId === null) {
+      throw new BadRequestException('A claim must stay linked to a policy');
+    }
+    if (dto.policyId) {
+      await this.assertPolicyInTeam(dto.policyId, existing.teamId);
+    }
+    if (dto.contactId) {
+      await this.assertContactInTeam(dto.contactId, existing.teamId);
+    }
+    this.validateClaimAmounts(dto);
+
+    const columnByField: Array<[string, any]> = [
+      ['claim_number', dto.claimNumber],
+      ['policy_id', dto.policyId],
+      ['contact_id', dto.contactId],
+      ['claim_type', dto.claimType],
+      ['description', dto.description],
+      ['incident_date', dto.incidentDate],
+      ['filed_date', dto.filedDate],
+      ['amount_claimed', dto.amountClaimed],
+      ['amount_approved', dto.amountApproved],
+      ['amount_paid', dto.amountPaid],
+      ['status', dto.status],
+      ['assigned_to', dto.assignedTo],
+      ['resolved_date', dto.resolvedDate],
+    ];
+
+    const sets: string[] = [];
+    const values: any[] = [];
+    let param = 1;
+    for (const [col, val] of columnByField) {
+      if (val !== undefined) {
+        sets.push(`${col} = $${param}`);
+        values.push(val === '' ? null : val);
+        param++;
+      }
+    }
+    if (!sets.length) return this.findOneClaim(id, userId, userTeamId, role);
+
+    sets.push('updated_at = NOW()');
+    values.push(id);
+    const idParam = param;
+    param++;
+    values.push(accessible);
+    const teamParam = param;
+
+    await this.db.query(
+      `UPDATE insurance_claims SET ${sets.join(', ')}
+        WHERE id = $${idParam} AND team_id = ANY($${teamParam})`,
+      values,
+    );
+
+    return this.findOneClaim(id, userId, userTeamId, role);
+  }
+
+  async removeClaim(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    await this.findOneClaim(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    await this.db.query(
+      `DELETE FROM insurance_claims WHERE id = $1 AND team_id = ANY($2)`,
       [id, accessible],
     );
     return { success: true };
