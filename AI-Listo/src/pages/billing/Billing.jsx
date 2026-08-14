@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import WorkspaceAddOns from '../../components/WorkspaceAddOns';
 
 export default function Billing() {
   // Placeholder data
@@ -66,6 +67,9 @@ export default function Billing() {
           </p>
         </div>
       </div>
+
+      {/* Workspace Add-Ons (each is its own $97/mo Paddle subscription) */}
+      <WorkspaceAddOns />
 
       {/* Invoices */}
       <div className="crm-section">

@@ -805,6 +805,15 @@ export class PaddleService {
         team: { startingCharge: 14, recurringMonthly: 347, recurringAnnual: 3331.2 },
         growth: { startingCharge: 21, recurringMonthly: 497, recurringAnnual: 4771.2 },
       },
+
+      // Paid Workspace add-on: its OWN $97/month recurring Paddle subscription,
+      // separate from the base plan. `priceId` is null until PADDLE_PRICE_WORKSPACE
+      // is set, which keeps the Workspace purchase inert until the client provisions
+      // the price. `monthly` is the display amount only.
+      workspaceAddon: {
+        priceId: this.configService.get('PADDLE_PRICE_WORKSPACE') || null,
+        monthly: 97,
+      },
     };
   }
 

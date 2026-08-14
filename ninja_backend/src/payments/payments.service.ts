@@ -3,6 +3,8 @@ import { DatabaseService } from '../database/database.service';
 import { PayPalService } from './paypal.service';
 import { PlatformMailerService } from '../platform-mail/platform-mailer.service';
 import { normalizePlanId, getPlan } from '../plans/plan-config';
+import { WorkspaceEntitlementsService } from '../workspaces/workspace-entitlements.service';
+import { isValidWorkspaceId, normalizeWorkspaceId } from '../workspaces/workspace-registry';
 
 // Seat allowance per normalized plan, mirrored from plan-config so a Paddle
 // activation can stamp the subscription row's seat_limit without a plan lookup.
@@ -22,6 +24,7 @@ export class PaymentsService {
     private readonly db: DatabaseService,
     private readonly paypalService: PayPalService,
     private readonly mailer: PlatformMailerService,
+    private readonly workspaceEntitlements: WorkspaceEntitlementsService,
   ) {}
 
   // Fire the once-only welcome email after a confirmed payment. Best-effort:
@@ -344,6 +347,39 @@ export class PaymentsService {
     const customCycle: string | null =
       data?.custom_data?.billingCycle || data?.custom_data?.billing_cycle || null;
 
+    // --- Workspace add-on (its OWN separate Paddle subscription) ---
+    // A paid Workspace is billed as an independent $97/month Paddle subscription,
+    // separate from the base plan and from every other Workspace. Detect and fully
+    // handle it here, BEFORE the base-plan switch, so it never activates or relabels
+    // the base plan, links its subscription id onto the user, writes plan billing
+    // rows, or fires plan emails. It only grants/revokes its own entitlement row,
+    // scoped by its own subscription id. This branch never throws (it records the
+    // event and returns) so a workspace event can never trigger a base-plan retry.
+    if (await this.isWorkspaceAddonEvent(data, subId)) {
+      let wsMatched = false;
+      // Never let a workspace-handling error escape: if it did, the event would go
+      // unrecorded and Paddle would retry it forever. Record + return regardless.
+      try {
+        wsMatched = await this.handleWorkspaceAddonEvent(
+          eventType,
+          data,
+          subId,
+          customUserId,
+        );
+      } catch (err: any) {
+        this.logger.error(
+          `workspace add-on ${eventType} for ${subId || 'unknown'} failed (recorded, no retry): ${err?.message}`,
+        );
+      }
+      await this.db.query(
+        `INSERT INTO webhook_events (provider, event_id, event_type, payload)
+         VALUES ('paddle', $1, $2, $3::jsonb)
+         ON CONFLICT (provider, event_id) DO NOTHING`,
+        [eventId, eventType, JSON.stringify(body)],
+      );
+      return { status: 'success', matched: wsMatched, eventType };
+    }
+
     let handled = false;
     let matched = false;
     // First-payment events only — a subscription.updated->active is a renewal /
@@ -506,6 +542,164 @@ export class PaymentsService {
     }
 
     return { status: 'success', matched, eventType };
+  }
+
+  // --- Workspace add-on webhook handling ---
+  //
+  // Everything below keeps a paid Workspace's billing lifecycle entirely separate
+  // from the base plan. A Workspace is its own Paddle subscription, so these events
+  // must never flow into base-plan activation.
+
+  // Collect every Paddle price id referenced by an event's line items. Covers the
+  // shapes used by subscription.* (data.items[].price.id) and transaction.*
+  // (data.items[].price.id or data.details.line_items[].price_id).
+  private extractPaddlePriceIds(data: any): string[] {
+    const ids = new Set<string>();
+    const items = Array.isArray(data?.items) ? data.items : [];
+    for (const it of items) {
+      const pid = it?.price?.id || it?.price_id || it?.priceId;
+      if (pid) ids.add(String(pid));
+    }
+    const lineItems = data?.details?.line_items;
+    if (Array.isArray(lineItems)) {
+      for (const li of lineItems) {
+        const pid = li?.price_id || li?.price?.id;
+        if (pid) ids.add(String(pid));
+      }
+    }
+    return Array.from(ids);
+  }
+
+  // Is this Paddle event about a Workspace add-on subscription? True when the
+  // checkout tagged it (custom_data.addon === 'workspace'), when it carries the
+  // configured $97 Workspace price id, or when its subscription id is one we have
+  // already recorded as a workspace entitlement (so later cancel/past-due events —
+  // which may not repeat custom_data — are still routed here and never fall through
+  // to the base-plan handler).
+  private async isWorkspaceAddonEvent(
+    data: any,
+    subId: string | null,
+  ): Promise<boolean> {
+    const addonTag = String(
+      data?.custom_data?.addon || data?.custom_data?.add_on || '',
+    ).toLowerCase();
+    if (addonTag === 'workspace') return true;
+
+    // A workspaceId in custom_data is exclusive to workspace checkouts (base-plan
+    // checkouts never carry one), so it is a safe secondary signal that catches
+    // subscription.* lifecycle events even if the addon tag were ever dropped.
+    if (data?.custom_data?.workspaceId || data?.custom_data?.workspace_id) {
+      return true;
+    }
+
+    const workspacePriceId = process.env.PADDLE_PRICE_WORKSPACE;
+    if (workspacePriceId && this.extractPaddlePriceIds(data).includes(workspacePriceId)) {
+      return true;
+    }
+
+    if (subId) {
+      try {
+        if (await this.workspaceEntitlements.isKnownSubscription(subId)) return true;
+      } catch (err: any) {
+        this.logger.warn(
+          `workspace add-on lookup failed for ${subId}: ${err?.message}`,
+        );
+      }
+    }
+    return false;
+  }
+
+  // Apply a Workspace add-on event to its entitlement row. Grants on first payment,
+  // revokes on cancel/refund, and marks transient loss of access on past-due/pause.
+  // Returns whether a row was affected; the caller records the event regardless, so
+  // an unmappable event never retries. Never throws for control flow.
+  private async handleWorkspaceAddonEvent(
+    eventType: string,
+    data: any,
+    subId: string | null,
+    customUserId: string | null,
+  ): Promise<boolean> {
+    // No subscription id means we cannot key the entitlement (e.g. an early
+    // one-off transaction). The subscription.created/activated event carries the id
+    // and performs the grant, so this is safely a no-op.
+    if (!subId) return false;
+
+    const status = data?.status;
+    const isGrant =
+      eventType === 'subscription.activated' ||
+      eventType === 'subscription.created' ||
+      eventType === 'transaction.completed' ||
+      eventType === 'transaction.paid' ||
+      (eventType === 'subscription.updated' && status === 'active');
+    const isCancel =
+      eventType === 'subscription.canceled' ||
+      (eventType === 'subscription.updated' && status === 'canceled');
+    const isRefund =
+      (eventType === 'adjustment.created' || eventType === 'adjustment.updated') &&
+      data?.action === 'refund';
+    const isPastDue =
+      eventType === 'subscription.past_due' ||
+      (eventType === 'subscription.updated' && status === 'past_due');
+    const isPaused =
+      eventType === 'subscription.updated' && status === 'paused';
+
+    if (isGrant) {
+      const workspaceId = normalizeWorkspaceId(
+        data?.custom_data?.workspaceId || data?.custom_data?.workspace_id,
+      );
+      if (!isValidWorkspaceId(workspaceId)) {
+        // A reactivation event (e.g. updated->active after past_due) may not echo
+        // the workspaceId. If we already know this subscription, restore its
+        // existing entitlement instead of skipping.
+        if (await this.workspaceEntitlements.reactivate(subId)) return true;
+        this.logger.warn(
+          `Workspace add-on ${eventType} for subscription ${subId} has no valid workspaceId; skipping grant`,
+        );
+        return false;
+      }
+      // Resolve the team authoritatively from the paying user. Never trust
+      // custom_data.teamId, so a tampered checkout cannot grant another team access.
+      let teamId: string | null = null;
+      if (customUserId) {
+        try {
+          const u = await this.db.query(
+            `SELECT team_id FROM users WHERE id = $1`,
+            [customUserId],
+          );
+          teamId = u.rows[0]?.team_id || null;
+        } catch (err: any) {
+          this.logger.warn(
+            `Workspace add-on ${eventType} for ${subId}: team lookup failed: ${err?.message}`,
+          );
+        }
+      }
+      if (!teamId) {
+        this.logger.warn(
+          `Workspace add-on ${eventType} for ${subId}: could not resolve team from user ${customUserId || 'unknown'}; skipping grant`,
+        );
+        return false;
+      }
+      const priceId =
+        this.extractPaddlePriceIds(data)[0] ||
+        process.env.PADDLE_PRICE_WORKSPACE ||
+        null;
+      return this.workspaceEntitlements.grant({
+        subscriptionId: subId,
+        workspaceId,
+        teamId,
+        priceId,
+        userId: customUserId,
+      });
+    }
+
+    if (isCancel) return this.workspaceEntitlements.revoke(subId, 'canceled');
+    if (isRefund) return this.workspaceEntitlements.revoke(subId, 'refunded');
+    if (isPastDue) return this.workspaceEntitlements.setStatus(subId, 'past_due');
+    if (isPaused) return this.workspaceEntitlements.setStatus(subId, 'suspended');
+
+    // Any other event for a known workspace subscription is acknowledged (recorded
+    // by the caller) but needs no state change.
+    return false;
   }
 
   // --- Paddle subscriptions + payments persistence ---
