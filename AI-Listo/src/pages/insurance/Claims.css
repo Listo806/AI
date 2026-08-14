@@ -1,0 +1,13 @@
+/* Generic status pill for claims (statuses are multi-word, so the policy status
+   classes don't apply). Neutral clean look for V1. */
+.iw-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  background: #eef2f7;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}

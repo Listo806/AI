@@ -30,6 +30,7 @@ import {
 import "./InsuranceWorkspace.css";
 import insuranceApi from "../../api/insuranceApi";
 import PolicyModal from "./PolicyModal";
+import ClaimsSection from "./ClaimsSection";
 
 // NOTE: The KPI cards, Policies-by-Type, Recent Activity and Upcoming Renewals
 // below still use placeholder data. They are wired to live backend data in their
@@ -179,6 +180,7 @@ export default function InsuranceWorkspace() {
   const [modalNonce, setModalNonce] = useState(0);
 
   useEffect(() => {
+    if (activeTab !== "Policies") return undefined;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -208,7 +210,7 @@ export default function InsuranceWorkspace() {
       cancelled = true;
       clearTimeout(handle);
     };
-  }, [search, page, limit, refreshTick]);
+  }, [search, page, limit, refreshTick, activeTab]);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const safePage = Math.min(page, totalPages);
@@ -307,6 +309,7 @@ export default function InsuranceWorkspace() {
         ))}
       </nav>
 
+      {activeTab === "Policies" && (
       <section className="insurance-ws-policies">
         <div className="insurance-ws-section-head">
           <div>
@@ -526,7 +529,22 @@ export default function InsuranceWorkspace() {
           </select>
         </div>
       </section>
+      )}
 
+      {activeTab === "Claims" && <ClaimsSection />}
+
+      {activeTab !== "Policies" && activeTab !== "Claims" && (
+        <section className="insurance-ws-policies">
+          <div className="insurance-ws-section-head">
+            <div>
+              <h2>{activeTab}</h2>
+              <p>{activeTab} workspace is ready for the next implementation step.</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab !== "Claims" && (
       <div className="insurance-ws-bottom">
         <div className="insurance-ws-bottom-card type-card">
           <div className="insurance-ws-card-head">
@@ -600,6 +618,7 @@ export default function InsuranceWorkspace() {
           <button className="insurance-ws-link-btn">View all renewals →</button>
         </div>
       </div>
+      )}
 
       <PolicyModal
         key={modalNonce}
