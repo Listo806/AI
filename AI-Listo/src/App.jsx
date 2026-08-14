@@ -92,6 +92,7 @@ import FinancialServicesWorkspace from "./pages/financial/FinancialServicesWorks
 import CustomerServiceWorkspace from "./pages/customer-service/CustomerServiceWorkspace";
 import MarketingWorkspace from "./pages/marketing/MarketingWorkspace";
 import ProjectWorkspace from "./pages/projects/ProjectWorkspace";
+import WorkspaceGate from "./components/WorkspaceGate";
 import ECommerceWorkspace from "./pages/ecommerce/ECommerceWorkspace";
 import Integrations from "./pages/integrations/Integrations";
 import WebhooksPage from "./pages/integrations/WebhooksPage";
@@ -399,22 +400,64 @@ function AppRoutes() {
         />
 
         {/* Sales Workspace */}
-        <Route path="sales-workspace" element={<SalesWorkspace />} />
+        <Route
+          path="sales-workspace"
+          element={
+            <WorkspaceGate workspaceId="sales">
+              <SalesWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Insurance Workspace */}
-        <Route path="insurance-workspace" element={<InsuranceWorkspace />} />
+        <Route
+          path="insurance-workspace"
+          element={
+            <WorkspaceGate workspaceId="insurance">
+              <InsuranceWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Financial Services Workspace */}
-        <Route path="financial-services" element={<FinancialServicesWorkspace />} />
+        <Route
+          path="financial-services"
+          element={
+            <WorkspaceGate workspaceId="financial-services">
+              <FinancialServicesWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Customer Service Workspace */}
-        <Route path="customer-service-workspace" element={<CustomerServiceWorkspace />} />
+        <Route
+          path="customer-service-workspace"
+          element={
+            <WorkspaceGate workspaceId="customer-service">
+              <CustomerServiceWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Marketing Workspace */}
-        <Route path="marketing-workspace" element={<MarketingWorkspace />} />
+        <Route
+          path="marketing-workspace"
+          element={
+            <WorkspaceGate workspaceId="marketing">
+              <MarketingWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* Projects Workspace */}
-        <Route path="projects-workspace" element={<ProjectWorkspace />} />
+        <Route
+          path="projects-workspace"
+          element={
+            <WorkspaceGate workspaceId="projects">
+              <ProjectWorkspace />
+            </WorkspaceGate>
+          }
+        />
 
         {/* E-Commerce Workspace — customer/tenant workspace only */}
         <Route

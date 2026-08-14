@@ -18,6 +18,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagg
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGuard } from '../auth/guards/payment.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { WorkspaceLockGuard } from '../workspaces/workspace-lock.guard';
+import { RequiresWorkspace } from '../workspaces/requires-workspace.decorator';
 
 import { InsuranceService } from './insurance.service';
 import { CreateInsurancePolicyDto } from './dto/create-insurance-policy.dto';
@@ -39,7 +41,8 @@ import { UpdateInsuranceCommissionDto } from './dto/update-insurance-commission.
 @ApiTags('insurance')
 @ApiBearerAuth('JWT-auth')
 @Controller('insurance')
-@UseGuards(JwtAuthGuard, PaymentGuard)
+@RequiresWorkspace('insurance')
+@UseGuards(JwtAuthGuard, PaymentGuard, WorkspaceLockGuard)
 export class InsuranceController {
   constructor(private readonly insurance: InsuranceService) {}
 

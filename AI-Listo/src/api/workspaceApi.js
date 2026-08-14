@@ -15,6 +15,11 @@ const workspaceApi = {
     return apiClient.request("/workspaces/entitlements", { method: "GET" });
   },
 
+  // { workspaces: [{ id, name, route, locked, entitled, accessible }] }
+  getAccess() {
+    return apiClient.request("/workspaces/access", { method: "GET" });
+  },
+
   // { alreadyEntitled, priceId, environment, customData, email } | { alreadyEntitled: true }
   purchase(workspaceId) {
     return apiClient.request(
