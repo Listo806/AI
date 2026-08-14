@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { StorageService } from '../integrations/storage/storage.service';
 import { CreateInsurancePolicyDto } from './dto/create-insurance-policy.dto';
 import { UpdateInsurancePolicyDto } from './dto/update-insurance-policy.dto';
 
@@ -16,7 +17,10 @@ const OWNER_ROLE = 'owner';
 // the caller can access. Contacts, leads, users are reused, never duplicated.
 @Injectable()
 export class InsuranceService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly storage: StorageService,
+  ) {}
 
   private schemaReady = false;
 
@@ -239,6 +243,34 @@ export class InsuranceService {
     );
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_insurance_commissions_status ON insurance_commissions(status)`,
+    );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_documents (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        stored_file_id UUID NOT NULL,
+        title TEXT,
+        doc_type TEXT,
+        policy_id UUID,
+        claim_id UUID,
+        contact_id UUID,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_documents_team ON insurance_documents(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_documents_policy ON insurance_documents(policy_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_documents_claim ON insurance_documents(claim_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_documents_file ON insurance_documents(stored_file_id)`,
     );
     this.schemaReady = true;
   }
@@ -1998,6 +2030,223 @@ export class InsuranceService {
         premium: num(r.premium),
       })),
     };
+  }
+
+  // ─── Documents ─────────────────────────────────────────────────────────────
+  //
+  // A document is a stored_files S3 object plus insurance context (title, type,
+  // optional policy/claim/contact link), team-scoped. The bytes never leave S3:
+  // downloads are served only through short-lived signed URLs (getSignedUrl), so
+  // a private bucket keeps documents unreachable without a signature. The raw S3
+  // url is never returned to the client.
+
+  private static readonly UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // Reject a malformed id early with 400 instead of letting Postgres raise a
+  // 22P02 (invalid uuid) that would surface as a 500. Blank/undefined is allowed
+  // (the caller decides whether the id is required).
+  private assertUuidOrBlank(value: string | undefined | null, label: string): void {
+    if (value && !InsuranceService.UUID_RE.test(String(value))) {
+      throw new BadRequestException(`Invalid ${label} reference`);
+    }
+  }
+
+  private async assertRefInTeam(
+    table: 'insurance_policies' | 'insurance_claims',
+    id: string,
+    teamId: string,
+    label: string,
+  ): Promise<void> {
+    const { rows } = await this.db.query(
+      `SELECT id FROM ${table} WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [id, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException(`Selected ${label} is not in this account`);
+    }
+  }
+
+  async listDocuments(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    params: { page?: number; limit?: number; policyId?: string; search?: string },
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    this.assertUuidOrBlank(params.policyId, 'policy');
+    const where: string[] = ['d.team_id = ANY($1)'];
+    const vals: any[] = [accessible];
+    let i = 2;
+    if (params.policyId) {
+      where.push(`d.policy_id = $${i++}`);
+      vals.push(params.policyId);
+    }
+    if (params.search && params.search.trim()) {
+      where.push(`(d.title ILIKE $${i} OR f.original_name ILIKE $${i})`);
+      vals.push(`%${params.search.trim()}%`);
+      i++;
+    }
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total
+         FROM insurance_documents d
+         LEFT JOIN stored_files f ON f.id = d.stored_file_id
+        WHERE ${whereSql}`,
+      vals,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const dataRes = await this.db.query(
+      `SELECT d.id, d.title, d.doc_type AS "docType", d.policy_id AS "policyId",
+              d.claim_id AS "claimId", d.contact_id AS "contactId", d.notes,
+              d.stored_file_id AS "storedFileId",
+              f.original_name AS "fileName", f.mime_type AS "mimeType", f.size,
+              p.policy_number AS "policyNumber",
+              d.created_at AS "createdAt"
+         FROM insurance_documents d
+         LEFT JOIN stored_files f ON f.id = d.stored_file_id
+         LEFT JOIN insurance_policies p ON p.id = d.policy_id AND p.team_id = d.team_id
+        WHERE ${whereSql}
+        ORDER BY d.created_at DESC
+        LIMIT $${i++} OFFSET $${i++}`,
+      [...vals, limit, (page - 1) * limit],
+    );
+    return { data: dataRes.rows, total, page, limit };
+  }
+
+  async createDocument(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    file: Express.Multer.File,
+    dto: {
+      title?: string;
+      docType?: string;
+      policyId?: string;
+      claimId?: string;
+      contactId?: string;
+      notes?: string;
+    },
+  ): Promise<any> {
+    await this.ensureSchema();
+    if (!file) throw new BadRequestException('No file provided');
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException('You do not have access to this account');
+    }
+    const teamId = this.resolveTeamId(undefined, userTeamId, accessible);
+
+    // Reject malformed ids with 400 before any DB/S3 work.
+    this.assertUuidOrBlank(dto.policyId, 'policy');
+    this.assertUuidOrBlank(dto.claimId, 'claim');
+    this.assertUuidOrBlank(dto.contactId, 'contact');
+
+    // Any optional link must belong to the same account.
+    if (dto.policyId) await this.assertRefInTeam('insurance_policies', dto.policyId, teamId, 'policy');
+    if (dto.claimId) await this.assertRefInTeam('insurance_claims', dto.claimId, teamId, 'claim');
+    if (dto.contactId) await this.assertContactInTeam(dto.contactId, teamId);
+
+    // Upload to S3 first; only record the document if the bytes landed.
+    const stored = await this.storage.uploadDocument({
+      file,
+      folder: `insurance/${teamId}`,
+      userId,
+      teamId,
+    });
+
+    const title = (dto.title && dto.title.trim()) || file.originalname;
+    let rows: any[];
+    try {
+      const res = await this.db.query(
+        `INSERT INTO insurance_documents
+           (team_id, created_by, stored_file_id, title, doc_type, policy_id, claim_id, contact_id, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, title, doc_type AS "docType", policy_id AS "policyId",
+                   claim_id AS "claimId", contact_id AS "contactId", notes,
+                   stored_file_id AS "storedFileId", created_at AS "createdAt"`,
+        [
+          teamId,
+          userId,
+          stored.id,
+          title,
+          dto.docType || null,
+          dto.policyId || null,
+          dto.claimId || null,
+          dto.contactId || null,
+          dto.notes || null,
+        ],
+      );
+      rows = res.rows;
+    } catch (err) {
+      // The bytes landed but the index row did not: remove the orphaned S3 object
+      // + stored_files row so a failed upload never leaks storage.
+      await this.storage.deleteStoredFileById(stored.id).catch(() => undefined);
+      throw err;
+    }
+    return {
+      ...rows[0],
+      fileName: stored.originalName,
+      mimeType: stored.mimeType,
+      size: stored.size,
+    };
+  }
+
+  // A short-lived signed URL to download a document. Team-authorized here, then
+  // re-checked at the storage layer (we pass the document's own team so the
+  // storage tenant check is consistent for multi-team owners).
+  async getDocumentDownloadUrl(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    docId: string,
+  ): Promise<{ url: string; expiresIn: number }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Document not found');
+    const { rows } = await this.db.query(
+      `SELECT stored_file_id, team_id FROM insurance_documents
+        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [docId, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Document not found');
+    const expiresIn = 3600;
+    const url = await this.storage.getSignedUrl(rows[0].stored_file_id, expiresIn, {
+      userId,
+      teamId: rows[0].team_id,
+      role,
+    });
+    return { url, expiresIn };
+  }
+
+  async removeDocument(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    docId: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Document not found');
+    const { rows } = await this.db.query(
+      `SELECT stored_file_id FROM insurance_documents
+        WHERE id = $1 AND team_id = ANY($2) LIMIT 1`,
+      [docId, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Document not found');
+    // Remove the index row first, then the underlying S3 object + stored_files.
+    await this.db.query(
+      `DELETE FROM insurance_documents WHERE id = $1 AND team_id = ANY($2)`,
+      [docId, accessible],
+    );
+    await this.storage.deleteStoredFileById(rows[0].stored_file_id);
+    return { success: true };
   }
 
   // ─── Carriers ──────────────────────────────────────────────────────────────

@@ -24,6 +24,24 @@ export interface FileRequester {
 const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
+// Documents (e.g. policy PDFs) allow more types and a larger cap than the
+// image-only uploadFile path. Kept separate so the existing image upload behavior
+// is unchanged.
+const ALLOWED_DOCUMENT_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain',
+  'text/csv',
+];
+const MAX_DOCUMENT_SIZE_BYTES = 20 * 1024 * 1024; // 20MB
+
 export interface StoredFile {
   id: string;
   originalName: string;
@@ -168,6 +186,113 @@ export class StorageService {
       this.logger.error('S3 upload failed', error.message);
       throw new BadRequestException(`Failed to upload file: ${error.message}`);
     }
+  }
+
+  /**
+   * Upload a document (PDF / office file / image) to S3 and record it in
+   * stored_files with its owning user + team. Same private-storage model as
+   * uploadFile, but with the document mime allowlist and a larger size cap. The
+   * returned `url` is the object path only; documents must be served through
+   * getSignedUrl (a signed, temporary link), never this raw URL, so a private
+   * bucket keeps them inaccessible without a signature.
+   */
+  async uploadDocument(uploadDto: UploadFileDto): Promise<StoredFile> {
+    if (!this.isConfigured || !this.s3Client) {
+      throw new BadRequestException('Storage service is not configured');
+    }
+
+    const { file, folder, userId, teamId } = uploadDto;
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    const mimeType = (file.mimetype || '').toLowerCase();
+    if (!ALLOWED_DOCUMENT_MIME_TYPES.includes(mimeType)) {
+      throw new BadRequestException(
+        `Invalid file type. Allowed: PDF, Word, Excel, CSV, text, and images. Got: ${file.mimetype || 'unknown'}`,
+      );
+    }
+    if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+      throw new BadRequestException(
+        `File too large. Maximum size: 20MB. Got: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      );
+    }
+
+    const fileExtension = file.originalname.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const key = folder ? `${folder}/${fileName}` : fileName;
+
+    try {
+      await this.s3Client.send(
+        new PutObjectCommand({
+          Bucket: this.bucketName,
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          Metadata: {
+            originalName: file.originalname,
+            userId,
+            ...(teamId && { teamId }),
+          },
+        }),
+      );
+
+      const url = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${key}`;
+
+      const { rows } = await this.db.query(
+        `INSERT INTO stored_files (
+          id, original_name, file_name, url, s3_key, mime_type, size, folder, user_id, team_id, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+        RETURNING id, original_name as "originalName", file_name as "fileName", url, s3_key as "key",
+                  mime_type as "mimeType", size, folder, user_id as "userId", team_id as "teamId", created_at as "createdAt"`,
+        [
+          uuidv4(),
+          file.originalname,
+          fileName,
+          url,
+          key,
+          file.mimetype,
+          file.size,
+          folder || null,
+          userId,
+          teamId || null,
+        ],
+      );
+
+      this.logger.log(`Document uploaded: ${key}`);
+      return rows[0];
+    } catch (error: any) {
+      this.logger.error('S3 document upload failed', error.message);
+      throw new BadRequestException(`Failed to upload document: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete a stored file by its id WITHOUT a per-user ownership check. The caller
+   * (e.g. the insurance module) must have already authorized the delete against
+   * its own tenant rules. Removes the S3 object then the stored_files row; a
+   * missing S3 object is treated as success. No-op if the id is unknown.
+   */
+  async deleteStoredFileById(fileId: string): Promise<void> {
+    if (!fileId) return;
+    const { rows } = await this.db.query(
+      `SELECT s3_key FROM stored_files WHERE id = $1`,
+      [fileId],
+    );
+    if (rows.length === 0) return;
+    const key = rows[0].s3_key;
+    if (this.isConfigured && this.s3Client) {
+      try {
+        await this.s3Client.send(
+          new DeleteObjectCommand({ Bucket: this.bucketName, Key: key }),
+        );
+      } catch (err: any) {
+        if (err.name !== 'NoSuchKey' && err.$metadata?.httpStatusCode !== 404) {
+          this.logger.warn(`S3 delete failed for ${key}: ${err.message}`);
+        }
+      }
+    }
+    await this.db.query(`DELETE FROM stored_files WHERE id = $1`, [fileId]);
   }
 
   // Enforce that `requester` is allowed to read a file owned by (ownerUserId,

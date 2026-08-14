@@ -18,6 +18,27 @@ const insuranceApi = {
   getReports() {
     return apiClient.request(`/insurance/reports`, { method: "GET" });
   },
+  listDocuments(params = {}) {
+    return apiClient.request(`/insurance/documents${toQuery(params)}`, {
+      method: "GET",
+    });
+  },
+  uploadDocument(formData) {
+    return apiClient.request(`/insurance/documents`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+  getDocumentLink(id) {
+    return apiClient.request(`/insurance/documents/${id}/link`, {
+      method: "GET",
+    });
+  },
+  deleteDocument(id) {
+    return apiClient.request(`/insurance/documents/${id}`, {
+      method: "DELETE",
+    });
+  },
   searchContacts(search) {
     return apiClient.request(`/insurance/contacts${toQuery({ search })}`, {
       method: "GET",

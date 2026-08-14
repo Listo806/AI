@@ -37,6 +37,7 @@ import CarriersSection from "./CarriersSection";
 import CommissionsSection from "./CommissionsSection";
 import OverviewSection from "./OverviewSection";
 import ReportsSection from "./ReportsSection";
+import DocumentsSection from "./DocumentsSection";
 
 // KPI card config (labels/icons/tones). Values come from the live stats
 // endpoint (/api/insurance/stats). Policies-by-Type, Recent Activity and
@@ -601,19 +602,7 @@ export default function InsuranceWorkspace() {
 
       {activeTab === "Reports" && <ReportsSection />}
 
-      {/* Only the not-yet-built tab (Documents) shows the generic placeholder. */}
-      {activeTab === "Documents" && (
-          <section className="insurance-ws-policies">
-            <div className="insurance-ws-section-head">
-              <div>
-                <h2>{activeTab}</h2>
-                <p>
-                  {activeTab} workspace is ready for the next implementation step.
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
+      {activeTab === "Documents" && <DocumentsSection />}
 
       {/* Policies-by-Type / Activity / Renewals cards belong to the Policies and
           Overview views (both driven by the stats payload). */}

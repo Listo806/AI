@@ -8,8 +8,12 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentGuard } from '../auth/guards/payment.guard';
@@ -536,6 +540,78 @@ export class InsuranceController {
       user.id,
       user.teamId ?? null,
       user.role ?? 'owner',
+    );
+  }
+
+  // ─── Documents ─────────────────────────────────────────────────────────────
+
+  @Get('documents')
+  @ApiOperation({ summary: 'List documents (team-scoped, paginated, filterable)' })
+  async listDocuments(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('policyId') policyId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.insurance.listDocuments(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      {
+        search,
+        policyId,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
+      },
+    );
+  }
+
+  @Post('documents')
+  @ApiOperation({ summary: 'Upload a document (multipart; optional policy/claim/contact link)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 20 * 1024 * 1024 } }),
+  )
+  async uploadDocument(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
+    @Body('title') title?: string,
+    @Body('docType') docType?: string,
+    @Body('policyId') policyId?: string,
+    @Body('claimId') claimId?: string,
+    @Body('contactId') contactId?: string,
+    @Body('notes') notes?: string,
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    return this.insurance.createDocument(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      file,
+      { title, docType, policyId, claimId, contactId, notes },
+    );
+  }
+
+  @Get('documents/:id/link')
+  @ApiOperation({ summary: 'Get a short-lived signed download URL for a document' })
+  async getDocumentLink(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.getDocumentDownloadUrl(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      id,
+    );
+  }
+
+  @Delete('documents/:id')
+  @ApiOperation({ summary: 'Delete a document (team-scoped; removes the stored file)' })
+  async removeDocument(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.removeDocument(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      id,
     );
   }
 }
