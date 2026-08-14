@@ -32,6 +32,7 @@ import insuranceApi from "../../api/insuranceApi";
 import PolicyModal from "./PolicyModal";
 import ClaimsSection from "./ClaimsSection";
 import QuotesSection from "./QuotesSection";
+import RenewalsSection from "./RenewalsSection";
 
 // NOTE: The KPI cards, Policies-by-Type, Recent Activity and Upcoming Renewals
 // below still use placeholder data. They are wired to live backend data in their
@@ -536,9 +537,12 @@ export default function InsuranceWorkspace() {
 
       {activeTab === "Quotes" && <QuotesSection />}
 
+      {activeTab === "Renewals" && <RenewalsSection />}
+
       {activeTab !== "Policies" &&
         activeTab !== "Claims" &&
-        activeTab !== "Quotes" && (
+        activeTab !== "Quotes" &&
+        activeTab !== "Renewals" && (
           <section className="insurance-ws-policies">
             <div className="insurance-ws-section-head">
               <div>
@@ -551,7 +555,9 @@ export default function InsuranceWorkspace() {
           </section>
         )}
 
-      {activeTab !== "Claims" && activeTab !== "Quotes" && (
+      {activeTab !== "Claims" &&
+        activeTab !== "Quotes" &&
+        activeTab !== "Renewals" && (
       <div className="insurance-ws-bottom">
         <div className="insurance-ws-bottom-card type-card">
           <div className="insurance-ws-card-head">

@@ -179,6 +179,38 @@ export class InsuranceService {
     await this.db.query(
       `CREATE INDEX IF NOT EXISTS idx_insurance_quotes_status ON insurance_quotes(status)`,
     );
+    await this.db.query(`
+      CREATE TABLE IF NOT EXISTS insurance_renewals (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        team_id UUID NOT NULL,
+        created_by UUID,
+        policy_id UUID,
+        contact_id UUID,
+        carrier_id UUID,
+        policy_type TEXT,
+        holder_name TEXT,
+        billing_frequency TEXT,
+        current_expiration DATE,
+        renewal_date DATE,
+        current_premium NUMERIC(12,2),
+        renewal_premium NUMERIC(12,2),
+        status TEXT NOT NULL DEFAULT 'Upcoming',
+        assigned_to UUID,
+        notes TEXT,
+        renewed_policy_id UUID,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_renewals_team ON insurance_renewals(team_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_renewals_policy ON insurance_renewals(policy_id)`,
+    );
+    await this.db.query(
+      `CREATE INDEX IF NOT EXISTS idx_insurance_renewals_status ON insurance_renewals(status)`,
+    );
     this.schemaReady = true;
   }
 
@@ -1183,5 +1215,390 @@ export class InsuranceService {
     }
 
     return policy;
+  }
+
+  // ─── Renewals ──────────────────────────────────────────────────────────────
+
+  private readonly renewalSelect = `
+    r.id,
+    r.team_id AS "teamId",
+    r.created_by AS "createdBy",
+    r.policy_id AS "policyId",
+    p.policy_number AS "policyNumber",
+    p.holder_name AS "policyHolder",
+    r.contact_id AS "contactId",
+    ct.name AS "contactName",
+    r.carrier_id AS "carrierId",
+    cr.name AS "carrierName",
+    r.policy_type AS "snapshotPolicyType",
+    r.holder_name AS "snapshotHolderName",
+    r.billing_frequency AS "snapshotBillingFrequency",
+    r.current_expiration AS "currentExpiration",
+    r.renewal_date AS "renewalDate",
+    r.current_premium AS "currentPremium",
+    r.renewal_premium AS "renewalPremium",
+    r.status,
+    r.assigned_to AS "assignedTo",
+    au.name AS "agentName",
+    r.notes,
+    r.renewed_policy_id AS "renewedPolicyId",
+    rp.policy_number AS "renewedPolicyNumber",
+    r.created_at AS "createdAt",
+    r.updated_at AS "updatedAt"
+  `;
+
+  private readonly renewalJoins = `
+    FROM insurance_renewals r
+    LEFT JOIN insurance_policies p ON p.id = r.policy_id AND p.team_id = r.team_id
+    LEFT JOIN contacts ct ON ct.id = r.contact_id AND ct.team_id = r.team_id
+    LEFT JOIN insurance_carriers cr ON cr.id = r.carrier_id AND cr.team_id = r.team_id
+    LEFT JOIN users au ON au.id = r.assigned_to
+    LEFT JOIN insurance_policies rp ON rp.id = r.renewed_policy_id AND rp.team_id = r.team_id
+  `;
+
+  // Fetch an in-team policy with the fields a renewal snapshots / carries forward.
+  private async getPolicyForRenewal(
+    policyId: string,
+    teamId: string,
+  ): Promise<any> {
+    const { rows } = await this.db.query(
+      `SELECT id, contact_id, carrier_id, coverage_end, premium, policy_type,
+              holder_name, billing_frequency, assigned_to
+         FROM insurance_policies WHERE id = $1 AND team_id = $2 LIMIT 1`,
+      [policyId, teamId],
+    );
+    if (!rows.length) {
+      throw new BadRequestException('Selected policy is not in this account');
+    }
+    return rows[0];
+  }
+
+  private validateRenewalPremium(dto: { renewalPremium?: number }): void {
+    if (
+      dto.renewalPremium != null &&
+      (isNaN(Number(dto.renewalPremium)) || Number(dto.renewalPremium) < 0)
+    ) {
+      throw new BadRequestException('Renewal premium must be zero or greater');
+    }
+  }
+
+  private addYearsIso(value: any, years: number): string | undefined {
+    const iso = this.toIsoDate(value);
+    if (!iso) return undefined;
+    const [y, m, d] = iso.split('-').map(Number);
+    const dt = new Date(y + years, m - 1, d);
+    // Clamp a Feb-29 source that overflowed into March back to the last day of
+    // the intended month.
+    if (dt.getMonth() !== (m - 1) % 12) dt.setDate(0);
+    return this.toIsoDate(dt);
+  }
+
+  async findAllRenewals(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+    query: any,
+  ): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    await this.ensureSchema();
+    const pageNum = Number(query.page);
+    const page = Number.isFinite(pageNum) ? Math.max(1, Math.trunc(pageNum)) : 1;
+    const limitNum = Number(query.limit);
+    const limit = Number.isFinite(limitNum)
+      ? Math.min(200, Math.max(1, Math.trunc(limitNum)))
+      : 20;
+
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) return { data: [], total: 0, page, limit };
+
+    const where: string[] = ['r.team_id = ANY($1)'];
+    const values: any[] = [accessible];
+    let param = 2;
+
+    if (query.search) {
+      where.push(`(
+        LOWER(COALESCE(p.policy_number, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(p.holder_name, '')) LIKE LOWER($${param})
+        OR LOWER(COALESCE(ct.name, '')) LIKE LOWER($${param})
+      )`);
+      values.push(`%${String(query.search).trim()}%`);
+      param++;
+    }
+    if (query.status) {
+      where.push(`r.status = $${param}`);
+      values.push(query.status);
+      param++;
+    }
+
+    const whereSql = where.join(' AND ');
+
+    const countRes = await this.db.query(
+      `SELECT COUNT(*)::int AS total ${this.renewalJoins} WHERE ${whereSql}`,
+      values,
+    );
+    const total = countRes.rows[0]?.total || 0;
+
+    const offset = (page - 1) * limit;
+    values.push(limit);
+    const limitParam = values.length;
+    values.push(offset);
+    const offsetParam = values.length;
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.renewalSelect} ${this.renewalJoins}
+        WHERE ${whereSql}
+        ORDER BY r.created_at DESC
+        LIMIT $${limitParam} OFFSET $${offsetParam}`,
+      values,
+    );
+
+    return { data: rows, total, page, limit };
+  }
+
+  async findOneRenewal(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) throw new NotFoundException('Renewal not found');
+
+    const { rows } = await this.db.query(
+      `SELECT ${this.renewalSelect} ${this.renewalJoins}
+        WHERE r.id = $1 AND r.team_id = ANY($2)`,
+      [id, accessible],
+    );
+    if (!rows.length) throw new NotFoundException('Renewal not found');
+    return rows[0];
+  }
+
+  async createRenewal(
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+    if (!accessible.length) {
+      throw new ForbiddenException(
+        'You must belong to a team to create renewals',
+      );
+    }
+    const teamId = this.resolveTeamId(dto.teamId, userTeamId, accessible);
+
+    if (!dto.policyId) {
+      throw new BadRequestException('A renewal must be linked to a policy');
+    }
+    const policy = await this.getPolicyForRenewal(dto.policyId, teamId);
+    this.validateRenewalPremium(dto);
+
+    const { rows } = await this.db.query(
+      `INSERT INTO insurance_renewals (
+         team_id, created_by, policy_id, contact_id, carrier_id,
+         policy_type, holder_name, billing_frequency,
+         current_expiration, renewal_date, current_premium, renewal_premium,
+         status, assigned_to, notes, updated_at
+       ) VALUES (
+         $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW()
+       ) RETURNING id`,
+      [
+        teamId,
+        userId,
+        dto.policyId,
+        policy.contact_id || null,
+        policy.carrier_id || null,
+        policy.policy_type || null,
+        policy.holder_name || null,
+        policy.billing_frequency || null,
+        this.toIsoDate(policy.coverage_end) || null,
+        dto.renewalDate || null,
+        policy.premium ?? null,
+        dto.renewalPremium ?? null,
+        dto.status || 'Upcoming',
+        dto.assignedTo || null,
+        dto.notes || null,
+      ],
+    );
+
+    return this.findOneRenewal(rows[0].id, userId, userTeamId, role);
+  }
+
+  async updateRenewal(
+    id: string,
+    dto: any,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    await this.findOneRenewal(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    this.validateRenewalPremium(dto);
+
+    const columnByField: Array<[string, any]> = [
+      ['renewal_date', dto.renewalDate],
+      ['renewal_premium', dto.renewalPremium],
+      ['status', dto.status],
+      ['assigned_to', dto.assignedTo],
+      ['notes', dto.notes],
+    ];
+
+    const sets: string[] = [];
+    const values: any[] = [];
+    let param = 1;
+    for (const [col, val] of columnByField) {
+      if (val !== undefined) {
+        sets.push(`${col} = $${param}`);
+        values.push(val === '' ? null : val);
+        param++;
+      }
+    }
+    if (!sets.length) return this.findOneRenewal(id, userId, userTeamId, role);
+
+    sets.push('updated_at = NOW()');
+    values.push(id);
+    const idParam = param;
+    param++;
+    values.push(accessible);
+    const teamParam = param;
+
+    await this.db.query(
+      `UPDATE insurance_renewals SET ${sets.join(', ')}
+        WHERE id = $${idParam} AND team_id = ANY($${teamParam})`,
+      values,
+    );
+
+    return this.findOneRenewal(id, userId, userTeamId, role);
+  }
+
+  async removeRenewal(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<{ success: boolean }> {
+    await this.ensureSchema();
+    await this.findOneRenewal(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    await this.db.query(
+      `DELETE FROM insurance_renewals WHERE id = $1 AND team_id = ANY($2)`,
+      [id, accessible],
+    );
+    return { success: true };
+  }
+
+  // Create the renewed policy term from a renewal, carrying forward the original
+  // policy's details with the new premium and coverage period. The ORIGINAL
+  // policy is left intact (history preserved). Same atomic guarded attach as
+  // quote conversion so a retry can't create two renewed policies.
+  async renewPolicy(
+    id: string,
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const renewal = await this.findOneRenewal(id, userId, userTeamId, role);
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    let stalePolicyId: string | null = null;
+    if (renewal.renewedPolicyId) {
+      try {
+        return await this.findOnePolicy(
+          renewal.renewedPolicyId,
+          userId,
+          userTeamId,
+          role,
+        );
+      } catch {
+        stalePolicyId = renewal.renewedPolicyId;
+      }
+    }
+
+    // Prefer the live original policy's current details, but fall back to the
+    // snapshot taken at renewal time so a renewal still works if the original
+    // policy was deleted (history preserved on the renewal row).
+    let orig: any = {};
+    try {
+      orig = await this.getPolicyForRenewal(renewal.policyId, renewal.teamId);
+    } catch {
+      orig = {};
+    }
+    const start =
+      this.toIsoDate(renewal.renewalDate) ||
+      this.toIsoDate(renewal.currentExpiration);
+    const end = this.addYearsIso(
+      renewal.renewalDate || renewal.currentExpiration,
+      1,
+    );
+
+    const newPolicy = await this.createPolicy(
+      {
+        teamId: renewal.teamId,
+        contactId: renewal.contactId || orig.contact_id || undefined,
+        holderName: orig.holder_name || renewal.snapshotHolderName || undefined,
+        carrierId: renewal.carrierId || orig.carrier_id || undefined,
+        policyType: orig.policy_type || renewal.snapshotPolicyType || undefined,
+        premium:
+          renewal.renewalPremium != null
+            ? Number(renewal.renewalPremium)
+            : orig.premium != null
+              ? Number(orig.premium)
+              : renewal.currentPremium != null
+                ? Number(renewal.currentPremium)
+                : undefined,
+        coverageStart: start,
+        coverageEnd: end,
+        billingFrequency:
+          orig.billing_frequency || renewal.snapshotBillingFrequency || undefined,
+        assignedTo: renewal.assignedTo || orig.assigned_to || undefined,
+        status: 'Active',
+      } as any,
+      userId,
+      userTeamId,
+      role,
+    );
+
+    const guard = stalePolicyId
+      ? 'AND (renewed_policy_id IS NULL OR renewed_policy_id = $4)'
+      : 'AND renewed_policy_id IS NULL';
+    const params = stalePolicyId
+      ? [newPolicy.id, id, accessible, stalePolicyId]
+      : [newPolicy.id, id, accessible];
+    const upd = await this.db.query(
+      `UPDATE insurance_renewals
+          SET status = 'Renewed', renewed_policy_id = $1, updated_at = NOW()
+        WHERE id = $2 AND team_id = ANY($3) ${guard}`,
+      params,
+    );
+
+    if (upd.rowCount === 0) {
+      await this.db.query(
+        `DELETE FROM insurance_policies WHERE id = $1 AND team_id = ANY($2)`,
+        [newPolicy.id, accessible],
+      );
+      const fresh = await this.findOneRenewal(id, userId, userTeamId, role);
+      if (fresh.renewedPolicyId) {
+        try {
+          return await this.findOnePolicy(
+            fresh.renewedPolicyId,
+            userId,
+            userTeamId,
+            role,
+          );
+        } catch {
+          /* fall through */
+        }
+      }
+      throw new BadRequestException(
+        'Could not create the renewed policy, please try again',
+      );
+    }
+
+    return newPolicy;
   }
 }

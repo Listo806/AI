@@ -22,6 +22,8 @@ import { CreateInsuranceClaimDto } from './dto/create-insurance-claim.dto';
 import { UpdateInsuranceClaimDto } from './dto/update-insurance-claim.dto';
 import { CreateInsuranceQuoteDto } from './dto/create-insurance-quote.dto';
 import { UpdateInsuranceQuoteDto } from './dto/update-insurance-quote.dto';
+import { CreateInsuranceRenewalDto } from './dto/create-insurance-renewal.dto';
+import { UpdateInsuranceRenewalDto } from './dto/update-insurance-renewal.dto';
 
 // Insurance Workspace API. Guards mirror the CRM: JwtAuthGuard authenticates,
 // PaymentGuard gates unpaid accounts (super_admin/admin/va are exempt). All
@@ -267,6 +269,88 @@ export class InsuranceController {
   @ApiOperation({ summary: 'Delete a quote (team-scoped)' })
   async removeQuote(@Param('id') id: string, @CurrentUser() user: any) {
     return this.insurance.removeQuote(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Renewals ──────────────────────────────────────────────────────────────
+
+  @Get('renewals')
+  @ApiOperation({ summary: 'List renewals for the account (paginated, filterable)' })
+  async listRenewals(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.insurance.findAllRenewals(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('renewals')
+  @ApiOperation({ summary: 'Create a renewal (must link to a policy)' })
+  async createRenewal(
+    @Body() dto: CreateInsuranceRenewalDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.createRenewal(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('renewals/:id')
+  @ApiOperation({ summary: 'Get one renewal (team-scoped)' })
+  async getRenewal(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.findOneRenewal(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('renewals/:id')
+  @ApiOperation({ summary: 'Update a renewal (team-scoped)' })
+  async updateRenewal(
+    @Param('id') id: string,
+    @Body() dto: UpdateInsuranceRenewalDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.updateRenewal(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Post('renewals/:id/renew')
+  @ApiOperation({ summary: 'Create the renewed policy term from a renewal' })
+  async renewPolicy(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.renewPolicy(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('renewals/:id')
+  @ApiOperation({ summary: 'Delete a renewal (team-scoped)' })
+  async removeRenewal(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.removeRenewal(
       id,
       user.id,
       user.teamId ?? null,
