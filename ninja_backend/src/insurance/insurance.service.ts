@@ -1842,6 +1842,164 @@ export class InsuranceService {
     };
   }
 
+  // Analytics for the Reports tab: team-scoped aggregates across policies, claims,
+  // commissions and renewals. All money is summed server-side; nothing is trusted
+  // from the client. Empty (all-zero) for an account with no accessible teams.
+  async getReports(
+    userId: string,
+    userTeamId: string | null,
+    role: string,
+  ): Promise<any> {
+    await this.ensureSchema();
+    const accessible = await this.getAccessibleTeamIds(userId, userTeamId, role);
+
+    const empty = {
+      premiumByType: [],
+      totalActivePremium: 0,
+      policiesByStatus: [],
+      claims: {
+        total: 0, open: 0, paid: 0, denied: 0, closed: 0,
+        totalClaimed: 0, totalPaid: 0, lossRatio: 0,
+      },
+      commissions: {
+        pendingCount: 0, pendingAmount: 0, paidCount: 0, paidAmount: 0, totalAmount: 0,
+      },
+      renewals: { total: 0, renewed: 0, lapsed: 0, declined: 0, pending: 0, rate: 0 },
+      newBusiness: [],
+    };
+    if (!accessible.length) return empty;
+
+    const num = (v: any) => Number(v) || 0;
+
+    const [premByType, polByStatus, claimsAgg, renAgg, newBiz] =
+      await Promise.all([
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(policy_type), ''), 'Other') AS type,
+                  COUNT(*)::int AS count, COALESCE(SUM(premium),0) AS premium
+             FROM insurance_policies
+            WHERE team_id = ANY($1) AND status = 'Active'
+            GROUP BY 1 ORDER BY premium DESC`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT COALESCE(NULLIF(TRIM(status), ''), 'Unknown') AS status,
+                  COUNT(*)::int AS count, COALESCE(SUM(premium),0) AS premium
+             FROM insurance_policies
+            WHERE team_id = ANY($1)
+            GROUP BY 1 ORDER BY count DESC`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT
+              COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE status NOT IN ('Paid','Denied','Closed'))::int AS open,
+              COUNT(*) FILTER (WHERE status = 'Paid')::int AS paid,
+              COUNT(*) FILTER (WHERE status = 'Denied')::int AS denied,
+              COUNT(*) FILTER (WHERE status = 'Closed')::int AS closed,
+              COALESCE(SUM(amount_claimed),0) AS total_claimed,
+              COALESCE(SUM(amount_paid) FILTER (WHERE status = 'Paid'),0) AS total_paid
+             FROM insurance_claims WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT
+              COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE status = 'Renewed')::int AS renewed,
+              COUNT(*) FILTER (WHERE status = 'Lapsed')::int AS lapsed,
+              COUNT(*) FILTER (WHERE status = 'Declined')::int AS declined,
+              COUNT(*) FILTER (WHERE status NOT IN ('Renewed','Lapsed','Declined'))::int AS pending
+             FROM insurance_renewals WHERE team_id = ANY($1)`,
+          [accessible],
+        ),
+        this.db.query(
+          `SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS month,
+                  COUNT(*)::int AS count, COALESCE(SUM(premium),0) AS premium
+             FROM insurance_policies
+            WHERE team_id = ANY($1)
+              AND created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'
+            GROUP BY 1 ORDER BY 1 ASC`,
+          [accessible],
+        ),
+      ]);
+
+    // Commissions may lag behind in some environments; keep the whole report alive
+    // if that one table/query fails (mirrors getStats' defensive handling).
+    let commissions = empty.commissions;
+    try {
+      const commAgg = await this.db.query(
+        `SELECT
+            COUNT(*) FILTER (WHERE status = 'Pending')::int AS pending_count,
+            COALESCE(SUM(amount) FILTER (WHERE status = 'Pending'),0) AS pending_amount,
+            COUNT(*) FILTER (WHERE status = 'Paid')::int AS paid_count,
+            COALESCE(SUM(amount) FILTER (WHERE status = 'Paid'),0) AS paid_amount,
+            COALESCE(SUM(amount),0) AS total_amount
+           FROM insurance_commissions WHERE team_id = ANY($1)`,
+        [accessible],
+      );
+      const c = commAgg.rows[0];
+      commissions = {
+        pendingCount: num(c.pending_count),
+        pendingAmount: num(c.pending_amount),
+        paidCount: num(c.paid_count),
+        paidAmount: num(c.paid_amount),
+        totalAmount: num(c.total_amount),
+      };
+    } catch {
+      /* commissions not available; leave zeros */
+    }
+
+    const activePremium = premByType.rows.reduce(
+      (s: number, r: any) => s + num(r.premium),
+      0,
+    );
+    const claims = claimsAgg.rows[0];
+    const totalPaid = num(claims.total_paid);
+    const ren = renAgg.rows[0];
+    const terminal = num(ren.renewed) + num(ren.lapsed) + num(ren.declined);
+
+    return {
+      premiumByType: premByType.rows.map((r: any) => ({
+        type: r.type,
+        count: r.count,
+        premium: num(r.premium),
+      })),
+      totalActivePremium: activePremium,
+      policiesByStatus: polByStatus.rows.map((r: any) => ({
+        status: r.status,
+        count: r.count,
+        premium: num(r.premium),
+      })),
+      claims: {
+        total: num(claims.total),
+        open: num(claims.open),
+        paid: num(claims.paid),
+        denied: num(claims.denied),
+        closed: num(claims.closed),
+        totalClaimed: num(claims.total_claimed),
+        totalPaid,
+        // Paid claims as a % of in-force annual premium (one decimal).
+        lossRatio:
+          activePremium > 0
+            ? Math.round((totalPaid / activePremium) * 1000) / 10
+            : 0,
+      },
+      commissions,
+      renewals: {
+        total: num(ren.total),
+        renewed: num(ren.renewed),
+        lapsed: num(ren.lapsed),
+        declined: num(ren.declined),
+        pending: num(ren.pending),
+        rate: terminal ? Math.round((num(ren.renewed) / terminal) * 100) : 0,
+      },
+      newBusiness: newBiz.rows.map((r: any) => ({
+        month: r.month,
+        count: r.count,
+        premium: num(r.premium),
+      })),
+    };
+  }
+
   // ─── Carriers ──────────────────────────────────────────────────────────────
 
   private readonly carrierSelect = `

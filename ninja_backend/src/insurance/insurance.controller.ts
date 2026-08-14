@@ -49,6 +49,18 @@ export class InsuranceController {
     );
   }
 
+  @Get('reports')
+  @ApiOperation({
+    summary: 'Analytics: premium by type, claims/loss, commissions, renewals, new business',
+  })
+  async reports(@CurrentUser() user: any) {
+    return this.insurance.getReports(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
   @Get('contacts')
   @ApiOperation({
     summary: "Search the account's existing contacts to link to a policy",
