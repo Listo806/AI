@@ -898,9 +898,10 @@ const pricingV3 = {
     oneTimeActivation: "one-time activation",
     annualSavings: "20% savings vs.",
     atMonthlyPricing: "at monthly pricing",
+    paidTrialNote: "Solo, Business, and Scale plans include a 14-day trial.",
     plans: {
       free: {
-        name: "Zero Plan",
+        name: "Free",
         desc: "Perfect to explore and get started.",
         price: "$0",
         users: "",
@@ -927,7 +928,7 @@ const pricingV3 = {
         price: "$7",
         users: "",
         features: [
-          "Everything in Zero Plan, plus:",
+          "Everything in Free, plus:",
           "Full CRM & Contact Management",
           "Lead & Pipeline Management",
           "Advanced Dashboard & Insights",
@@ -1020,9 +1021,10 @@ const pricingV3 = {
     oneTimeActivation: "activación única",
     annualSavings: "20% de ahorro vs.",
     atMonthlyPricing: "con precio mensual",
+    paidTrialNote: "Los planes Solo, Business y Scale incluyen una prueba gratuita de 14 días.",
     plans: {
       free: {
-        name: "Plan Zero",
+        name: "Free",
         desc: "Perfecto para explorar y comenzar.",
         price: "$0",
         users: "",
@@ -1049,7 +1051,7 @@ const pricingV3 = {
         price: "$7",
         users: "",
         features: [
-          "Todo lo del Plan Zero, más:",
+          "Todo lo de Free, más:",
           "CRM completo y gestión de contactos",
           "Gestión de leads y pipeline",
           "Panel e insights avanzados",
@@ -1142,9 +1144,10 @@ const pricingV3 = {
     oneTimeActivation: "ativação única",
     annualSavings: "20% de economia vs.",
     atMonthlyPricing: "com preço mensal",
+    paidTrialNote: "Os planos Solo, Business e Scale incluem um teste gratuito de 14 dias.",
     plans: {
       free: {
-        name: "Plano Zero",
+        name: "Free",
         desc: "Perfeito para explorar e começar.",
         price: "$0",
         users: "",
@@ -1171,7 +1174,7 @@ const pricingV3 = {
         price: "$7",
         users: "",
         features: [
-          "Tudo do Plano Zero, mais:",
+          "Tudo do Free, mais:",
           "CRM completo e gestão de contatos",
           "Gestão de leads e pipeline",
           "Dashboard e insights avançados",
@@ -1598,6 +1601,10 @@ export default function PricingPage() {
               </div>
             </article>
           </div>
+
+          <p className="cx-pricing-v3-paid-trial-note">
+            {pv3.paidTrialNote}
+          </p>
 
         </section>
       </main>
