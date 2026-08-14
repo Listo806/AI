@@ -20,6 +20,8 @@ import { CreateInsurancePolicyDto } from './dto/create-insurance-policy.dto';
 import { UpdateInsurancePolicyDto } from './dto/update-insurance-policy.dto';
 import { CreateInsuranceClaimDto } from './dto/create-insurance-claim.dto';
 import { UpdateInsuranceClaimDto } from './dto/update-insurance-claim.dto';
+import { CreateInsuranceQuoteDto } from './dto/create-insurance-quote.dto';
+import { UpdateInsuranceQuoteDto } from './dto/update-insurance-quote.dto';
 
 // Insurance Workspace API. Guards mirror the CRM: JwtAuthGuard authenticates,
 // PaymentGuard gates unpaid accounts (super_admin/admin/va are exempt). All
@@ -183,6 +185,88 @@ export class InsuranceController {
   @ApiOperation({ summary: 'Delete a claim (team-scoped)' })
   async removeClaim(@Param('id') id: string, @CurrentUser() user: any) {
     return this.insurance.removeClaim(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  // ─── Quotes ────────────────────────────────────────────────────────────────
+
+  @Get('quotes')
+  @ApiOperation({ summary: 'List quotes for the account (paginated, filterable)' })
+  async listQuotes(
+    @CurrentUser() user: any,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.insurance.findAllQuotes(
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+      { search, status, page, limit },
+    );
+  }
+
+  @Post('quotes')
+  @ApiOperation({ summary: 'Create a quote' })
+  async createQuote(
+    @Body() dto: CreateInsuranceQuoteDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.createQuote(
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Get('quotes/:id')
+  @ApiOperation({ summary: 'Get one quote (team-scoped)' })
+  async getQuote(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.findOneQuote(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Put('quotes/:id')
+  @ApiOperation({ summary: 'Update a quote (team-scoped)' })
+  async updateQuote(
+    @Param('id') id: string,
+    @Body() dto: UpdateInsuranceQuoteDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.insurance.updateQuote(
+      id,
+      dto,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Post('quotes/:id/convert')
+  @ApiOperation({ summary: 'Convert an accepted quote into a policy' })
+  async convertQuote(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.convertQuoteToPolicy(
+      id,
+      user.id,
+      user.teamId ?? null,
+      user.role ?? 'owner',
+    );
+  }
+
+  @Delete('quotes/:id')
+  @ApiOperation({ summary: 'Delete a quote (team-scoped)' })
+  async removeQuote(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.insurance.removeQuote(
       id,
       user.id,
       user.teamId ?? null,
