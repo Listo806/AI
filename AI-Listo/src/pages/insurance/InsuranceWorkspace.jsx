@@ -35,6 +35,8 @@ import QuotesSection from "./QuotesSection";
 import RenewalsSection from "./RenewalsSection";
 import CarriersSection from "./CarriersSection";
 import CommissionsSection from "./CommissionsSection";
+import OverviewSection from "./OverviewSection";
+import ReportsSection from "./ReportsSection";
 
 // KPI card config (labels/icons/tones). Values come from the live stats
 // endpoint (/api/insurance/stats). Policies-by-Type, Recent Activity and
@@ -583,6 +585,10 @@ export default function InsuranceWorkspace() {
       </section>
       )}
 
+      {activeTab === "Overview" && (
+        <OverviewSection stats={stats} onGoTo={setActiveTab} />
+      )}
+
       {activeTab === "Claims" && <ClaimsSection />}
 
       {activeTab === "Quotes" && <QuotesSection />}
@@ -593,12 +599,10 @@ export default function InsuranceWorkspace() {
 
       {activeTab === "Commissions" && <CommissionsSection />}
 
-      {activeTab !== "Policies" &&
-        activeTab !== "Claims" &&
-        activeTab !== "Quotes" &&
-        activeTab !== "Renewals" &&
-        activeTab !== "Carriers" &&
-        activeTab !== "Commissions" && (
+      {activeTab === "Reports" && <ReportsSection />}
+
+      {/* Only the not-yet-built tab (Documents) shows the generic placeholder. */}
+      {activeTab === "Documents" && (
           <section className="insurance-ws-policies">
             <div className="insurance-ws-section-head">
               <div>
@@ -611,11 +615,9 @@ export default function InsuranceWorkspace() {
           </section>
         )}
 
-      {activeTab !== "Claims" &&
-        activeTab !== "Quotes" &&
-        activeTab !== "Renewals" &&
-        activeTab !== "Carriers" &&
-        activeTab !== "Commissions" && (
+      {/* Policies-by-Type / Activity / Renewals cards belong to the Policies and
+          Overview views (both driven by the stats payload). */}
+      {(activeTab === "Policies" || activeTab === "Overview") && (
       <div className="insurance-ws-bottom">
         <div className="insurance-ws-bottom-card type-card">
           <div className="insurance-ws-card-head">

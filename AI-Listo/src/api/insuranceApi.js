@@ -15,6 +15,9 @@ const insuranceApi = {
   getStats() {
     return apiClient.request(`/insurance/stats`, { method: "GET" });
   },
+  getReports() {
+    return apiClient.request(`/insurance/reports`, { method: "GET" });
+  },
   searchContacts(search) {
     return apiClient.request(`/insurance/contacts${toQuery({ search })}`, {
       method: "GET",
