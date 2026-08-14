@@ -59,14 +59,17 @@ export async function initPaddle(config, onEvent) {
   });
 }
 
-// Pick the recurring price for the chosen billing cycle. Annual is used only
-// when an annual price ID is configured for the plan; otherwise it falls back to
-// the monthly price, so annual stays inert until the yearly Paddle prices exist.
+// Pick the recurring price for the chosen billing cycle.
+//
+// Annual must resolve to a real annual Paddle price. It NEVER falls back to the
+// monthly price: if the annual price ID is missing, this returns null so the
+// checkout is blocked (paddleReady === false and openPaddleCheckout throws),
+// rather than silently billing the customer monthly while they chose annual.
 function recurringPriceFor(config, plan, billingCycle) {
-  if (billingCycle === "annual" && config?.annualPrices?.[plan]) {
-    return config.annualPrices[plan];
+  if (billingCycle === "annual") {
+    return config?.annualPrices?.[plan] || null;
   }
-  return config?.prices?.[plan];
+  return config?.prices?.[plan] || null;
 }
 
 // Checkout is ready only when BOTH the one-time start price and the recurring
@@ -101,8 +104,11 @@ export function openPaddleCheckout({
   }
 
   if (!recurringPriceId) {
+    // Annual with no annual price must NOT proceed on the monthly price.
     throw new Error(
-      `Recurring Paddle price is not configured for plan: ${plan}`
+      billingCycle === "annual"
+        ? `Annual billing for the ${plan} plan is not fully configured yet. Please choose monthly or contact support.`
+        : `Recurring Paddle price is not configured for plan: ${plan}`
     );
   }
 

@@ -249,6 +249,12 @@ export default function CheckoutPage() {
   // 2) the existing recurring subscription ($197/$347/$497)
   // This prevents accidentally creating a $7/$14/$21 monthly subscription.
   const usePaddle = paddleReady(paddleConfig, selectedPlan, billingCycle);
+  // Annual must have its own Paddle price. When it is missing the checkout is
+  // blocked (never silently billed monthly) until the annual Price ID is set.
+  const annualUnavailable =
+    billingCycle === "annual" &&
+    !!paddleConfig &&
+    !paddleConfig?.annualPrices?.[selectedPlan];
   const setupFee = plan.startPrice;
   const recurringPrice =
     billingCycle === "annual" ? plan.annualPrice : plan.price;
@@ -721,6 +727,16 @@ export default function CheckoutPage() {
                     {processing && (
                       <p className="checkout-paypal-status">{tr.processing}</p>
                     )}
+                    {errorMsg && (
+                      <p className="checkout-paypal-error">{errorMsg}</p>
+                    )}
+                  </>
+                ) : annualUnavailable ? (
+                  <>
+                    <p className="checkout-paypal-error">
+                      Annual billing for this plan is being finalized and is not
+                      available yet. Please switch to monthly billing to continue.
+                    </p>
                     {errorMsg && (
                       <p className="checkout-paypal-error">{errorMsg}</p>
                     )}
